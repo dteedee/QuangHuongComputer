@@ -1,0 +1,143 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Identity.Infrastructure;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using MassTransit;
+using BuildingBlocks.Messaging.IntegrationEvents;
+
+namespace Identity;
+
+public static class IdentityEndpoints
+{
+    public static void MapIdentityEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/auth");
+
+        group.MapPost("/register", async (RegisterDto model, UserManager<ApplicationUser> userManager, IPublishEndpoint publishEndpoint) =>
+        {
+            var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FullName = model.FullName };
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, "Customer");
+                
+                await publishEndpoint.Publish(new UserRegisteredIntegrationEvent(Guid.Parse(user.Id), user.Email!, user.FullName));
+
+                return Results.Ok(new { Message = "User registered successfully" });
+            }
+
+            return Results.BadRequest(result.Errors);
+        });
+
+        group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, IConfiguration configuration) =>
+        {
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
+            {
+                var roles = await userManager.GetRolesAsync(user);
+                var token = GenerateJwtToken(user, roles, configuration);
+                return Results.Ok(new { Token = token, User = new { user.Email, user.FullName, Roles = roles } });
+            }
+
+            return Results.Unauthorized();
+        });
+
+        group.MapGet("/users", async (UserManager<ApplicationUser> userManager) =>
+        {
+            var users = await userManager.Users.ToListAsync();
+            var userDtos = new List<object>();
+
+            foreach (var user in users)
+            {
+                var roles = await userManager.GetRolesAsync(user);
+                userDtos.Add(new
+                {
+                    user.Id,
+                    user.Email,
+                    user.FullName,
+                    Roles = roles
+                });
+            }
+
+            return Results.Ok(userDtos);
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, IConfiguration configuration, IPublishEndpoint publishEndpoint) =>
+        {
+            try
+            {
+                var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
+                {
+                    Audience = new List<string> { configuration["Google:ClientId"]! }
+                };
+
+                var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(model.IdToken, settings);
+                
+                var user = await userManager.FindByEmailAsync(payload.Email);
+                if (user == null)
+                {
+                    user = new ApplicationUser 
+                    { 
+                        UserName = payload.Email, 
+                        Email = payload.Email, 
+                        FullName = payload.Name 
+                    };
+                    var result = await userManager.CreateAsync(user);
+                    if (!result.Succeeded) return Results.BadRequest(result.Errors);
+                    
+                    await userManager.AddToRoleAsync(user, "Customer");
+                    
+                    await publishEndpoint.Publish(new UserRegisteredIntegrationEvent(Guid.Parse(user.Id), user.Email!, user.FullName));
+                }
+
+                var roles = await userManager.GetRolesAsync(user);
+                var token = GenerateJwtToken(user, roles, configuration);
+                return Results.Ok(new { Token = token, User = new { user.Email, user.FullName, Roles = roles } });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = "Invalid Google Token", Details = ex.Message });
+            }
+        });
+    }
+
+    private static string GenerateJwtToken(ApplicationUser user, IList<string> roles, IConfiguration configuration)
+    {
+        var jwtSettings = configuration.GetSection("Jwt");
+        var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "super_secret_key_1234567890123456"));
+        
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
+            new Claim("name", user.FullName),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var token = new JwtSecurityToken(
+            issuer: jwtSettings["Issuer"] ?? "QuangHuongComputer",
+            audience: jwtSettings["Audience"] ?? "QuangHuongComputer",
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(7),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+public record RegisterDto(string Email, string Password, string FullName);
+public record LoginDto(string Email, string Password);
+public record GoogleLoginDto(string IdToken);

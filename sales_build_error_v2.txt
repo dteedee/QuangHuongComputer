@@ -1,0 +1,15 @@
+﻿  Determining projects to restore...
+D:\Project\QuangHuongComputer\backend\Services\Sales\Sales.csproj : warning NU1603: Sales depends on Microsoft.Extensions.Configuration.Abstractions (>= 8.0.2) but Microsoft.Extensions.Configuration.Abstractions 8.0.2 was not found. Microsoft.Extensions.Configuration.Abstractions 9.0.0 was resolved instead.
+  All projects are up-to-date for restore.
+D:\Project\QuangHuongComputer\backend\Services\Sales\Sales.csproj : warning NU1603: Sales depends on Microsoft.Extensions.Configuration.Abstractions (>= 8.0.2) but Microsoft.Extensions.Configuration.Abstractions 8.0.2 was not found. Microsoft.Extensions.Configuration.Abstractions 9.0.0 was resolved instead.
+  BuildingBlocks -> D:\Project\QuangHuongComputer\backend\BuildingBlocks\bin\Debug\net8.0\BuildingBlocks.dll
+  Sales -> D:\Project\QuangHuongComputer\backend\Services\Sales\bin\Debug\net8.0\Sales.dll
+
+Build succeeded.
+
+D:\Project\QuangHuongComputer\backend\Services\Sales\Sales.csproj : warning NU1603: Sales depends on Microsoft.Extensions.Configuration.Abstractions (>= 8.0.2) but Microsoft.Extensions.Configuration.Abstractions 8.0.2 was not found. Microsoft.Extensions.Configuration.Abstractions 9.0.0 was resolved instead.
+D:\Project\QuangHuongComputer\backend\Services\Sales\Sales.csproj : warning NU1603: Sales depends on Microsoft.Extensions.Configuration.Abstractions (>= 8.0.2) but Microsoft.Extensions.Configuration.Abstractions 8.0.2 was not found. Microsoft.Extensions.Configuration.Abstractions 9.0.0 was resolved instead.
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.72

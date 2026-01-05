@@ -1,0 +1,27 @@
+# Staging environment values
+replicaCount: 1
+
+image:
+  tag: "develop-latest"
+
+ingress:
+  hosts:
+    - host: api-staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-staging-tls
+      hosts:
+        - api-staging.example.com
+
+env:
+  ASPNETCORE_ENVIRONMENT: Staging
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi

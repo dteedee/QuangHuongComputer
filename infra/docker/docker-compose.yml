@@ -1,22 +1,120 @@
+version: '3.8'
+
 services:
+  # --- Application Services ---
+  backend:
+    build:
+      context: ../../
+      dockerfile: backend/Dockerfile
+    container_name: shop_backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=shop_postgres;Database=quanghuong;Username=admin;Password=password
+      - RabbitMq__Host=shop_rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    networks:
+      - shop-network
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: frontend/Dockerfile
+    container_name: shop_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    networks:
+      - shop-network
+    depends_on:
+      - backend
+
+  # --- Data Stores ---
   postgres:
     image: postgres:15-alpine
+    container_name: shop_postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: quanghuong
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shop-network
+
   redis:
     image: redis:alpine
+    container_name: shop_redis
     ports:
-      - 6379:6379
+      - "6379:6379"
+    networks:
+      - shop-network
+
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: shop_rabbitmq
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - shop-network
+
+  # --- Observability ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: shop_prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - shop-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: shop_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - shop-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: shop_loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - shop-network
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: shop_tempo
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    ports:
+      - "3200:3200"
+      - "4317:4317" # OTLP gRPC
+    networks:
+      - shop-network
+
 volumes:
   postgres_data:
+
+
+networks:
+  shop-network:
+    driver: bridge

@@ -1,0 +1,95 @@
+﻿Build started 12/30/2025 7:29:47 PM.
+     1>Project "D:\Project\QuangHuongComputer\backend\ComputerCompany.sln" on node 1 (VSTest target(s)).
+     1>ValidateSolutionConfiguration:
+         Building solution configuration "Debug|Any CPU".
+Test run for D:\Project\QuangHuongComputer\backend\Services\Sales.Tests\bin\Debug\net8.0\Sales.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for D:\Project\QuangHuongComputer\backend\Services\Repair.Tests\bin\Debug\net8.0\Repair.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for D:\Project\QuangHuongComputer\backend\Services\Inventory.Tests\bin\Debug\net8.0\Inventory.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.14.0 (x64)
+VSTest version 17.14.0 (x64)
+VSTest version 17.14.0 (x64)
+
+
+
+Starting test execution, please wait...
+Starting test execution, please wait...Starting test execution, please wait...
+
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.17)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.17)
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.7+8f2703126a (64-bit .NET 8.0.17)
+[xUnit.net 00:00:00.10]   Discovering: Sales.Tests
+[xUnit.net 00:00:00.10]   Discovering: Repair.Tests
+[xUnit.net 00:00:00.10]   Discovering: Inventory.Tests
+[xUnit.net 00:00:00.13]   Discovered:  Sales.Tests
+[xUnit.net 00:00:00.13]   Discovered:  Repair.Tests
+[xUnit.net 00:00:00.13]   Discovered:  Inventory.Tests
+[xUnit.net 00:00:00.13]   Starting:    Sales.Tests
+[xUnit.net 00:00:00.13]   Starting:    Repair.Tests
+[xUnit.net 00:00:00.13]   Starting:    Inventory.Tests
+[xUnit.net 00:00:00.22]   Finished:    Repair.Tests
+  Passed Inventory.Tests.UnitTest1.Test1 [1 ms]
+  Passed Sales.Tests.UnitTest1.Test1 [1 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.Constructor_SetsPropertiesCorrectly [26 ms]
+  Passed Sales.Tests.Domain.CartTests.UpdateItemQuantity_ZeroQuantity_RemovesItem [27 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.NeedsReorder_AboveThreshold_ReturnsFalse [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.SetStatus_UpdatesStatusAndTimestamp_Shipped [29 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.AdjustStock_PositiveQuantity_IncreasesStock [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.SetStatus_UpdatesStatusAndTimestamp_Confirmed [< 1 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.NeedsReorder_BelowThreshold_ReturnsTrue [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.AddItem_UpdatesItemsAndRecalculatesAmounts [< 1 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.NeedsReorder_AtThreshold_ReturnsTrue [< 1 ms]
+  Passed Sales.Tests.Domain.CartTests.AddItem_NewProduct_AddsToItems [3 ms]
+  Passed Inventory.Tests.Domain.InventoryItemTests.AdjustStock_NegativeQuantity_DecreasesStock [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.Constructor_WithNotes_SetsNotes [< 1 ms]
+  Passed Inventory.Tests.Domain.PurchaseOrderTests.Constructor_SetsCorrectDefaults [28 ms]
+  Passed Sales.Tests.Domain.CartTests.TotalAmount_CalculatesCorrectly [< 1 ms]
+  Passed Inventory.Tests.Domain.PurchaseOrderTests.Constructor_CalculatesTotalAmount [< 1 ms]
+  Passed Sales.Tests.Domain.CartTests.RemoveItem_NonExistingProduct_NoEffect [< 1 ms]
+[xUnit.net 00:00:00.23]   Finished:    Inventory.Tests
+  Passed Sales.Tests.Domain.OrderTests.Constructor_SetsCorrectDefaults [1 ms]
+  Passed Sales.Tests.Domain.CartTests.RemoveItem_ExistingProduct_RemovesFromItems [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.Constructor_CalculatesAmountsCorrectly [< 1 ms]
+  Passed Sales.Tests.Domain.CartTests.AddItem_ExistingProduct_UpdatesQuantity [< 1 ms]
+  Passed Sales.Tests.Domain.CartTests.UpdateItemQuantity_ValidQuantity_UpdatesItem [< 1 ms]
+  Passed Sales.Tests.Domain.OrderTests.SetStatus_UpdatesStatusAndTimestamp_Cancelled [< 1 ms]
+  Passed Sales.Tests.Domain.CartTests.Clear_RemovesAllItems [< 1 ms]
+  Passed Sales.Tests.Domain.CartItemTests.UpdateQuantity_NegativeQuantity_ThrowsException [40 ms]
+[xUnit.net 00:00:00.23]   Finished:    Sales.Tests
+  Passed   Passed Sales.Tests.Domain.CartItemTests.UpdateQuantity_ZeroQuantity_ThrowsException [< 1 ms]
+Inventory.Tests.Domain.PurchaseOrderTests.Cancel_SetsStatusToCancelled [< 1 ms]
+  Passed   Passed Sales.Tests.Domain.CartItemTests.UpdateQuantity_ValidQuantity_Updates [< 1 ms]Inventory.Tests.Domain.PurchaseOrderTests.ReceiveAll_SetsStatusToReceived [< 1 ms]
+
+  Passed Sales.Tests.Domain.CartItemTests.Constructor_SetsPropertiesCorrectly [< 1 ms]
+  Passed Sales.Tests.Domain.CartItemTests.Subtotal_CalculatesCorrectly [< 1 ms]
+
+
+Test Run Successful.
+Total tests: 21
+     Passed: 21
+Test Run Successful.
+Total tests: 11
+     Passed: 11
+ Total time: 0.8899 Seconds
+ Total time: 0.8894 Seconds
+  Passed Repair.Tests.Domain.WorkOrderTests.CompleteRepair_FromPending_ThrowsException [44 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.AssignTechnician_SetsStatusToAssigned [1 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.CompleteRepair_FromInProgress_SetsStatusToCompleted [2 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.Cancel_SetsStatusAndReason [< 1 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.Constructor_SetsStatusToPending [< 1 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.StartRepair_FromAssigned_SetsStatusToInProgress [< 1 ms]
+  Passed Repair.Tests.Domain.WorkOrderTests.StartRepair_FromPending_ThrowsException [< 1 ms]
+
+Test Run Successful.
+Total tests: 7
+     Passed: 7
+ Total time: 0.9200 Seconds
+     1>Done Building Project "D:\Project\QuangHuongComputer\backend\ComputerCompany.sln" (VSTest target(s)).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.36

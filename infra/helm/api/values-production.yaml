@@ -1,0 +1,38 @@
+# Production environment values
+replicaCount: 3
+
+image:
+  tag: "main-latest"
+
+ingress:
+  hosts:
+    - host: api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-prod-tls
+      hosts:
+        - api.example.com
+
+env:
+  ASPNETCORE_ENVIRONMENT: Production
+  ConnectionStrings__DefaultConnection: "Host=postgres-prod;Database=computer_db;Username=postgres;Password=secure_password"
+  ConnectionStrings__RabbitMQ: "amqp://guest:guest@rabbitmq-prod:5672"
+  ConnectionStrings__Redis: "redis-prod:6379"
+  Jwt__Issuer: "QuangHuongComputer"
+  Jwt__Audience: "QuangHuongComputer"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
