@@ -160,9 +160,10 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            db.Products.Remove(product);
+            product.IsActive = false;
+            product.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Product deleted" });
+            return Results.Ok(new { Message = "Product deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Category
@@ -184,13 +185,17 @@ public static class CatalogEndpoints
             if (category == null)
                 return Results.NotFound(new { Error = "Category not found" });
 
-            var hasProducts = await db.Products.AnyAsync(p => p.CategoryId == id);
-            if (hasProducts)
-                return Results.BadRequest(new { Error = "Cannot delete category with existing products" });
+            category.IsActive = false;
+            category.UpdatedAt = DateTime.UtcNow;
+            
+            // High-performance cascading deactivation
+            await db.Products
+                .Where(p => p.CategoryId == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.IsActive, false)
+                                         .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
-            db.Categories.Remove(category);
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Category deleted" });
+            return Results.Ok(new { Message = "Category and associated products deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Brand
@@ -212,13 +217,17 @@ public static class CatalogEndpoints
             if (brand == null)
                 return Results.NotFound(new { Error = "Brand not found" });
 
-            var hasProducts = await db.Products.AnyAsync(p => p.BrandId == id);
-            if (hasProducts)
-                return Results.BadRequest(new { Error = "Cannot delete brand with existing products" });
+            brand.IsActive = false;
+            brand.UpdatedAt = DateTime.UtcNow;
+            
+            // High-performance cascading deactivation for brands
+            await db.Products
+                .Where(p => p.BrandId == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.IsActive, false)
+                                         .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
-            db.Brands.Remove(brand);
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Brand deleted" });
+            return Results.Ok(new { Message = "Brand and associated products deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 }

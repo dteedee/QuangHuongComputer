@@ -199,6 +199,8 @@ app.MapContentEndpoints();
 app.MapCommunicationEndpoints(); // Added Communication Endpoints
 app.MapHREndpoints();
 app.MapSystemConfigEndpoints();
+app.MapInventoryEndpoints();
+app.MapAccountingEndpoints();
 app.MapReportingEndpoints();
 
 app.MapControllers();

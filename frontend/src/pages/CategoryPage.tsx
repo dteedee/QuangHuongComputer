@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
 import { Monitor, Filter, ArrowDownWideNarrow } from 'lucide-react';
@@ -11,6 +11,25 @@ export const CategoryPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const location = useLocation();
+
+    // Mapping manual slugs from routes to category names in DB
+    const routeToCategory: Record<string, string> = {
+        'laptop': 'Laptop',
+        'pc-gaming': 'PC Gaming',
+        'workstation': 'Workstation',
+        'office': 'Office',
+        'components': 'Components',
+        'screens': 'Screens',
+        'gear': 'Gear',
+        'network': 'Network',
+        'camera': 'Camera',
+        'audio': 'Audio',
+        'accessories': 'Accessories'
+    };
+
+    const currentSlug = slug || location.pathname.split('/').pop() || '';
+    const categorySearchName = routeToCategory[currentSlug] || currentSlug;
 
     const categoryNames: Record<string, string> = {
         'laptop': 'Laptop - Máy tính xách tay',
@@ -18,17 +37,31 @@ export const CategoryPage = () => {
         'workstation': 'PC Workstation - Máy tính đồ họa',
         'office': 'Máy tính văn phòng',
         'components': 'Linh kiện máy tính',
-        'screens': 'Màn hình máy tính'
+        'screens': 'Màn hình máy tính',
+        'gear': 'Phím, Chuột - Gaming Gear',
+        'network': 'Thiết bị mạng',
+        'camera': 'Camera giám sát',
+        'audio': 'Loa, Mic, Webcam',
+        'accessories': 'Phụ kiện máy tính'
     };
 
-    const title = categoryNames[slug || ''] || 'Sản phẩm';
+    const title = categoryNames[currentSlug] || categorySearchName || 'Sản phẩm';
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const loadData = async () => {
             setIsLoading(true);
             try {
-                // In real implementation: await catalogApi.getProductsByCategory(categoryId);
-                const data = await catalogApi.getProducts();
+                // 1. Get all categories
+                const categories: any = await catalogApi.getCategories();
+                const matchedCat = (categories.value || categories).find(
+                    (c: any) => c.name.toLowerCase() === categorySearchName.toLowerCase()
+                );
+
+                // 2. Get products for this category
+                const data = await catalogApi.getProducts({
+                    categoryId: matchedCat?.id,
+                    pageSize: 40
+                });
                 setProducts(data.products);
             } catch (error) {
                 console.error(error);
@@ -36,8 +69,8 @@ export const CategoryPage = () => {
                 setIsLoading(false);
             }
         };
-        fetchProducts();
-    }, [slug]);
+        loadData();
+    }, [currentSlug, categorySearchName]);
 
     return (
         <div className="bg-gray-100 min-h-screen pb-10">

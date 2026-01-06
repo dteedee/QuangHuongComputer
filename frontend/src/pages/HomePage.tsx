@@ -33,9 +33,9 @@ export const HomePage = () => {
     ];
 
     const sideBanners = [
-        { title: 'Build PC Cực Chất', sub: 'Quà tặng tới 5 triệu', color: 'bg-amber-500' },
-        { title: 'Thu Cũ Đổi Mới', sub: 'Trợ giá lên đời 1 triệu', color: 'bg-blue-500' },
-        { title: 'Camera Giám Sát', sub: 'Chỉ từ 390.000đ', color: 'bg-emerald-500' },
+        { title: 'Build PC Cực Chất', sub: 'Quà tặng tới 5 triệu', color: 'bg-amber-500', link: '/pc-gaming' },
+        { title: 'Thu Cũ Đổi Mới', sub: 'Trợ giá lên đời 1 triệu', color: 'bg-blue-500', link: '/warranty' },
+        { title: 'Camera Giám Sát', sub: 'Chỉ từ 390.000đ', color: 'bg-emerald-500', link: '/category/camera' },
     ];
 
     if (isLoading) return (
@@ -91,7 +91,7 @@ export const HomePage = () => {
                                             <span className="bg-white/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Khuyến mãi Tết</span>
                                             <h2 className="text-5xl font-black mt-4 leading-tight">BUILD PC GAMING<br />GIẢM ĐẾN 20%</h2>
                                             <p className="text-lg opacity-80 mt-2 max-w-sm">Tặng kèm gói vệ sinh máy trọn đời.</p>
-                                            <button className="mt-8 bg-white text-[#D70018] px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all">Xem ngay</button>
+                                            <Link to="/pc-gaming" className="mt-8 inline-block bg-white text-[#D70018] px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all">Xem ngay</Link>
                                         </div>
                                         <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none">
                                             <Cpu size={300} />
@@ -104,7 +104,7 @@ export const HomePage = () => {
                                             <span className="bg-white/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Siêu phẩm đồ họa</span>
                                             <h2 className="text-5xl font-black mt-4 leading-tight">WORKSTATION<br />CHUYÊN NGHIỆP</h2>
                                             <p className="text-lg opacity-80 mt-2 max-w-sm">Tối ưu cho thiết kế 3D và Render.</p>
-                                            <button className="mt-8 bg-white text-blue-600 px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all">Cấu hình ngay</button>
+                                            <Link to="/workstation" className="mt-8 inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all">Cấu hình ngay</Link>
                                         </div>
                                         <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none">
                                             <Server size={300} />
@@ -117,10 +117,10 @@ export const HomePage = () => {
                         {/* Right promo banners */}
                         <div className="flex flex-col gap-4">
                             {sideBanners.map((banner, i) => (
-                                <div key={i} className={`flex-1 ${banner.color} rounded-lg p-6 text-white flex flex-col justify-center gap-1 group cursor-pointer hover:shadow-lg transition-all`}>
+                                <Link key={i} to={banner.link} className={`flex-1 ${banner.color} rounded-lg p-6 text-white flex flex-col justify-center gap-1 group cursor-pointer hover:shadow-lg transition-all`}>
                                     <h4 className="text-lg font-black leading-tight group-hover:scale-105 transition-transform origin-left">{banner.title}</h4>
                                     <p className="text-xs opacity-90 font-bold">{banner.sub}</p>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>
@@ -147,30 +147,74 @@ export const HomePage = () => {
                 </div>
             </div>
 
-            {/* 3. Category Section: Laptop */}
+            {/* 3. Category Section: PC Gaming */}
             <div className="max-w-[1400px] mx-auto px-4 mt-8">
                 <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#D70018] py-2.5 px-6 flex items-center justify-between">
-                    <h2 className="text-lg font-black text-gray-800 uppercase">LAPTOP - MÁY TÍNH XÁCH TAY</h2>
+                    <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">MÁY TÍNH CHƠI GAME - PC GAMING</h2>
                     <div className="hidden md:flex gap-6">
-                        {['Laptop Dell', 'Laptop Asus', 'Laptop MSI', 'Laptop HP'].map(cat => (
-                            <Link key={cat} to="#" className="text-xs font-bold text-gray-500 hover:text-[#D70018] transition-colors">{cat}</Link>
-                        ))}
-                        <Link to="/laptop" className="text-xs font-bold text-[#D70018] hover:underline flex items-center gap-1">
+                        <Link to="/pc-gaming" className="text-xs font-bold text-[#D70018] hover:underline flex items-center gap-1">
                             Xem tất cả <ChevronRight size={14} />
                         </Link>
                     </div>
                 </div>
                 <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        {products?.slice(5, 10).map((product) => (
+                        {products?.filter(p => p.name.includes('PC Gaming')).slice(0, 5).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* 4. Trust Banner */}
+            {/* 4. Category Section: Laptop */}
             <div className="max-w-[1400px] mx-auto px-4 mt-8">
+                <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#facc15] py-2.5 px-6 flex items-center justify-between">
+                    <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter border-b-2 border-[#facc15]">LAPTOP - MÁY TÍNH XÁCH TAY</h2>
+                    <div className="hidden md:flex gap-6">
+                        <Link to="/laptop" className="text-xs font-bold text-[#facc15] hover:underline flex items-center gap-1">
+                            Xem tất cả <ChevronRight size={14} />
+                        </Link>
+                    </div>
+                </div>
+                <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {products?.filter(p => p.name.includes('Laptop')).slice(0, 5).map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* 5. Category Section: Components & Screens */}
+            <div className="max-w-[1400px] mx-auto px-4 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-blue-600 py-2.5 px-6 flex items-center justify-between">
+                            <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">LINH KIỆN MÁY TÍNH</h2>
+                            <Link to="/components" className="text-xs font-bold text-blue-600 hover:underline">Tất cả</Link>
+                        </div>
+                        <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4 grid grid-cols-2 gap-4">
+                            {products?.filter(p => !p.name.includes('Laptop') && !p.name.includes('PC')).slice(0, 4).map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-emerald-600 py-2.5 px-6 flex items-center justify-between">
+                            <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">MÀN HÌNH MÁY TÍNH</h2>
+                            <Link to="/screens" className="text-xs font-bold text-emerald-600 hover:underline">Tất cả</Link>
+                        </div>
+                        <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4 grid grid-cols-2 gap-4">
+                            {products?.filter(p => p.name.includes('Màn hình')).slice(0, 4).map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 6. Trust Banner */}
+            <div className="max-w-[1400px] mx-auto px-4 mt-12 mb-12">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                         { icon: <ShieldCheck className="text-[#D70018]" />, label: 'Chế độ bảo hành', sub: 'Tận tâm, tin cậy' },
@@ -178,11 +222,11 @@ export const HomePage = () => {
                         { icon: <Wrench className="text-[#D70018]" />, label: 'Xây dựng PC', sub: 'Chuyên nghiệp' },
                         { icon: <Award className="text-[#D70018]" />, label: 'Chính hãng 100%', sub: 'Nguồn gốc rõ ràng' },
                     ].map((item, i) => (
-                        <div key={i} className="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-4 hover:shadow-md transition-all">
-                            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">{item.icon}</div>
+                        <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 flex items-center gap-4 hover:shadow-xl hover:shadow-red-500/5 transition-all group">
+                            <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0 group-hover:bg-[#D70018] group-hover:text-white transition-all transform group-hover:rotate-6">{item.icon}</div>
                             <div>
-                                <h4 className="text-sm font-black text-gray-800 uppercase leading-none">{item.label}</h4>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">{item.sub}</p>
+                                <h4 className="text-xs font-black text-gray-800 uppercase leading-none tracking-tighter">{item.label}</h4>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1.5">{item.sub}</p>
                             </div>
                         </div>
                     ))}

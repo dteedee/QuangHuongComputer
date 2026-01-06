@@ -7,6 +7,7 @@ namespace Identity.Infrastructure;
 public class ApplicationUser : IdentityUser
 {
     public string FullName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
 }
 
 public class IdentityDbContext : IdentityDbContext<ApplicationUser>
@@ -18,6 +19,6 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        // Custom configurations if needed
+        builder.Entity<ApplicationUser>().HasQueryFilter(u => u.IsActive);
     }
 }

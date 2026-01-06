@@ -17,6 +17,11 @@ public class InventoryDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Soft delete filters
+        modelBuilder.Entity<InventoryItem>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<Supplier>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<PurchaseOrder>().HasQueryFilter(e => e.IsActive);
+
         modelBuilder.Entity<InventoryItem>(entity =>
         {
             entity.HasKey(e => e.Id);

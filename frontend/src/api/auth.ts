@@ -40,4 +40,29 @@ export const authApi = {
         const response = await client.get<User[]>('/auth/users');
         return response.data;
     },
+
+    getUser: async (id: string) => {
+        const response = await client.get<User>(`/auth/users/${id}`);
+        return response.data;
+    },
+
+    updateUser: async (id: string, data: { email: string; fullName: string }) => {
+        const response = await client.put<{ message: string; user: User }>(`/auth/users/${id}`, data);
+        return response.data;
+    },
+
+    deleteUser: async (id: string) => {
+        const response = await client.delete<{ message: string }>(`/auth/users/${id}`);
+        return response.data;
+    },
+
+    updateUserRoles: async (id: string, roles: string[]) => {
+        const response = await client.post<{ message: string; roles: string[] }>(`/auth/users/${id}/roles`, roles);
+        return response.data;
+    },
+
+    getRoles: async () => {
+        const response = await client.get<string[]>('/auth/roles');
+        return response.data;
+    },
 };

@@ -41,7 +41,7 @@ public static class IdentityEndpoints
         group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, IConfiguration configuration) =>
         {
             var user = await userManager.FindByEmailAsync(model.Email);
-            if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
+            if (user != null && user.IsActive && await userManager.CheckPasswordAsync(user, model.Password))
             {
                 var roles = await userManager.GetRolesAsync(user);
                 var token = GenerateJwtToken(user, roles, configuration);
@@ -133,10 +133,46 @@ public static class IdentityEndpoints
             }
         });
 
-        group.MapGet("/roles", async (RoleManager<IdentityRole> roleManager) =>
+        group.MapGet("/users/{id}", async (string id, UserManager<ApplicationUser> userManager) =>
         {
-            var roles = await roleManager.Roles.Select(r => r.Name).ToListAsync();
-            return Results.Ok(roles);
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+            
+            var roles = await userManager.GetRolesAsync(user);
+            return Results.Ok(new
+            {
+                user.Id,
+                user.Email,
+                user.FullName,
+                Roles = roles
+            });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+
+        group.MapPut("/users/{id}", async (string id, UpdateUserDto model, UserManager<ApplicationUser> userManager) =>
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+
+            user.FullName = model.FullName;
+            user.Email = model.Email;
+            user.UserName = model.Email;
+
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            return Results.Ok(new { Message = "User updated successfully", User = user });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapDelete("/users/{id}", async (string id, UserManager<ApplicationUser> userManager) =>
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+
+            user.IsActive = false;
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            return Results.Ok(new { Message = "User deactivated successfully" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         group.MapPost("/users/{id}/roles", async (string id, string[] roles, UserManager<ApplicationUser> userManager) =>
@@ -152,6 +188,23 @@ public static class IdentityEndpoints
             if (!result.Succeeded) return Results.BadRequest(result.Errors);
 
             return Results.Ok(new { Message = "Roles updated successfully", Roles = roles });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapPost("/roles", async (string roleName, RoleManager<IdentityRole> roleManager) =>
+        {
+            if (await roleManager.RoleExistsAsync(roleName)) return Results.BadRequest("Role already exists");
+            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+            return Results.Ok(new { Message = "Role created" });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapDelete("/roles/{roleName}", async (string roleName, RoleManager<IdentityRole> roleManager) =>
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null) return Results.NotFound("Role not found");
+            var result = await roleManager.DeleteAsync(role);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+            return Results.Ok(new { Message = "Role deleted" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 
@@ -187,4 +240,5 @@ public static class IdentityEndpoints
 
 public record RegisterDto(string Email, string Password, string FullName);
 public record LoginDto(string Email, string Password);
+public record UpdateUserDto(string Email, string FullName);
 public record GoogleLoginDto(string? IdToken);

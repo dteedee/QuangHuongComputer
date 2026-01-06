@@ -8,6 +8,7 @@ public abstract class Entity<TId> : IHasDomainEvents
     private readonly List<IDomainEvent> _domainEvents = new();
     
     public TId Id { get; protected set; } = default!;
+    public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public string? CreatedBy { get; set; }

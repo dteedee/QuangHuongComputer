@@ -16,6 +16,10 @@ public class SalesDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Soft delete filters
+        modelBuilder.Entity<Order>().HasQueryFilter(o => o.IsActive);
+        modelBuilder.Entity<Cart>().HasQueryFilter(c => c.IsActive);
+
         // Cart configuration
         modelBuilder.Entity<Cart>(entity =>
         {

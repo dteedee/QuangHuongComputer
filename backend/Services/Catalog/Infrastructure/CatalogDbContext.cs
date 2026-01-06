@@ -18,7 +18,12 @@ public class CatalogDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CatalogDbContext).Assembly);
         
-        // Basic configurations if not using separate files yet
+        // Soft delete filters
+        modelBuilder.Entity<Product>().HasQueryFilter(p => p.IsActive);
+        modelBuilder.Entity<Category>().HasQueryFilter(c => c.IsActive);
+        modelBuilder.Entity<Brand>().HasQueryFilter(b => b.IsActive);
+
+        // Basic configurations
         modelBuilder.Entity<Product>().Property(p => p.Price).HasPrecision(18, 2);
     }
 }

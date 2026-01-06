@@ -1,149 +1,177 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import {
     Receipt, Landmark, Landmark as Bank,
-    FileText, ArrowUpRight, ArrowDownRight, Search, Filter
+    FileText, ArrowUpRight, ArrowDownRight, Search, Filter,
+    CheckCircle2, AlertCircle, TrendingUp, X, Check, Loader2
 } from 'lucide-react';
-import client from '../../../api/client';
+import { accountingApi, OrganizationAccount } from '../../../api/accounting';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 export const AccountingPortal = () => {
-    const [accounts, setAccounts] = useState<any[]>([]);
+    const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const fetchAccounts = async () => {
-            try {
-                const response = await client.get('/reports/ar-aging');
-                setAccounts(response.data);
-            } catch (error) {
-                console.error('Failed to fetch accounts', error);
-            }
+    const { data: accounts = [], isLoading } = useQuery({
+        queryKey: ['accounting-accounts'],
+        queryFn: accountingApi.getAccounts,
+    });
+
+    const { data: stats } = useQuery({
+        queryKey: ['accounting-stats'],
+        queryFn: accountingApi.getStats,
+    });
+
+    const createAccountMutation = useMutation({
+        mutationFn: (data: any) => accountingApi.createAccount(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['accounting-accounts'] });
+            toast.success('Tạo tài khoản tổ chức thành công!');
+            setIsAccountModalOpen(false);
+        }
+    });
+
+    const handleCreateAccount = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const data = {
+            organizationName: formData.get('name'),
+            contactEmail: formData.get('email'),
+            creditLimit: Number(formData.get('creditLimit'))
         };
-        fetchAccounts();
-    }, []);
+        createAccountMutation.mutate(data);
+    };
 
     return (
-        <div className="space-y-8 pb-12">
-            <div className="flex justify-between items-end">
+        <div className="space-y-10 pb-20 animate-fade-in">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Financial Operations</h1>
-                    <p className="text-slate-400 mt-1">Manage corporate accounts, invoicing, and receivables.</p>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                        Quản lý <span className="text-[#D70018]">Kế toán</span>
+                    </h1>
+                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                        Vận hành tài chính, quản lý hóa đơn và công nợ tổ chức
+                    </p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-all">
-                        <Bank size={20} />
-                        Banking
-                    </button>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/20">
-                        <Receipt size={20} />
-                        New Invoice
+                    <button
+                        onClick={() => setIsAccountModalOpen(true)}
+                        className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 group"
+                    >
+                        <Landmark size={18} />
+                        Thêm đối tác mới
                     </button>
                 </div>
             </div>
 
             {/* Account Balances */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl group">
-                    <p className="text-slate-500 text-sm font-semibold mb-2">Total Receivables</p>
-                    <h3 className="text-4xl font-bold text-white flex items-baseline gap-2">
-                        ${accounts.reduce((sum, a) => sum + a.balance, 0).toLocaleString()}
-                        <ArrowDownRight className="text-rose-400" size={24} />
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group bg-gray-900 border-none shadow-2xl">
+                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Tổng nợ phải thu (AR)</p>
+                    <h3 className="text-4xl font-black text-white flex items-baseline gap-3 tracking-tighter">
+                        ₫{stats?.totalReceivables?.toLocaleString() || '0'}
+                        <ArrowDownRight className="text-rose-500" size={24} />
                     </h3>
-                    <div className="mt-4 flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-rose-500 w-[65%]" />
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-bold">65% Overdue</span>
-                    </div>
-                </div>
+                </motion.div>
 
-                <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl group">
-                    <p className="text-slate-500 text-sm font-semibold mb-2">Available Credit</p>
-                    <h3 className="text-4xl font-bold text-white flex items-baseline gap-2">
-                        ${accounts.reduce((sum, a) => sum + a.creditLimit, 0).toLocaleString()}
-                        <ArrowUpRight className="text-emerald-400" size={24} />
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group border-none shadow-xl shadow-gray-200/50">
+                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Hóa đơn trong tháng</p>
+                    <h3 className="text-4xl font-black text-gray-900 flex items-baseline gap-3 tracking-tighter">
+                        {stats?.totalInvoices || '0'}
+                        <FileText className="text-blue-500" size={24} />
                     </h3>
-                    <p className="text-slate-500 text-xs mt-4">Extended to {accounts.length} organization accounts</p>
-                </div>
+                </motion.div>
 
-                <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl group">
-                    <p className="text-slate-500 text-sm font-semibold mb-2">Cash Flow (30d)</p>
-                    <h3 className="text-4xl font-bold text-emerald-400">
-                        +$42,150
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group bg-emerald-50 border-none shadow-xl shadow-emerald-700/5">
+                    <p className="text-emerald-600/60 text-[10px] font-black uppercase tracking-widest mb-3 italic">Doanh thu hôm nay</p>
+                    <h3 className="text-4xl font-black text-emerald-700 tracking-tighter">
+                        ₫{stats?.dailyRevenue?.toLocaleString() || '0'}
                     </h3>
-                    <p className="text-slate-500 text-xs mt-4">Projected based on current aging</p>
-                </div>
+                </motion.div>
             </div>
 
             {/* Corporate Accounts Table */}
-            <div className="bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden">
-                <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h3 className="text-xl font-bold text-white">Organization Accounts (AR)</h3>
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search organization..."
-                                className="pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                            />
-                        </div>
-                        <button className="p-2 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition-colors">
-                            <Filter size={18} />
-                        </button>
-                    </div>
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="premium-card overflow-hidden">
+                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-white/50 backdrop-blur-sm">
+                    <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Tài khoản Tổ chức & Doanh nghiệp</h3>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-slate-800/30 text-slate-400 text-xs uppercase tracking-wider">
+                        <thead className="bg-gray-50/80 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                             <tr>
-                                <th className="px-6 py-4 font-semibold">Organization</th>
-                                <th className="px-6 py-4 font-semibold">Contact</th>
-                                <th className="px-6 py-4 font-semibold text-right">Credit Limit</th>
-                                <th className="px-6 py-4 font-semibold text-right">Current Balance</th>
-                                <th className="px-6 py-4 font-semibold text-right">Last Action</th>
+                                <th className="px-8 py-5">Đối tác</th>
+                                <th className="px-8 py-5 text-right">Tín dụng</th>
+                                <th className="px-8 py-5 text-right">Số dư nợ</th>
+                                <th className="px-8 py-5 text-right">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {accounts.map((account) => (
-                                <tr key={account.id} className="hover:bg-white/5 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-slate-800 rounded-xl text-blue-400">
+                        <tbody className="divide-y divide-gray-50">
+                            {isLoading ? (
+                                <tr><td colSpan={4} className="px-8 py-20 text-center"><Loader2 className="mx-auto animate-spin text-[#D70018]" /></td></tr>
+                            ) : accounts.length === 0 ? (
+                                <tr><td colSpan={4} className="px-8 py-20 text-center text-gray-300 font-black uppercase text-[10px]">Không có dữ liệu</td></tr>
+                            ) : accounts.map((account: OrganizationAccount) => (
+                                <tr key={account.id} className="hover:bg-gray-50/50 transition-all group cursor-pointer">
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 text-blue-500">
                                                 <Landmark size={20} />
                                             </div>
-                                            <span className="font-bold text-white text-sm">{account.organizationName}</span>
+                                            <div>
+                                                <span className="font-black text-gray-800 text-sm uppercase italic tracking-tight">{account.organizationName}</span>
+                                                <p className="text-[10px] text-gray-400 font-bold lowercase">{account.contactEmail}</p>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-sm font-medium text-slate-300">{account.contactEmail}</p>
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-tighter">Verified Account</p>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="text-sm font-bold text-slate-400">${account.creditLimit.toLocaleString()}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className={`text-sm font-bold ${account.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                            ${account.balance.toLocaleString()}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-slate-400 hover:text-white transition-colors">
-                                            <FileText size={18} />
-                                        </button>
+                                    <td className="px-8 py-6 text-right font-black text-gray-400 tracking-tighter">₫{account.creditLimit.toLocaleString()}</td>
+                                    <td className="px-8 py-6 text-right font-black text-rose-600 text-base tracking-tighter">₫{account.balance.toLocaleString()}</td>
+                                    <td className="px-8 py-6 text-right">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-[#D70018] shadow-sm"><FileText size={18} /></button>
+                                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-600 shadow-sm"><Receipt size={18} /></button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
-                            {accounts.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-600 italic font-medium">
-                                        No organization accounts configured.
-                                    </td>
-                                </tr>
-                            )}
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </motion.div>
+
+            {/* Create Account Modal */}
+            <AnimatePresence>
+                {isAccountModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAccountModalOpen(false)} className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8">
+                            <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6 tracking-tighter">Thêm <span className="text-[#D70018]">Đối tác Công nợ</span></h2>
+                            <form onSubmit={handleCreateAccount} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tên tổ chức</label>
+                                    <input name="name" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email liên hệ</label>
+                                    <input name="email" type="email" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hạn mức tín dụng (₫)</label>
+                                    <input name="creditLimit" type="number" required defaultValue={100000000} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                </div>
+                                <div className="flex gap-4 pt-4">
+                                    <button type="button" onClick={() => setIsAccountModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-400 font-black uppercase text-[10px] rounded-2xl">Hủy</button>
+                                    <button type="submit" disabled={createAccountMutation.isPending} className="flex-[2] py-4 bg-[#D70018] text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-red-500/20">
+                                        {createAccountMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                                        Lưu đối tác
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

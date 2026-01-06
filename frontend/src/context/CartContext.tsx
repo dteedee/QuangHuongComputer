@@ -1,5 +1,6 @@
 ﻿import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { Product } from '../api/catalog';
+import toast from 'react-hot-toast';
 
 import { salesApi } from '../api/sales';
 
@@ -35,6 +36,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             }
             return [...prev, { ...product, quantity: 1 }];
         });
+        toast.success(`Đã thêm ${product.name} vào giỏ hàng`, {
+            style: { borderRadius: '15px' }
+        });
     };
 
     const removeFromCart = (productId: string) => {
@@ -66,8 +70,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             unitPrice: item.price,
             quantity: item.quantity
         }));
-        await salesApi.checkout({ items: checkoutItems });
-        clearCart();
+        try {
+            await salesApi.checkout({ items: checkoutItems });
+            clearCart();
+            toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.', {
+                duration: 5000,
+                icon: '🎉',
+                style: { borderRadius: '15px', fontWeight: 'bold' }
+            });
+        } catch (error) {
+            toast.error('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
+        }
     };
 
     return (

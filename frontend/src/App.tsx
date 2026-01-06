@@ -34,12 +34,14 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { RequireAuth } from './components/RequireAuth';
+import { Toaster } from 'react-hot-toast';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster position="top-right" reverseOrder={false} />
       <BrowserRouter>
         <AuthProvider>
           <CartProvider>

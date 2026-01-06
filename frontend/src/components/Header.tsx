@@ -153,21 +153,21 @@ export const Header = ({ onCartClick }: HeaderProps) => {
             <div className="bg-white border-b border-gray-100 hidden lg:block">
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
                     <div className="flex items-center gap-8 py-2.5">
-                        <button className="bg-[#D70018] text-white flex items-center gap-3 px-6 py-2 rounded-t-xl font-bold text-sm uppercase">
+                        <Link to="/products" className="bg-[#D70018] text-white flex items-center gap-3 px-6 py-2 rounded-t-xl font-bold text-sm uppercase">
                             <Menu size={18} /> Danh mục sản phẩm
-                        </button>
+                        </Link>
 
                         <div className="flex items-center gap-6">
                             {[
-                                { name: 'PC Gaming', icon: <Wrench size={14} /> },
-                                { name: 'Máy tính đồ họa', icon: <Monitor size={14} /> },
-                                { name: 'Laptop', icon: <Laptop size={14} /> },
-                                { name: 'Linh kiện máy tính', icon: <Cpu size={14} /> },
-                                { name: 'Màn hình máy tính', icon: <Monitor size={14} /> },
+                                { name: 'PC Gaming', icon: <Wrench size={14} />, path: '/pc-gaming' },
+                                { name: 'Máy tính đồ họa', icon: <Monitor size={14} />, path: '/workstation' },
+                                { name: 'Laptop', icon: <Laptop size={14} />, path: '/laptop' },
+                                { name: 'Linh kiện máy tính', icon: <Cpu size={14} />, path: '/components' },
+                                { name: 'Màn hình máy tính', icon: <Monitor size={14} />, path: '/screens' },
                             ].map((item, idx) => (
                                 <Link
                                     key={idx}
-                                    to="#"
+                                    to={item.path}
                                     className="flex items-center gap-2 text-[12px] font-bold text-gray-600 hover:text-[#D70018] transition-colors"
                                 >
                                     {item.icon} {item.name}
