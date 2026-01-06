@@ -1,22 +1,25 @@
-import { Navigate, Outlet } from 'react-router-dom';
+﻿import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface RequireAuthProps {
     allowedRoles?: string[];
 }
 
-export const RequireAuth = ({ allowedRoles: _allowedRoles }: RequireAuthProps) => {
-    const { isAuthenticated } = useAuth();
+export const RequireAuth = ({ allowedRoles }: RequireAuthProps) => {
+    const { isAuthenticated, user } = useAuth();
+    const location = useLocation();
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // For now, we don't have role information in the user object
-    // This would need to be added to the AuthContext and JWT claims
-    // if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
-    //   return <Navigate to="/" replace />;
-    // }
+    if (allowedRoles && user) {
+        const hasRole = user.roles.some(role => allowedRoles.includes(role));
+        if (!hasRole) {
+            return <Navigate to="/" replace />;
+        }
+    }
 
     return <Outlet />;
 };
+

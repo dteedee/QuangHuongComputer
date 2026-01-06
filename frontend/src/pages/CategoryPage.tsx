@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
@@ -131,3 +131,4 @@ export const CategoryPage = () => {
         </div>
     );
 };
+

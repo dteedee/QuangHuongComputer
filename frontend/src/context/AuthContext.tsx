@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+﻿import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import client from '../api/client';
 
 interface User {
@@ -59,3 +59,4 @@ export const useAuth = () => {
     if (!context) throw new Error('useAuth must be used within an AuthProvider');
     return context;
 };
+

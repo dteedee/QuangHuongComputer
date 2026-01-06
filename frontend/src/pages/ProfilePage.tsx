@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from 'react';
 import { salesApi } from '../api/sales';
 import type { Order } from '../api/sales';
@@ -152,3 +152,4 @@ export const ProfilePage = () => {
         </div>
     );
 };
+

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { catalogApi } from '../../api/catalog';
@@ -107,3 +107,4 @@ export const AdminProductsPage = () => {
         </div>
     );
 };
+

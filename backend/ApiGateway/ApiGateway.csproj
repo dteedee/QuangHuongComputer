@@ -30,6 +30,9 @@
     <ProjectReference Include="..\Services\Content\Content.csproj" />
     <ProjectReference Include="..\Services\Ai\Ai.csproj" />
     <ProjectReference Include="..\Services\Communication\Communication.csproj" />
+    <ProjectReference Include="..\Services\HR\HR.csproj" />
+    <ProjectReference Include="..\Services\SystemConfig\SystemConfig.csproj" />
+    <ProjectReference Include="..\Services\Reporting\Reporting.csproj" />
   </ItemGroup>
 
 </Project>

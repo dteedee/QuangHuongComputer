@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+﻿import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { Product } from '../api/catalog';
 
 import { salesApi } from '../api/sales';
@@ -82,3 +82,4 @@ export const useCart = () => {
     if (!context) throw new Error('useCart must be used within a CartProvider');
     return context;
 };
+

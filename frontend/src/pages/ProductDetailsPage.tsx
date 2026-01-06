@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
@@ -208,3 +208,4 @@ export const ProductDetailsPage = () => {
         </div>
     );
 };
+

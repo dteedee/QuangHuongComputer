@@ -1,7 +1,13 @@
+﻿
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { Search, ShoppingCart, User, Menu, Phone, Wrench, FileText, Monitor, ChevronDown } from 'lucide-react';
+import {
+    Search, ShoppingCart, User, Menu, Phone,
+    Wrench, FileText, Monitor, ChevronDown,
+    LogOut, Settings, Laptop, Cpu, Headset, Zap,
+    Shield, Briefcase, Info, Mail
+} from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -13,6 +19,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
     const { itemCount } = useCart();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -25,25 +32,43 @@ export const Header = ({ onCartClick }: HeaderProps) => {
     };
 
     return (
-        <div className="flex flex-col w-full z-50 sticky top-0 shadow-md">
-            {/* 1. Top Bar (Red Background) */}
-            <div className="bg-[#D70018] text-white text-xs py-1.5 hidden md:block">
-                <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="flex flex-col w-full z-50 sticky top-0 bg-white shadow-sm">
+            {/* 1. Tầng 1: Thanh Top Bar (Màu đỏ) */}
+            <div className="bg-[#D70018] text-white text-[11px] font-medium py-1.5 hidden md:block">
+                <div className="max-w-[1400px] mx-auto px-4 flex justify-between items-center">
                     <div className="flex gap-4">
-                        <Link to="#" className="hover:opacity-80">Khách hàng cá nhân</Link>
-                        <span className="opacity-50">|</span>
-                        <Link to="#" className="hover:opacity-80">Khách hàng doanh nghiệp, Game Net</Link>
+                        <Link to="#" className="bg-white/20 px-2 py-0.5 rounded hover:bg-white/30 transition-colors uppercase">Khách hàng cá nhân</Link>
+                        <Link to="#" className="hover:text-white/80 transition-colors uppercase">Khách hàng doanh nghiệp, Game Net</Link>
                     </div>
-                    <div className="flex gap-4">
-                        <Link to="#" className="hover:opacity-80 flex items-center gap-1"><FileText size={12} /> Tin khuyến mãi</Link>
-                        <Link to="#" className="hover:opacity-80 flex items-center gap-1"><Monitor size={12} /> Tin tức công nghệ</Link>
-                        <Link to="#" className="hover:opacity-80 flex items-center gap-1"><User size={12} /> Tuyển dụng</Link>
+                    <div className="flex gap-6 items-center">
+                        <Link to="#" className="hover:underline flex items-center gap-1.5"><Zap size={12} /> Tin khuyến mãi</Link>
+                        <Link to="#" className="hover:underline flex items-center gap-1.5"><Monitor size={12} /> Tin công nghệ</Link>
+                        <Link to="#" className="hover:underline flex items-center gap-1.5"><Briefcase size={12} /> Tuyển dụng</Link>
+
+                        <div className="h-4 w-[1px] bg-white/30" />
+
                         {isAuthenticated ? (
-                            <button onClick={handleLogout} className="font-bold hover:underline">Đăng xuất ({user?.fullName})</button>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
+                                    className="flex items-center gap-1 hover:underline"
+                                >
+                                    Chào, {user?.fullName.split(' ')[0]} <ChevronDown size={12} />
+                                </button>
+                                {showUserMenu && (
+                                    <div className="absolute top-full right-0 mt-2 w-48 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 p-2 z-[60]">
+                                        <Link to="/backoffice" className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 rounded-lg transition-colors">
+                                            <Settings size={14} /> Quản trị
+                                        </Link>
+                                        <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-xs hover:bg-rose-50 rounded-lg transition-colors text-rose-600">
+                                            <LogOut size={14} /> Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         ) : (
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 <Link to="/login" className="hover:underline">Đăng nhập</Link>
-                                <span>/</span>
                                 <Link to="/register" className="hover:underline">Đăng ký</Link>
                             </div>
                         )}
@@ -51,114 +76,108 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                 </div>
             </div>
 
-            {/* 2. Main Header (White Background) */}
-            <div className="bg-white py-3">
-                <div className="container mx-auto px-4 flex items-center gap-4 lg:gap-8 justify-between">
-                    {/* Logo */}
-                    <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-                        <div className="w-10 h-10 bg-[#D70018] rounded flex items-center justify-center text-white font-bold text-xl skew-x-[-10deg]">
-                            Q
+            {/* 2. Tầng 2: Main Header Body (Màu trắng) */}
+            <div className="bg-white py-4 border-b border-gray-100">
+                <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-4 lg:gap-8 justify-between">
+                    {/* Logo Section */}
+                    <Link to="/" className="flex-shrink-0 flex items-center gap-3">
+                        <div className="relative">
+                            <div className="w-12 h-12 bg-[#D70018] rounded-lg flex items-center justify-center text-white font-black text-2xl transform shadow-lg shadow-red-500/20">
+                                QH
+                            </div>
                         </div>
-                        <div className="flex flex-col leading-none">
-                            <span className="text-xl font-extrabold text-[#D70018] uppercase tracking-tighter">QUANG HUONG</span>
-                            <span className="text-xs font-bold text-gray-600 tracking-widest uppercase">COMPUTER</span>
+                        <div className="flex flex-col">
+                            <span className="text-xl font-black text-[#D70018] uppercase tracking-tighter leading-none">QUANG HƯỞNG</span>
+                            <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">COMPUTER</span>
                         </div>
                     </Link>
 
-                    {/* Category Button & Search */}
-                    <div className="flex-1 max-w-3xl flex items-center gap-4">
-                        {/* Category Button */}
-                        <button className="hidden lg:flex items-center gap-2 bg-[#D70018] text-white px-3 py-2.5 rounded hover:bg-red-700 transition text-sm font-bold flex-shrink-0">
-                            <Menu size={20} />
-                            <span>Danh mục sản phẩm</span>
-                        </button>
-
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="flex-1 relative hidden md:block">
-                            <div className="relative flex items-center w-full">
-                                <div className="absolute left-0 pl-3 pointer-events-none flex items-center">
-                                    <button className="text-gray-500 bg-gray-100 p-1 rounded-md text-xs flex items-center gap-1 pr-2">
-                                        Tất cả danh mục <ChevronDown size={10} />
-                                    </button>
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Nhập từ khóa tìm kiếm ..."
-                                    className="w-full pl-36 pr-12 py-2.5 bg-gray-100 border-none rounded-r-none rounded-l-md text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-300 text-sm"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                                <button type="submit" className="bg-[#D70018] text-white px-4 py-2.5 rounded-r-md hover:bg-red-700 transition absolute right-0 top-0 h-full flex items-center justify-center">
-                                    <Search size={18} />
-                                </button>
+                    {/* Search Bar */}
+                    <div className="flex-1 max-w-2xl relative">
+                        <form onSubmit={handleSearch} className="flex h-11">
+                            <div className="relative flex-shrink-0 bg-gray-100 px-4 flex items-center gap-1 rounded-l-xl border-r border-gray-200 cursor-pointer text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors">
+                                Tất cả danh mục <ChevronDown size={14} />
                             </div>
+                            <input
+                                type="text"
+                                placeholder="Nhập từ khoá tìm kiếm..."
+                                className="flex-1 px-4 bg-gray-100 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#D70018]/20 transition-all border-y border-gray-100"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <button type="submit" className="bg-[#D70018] text-white px-5 rounded-r-xl hover:bg-[#b50014] transition-all">
+                                <Search size={20} />
+                            </button>
                         </form>
                     </div>
 
-                    {/* Right Actions */}
+                    {/* Quick Actions */}
                     <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
-                        {/* Hotline */}
-                        <a href="tel:18006321" className="hidden xl:flex items-center gap-2 group">
-                            <div className="w-10 h-10 rounded-full border border-[#D70018] flex items-center justify-center text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition">
-                                <Phone size={20} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold text-[#D70018]">Hotline</span>
-                                <span className="text-sm font-bold text-gray-800">1800.6321</span>
-                            </div>
-                        </a>
+                        {/* Config PC */}
+                        <button className="hidden xl:flex flex-col items-center gap-1 bg-[#D70018] text-white px-4 py-1.5 rounded-xl hover:bg-[#b50014] transition-all shadow-md active:scale-95">
+                            <Settings size={18} />
+                            <span className="text-[10px] font-bold uppercase leading-none">Xây dựng PC</span>
+                        </button>
 
-                        {/* Build PC */}
-                        <Link to="/build-pc" className="hidden lg:flex items-center gap-2 group">
-                            <div className="w-10 h-10 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 group-hover:border-[#D70018] group-hover:text-[#D70018] transition">
-                                <Wrench size={20} />
+                        {/* Hotline */}
+                        <div className="hidden lg:flex items-center gap-2 group cursor-pointer">
+                            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all">
+                                <Phone size={18} />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-xs font-medium text-gray-500">Xây dựng</span>
-                                <span className="text-sm font-bold text-gray-800">Cấu hình PC</span>
+                                <span className="text-[10px] font-bold text-gray-400 leading-none">Hotline</span>
+                                <span className="text-sm font-black text-gray-800">1800.6321</span>
                             </div>
-                        </Link>
+                        </div>
 
                         {/* Cart */}
-                        <button onClick={onCartClick} className="flex items-center gap-2 group p-1.5 rounded-full bg-[#D70018] text-white px-3 hover:bg-red-700 transition">
+                        <button
+                            onClick={onCartClick}
+                            className="flex items-center gap-3 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all relative border border-red-200"
+                        >
                             <div className="relative">
-                                <ShoppingCart size={20} />
-                                <span className="absolute -top-2 -right-2 bg-yellow-400 text-red-600 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white">
-                                    {itemCount}
-                                </span>
+                                <ShoppingCart size={22} className="text-[#D70018]" />
+                                {itemCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-[#D70018] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white">
+                                        {itemCount}
+                                    </span>
+                                )}
                             </div>
-                            <span className="text-xs font-bold hidden sm:block">Giỏ hàng</span>
+                            <span className="text-sm font-bold text-[#D70018] hidden sm:block">Giỏ hàng</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Search (Row 3) */}
-            <div className="md:hidden bg-white p-2 border-b border-gray-200">
-                <form onSubmit={handleSearch} className="relative flex w-full">
-                    <input
-                        type="text"
-                        placeholder="Bạn cần tìm gì?"
-                        className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#D70018]"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button type="submit" className="absolute right-0 top-0 h-full px-3 text-[#D70018]">
-                        <Search size={18} />
-                    </button>
-                </form>
-            </div>
+            {/* 3. Tầng 3: Sub Navigation / Category Menu */}
+            <div className="bg-white border-b border-gray-100 hidden lg:block">
+                <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
+                    <div className="flex items-center gap-8 py-2.5">
+                        <button className="bg-[#D70018] text-white flex items-center gap-3 px-6 py-2 rounded-t-xl font-bold text-sm uppercase">
+                            <Menu size={18} /> Danh mục sản phẩm
+                        </button>
 
-            {/* Navigation Bar (Desktop) */}
-            <div className="bg-white border-t border-gray-200 hidden lg:block">
-                <div className="container mx-auto px-4">
-                    <div className="flex items-center gap-6 text-sm font-medium text-gray-700 py-2">
-                        <Link to="/laptop" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Monitor size={14} /> Laptop</Link>
-                        <Link to="/pc-gaming" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Wrench size={14} /> PC Gaming</Link>
-                        <Link to="/workstation" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Monitor size={14} /> Workstation</Link>
-                        <Link to="/office" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Monitor size={14} /> Văn phòng</Link>
-                        <Link to="/components" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Wrench size={14} /> Linh kiện</Link>
-                        <Link to="/screens" className="hover:text-[#D70018] flex items-center gap-2 uppercase font-bold text-xs"><Monitor size={14} /> Màn hình</Link>
+                        <div className="flex items-center gap-6">
+                            {[
+                                { name: 'PC Gaming', icon: <Wrench size={14} /> },
+                                { name: 'Máy tính đồ họa', icon: <Monitor size={14} /> },
+                                { name: 'Laptop', icon: <Laptop size={14} /> },
+                                { name: 'Linh kiện máy tính', icon: <Cpu size={14} /> },
+                                { name: 'Màn hình máy tính', icon: <Monitor size={14} /> },
+                            ].map((item, idx) => (
+                                <Link
+                                    key={idx}
+                                    to="#"
+                                    className="flex items-center gap-2 text-[12px] font-bold text-gray-600 hover:text-[#D70018] transition-colors"
+                                >
+                                    {item.icon} {item.name}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Link to="#" className="text-xs font-bold text-[#D70018] animate-pulse">SIÊU SELL TỔNG KẾT NĂM</Link>
                     </div>
                 </div>
             </div>

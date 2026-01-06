@@ -1,4 +1,4 @@
-
+﻿
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PolicyPage } from './pages/PolicyPage';
@@ -12,17 +12,28 @@ import { WarrantyPage } from './pages/WarrantyPage';
 import { ChatSupport } from './components/ChatSupport';
 import { RootLayout } from './layouts/RootLayout';
 import { HomePage } from './pages/HomePage';
-import { AdminLayout } from './layouts/AdminLayout';
-import { AdminDashboard } from './pages/admin/DashboardPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { CategoryPage } from './pages/CategoryPage';
+import { BackofficeLayout } from './layouts/BackofficeLayout';
+import { CommonDashboard } from './pages/backoffice/CommonDashboard';
+import { SalePortal } from './pages/backoffice/sale/SalePortal';
+import { TechPortal } from './pages/backoffice/tech/TechPortal';
+import { AccountingPortal } from './pages/backoffice/accountant/AccountingPortal';
+import { InventoryPortal } from './pages/backoffice/inventory/InventoryPortal';
+import { HRPortal } from './pages/backoffice/hr/HRPortal';
+import { ManagerPortal } from './pages/backoffice/manager/ManagerPortal';
+import { AdminPortal } from './pages/backoffice/admin/AdminPortal';
+import { WarrantyPortal } from './pages/backoffice/WarrantyPortal';
+import { CMSPortal } from './pages/backoffice/CMSPortal';
+import { ReportsPortal } from './pages/backoffice/ReportsPortal';
+import { ConfigPortal } from './pages/backoffice/ConfigPortal';
 import { AdminProductsPage } from './pages/admin/ProductsPage';
 import { AdminOrdersPage } from './pages/admin/OrdersPage';
 import { AdminUsersPage } from './pages/admin/UsersPage';
-import { RequireAuth } from './components/RequireAuth';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
-import { ProfilePage } from './pages/ProfilePage';
-import { CategoryPage } from './pages/CategoryPage';
+import { RequireAuth } from './components/RequireAuth';
 
 const queryClient = new QueryClient();
 
@@ -58,13 +69,24 @@ function App() {
                 <Route path="contact" element={<ContactPage />} />
               </Route>
 
-              {/* Admin Routes */}
-              <Route element={<RequireAuth allowedRoles={['Admin']} />}>
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboard />} />
+              {/* Backoffice Routes */}
+              <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
+                <Route path="/backoffice" element={<BackofficeLayout />}>
+                  <Route index element={<CommonDashboard />} />
+                  <Route path="sale" element={<SalePortal />} />
+                  <Route path="tech" element={<TechPortal />} />
+                  <Route path="inventory" element={<InventoryPortal />} />
+                  <Route path="accounting" element={<AccountingPortal />} />
+                  <Route path="hr" element={<HRPortal />} />
+                  <Route path="warranty" element={<WarrantyPortal />} />
+                  <Route path="cms" element={<CMSPortal />} />
+                  <Route path="reports" element={<ReportsPortal />} />
+                  <Route path="users" element={<AdminUsersPage />} />
                   <Route path="products" element={<AdminProductsPage />} />
                   <Route path="orders" element={<AdminOrdersPage />} />
-                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="config" element={<ConfigPortal />} />
+                  <Route path="admin" element={<AdminPortal />} />
+                  <Route path="manager" element={<ManagerPortal />} />
                 </Route>
               </Route>
 
@@ -81,3 +103,4 @@ function App() {
 
 
 export default App;
+

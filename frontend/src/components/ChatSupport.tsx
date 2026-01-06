@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
 import { Users, Send, Info } from 'lucide-react';
@@ -58,7 +58,7 @@ export const ChatSupport = () => {
                     <div className="flex items-center gap-3">
                         <Users className="text-blue-400" />
                         <div>
-                            <h3 className="text-white font-bold">Quang Hường Live Support</h3>
+                            <h3 className="text-white font-bold">QUANG HƯỞNG Live Support</h3>
                             <p className="text-xs text-gray-500">Status: <span className={status === 'Connected' ? 'text-green-500' : 'text-red-500'}>{status}</span></p>
                         </div>
                     </div>
@@ -105,3 +105,4 @@ export const ChatSupport = () => {
         </div>
     );
 };
+

@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+﻿import { Outlet, Link } from 'react-router-dom';
 import { LayoutDashboard, Package, ShoppingCart, Users, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,7 +11,7 @@ export const AdminLayout = () => {
             <aside className="w-64 bg-white/5 backdrop-blur-lg border-r border-white/10 p-6">
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-                    <p className="text-sm text-gray-400 mt-1">Quang Hường Computer</p>
+                    <p className="text-sm text-gray-400 mt-1">QUANG HƯỞNG Computer</p>
                 </div>
 
                 <nav className="space-y-2">
@@ -61,3 +61,4 @@ export const AdminLayout = () => {
         </div>
     );
 };
+

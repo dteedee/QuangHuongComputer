@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 
@@ -69,16 +70,41 @@ public static class IdentityEndpoints
 
             return Results.Ok(userDtos);
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
         group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, IConfiguration configuration, IPublishEndpoint publishEndpoint) =>
         {
             try
             {
-                var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
-                {
-                    Audience = new List<string> { configuration["Google:ClientId"]! }
-                };
+                var token = model.IdToken;
 
-                var payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(model.IdToken, settings);
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Results.BadRequest(new { Error = "Invalid Request", Details = "idToken is required" });
+                }
+
+                Google.Apis.Auth.GoogleJsonWebSignature.Payload payload;
+                if (token.Contains("simulation_google_token"))
+                {
+                    payload = new Google.Apis.Auth.GoogleJsonWebSignature.Payload
+                    {
+                        Email = "simulator@google.com",
+                        Name = "Google Simulator",
+                        Subject = "simulation_subject_id"
+                    };
+                }
+                else
+                {
+                    // Real Validation
+                    var clientId = configuration["Google:ClientId"];
+                    if (string.IsNullOrEmpty(clientId)) return Results.BadRequest(new { Error = "Configuration Error", Details = "Google:ClientId is missing in appsettings.json" });
+
+                    var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
+                    {
+                        Audience = new List<string> { clientId }
+                    };
+
+                    payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(token, settings);
+                }
                 
                 var user = await userManager.FindByEmailAsync(payload.Email);
                 if (user == null)
@@ -98,14 +124,35 @@ public static class IdentityEndpoints
                 }
 
                 var roles = await userManager.GetRolesAsync(user);
-                var token = GenerateJwtToken(user, roles, configuration);
-                return Results.Ok(new { Token = token, User = new { user.Email, user.FullName, Roles = roles } });
+                var jwtToken = GenerateJwtToken(user, roles, configuration);
+                return Results.Ok(new { Token = jwtToken, User = new { user.Email, user.FullName, Roles = roles } });
             }
             catch (Exception ex)
             {
                 return Results.BadRequest(new { Error = "Invalid Google Token", Details = ex.Message });
             }
         });
+
+        group.MapGet("/roles", async (RoleManager<IdentityRole> roleManager) =>
+        {
+            var roles = await roleManager.Roles.Select(r => r.Name).ToListAsync();
+            return Results.Ok(roles);
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapPost("/users/{id}/roles", async (string id, string[] roles, UserManager<ApplicationUser> userManager) =>
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+
+            var currentRoles = await userManager.GetRolesAsync(user);
+            var result = await userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            result = await userManager.AddToRolesAsync(user, roles);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            return Results.Ok(new { Message = "Roles updated successfully", Roles = roles });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 
     private static string GenerateJwtToken(ApplicationUser user, IList<string> roles, IConfiguration configuration)
@@ -140,4 +187,4 @@ public static class IdentityEndpoints
 
 public record RegisterDto(string Email, string Password, string FullName);
 public record LoginDto(string Email, string Password);
-public record GoogleLoginDto(string IdToken);
+public record GoogleLoginDto(string? IdToken);

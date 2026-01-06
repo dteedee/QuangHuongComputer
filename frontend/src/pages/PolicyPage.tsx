@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+﻿import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight } from 'lucide-react';
 
 const policies: Record<string, { title: string; content: React.ReactNode; icon: any }> = {
@@ -116,3 +116,4 @@ export const PolicyPage = () => {
         </div>
     );
 };
+

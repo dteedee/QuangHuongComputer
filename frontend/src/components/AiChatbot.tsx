@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import client from '../api/client';
 import { MessageCircle, Send, X, Bot } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export const AiChatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
-        { id: '1', text: 'Xin chào! Tôi là trợ lý ảo của Quang Hường Computer. Tôi có thể giúp gì cho bạn?', sender: 'ai', timestamp: new Date() }
+        { id: '1', text: 'Xin chào! Tôi là trợ lý ảo của QUANG HƯỞNG Computer. Tôi có thể giúp gì cho bạn?', sender: 'ai', timestamp: new Date() }
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,7 +66,7 @@ export const AiChatbot = () => {
                                 <Bot size={20} className="text-white" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-sm">Quang Hường AI</h3>
+                                <h3 className="text-white font-bold text-sm">QUANG HƯỞNG AI</h3>
                                 <p className="text-blue-100 text-xs">Direct Support</p>
                             </div>
                         </div>
@@ -125,3 +125,4 @@ export const AiChatbot = () => {
         </div>
     );
 };
+

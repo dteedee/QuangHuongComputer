@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, Users, DollarSign, Loader2 } from 'lucide-react';
+﻿import { Package, ShoppingCart, Users, DollarSign, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '../../api/sales';
 
@@ -83,3 +83,4 @@ export const AdminDashboard = () => {
         </div>
     );
 };
+

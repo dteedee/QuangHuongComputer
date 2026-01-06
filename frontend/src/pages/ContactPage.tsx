@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 
 export const ContactPage = () => {
@@ -83,3 +83,4 @@ export const ContactPage = () => {
         </div>
     );
 };
+

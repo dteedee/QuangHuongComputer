@@ -10,6 +10,9 @@ using Identity;
 using Ai;
 using Ai.Application;
 using Communication;
+using HR;
+using SystemConfig;
+using Reporting;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Data;
 using Sales.Infrastructure;
@@ -20,6 +23,8 @@ using InventoryModule.Infrastructure;
 using Payments.Infrastructure;
 using Content.Infrastructure;
 using Ai.Infrastructure;
+using HR.Infrastructure;
+using SystemConfig.Infrastructure;
 using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
 using MassTransit;
@@ -69,6 +74,9 @@ builder.Services.AddContentModule(builder.Configuration);
 builder.Services.AddAiModule(builder.Configuration);
 builder.Services.AddSignalR();
 builder.Services.AddCommunicationModule(builder.Configuration);  // Added Communication Module
+builder.Services.AddHRModule(builder.Configuration);
+builder.Services.AddSystemConfigModule(builder.Configuration);
+builder.Services.AddReportingModule();
 
 // Infrastructure
 builder.Services.AddMassTransit(x =>
@@ -130,7 +138,9 @@ if (app.Environment.IsDevelopment())
             services.GetRequiredService<PaymentsDbContext>(),
             services.GetRequiredService<ContentDbContext>(),
             services.GetRequiredService<AiDbContext>(),
-            services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>()
+            services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>(),
+            services.GetRequiredService<HRDbContext>(),
+            services.GetRequiredService<SystemConfigDbContext>()
         };
 
         foreach (var ctx in contexts)
@@ -187,6 +197,9 @@ app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();
 app.MapContentEndpoints();
 app.MapCommunicationEndpoints(); // Added Communication Endpoints
+app.MapHREndpoints();
+app.MapSystemConfigEndpoints();
+app.MapReportingEndpoints();
 
 app.MapControllers();
 

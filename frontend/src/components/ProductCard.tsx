@@ -1,7 +1,8 @@
+﻿
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingBag, Check } from 'lucide-react';
+import { ShoppingCart, Star, HelpCircle, PackageCheck } from 'lucide-react';
 
 interface ProductCardProps {
     product: Product;
@@ -9,70 +10,77 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
+
     // Calculate mock discount
     const oldPrice = product.price * 1.15;
-    const discount = Math.round(((oldPrice - product.price) / oldPrice) * 100);
+    const discount = 15;
 
     return (
-        <div className="group bg-white border border-gray-200 rounded-md overflow-hidden hover:shadow-[0_0_10px_rgba(0,0,0,0.15)] hover:border-gray-300 transition-all duration-200 flex flex-col h-full relative cursor-pointer">
+        <div className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:border-[#D70018] transition-all duration-300">
             {/* Discount Badge */}
-            <div className="absolute top-0 left-0 bg-[#D70018] text-white text-[11px] font-bold px-2 py-1 z-10 rounded-br-md">
-                GIẢM {discount}%
+            <div className="absolute top-2 left-2 z-20">
+                <div className="bg-[#D70018] text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
+                    -{discount}%
+                </div>
             </div>
 
-            {/* Product Image */}
-            <Link to={`/product/${product.id}`} className="block relative pt-[90%] bg-white p-2 overflow-hidden">
+            {/* Hot/New Badge */}
+            <div className="absolute top-2 right-2 z-20">
+                <div className="bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm uppercase">
+                    Bán chạy
+                </div>
+            </div>
+
+            {/* Product Image Area */}
+            <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center p-4">
-                    {/* Placeholder or Image */}
-                    <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 font-bold text-3xl group-hover:scale-105 transition-transform duration-300 rounded">
-                        {product.name.substring(0, 1).toUpperCase()}
+                    {/* Placeholder replacement or actual image if exists */}
+                    <div className="w-full h-full bg-gray-50 rounded-lg flex items-center justify-center text-gray-200 border border-gray-100 italic">
+                        <span className="text-5xl font-black opacity-10">{product.name.charAt(0)}</span>
                     </div>
                 </div>
             </Link>
 
-            <div className="p-3 flex flex-col flex-1">
-                {/* Product Name */}
-                <Link to={`/product/${product.id}`} className="mb-2 block">
-                    <h3 className="text-[13px] md:text-[14px] font-medium text-gray-800 line-clamp-2 min-h-[40px] group-hover:text-[#D70018] transition leading-snug">
+            {/* Info Area */}
+            <div className="p-4 flex flex-col flex-1 border-t border-gray-50">
+                <div className="mb-2 flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} size={10} className="fill-amber-400 text-amber-400" />)}
+                    <span className="text-[10px] text-gray-400 ml-1">( Mã: QH-{product.id.substring(0, 4)} )</span>
+                </div>
+
+                <Link to={`/product/${product.id}`} className="mb-3 block">
+                    <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight">
                         {product.name}
                     </h3>
                 </Link>
 
-                {/* Specs / Status */}
-                <div className="mb-2">
-                    <div className="flex items-center gap-1 text-[10px] text-[#27ae60] bg-[#eafaf1] w-fit px-2 py-0.5 rounded border border-[#27ae60]">
-                        <Check size={10} strokeWidth={3} />
-                        <span className="font-bold">Còn hàng</span>
-                    </div>
-                </div>
-
-                <div className="mt-auto">
-                    {/* Prices */}
-                    <div className="flex flex-col items-start">
-                        <span className="text-[11px] text-gray-400 line-through">
-                            {oldPrice.toLocaleString()} đ
-                        </span>
-                        <span className="text-[15px] md:text-[16px] xl:text-[18px] font-bold text-[#D70018]">
-                            {product.price.toLocaleString()} đ
-                        </span>
+                <div className="mt-auto space-y-2">
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 line-through leading-none">{oldPrice.toLocaleString()}đ</span>
+                        <span className="text-lg font-black text-[#D70018] leading-tight">{product.price.toLocaleString()}đ</span>
                     </div>
 
-                    {/* Hover Action */}
-                    <div className="mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 left-2 right-2 flex gap-1">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                            <PackageCheck size={14} /> Còn hàng
+                        </span>
+
                         <button
-                            onClick={(e) => { e.preventDefault(); /* Buy now logic */ }}
-                            className="flex-1 bg-[#D70018] text-white text-[11px] font-bold py-1.5 rounded hover:bg-red-700 transition"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
+                            className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-[#D70018] hover:text-white transition-all active:scale-95"
+                            title="Thêm vào giỏ hàng"
                         >
-                            MUA NGAY
-                        </button>
-                        <button
-                            onClick={(e) => { e.preventDefault(); addToCart(product); }}
-                            className="w-8 flex-shrink-0 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700"
-                        >
-                            <ShoppingBag size={12} />
+                            <ShoppingCart size={18} />
                         </button>
                     </div>
                 </div>
+            </div>
+
+            {/* Quick view / Compare overlay on hover (optional enhancement) */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button className="bg-white/90 backdrop-blur text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-gray-200 hover:bg-[#D70018] hover:text-white transition-all">
+                    Xem nhanh
+                </button>
             </div>
         </div>
     );
