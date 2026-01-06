@@ -18,10 +18,11 @@ public class Coupon : Entity<Guid>
 
     protected Coupon() { }
 
-    public Coupon(string code, DiscountType type, decimal value, DateTime startDate, DateTime? endDate = null)
+    public Coupon(string code, string description, DiscountType type, decimal value, DateTime startDate, DateTime? endDate = null)
     {
         Id = Guid.NewGuid();
         Code = code.ToUpper();
+        Description = description;
         Type = type;
         Value = value;
         StartDate = startDate;

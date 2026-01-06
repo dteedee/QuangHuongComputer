@@ -1,6 +1,8 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { PolicyPage } from './pages/PolicyPage';
+import { ContactPage } from './pages/ContactPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LoginPage } from './pages/LoginPage';
@@ -20,6 +22,7 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { CategoryPage } from './pages/CategoryPage';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,19 @@ function App() {
                 <Route path="checkout" element={<CheckoutPage />} />
                 <Route path="product/:id" element={<ProductDetailsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+
+                {/* Category Routes */}
+                <Route path="laptop" element={<CategoryPage />} />
+                <Route path="pc-gaming" element={<CategoryPage />} />
+                <Route path="workstation" element={<CategoryPage />} />
+                <Route path="office" element={<CategoryPage />} />
+                <Route path="components" element={<CategoryPage />} />
+                <Route path="screens" element={<CategoryPage />} />
+                <Route path="category/:slug" element={<CategoryPage />} />
+
+                {/* Content Pages */}
+                <Route path="policy/:type" element={<PolicyPage />} />
+                <Route path="contact" element={<ContactPage />} />
               </Route>
 
               {/* Admin Routes */}

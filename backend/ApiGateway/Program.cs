@@ -27,6 +27,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ApiGateway;
 using Content.Infrastructure.Data;
+using DotNetEnv;
+
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +43,18 @@ builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString!, name: "postgres")
     .AddRabbitMQ(rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672", name: "rabbitmq")
     .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379", name: "redis");
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Allow Frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
@@ -120,7 +135,16 @@ if (app.Environment.IsDevelopment())
 
         foreach (var ctx in contexts)
         {
-            await ctx.Database.MigrateAsync();
+            try
+            {
+                await ctx.Database.MigrateAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log error but continue to next context/module
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "Migration failed for {ContextName}", ctx.GetType().Name);
+            }
         }
 
         await CatalogDbSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>());
@@ -129,6 +153,7 @@ if (app.Environment.IsDevelopment())
     }
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

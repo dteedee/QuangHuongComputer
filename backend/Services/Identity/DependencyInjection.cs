@@ -14,7 +14,8 @@ public static class DependencyInjection
     public static IServiceCollection AddIdentityModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<IdentityDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly(typeof(IdentityDbContext).Assembly.FullName)));
 
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {

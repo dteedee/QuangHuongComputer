@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 import { useState } from 'react';
 import { CartDrawer } from '../components/CartDrawer';
@@ -9,13 +10,14 @@ export const RootLayout = () => {
     const [isCartOpen, setIsCartOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-blue-500/30">
+        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
             <Header onCartClick={() => setIsCartOpen(true)} />
             <main>
                 <Outlet />
             </main>
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
             <AiChatbot />
+            <Footer />
         </div>
     );
 };

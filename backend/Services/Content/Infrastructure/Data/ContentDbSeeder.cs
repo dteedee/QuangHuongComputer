@@ -36,9 +36,9 @@ public class ContentDbSeeder
         {
             var coupons = new List<Coupon>
             {
-                new Coupon("WELCOME10", DiscountType.Percentage, 10, DateTime.UtcNow, DateTime.UtcNow.AddYears(1)),
-                new Coupon("SUMMER24", DiscountType.FixedAmount, 50, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)),
-                new Coupon("VIPUSER", DiscountType.Percentage, 15, DateTime.UtcNow, DateTime.UtcNow.AddYears(10))
+                new Coupon("WELCOME10", "Welcome Discount", DiscountType.Percentage, 10, DateTime.UtcNow, DateTime.UtcNow.AddYears(1)),
+                new Coupon("SUMMER24", "Summer Sale", DiscountType.FixedAmount, 50, DateTime.UtcNow, DateTime.UtcNow.AddMonths(3)),
+                new Coupon("VIPUSER", "VIP Discount", DiscountType.Percentage, 15, DateTime.UtcNow, DateTime.UtcNow.AddYears(10))
             };
 
             _context.Coupons.AddRange(coupons);
