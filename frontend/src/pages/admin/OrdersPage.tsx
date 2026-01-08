@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { Eye, Filter, Loader2, Search, ArrowRight, Clock, CheckCircle2, Package, XCircle, Truck, Plus, X, Check, ShoppingCart, User, MapPin, FileText } from 'lucide-react';
-import { salesApi, Order, OrderStatus } from '../../api/sales';
-import { catalogApi, Product } from '../../api/catalog';
+import { salesApi, type Order, type OrderStatus } from '../../api/sales';
+import { catalogApi, type Product } from '../../api/catalog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';

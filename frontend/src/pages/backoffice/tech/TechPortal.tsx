@@ -4,8 +4,7 @@ import {
     Play, CheckSquare, Search, Filter,
     Activity, ChevronRight, MoreVertical, X, Check, Loader2, Trash2
 } from 'lucide-react';
-import { repairApi } from '../../../api/repair';
-import { WorkOrder } from '../../../api/repair';
+import { repairApi, type WorkOrder } from '../../../api/repair';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -32,7 +31,8 @@ export const TechPortal = () => {
     });
 
     const completeRepairMutation = useMutation({
-        mutationFn: ({ id, notes }: { id: string, notes: string }) => repairApi.admin.completeRepair(id, notes),
+        mutationFn: ({ id, partsCost, laborCost, notes }: { id: string, partsCost: number, laborCost: number, notes?: string }) =>
+            repairApi.admin.completeRepair(id, { partsCost, laborCost, notes }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tech-work-orders'] });
             toast.success('Đã hoàn tất sửa chữa!');
@@ -40,7 +40,7 @@ export const TechPortal = () => {
     });
 
     const cancelRepairMutation = useMutation({
-        mutationFn: ({ id, reason }: { id: string, reason: string }) => repairApi.admin.cancelRepair(id, reason),
+        mutationFn: ({ id, reason }: { id: string, reason: string }) => repairApi.admin.cancelWorkOrder(id, reason),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tech-work-orders'] });
             toast.success('Đã hủy phiếu!');
@@ -151,7 +151,7 @@ export const TechPortal = () => {
                                                 <button
                                                     onClick={() => {
                                                         const notes = window.prompt('Nhập ghi chú kỹ thuật:');
-                                                        if (notes !== null) completeRepairMutation.mutate({ id: order.id, notes });
+                                                        if (notes !== null) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes });
                                                     }}
                                                     className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                                                 >

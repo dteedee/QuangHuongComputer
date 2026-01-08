@@ -3,6 +3,7 @@ using BuildingBlocks.Messaging.IntegrationEvents;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Sales.Domain;
+using Sales.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace Sales.Application.Consumers;

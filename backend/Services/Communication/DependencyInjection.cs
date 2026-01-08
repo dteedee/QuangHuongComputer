@@ -8,9 +8,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddCommunicationModule(this IServiceCollection services, IConfiguration configuration)
     {
-        // Email
-        services.AddTransient<IEmailService, EmailService>();
-
+        // Email is registered globally in BuildingBlocks.Email
+        
         return services;
     }
 }

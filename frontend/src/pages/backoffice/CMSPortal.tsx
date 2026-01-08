@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contentApi, Post } from '../../api/content';
+import { contentApi, type Post } from '../../api/content';
 import toast from 'react-hot-toast';
 
 export const CMSPortal = () => {

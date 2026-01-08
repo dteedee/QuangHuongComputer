@@ -4,7 +4,7 @@ import {
     UserPlus, Search, Download, CheckCircle,
     UserCheck, TrendingUp, MoreHorizontal, X, Check, Loader2
 } from 'lucide-react';
-import { hrApi, Employee, Payroll } from '../../../api/hr';
+import { hrApi, type Employee, type Payroll } from '../../../api/hr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';

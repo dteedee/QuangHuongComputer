@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { salesApi, Order } from '../api/sales';
+import { salesApi, type Order } from '../api/sales';
 import { paymentApi } from '../api/payment';
-import { CreditCard, Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { CreditCard, Lock, CheckCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const PaymentPage = () => {
@@ -35,29 +35,39 @@ export const PaymentPage = () => {
         }
     };
 
+    const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
     const initiatePayment = async (orderData: Order) => {
         try {
             const res = await paymentApi.initiate({
                 orderId: orderData.id,
                 amount: orderData.totalAmount,
-                provider: 1 // VnPay Mock
+                provider: 1 // VnPay
             });
             setPaymentId(res.paymentId);
+            setPaymentUrl(res.paymentUrl || null);
         } catch (error) {
             console.error('Failed to initiate payment', error);
+            toast.error('Failed to initialize payment system');
         }
     };
 
     const handlePayment = async () => {
         if (!paymentId) return;
         setIsProcessing(true);
-        setStep('gateway'); // Simulate redirect to gateway
 
-        // Simulate Gateway Interaction Delay
+        if (paymentUrl) {
+            setStep('gateway');
+            setTimeout(() => {
+                window.location.href = paymentUrl;
+            }, 1000);
+            return;
+        }
+
+        setStep('gateway');
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         try {
-            // Mock Webhook Trigger from Client (In real app, gateway calls backend)
             await paymentApi.mockWebhook({
                 paymentId,
                 success: true
@@ -71,6 +81,7 @@ export const PaymentPage = () => {
         } catch (error) {
             toast.error('Payment failed');
             setIsProcessing(false);
+            setStep('review');
         }
     };
 

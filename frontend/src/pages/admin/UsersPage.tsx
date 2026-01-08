@@ -2,7 +2,7 @@
 import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApi, User } from '../../api/auth';
+import { authApi, type User } from '../../api/auth';
 import toast from 'react-hot-toast';
 
 export const AdminUsersPage = () => {
@@ -171,14 +171,14 @@ export const AdminUsersPage = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-lg bg-white rounded-3xl p-8">
                             <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6">Phân quyền: <span className="text-[#D70018]">{selectedUser.fullName}</span></h2>
                             <div className="grid grid-cols-2 gap-4 mb-8">
-                                {allRoles.map(role => (
+                                {allRoles.map(roleObj => (
                                     <button
-                                        key={role}
-                                        onClick={() => handleToggleRole(role)}
-                                        className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between font-black uppercase text-[10px] tracking-widest ${selectedUser.roles?.includes(role) ? 'border-[#D70018] bg-red-50 text-[#D70018]' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
+                                        key={roleObj.id}
+                                        onClick={() => handleToggleRole(roleObj.name)}
+                                        className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between font-black uppercase text-[10px] tracking-widest ${selectedUser.roles?.includes(roleObj.name) ? 'border-[#D70018] bg-red-50 text-[#D70018]' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
                                     >
-                                        {role}
-                                        {selectedUser.roles?.includes(role) && <Check size={16} />}
+                                        {roleObj.name}
+                                        {selectedUser.roles?.includes(roleObj.name) && <Check size={16} />}
                                     </button>
                                 ))}
                             </div>

@@ -1,4 +1,5 @@
 
+using BuildingBlocks.Email;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,13 @@ public static class CommunicationEndpoints
         {
             try
             {
-                await emailService.SendEmailAsync(model.To, model.Subject, model.Body);
+                await emailService.SendEmailAsync(new EmailMessage 
+                { 
+                    ToEmail = model.To, 
+                    Subject = model.Subject, 
+                    Body = model.Body,
+                    IsHtml = true
+                });
                 return Results.Ok(new { Message = "Email sent successfully" });
             }
             catch (Exception ex)

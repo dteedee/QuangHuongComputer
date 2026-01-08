@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, ChevronRight, MoreVertical, X, Check, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { catalogApi, Product, CreateProductDto } from '../../api/catalog';
+import { catalogApi, type Product, type CreateProductDto } from '../../api/catalog';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 

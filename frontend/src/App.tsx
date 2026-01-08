@@ -34,6 +34,7 @@ import { RolesPage } from './pages/admin/RolesPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
+import { PaymentResultPage } from './pages/PaymentResultPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
@@ -41,6 +42,7 @@ import { Toaster } from 'react-hot-toast';
 const queryClient = new QueryClient();
 
 function App() {
+  console.log('App Rendering...');
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" reverseOrder={false} />
@@ -57,6 +59,8 @@ function App() {
                 <Route path="cart" element={<CartPage />} />
                 <Route path="checkout" element={<CheckoutPage />} />
                 <Route path="payment/:orderId" element={<PaymentPage />} />
+                <Route path="payment/success" element={<PaymentResultPage />} />
+                <Route path="payment/failed" element={<PaymentResultPage />} />
                 <Route path="product/:id" element={<ProductDetailsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
 
@@ -108,6 +112,4 @@ function App() {
   );
 }
 
-
 export default App;
-
