@@ -64,7 +64,7 @@ public static class ContentEndpoints
 
             post.UpdateDetails(model.Title, model.Body);
             if (model.IsPublished && !post.IsPublished) post.Publish();
-            else if (!model.IsPublished) post.IsPublished = false;
+            else if (!model.IsPublished && post.IsPublished) post.Unpublish();
 
             await db.SaveChangesAsync();
             return Results.Ok(post);
@@ -85,9 +85,19 @@ public static class ContentEndpoints
             return await db.Coupons.ToListAsync();
         });
 
-        adminGroup.MapPost("/coupons", async (Coupon coupon, ContentDbContext db) =>
+        adminGroup.MapPost("/coupons", async (CreateCouponDto model, ContentDbContext db) =>
         {
-            coupon.Id = Guid.NewGuid();
+            var coupon = new Coupon(
+                model.Code,
+                model.Description,
+                model.DiscountType,
+                model.DiscountValue,
+                model.MinOrderAmount,
+                model.MaxDiscount,
+                model.ValidFrom,
+                model.ValidUntil,
+                model.UsageLimit
+            );
             db.Coupons.Add(coupon);
             await db.SaveChangesAsync();
             return Results.Created($"/api/content/admin/coupons/{coupon.Id}", coupon);
@@ -106,3 +116,14 @@ public static class ContentEndpoints
 
 public record CreatePostDto(string Title, string Slug, string Body, PostType Type, bool IsPublished);
 public record UpdatePostDto(string Title, string Body, bool IsPublished);
+public record CreateCouponDto(
+    string Code,
+    string Description,
+    DiscountType DiscountType,
+    decimal DiscountValue,
+    decimal MinOrderAmount,
+    decimal? MaxDiscount,
+    DateTime ValidFrom,
+    DateTime ValidUntil,
+    int? UsageLimit
+);

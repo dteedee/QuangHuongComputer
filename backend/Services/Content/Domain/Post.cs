@@ -31,6 +31,18 @@ public class Post : Entity<Guid>
         IsPublished = true;
         PublishedAt = DateTime.UtcNow;
     }
+
+    public void Unpublish()
+    {
+        IsPublished = false;
+    }
+
+    public void UpdateDetails(string title, string content)
+    {
+        Title = title;
+        Content = content;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public enum PostType

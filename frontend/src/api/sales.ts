@@ -26,7 +26,7 @@ export interface OrderItem {
     quantity: number;
 }
 
-export type OrderStatus = 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
+export type OrderStatus = 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Paid';
 
 export interface CheckoutDto {
     items: {

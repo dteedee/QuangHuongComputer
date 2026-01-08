@@ -13,12 +13,35 @@ export const LoginPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
 
+    const getRedirectPath = (roles: string[]) => {
+        if (roles.includes('Admin')) return '/backoffice/admin';
+        if (roles.includes('Manager')) return '/backoffice/manager';
+        if (roles.includes('Sale')) return '/backoffice/sale';
+        if (roles.includes('TechnicianInShop')) return '/backoffice/tech';
+        if (roles.includes('TechnicianOnSite')) return '/backoffice/tech';
+        if (roles.includes('Accountant')) return '/backoffice/accounting';
+        if (roles.includes('Supplier')) return '/backoffice/inventory';
+        if (roles.includes('Customer')) return '/profile';
+        return '/';
+    };
+
     const onSubmit = async (data: any) => {
         setIsLoading(true);
         setLoginError('');
         try {
             await login(data.email, data.password);
-            navigate('/');
+            // Login function updates AuthContext, but we might need to get the user data directly from the response 
+            // OR rely on the fact that 'user' in context will be updated. 
+            // However, context update might be async or not immediate enough for next line if we rely on 'user' from useAuth().
+            // Ideally, 'login' should return the user object or we fetch it.
+            // Looking at AuthContext, login throws if failed, but doesn't return data.
+            // Let's rely on reading localStorage which AuthContext sets synchronously before resolving.
+
+            const savedUser = localStorage.getItem('user');
+            const userObj = savedUser ? JSON.parse(savedUser) : null;
+            const roles = userObj?.roles || [];
+
+            navigate(getRedirectPath(roles));
         } catch (error: any) {
             setLoginError('Tài khoản hoặc mật khẩu không chính xác');
         } finally {

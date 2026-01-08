@@ -62,7 +62,32 @@ export const authApi = {
     },
 
     getRoles: async () => {
-        const response = await client.get<string[]>('/auth/roles');
+        const response = await client.get<{ id: string; name: string }[]>('/auth/roles');
+        return response.data;
+    },
+
+    createRole: async (roleName: string) => {
+        const response = await client.post('/auth/roles?roleName=' + roleName);
+        return response.data;
+    },
+
+    deleteRole: async (roleName: string) => {
+        const response = await client.delete(`/auth/roles/${roleName}`);
+        return response.data;
+    },
+
+    getAllPermissions: async () => {
+        const response = await client.get<string[]>('/auth/permissions');
+        return response.data;
+    },
+
+    getRolePermissions: async (roleId: string) => {
+        const response = await client.get<string[]>(`/auth/roles/${roleId}/permissions`);
+        return response.data;
+    },
+
+    updateRolePermissions: async (roleId: string, permissions: string[]) => {
+        const response = await client.put(`/auth/roles/${roleId}/permissions`, permissions);
         return response.data;
     },
 };

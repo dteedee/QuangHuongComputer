@@ -1,26 +1,31 @@
 ﻿import { useState, useEffect } from 'react';
 import {
     ShoppingCart, Plus, CreditCard, ArrowRight,
-    Tag, Star, TrendingUp, Clock
+    Tag, Star, TrendingUp, Clock, DollarSign, Package
 } from 'lucide-react';
 import { salesApi } from '../../../api/sales';
-import type { Order } from '../../../api/sales';
+import type { Order, SalesStats } from '../../../api/sales';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export const SalePortal = () => {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [stats, setStats] = useState<SalesStats | null>(null);
 
     useEffect(() => {
-        const fetchRecentOrders = async () => {
+        const fetchData = async () => {
             try {
-                const data = await salesApi.admin.getOrders(1, 10);
-                setOrders(data.orders);
+                const [ordersData, statsData] = await Promise.all([
+                    salesApi.admin.getOrders(1, 10),
+                    salesApi.admin.getStats()
+                ]);
+                setOrders(ordersData.orders);
+                setStats(statsData);
             } catch (error) {
-                console.error('Failed to fetch orders', error);
+                console.error('Failed to fetch data', error);
             }
         };
-        fetchRecentOrders();
+        fetchData();
     }, []);
 
     return (
@@ -40,34 +45,79 @@ export const SalePortal = () => {
                 </button>
             </div>
 
-            {/* Quick Actions & Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        className="premium-card p-8 group cursor-pointer"
-                    >
-                        <div className="p-4 bg-red-50 text-[#D70018] rounded-2xl w-fit mb-6 group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-inner">
-                            <Tag size={28} />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                            <Package size={24} />
                         </div>
-                        <h4 className="text-gray-900 font-black uppercase italic tracking-tighter text-xl">Chiến dịch</h4>
-                        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-2">Quản lý mã giảm giá và coupon</p>
-                    </motion.div>
-                    <motion.div
-                        whileHover={{ y: -5 }}
-                        className="premium-card p-8 group cursor-pointer"
-                    >
-                        <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl w-fit mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner">
-                            <Star size={28} />
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Tổng đơn</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats?.totalOrders || 0}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Hôm nay: {stats?.todayOrders || 0}</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                            <DollarSign size={24} />
                         </div>
-                        <h4 className="text-gray-900 font-black uppercase italic tracking-tighter text-xl">Thành viên</h4>
-                        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-2">Điểm thưởng và hạng khách hàng</p>
-                    </motion.div>
-                </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Doanh thu</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">${(stats?.monthRevenue || 0).toLocaleString()}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Tháng này</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                            <Clock size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Chờ xử lý</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats?.pendingOrders || 0}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Cần xử lý ngay</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-red-50 text-[#D70018] rounded-2xl">
+                            <TrendingUp size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Hoàn thành</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats?.completedOrders || 0}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Đã giao hàng</p>
+                </motion.div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <motion.div
+                    whileHover={{ y: -5 }}
+                    className="premium-card p-8 group cursor-pointer"
+                >
+                    <div className="p-4 bg-red-50 text-[#D70018] rounded-2xl w-fit mb-6 group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-inner">
+                        <Tag size={28} />
+                    </div>
+                    <h4 className="text-gray-900 font-black uppercase italic tracking-tighter text-xl">Chiến dịch</h4>
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-2">Quản lý mã giảm giá và coupon</p>
+                </motion.div>
+                <motion.div
+                    whileHover={{ y: -5 }}
+                    className="premium-card p-8 group cursor-pointer"
+                >
+                    <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl w-fit mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner">
+                        <Star size={28} />
+                    </div>
+                    <h4 className="text-gray-900 font-black uppercase italic tracking-tighter text-xl">Thành viên</h4>
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-2">Điểm thưởng và hạng khách hàng</p>
+                </motion.div>
 
                 <motion.div
                     whileHover={{ scale: 1.02 }}
-                    className="bg-gray-900 p-10 rounded-[30px] lg:col-span-2 relative overflow-hidden flex flex-col justify-between group shadow-2xl"
+                    className="bg-gray-900 p-10 rounded-[30px] relative overflow-hidden flex flex-col justify-between group shadow-2xl"
                 >
                     <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
 

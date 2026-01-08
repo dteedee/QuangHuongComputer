@@ -4,7 +4,7 @@ import {
     LayoutDashboard, ShoppingCart, Users,
     Wrench, ShieldCheck, Box, BarChart3,
     Receipt, Users2, Settings, MessageSquare, Bell,
-    ChevronLeft, Menu, Search, Globe, Power
+    ChevronLeft, Menu, Search, Globe, Power, Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
@@ -36,15 +36,20 @@ export const BackofficeLayout = () => {
 
     const menuItems = [
         { title: 'Tổng quan', icon: <LayoutDashboard size={20} />, path: '/backoffice', allowedRoles: ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier'] },
+        { title: 'Admin Command', icon: <ShieldCheck size={20} />, path: '/backoffice/admin', allowedRoles: ['Admin'] },
+        { title: 'Manager Hub', icon: <BarChart3 size={20} />, path: '/backoffice/manager', allowedRoles: ['Admin', 'Manager'] },
         { title: 'Bán hàng', icon: <ShoppingCart size={20} />, path: '/backoffice/sale', allowedRoles: ['Admin', 'Manager', 'Sale'] },
+        { title: 'Quản lý Đơn hàng', icon: <Receipt size={20} />, path: '/backoffice/orders', allowedRoles: ['Admin', 'Manager', 'Sale'] },
+        { title: 'Quản lý Sản phẩm', icon: <Box size={20} />, path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'] },
         { title: 'Kỹ thuật & Sửa chữa', icon: <Wrench size={20} />, path: '/backoffice/tech', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite'] },
         { title: 'Kho hàng', icon: <Box size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'Sale', 'Supplier'] },
-        { title: 'Kế toán', icon: <Receipt size={20} />, path: '/backoffice/accounting', allowedRoles: ['Admin', 'Manager', 'Accountant'] },
+        { title: 'Kế toán', icon: <BarChart3 size={20} />, path: '/backoffice/accounting', allowedRoles: ['Admin', 'Manager', 'Accountant'] },
         { title: 'Nhân sự & Lương', icon: <Users2 size={20} />, path: '/backoffice/hr', allowedRoles: ['Admin', 'Manager'] },
         { title: 'Bảo hành / RMA', icon: <ShieldCheck size={20} />, path: '/backoffice/warranty', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop'] },
         { title: 'Marketing / CMS', icon: <MessageSquare size={20} />, path: '/backoffice/cms', allowedRoles: ['Admin', 'Manager', 'Sale'] },
         { title: 'Báo cáo', icon: <BarChart3 size={20} />, path: '/backoffice/reports', allowedRoles: ['Admin', 'Manager'] },
         { title: 'Quản lý người dùng', icon: <Users size={20} />, path: '/backoffice/users', allowedRoles: ['Admin'] },
+        { title: 'Quản lý vai trò', icon: <Shield size={20} />, path: '/backoffice/roles', allowedRoles: ['Admin'] },
         { title: 'Cấu hình hệ thống', icon: <Settings size={20} />, path: '/backoffice/config', allowedRoles: ['Admin'] },
     ];
 

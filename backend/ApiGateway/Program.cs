@@ -27,6 +27,7 @@ using HR.Infrastructure;
 using SystemConfig.Infrastructure;
 using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
+using BuildingBlocks.Email;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -78,11 +79,17 @@ builder.Services.AddHRModule(builder.Configuration);
 builder.Services.AddSystemConfigModule(builder.Configuration);
 builder.Services.AddReportingModule();
 
+// Email Service
+builder.Services.AddSingleton<IEmailService, EmailService>();
+
 // Infrastructure
 builder.Services.AddMassTransit(x =>
 {
     // Register Consumers from Modules
     x.AddConsumers(typeof(Communication.DependencyInjection).Assembly);
+    x.AddConsumers(typeof(Sales.DependencyInjection).Assembly);
+    x.AddConsumers(typeof(Accounting.DependencyInjection).Assembly);
+    x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
     
     x.UsingRabbitMq((context, cfg) =>
     {

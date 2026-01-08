@@ -61,6 +61,18 @@ export const catalogApi = {
         return response.data;
     },
 
+    searchProducts: async (params?: {
+        query?: string;
+        categoryId?: string;
+        brandId?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        inStock?: boolean;
+    }) => {
+        const response = await client.get<Product[]>('/catalog/products/search', { params });
+        return response.data;
+    },
+
     getProduct: async (id: string) => {
         const response = await client.get<Product>(`/catalog/products/${id}`);
         return response.data;

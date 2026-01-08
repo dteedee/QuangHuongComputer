@@ -36,18 +36,19 @@ export const CheckoutPage = () => {
                 quantity: item.quantity
             }));
 
-            await salesApi.checkout({
+            const result = await salesApi.checkout({
                 items: checkoutItems,
                 shippingAddress,
                 notes
             });
 
             clearCart();
-            // In a real app, maybe redirect to a success/order details page
-            navigate('/profile'); // Redirect to profile to see the new order
-        } catch (err) {
+            // Redirect to Payment Page
+            navigate(`/payment/${result.orderId}`);
+        } catch (err: any) {
             console.error('Checkout failed', err);
-            setError('Failed to place order. Please try again.');
+            const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to place order. Please try again.';
+            setError(msg);
         } finally {
             setIsSubmitting(false);
         }

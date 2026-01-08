@@ -75,7 +75,7 @@ public static class WarrantyEndpoints
         {
             var warranties = await db.ProductWarranties.OrderByDescending(w => w.PurchaseDate).ToListAsync();
             return Results.Ok(warranties);
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "TechnicianInShop"));
     }
 }
 

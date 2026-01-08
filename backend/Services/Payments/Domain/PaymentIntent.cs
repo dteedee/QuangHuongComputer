@@ -49,14 +49,14 @@ public class PaymentIntent : AggregateRoot<Guid>
         if (Status == PaymentStatus.Succeeded) return; // Idempotent check handled here ideally
         
         Status = PaymentStatus.Succeeded;
-        RaiseDomainEvent(new PaymentSucceededEvent(Id, OrderId, Amount));
+        RaiseDomainEvent(new PaymentSucceededDomainEvent(Id, OrderId, Amount));
     }
 
     public void Fail(string reason)
     {
         Status = PaymentStatus.Failed;
         FailureReason = reason;
-        RaiseDomainEvent(new PaymentFailedEvent(Id, OrderId, reason));
+        RaiseDomainEvent(new PaymentFailedDomainEvent(Id, OrderId, reason));
     }
 }
 
@@ -78,5 +78,5 @@ public enum PaymentStatus
 }
 
 // Events
-public record PaymentSucceededEvent(Guid PaymentId, Guid OrderId, decimal Amount) : DomainEvent;
-public record PaymentFailedEvent(Guid PaymentId, Guid OrderId, string Reason) : DomainEvent;
+public record PaymentSucceededDomainEvent(Guid PaymentId, Guid OrderId, decimal Amount) : DomainEvent;
+public record PaymentFailedDomainEvent(Guid PaymentId, Guid OrderId, string Reason) : DomainEvent;

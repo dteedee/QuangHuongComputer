@@ -2,7 +2,7 @@
 import {
     BarChart3, PieChart, TrendingUp, TrendingDown,
     Download, Calendar, Filter, ArrowUpRight,
-    Search, Activity, FileStack
+    Search, Activity, FileStack, Clock
 } from 'lucide-react';
 import client from '../../api/client';
 import { motion } from 'framer-motion';

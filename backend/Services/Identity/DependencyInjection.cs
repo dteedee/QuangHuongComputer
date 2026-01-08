@@ -51,6 +51,8 @@ public static class DependencyInjection
 
         services.AddAuthorization();
 
+        services.AddScoped<Identity.Services.IAuditService, Identity.Services.AuditService>();
+
         return services;
     }
 }

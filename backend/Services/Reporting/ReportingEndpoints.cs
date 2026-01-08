@@ -50,7 +50,7 @@ public static class ReportingEndpoints
         group.MapGet("/inventory-value", async (InventoryDbContext invDb) =>
         {
             var items = await invDb.InventoryItems.ToListAsync();
-            var totalValue = items.Sum(i => i.Quantity * 100); // Placeholder unit price
+            var totalValue = items.Sum(i => i.QuantityOnHand * 100); // Placeholder unit price
             return Results.Ok(new { TotalValue = totalValue, ItemCount = items.Count });
         });
 

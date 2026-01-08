@@ -30,8 +30,10 @@ import { ConfigPortal } from './pages/backoffice/ConfigPortal';
 import { AdminProductsPage } from './pages/admin/ProductsPage';
 import { AdminOrdersPage } from './pages/admin/OrdersPage';
 import { AdminUsersPage } from './pages/admin/UsersPage';
+import { RolesPage } from './pages/admin/RolesPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { PaymentPage } from './pages/PaymentPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
@@ -54,6 +56,7 @@ function App() {
                 <Route path="support" element={<ChatSupport />} />
                 <Route path="cart" element={<CartPage />} />
                 <Route path="checkout" element={<CheckoutPage />} />
+                <Route path="payment/:orderId" element={<PaymentPage />} />
                 <Route path="product/:id" element={<ProductDetailsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
 
@@ -64,6 +67,7 @@ function App() {
                 <Route path="office" element={<CategoryPage />} />
                 <Route path="components" element={<CategoryPage />} />
                 <Route path="screens" element={<CategoryPage />} />
+                <Route path="search" element={<CategoryPage />} />
                 <Route path="category/:slug" element={<CategoryPage />} />
 
                 {/* Content Pages */}
@@ -84,6 +88,7 @@ function App() {
                   <Route path="cms" element={<CMSPortal />} />
                   <Route path="reports" element={<ReportsPortal />} />
                   <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="roles" element={<RolesPage />} />
                   <Route path="products" element={<AdminProductsPage />} />
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="config" element={<ConfigPortal />} />

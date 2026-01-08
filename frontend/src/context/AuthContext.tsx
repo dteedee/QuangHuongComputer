@@ -6,6 +6,7 @@ interface User {
     email: string;
     fullName: string;
     roles: string[];
+    permissions: string[];
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
     register: (email: string, password: string, fullName: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
+    hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,8 +71,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast('Đã đăng xuất tài khoản', { icon: '🚪' });
     };
 
+    const hasPermission = (permission: string) => {
+        if (!user) return false;
+        if (user.roles.includes('Admin')) return true; // Super Admin bypass
+        return user.permissions?.includes(permission) ?? false;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token, hasPermission }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,220 +1,276 @@
 ﻿import { useState, useEffect } from 'react';
-import {
-    ShieldCheck, Search, FileText, CheckCircle,
-    XCircle, Clock, AlertCircle, ArrowUpRight, Filter
-} from 'lucide-react';
-import { warrantyApi } from '../../api/warranty';
-import type { WarrantyClaim } from '../../api/warranty';
+import { Shield, Search, CheckCircle, XCircle, Clock, AlertCircle, Package, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import client from '../../api/client';
+
+interface Warranty {
+    id: string;
+    productId: string;
+    serialNumber: string;
+    customerId: string;
+    purchaseDate: string;
+    expirationDate: string;
+    warrantyPeriodMonths: number;
+    status: number;
+    notes: string | null;
+}
+
+interface WarrantyClaim {
+    id: string;
+    customerId: string;
+    serialNumber: string;
+    issueDescription: string;
+    status: number;
+    createdAt: string;
+}
 
 export const WarrantyPortal = () => {
-    const [claims, setClaims] = useState<WarrantyClaim[]>([]);
-    const [serialLookup, setSerialLookup] = useState('');
-    const [lookupResult, setLookupResult] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [warranties, setWarranties] = useState<Warranty[]>([]);
+    const [searchSerial, setSearchSerial] = useState('');
+    const [searchResult, setSearchResult] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchClaims = async () => {
-            try {
-                const data = await warrantyApi.getMyClaims();
-                setClaims(data);
-            } catch (error) {
-                console.error('Failed to fetch claims', error);
-            }
-        };
-        fetchClaims();
+        fetchWarranties();
     }, []);
 
-    const handleLookup = async () => {
-        if (!serialLookup) return;
-        setIsLoading(true);
+    const fetchWarranties = async () => {
         try {
-            const result = await warrantyApi.lookupCoverage(serialLookup);
-            setLookupResult(result);
-            if (result.isValid) {
-                toast.success('Sản phẩm còn bảo hành!', { icon: '✅' });
-            } else {
-                toast.error('Sản phẩm đã hết hạn hoặc không tồn tại', { icon: '❌' });
-            }
+            const res = await client.get('/warranty/admin/warranties');
+            setWarranties(res.data);
         } catch (error) {
-            toast.error('Lỗi khi tra cứu thông tin');
-        } finally {
-            setIsLoading(false);
+            console.error('Failed to fetch warranties', error);
         }
     };
 
+    const handleSearch = async () => {
+        if (!searchSerial.trim()) return;
+        setLoading(true);
+        try {
+            const res = await client.get(`/warranty/lookup/${searchSerial}`);
+            setSearchResult(res.data);
+        } catch (error: any) {
+            setSearchResult({ error: 'Serial number not found' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getStatusBadge = (status: number) => {
+        switch (status) {
+            case 0: // Active
+                return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Active</span>;
+            case 1: // Expired
+                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Expired</span>;
+            case 2: // Voided
+                return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Voided</span>;
+            default:
+                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Unknown</span>;
+        }
+    };
+
+    const isExpired = (expirationDate: string) => new Date(expirationDate) < new Date();
+
     return (
-        <div className="space-y-10 pb-20 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-10 pb-20">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Bảo hành & <span className="text-[#D70018]">RMA</span>
+                        Quản lý <span className="text-[#D70018]">Bảo hành</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
-                        Tra cứu bảo hành và xử lý yêu cầu đổi trả
+                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                        Theo dõi và xử lý bảo hành sản phẩm
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Coverage Lookup */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-1 premium-card p-8 flex flex-col h-fit"
-                >
-                    <h3 className="text-lg font-black text-gray-900 mb-8 uppercase italic italic border-b border-gray-100 pb-4">Kiểm tra bảo hành</h3>
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Số Serial (S/N)</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={serialLookup}
-                                    onChange={(e) => setSerialLookup(e.target.value)}
-                                    placeholder="Vd: SN-123456"
-                                    className="flex-1 px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#D70018] transition-all font-mono uppercase font-bold"
-                                />
-                                <button
-                                    onClick={handleLookup}
-                                    disabled={isLoading}
-                                    className="w-14 h-14 bg-[#D70018] hover:bg-[#b50014] text-white rounded-2xl shadow-lg shadow-red-500/20 flex items-center justify-center transition-all active:scale-90 disabled:opacity-50"
-                                >
-                                    <Search size={22} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {lookupResult && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className={`p-6 rounded-3xl border-2 ${lookupResult.isValid ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}
-                            >
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${lookupResult.isValid ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-red-500 text-white shadow-red-500/20'}`}>
-                                        {lookupResult.isValid ? <CheckCircle size={24} /> : <XCircle size={24} />}
-                                    </div>
-                                    <div>
-                                        <h4 className={`font-black uppercase italic tracking-tighter ${lookupResult.isValid ? 'text-green-600' : 'text-red-600'}`}>
-                                            {lookupResult.isValid ? 'Còn bảo hành' : 'Hết hạn bảo hành'}
-                                        </h4>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Trạng thái xác thực</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center p-3 bg-white rounded-xl">
-                                        <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Tình trạng</span>
-                                        <span className="text-xs font-black text-gray-800 uppercase">{lookupResult.status}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center p-3 bg-white rounded-xl">
-                                        <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Ngày hết hạn</span>
-                                        <span className="text-xs font-black text-gray-800">{new Date(lookupResult.expirationDate).toLocaleDateString('vi-VN')}</span>
-                                    </div>
-                                </div>
-                                {lookupResult.isValid && (
-                                    <button className="w-full mt-6 py-4 bg-gray-900 hover:bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl">
-                                        Khởi tạo yêu cầu RMA
-                                    </button>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {!lookupResult && (
-                            <div className="p-10 bg-gray-50 border-2 border-dashed border-gray-100 rounded-3xl text-center">
-                                <ShieldCheck className="mx-auto text-gray-200 mb-4" size={50} />
-                                <p className="text-[11px] text-gray-400 font-black uppercase italic">Nhập số Serial để tra cứu ngay</p>
-                            </div>
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Active Claims List */}
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="lg:col-span-2 premium-card overflow-hidden h-fit"
-                >
-                    <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-                        <h3 className="text-lg font-black text-gray-900 uppercase italic">Danh sách yêu cầu RMA</h3>
-                        <div className="flex gap-2">
-                            <button className="w-10 h-10 flex items-center justify-center bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-400 transition-colors border border-gray-100"><Filter size={18} /></button>
-                        </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-[#D70018]/5 text-[#D70018] text-[10px] font-black uppercase tracking-widest">
-                                <tr>
-                                    <th className="px-8 py-5">Mã yêu cầu</th>
-                                    <th className="px-8 py-5">Số Serial</th>
-                                    <th className="px-8 py-5">Lỗi kỹ thuật</th>
-                                    <th className="px-8 py-5">Trạng thái</th>
-                                    <th className="px-8 py-5 text-right">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {claims.map((claim) => (
-                                    <tr key={claim.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <span className="text-[10px] font-black text-[#D70018] bg-red-50 px-2 py-1 rounded-lg uppercase">#{claim.id.substring(0, 6)}</span>
-                                        </td>
-                                        <td className="px-8 py-6 text-xs font-black text-gray-800 uppercase italic">
-                                            {claim.serialNumber}
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <p className="text-xs text-gray-500 font-medium truncate max-w-[150px]">{claim.issueDescription}</p>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${claim.status === 'Resolved' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
-                                                {claim.status === 'Resolved' ? <CheckCircle size={12} /> : <Clock size={12} />}
-                                                {claim.status === 'Resolved' ? 'Hoàn tất' : 'Đang xử lý'}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-[#D70018] hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
-                                                <ArrowUpRight size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {claims.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-20 text-center">
-                                            <ShieldCheck className="mx-auto text-gray-100 mb-4" size={60} />
-                                            <p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">Không có yêu cầu bảo hành nào trong hàng đợi.</p>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </motion.div>
-            </div>
-
-            {/* Support Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {[
-                    { label: 'Thời gian xử lý TB', value: '3.2 Ngày', icon: <Clock className="text-blue-500" /> },
-                    { label: 'Tỉ lệ chấp thuận', value: '98.5%', icon: <ShieldCheck className="text-green-500" /> },
-                    { label: 'Linh kiện đổi mới', value: '45', icon: <FileText className="text-purple-500" /> },
-                    { label: 'Từ chối bảo hành', value: '2', icon: <AlertCircle className="text-red-500" /> },
-                ].map((m, i) => (
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        key={i}
-                        className="premium-card p-6 flex items-center gap-5 group"
+            {/* Search Box */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="premium-card p-8"
+            >
+                <div className="flex items-center gap-2 mb-6">
+                    <Search className="text-[#D70018]" size={20} />
+                    <h3 className="text-xl font-black text-gray-900 uppercase italic">Tra cứu bảo hành</h3>
+                </div>
+                <div className="flex gap-4">
+                    <input
+                        type="text"
+                        value={searchSerial}
+                        onChange={(e) => setSearchSerial(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Nhập số Serial (VD: SN-A1B2C3D4)"
+                        className="flex-1 px-6 py-4 border-2 border-gray-100 rounded-2xl text-sm font-bold focus:border-[#D70018] focus:outline-none transition-all"
+                    />
+                    <button
+                        onClick={handleSearch}
+                        disabled={loading}
+                        className="px-8 py-4 bg-[#D70018] hover:bg-[#b50014] text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 disabled:opacity-50"
                     >
-                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-inner">
-                            {m.icon}
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-[9px] uppercase font-black tracking-widest mb-1">{m.label}</p>
-                            <h4 className="text-xl font-black text-gray-900 tracking-tighter italic">{m.value}</h4>
-                        </div>
+                        {loading ? 'Đang tìm...' : 'Tra cứu'}
+                    </button>
+                </div>
+
+                {searchResult && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-6 p-6 bg-gray-50 rounded-2xl"
+                    >
+                        {searchResult.error ? (
+                            <div className="flex items-center gap-3 text-red-600">
+                                <XCircle size={24} />
+                                <span className="font-bold">{searchResult.error}</span>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div>
+                                    <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-2">Serial Number</p>
+                                    <p className="font-black text-gray-900">{searchResult.serialNumber}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-2">Trạng thái</p>
+                                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${searchResult.isValid ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                        {searchResult.status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-2">Hết hạn</p>
+                                    <p className="font-black text-gray-900">{new Date(searchResult.expirationDate).toLocaleDateString('vi-VN')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-2">Product ID</p>
+                                    <p className="font-mono text-xs text-gray-600">{searchResult.productId.substring(0, 8)}...</p>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
-                ))}
+                )}
+            </motion.div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                            <CheckCircle size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Còn hạn</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                        {warranties.filter(w => !isExpired(w.expirationDate) && w.status === 0).length}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Bảo hành đang hoạt động</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                            <AlertCircle size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Sắp hết</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                        {warranties.filter(w => {
+                            const daysLeft = Math.ceil((new Date(w.expirationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                            return daysLeft > 0 && daysLeft <= 30;
+                        }).length}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Hết hạn trong 30 ngày</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-gray-50 text-gray-600 rounded-2xl">
+                            <Clock size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Hết hạn</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                        {warranties.filter(w => isExpired(w.expirationDate) || w.status === 1).length}
+                    </h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Không còn bảo hành</p>
+                </motion.div>
+
+                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                            <Package size={24} />
+                        </div>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Tổng số</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{warranties.length}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Sản phẩm đã đăng ký</p>
+                </motion.div>
             </div>
+
+            {/* Warranties Table */}
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="premium-card overflow-hidden"
+            >
+                <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-sm">
+                    <h3 className="text-xl font-black text-gray-900 uppercase italic">Danh sách bảo hành</h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50/50 text-gray-400 text-[10px] uppercase font-black tracking-widest">
+                            <tr>
+                                <th className="px-8 py-5">Serial Number</th>
+                                <th className="px-8 py-5">Product ID</th>
+                                <th className="px-8 py-5">Ngày mua</th>
+                                <th className="px-8 py-5">Hết hạn</th>
+                                <th className="px-8 py-5">Thời hạn</th>
+                                <th className="px-8 py-5">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {warranties.slice(0, 20).map((warranty) => (
+                                <tr key={warranty.id} className="hover:bg-gray-50/50 transition-colors group">
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-3">
+                                            <Shield className="text-[#D70018]" size={18} />
+                                            <span className="font-black text-gray-900 font-mono">{warranty.serialNumber}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <span className="text-xs text-gray-600 font-mono">{warranty.productId.substring(0, 8)}...</span>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-2 text-gray-600 text-xs font-bold">
+                                            <Calendar size={14} />
+                                            {new Date(warranty.purchaseDate).toLocaleDateString('vi-VN')}
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <span className={`text-xs font-bold ${isExpired(warranty.expirationDate) ? 'text-red-600' : 'text-gray-900'}`}>
+                                            {new Date(warranty.expirationDate).toLocaleDateString('vi-VN')}
+                                        </span>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <span className="text-xs text-gray-600 font-bold">{warranty.warrantyPeriodMonths} tháng</span>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        {getStatusBadge(warranty.status)}
+                                    </td>
+                                </tr>
+                            ))}
+                            {warranties.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-20 text-center">
+                                        <Shield className="mx-auto text-gray-100 mb-4" size={60} />
+                                        <p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">
+                                            Chưa có bảo hành nào được đăng ký.
+                                        </p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </motion.div>
         </div>
     );
 };

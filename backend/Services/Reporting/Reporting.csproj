@@ -12,6 +12,7 @@
     <ProjectReference Include="..\Sales\Sales.csproj" />
     <ProjectReference Include="..\Accounting\Accounting.csproj" />
     <ProjectReference Include="..\Inventory\Inventory.csproj" />
+    <ProjectReference Include="..\Repair\Repair.csproj" />
   </ItemGroup>
 
   <ItemGroup>

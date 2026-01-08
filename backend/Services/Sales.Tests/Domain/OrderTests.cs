@@ -17,7 +17,7 @@ public class OrderTests
         };
 
         // Act
-        var order = new Order(customerId, "123 Main St", items);
+        var order = new Order(customerId, "123 Main St", items, 0.1m);
 
         // Assert
         order.Id.Should().NotBeEmpty();
@@ -39,7 +39,7 @@ public class OrderTests
         };
 
         // Act
-        var order = new Order(Guid.NewGuid(), "123 Main St", items);
+        var order = new Order(Guid.NewGuid(), "123 Main St", items, 0.1m);
 
         // Assert
         order.SubtotalAmount.Should().Be(350m);
@@ -80,7 +80,7 @@ public class OrderTests
 
         // Assert
         order.Status.Should().Be(OrderStatus.Shipped);
-        order.ShippedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        order.FulfilledAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class OrderTests
         };
 
         // Act
-        var order = new Order(Guid.NewGuid(), "123 Main St", items, "Please deliver after 5pm");
+        var order = new Order(Guid.NewGuid(), "123 Main St", items, 0.1m, "Please deliver after 5pm");
 
         // Assert
         order.Notes.Should().Be("Please deliver after 5pm");

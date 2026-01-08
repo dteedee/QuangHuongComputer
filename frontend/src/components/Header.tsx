@@ -28,7 +28,9 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Searching for:', searchQuery);
+        if (searchQuery.trim()) {
+            navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+        }
     };
 
     return (

@@ -23,6 +23,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Gui
             request.CustomerId,
             request.ShippingAddress,
             orderItems,
+            0.1m, // 10% tax rate
             request.Notes
         );
 

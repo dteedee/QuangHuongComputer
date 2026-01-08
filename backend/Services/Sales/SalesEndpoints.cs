@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Sales.Domain;
 using Sales.Infrastructure;
+using Catalog.Infrastructure;
+using InventoryModule.Infrastructure;
+using MassTransit;
 
 namespace Sales;
 
@@ -14,8 +17,7 @@ public static class SalesEndpoints
     {
         var group = app.MapGroup("/api/sales").RequireAuthorization();
 
-        // Customer Endpoints
-        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext db, ClaimsPrincipal user) =>
+        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) 
@@ -24,15 +26,60 @@ public static class SalesEndpoints
             if (model.Items == null || !model.Items.Any())
                 return Results.BadRequest(new { Error = "Cart is empty" });
 
-            // Create a new order for the user
-            var order = new Order(userId, model.ShippingAddress ?? "", new List<OrderItem>(), model.Notes);
-            foreach (var item in model.Items)
+            // Validate Data & Check Stock (Transactional-like in Monolith)
+            // Note: Ideally use a distributed transaction or Saga, but for Monolith, we can try to orchestrate checks.
+            
+            var orderItems = new List<OrderItem>();
+            
+            // 1. Fetch all products to validate prices
+            var productIds = model.Items.Select(i => i.ProductId).ToList();
+            var products = await catalogDb.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+            var inventoryItems = await inventoryDb.InventoryItems.Where(i => productIds.Contains(i.ProductId)).ToListAsync();
+
+            foreach (var cartItem in model.Items)
             {
-                order.AddItem(item.ProductId, item.ProductName, item.UnitPrice, item.Quantity);
+                var product = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
+                if (product == null)
+                    return Results.BadRequest(new { Error = $"Product not found: {cartItem.ProductId}" });
+
+                // Validate Price (Security fix: Don't trust frontend price)
+                // Note: You might want to allow some tolerance or explicit overrides, but for now strict check.
+                // We use the current database price.
+                
+                // Validate Stock
+                var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
+                if (inventoryItem == null || inventoryItem.QuantityOnHand < cartItem.Quantity)
+                {
+                    return Results.BadRequest(new { Error = $"Insufficient stock for product: {product.Name}" });
+                }
+
+                orderItems.Add(new OrderItem(product.Id, product.Name, product.Price, cartItem.Quantity));
             }
 
-            db.Orders.Add(order);
-            await db.SaveChangesAsync();
+            // 2. Reduce Stock (Synchronous for now)
+            foreach (var item in orderItems)
+            {
+                var invItem = inventoryItems.First(i => i.ProductId == item.ProductId);
+                invItem.AdjustStock(-item.Quantity);
+                
+                // Also update Catalog stock for display purposes if needed
+                var catProduct = products.First(p => p.Id == item.ProductId);
+                catProduct.UpdateStock(-item.Quantity);
+            }
+            
+            // 3. Create Order
+            var order = new Order(userId, model.ShippingAddress ?? "", orderItems, 0.1m, model.Notes);
+            salesDb.Orders.Add(order);
+
+            // 4. Save Changes
+            // In a real monolith, we might wrap this in a customized TransactionScope or ensure idempotency.
+            // Here we just save all.
+            await inventoryDb.SaveChangesAsync();
+            await catalogDb.SaveChangesAsync();
+            await salesDb.SaveChangesAsync();
+
+            // 5. Publish Event
+            // await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(order.Id, order.CustomerId));
 
             return Results.Ok(new 
             { 
@@ -100,8 +147,8 @@ public static class SalesEndpoints
                 order.ShippingAddress,
                 order.Notes,
                 order.ConfirmedAt,
-                order.ShippedAt,
-                order.DeliveredAt,
+                order.FulfilledAt,
+                order.CompletedAt,
                 Items = order.Items.Select(i => new
                 {
                     i.ProductId,

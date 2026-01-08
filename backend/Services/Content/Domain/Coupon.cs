@@ -18,15 +18,27 @@ public class Coupon : Entity<Guid>
 
     protected Coupon() { }
 
-    public Coupon(string code, string description, DiscountType type, decimal value, DateTime startDate, DateTime? endDate = null)
+    public Coupon(
+        string code, 
+        string description, 
+        DiscountType type, 
+        decimal value, 
+        decimal minOrderAmount,
+        decimal? maxDiscountAmount,
+        DateTime startDate, 
+        DateTime endDate,
+        int? usageLimit = null)
     {
         Id = Guid.NewGuid();
         Code = code.ToUpper();
         Description = description;
         Type = type;
         Value = value;
+        MinOrderAmount = minOrderAmount;
+        MaxDiscountAmount = maxDiscountAmount;
         StartDate = startDate;
         EndDate = endDate;
+        UsageLimit = usageLimit;
         IsActive = true;
         CreatedAt = DateTime.UtcNow;
     }

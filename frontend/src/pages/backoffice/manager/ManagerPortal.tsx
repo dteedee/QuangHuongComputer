@@ -1,7 +1,9 @@
-﻿import { LayoutDashboard, Users, Target, Rocket, Zap, BarChart3, TrendingUp, Briefcase } from 'lucide-react';
+﻿import { Users, Target, Rocket, Zap, BarChart3, TrendingUp, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export const ManagerPortal = () => {
+    const navigate = useNavigate();
     const stats = [
         { label: 'Doanh thu tháng', value: '₫1.2B', icon: <TrendingUp size={20} />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
         { label: 'KPI Hoàn thành', value: '85%', icon: <Target size={20} />, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -56,8 +58,18 @@ export const ManagerPortal = () => {
                     <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter mb-4">Phân tích Hiệu suất</h3>
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Theo dõi sát sao các chỉ số tăng trưởng, hiệu quả marketing và tối ưu hóa quy trình vận hành cửa hàng.</p>
                     <div className="flex gap-4">
-                        <button className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all">Growth Analytics</button>
-                        <button className="px-6 py-3 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-gray-100 transition-all">Sales Forecast</button>
+                        <button
+                            onClick={() => navigate('/backoffice/reports')}
+                            className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all"
+                        >
+                            Growth Analytics
+                        </button>
+                        <button
+                            onClick={() => navigate('/backoffice/orders')}
+                            className="px-6 py-3 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-gray-100 transition-all"
+                        >
+                            Review Orders
+                        </button>
                     </div>
                 </motion.div>
 
@@ -71,7 +83,10 @@ export const ManagerPortal = () => {
                     </div>
                     <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-4">Quản lý Đội ngũ</h3>
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Điều phối tài nguyên nhân sự, phân bổ ca trực và giải quyết các khiếu nại khách hàng cấp quản lý.</p>
-                    <button className="px-6 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] hover:text-white transition-all">
+                    <button
+                        onClick={() => navigate('/backoffice/hr')}
+                        className="px-6 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] hover:text-white transition-all"
+                    >
                         Team Management
                     </button>
                 </motion.div>

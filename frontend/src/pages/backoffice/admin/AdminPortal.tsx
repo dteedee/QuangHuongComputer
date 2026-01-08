@@ -1,7 +1,9 @@
 ﻿import { LayoutDashboard, Shield, Users, Lock, Key, Activity, Heart, Globe, Terminal } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export const AdminPortal = () => {
+    const navigate = useNavigate();
     const stats = [
         { label: 'System Health', value: '99.9%', icon: <Heart size={20} />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
         { label: 'Active Sessions', value: '142', icon: <Users size={20} />, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -56,8 +58,18 @@ export const AdminPortal = () => {
                     <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter mb-4">Quản lý định danh</h3>
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Cấp phát quyền hạn (RBAC), quản lý token người dùng và thiết lập bảo mật 2 lớp toàn hệ thống.</p>
                     <div className="flex gap-4">
-                        <button className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all">Identity Hub</button>
-                        <button className="px-6 py-3 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-gray-100 transition-all">Audit Logs</button>
+                        <button
+                            onClick={() => navigate('/backoffice/users')}
+                            className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all"
+                        >
+                            Identity Hub
+                        </button>
+                        <button
+                            onClick={() => navigate('/backoffice/roles')}
+                            className="px-6 py-3 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-gray-100 transition-all"
+                        >
+                            Role Manager
+                        </button>
                     </div>
                 </motion.div>
 

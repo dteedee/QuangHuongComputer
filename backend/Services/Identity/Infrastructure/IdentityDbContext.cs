@@ -16,6 +16,8 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
