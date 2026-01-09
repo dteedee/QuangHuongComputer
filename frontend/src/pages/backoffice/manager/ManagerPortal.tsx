@@ -16,7 +16,7 @@ export const ManagerPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Manager <span className="text-[#D70018]">Strategy Hub</span>
+                        Quản lý <span className="text-[#D70018]">Trung tâm Chiến lược</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                         Điều hành chiến lược, quản lý chỉ số KPI và nhân sự trực thuộc
@@ -25,7 +25,7 @@ export const ManagerPortal = () => {
                 <div className="flex gap-4">
                     <button className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 group">
                         <Zap size={18} className="text-white group-hover:scale-125 transition-transform" />
-                        Quick Report
+                        Báo cáo nhanh
                     </button>
                 </div>
             </div>
@@ -62,13 +62,13 @@ export const ManagerPortal = () => {
                             onClick={() => navigate('/backoffice/reports')}
                             className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all"
                         >
-                            Growth Analytics
+                            Phân tích tăng trưởng
                         </button>
                         <button
                             onClick={() => navigate('/backoffice/orders')}
                             className="px-6 py-3 bg-gray-50 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-gray-100 transition-all"
                         >
-                            Review Orders
+                            Duyệt đơn hàng
                         </button>
                     </div>
                 </motion.div>
@@ -87,7 +87,7 @@ export const ManagerPortal = () => {
                         onClick={() => navigate('/backoffice/hr')}
                         className="px-6 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] hover:text-white transition-all"
                     >
-                        Team Management
+                        Quản lý Đội ngũ
                     </button>
                 </motion.div>
             </div>

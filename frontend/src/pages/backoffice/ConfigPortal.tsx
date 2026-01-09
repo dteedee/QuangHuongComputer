@@ -92,7 +92,7 @@ export const ConfigPortal = () => {
                     >
                         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12 border-b border-gray-50 pb-8">
                             <div>
-                                <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">{activeCategory}</h3>
+                                <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">{categories.find(c => c.name === activeCategory)?.label || activeCategory}</h3>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Thiết lập các tham số vận hành</p>
                             </div>
                             <button

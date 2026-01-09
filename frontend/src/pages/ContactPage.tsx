@@ -12,69 +12,68 @@ export const ContactPage = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-8">
-                <div className="bg-white rounded-lg shadow-sm p-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center uppercase text-[#D70018]">Liên hệ với chúng tôi</h1>
+            <div className="container mx-auto px-4 mt-8 font-sans">
+                <div className="bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 p-8 md:p-16 border border-gray-50">
+                    <h1 className="text-4xl font-black text-gray-900 mb-12 text-center uppercase italic tracking-tighter">Liên hệ với <span className="text-[#D70018]">Quang Hưởng</span></h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {/* Info */}
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-gray-800 border-l-4 border-[#D70018] pl-3">Thông tin liên hệ</h3>
+                        <div className="space-y-10">
+                            <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter border-l-4 border-[#D70018] pl-4">Thông tin hệ thống</h3>
                             <div className="space-y-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-red-50 p-2 rounded text-[#D70018]"><MapPin /></div>
+                                <div className="flex items-start gap-5 group">
+                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><MapPin /></div>
                                     <div>
-                                        <b className="block text-gray-900">Địa chỉ:</b>
-                                        <p className="text-gray-600">Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội</p>
+                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Trụ sở chính:</b>
+                                        <p className="text-gray-900 font-bold">Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-red-50 p-2 rounded text-[#D70018]"><Phone /></div>
+                                <div className="flex items-start gap-5 group">
+                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Phone /></div>
                                     <div>
-                                        <b className="block text-gray-900">Hotline:</b>
-                                        <p className="text-[#D70018] font-bold text-lg">1800.6321</p>
+                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Tổng đài hỗ trợ:</b>
+                                        <p className="text-[#D70018] font-black text-2xl tracking-tighter">1800.6321</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-red-50 p-2 rounded text-[#D70018]"><Mail /></div>
+                                <div className="flex items-start gap-5 group">
+                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Mail /></div>
                                     <div>
-                                        <b className="block text-gray-900">Email:</b>
-                                        <p className="text-gray-600">contact@minhancomputer.com</p>
+                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Email phản hồi:</b>
+                                        <p className="text-gray-900 font-bold">contact@quanghuong.com</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-red-50 p-2 rounded text-[#D70018]"><Clock /></div>
+                                <div className="flex items-start gap-5 group">
+                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Clock /></div>
                                     <div>
-                                        <b className="block text-gray-900">Giờ làm việc:</b>
-                                        <p className="text-gray-600">8:00 - 21:00 (Tất cả các ngày trong tuần)</p>
+                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Thời gian phục vụ:</b>
+                                        <p className="text-gray-900 font-bold">8:00 - 21:00 (Tất cả các ngày trong tuần)</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Form */}
-                        <div className="bg-gray-50 p-6 rounded-lg">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">Gửi tin nhắn cho chúng tôi</h3>
+                        <div className="bg-gray-50/50 p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-inner">
+                            <h3 className="text-2xl font-black text-gray-900 mb-8 uppercase italic tracking-tighter">Gửi tin nhắn <span className="text-[#D70018]">tư vấn</span></h3>
                             <form className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên *</label>
-                                        <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#D70018] outline-none" placeholder="Nguyễn Văn A" />
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Họ tên *</label>
+                                        <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#D70018] outline-none transition-all focus:ring-4 focus:ring-red-500/5" placeholder="Nguyễn Văn A" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Điện thoại *</label>
-                                        <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#D70018] outline-none" placeholder="09xxx..." />
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Điện thoại *</label>
+                                        <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#D70018] outline-none transition-all focus:ring-4 focus:ring-red-500/5" placeholder="09xxx..." />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input type="email" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#D70018] outline-none" placeholder="email@example.com" />
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Email</label>
+                                    <input type="email" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#D70018] outline-none transition-all focus:ring-4 focus:ring-red-500/5" placeholder="email@example.com" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung</label>
-                                    <textarea className="w-full border border-gray-300 rounded px-3 py-2 text-sm h-32 focus:border-[#D70018] outline-none" placeholder="Nội dung cần tư vấn..."></textarea>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Nội dung</label>
+                                    <textarea className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold h-32 focus:border-[#D70018] outline-none transition-all focus:ring-4 focus:ring-red-500/5 resize-none" placeholder="Nội dung cần tư vấn..."></textarea>
                                 </div>
-                                <button className="w-full bg-[#D70018] text-white font-bold py-3 rounded hover:bg-red-700 transition uppercase shadow-lg">Gửi liên hệ</button>
+                                <button className="w-full bg-[#D70018] hover:bg-[#b50014] text-white font-black py-5 rounded-xl transition-all uppercase shadow-xl shadow-red-500/20 active:scale-95 tracking-widest text-xs">Gửi liên hệ ngay</button>
                             </form>
                         </div>
                     </div>

@@ -60,7 +60,7 @@ public static class RepairEndpoints
                     w.Description,
                     w.Status,
                     w.EstimatedCost,
-                    w.TotalCost,
+                    TotalCost = w.PartsCost + w.LaborCost,
                     w.CreatedAt,
                     w.StartedAt,
                     w.FinishedAt
@@ -165,7 +165,7 @@ public static class RepairEndpoints
                     w.Status,
                     w.TechnicianId,
                     w.EstimatedCost,
-                    w.TotalCost,
+                    TotalCost = w.PartsCost + w.LaborCost,
                     w.CreatedAt,
                     w.StartedAt,
                     w.FinishedAt
@@ -270,7 +270,7 @@ public static class RepairEndpoints
                 CompletedWorkOrders = await db.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Completed),
                 TotalRevenue = await db.WorkOrders
                     .Where(w => w.Status == WorkOrderStatus.Completed)
-                    .SumAsync(w => (decimal?)w.TotalCost) ?? 0
+                    .SumAsync(w => (decimal?)(w.PartsCost + w.LaborCost)) ?? 0
             };
 
             return Results.Ok(stats);

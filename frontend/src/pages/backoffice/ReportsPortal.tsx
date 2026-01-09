@@ -68,7 +68,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Tổng doanh thu bán hàng</p>
                     <h3 className="text-4xl font-black text-gray-900 flex items-baseline gap-3 tracking-tighter">
-                        ${salesStats?.totalRevenue?.toLocaleString() || '0'}
+                        {salesStats?.totalRevenue?.toLocaleString() || '0'}₫
                         <span className="text-xs font-black text-emerald-500 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
                             <ArrowUpRight size={14} /> 12%
                         </span>
@@ -88,7 +88,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Giá trị tài sản kho</p>
                     <h3 className="text-4xl font-black text-gray-900 tracking-tighter">
-                        ${invValue?.totalValue?.toLocaleString() || '0'}
+                        {invValue?.totalValue?.toLocaleString() || '0'}₫
                     </h3>
                     <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
                         <BarChart3 size={14} className="text-blue-500" />
@@ -105,7 +105,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Công nợ phải thu</p>
                     <h3 className="text-4xl font-black text-[#D70018] tracking-tighter">
-                        ${arAging?.reduce((acc, curr) => acc + curr.balance, 0)?.toLocaleString() || '0'}
+                        {arAging?.reduce((acc, curr) => acc + curr.balance, 0)?.toLocaleString() || '0'}₫
                     </h3>
                     <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
                         <Clock size={14} className="text-amber-500" />
@@ -140,11 +140,11 @@ export const ReportsPortal = () => {
                                     </div>
                                     <div>
                                         <p className="font-black text-gray-800 text-sm uppercase tracking-tight italic leading-none">{account.organizationName}</p>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-2">Hạn mức: ${account.creditLimit?.toLocaleString()}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-2">Hạn mức: {account.creditLimit?.toLocaleString()}₫</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-[#D70018] text-lg tracking-tighter">${account.balance?.toLocaleString()}</p>
+                                    <p className="font-black text-[#D70018] text-lg tracking-tighter">{account.balance?.toLocaleString()}₫</p>
                                     <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">Số dư chưa thanh toán</p>
                                 </div>
                             </motion.div>

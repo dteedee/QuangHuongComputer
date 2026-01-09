@@ -9,11 +9,13 @@ export const AdminProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [page, setPage] = useState(1);
+    const pageSize = 15;
     const queryClient = useQueryClient();
 
     const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-products'],
-        queryFn: () => catalogApi.getProducts(),
+        queryKey: ['admin-products', page],
+        queryFn: () => catalogApi.getProducts({ page, pageSize }),
     });
 
     const { data: categories } = useQuery({
@@ -214,6 +216,29 @@ export const AdminProductsPage = () => {
                     </table>
                 </div>
             </motion.div>
+
+            {/* Pagination UI */}
+            <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                    Hiển thị <span className="text-gray-900">{products.length}</span> / <span className="text-gray-900">{response?.total || 0}</span> sản phẩm
+                </p>
+                <div className="flex gap-2">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                        className="px-6 py-3 bg-gray-50 border border-transparent rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] disabled:opacity-30 transition-all"
+                    >
+                        Trang trước
+                    </button>
+                    <button
+                        disabled={!response?.total || page >= Math.ceil(response.total / pageSize)}
+                        onClick={() => setPage(p => p + 1)}
+                        className="px-6 py-3 bg-gray-50 border border-transparent rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] disabled:opacity-30 transition-all"
+                    >
+                        Trang kế tiếp
+                    </button>
+                </div>
+            </div>
 
             {/* Modal */}
             <AnimatePresence>

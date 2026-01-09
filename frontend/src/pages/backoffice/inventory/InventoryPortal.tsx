@@ -48,9 +48,9 @@ export const InventoryPortal = () => {
 
     const getStatusBadge = (status: number) => {
         switch (status) {
-            case 0: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase">Pending</span>;
-            case 1: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Received</span>;
-            case 2: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-black uppercase">Cancelled</span>;
+            case 0: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase">Chờ duyệt</span>;
+            case 1: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Đã nhập</span>;
+            case 2: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-black uppercase">Đã hủy</span>;
             default: return null;
         }
     };
@@ -198,14 +198,14 @@ export const InventoryPortal = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs text-gray-400 font-bold">
-                                                Supplier: {po.supplierId.substring(0, 8)}...
+                                                Nhà cung cấp: {po.supplierId.substring(0, 8)}...
                                             </p>
                                             <p className="text-xs text-gray-400 font-bold mt-1">
                                                 {new Date(po.orderDate).toLocaleDateString('vi-VN')}
                                             </p>
                                         </div>
                                         <p className="text-lg font-black text-gray-900 tracking-tighter">
-                                            ${po.totalAmount.toLocaleString()}
+                                            {po.totalAmount.toLocaleString()}₫
                                         </p>
                                     </div>
                                 </div>

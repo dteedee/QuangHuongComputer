@@ -26,6 +26,9 @@ export const CategoryPage = () => {
     const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
     const [priceRange, setPriceRange] = useState<{ min?: number; max?: number } | null>(null);
     const [inStockOnly, setInStockOnly] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const pageSize = 12;
 
     // Initial load
     useEffect(() => {
@@ -49,26 +52,31 @@ export const CategoryPage = () => {
 
     // Manual mapping for better UX titles
     const routeToCategory: Record<string, string> = {
-        'laptop': 'Laptop',
-        'pc-gaming': 'PC Gaming',
-        'workstation': 'Workstation',
-        'office': 'Office',
-        'components': 'Components',
-        'screens': 'Screens',
-        'gear': 'Gear',
-        'network': 'Network',
+        'laptop': 'Laptop - Máy Tính Xách Tay',
+        'pc-gaming': 'Máy Tính Chơi Game',
+        'workstation': 'Máy Tính Đồ Họa',
+        'screens': 'Màn Hình Máy Tính',
+        'components': 'Linh Kiện Máy Tính',
+        'gear': 'Phím, Chuột - Gaming Gear',
+        'network': 'Thiết Bị Mạng',
         'camera': 'Camera',
-        'audio': 'Audio',
-        'accessories': 'Accessories'
+        'audio': 'Loa, Mic, Webcam, Stream',
+        'accessories': 'Phụ Kiện Máy Tính - Laptop'
     };
 
     const categorySearchName = routeToCategory[currentSlug] || currentSlug;
 
     // Find matching category object
     const matchedCategory = categories.find(c => {
-        const n1 = normalize(c.name);
-        const n2 = normalize(categorySearchName);
-        return n1.includes(n2) || n2.includes(n1);
+        const catName = normalize(c.name);
+        const catDesc = normalize(c.description || "");
+        const target = normalize(categorySearchName);
+        const slugTarget = normalize(currentSlug);
+
+        return catName === target ||
+            catDesc === slugTarget ||
+            catName.includes(target) ||
+            target.includes(catName);
     });
 
     const categoryTitle = searchQuery
@@ -106,9 +114,13 @@ export const CategoryPage = () => {
                     params.inStock = true;
                 }
 
+                params.page = page;
+                params.pageSize = pageSize;
+
                 // Use the search endpoint which supports advanced filters
-                const results = await catalogApi.searchProducts(params);
-                setProducts(results || []);
+                const response = await catalogApi.searchProducts(params);
+                setProducts(response.products || []);
+                setTotalProducts(response.total || 0);
 
             } catch (error) {
                 console.error("Error fetching products", error);
@@ -123,7 +135,7 @@ export const CategoryPage = () => {
         if (categories.length > 0 || searchQuery) {
             fetchProducts();
         }
-    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, categories.length, searchQuery]);
+    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, categories.length, searchQuery, page]);
 
     // Handlers
     const handlePriceSelect = (min?: number, max?: number) => {
@@ -146,7 +158,10 @@ export const CategoryPage = () => {
         setSelectedBrandId(null);
         setPriceRange(null);
         setInStockOnly(false);
+        setPage(1);
     };
+
+    const totalPages = Math.ceil(totalProducts / pageSize);
 
     return (
         <div className="bg-gray-100 min-h-screen pb-10">
@@ -275,23 +290,59 @@ export const CategoryPage = () => {
                                 ))}
                             </div>
                         ) : (
-                            products.length > 0 ? (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
-                                >
-                                    {products.map((product) => (
-                                        <ProductCard key={product.id} product={product} />
-                                    ))}
-                                </motion.div>
-                            ) : (
-                                <div className="bg-white p-8 text-center rounded-lg shadow-sm">
-                                    <p className="text-gray-500">Không tìm thấy sản phẩm nào phù hợp.</p>
-                                    <button onClick={clearFilters} className="mt-2 text-[#D70018] hover:underline">Xóa bộ lọc</button>
-                                </div>
-                            )
+                            <>
+                                {products.length > 0 ? (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                                    >
+                                        {products.map((product) => (
+                                            <ProductCard key={product.id} product={product} />
+                                        ))}
+                                    </motion.div>
+                                ) : (
+                                    <div className="bg-white p-8 text-center rounded-lg shadow-sm">
+                                        <p className="text-gray-500">Không tìm thấy sản phẩm nào phù hợp.</p>
+                                        <button onClick={clearFilters} className="mt-2 text-[#D70018] hover:underline">Xóa bộ lọc</button>
+                                    </div>
+                                )}
+
+                                {/* Pagination UI */}
+                                {totalPages > 1 && (
+                                    <div className="mt-10 flex justify-center items-center gap-2">
+                                        <button
+                                            disabled={page === 1}
+                                            onClick={() => setPage(p => p - 1)}
+                                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Trước
+                                        </button>
+                                        <div className="flex gap-1">
+                                            {[...Array(totalPages)].map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setPage(i + 1)}
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${page === i + 1
+                                                        ? 'bg-[#D70018] text-white shadow-lg shadow-red-500/30'
+                                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button
+                                            disabled={page === totalPages}
+                                            onClick={() => setPage(p => p + 1)}
+                                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Sau
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

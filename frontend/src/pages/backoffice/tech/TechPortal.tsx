@@ -52,9 +52,9 @@ export const TechPortal = () => {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'Pending': return <Clock className="text-amber-500" size={16} />;
-            case 'InProgress': return <Play className="text-blue-500" size={16} />;
+            case 'InProgress': return <Play className="text-[#D70018]" size={16} />;
             case 'Completed': return <CheckCircle2 className="text-emerald-500" size={16} />;
-            case 'Cancelled': return <AlertCircle className="text-rose-500" size={16} />;
+            case 'Cancelled': return <AlertCircle className="text-gray-400" size={16} />;
             default: return <Wrench className="text-gray-400" size={16} />;
         }
     };
@@ -62,10 +62,20 @@ export const TechPortal = () => {
     const getStatusStyle = (status: string) => {
         switch (status) {
             case 'Pending': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'InProgress': return 'bg-blue-50 text-blue-600 border-blue-100';
+            case 'InProgress': return 'bg-red-50 text-[#D70018] border-red-100';
             case 'Completed': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'Cancelled': return 'bg-rose-50 text-rose-600 border-rose-100';
+            case 'Cancelled': return 'bg-gray-50 text-gray-400 border-gray-100';
             default: return 'bg-gray-50 text-gray-500 border-gray-100';
+        }
+    };
+
+    const translateStatus = (status: string) => {
+        switch (status) {
+            case 'Pending': return 'Chờ xử lý';
+            case 'InProgress': return 'Đang thực hiện';
+            case 'Completed': return 'Đã hoàn tất';
+            case 'Cancelled': return 'Đã hủy';
+            default: return status;
         }
     };
 
@@ -131,7 +141,7 @@ export const TechPortal = () => {
                                     <td className="px-8 py-6">
                                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase border ${getStatusStyle(order.status)}`}>
                                             {getStatusIcon(order.status)}
-                                            {order.status}
+                                            {translateStatus(order.status)}
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase">

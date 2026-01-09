@@ -116,7 +116,7 @@ export const HRPortal = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-base font-black text-gray-900 tracking-tighter">₫{emp.baseSalary.toLocaleString()}</p>
-                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black italic mt-1">{emp.isActive ? 'Active' : 'Inactive'}</p>
+                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black italic mt-1">{emp.isActive ? 'Đang làm việc' : 'Đã nghỉ việc'}</p>
                                 </div>
                             </div>
                         ))}

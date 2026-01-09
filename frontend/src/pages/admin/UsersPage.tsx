@@ -9,11 +9,13 @@ export const AdminUsersPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [page, setPage] = useState(1);
+    const pageSize = 15;
     const queryClient = useQueryClient();
 
-    const { data: users = [], isLoading } = useQuery({
-        queryKey: ['admin-users'],
-        queryFn: authApi.getUsers,
+    const { data: response, isLoading } = useQuery({
+        queryKey: ['admin-users', page],
+        queryFn: () => authApi.getUsers(page, pageSize),
     });
 
     const { data: allRoles = [] } = useQuery({
@@ -47,6 +49,9 @@ export const AdminUsersPage = () => {
             default: return { color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-100' };
         }
     };
+
+    const users = response?.items || [];
+    const total = response?.total || 0;
 
     const filteredUsers = users.filter((u: User) =>
         u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -162,6 +167,29 @@ export const AdminUsersPage = () => {
                     </table>
                 </div>
             </motion.div>
+
+            {/* Pagination UI */}
+            <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                    Hiển thị <span className="text-gray-900">{users.length}</span> / <span className="text-gray-900">{total}</span> người dùng
+                </p>
+                <div className="flex gap-2">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                        className="px-6 py-3 bg-gray-50 border border-transparent rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] disabled:opacity-30 transition-all font-black"
+                    >
+                        Trang trước
+                    </button>
+                    <button
+                        disabled={page >= Math.ceil(total / pageSize)}
+                        onClick={() => setPage(p => p + 1)}
+                        className="px-6 py-3 bg-gray-50 border border-transparent rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] disabled:opacity-30 transition-all font-black"
+                    >
+                        Trang kế tiếp
+                    </button>
+                </div>
+            </div>
 
             {/* Role Modal */}
             <AnimatePresence>

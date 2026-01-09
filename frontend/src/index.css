@@ -3,15 +3,16 @@
 @theme {
     --color-brand-red: #D70018;
     --color-brand-red-light: #FFEDED;
-    --color-brand-dark: #333333;
-    --color-brand-gray: #777777;
-    --color-brand-bg: #F4F4F4;
+    --color-brand-red-dark: #B50014;
+    --color-brand-dark: #1A1A1A;
+    --color-brand-gray: #666666;
+    --color-brand-bg: #FFFFFF;
 }
 
 /* Base Styles */
 body {
-    background-color: #F4F4F4;
-    color: #333333;
+    background-color: #F9FAFB;
+    color: #1A1A1A;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
 }

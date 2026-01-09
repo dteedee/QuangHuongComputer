@@ -68,8 +68,10 @@ export const catalogApi = {
         minPrice?: number;
         maxPrice?: number;
         inStock?: boolean;
+        page?: number;
+        pageSize?: number;
     }) => {
-        const response = await client.get<Product[]>('/catalog/products/search', { params });
+        const response = await client.get<ProductsResponse>('/catalog/products/search', { params });
         return response.data;
     },
 

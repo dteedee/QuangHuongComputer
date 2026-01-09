@@ -2,7 +2,8 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, HelpCircle, PackageCheck } from 'lucide-react';
+import { ShoppingCart, Star, PackageCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ProductCardProps {
     product: Product;
@@ -16,20 +17,34 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     const discount = 15;
 
     return (
-        <div className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:border-[#D70018] transition-all duration-300">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+            className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:border-[#D70018] transition-all duration-300"
+        >
             {/* Discount Badge */}
-            <div className="absolute top-2 left-2 z-20">
+            <motion.div
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-2 left-2 z-20"
+            >
                 <div className="bg-[#D70018] text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
                     -{discount}%
                 </div>
-            </div>
+            </motion.div>
 
             {/* Hot/New Badge */}
-            <div className="absolute top-2 right-2 z-20">
+            <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-2 right-2 z-20"
+            >
                 <div className="bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm uppercase">
                     Bán chạy
                 </div>
-            </div>
+            </motion.div>
 
             {/* Product Image Area */}
             <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
@@ -49,7 +64,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 </div>
 
                 <Link to={`/product/${product.id}`} className="mb-3 block">
-                    <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight">
+                    <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight uppercase italic tracking-tighter">
                         {product.name}
                     </h3>
                 </Link>
@@ -76,12 +91,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 </div>
             </div>
 
-            {/* Quick view / Compare overlay on hover (optional enhancement) */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <button className="bg-white/90 backdrop-blur text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-gray-200 hover:bg-[#D70018] hover:text-white transition-all">
+            {/* Quick view overlay on hover */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 transition-all duration-500">
+                <button className="bg-white/90 backdrop-blur text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-2xl border border-gray-100 hover:bg-[#D70018] hover:text-white transition-all transform hover:scale-110 active:scale-95">
                     Xem nhanh
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 };

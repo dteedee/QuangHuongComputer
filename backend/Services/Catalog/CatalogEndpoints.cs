@@ -66,7 +66,9 @@ public static class CatalogEndpoints
             decimal? minPrice,
             decimal? maxPrice,
             bool? inStock,
-            CatalogDbContext db) =>
+            CatalogDbContext db,
+            int page = 1,
+            int pageSize = 20) =>
         {
             var productsQuery = db.Products.AsQueryable();
 
@@ -102,8 +104,18 @@ public static class CatalogEndpoints
                 productsQuery = productsQuery.Where(p => p.StockQuantity > 0);
             }
 
-            var products = await productsQuery.ToListAsync();
-            return Results.Ok(products);
+            var total = await productsQuery.CountAsync();
+            var products = await productsQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Results.Ok(new {
+                Total = total,
+                Page = page,
+                PageSize = pageSize,
+                Products = products
+            });
         });
 
         // Create Product (Admin only)

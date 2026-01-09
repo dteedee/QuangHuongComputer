@@ -77,19 +77,19 @@ export const PolicyPage = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-8 flex flex-col lg:flex-row gap-8">
+            <div className="container mx-auto px-4 mt-8 flex flex-col lg:flex-row gap-8 font-sans">
                 {/* Sidebar */}
                 <div className="w-full lg:w-1/4">
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        <div className="bg-[#D70018] text-white p-4 font-bold uppercase text-sm">Danh mục chính sách</div>
+                    <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
+                        <div className="bg-[#D70018] text-white p-6 font-black uppercase text-xs italic tracking-widest">Danh mục chính sách</div>
                         <div className="flex flex-col">
                             {Object.entries(policies).map(([key, item]) => (
                                 <Link
                                     key={key}
                                     to={`/policy/${key}`}
-                                    className={`p-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 hover:text-[#D70018] transition ${key === type ? 'text-[#D70018] font-bold bg-red-50' : 'text-gray-700'}`}
+                                    className={`p-5 border-b border-gray-50 flex items-center justify-between hover:bg-gray-50 hover:text-[#D70018] transition-all ${key === type ? 'text-[#D70018] font-black bg-red-50' : 'text-gray-500 font-bold'}`}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 text-sm">
                                         <item.icon size={18} />
                                         <span>{item.title}</span>
                                     </div>
@@ -101,14 +101,14 @@ export const PolicyPage = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 bg-white p-8 rounded-lg shadow-sm">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                        <div className="p-3 bg-red-50 text-[#D70018] rounded-full">
-                            <Icon size={32} />
+                <div className="flex-1 bg-white p-10 md:p-16 rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
+                    <div className="flex items-center gap-5 mb-10 border-b border-gray-100 pb-8">
+                        <div className="p-5 bg-red-50 text-[#D70018] rounded-2xl shadow-inner">
+                            <Icon size={40} />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 uppercase">{policy.title}</h1>
+                        <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">{policy.title}</h1>
                     </div>
-                    <div className="prose max-w-none">
+                    <div className="prose prose-red max-w-none text-gray-600 font-medium leading-relaxed italic">
                         {policy.content}
                     </div>
                 </div>

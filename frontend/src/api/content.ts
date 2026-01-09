@@ -4,8 +4,8 @@ export interface Post {
     id: string;
     title: string;
     slug: string;
-    body: string;
-    type: 'Article' | 'Page' | 'Banner';
+    content: string;
+    type: 'Article' | 'News' | 'Promotion' | 'Banner' | 'Ad';
     isPublished: boolean;
     publishedAt?: string;
     createdAt: string;

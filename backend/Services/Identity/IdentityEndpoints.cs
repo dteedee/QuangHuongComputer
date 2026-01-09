@@ -65,9 +65,16 @@ public static class IdentityEndpoints
             return Results.Unauthorized();
         });
 
-        group.MapGet("/users", async (UserManager<ApplicationUser> userManager) =>
+        group.MapGet("/users", async (UserManager<ApplicationUser> userManager, int page = 1, int pageSize = 20) =>
         {
-            var users = await userManager.Users.ToListAsync();
+            var query = userManager.Users;
+            var total = await query.CountAsync();
+            var users = await query
+                .OrderBy(u => u.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             var userDtos = new List<object>();
 
             foreach (var user in users)
@@ -82,7 +89,7 @@ public static class IdentityEndpoints
                 });
             }
 
-            return Results.Ok(userDtos);
+            return Results.Ok(new { Items = userDtos, Total = total, Page = page, PageSize = pageSize });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
 
         group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint) =>

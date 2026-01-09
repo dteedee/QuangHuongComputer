@@ -59,13 +59,13 @@ export const WarrantyPortal = () => {
     const getStatusBadge = (status: number) => {
         switch (status) {
             case 0: // Active
-                return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Active</span>;
+                return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Đang hiệu lực</span>;
             case 1: // Expired
-                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Expired</span>;
+                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Hết hạn</span>;
             case 2: // Voided
-                return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Voided</span>;
+                return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Đã hủy bỏ</span>;
             default:
-                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Unknown</span>;
+                return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Không xác định</span>;
         }
     };
 

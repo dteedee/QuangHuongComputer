@@ -38,77 +38,80 @@ import { PaymentResultPage } from './pages/PaymentResultPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const queryClient = new QueryClient();
 
 function App() {
   console.log('App Rendering...');
   return (
-    <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" reverseOrder={false} />
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <Routes>
-              {/* Main Store Layout */}
-              <Route path="/" element={<RootLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="repairs" element={<RepairPage />} />
-                <Route path="warranty" element={<WarrantyPage />} />
-                <Route path="support" element={<ChatSupport />} />
-                <Route path="cart" element={<CartPage />} />
-                <Route path="checkout" element={<CheckoutPage />} />
-                <Route path="payment/:orderId" element={<PaymentPage />} />
-                <Route path="payment/success" element={<PaymentResultPage />} />
-                <Route path="payment/failed" element={<PaymentResultPage />} />
-                <Route path="product/:id" element={<ProductDetailsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
+    <GoogleOAuthProvider clientId="97898189481-npr89hminm1stncf1tpee4apc1q2gu7g.apps.googleusercontent.com">
+      <QueryClientProvider client={queryClient}>
+        <Toaster position="top-right" reverseOrder={false} />
+        <BrowserRouter>
+          <AuthProvider>
+            <CartProvider>
+              <Routes>
+                {/* Main Store Layout */}
+                <Route path="/" element={<RootLayout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="repairs" element={<RepairPage />} />
+                  <Route path="warranty" element={<WarrantyPage />} />
+                  <Route path="support" element={<ChatSupport />} />
+                  <Route path="cart" element={<CartPage />} />
+                  <Route path="checkout" element={<CheckoutPage />} />
+                  <Route path="payment/:orderId" element={<PaymentPage />} />
+                  <Route path="payment/success" element={<PaymentResultPage />} />
+                  <Route path="payment/failed" element={<PaymentResultPage />} />
+                  <Route path="product/:id" element={<ProductDetailsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
 
-                {/* Category Routes */}
-                <Route path="laptop" element={<CategoryPage />} />
-                <Route path="pc-gaming" element={<CategoryPage />} />
-                <Route path="workstation" element={<CategoryPage />} />
-                <Route path="office" element={<CategoryPage />} />
-                <Route path="components" element={<CategoryPage />} />
-                <Route path="screens" element={<CategoryPage />} />
-                <Route path="search" element={<CategoryPage />} />
-                <Route path="category/:slug" element={<CategoryPage />} />
+                  {/* Category Routes */}
+                  <Route path="laptop" element={<CategoryPage />} />
+                  <Route path="pc-gaming" element={<CategoryPage />} />
+                  <Route path="workstation" element={<CategoryPage />} />
+                  <Route path="office" element={<CategoryPage />} />
+                  <Route path="components" element={<CategoryPage />} />
+                  <Route path="screens" element={<CategoryPage />} />
+                  <Route path="search" element={<CategoryPage />} />
+                  <Route path="category/:slug" element={<CategoryPage />} />
 
-                {/* Content Pages */}
-                <Route path="policy/:type" element={<PolicyPage />} />
-                <Route path="contact" element={<ContactPage />} />
-              </Route>
-
-              {/* Backoffice Routes */}
-              <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
-                <Route path="/backoffice" element={<BackofficeLayout />}>
-                  <Route index element={<CommonDashboard />} />
-                  <Route path="sale" element={<SalePortal />} />
-                  <Route path="tech" element={<TechPortal />} />
-                  <Route path="inventory" element={<InventoryPortal />} />
-                  <Route path="accounting" element={<AccountingPortal />} />
-                  <Route path="hr" element={<HRPortal />} />
-                  <Route path="warranty" element={<WarrantyPortal />} />
-                  <Route path="cms" element={<CMSPortal />} />
-                  <Route path="reports" element={<ReportsPortal />} />
-                  <Route path="users" element={<AdminUsersPage />} />
-                  <Route path="roles" element={<RolesPage />} />
-                  <Route path="products" element={<AdminProductsPage />} />
-                  <Route path="orders" element={<AdminOrdersPage />} />
-                  <Route path="config" element={<ConfigPortal />} />
-                  <Route path="admin" element={<AdminPortal />} />
-                  <Route path="manager" element={<ManagerPortal />} />
+                  {/* Content Pages */}
+                  <Route path="policy/:type" element={<PolicyPage />} />
+                  <Route path="contact" element={<ContactPage />} />
                 </Route>
-              </Route>
 
-              {/* Auth Pages (Standalone) */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Routes>
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+                {/* Backoffice Routes */}
+                <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
+                  <Route path="/backoffice" element={<BackofficeLayout />}>
+                    <Route index element={<CommonDashboard />} />
+                    <Route path="sale" element={<SalePortal />} />
+                    <Route path="tech" element={<TechPortal />} />
+                    <Route path="inventory" element={<InventoryPortal />} />
+                    <Route path="accounting" element={<AccountingPortal />} />
+                    <Route path="hr" element={<HRPortal />} />
+                    <Route path="warranty" element={<WarrantyPortal />} />
+                    <Route path="cms" element={<CMSPortal />} />
+                    <Route path="reports" element={<ReportsPortal />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="roles" element={<RolesPage />} />
+                    <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="config" element={<ConfigPortal />} />
+                    <Route path="admin" element={<AdminPortal />} />
+                    <Route path="manager" element={<ManagerPortal />} />
+                  </Route>
+                </Route>
+
+                {/* Auth Pages (Standalone) */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+              </Routes>
+            </CartProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -36,8 +36,8 @@ export const authApi = {
         return response.data;
     },
 
-    getUsers: async () => {
-        const response = await client.get<User[]>('/auth/users');
+    getUsers: async (page: number = 1, pageSize: number = 20) => {
+        const response = await client.get<{ items: User[], total: number }>('/auth/users', { params: { page, pageSize } });
         return response.data;
     },
 

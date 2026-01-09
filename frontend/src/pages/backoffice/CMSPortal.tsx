@@ -151,7 +151,7 @@ export const CMSPortal = () => {
                                     </div>
                                     <div className="flex items-center gap-8">
                                         <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest italic border-2 ${item.isPublished ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
-                                            {item.isPublished ? 'Published' : 'Draft'}
+                                            {item.isPublished ? 'Đã xuất bản' : 'Bản nháp'}
                                         </span>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                             <button onClick={() => handleOpenModal(item)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-blue-500 transition-all shadow-sm"><Edit3 size={18} /></button>
