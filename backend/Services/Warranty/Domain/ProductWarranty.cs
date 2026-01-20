@@ -12,8 +12,9 @@ public class ProductWarranty : Entity<Guid>
     public int WarrantyPeriodMonths { get; private set; }
     public WarrantyStatus Status { get; private set; }
     public string? Notes { get; private set; }
+    public string? OrderNumber { get; private set; }
 
-    public ProductWarranty(Guid productId, string serialNumber, Guid customerId, DateTime purchaseDate, int warrantyPeriodMonths)
+    public ProductWarranty(Guid productId, string serialNumber, Guid customerId, DateTime purchaseDate, int warrantyPeriodMonths, string? orderNumber = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -23,6 +24,7 @@ public class ProductWarranty : Entity<Guid>
         WarrantyPeriodMonths = warrantyPeriodMonths;
         ExpirationDate = purchaseDate.AddMonths(warrantyPeriodMonths);
         Status = WarrantyStatus.Active;
+        OrderNumber = orderNumber;
     }
 
     protected ProductWarranty() { }

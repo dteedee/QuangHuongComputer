@@ -2,16 +2,20 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { warrantyApi, type WarrantyClaim, type WarrantyCoverage } from '../api/warranty';
+import { warrantyApi, type WarrantyClaim, type WarrantyCoverage, ResolutionPreference } from '../api/warranty';
 
 export const WarrantyPage = () => {
     const { isAuthenticated } = useAuth();
     const queryClient = useQueryClient();
     const [serialNumber, setSerialNumber] = useState('');
     const [issueDescription, setIssueDescription] = useState('');
+    const [preferredResolution, setPreferredResolution] = useState<ResolutionPreference>(ResolutionPreference.Repair);
     const [success, setSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [lookupSerial, setLookupSerial] = useState('');
-    const [coverageInfo, setCoverageInfo] = useState<WarrantyCoverage | null>(null);
+    const [lookupInvoice, setLookupInvoice] = useState('');
+    const [lookupMode, setLookupMode] = useState<'serial' | 'invoice'>('serial');
+    const [coverageInfo, setCoverageInfo] = useState<WarrantyCoverage | WarrantyCoverage[] | null>(null);
 
     const { data: claims, isLoading } = useQuery<WarrantyClaim[]>({
         queryKey: ['warranty-claims'],
@@ -24,24 +28,58 @@ export const WarrantyPage = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['warranty-claims'] });
             setSuccess(true);
+            setErrorMessage('');
             setSerialNumber('');
             setIssueDescription('');
+            setPreferredResolution(ResolutionPreference.Repair);
             setTimeout(() => setSuccess(false), 3000);
+        },
+        onError: (error: any) => {
+            const message = error.response?.data?.Message || error.message || 'Có lỗi xảy ra khi gửi yêu cầu';
+            setErrorMessage(message);
+            setSuccess(false);
         }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        createClaim.mutate({ serialNumber, issueDescription });
+        if (!serialNumber.trim()) {
+            setErrorMessage('Vui lòng nhập số Serial');
+            return;
+        }
+        if (!issueDescription.trim()) {
+            setErrorMessage('Vui lòng mô tả lỗi');
+            return;
+        }
+        createClaim.mutate({
+            serialNumber,
+            issueDescription,
+            preferredResolution
+        });
     };
 
     const handleLookup = async () => {
-        if (!lookupSerial) return;
+        setCoverageInfo(null);
+        setErrorMessage('');
+
         try {
-            const data = await warrantyApi.lookupCoverage(lookupSerial);
-            setCoverageInfo(data);
-        } catch (error) {
-            setCoverageInfo({ serialNumber: lookupSerial, productId: '', status: 'Lỗi', expirationDate: '', isValid: false, error: 'Không tìm thấy số Serial' });
+            if (lookupMode === 'serial') {
+                if (!lookupSerial.trim()) {
+                    setErrorMessage('Vui lòng nhập số Serial');
+                    return;
+                }
+                const data = await warrantyApi.lookupCoverage(lookupSerial);
+                setCoverageInfo(data);
+            } else {
+                if (!lookupInvoice.trim()) {
+                    setErrorMessage('Vui lòng nhập số hóa đơn');
+                    return;
+                }
+                const data = await warrantyApi.lookupByInvoice(lookupInvoice);
+                setCoverageInfo(data);
+            }
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Không tìm thấy thông tin bảo hành');
         }
     };
 
@@ -65,38 +103,153 @@ export const WarrantyPage = () => {
                 <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 h-fit">
                     <h3 className="text-xl font-black text-emerald-600 mb-6 uppercase italic tracking-tighter">Tra cứu bảo hành</h3>
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Số Serial (S/N)</label>
-                            <input
-                                value={lookupSerial}
-                                onChange={e => setLookupSerial(e.target.value)}
-                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
-                                placeholder="Ví dụ: SN123456"
-                            />
+                        {/* Mode Toggle */}
+                        <div className="flex gap-2 bg-gray-50 p-1 rounded-xl">
+                            <button
+                                onClick={() => setLookupMode('serial')}
+                                className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition ${lookupMode === 'serial' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                            >
+                                Theo Serial
+                            </button>
+                            <button
+                                onClick={() => setLookupMode('invoice')}
+                                className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition ${lookupMode === 'invoice' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                            >
+                                Theo Hóa đơn
+                            </button>
                         </div>
+
+                        {/* Input Field */}
+                        {lookupMode === 'serial' ? (
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Số Serial (S/N)</label>
+                                <input
+                                    value={lookupSerial}
+                                    onChange={e => setLookupSerial(e.target.value)}
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    placeholder="Ví dụ: SN123456"
+                                />
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Số Hóa đơn</label>
+                                <input
+                                    value={lookupInvoice}
+                                    onChange={e => setLookupInvoice(e.target.value)}
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    placeholder="Ví dụ: ORD-20260120-001"
+                                />
+                            </div>
+                        )}
+
                         <button
                             onClick={handleLookup}
                             className="w-full py-4 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 uppercase tracking-widest text-[10px] active:scale-95"
                         >
                             Kiểm tra trạng thái
                         </button>
+
+                        {/* Error Message */}
+                        {errorMessage && lookupMode && (
+                            <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                                <p className="text-[#D70018] font-bold text-xs tracking-tighter">{errorMessage}</p>
+                            </div>
+                        )}
+
+                        {/* Coverage Info */}
                         {coverageInfo && (
-                            <div className="mt-6 p-5 bg-gray-50 rounded-2xl border border-gray-100 italic">
-                                {coverageInfo.error ? (
-                                    <p className="text-[#D70018] font-bold text-sm tracking-tighter">{coverageInfo.error}</p>
+                            <div className="mt-6 space-y-4">
+                                {Array.isArray(coverageInfo) ? (
+                                    coverageInfo.map((info, index) => (
+                                        <div key={index} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 italic">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-gray-400 font-black uppercase">Serial:</span>
+                                                    <span className="text-gray-900 font-bold">{info.serialNumber}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-gray-400 font-black uppercase">Trạng thái:</span>
+                                                    <span className={`font-black ${info.isValid ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                        {info.isValid ? 'Còn hạn' : 'Hết hạn'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-gray-400 font-black uppercase">Hết hạn:</span>
+                                                    <span className="text-gray-900 font-bold">{new Date(info.expirationDate).toLocaleDateString('vi-VN')}</span>
+                                                </div>
+                                                {info.claimHistory && info.claimHistory.length > 0 && (
+                                                    <div className="mt-3 pt-3 border-t border-gray-200">
+                                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Lịch sử bảo hành:</p>
+                                                        <div className="space-y-2">
+                                                            {info.claimHistory.map((claim, idx) => (
+                                                                <div key={idx} className="text-[10px] flex justify-between items-center">
+                                                                    <span className="text-gray-600 font-medium">{claim.issueDescription.substring(0, 30)}...</span>
+                                                                    <span className={`px-2 py-0.5 rounded font-black ${claim.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700' :
+                                                                        claim.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-red-100 text-red-700'
+                                                                        }`}>
+                                                                        {claim.status}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
                                 ) : (
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-gray-400 font-black uppercase">Serial:</span>
-                                            <span className="text-gray-900 font-bold">{coverageInfo.serialNumber}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-gray-400 font-black uppercase">Trạng thái:</span>
-                                            <span className="text-emerald-600 font-black">{coverageInfo.status}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-gray-400 font-black uppercase">Hết hạn:</span>
-                                            <span className="text-gray-900 font-bold">{new Date(coverageInfo.expirationDate).toLocaleDateString('vi-VN')}</span>
+                                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 italic">
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-black uppercase">Serial:</span>
+                                                <span className="text-gray-900 font-bold">{coverageInfo.serialNumber}</span>
+                                            </div>
+                                            {coverageInfo.orderNumber && (
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-gray-400 font-black uppercase">Hóa đơn:</span>
+                                                    <span className="text-gray-900 font-bold">{coverageInfo.orderNumber}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-black uppercase">Trạng thái:</span>
+                                                <span className={`font-black ${coverageInfo.isValid ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {coverageInfo.isValid ? 'Còn hạn' : 'Hết hạn'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-black uppercase">Ngày mua:</span>
+                                                <span className="text-gray-900 font-bold">{new Date(coverageInfo.purchaseDate).toLocaleDateString('vi-VN')}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-400 font-black uppercase">Hết hạn:</span>
+                                                <span className="text-gray-900 font-bold">{new Date(coverageInfo.expirationDate).toLocaleDateString('vi-VN')}</span>
+                                            </div>
+                                            {coverageInfo.claimHistory && coverageInfo.claimHistory.length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Lịch sử bảo hành:</p>
+                                                    <div className="space-y-2">
+                                                        {coverageInfo.claimHistory.map((claim, idx) => (
+                                                            <div key={idx} className="text-[10px]">
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span className="text-gray-600 font-medium">{claim.issueDescription}</span>
+                                                                    <span className={`px-2 py-0.5 rounded font-black ${claim.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700' :
+                                                                        claim.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-red-100 text-red-700'
+                                                                        }`}>
+                                                                        {claim.status}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-gray-400 font-bold">
+                                                                    {new Date(claim.filedDate).toLocaleDateString('vi-VN')}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -129,11 +282,28 @@ export const WarrantyPage = () => {
                                 required
                             />
                         </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Phương thức xử lý mong muốn</label>
+                            <select
+                                value={preferredResolution}
+                                onChange={e => setPreferredResolution(e.target.value as ResolutionPreference)}
+                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                            >
+                                <option value={ResolutionPreference.Repair}>Sửa chữa</option>
+                                <option value={ResolutionPreference.Replace}>Đổi mới</option>
+                                <option value={ResolutionPreference.Refund}>Hoàn tiền</option>
+                            </select>
+                        </div>
                         {success && <p className="text-emerald-600 text-xs font-black italic uppercase">Đã gửi yêu cầu thành công!</p>}
+                        {errorMessage && !success && (
+                            <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                                <p className="text-[#D70018] font-bold text-xs tracking-tighter">{errorMessage}</p>
+                            </div>
+                        )}
                         <button
                             type="submit"
                             disabled={createClaim.isPending}
-                            className="w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 transition shadow-lg shadow-orange-600/20 uppercase tracking-widest text-[10px] active:scale-95"
+                            className="w-full py-4 bg-orange-600 text-white font-black rounded-xl hover:bg-orange-700 transition shadow-lg shadow-orange-600/20 uppercase tracking-widest text-[10px] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {createClaim.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
                         </button>
