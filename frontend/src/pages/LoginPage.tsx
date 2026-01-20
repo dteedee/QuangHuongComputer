@@ -1,16 +1,21 @@
 ﻿
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import { Mail, Lock, LogIn, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { Input, Button } from '../components/ui';
+import { loginSchema, type LoginFormData } from '../lib/validation/schemas';
 
 export const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
 
@@ -26,7 +31,7 @@ export const LoginPage = () => {
         return '/';
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true);
         setLoginError('');
         try {
@@ -116,35 +121,27 @@ export const LoginPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-1">Địa chỉ Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                <input
-                                    {...register('email', { required: true })}
-                                    type="email"
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
-                                    placeholder="name@gmail.com"
-                                />
-                            </div>
-                            {errors.email && <span className="text-red-500 text-[10px] font-bold uppercase ml-1">Email là bắt buộc</span>}
-                        </div>
+                        <Input
+                            label="Địa chỉ Email"
+                            type="email"
+                            icon={Mail}
+                            placeholder="name@gmail.com"
+                            error={errors.email?.message}
+                            {...register('email')}
+                        />
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Mật khẩu</label>
                                 <Link to="/forgot-password" className="text-[11px] text-[#D70018] hover:underline font-black uppercase">Quên mật khẩu?</Link>
                             </div>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                <input
-                                    {...register('password', { required: true })}
-                                    type="password"
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                            {errors.password && <span className="text-red-500 text-[10px] font-bold uppercase ml-1">Mật khẩu là bắt buộc</span>}
+                            <Input
+                                type="password"
+                                icon={Lock}
+                                placeholder="••••••••"
+                                error={errors.password?.message}
+                                {...register('password')}
+                            />
                         </div>
 
                         {loginError && (
@@ -154,20 +151,17 @@ export const LoginPage = () => {
                             </div>
                         )}
 
-                        <button
+                        <Button
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full py-4 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
+                            variant="brand"
+                            size="lg"
+                            loading={isLoading}
+                            icon={ArrowRight}
+                            iconPosition="right"
+                            className="w-full"
                         >
-                            {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    Đăng nhập ngay
-                                    <ArrowRight size={18} />
-                                </>
-                            )}
-                        </button>
+                            Đăng nhập ngay
+                        </Button>
 
                         <div className="relative my-10">
                             <div className="absolute inset-0 flex items-center">
