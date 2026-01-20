@@ -4,11 +4,16 @@ import client from './client';
 export interface Product {
     id: string;
     name: string;
+    sku: string;
     description: string;
     price: number;
+    oldPrice?: number;
+    specifications?: string;
+    warrantyInfo?: string;
     categoryId: string;
     brandId: string;
     stockQuantity: number;
+    status: 'InStock' | 'LowStock' | 'OutOfStock' | 'PreOrder';
     createdAt: string;
     updatedAt: string;
 }
@@ -68,6 +73,7 @@ export const catalogApi = {
         minPrice?: number;
         maxPrice?: number;
         inStock?: boolean;
+        sortBy?: string;
         page?: number;
         pageSize?: number;
     }) => {

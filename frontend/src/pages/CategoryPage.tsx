@@ -26,6 +26,7 @@ export const CategoryPage = () => {
     const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
     const [priceRange, setPriceRange] = useState<{ min?: number; max?: number } | null>(null);
     const [inStockOnly, setInStockOnly] = useState(false);
+    const [sortBy, setSortBy] = useState<string>('newest');
     const [page, setPage] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
     const pageSize = 12;
@@ -116,6 +117,7 @@ export const CategoryPage = () => {
 
                 params.page = page;
                 params.pageSize = pageSize;
+                params.sortBy = sortBy;
 
                 // Use the search endpoint which supports advanced filters
                 const response = await catalogApi.searchProducts(params);
@@ -135,7 +137,7 @@ export const CategoryPage = () => {
         if (categories.length > 0 || searchQuery) {
             fetchProducts();
         }
-    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, categories.length, searchQuery, page]);
+    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, sortBy, categories.length, searchQuery, page]);
 
     // Handlers
     const handlePriceSelect = (min?: number, max?: number) => {
@@ -277,10 +279,16 @@ export const CategoryPage = () => {
                         {/* Sort Bar */}
                         <div className="bg-white p-2 rounded-md shadow-sm mb-4 flex justify-end items-center gap-2">
                             <span className="text-sm text-gray-500">Sắp xếp theo:</span>
-                            <div className="flex items-center gap-1 border border-gray-300 px-3 py-1.5 rounded text-sm cursor-pointer hover:border-[#D70018]">
-                                <ArrowDownWideNarrow size={14} />
-                                <span>Mới nhất</span>
-                            </div>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="flex items-center gap-1 border border-gray-300 px-3 py-1.5 rounded text-sm cursor-pointer hover:border-[#D70018] bg-white"
+                            >
+                                <option value="newest">Mới nhất</option>
+                                <option value="price_asc">Giá tăng dần</option>
+                                <option value="price_desc">Giá giảm dần</option>
+                                <option value="name">Tên A-Z</option>
+                            </select>
                         </div>
 
                         {isLoading ? (

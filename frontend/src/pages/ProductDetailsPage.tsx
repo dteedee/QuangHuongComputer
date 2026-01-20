@@ -52,10 +52,18 @@ export const ProductDetailsPage = () => {
         </div>
     );
 
-    // Mock calculations
-    const oldPrice = product.price * 1.15;
+    // Price calculations
+    const oldPrice = product.oldPrice || product.price * 1.15;
     const discount = Math.round(((oldPrice - product.price) / oldPrice) * 100);
     const saveAmount = oldPrice - product.price;
+
+    // Product status display
+    const getStatusBadge = (status: string, stock: number) => {
+        if (status === 'OutOfStock') return <span className="text-red-600 font-bold">Hết hàng</span>;
+        if (status === 'LowStock') return <span className="text-orange-600 font-bold">Sắp hết hàng ({stock} sản phẩm)</span>;
+        if (status === 'PreOrder') return <span className="text-blue-600 font-bold">Đặt trước</span>;
+        return <span className="text-green-600 font-bold">Còn hàng ({stock} sản phẩm)</span>;
+    };
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans text-gray-800 pb-20">
@@ -108,15 +116,22 @@ export const ProductDetailsPage = () => {
                         {/* USPs */}
                         <div className="grid grid-cols-2 gap-3 mt-4">
                             {[
-                                { icon: ShieldCheck, text: "Bảo hành 24 tháng" },
+                                { icon: ShieldCheck, text: product.warrantyInfo || "Bảo hành 24 tháng", link: "/policy/warranty" },
                                 { icon: Truck, text: "Miễn phí vận chuyển" },
                                 { icon: RotateCcw, text: "Đổi trả 30 ngày" },
                                 { icon: Award, text: "Cam kết chính hãng" }
                             ].map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                                    <item.icon size={18} className="text-[#D70018]" />
-                                    <span className="text-[10px] font-bold text-gray-700 uppercase">{item.text}</span>
-                                </div>
+                                item.link ? (
+                                    <Link key={idx} to={item.link} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:border-[#D70018] transition-colors">
+                                        <item.icon size={18} className="text-[#D70018]" />
+                                        <span className="text-[10px] font-bold text-gray-700 uppercase">{item.text}</span>
+                                    </Link>
+                                ) : (
+                                    <div key={idx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                                        <item.icon size={18} className="text-[#D70018]" />
+                                        <span className="text-[10px] font-bold text-gray-700 uppercase">{item.text}</span>
+                                    </div>
+                                )
                             ))}
                         </div>
                     </div>
@@ -139,8 +154,8 @@ export const ProductDetailsPage = () => {
                             </h1>
 
                             <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span>Mã SP: <span className="text-gray-900 font-bold">QH-{product.id.substring(0, 6).toUpperCase()}</span></span>
-                                <span>Lượt xem: <span className="text-gray-900 font-bold">1,234</span></span>
+                                <span>Mã SP: <span className="text-gray-900 font-bold">{product.sku}</span></span>
+                                <span>Trạng thái: {getStatusBadge(product.status, product.stockQuantity)}</span>
                             </div>
                         </div>
 
@@ -218,15 +233,25 @@ export const ProductDetailsPage = () => {
                             </div>
 
                             <div className="mt-6 pt-4 border-t border-gray-100">
-                                <h4 className="font-bold text-xs text-gray-900 mb-2">Ưu đãi thêm:</h4>
+                                <h4 className="font-bold text-xs text-gray-900 mb-2">Chính sách:</h4>
                                 <ul className="text-[11px] text-gray-600 space-y-1.5">
                                     <li className="flex items-start gap-1.5">
                                         <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
-                                        Giảm thêm 5% khi thanh toán qua QRPay
+                                        <Link to="/policy/warranty" className="hover:text-[#D70018] hover:underline">
+                                            {product.warrantyInfo || "Bảo hành 24 tháng"}
+                                        </Link>
                                     </li>
                                     <li className="flex items-start gap-1.5">
                                         <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
-                                        Tặng Balo Laptop cao cấp (Trị giá 500k)
+                                        <Link to="/policy/return" className="hover:text-[#D70018] hover:underline">
+                                            Chính sách đổi trả trong 30 ngày
+                                        </Link>
+                                    </li>
+                                    <li className="flex items-start gap-1.5">
+                                        <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
+                                        <Link to="/policy/shipping" className="hover:text-[#D70018] hover:underline">
+                                            Chính sách giao hàng
+                                        </Link>
                                     </li>
                                 </ul>
                             </div>

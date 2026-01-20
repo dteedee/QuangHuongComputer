@@ -66,6 +66,7 @@ public static class CatalogEndpoints
             decimal? minPrice,
             decimal? maxPrice,
             bool? inStock,
+            string? sortBy,
             CatalogDbContext db,
             int page = 1,
             int pageSize = 20) =>
@@ -74,8 +75,8 @@ public static class CatalogEndpoints
 
             if (!string.IsNullOrWhiteSpace(query))
             {
-                productsQuery = productsQuery.Where(p => 
-                    p.Name.Contains(query) || 
+                productsQuery = productsQuery.Where(p =>
+                    p.Name.Contains(query) ||
                     p.Description.Contains(query));
             }
 
@@ -104,6 +105,16 @@ public static class CatalogEndpoints
                 productsQuery = productsQuery.Where(p => p.StockQuantity > 0);
             }
 
+            // Sorting
+            productsQuery = sortBy switch
+            {
+                "price_asc" => productsQuery.OrderBy(p => p.Price),
+                "price_desc" => productsQuery.OrderByDescending(p => p.Price),
+                "newest" => productsQuery.OrderByDescending(p => p.CreatedAt),
+                "name" => productsQuery.OrderBy(p => p.Name),
+                _ => productsQuery.OrderByDescending(p => p.CreatedAt) // Default: newest first
+            };
+
             var total = await productsQuery.CountAsync();
             var products = await productsQuery
                 .Skip((page - 1) * pageSize)
@@ -127,7 +138,11 @@ public static class CatalogEndpoints
                 model.Description,
                 model.CategoryId,
                 model.BrandId,
-                model.StockQuantity
+                model.StockQuantity,
+                model.Sku,
+                model.OldPrice,
+                model.Specifications,
+                model.WarrantyInfo
             );
 
             db.Products.Add(product);
@@ -160,7 +175,7 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            product.UpdateDetails(model.Name, model.Description, model.Price);
+            product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo);
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = "Product updated", Product = product });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
@@ -244,8 +259,26 @@ public static class CatalogEndpoints
     }
 }
 
-public record CreateProductDto(string Name, string Description, decimal Price, Guid CategoryId, Guid BrandId, int StockQuantity);
-public record UpdateProductDto(string Name, string Description, decimal Price);
+public record CreateProductDto(
+    string Name,
+    string Description,
+    decimal Price,
+    Guid CategoryId,
+    Guid BrandId,
+    int StockQuantity,
+    string? Sku = null,
+    decimal? OldPrice = null,
+    string? Specifications = null,
+    string? WarrantyInfo = null);
+
+public record UpdateProductDto(
+    string Name,
+    string Description,
+    decimal Price,
+    decimal? OldPrice = null,
+    string? Specifications = null,
+    string? WarrantyInfo = null);
+
 public record CreateCategoryDto(string Name, string Description);
 public record UpdateCategoryDto(string Name, string Description);
 public record CreateBrandDto(string Name, string Description);
