@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, ArrowRight, ShieldCheck, Zap, Laptop } from 'lucide-react';
+import { useRecaptcha } from '../hooks/useRecaptcha';
+import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 
 export const RegisterPage = () => {
     const { register: signup } = useAuth();
@@ -14,6 +16,7 @@ export const RegisterPage = () => {
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { isLoaded, executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,7 +42,10 @@ export const RegisterPage = () => {
         }
 
         try {
-            await signup(email, password, fullName);
+            // Get reCAPTCHA token
+            const recaptchaToken = await executeRecaptcha(RECAPTCHA_ACTIONS.REGISTER);
+
+            await signup(email, password, fullName, recaptchaToken);
             navigate('/login');
         } catch {
             setError('Đăng ký thất bại. Vui lòng thử lại.');

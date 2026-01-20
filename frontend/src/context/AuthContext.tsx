@@ -12,8 +12,8 @@ interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, fullName: string) => Promise<void>;
+    login: (email: string, password: string, recaptchaToken?: string) => Promise<void>;
+    register: (email: string, password: string, fullName: string, recaptchaToken?: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
     hasPermission: (permission: string) => boolean;
@@ -34,9 +34,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [token]);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, recaptchaToken?: string) => {
         try {
-            const { data } = await client.post('/auth/login', { email, password });
+            const { data } = await client.post('/auth/login', { email, password, recaptchaToken });
             setToken(data.token);
             setUser(data.user);
             localStorage.setItem('token', data.token);
@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const register = async (email: string, password: string, fullName: string) => {
+    const register = async (email: string, password: string, fullName: string, recaptchaToken?: string) => {
         try {
-            await client.post('/auth/register', { email, password, fullName });
+            await client.post('/auth/register', { email, password, fullName, recaptchaToken });
             toast.success('Đăng ký tài khoản thành công!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Đăng ký thất bại');

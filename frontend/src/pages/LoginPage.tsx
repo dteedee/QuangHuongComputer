@@ -9,6 +9,8 @@ import { Mail, Lock, LogIn, ArrowRight, ShieldCheck, Sparkles } from 'lucide-rea
 import { GoogleLogin } from '@react-oauth/google';
 import { Input, Button } from '../components/ui';
 import { loginSchema, type LoginFormData } from '../lib/validation/schemas';
+import { useRecaptcha } from '../hooks/useRecaptcha';
+import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 
 export const LoginPage = () => {
     const { login } = useAuth();
@@ -18,6 +20,7 @@ export const LoginPage = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
+    const { isLoaded, executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
     const getRedirectPath = (roles: string[]) => {
         if (roles.includes('Admin')) return '/backoffice/admin';
@@ -35,7 +38,10 @@ export const LoginPage = () => {
         setIsLoading(true);
         setLoginError('');
         try {
-            await login(data.email, data.password);
+            // Get reCAPTCHA token
+            const recaptchaToken = await executeRecaptcha(RECAPTCHA_ACTIONS.LOGIN);
+
+            await login(data.email, data.password, recaptchaToken);
             // Login function updates AuthContext, but we might need to get the user data directly from the response 
             // OR rely on the fact that 'user' in context will be updated. 
             // However, context update might be async or not immediate enough for next line if we rely on 'user' from useAuth().

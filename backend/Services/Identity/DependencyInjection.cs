@@ -51,7 +51,10 @@ public static class DependencyInjection
 
         services.AddAuthorization();
 
+        services.AddMemoryCache();
         services.AddScoped<Identity.Services.IAuditService, Identity.Services.AuditService>();
+        services.AddScoped<Identity.Services.IEmailService, Identity.Services.EmailService>();
+        services.AddSingleton<Identity.Services.IRateLimitService, Identity.Services.RateLimitService>();
 
         return services;
     }

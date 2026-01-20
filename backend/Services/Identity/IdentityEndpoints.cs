@@ -26,7 +26,7 @@ public static class IdentityEndpoints
     {
         var group = app.MapGroup("/api/auth");
 
-        group.MapPost("/register", async (RegisterDto model, UserManager<ApplicationUser> userManager, IPublishEndpoint publishEndpoint) =>
+        group.MapPost("/register", async (RegisterDto model, UserManager<ApplicationUser> userManager, IPublishEndpoint publishEndpoint, IEmailService emailService) =>
         {
             var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FullName = model.FullName };
             var result = await userManager.CreateAsync(user, model.Password);
@@ -34,8 +34,19 @@ public static class IdentityEndpoints
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(user, "Customer");
-                
+
                 await publishEndpoint.Publish(new UserRegisteredIntegrationEvent(Guid.Parse(user.Id), user.Email!, user.FullName));
+
+                // Send welcome email
+                try
+                {
+                    await emailService.SendWelcomeEmailAsync(user.Email!, user.FullName);
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail registration
+                    Console.WriteLine($"Failed to send welcome email: {ex.Message}");
+                }
 
                 return Results.Ok(new { Message = "User registered successfully" });
             }
@@ -43,11 +54,20 @@ public static class IdentityEndpoints
             return Results.BadRequest(result.Errors);
         });
 
-        group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration) =>
+        group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IRateLimitService rateLimitService) =>
         {
+            // Rate limiting: 5 failed login attempts per 10 minutes per email
+            var rateLimitKey = $"login:{model.Email}";
+            if (await rateLimitService.IsRateLimitedAsync(rateLimitKey, 5, TimeSpan.FromMinutes(10)))
+            {
+                return Results.StatusCode(429); // Too Many Requests
+            }
+
             var user = await userManager.FindByEmailAsync(model.Email);
             if (user != null && user.IsActive && await userManager.CheckPasswordAsync(user, model.Password))
             {
+                // Reset rate limit on successful login
+                await rateLimitService.ResetAsync(rateLimitKey);
                 var roles = await userManager.GetRolesAsync(user);
                 var roleClaims = new List<Claim>();
                 foreach (var roleName in roles)
@@ -76,6 +96,9 @@ public static class IdentityEndpoints
 
                 return Results.Ok(response);
             }
+
+            // Increment failed login attempts
+            await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(10));
 
             return Results.Unauthorized();
         });
@@ -389,8 +412,17 @@ public static class IdentityEndpoints
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.Edit));
 
         // Forgot Password
-        group.MapPost("/forgot-password", async (ForgotPasswordDto model, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        group.MapPost("/forgot-password", async (ForgotPasswordDto model, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext, IEmailService emailService, IConfiguration configuration, IRateLimitService rateLimitService) =>
         {
+            // Rate limiting: 3 attempts per 15 minutes per email
+            var rateLimitKey = $"forgot-password:{model.Email}";
+            if (await rateLimitService.IsRateLimitedAsync(rateLimitKey, 3, TimeSpan.FromMinutes(15)))
+            {
+                return Results.StatusCode(429); // Too Many Requests
+            }
+
+            await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(15));
+
             var user = await userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
@@ -412,13 +444,21 @@ public static class IdentityEndpoints
             dbContext.PasswordResetTokens.Add(resetToken);
             await dbContext.SaveChangesAsync();
 
-            // TODO: Send email with reset link
-            // For now, we'll just return the token in development
-            // In production, you would send an email like:
-            // var resetLink = $"https://yourdomain.com/reset-password?token={token}";
-            // await emailService.SendPasswordResetEmail(user.Email, resetLink);
+            // Send email with reset link
+            var frontendUrl = configuration["Frontend:Url"] ?? "http://localhost:5173";
+            var resetLink = $"{frontendUrl}/reset-password?token={token}";
 
-            return Results.Ok(new { Message = "If the email exists, a password reset link has been sent.", Token = token });
+            try
+            {
+                await emailService.SendPasswordResetEmailAsync(user.Email!, resetLink);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't reveal to user for security reasons
+                Console.WriteLine($"Failed to send email: {ex.Message}");
+            }
+
+            return Results.Ok(new { Message = "If the email exists, a password reset link has been sent." });
         });
 
         // Reset Password
