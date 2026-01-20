@@ -41,6 +41,8 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
+import { OrdersPage } from './pages/account/OrdersPage';
+import { OrderDetailPage } from './pages/account/OrderDetailPage';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -72,6 +74,10 @@ function App() {
                   <Route path="products" element={<CategoryPage />} />
                   <Route path="products/:id" element={<ProductDetailsPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+
+                  {/* Account Routes */}
+                  <Route path="account/orders" element={<OrdersPage />} />
+                  <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
 
                   {/* Category Routes */}
                   <Route path="laptop" element={<CategoryPage />} />

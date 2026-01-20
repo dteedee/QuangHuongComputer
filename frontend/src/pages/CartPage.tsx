@@ -1,14 +1,35 @@
-﻿
+
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, X } from 'lucide-react';
 
 export const CartPage = () => {
-    const { items, removeFromCart, updateQuantity, total, clearCart } = useCart();
+    const {
+        items,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        couponCode,
+        discountAmount,
+        applyCoupon,
+        removeCoupon,
+        subtotal,
+        tax,
+        total
+    } = useCart();
     const navigate = useNavigate();
 
-    const tax = total * 0.1;
-    const grandTotal = total + tax;
+    const [couponInput, setCouponInput] = useState('');
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+    const handleApplyCoupon = async () => {
+        if (!couponInput.trim()) return;
+        setIsApplyingCoupon(true);
+        await applyCoupon(couponInput.trim());
+        setIsApplyingCoupon(false);
+        setCouponInput('');
+    };
 
     if (items.length === 0) {
         return (
@@ -131,11 +152,63 @@ export const CartPage = () => {
                         <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-xl shadow-gray-200/50 sticky top-24">
                             <h3 className="text-xl font-black text-gray-900 mb-6 uppercase italic tracking-tighter">Tóm tắt đơn hàng</h3>
 
+                            {/* Coupon Input */}
+                            <div className="mb-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Tag className="w-4 h-4 text-amber-600" />
+                                    <span className="text-xs font-black uppercase tracking-wide text-amber-900">Mã giảm giá</span>
+                                </div>
+
+                                {couponCode ? (
+                                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200">
+                                        <div className="flex items-center gap-2">
+                                            <Tag className="w-4 h-4 text-emerald-600" />
+                                            <span className="font-black text-emerald-700 uppercase text-sm">{couponCode}</span>
+                                        </div>
+                                        <button
+                                            onClick={removeCoupon}
+                                            className="text-red-500 hover:text-red-700 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={couponInput}
+                                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                                            placeholder="Nhập mã giảm giá"
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold uppercase"
+                                        />
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            disabled={!couponInput.trim() || isApplyingCoupon}
+                                            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase"
+                                        >
+                                            {isApplyingCoupon ? 'Đang áp dụng...' : 'Áp dụng'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
                                     <span>Tạm tính</span>
-                                    <span className="text-gray-900">{total.toLocaleString()}₫</span>
+                                    <span className="text-gray-900">{subtotal.toLocaleString()}₫</span>
                                 </div>
+
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-emerald-600 text-xs font-bold uppercase tracking-wide">
+                                        <span className="flex items-center gap-1">
+                                            <Tag className="w-3 h-3" />
+                                            Giảm giá
+                                        </span>
+                                        <span>-{discountAmount.toLocaleString()}₫</span>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
                                     <span>Thuế GTGT (10%)</span>
                                     <span className="text-gray-900">{tax.toLocaleString()}₫</span>
@@ -147,7 +220,7 @@ export const CartPage = () => {
                                 <div className="flex justify-between items-end pt-2">
                                     <span className="text-sm font-black text-gray-900 uppercase tracking-wide">Tổng cộng</span>
                                     <div className="text-right">
-                                        <p className="text-3xl font-black text-[#D70018] tracking-tight">{grandTotal.toLocaleString()}₫</p>
+                                        <p className="text-3xl font-black text-[#D70018] tracking-tight">{total.toLocaleString()}₫</p>
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 italic">Đã bao gồm VAT</p>
                                     </div>
                                 </div>

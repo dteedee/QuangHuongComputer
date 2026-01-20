@@ -24,6 +24,9 @@ public class SalesDbContext : DbContext
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(c => c.Id);
+            entity.Property(c => c.DiscountAmount).HasPrecision(18, 2);
+            entity.Property(c => c.ShippingAmount).HasPrecision(18, 2);
+            entity.Property(c => c.TaxRate).HasPrecision(5, 4); // e.g., 0.1000 for 10%
             entity.OwnsMany(c => c.Items, item =>
             {
                 item.Property(i => i.Price).HasPrecision(18, 2);

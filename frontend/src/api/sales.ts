@@ -56,8 +56,90 @@ export interface SalesStats {
     completedOrders: number;
 }
 
+// Cart Types
+export interface CartDto {
+    id: string;
+    customerId: string;
+    subtotalAmount: number;
+    discountAmount: number;
+    taxAmount: number;
+    shippingAmount: number;
+    totalAmount: number;
+    taxRate: number;
+    couponCode?: string;
+    items: CartItemDto[];
+}
+
+export interface CartItemDto {
+    productId: string;
+    productName: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+}
+
 // API Functions
 export const salesApi = {
+    // Cart Endpoints
+    cart: {
+        get: async () => {
+            const response = await client.get<CartDto>('/sales/cart');
+            return response.data;
+        },
+
+        addItem: async (item: {
+            productId: string;
+            productName: string;
+            price: number;
+            quantity: number;
+        }) => {
+            const response = await client.post<{ message: string }>('/sales/cart/items', item);
+            return response.data;
+        },
+
+        updateQuantity: async (productId: string, quantity: number) => {
+            const response = await client.put<{ message: string }>(
+                `/sales/cart/items/${productId}`,
+                { quantity }
+            );
+            return response.data;
+        },
+
+        removeItem: async (productId: string) => {
+            const response = await client.delete<{ message: string }>(
+                `/sales/cart/items/${productId}`
+            );
+            return response.data;
+        },
+
+        applyCoupon: async (couponCode: string) => {
+            const response = await client.post<{
+                message: string;
+                discountAmount: number;
+                totalAmount: number;
+            }>('/sales/cart/apply-coupon', { couponCode });
+            return response.data;
+        },
+
+        removeCoupon: async () => {
+            const response = await client.delete<{ message: string }>('/sales/cart/remove-coupon');
+            return response.data;
+        },
+
+        setShipping: async (shippingAmount: number) => {
+            const response = await client.post<{ message: string; totalAmount: number }>(
+                '/sales/cart/set-shipping',
+                { shippingAmount }
+            );
+            return response.data;
+        },
+
+        clear: async () => {
+            const response = await client.delete<{ message: string }>('/sales/cart/clear');
+            return response.data;
+        },
+    },
+
     // Customer Endpoints
     checkout: async (data: CheckoutDto) => {
         const response = await client.post<{

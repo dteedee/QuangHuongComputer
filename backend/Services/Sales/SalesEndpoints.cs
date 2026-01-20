@@ -1,12 +1,17 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Sales.Domain;
 using Sales.Infrastructure;
+using Sales.Contracts;
 using Catalog.Infrastructure;
 using InventoryModule.Infrastructure;
+using Content.Infrastructure;
+using Content.Domain;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 
@@ -17,6 +22,215 @@ public static class SalesEndpoints
     public static void MapSalesEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/sales").RequireAuthorization();
+
+        // ==================== CART ENDPOINTS ====================
+
+        group.MapGet("/cart", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+            {
+                cart = new Cart(userId);
+                db.Carts.Add(cart);
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new CartDto(
+                cart.Id,
+                cart.CustomerId,
+                cart.SubtotalAmount,
+                cart.DiscountAmount,
+                cart.SubtotalAmount * cart.TaxRate,
+                cart.ShippingAmount,
+                cart.TotalAmount,
+                cart.TaxRate,
+                cart.CouponCode,
+                cart.Items.Select(i => new CartItemDto(i.ProductId, i.ProductName, i.Price, i.Quantity, i.Subtotal)).ToList()
+            ));
+        });
+
+        group.MapPost("/cart/items", async ([FromBody] AddToCartDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+            {
+                cart = new Cart(userId);
+                db.Carts.Add(cart);
+            }
+
+            cart.AddItem(dto.ProductId, dto.ProductName, dto.Price, dto.Quantity);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Item added to cart" });
+        });
+
+        group.MapPut("/cart/items/{productId:guid}", async (Guid productId, [FromBody] UpdateQuantityDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            cart.UpdateItemQuantity(productId, dto.Quantity);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Quantity updated" });
+        });
+
+        group.MapDelete("/cart/items/{productId:guid}", async (Guid productId, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            cart.RemoveItem(productId);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Item removed from cart" });
+        });
+
+        group.MapPost("/cart/apply-coupon", async ([FromBody] ApplyCouponDto dto, SalesDbContext salesDb, ContentDbContext contentDb, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await salesDb.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            // Validate coupon
+            var coupon = await contentDb.Coupons
+                .FirstOrDefaultAsync(c => c.Code == dto.CouponCode.ToUpper());
+
+            if (coupon == null)
+                return Results.BadRequest(new { Error = "Mã giảm giá không tồn tại" });
+
+            if (!coupon.IsValid(cart.SubtotalAmount))
+            {
+                if (!coupon.IsActive)
+                    return Results.BadRequest(new { Error = "Mã giảm giá không còn hiệu lực" });
+                if (coupon.EndDate.HasValue && DateTime.UtcNow > coupon.EndDate)
+                    return Results.BadRequest(new { Error = "Mã giảm giá đã hết hạn" });
+                if (coupon.UsageLimit.HasValue && coupon.UsageCount >= coupon.UsageLimit)
+                    return Results.BadRequest(new { Error = "Mã giảm giá đã hết lượt sử dụng" });
+                if (coupon.MinOrderAmount.HasValue && cart.SubtotalAmount < coupon.MinOrderAmount)
+                    return Results.BadRequest(new { Error = $"Đơn hàng tối thiểu {coupon.MinOrderAmount.Value:N0}₫ để sử dụng mã này" });
+            }
+
+            // Calculate discount
+            decimal discountAmount = 0;
+            if (coupon.Type == DiscountType.Percentage)
+            {
+                discountAmount = cart.SubtotalAmount * (coupon.Value / 100);
+                if (coupon.MaxDiscountAmount.HasValue && discountAmount > coupon.MaxDiscountAmount.Value)
+                    discountAmount = coupon.MaxDiscountAmount.Value;
+            }
+            else // FixedAmount
+            {
+                discountAmount = coupon.Value;
+            }
+
+            cart.ApplyCoupon(dto.CouponCode.ToUpper(), discountAmount);
+            await salesDb.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                Message = "Áp dụng mã giảm giá thành công",
+                DiscountAmount = discountAmount,
+                TotalAmount = cart.TotalAmount
+            });
+        });
+
+        group.MapDelete("/cart/remove-coupon", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            cart.RemoveCoupon();
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Đã xóa mã giảm giá" });
+        });
+
+        group.MapPost("/cart/set-shipping", async ([FromBody] SetShippingDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            cart.SetShippingAmount(dto.ShippingAmount);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Phí ship đã được cập nhật", TotalAmount = cart.TotalAmount });
+        });
+
+        group.MapDelete("/cart/clear", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var cart = await db.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return Results.NotFound(new { Error = "Cart not found" });
+
+            cart.Clear();
+            cart.RemoveCoupon();
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Giỏ hàng đã được xóa" });
+        });
+
+        // ==================== CHECKOUT ENDPOINT ====================
 
         group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint) =>
         {

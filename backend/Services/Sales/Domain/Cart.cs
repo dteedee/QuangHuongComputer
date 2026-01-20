@@ -6,7 +6,13 @@ public class Cart : Entity<Guid>
 {
     public Guid CustomerId { get; private set; }
     public List<CartItem> Items { get; private set; } = new();
-    public decimal TotalAmount => Items.Sum(i => i.Subtotal);
+    public string? CouponCode { get; private set; }
+    public decimal DiscountAmount { get; private set; }
+    public decimal TaxRate { get; private set; } = 0.1m; // 10% VAT
+    public decimal ShippingAmount { get; private set; }
+
+    public decimal SubtotalAmount => Items.Sum(i => i.Subtotal);
+    public decimal TotalAmount => CalculateTotal();
 
     public Cart(Guid customerId)
     {
@@ -58,6 +64,34 @@ public class Cart : Entity<Guid>
     public void Clear()
     {
         Items.Clear();
+    }
+
+    public void ApplyCoupon(string couponCode, decimal discountAmount)
+    {
+        CouponCode = couponCode;
+        DiscountAmount = discountAmount;
+    }
+
+    public void RemoveCoupon()
+    {
+        CouponCode = null;
+        DiscountAmount = 0;
+    }
+
+    public void SetShippingAmount(decimal amount)
+    {
+        if (amount < 0)
+            throw new ArgumentException("Shipping amount cannot be negative");
+        ShippingAmount = amount;
+    }
+
+    private decimal CalculateTotal()
+    {
+        var subtotal = SubtotalAmount;
+        var discounted = subtotal - DiscountAmount;
+        if (discounted < 0) discounted = 0;
+        var tax = discounted * TaxRate;
+        return discounted + tax + ShippingAmount;
     }
 }
 

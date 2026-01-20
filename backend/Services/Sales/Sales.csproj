@@ -14,6 +14,8 @@
     <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.csproj" />
     <ProjectReference Include="..\Catalog\Catalog.csproj" />
     <ProjectReference Include="..\Inventory\Inventory.csproj" />
+    <ProjectReference Include="..\Content\Content.csproj" />
+    <ProjectReference Include="..\Payments\Payments.csproj" />
   </ItemGroup>
 
   <ItemGroup>
