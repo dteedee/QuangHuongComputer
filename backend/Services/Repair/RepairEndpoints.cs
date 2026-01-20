@@ -14,6 +14,11 @@ public static class RepairEndpoints
 {
     public static void MapRepairEndpoints(this IEndpointRouteBuilder app)
     {
+        // Map all repair-related endpoints
+        app.MapBookingEndpoints();
+        app.MapTechnicianEndpoints();
+        app.MapQuoteEndpoints();
+
         var group = app.MapGroup("/api/repair").RequireAuthorization();
 
         // Customer Endpoints
