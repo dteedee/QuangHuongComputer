@@ -133,7 +133,7 @@ export const LoginPage = () => {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Mật khẩu</label>
-                                <Link to="#" className="text-[11px] text-[#D70018] hover:underline font-black uppercase">Quên mật khẩu?</Link>
+                                <Link to="/forgot-password" className="text-[11px] text-[#D70018] hover:underline font-black uppercase">Quên mật khẩu?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />

@@ -24,6 +24,15 @@ export interface LoginResponse {
     user: User;
 }
 
+export interface ForgotPasswordDto {
+    email: string;
+}
+
+export interface ResetPasswordDto {
+    token: string;
+    newPassword: string;
+}
+
 // API Functions
 export const authApi = {
     login: async (data: LoginDto) => {
@@ -88,6 +97,16 @@ export const authApi = {
 
     updateRolePermissions: async (roleId: string, permissions: string[]) => {
         const response = await client.put(`/auth/roles/${roleId}/permissions`, permissions);
+        return response.data;
+    },
+
+    forgotPassword: async (data: ForgotPasswordDto) => {
+        const response = await client.post<{ message: string }>('/auth/forgot-password', data);
+        return response.data;
+    },
+
+    resetPassword: async (data: ResetPasswordDto) => {
+        const response = await client.post<{ message: string }>('/auth/reset-password', data);
         return response.data;
     },
 };

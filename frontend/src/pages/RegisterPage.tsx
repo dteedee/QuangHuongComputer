@@ -9,7 +9,9 @@ export const RegisterPage = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -17,6 +19,25 @@ export const RegisterPage = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        if (!acceptTerms) {
+            setError('Vui lòng đồng ý với điều khoản sử dụng');
+            setLoading(false);
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Mật khẩu xác nhận không khớp');
+            setLoading(false);
+            return;
+        }
+
+        if (password.length < 6) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự');
+            setLoading(false);
+            return;
+        }
+
         try {
             await signup(email, password, fullName);
             navigate('/login');
@@ -123,6 +144,39 @@ export const RegisterPage = () => {
                                     minLength={6}
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-1">Xác nhận mật khẩu</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    placeholder="Nhập lại mật khẩu"
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="acceptTerms"
+                                checked={acceptTerms}
+                                onChange={(e) => setAcceptTerms(e.target.checked)}
+                                className="mt-1 w-4 h-4 text-[#D70018] border-gray-300 rounded focus:ring-[#D70018]"
+                            />
+                            <label htmlFor="acceptTerms" className="text-sm text-gray-600 font-medium">
+                                Tôi đồng ý với{' '}
+                                <Link to="/policy/terms" target="_blank" className="text-[#D70018] hover:underline font-bold">
+                                    Điều khoản sử dụng
+                                </Link>
+                                {' '}của Quang Hưởng Computer
+                            </label>
                         </div>
 
                         {error && (

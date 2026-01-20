@@ -7,6 +7,8 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { RepairPage } from './pages/RepairPage';
 import { WarrantyPage } from './pages/WarrantyPage';
 import { ChatSupport } from './components/ChatSupport';
@@ -106,6 +108,8 @@ function App() {
                 {/* Auth Pages (Standalone) */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
               </Routes>
             </CartProvider>
           </AuthProvider>

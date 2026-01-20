@@ -1,5 +1,5 @@
 ﻿import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight, FileText } from 'lucide-react';
 
 const policies: Record<string, { title: string; content: React.ReactNode; icon: any }> = {
     'warranty': {
@@ -53,6 +53,39 @@ const policies: Record<string, { title: string; content: React.ReactNode; icon: 
                     <li>VNPAY-QR.</li>
                     <li>Tiền mặt khi nhận hàng (COD).</li>
                 </ul>
+            </div>
+        )
+    },
+    'terms': {
+        title: 'Điều khoản sử dụng',
+        icon: FileText,
+        content: (
+            <div className="space-y-4 text-gray-700">
+                <p>Chào mừng bạn đến với Quang Hưởng Computer. Khi sử dụng dịch vụ của chúng tôi, bạn đồng ý với các điều khoản sau:</p>
+
+                <h3 className="font-bold text-gray-900">1. Tài khoản người dùng</h3>
+                <ul className="list-disc pl-5 space-y-2">
+                    <li>Bạn phải cung cấp thông tin chính xác khi đăng ký tài khoản.</li>
+                    <li>Bạn chịu trách nhiệm bảo mật thông tin đăng nhập của mình.</li>
+                    <li>Không được sử dụng tài khoản của người khác mà không có sự cho phép.</li>
+                    <li>Chúng tôi có quyền khóa hoặc xóa tài khoản nếu phát hiện hành vi vi phạm.</li>
+                </ul>
+
+                <h3 className="font-bold text-gray-900">2. Quyền riêng tư</h3>
+                <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn theo quy định pháp luật. Thông tin của bạn chỉ được sử dụng cho mục đích cung cấp dịch vụ và không chia sẻ cho bên thứ ba mà không có sự đồng ý của bạn.</p>
+
+                <h3 className="font-bold text-gray-900">3. Sử dụng dịch vụ</h3>
+                <ul className="list-disc pl-5 space-y-2">
+                    <li>Bạn không được sử dụng dịch vụ cho mục đích vi phạm pháp luật.</li>
+                    <li>Không được phát tán thông tin sai sự thật, gây hiểu lầm.</li>
+                    <li>Không được can thiệp, phá hoại hệ thống của chúng tôi.</li>
+                </ul>
+
+                <h3 className="font-bold text-gray-900">4. Thay đổi điều khoản</h3>
+                <p>Chúng tôi có quyền thay đổi các điều khoản này bất cứ lúc nào. Các thay đổi sẽ có hiệu lực ngay khi được đăng tải trên website.</p>
+
+                <h3 className="font-bold text-gray-900">5. Liên hệ</h3>
+                <p>Nếu có bất kỳ thắc mắc nào về điều khoản sử dụng, vui lòng liên hệ với chúng tôi qua email: support@quanghuongcomputer.com</p>
             </div>
         )
     }

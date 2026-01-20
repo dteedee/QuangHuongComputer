@@ -309,6 +309,77 @@ public static class IdentityEndpoints
 
             return Results.Ok(new { Message = "Permissions updated successfully" });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.Edit));
+
+        // Forgot Password
+        group.MapPost("/forgot-password", async (ForgotPasswordDto model, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        {
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist for security reasons
+                return Results.Ok(new { Message = "If the email exists, a password reset link has been sent." });
+            }
+
+            // Generate a unique token
+            var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+
+            var resetToken = new PasswordResetToken
+            {
+                UserId = user.Id,
+                Token = token,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                IsUsed = false
+            };
+
+            dbContext.PasswordResetTokens.Add(resetToken);
+            await dbContext.SaveChangesAsync();
+
+            // TODO: Send email with reset link
+            // For now, we'll just return the token in development
+            // In production, you would send an email like:
+            // var resetLink = $"https://yourdomain.com/reset-password?token={token}";
+            // await emailService.SendPasswordResetEmail(user.Email, resetLink);
+
+            return Results.Ok(new { Message = "If the email exists, a password reset link has been sent.", Token = token });
+        });
+
+        // Reset Password
+        group.MapPost("/reset-password", async (ResetPasswordDto model, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        {
+            var resetToken = await dbContext.PasswordResetTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == model.Token && !rt.IsUsed && rt.ExpiresAt > DateTime.UtcNow);
+
+            if (resetToken == null)
+            {
+                return Results.BadRequest(new { Message = "Invalid or expired token." });
+            }
+
+            var user = resetToken.User;
+            if (user == null)
+            {
+                return Results.BadRequest(new { Message = "User not found." });
+            }
+
+            // Remove old password and set new one
+            var removePasswordResult = await userManager.RemovePasswordAsync(user);
+            if (!removePasswordResult.Succeeded)
+            {
+                return Results.BadRequest(removePasswordResult.Errors);
+            }
+
+            var addPasswordResult = await userManager.AddPasswordAsync(user, model.NewPassword);
+            if (!addPasswordResult.Succeeded)
+            {
+                return Results.BadRequest(addPasswordResult.Errors);
+            }
+
+            // Mark token as used
+            resetToken.IsUsed = true;
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Password has been reset successfully." });
+        });
     }
 
     private static string GenerateJwtToken(ApplicationUser user, IList<string> roles, IEnumerable<Claim> roleClaims, IConfiguration configuration)
@@ -354,3 +425,5 @@ public record RegisterDto(string Email, string Password, string FullName);
 public record LoginDto(string Email, string Password);
 public record UpdateUserDto(string Email, string FullName);
 public record GoogleLoginDto(string? IdToken);
+public record ForgotPasswordDto(string Email);
+public record ResetPasswordDto(string Token, string NewPassword);
