@@ -8,6 +8,7 @@ using Sales.Infrastructure;
 using Catalog.Infrastructure;
 using InventoryModule.Infrastructure;
 using MassTransit;
+using BuildingBlocks.Messaging.IntegrationEvents;
 
 namespace Sales;
 
@@ -23,11 +24,13 @@ public static class SalesEndpoints
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) 
                 return Results.Unauthorized();
 
+            // Try get Email
+            var email = user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email") ?? "customer@api.com";
+
             if (model.Items == null || !model.Items.Any())
                 return Results.BadRequest(new { Error = "Cart is empty" });
 
             // Validate Data & Check Stock (Transactional-like in Monolith)
-            // Note: Ideally use a distributed transaction or Saga, but for Monolith, we can try to orchestrate checks.
             
             var orderItems = new List<OrderItem>();
             
@@ -42,10 +45,6 @@ public static class SalesEndpoints
                 if (product == null)
                     return Results.BadRequest(new { Error = $"Product not found: {cartItem.ProductId}" });
 
-                // Validate Price (Security fix: Don't trust frontend price)
-                // Note: You might want to allow some tolerance or explicit overrides, but for now strict check.
-                // We use the current database price.
-                
                 // Validate Stock
                 var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
                 if (inventoryItem == null || inventoryItem.QuantityOnHand < cartItem.Quantity)
@@ -72,14 +71,12 @@ public static class SalesEndpoints
             salesDb.Orders.Add(order);
 
             // 4. Save Changes
-            // In a real monolith, we might wrap this in a customized TransactionScope or ensure idempotency.
-            // Here we just save all.
             await inventoryDb.SaveChangesAsync();
             await catalogDb.SaveChangesAsync();
             await salesDb.SaveChangesAsync();
 
             // 5. Publish Event
-            // await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(order.Id, order.CustomerId));
+            await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(order.Id, order.CustomerId, email, order.TotalAmount, order.OrderNumber));
 
             return Results.Ok(new 
             { 
