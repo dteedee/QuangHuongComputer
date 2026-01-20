@@ -11,6 +11,8 @@ public class AccountingDbContext : DbContext
 
     public DbSet<OrganizationAccount> Accounts { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<ShiftSession> ShiftSessions { get; set; }
+    public DbSet<PaymentApplication> PaymentApplications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +57,40 @@ public class AccountingDbContext : DbContext
                 payment.HasKey(p => p.Id);
                 payment.Property(p => p.Amount).HasPrecision(18, 2);
             });
+
+            entity.OwnsMany(e => e.PaymentApplications, application =>
+            {
+                application.WithOwner().HasForeignKey("InvoiceId");
+                application.HasKey(pa => pa.Id);
+                application.Property(pa => pa.Amount).HasPrecision(18, 2);
+            });
+        });
+
+        modelBuilder.Entity<ShiftSession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OpeningBalance).HasPrecision(18, 2);
+            entity.Property(e => e.ClosingBalance).HasPrecision(18, 2);
+
+            entity.OwnsMany(e => e.Transactions, transaction =>
+            {
+                transaction.WithOwner().HasForeignKey("ShiftSessionId");
+                transaction.HasKey(t => t.Id);
+                transaction.Property(t => t.Amount).HasPrecision(18, 2);
+            });
+
+            // Index for validation: only one open shift per cashier/warehouse/day
+            entity.HasIndex(e => new { e.CashierId, e.WarehouseId, e.OpenedAt, e.Status })
+                .HasDatabaseName("IX_ShiftSession_UniqueOpenShift");
+        });
+
+        modelBuilder.Entity<PaymentApplication>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+
+            entity.HasIndex(e => e.PaymentId);
+            entity.HasIndex(e => e.InvoiceId);
         });
     }
 }

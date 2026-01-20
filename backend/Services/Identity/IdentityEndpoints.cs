@@ -12,11 +12,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
+using BuildingBlocks.Repository;
 
 namespace Identity;
 
 using Identity.Permissions;
 using Identity.Services;
+using Identity.DTOs;
 
 public static class IdentityEndpoints
 {
@@ -59,37 +61,100 @@ public static class IdentityEndpoints
                 
                 var token = GenerateJwtToken(user, roles, roleClaims, configuration);
                 var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
-                return Results.Ok(new { Token = token, User = new { user.Email, user.FullName, Roles = roles, Permissions = permissions } });
+
+                var response = new LoginResponseDto
+                {
+                    Token = token,
+                    User = new UserInfoDto
+                    {
+                        Email = user.Email ?? string.Empty,
+                        FullName = user.FullName,
+                        Roles = roles.ToList(),
+                        Permissions = permissions
+                    }
+                };
+
+                return Results.Ok(response);
             }
 
             return Results.Unauthorized();
         });
 
-        group.MapGet("/users", async (UserManager<ApplicationUser> userManager, int page = 1, int pageSize = 20) =>
+        group.MapGet("/users", async (UserManager<ApplicationUser> userManager, [AsParameters] UserQueryParams queryParams) =>
         {
-            var query = userManager.Users;
+            var query = userManager.Users.AsQueryable();
+
+            // Filter by active status
+            if (!queryParams.IncludeInactive)
+            {
+                query = query.Where(u => u.IsActive);
+            }
+
+            // Search by email, name
+            if (!string.IsNullOrWhiteSpace(queryParams.Search))
+            {
+                var searchTerm = queryParams.Search.ToLower();
+                query = query.Where(u =>
+                    u.Email!.ToLower().Contains(searchTerm) ||
+                    u.FullName.ToLower().Contains(searchTerm));
+            }
+
+            // Count total before pagination
             var total = await query.CountAsync();
+
+            // Sort
+            query = queryParams.SortBy?.ToLower() switch
+            {
+                "email" => queryParams.SortDescending
+                    ? query.OrderByDescending(u => u.Email)
+                    : query.OrderBy(u => u.Email),
+                "fullname" => queryParams.SortDescending
+                    ? query.OrderByDescending(u => u.FullName)
+                    : query.OrderBy(u => u.FullName),
+                "createdat" => queryParams.SortDescending
+                    ? query.OrderByDescending(u => u.Id)
+                    : query.OrderBy(u => u.Id),
+                _ => query.OrderBy(u => u.Email)
+            };
+
+            // Paginate
             var users = await query
-                .OrderBy(u => u.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip(queryParams.Skip)
+                .Take(queryParams.Take)
                 .ToListAsync();
 
-            var userDtos = new List<object>();
-
+            // Build DTOs with roles
+            var userDtos = new List<UserDto>();
             foreach (var user in users)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                userDtos.Add(new
+
+                // Filter by role if specified
+                if (!string.IsNullOrWhiteSpace(queryParams.Role) && !roles.Contains(queryParams.Role))
                 {
-                    user.Id,
-                    user.Email,
-                    user.FullName,
-                    Roles = roles
+                    continue;
+                }
+
+                userDtos.Add(new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email ?? string.Empty,
+                    FullName = user.FullName,
+                    IsActive = user.IsActive,
+                    Roles = roles.ToList(),
+                    CreatedAt = DateTime.UtcNow // Note: ApplicationUser doesn't have CreatedAt, using current time
                 });
             }
 
-            return Results.Ok(new { Items = userDtos, Total = total, Page = page, PageSize = pageSize });
+            var pagedResult = new PagedResult<UserDto>
+            {
+                Items = userDtos,
+                Total = total,
+                Page = queryParams.Page,
+                PageSize = queryParams.PageSize
+            };
+
+            return Results.Ok(pagedResult);
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
 
         group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint) =>
@@ -157,7 +222,20 @@ public static class IdentityEndpoints
 
                 var jwtToken = GenerateJwtToken(user, roles, roleClaims, configuration);
                 var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
-                return Results.Ok(new { Token = jwtToken, User = new { user.Email, user.FullName, Roles = roles, Permissions = permissions } });
+
+                var response = new LoginResponseDto
+                {
+                    Token = jwtToken,
+                    User = new UserInfoDto
+                    {
+                        Email = user.Email ?? string.Empty,
+                        FullName = user.FullName,
+                        Roles = roles.ToList(),
+                        Permissions = permissions
+                    }
+                };
+
+                return Results.Ok(response);
             }
             catch (Exception ex)
             {
@@ -215,7 +293,7 @@ public static class IdentityEndpoints
             return Results.Ok(new { Message = "User deactivated successfully" });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Delete));
 
-        group.MapPost("/users/{id}/roles", async (string id, string[] roles, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        group.MapPost("/users/{id}/roles", async (string id, AssignRolesDto model, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return Results.NotFound("User not found");

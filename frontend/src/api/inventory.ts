@@ -1,5 +1,24 @@
 import client from './client';
 
+export interface QueryParams {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    sortBy?: string;
+    sortDescending?: boolean;
+    includeInactive?: boolean;
+}
+
+export interface PagedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+}
+
 export interface InventoryItem {
     id: string;
     productId: string;
@@ -14,6 +33,26 @@ export interface Supplier {
     contactPerson: string;
     email: string;
     phone: string;
+    address?: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateSupplierDto {
+    name: string;
+    contactPerson: string;
+    email: string;
+    phone: string;
+    address?: string;
+}
+
+export interface UpdateSupplierDto {
+    name?: string;
+    contactPerson?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
 }
 
 export interface PurchaseOrder {
@@ -32,10 +71,38 @@ export const inventoryApi = {
         const response = await client.get<InventoryItem[]>('/inventory/stock');
         return response.data;
     },
-    getSuppliers: async () => {
-        const response = await client.get<Supplier[]>('/inventory/suppliers');
+
+    // Supplier API methods
+    getSuppliers: async (params?: QueryParams): Promise<PagedResult<Supplier>> => {
+        const response = await client.get<PagedResult<Supplier>>('/inventory/suppliers', { params });
         return response.data;
     },
+
+    getSupplier: async (id: string): Promise<Supplier> => {
+        const response = await client.get<Supplier>(`/inventory/suppliers/${id}`);
+        return response.data;
+    },
+
+    createSupplier: async (data: CreateSupplierDto): Promise<Supplier> => {
+        const response = await client.post<Supplier>('/inventory/suppliers', data);
+        return response.data;
+    },
+
+    updateSupplier: async (id: string, data: UpdateSupplierDto): Promise<Supplier> => {
+        const response = await client.put<Supplier>(`/inventory/suppliers/${id}`, data);
+        return response.data;
+    },
+
+    deleteSupplier: async (id: string): Promise<void> => {
+        await client.delete(`/inventory/suppliers/${id}`);
+    },
+
+    toggleSupplierActive: async (id: string): Promise<Supplier> => {
+        const response = await client.put<Supplier>(`/inventory/suppliers/${id}/toggle-active`);
+        return response.data;
+    },
+
+    // Purchase Order methods
     getPurchaseOrders: async () => {
         const response = await client.get<PurchaseOrder[]>('/inventory/po');
         return response.data;

@@ -34,6 +34,19 @@ public static class Permissions
         public const string SubmitClaim = "Permissions.Warranty.SubmitClaim";
         public const string ReviewClaim = "Permissions.Warranty.ReviewClaim";
     }
+
+    public static class Inventory
+    {
+        public const string ViewSupplier = "Permissions.Inventory.ViewSupplier";
+        public const string CreateSupplier = "Permissions.Inventory.CreateSupplier";
+        public const string UpdateSupplier = "Permissions.Inventory.UpdateSupplier";
+        public const string DeleteSupplier = "Permissions.Inventory.DeleteSupplier";
+        public const string ViewStock = "Permissions.Inventory.ViewStock";
+        public const string ManageStock = "Permissions.Inventory.ManageStock";
+        public const string ViewPurchaseOrder = "Permissions.Inventory.ViewPurchaseOrder";
+        public const string CreatePurchaseOrder = "Permissions.Inventory.CreatePurchaseOrder";
+        public const string ReceivePurchaseOrder = "Permissions.Inventory.ReceivePurchaseOrder";
+    }
 }
 
 public static class Roles

@@ -28,6 +28,10 @@ public class Invoice : AggregateRoot<Guid>
     public decimal TotalAmount { get; private set; }
     public decimal PaidAmount { get; private set; }
     public decimal RemainingAmount => TotalAmount - PaidAmount;
+
+    // AR/AP specific properties
+    public decimal OutstandingAmount => TotalAmount - PaidAmount;
+    public AgingBucket AgingBucket { get; private set; } = AgingBucket.None;
     
     public Currency Currency { get; private set; }
     public string? Notes { get; private set; }
@@ -37,6 +41,9 @@ public class Invoice : AggregateRoot<Guid>
     
     private readonly List<Payment> _payments = new();
     public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
+
+    private readonly List<PaymentApplication> _paymentApplications = new();
+    public IReadOnlyCollection<PaymentApplication> PaymentApplications => _paymentApplications.AsReadOnly();
 
     protected Invoice() { }
 
@@ -100,14 +107,91 @@ public class Invoice : AggregateRoot<Guid>
     {
         if (Status != InvoiceStatus.Draft)
             throw new InvalidOperationException("Only draft invoices can be issued");
-        
+
         if (!_lines.Any())
             throw new InvalidOperationException("Invoice must have at least one line item");
 
         Status = InvoiceStatus.Issued;
         IssueDate = DateTime.UtcNow;
-        
+
+        // Initialize aging status
+        CalculateAgingStatus();
+
         RaiseDomainEvent(new InvoiceIssuedEvent(Id, InvoiceNumber, TotalAmount, DueDate));
+    }
+
+    /// <summary>
+    /// Applies a payment to this invoice via PaymentApplication.
+    /// Validates that the total applications don't exceed outstanding amount.
+    /// </summary>
+    public void ApplyPayment(Guid paymentId, decimal amount, string? notes = null)
+    {
+        if (Status == InvoiceStatus.Draft)
+            throw new InvalidOperationException("Cannot apply payment to draft invoice");
+
+        if (Status == InvoiceStatus.Cancelled)
+            throw new InvalidOperationException("Cannot apply payment to cancelled invoice");
+
+        if (amount <= 0)
+            throw new ArgumentException("Payment amount must be positive", nameof(amount));
+
+        // Calculate existing applications for this invoice
+        var existingApplications = _paymentApplications.Sum(pa => pa.Amount);
+
+        // Validate that total applications don't exceed outstanding
+        PaymentApplication.ValidateTotalApplications(OutstandingAmount, existingApplications, amount);
+
+        // Create and add the payment application
+        var application = PaymentApplication.Create(paymentId, Id, amount, notes);
+        _paymentApplications.Add(application);
+
+        // Update paid amount
+        PaidAmount += amount;
+
+        // Update status based on payment
+        if (OutstandingAmount == 0)
+        {
+            Status = InvoiceStatus.Paid;
+            RaiseDomainEvent(new InvoicePaidEvent(Id, InvoiceNumber));
+        }
+        else if (PaidAmount > 0)
+        {
+            Status = InvoiceStatus.PartiallyPaid;
+        }
+
+        // Recalculate aging status
+        CalculateAgingStatus();
+    }
+
+    /// <summary>
+    /// Calculates and updates the aging bucket based on due date vs current date.
+    /// Should be called periodically or when status changes.
+    /// </summary>
+    public void CalculateAgingStatus()
+    {
+        if (Status == InvoiceStatus.Paid || Status == InvoiceStatus.Cancelled)
+        {
+            AgingBucket = AgingBucket.None;
+            return;
+        }
+
+        var daysOverdue = (DateTime.UtcNow - DueDate).Days;
+
+        AgingBucket = daysOverdue switch
+        {
+            <= 0 => AgingBucket.Current,
+            <= 30 => AgingBucket.Days1To30,
+            <= 60 => AgingBucket.Days31To60,
+            <= 90 => AgingBucket.Days61To90,
+            _ => AgingBucket.Over90Days
+        };
+
+        // Mark as overdue if past due date and not paid
+        if (daysOverdue > 0 && Status == InvoiceStatus.Issued)
+        {
+            Status = InvoiceStatus.Overdue;
+            RaiseDomainEvent(new InvoiceOverdueEvent(Id, InvoiceNumber, DueDate, OutstandingAmount));
+        }
     }
 
     public void RecordPayment(decimal amount, string paymentReference, PaymentMethod method)
