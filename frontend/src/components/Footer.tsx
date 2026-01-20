@@ -37,17 +37,22 @@ export const Footer = () => {
                         <span className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase mt-1">COMPUTER</span>
                     </Link>
                     <div className="space-y-4 text-gray-600">
-                        <div className="flex gap-3">
+                        <div className="flex gap-3" data-testid="company-address">
                             <MapPin size={20} className="text-[#D70018] flex-shrink-0" />
                             <p className="text-sm">Trụ sở: 91 Nguyễn Xiển, Hạ Đình, Thanh Xuân, Hà Nội</p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3" data-testid="company-phone">
                             <Phone size={20} className="text-[#D70018] flex-shrink-0" />
                             <p className="text-sm font-black">1800.6321 - 0914.xxx.xxx</p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3" data-testid="company-email">
                             <Mail size={20} className="text-[#D70018] flex-shrink-0" />
                             <p className="text-sm">kinhdoanh@qhcomputer.com</p>
+                        </div>
+                        <div className="flex gap-3" data-testid="company-tax">
+                            <div className="text-sm">
+                                <span className="font-bold">MST:</span> 0123456789
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -68,11 +73,11 @@ export const Footer = () => {
                 <div className="space-y-6">
                     <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">Chính sách & Hỗ trợ</h4>
                     <ul className="space-y-3 text-gray-500 text-sm font-medium">
-                        <li><Link to="#" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
-                        <li><Link to="#" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Chính sách đổi trả</Link></li>
-                        <li><Link to="#" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Hướng dẫn mua hàng online</Link></li>
-                        <li><Link to="#" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Mua hàng trả góp</Link></li>
-                        <li><Link to="#" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Vận chuyển & Giao nhận</Link></li>
+                        <li><Link to="/policy/warranty" className="hover:text-[#D70018] transition-colors flex items-center gap-1" data-testid="policy-warranty-link"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
+                        <li><Link to="/policy/return" className="hover:text-[#D70018] transition-colors flex items-center gap-1" data-testid="policy-return-link"><ChevronRight size={14} /> Chính sách đổi trả</Link></li>
+                        <li><Link to="/terms" className="hover:text-[#D70018] transition-colors flex items-center gap-1" data-testid="terms-link"><ChevronRight size={14} /> Điều khoản sử dụng</Link></li>
+                        <li><Link to="/privacy" className="hover:text-[#D70018] transition-colors flex items-center gap-1" data-testid="privacy-link"><ChevronRight size={14} /> Chính sách bảo mật</Link></li>
+                        <li><Link to="/contact" className="hover:text-[#D70018] transition-colors flex items-center gap-1" data-testid="contact-link"><ChevronRight size={14} /> Liên hệ</Link></li>
                     </ul>
                 </div>
 

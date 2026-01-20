@@ -6,15 +6,16 @@ import {
     Search, ShoppingCart, Menu, Phone,
     Wrench, Monitor, ChevronDown,
     LogOut, Settings, Laptop, Cpu, Zap,
-    Briefcase
+    Briefcase, MessageCircle, User, Package, FileText
 } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
     onCartClick: () => void;
+    onChatClick?: () => void;
 }
 
-export const Header = ({ onCartClick }: HeaderProps) => {
+export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const { isAuthenticated, user, logout } = useAuth();
     const { itemCount } = useCart();
     const navigate = useNavigate();
@@ -82,7 +83,7 @@ export const Header = ({ onCartClick }: HeaderProps) => {
             <div className="bg-white py-4 border-b border-gray-100">
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-4 lg:gap-8 justify-between">
                     {/* Logo Section */}
-                    <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
+                    <Link to="/" className="flex-shrink-0 flex items-center gap-3 group" data-testid="logo-link">
                         <div className="relative">
                             <div className="w-12 h-12 bg-[#D70018] rounded-lg flex items-center justify-center text-white font-black text-2xl transform shadow-lg shadow-red-500/20 group-hover:rotate-3 transition-transform">
                                 QH
@@ -115,27 +116,11 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
                     {/* Quick Actions */}
                     <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
-                        {/* Config PC */}
-                        <Link to="/pc-builder" className="hidden xl:flex flex-col items-center gap-1 bg-[#D70018] text-white px-4 py-1.5 rounded-xl hover:bg-[#b50014] transition-all shadow-md active:scale-95">
-                            <Settings size={18} />
-                            <span className="text-[10px] font-bold uppercase leading-none">Xây dựng PC</span>
-                        </Link>
-
-                        {/* Hotline */}
-                        <div className="hidden lg:flex items-center gap-2 group cursor-pointer" onClick={() => window.open('tel:18006321')}>
-                            <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all">
-                                <Phone size={18} />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-gray-400 leading-none">Hotline mua hàng</span>
-                                <span className="text-sm font-black text-gray-800">1800.6321</span>
-                            </div>
-                        </div>
-
                         {/* Cart */}
                         <button
                             onClick={onCartClick}
                             className="flex items-center gap-3 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all relative border border-red-200 group"
+                            data-testid="cart-button"
                         >
                             <div className="relative">
                                 <ShoppingCart size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
@@ -147,6 +132,59 @@ export const Header = ({ onCartClick }: HeaderProps) => {
                             </div>
                             <span className="text-sm font-bold text-[#D70018] hidden sm:block">Giỏ hàng</span>
                         </button>
+
+                        {/* Chat */}
+                        <button
+                            onClick={onChatClick}
+                            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all border border-blue-200 group"
+                            data-testid="chat-button"
+                        >
+                            <MessageCircle size={22} className="text-blue-600 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-bold text-blue-600 hidden sm:block">Chat</span>
+                        </button>
+
+                        {/* Account Menu */}
+                        {isAuthenticated ? (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
+                                    className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl transition-all border border-gray-200"
+                                    data-testid="user-menu-button"
+                                >
+                                    <User size={22} className="text-gray-600" />
+                                    <span className="text-sm font-bold text-gray-600 hidden sm:block">{user?.fullName.split(' ')[0]}</span>
+                                    <ChevronDown size={14} />
+                                </button>
+                                {showUserMenu && (
+                                    <div className="absolute top-full right-0 mt-2 w-56 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 p-2 z-[60]">
+                                        <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors" data-testid="account-link">
+                                            <User size={16} /> Tài khoản
+                                        </Link>
+                                        <Link to="/profile?tab=orders" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors" data-testid="orders-link">
+                                            <Package size={16} /> Đơn hàng
+                                        </Link>
+                                        {user?.roles.some(role => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier'].includes(role)) && (
+                                            <Link to="/backoffice" className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors" data-testid="backoffice-link">
+                                                <Settings size={16} /> Quản trị
+                                            </Link>
+                                        )}
+                                        <div className="h-px bg-gray-100 my-2" />
+                                        <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-rose-50 rounded-lg transition-colors text-rose-600" data-testid="logout-button">
+                                            <LogOut size={16} /> Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl transition-all border border-gray-200"
+                                data-testid="login-link"
+                            >
+                                <User size={22} className="text-gray-600" />
+                                <span className="text-sm font-bold text-gray-600 hidden sm:block">Đăng nhập</span>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
@@ -161,11 +199,11 @@ export const Header = ({ onCartClick }: HeaderProps) => {
 
                         <div className="flex items-center gap-8">
                             {[
-                                { name: 'PC Gaming', icon: <Wrench size={16} />, path: '/category/pc-gaming' },
-                                { name: 'Workstation', icon: <Monitor size={16} />, path: '/category/workstation' },
-                                { name: 'Laptop', icon: <Laptop size={16} />, path: '/category/laptop' },
-                                { name: 'Linh kiện', icon: <Cpu size={16} />, path: '/category/components' },
-                                { name: 'Màn hình', icon: <Monitor size={16} />, path: '/category/screens' },
+                                { name: 'Sản phẩm', icon: <Laptop size={16} />, path: '/products' },
+                                { name: 'Dịch vụ sửa chữa', icon: <Wrench size={16} />, path: '/repairs' },
+                                { name: 'Bảo hành', icon: <Monitor size={16} />, path: '/warranty' },
+                                { name: 'Blog/Tin tức', icon: <FileText size={16} />, path: '/policy/news' },
+                                { name: 'Liên hệ', icon: <Phone size={16} />, path: '/contact' },
                             ].map((item, idx) => (
                                 <Link
                                     key={idx}

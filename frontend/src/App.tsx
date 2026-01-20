@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PolicyPage } from './pages/PolicyPage';
 import { ContactPage } from './pages/ContactPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { AboutPage } from './pages/AboutPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { LoginPage } from './pages/LoginPage';
@@ -81,6 +84,9 @@ function App() {
                   {/* Content Pages */}
                   <Route path="policy/:type" element={<PolicyPage />} />
                   <Route path="contact" element={<ContactPage />} />
+                  <Route path="terms" element={<TermsPage />} />
+                  <Route path="privacy" element={<PrivacyPage />} />
+                  <Route path="about" element={<AboutPage />} />
                 </Route>
 
                 {/* Backoffice Routes */}
