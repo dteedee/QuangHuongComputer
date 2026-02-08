@@ -449,8 +449,8 @@ public static class SalesEndpoints
                 dto.OrderId,
                 dto.OrderItemId,
                 dto.Reason,
-                dto.Description,
-                orderItem.UnitPrice * orderItem.Quantity);
+                orderItem.UnitPrice * orderItem.Quantity,
+                dto.Description);
 
             db.ReturnRequests.Add(returnRequest);
             await db.SaveChangesAsync();
@@ -663,7 +663,7 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be approved" });
 
-            returnRequest.Approve();
+            returnRequest.Approve("Admin"); // TODO: Get actual user ID from auth context
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request approved", Status = returnRequest.Status.ToString() });
@@ -678,7 +678,7 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be rejected" });
 
-            returnRequest.Reject(dto.Reason);
+            returnRequest.Reject(dto.Reason, "Admin"); // TODO: Get actual user ID from auth context
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
@@ -693,7 +693,7 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Approved)
                 return Results.BadRequest(new { Error = "Only approved returns can be refunded" });
 
-            returnRequest.MarkAsRefunded();
+            returnRequest.ProcessRefund("Admin"); // TODO: Get actual user ID from auth context
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
+using System.Security.Claims;
 
 namespace HR;
 
@@ -166,8 +167,6 @@ public static class HREndpoints
                 timesheet.Notes,
                 timesheet.ApprovedBy,
                 timesheet.ApprovedAt,
-                timesheet.RejectedBy,
-                timesheet.RejectedAt,
                 timesheet.RejectionReason,
                 timesheet.CreatedAt,
                 timesheet.UpdatedAt
@@ -222,7 +221,7 @@ public static class HREndpoints
             if (timesheet.Status != TimesheetStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending timesheets can be approved" });
 
-            timesheet.Approve(userId, dto.Notes);
+            timesheet.Approve(userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new
@@ -254,7 +253,7 @@ public static class HREndpoints
             {
                 Message = "Timesheet rejected",
                 Status = timesheet.Status.ToString(),
-                RejectedAt = timesheet.RejectedAt
+                RejectionReason = timesheet.RejectionReason
             });
         });
 

@@ -100,6 +100,10 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Set schema cho Identity module
+        builder.HasDefaultSchema("identity");
+
         builder.Entity<ApplicationUser>().HasQueryFilter(u => u.IsActive);
 
         builder.Entity<PasswordResetToken>(entity =>

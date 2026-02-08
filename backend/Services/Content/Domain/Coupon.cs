@@ -121,6 +121,60 @@ public class Coupon : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void UpdateDescription(string description)
+    {
+        Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateDiscountValue(decimal discountValue)
+    {
+        DiscountValue = discountValue;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateMinOrderAmount(decimal minOrderAmount)
+    {
+        MinOrderAmount = minOrderAmount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateMaxDiscount(decimal? maxDiscount)
+    {
+        MaxDiscount = maxDiscount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateValidFrom(DateTime validFrom)
+    {
+        ValidFrom = validFrom;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateValidTo(DateTime validTo)
+    {
+        ValidTo = validTo;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateUsageLimit(int? usageLimit)
+    {
+        UsageLimit = usageLimit;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public ValidationResult Validate()
     {
         var result = new ValidationResult();

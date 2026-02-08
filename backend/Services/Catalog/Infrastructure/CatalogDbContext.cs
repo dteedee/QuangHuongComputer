@@ -34,7 +34,7 @@ public class CatalogDbContext : DbContext
         // Product configurations
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.ToTable("products");
+            entity.ToTable("Products");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Price).HasPrecision(18, 2);
             entity.Property(p => p.CostPrice).HasPrecision(18, 2);
@@ -88,7 +88,7 @@ public class CatalogDbContext : DbContext
         // Category configurations
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.ToTable("categories");
+            entity.ToTable("Categories");
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
             entity.Property(c => c.Description).HasColumnType("text");
@@ -97,7 +97,7 @@ public class CatalogDbContext : DbContext
         // Brand configurations
         modelBuilder.Entity<Brand>(entity =>
         {
-            entity.ToTable("brands");
+            entity.ToTable("Brands");
             entity.HasKey(b => b.Id);
             entity.Property(b => b.Name).IsRequired().HasMaxLength(100);
             entity.Property(b => b.Description).HasColumnType("text");
@@ -106,7 +106,7 @@ public class CatalogDbContext : DbContext
         // ProductReview configurations
         modelBuilder.Entity<ProductReview>(entity =>
         {
-            entity.ToTable("product_reviews");
+            entity.ToTable("ProductReviews");
             entity.HasKey(pr => pr.Id);
             entity.Property(pr => pr.Rating).IsRequired();
             entity.Property(pr => pr.Comment).IsRequired().HasColumnType("text");
@@ -128,7 +128,7 @@ public class CatalogDbContext : DbContext
         // ProductAttribute configurations
         modelBuilder.Entity<ProductAttribute>(entity =>
         {
-            entity.ToTable("product_attributes");
+            entity.ToTable("ProductAttributes");
             entity.HasKey(pa => pa.Id);
             entity.Property(pa => pa.AttributeName).IsRequired().HasMaxLength(100);
             entity.Property(pa => pa.AttributeValue).IsRequired().HasMaxLength(500);

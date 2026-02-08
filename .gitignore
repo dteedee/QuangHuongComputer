@@ -33,6 +33,21 @@ obj/
 .env.*.local
 
 # ========================================
+# Sensitive Configuration Files (IMPORTANT!)
+# ========================================
+# DO NOT commit these files - they contain secrets!
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+backend/**/appsettings.Development.json
+backend/**/appsettings.Production.json
+
+# User Secrets
+**/secrets.json
+**/*.secrets.json
+
+# ========================================
 # IDE & Editor files
 # ========================================
 .vscode/
@@ -84,6 +99,16 @@ docker-compose.override.yml
 *.min.js
 *.min.css
 *.map
+
+# ========================================
+# .NET specific
+# ========================================
+.vs/
+*.user
+*.suo
+*.userosscache
+project.lock.json
+project.fragment.lock.json
 
 # ========================================
 # Documentation
