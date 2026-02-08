@@ -21,16 +21,16 @@ public class PerformanceMonitoringMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             // Store request info for later use
             context.Items["RequestStartTime"] = DateTime.UtcNow;
-            
+
             await _next(context);
-            
+
             stopwatch.Stop();
-            
+
             // Log slow requests
             if (stopwatch.ElapsedMilliseconds > SlowRequestThresholdMs)
             {
@@ -41,21 +41,24 @@ public class PerformanceMonitoringMiddleware
                     stopwatch.ElapsedMilliseconds,
                     context.Response.StatusCode);
             }
-            
-            // Add performance headers
-            context.Response.Headers.Add("X-Response-Time-Ms", stopwatch.ElapsedMilliseconds.ToString());
+
+            // Add performance headers only if response hasn't started
+            if (!context.Response.HasStarted)
+            {
+                context.Response.Headers.TryAdd("X-Response-Time-Ms", stopwatch.ElapsedMilliseconds.ToString());
+            }
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             _logger.LogError(
                 ex,
                 "API Request Failed: {Method}{Path} after {ElapsedMs}ms",
                 context.Request.Method,
                 context.Request.Path,
                 stopwatch.ElapsedMilliseconds);
-            
+
             throw;
         }
     }
@@ -132,12 +135,15 @@ public class SecurityHeadersMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Add security headers
-        context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-        context.Response.Headers.Add("X-Frame-Options", "DENY");
-        context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-        context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-        context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+        // Add security headers only if response hasn't started
+        if (!context.Response.HasStarted)
+        {
+            context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+            context.Response.Headers.TryAdd("X-XSS-Protection", "1; mode=block");
+            context.Response.Headers.TryAdd("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+            context.Response.Headers.TryAdd("Content-Security-Policy", "default-src 'self'");
+        }
 
         await _next(context);
     }
@@ -166,18 +172,22 @@ public class GlobalExceptionHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception occurred");
-            
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            var response = new
+            // Only modify response if it hasn't started
+            if (!context.Response.HasStarted)
             {
-                statusCode = context.Response.StatusCode,
-                message = "An error occurred processing your request",
-                traceId = context.TraceIdentifier
-            };
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            await context.Response.WriteAsJsonAsync(response);
+                var response = new
+                {
+                    statusCode = context.Response.StatusCode,
+                    message = "An error occurred processing your request",
+                    traceId = context.TraceIdentifier
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
+            }
         }
     }
 }

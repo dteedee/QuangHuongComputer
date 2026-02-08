@@ -162,3 +162,9 @@ public/uploads/
 # Misc
 # ========================================
 .wslignore
+
+# ========================================
+# Temporary Documentation (Do not commit)
+# ========================================
+CONFIG-COMPARISON.md
+URGENT-ACTION-REQUIRED.md

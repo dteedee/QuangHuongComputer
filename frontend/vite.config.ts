@@ -15,5 +15,11 @@ export default defineConfig({
       '@pages': path.resolve(__dirname, './src/pages'),
       '@lib': path.resolve(__dirname, './src/lib'),
     }
+  },
+  server: {
+    headers: {
+      // Allow Google Sign-In popup to communicate with main window
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    }
   }
 })

@@ -23,7 +23,7 @@ public class ApiResponseTimeMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             await _next(context);
@@ -32,10 +32,13 @@ public class ApiResponseTimeMiddleware
         {
             stopwatch.Stop();
             var elapsedMs = stopwatch.ElapsedMilliseconds;
-            
-            // Add response header with timing information
-            context.Response.Headers.Add("X-Response-Time-Ms", elapsedMs.ToString());
-            
+
+            // Add response header with timing information (only if response hasn't started)
+            if (!context.Response.HasStarted)
+            {
+                context.Response.Headers.TryAdd("X-Response-Time-Ms", elapsedMs.ToString());
+            }
+
             // Log slow requests
             if (elapsedMs > SlowRequestThresholdMs)
             {

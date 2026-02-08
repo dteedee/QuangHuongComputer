@@ -53,9 +53,11 @@ import POSPage from './pages/backoffice/sale/POSPage';
 
 const queryClient = new QueryClient();
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 function App() {
   return (
-    <GoogleOAuthProvider clientId="97898189481-npr89hminm1stncf1tpee4apc1q2gu7g.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-right" reverseOrder={false} />
         <BrowserRouter>

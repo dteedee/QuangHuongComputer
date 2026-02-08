@@ -290,8 +290,8 @@ public static class IdentityEndpoints
                 else
                 {
                     // Real Validation
-                    var clientId = configuration["Google:ClientId"];
-                    if (string.IsNullOrEmpty(clientId)) return Results.BadRequest(new { Error = "Configuration Error", Details = "Google:ClientId is missing in appsettings.json" });
+                    var clientId = configuration["OAuth:Google:ClientId"];
+                    if (string.IsNullOrEmpty(clientId)) return Results.BadRequest(new { Error = "Configuration Error", Details = "OAuth:Google:ClientId is missing in appsettings.json" });
 
                     var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
                     {
