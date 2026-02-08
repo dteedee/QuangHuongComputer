@@ -1,4 +1,4 @@
-using BuildingBlocks;
+using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
 
 namespace InventoryModule.Domain;

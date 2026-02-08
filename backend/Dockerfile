@@ -16,6 +16,9 @@ COPY ["backend/Services/Payments/Payments.csproj", "backend/Services/Payments/"]
 COPY ["backend/Services/Content/Content.csproj", "backend/Services/Content/"]
 COPY ["backend/Services/Ai/Ai.csproj", "backend/Services/Ai/"]
 COPY ["backend/Services/Communication/Communication.csproj", "backend/Services/Communication/"]
+COPY ["backend/Services/HR/HR.csproj", "backend/Services/HR/"]
+COPY ["backend/Services/Reporting/Reporting.csproj", "backend/Services/Reporting/"]
+COPY ["backend/Services/SystemConfig/SystemConfig.csproj", "backend/Services/SystemConfig/"]
 
 RUN dotnet restore "backend/ApiGateway/ApiGateway.csproj"
 

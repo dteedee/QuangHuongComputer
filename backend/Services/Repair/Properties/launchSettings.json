@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Repair": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:49301;http://localhost:49306"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-﻿
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PolicyPage } from './pages/PolicyPage';
@@ -41,16 +41,19 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
+import ProductCatalogPage from './pages/ProductCatalogPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import { OrdersPage } from './pages/account/OrdersPage';
 import { OrderDetailPage } from './pages/account/OrderDetailPage';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import POSPage from './pages/backoffice/sale/POSPage';
 
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('App Rendering...');
   return (
     <GoogleOAuthProvider clientId="97898189481-npr89hminm1stncf1tpee4apc1q2gu7g.apps.googleusercontent.com">
       <QueryClientProvider client={queryClient}>
@@ -71,8 +74,9 @@ function App() {
                   <Route path="payment/success" element={<PaymentResultPage />} />
                   <Route path="payment/failed" element={<PaymentResultPage />} />
                   <Route path="product/:id" element={<ProductDetailsPage />} />
-                  <Route path="products" element={<CategoryPage />} />
-                  <Route path="products/:id" element={<ProductDetailsPage />} />
+                  <Route path="products" element={<ProductCatalogPage />} />
+                  <Route path="products/:id" element={<ProductDetailPage />} />
+                  <Route path="catalog" element={<ProductCatalogPage />} />
                   <Route path="profile" element={<ProfilePage />} />
 
                   {/* Account Routes */}
@@ -101,6 +105,7 @@ function App() {
                 <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
                   <Route path="/backoffice" element={<BackofficeLayout />}>
                     <Route index element={<CommonDashboard />} />
+                    <Route path="pos" element={<POSPage />} />
                     <Route path="sale" element={<SalePortal />} />
                     <Route path="tech" element={<TechPortal />} />
                     <Route path="inventory" element={<InventoryPortal />} />
@@ -117,6 +122,17 @@ function App() {
                     <Route path="admin" element={<AdminPortal />} />
                     <Route path="manager" element={<ManagerPortal />} />
                   </Route>
+                </Route>
+
+                {/* Admin Routes */}
+                <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/products" element={<AdminProductsPage />} />
+                  <Route path="/admin/products/new" element={<AdminProductsPage />} />
+                  <Route path="/admin/orders" element={<AdminOrdersPage />} />
+                  <Route path="/admin/orders/:orderId" element={<AdminOrdersPage />} />
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/roles" element={<RolesPage />} />
                 </Route>
 
                 {/* Auth Pages (Standalone) */}

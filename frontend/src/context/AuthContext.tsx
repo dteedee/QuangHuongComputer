@@ -1,20 +1,13 @@
-﻿import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import client from '../api/client';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { authApi, setupTokenRefreshInterceptor, type User } from '../api/auth';
 import toast from 'react-hot-toast';
-
-interface User {
-    email: string;
-    fullName: string;
-    roles: string[];
-    permissions: string[];
-}
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (email: string, password: string, recaptchaToken?: string) => Promise<void>;
     register: (email: string, password: string, fullName: string, recaptchaToken?: string) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     isAuthenticated: boolean;
     hasPermission: (permission: string) => boolean;
 }
@@ -28,20 +21,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
+    // Setup token refresh interceptor on mount
     useEffect(() => {
-        if (token) {
-            client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        }
-    }, [token]);
+        setupTokenRefreshInterceptor();
+    }, []);
 
     const login = async (email: string, password: string, recaptchaToken?: string) => {
         try {
-            const { data } = await client.post('/auth/login', { email, password, recaptchaToken });
+            const data = await authApi.login({ email, password, recaptchaToken });
+            
             setToken(data.token);
             setUser(data.user);
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            client.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+            
             toast.success(`Chào mừng trở lại, ${data.user.fullName}!`, {
                 icon: '👋',
                 style: { borderRadius: '15px', fontWeight: 'bold' }
@@ -54,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const register = async (email: string, password: string, fullName: string, recaptchaToken?: string) => {
         try {
-            await client.post('/auth/register', { email, password, fullName, recaptchaToken });
+            await authApi.register({ email, password, fullName, recaptchaToken });
             toast.success('Đăng ký tài khoản thành công!');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Đăng ký thất bại');
@@ -62,18 +55,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        delete client.defaults.headers.common['Authorization'];
-        toast('Đã đăng xuất tài khoản', { icon: '🚪' });
+    const logout = async () => {
+        try {
+            await authApi.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setToken(null);
+            setUser(null);
+            toast('Đã đăng xuất tài khoản', { icon: '🚪' });
+        }
     };
 
     const hasPermission = (permission: string) => {
         if (!user) return false;
-        if (user.roles.includes('Admin')) return true; // Super Admin bypass
+        if (user.roles.includes('Admin')) return true;
         return user.permissions?.includes(permission) ?? false;
     };
 

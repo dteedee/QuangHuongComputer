@@ -13,9 +13,19 @@ public static class DependencyInjection
     {
         // Email is registered globally in BuildingBlocks.Email
 
-        // Database
-        services.AddDbContext<CommunicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        // Database with Connection Pooling
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("DefaultConnection not found");
+
+        services.AddDbContextPool<CommunicationDbContext>(options =>
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.CommandTimeout(30);
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+            }),
+            poolSize: 128);
 
         // Repositories
         services.AddScoped<IConversationRepository, ConversationRepository>();

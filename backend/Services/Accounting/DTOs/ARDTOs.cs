@@ -51,14 +51,14 @@ public record InvoiceLineDto(
 
 public record PaymentApplicationDto(
     Guid Id,
-    Guid PaymentId,
+    Guid PaymentIntentId,
     Guid InvoiceId,
     decimal Amount,
     DateTime AppliedAt,
     string? Notes);
 
 public record ApplyPaymentRequest(
-    Guid PaymentId,
+    Guid PaymentIntentId,
     decimal Amount,
     string? Notes = null);
 

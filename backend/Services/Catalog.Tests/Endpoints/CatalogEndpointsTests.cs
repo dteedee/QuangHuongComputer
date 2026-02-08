@@ -49,6 +49,7 @@ public class CatalogEndpointsTests : IDisposable
         var product1 = new Product(
             "ASUS ROG Strix",
             25000000,
+            20000000,
             "Gaming laptop",
             _categoryId,
             _brandId,
@@ -67,6 +68,7 @@ public class CatalogEndpointsTests : IDisposable
         var product2 = new Product(
             "Gaming PC",
             30000000,
+            24000000,
             "Desktop PC",
             otherCategoryId,
             _brandId,
@@ -91,9 +93,9 @@ public class CatalogEndpointsTests : IDisposable
     public async Task SearchProducts_WithPriceRangeFilter_ReturnsProductsInRange()
     {
         // Arrange
-        var product1 = new Product("Product 1", 10000000, "Description 1", _categoryId, _brandId, 10);
-        var product2 = new Product("Product 2", 20000000, "Description 2", _categoryId, _brandId, 10);
-        var product3 = new Product("Product 3", 30000000, "Description 3", _categoryId, _brandId, 10);
+        var product1 = new Product("Product 1", 10000000, 8000000, "Description 1", _categoryId, _brandId, 10);
+        var product2 = new Product("Product 2", 20000000, 16000000, "Description 2", _categoryId, _brandId, 10);
+        var product3 = new Product("Product 3", 30000000, 24000000, "Description 3", _categoryId, _brandId, 10);
 
         _context.Products.AddRange(product1, product2, product3);
         await _context.SaveChangesAsync();
@@ -120,8 +122,8 @@ public class CatalogEndpointsTests : IDisposable
         typeof(Brand).GetProperty("Id")!.SetValue(otherBrand, otherBrandId);
         _context.Brands.Add(otherBrand);
 
-        var product1 = new Product("ASUS Product", 20000000, "ASUS Description", _categoryId, _brandId, 10);
-        var product2 = new Product("Dell Product", 25000000, "Dell Description", _categoryId, otherBrandId, 10);
+        var product1 = new Product("ASUS Product", 20000000, 16000000, "ASUS Description", _categoryId, _brandId, 10);
+        var product2 = new Product("Dell Product", 25000000, 20000000, "Dell Description", _categoryId, otherBrandId, 10);
 
         _context.Products.AddRange(product1, product2);
         await _context.SaveChangesAsync();
@@ -140,8 +142,8 @@ public class CatalogEndpointsTests : IDisposable
     public async Task SearchProducts_WithTextSearch_ReturnsMatchingProducts()
     {
         // Arrange
-        var product1 = new Product("ASUS ROG Gaming", 25000000, "High performance gaming laptop", _categoryId, _brandId, 10);
-        var product2 = new Product("Dell Workstation", 30000000, "Professional workstation", _categoryId, _brandId, 10);
+        var product1 = new Product("ASUS ROG Gaming", 25000000, 20000000, "High performance gaming laptop", _categoryId, _brandId, 10);
+        var product2 = new Product("Dell Workstation", 30000000, 24000000, "Professional workstation", _categoryId, _brandId, 10);
 
         _context.Products.AddRange(product1, product2);
         await _context.SaveChangesAsync();
@@ -161,8 +163,8 @@ public class CatalogEndpointsTests : IDisposable
     public async Task SearchProducts_WithInStockFilter_ReturnsOnlyInStockProducts()
     {
         // Arrange
-        var product1 = new Product("In Stock Product", 20000000, "Available", _categoryId, _brandId, 10);
-        var product2 = new Product("Out of Stock Product", 25000000, "Not available", _categoryId, _brandId, 0);
+        var product1 = new Product("In Stock Product", 20000000, 16000000, "Available", _categoryId, _brandId, 10);
+        var product2 = new Product("Out of Stock Product", 25000000, 20000000, "Not available", _categoryId, _brandId, 0);
 
         _context.Products.AddRange(product1, product2);
         await _context.SaveChangesAsync();
@@ -184,9 +186,9 @@ public class CatalogEndpointsTests : IDisposable
     public async Task SearchProducts_WithSorting_ReturnsSortedProducts(string sortBy, object expectedOrder)
     {
         // Arrange
-        var product1 = new Product("Product C", 30000000, "Description", _categoryId, _brandId, 10);
-        var product2 = new Product("Product A", 10000000, "Description", _categoryId, _brandId, 10);
-        var product3 = new Product("Product B", 20000000, "Description", _categoryId, _brandId, 10);
+        var product1 = new Product("Product C", 30000000, 24000000, "Description", _categoryId, _brandId, 10);
+        var product2 = new Product("Product A", 10000000, 8000000, "Description", _categoryId, _brandId, 10);
+        var product3 = new Product("Product B", 20000000, 16000000, "Description", _categoryId, _brandId, 10);
 
         _context.Products.AddRange(product1, product2, product3);
         await _context.SaveChangesAsync();
@@ -225,7 +227,7 @@ public class CatalogEndpointsTests : IDisposable
         // Arrange
         for (int i = 1; i <= 25; i++)
         {
-            var product = new Product($"Product {i}", 10000000 + i, $"Description {i}", _categoryId, _brandId, 10);
+            var product = new Product($"Product {i}", 10000000 + i, (10000000 + i) * 0.8m, $"Description {i}", _categoryId, _brandId, 10);
             _context.Products.Add(product);
         }
         await _context.SaveChangesAsync();
@@ -252,9 +254,9 @@ public class CatalogEndpointsTests : IDisposable
     public async Task SearchProducts_WithCombinedFilters_ReturnsCorrectResults()
     {
         // Arrange
-        var product1 = new Product("ASUS Gaming Laptop", 25000000, "Gaming laptop with RTX", _categoryId, _brandId, 15);
-        var product2 = new Product("ASUS Office Laptop", 15000000, "Office laptop", _categoryId, _brandId, 5);
-        var product3 = new Product("ASUS High-End Gaming", 35000000, "High-end gaming laptop", _categoryId, _brandId, 0);
+        var product1 = new Product("ASUS Gaming Laptop", 25000000, 20000000, "Gaming laptop with RTX", _categoryId, _brandId, 15);
+        var product2 = new Product("ASUS Office Laptop", 15000000, 12000000, "Office laptop", _categoryId, _brandId, 5);
+        var product3 = new Product("ASUS High-End Gaming", 35000000, 28000000, "High-end gaming laptop", _categoryId, _brandId, 0);
 
         _context.Products.AddRange(product1, product2, product3);
         await _context.SaveChangesAsync();
@@ -284,6 +286,7 @@ public class CatalogEndpointsTests : IDisposable
         var product = new Product(
             "Test Product",
             25000000,
+            20000000,
             "Test Description",
             _categoryId,
             _brandId,
@@ -325,6 +328,7 @@ public class CatalogEndpointsTests : IDisposable
         var product = new Product(
             "Test Product",
             25000000,
+            20000000,
             "Description",
             _categoryId,
             _brandId,
@@ -347,6 +351,7 @@ public class CatalogEndpointsTests : IDisposable
         var product = new Product(
             "Test Product",
             25000000,
+            20000000,
             "Description",
             _categoryId,
             _brandId,

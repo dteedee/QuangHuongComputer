@@ -1,33 +1,91 @@
 import client from './client';
 
-// Types
+// Types - Updated to match backend entities
 export interface Product {
     id: string;
     name: string;
     sku: string;
     description: string;
-    price: number;
-    oldPrice?: number;
     specifications?: string;
     warrantyInfo?: string;
     categoryId: string;
     brandId: string;
     stockQuantity: number;
     status: 'InStock' | 'LowStock' | 'OutOfStock' | 'PreOrder';
+    
+    // Enhanced fields
+    price: number;
+    oldPrice?: number;
+    costPrice?: number;
+    barcode?: string;
+    weight: number;
+    imageUrl?: string;
+    galleryImages?: string;
+    viewCount: number;
+    soldCount: number;
+    averageRating: number;
+    reviewCount: number;
+    publishedAt?: string;
+    discontinuedAt?: string;
+    lowStockThreshold: number;
+    createdByUserId?: string;
+    updatedByUserId?: string;
+    
+    // SEO fields
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+    canonicalUrl?: string;
+    
+    // Audit fields
+    isActive: boolean;
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
+    createdBy?: string;
+    updatedBy?: string;
+}
+
+export interface ProductReview {
+    id: string;
+    productId: string;
+    customerId: string;
+    rating: number;
+    title?: string;
+    comment: string;
+    isVerifiedPurchase: boolean;
+    isApproved: boolean;
+    helpfulCount: number;
+    approvedAt?: string;
+    approvedBy?: string;
+    createdAt: string;
+    updatedAt?: string;
+}
+
+export interface ProductAttribute {
+    id: string;
+    productId: string;
+    attributeName: string;
+    attributeValue: string;
+    displayOrder: number;
+    isFilterable: boolean;
 }
 
 export interface Category {
     id: string;
     name: string;
     description: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt?: string;
 }
 
 export interface Brand {
     id: string;
     name: string;
     description: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt?: string;
 }
 
 export interface ProductsResponse {
@@ -39,17 +97,38 @@ export interface ProductsResponse {
 
 export interface CreateProductDto {
     name: string;
+    sku?: string;
     description: string;
     price: number;
+    costPrice?: number;
     categoryId: string;
     brandId: string;
     stockQuantity: number;
+    specifications?: string;
+    warrantyInfo?: string;
+    barcode?: string;
+    weight?: number;
+    imageUrl?: string;
+    galleryImages?: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
 }
 
 export interface UpdateProductDto {
-    name: string;
-    description: string;
-    price: number;
+    name?: string;
+    description?: string;
+    price?: number;
+    oldPrice?: number;
+    costPrice?: number;
+    specifications?: string;
+    warrantyInfo?: string;
+    imageUrl?: string;
+    galleryImages?: string;
+    lowStockThreshold?: number;
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
 }
 
 // API Functions
@@ -61,6 +140,11 @@ export const catalogApi = {
         categoryId?: string;
         brandId?: string;
         search?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        inStock?: boolean;
+        sortBy?: string;
+        isActive?: boolean;
     }) => {
         const response = await client.get<ProductsResponse>('/catalog/products', { params });
         return response.data;
@@ -104,6 +188,35 @@ export const catalogApi = {
 
     deleteProduct: async (id: string) => {
         const response = await client.delete<{ message: string }>(`/catalog/products/${id}`);
+        return response.data;
+    },
+
+    // Product Reviews
+    getProductReviews: async (productId: string, params?: { page?: number; pageSize?: number }) => {
+        const response = await client.get<{ total: number; reviews: ProductReview[] }>(
+            `/catalog/products/${productId}/reviews`,
+            { params }
+        );
+        return response.data;
+    },
+
+    createProductReview: async (productId: string, data: {
+        rating: number;
+        title?: string;
+        comment: string;
+    }) => {
+        const response = await client.post<{ message: string; review: ProductReview }>(
+            `/catalog/products/${productId}/reviews`,
+            data
+        );
+        return response.data;
+    },
+
+    // Product Attributes
+    getProductAttributes: async (productId: string) => {
+        const response = await client.get<ProductAttribute[]>(
+            `/catalog/products/${productId}/attributes`
+        );
         return response.data;
     },
 

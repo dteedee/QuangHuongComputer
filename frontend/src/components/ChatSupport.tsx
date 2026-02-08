@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
 import { Users, Send, Info, AlertCircle } from 'lucide-react';
-import { MessageBubble, MessageData } from './chat/MessageBubble';
+import { MessageBubble, type MessageData } from './chat/MessageBubble';
 import { TypingIndicator } from './chat/TypingIndicator';
-import { ConnectionStatus, ConnectionState } from './chat/ConnectionStatus';
+import { ConnectionStatus, type ConnectionState } from './chat/ConnectionStatus';
 import toast from 'react-hot-toast';
 
 interface QueuedMessage {
@@ -24,7 +24,7 @@ export const ChatSupport = () => {
   const [readReceipts, setReadReceipts] = useState<Map<string, boolean>>(new Map());
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
 

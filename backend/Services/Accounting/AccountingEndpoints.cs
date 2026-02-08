@@ -247,7 +247,7 @@ public static class AccountingEndpoints
                 invoice.Lines.Select(l => new InvoiceLineDto(
                     l.Id, l.Description, l.Quantity, l.UnitPrice, l.VatRate, l.LineTotal, l.VatAmount)).ToList(),
                 invoice.PaymentApplications.Select(pa => new PaymentApplicationDto(
-                    pa.Id, pa.PaymentId, pa.InvoiceId, pa.Amount, pa.AppliedAt, pa.Notes)).ToList());
+                    pa.Id, pa.PaymentIntentId, pa.InvoiceId, pa.Amount, pa.AppliedAt, pa.Notes)).ToList());
 
             return Results.Ok(dto);
         }).WithName("GetARInvoiceDetail");
@@ -263,7 +263,7 @@ public static class AccountingEndpoints
 
             try
             {
-                invoice.ApplyPayment(request.PaymentId, request.Amount, request.Notes);
+                invoice.ApplyPayment(request.PaymentIntentId, request.Amount, request.Notes);
                 await db.SaveChangesAsync();
                 return Results.Ok(new { Message = "Payment applied successfully", OutstandingAmount = invoice.OutstandingAmount });
             }
@@ -357,7 +357,7 @@ public static class AccountingEndpoints
                 invoice.Lines.Select(l => new InvoiceLineDto(
                     l.Id, l.Description, l.Quantity, l.UnitPrice, l.VatRate, l.LineTotal, l.VatAmount)).ToList(),
                 invoice.PaymentApplications.Select(pa => new PaymentApplicationDto(
-                    pa.Id, pa.PaymentId, pa.InvoiceId, pa.Amount, pa.AppliedAt, pa.Notes)).ToList());
+                    pa.Id, pa.PaymentIntentId, pa.InvoiceId, pa.Amount, pa.AppliedAt, pa.Notes)).ToList());
 
             return Results.Ok(dto);
         }).WithName("GetAPInvoiceDetail");

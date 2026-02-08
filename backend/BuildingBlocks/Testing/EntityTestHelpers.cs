@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FluentAssertions.Primitives;
+using BuildingBlocks.SharedKernel;
 
 namespace BuildingBlocks.Testing;
 

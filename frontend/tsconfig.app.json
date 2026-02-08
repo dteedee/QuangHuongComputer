@@ -20,6 +20,17 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    /* Path Aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@api/*": ["./src/api/*"],
+      "@components/*": ["./src/components/*"],
+      "@context/*": ["./src/context/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@lib/*": ["./src/lib/*"]
+    },
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
@@ -30,5 +41,11 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/**/__tests__",
+    "src/**/*.test.tsx",
+    "src/**/*.test.ts",
+    "src/test"
   ]
 }

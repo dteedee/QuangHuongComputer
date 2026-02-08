@@ -28,11 +28,15 @@ using SystemConfig.Infrastructure;
 using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
 using BuildingBlocks.Email;
+using BuildingBlocks.Caching;
+using BuildingBlocks.Endpoints;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ApiGateway;
 using Content.Infrastructure.Data;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using DotNetEnv;
 
 Env.TraversePath().Load();
@@ -47,6 +51,48 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
+// ========================================
+// RESPONSE COMPRESSION
+// ========================================
+builder.Services.AddResponseCompression(options =>
+{
+    options.Providers.Add<GzipCompressionProvider>();
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes
+        .Concat(new[] { "application/json", "text/json", "application/xml", "text/plain" })
+        .Distinct();
+});
+
+// ========================================
+// RATE LIMITING CONFIGURATION
+// ========================================
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = int.Parse(builder.Configuration["RateLimiting:PermitLimit"] ?? "100"),
+                Window = TimeSpan.FromSeconds(int.Parse(builder.Configuration["RateLimiting:WindowInSeconds"] ?? "60")),
+                SegmentsPerWindow = 2,
+                QueueLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.Add("Retry-After", "60");
+        
+        await context.HttpContext.Response.WriteAsJsonAsync(new 
+        { 
+            error = "Too many requests. Please try again later.",
+            retryAfter = 60
+        }, cancellationToken);
+    };
+});
+
 // Health Checks
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddHealthChecks()
@@ -59,12 +105,22 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Allow Frontend
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:5174") // Allow Frontend
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
+
+// ========================================
+// REDIS CACHING CONFIGURATION
+// ========================================
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    options.InstanceName = "quanghc:";
+});
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
@@ -140,46 +196,86 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var services = scope.ServiceProvider;
-        
-        // Ensure all DBs are created and seeded
-        var contexts = new DbContext[] 
-        { 
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        // ── Contexts that HAVE EF migrations ──
+        var migrateContexts = new DbContext[]
+        {
             services.GetRequiredService<CatalogDbContext>(),
             services.GetRequiredService<SalesDbContext>(),
             services.GetRequiredService<RepairDbContext>(),
-            services.GetRequiredService<InventoryModule.Infrastructure.InventoryDbContext>(),
-            services.GetRequiredService<AccountingDbContext>(),
             services.GetRequiredService<WarrantyDbContext>(),
-            services.GetRequiredService<PaymentsDbContext>(),
             services.GetRequiredService<ContentDbContext>(),
-            services.GetRequiredService<AiDbContext>(),
             services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>(),
-            services.GetRequiredService<HRDbContext>(),
-            services.GetRequiredService<SystemConfigDbContext>()
         };
 
-        foreach (var ctx in contexts)
+        foreach (var ctx in migrateContexts)
         {
             try
             {
+                logger.LogInformation("Migrating {Context}...", ctx.GetType().Name);
                 await ctx.Database.MigrateAsync();
             }
             catch (Exception ex)
             {
-                // Log error but continue to next context/module
-                var logger = services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "Migration failed for {ContextName}", ctx.GetType().Name);
+                logger.LogError(ex, "Migration failed for {Context}", ctx.GetType().Name);
             }
         }
 
-        await CatalogDbSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>());
-        await IdentitySeeder.SeedAsync(services);
-        await new ContentDbSeeder(services.GetRequiredService<ContentDbContext>()).SeedAsync();
+        // ── Contexts WITHOUT migrations – use EnsureCreated ──
+        var ensureCreatedContexts = new DbContext[]
+        {
+            services.GetRequiredService<InventoryModule.Infrastructure.InventoryDbContext>(),
+            services.GetRequiredService<AccountingDbContext>(),
+            services.GetRequiredService<PaymentsDbContext>(),
+            services.GetRequiredService<AiDbContext>(),
+            services.GetRequiredService<Communication.Infrastructure.CommunicationDbContext>(),
+            services.GetRequiredService<HRDbContext>(),
+            services.GetRequiredService<SystemConfigDbContext>(),
+        };
+
+        foreach (var ctx in ensureCreatedContexts)
+        {
+            try
+            {
+                logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);
+                await ctx.Database.EnsureCreatedAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "EnsureCreated failed for {Context}", ctx.GetType().Name);
+            }
+        }
+
+        // ── Seed data ──
+        try
+        {
+            await CatalogDbSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Catalog seeding failed (tables may not exist yet)");
+        }
     }
 }
 
 app.UseCors();
 app.UseHttpsRedirection();
+app.UseResponseCompression();
+
+// ========================================
+// CUSTOM MIDDLEWARE
+// ========================================
+app.UseGlobalExceptionHandling();
+app.UseSecurityHeaders();
+app.UsePerformanceMonitoring();
+app.UseApiResponseTime();
+
+// ========================================
+// RATE LIMITING MIDDLEWARE
+// ========================================
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

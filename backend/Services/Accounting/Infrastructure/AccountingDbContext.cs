@@ -51,6 +51,7 @@ public class AccountingDbContext : DbContext
                 line.Property(l => l.VatRate).HasPrecision(18, 2);
             });
 
+            // Payment is an owned type (embedded in Invoice table)
             entity.OwnsMany(e => e.Payments, payment =>
             {
                 payment.WithOwner().HasForeignKey("InvoiceId");
@@ -58,12 +59,11 @@ public class AccountingDbContext : DbContext
                 payment.Property(p => p.Amount).HasPrecision(18, 2);
             });
 
-            entity.OwnsMany(e => e.PaymentApplications, application =>
-            {
-                application.WithOwner().HasForeignKey("InvoiceId");
-                application.HasKey(pa => pa.Id);
-                application.Property(pa => pa.Amount).HasPrecision(18, 2);
-            });
+            // PaymentApplication is a standalone entity with relationship
+            entity.HasMany(e => e.PaymentApplications)
+                .WithOne()
+                .HasForeignKey(e => e.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ShiftSession>(entity =>
@@ -79,7 +79,6 @@ public class AccountingDbContext : DbContext
                 transaction.Property(t => t.Amount).HasPrecision(18, 2);
             });
 
-            // Index for validation: only one open shift per cashier/warehouse/day
             entity.HasIndex(e => new { e.CashierId, e.WarehouseId, e.OpenedAt, e.Status })
                 .HasDatabaseName("IX_ShiftSession_UniqueOpenShift");
         });
@@ -88,8 +87,7 @@ public class AccountingDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Amount).HasPrecision(18, 2);
-
-            entity.HasIndex(e => e.PaymentId);
+            entity.HasIndex(e => e.PaymentIntentId);
             entity.HasIndex(e => e.InvoiceId);
         });
     }

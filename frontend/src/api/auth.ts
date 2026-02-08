@@ -1,112 +1,234 @@
 import client from './client';
 
-// Types
-export interface User {
-    id: string;
-    email: string;
-    fullName: string;
-    roles: string[];
-}
-
-export interface LoginDto {
+// ========================================
+// Authentication Types
+// ========================================
+interface LoginRequest {
     email: string;
     password: string;
 }
 
-export interface RegisterDto {
+interface RegisterRequest {
     email: string;
     password: string;
     fullName: string;
 }
 
-export interface LoginResponse {
+interface AuthResponse {
     token: string;
     user: User;
 }
 
-export interface ForgotPasswordDto {
+interface User {
     email: string;
+    fullName: string;
+    roles: string[];
+    permissions: string[];
 }
 
-export interface ResetPasswordDto {
-    token: string;
-    newPassword: string;
-}
-
-// API Functions
+// ========================================
+// Authentication API
+// ========================================
 export const authApi = {
-    login: async (data: LoginDto) => {
-        const response = await client.post<LoginResponse>('/auth/login', data);
+    /**
+     * Login user
+     */
+    login: async (data: LoginRequest): Promise<AuthResponse> => {
+        const response = await client.post<AuthResponse>('/auth/login', data);
         return response.data;
     },
 
-    register: async (data: RegisterDto) => {
-        const response = await client.post<{ message: string }>('/auth/register', data);
+    /**
+     * Register new user
+     */
+    register: async (data: RegisterRequest): Promise<void> => {
+        await client.post('/auth/register', data);
+    },
+
+    /**
+     * Login with Google
+     */
+    googleLogin: async (idToken: string): Promise<AuthResponse> => {
+        const response = await client.post<AuthResponse>('/auth/google', { idToken });
         return response.data;
     },
 
-    getUsers: async (page: number = 1, pageSize: number = 20) => {
-        const response = await client.get<{ items: User[], total: number }>('/auth/users', { params: { page, pageSize } });
-        return response.data;
+    /**
+     * Logout user - NOTE: Backend doesn't have this endpoint
+     * Just clear local storage
+     */
+    logout: async (): Promise<void> => {
+        // Clear tokens locally
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
     },
 
-    getUser: async (id: string) => {
-        const response = await client.get<User>(`/auth/users/${id}`);
-        return response.data;
+    /**
+     * Get current user profile - NOTE: Backend doesn't have /auth/me
+     * User info is returned from login response
+     */
+    getCurrentUser: async (): Promise<User | null> => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            return JSON.parse(userStr);
+        }
+        return null;
     },
 
-    updateUser: async (id: string, data: { email: string; fullName: string }) => {
-        const response = await client.put<{ message: string; user: User }>(`/auth/users/${id}`, data);
-        return response.data;
+    /**
+     * Request password reset
+     */
+    forgotPassword: async (email: string): Promise<void> => {
+        await client.post('/auth/forgot-password', { email });
     },
 
-    deleteUser: async (id: string) => {
-        const response = await client.delete<{ message: string }>(`/auth/users/${id}`);
-        return response.data;
-    },
+    /**
+     * Reset password with token
+     */
+    resetPassword: async (token: string, newPassword: string): Promise<void> => {
+        await client.post('/auth/reset-password', { token, newPassword });
+    }
+};
 
-    updateUserRoles: async (id: string, roles: string[]) => {
-        const response = await client.post<{ message: string; roles: string[] }>(`/auth/users/${id}/roles`, roles);
-        return response.data;
-    },
+// ========================================
+// Token Refresh Utilities (Simplified)
+// ========================================
+let isRefreshing = false;
+let failedQueue: Array<{
+    resolve: (value?: any) => void;
+    reject: (reason?: any) => void;
+}> = [];
 
-    getRoles: async () => {
-        const response = await client.get<{ id: string; name: string }[]>('/auth/roles');
-        return response.data;
-    },
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
 
-    createRole: async (roleName: string) => {
-        const response = await client.post('/auth/roles?roleName=' + roleName);
-        return response.data;
-    },
+    failedQueue = [];
+};
 
-    deleteRole: async (roleName: string) => {
-        const response = await client.delete(`/auth/roles/${roleName}`);
-        return response.data;
-    },
+/**
+ * Setup axios interceptors for automatic token refresh
+ * NOTE: Backend doesn't have refresh-token endpoint, so this is simplified
+ */
+export const setupTokenRefreshInterceptor = () => {
+    client.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
 
-    getAllPermissions: async () => {
-        const response = await client.get<string[]>('/auth/permissions');
-        return response.data;
-    },
+            // If error is not 401 or already retrying, reject
+            if (error.response?.status !== 401 || originalRequest._retry) {
+                return Promise.reject(error);
+            }
 
-    getRolePermissions: async (roleId: string) => {
-        const response = await client.get<string[]>(`/auth/roles/${roleId}/permissions`);
-        return response.data;
-    },
+            // If refreshing token, add to queue
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then(token => {
+                        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                        return client(originalRequest);
+                    })
+                    .catch(err => {
+                        return Promise.reject(err);
+                    });
+            }
 
-    updateRolePermissions: async (roleId: string, permissions: string[]) => {
-        const response = await client.put(`/auth/roles/${roleId}/permissions`, permissions);
-        return response.data;
-    },
+            // Start token refresh
+            originalRequest._retry = true;
+            isRefreshing = true;
 
-    forgotPassword: async (data: ForgotPasswordDto) => {
-        const response = await client.post<{ message: string }>('/auth/forgot-password', data);
-        return response.data;
-    },
+            // Get stored user info
+            const userStr = localStorage.getItem('user');
 
-    resetPassword: async (data: ResetPasswordDto) => {
-        const response = await client.post<{ message: string }>('/auth/reset-password', data);
-        return response.data;
-    },
+            if (!userStr) {
+                // No user data available, redirect to login
+                processQueue(error, null);
+                isRefreshing = false;
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+
+                return Promise.reject(error);
+            }
+
+            try {
+                // Simply store token from login response - no refresh endpoint
+                const token = localStorage.getItem('token');
+
+                // Update stored token
+                if (token) {
+                    localStorage.setItem('token', token);
+                    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                }
+
+                // Process queued requests
+                processQueue(null, token);
+
+                // Retry original request
+                originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                return client(originalRequest);
+
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                isRefreshing = false;
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+    );
+
+    // Request interceptor to add token
+    client.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+};
+
+// Initialize interceptors immediately when module loads
+if (typeof window !== 'undefined') {
+    setupTokenRefreshInterceptor();
+}
+
+// Helper to store auth data after login
+export const storeAuthData = (data: AuthResponse) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+};
+
+// Helper to clear auth data
+export const clearAuthData = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+};
+
+// Helper to get stored token
+export const getStoredToken = (): string | null => {
+    return localStorage.getItem('token');
 };

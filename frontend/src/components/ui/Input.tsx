@@ -1,12 +1,10 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
-import { LucideIcon } from 'lucide-react';
-import { inputVariants, labelVariants } from '../../design-system/variants';
+import { InputHTMLAttributes, forwardRef, ComponentType } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  icon?: LucideIcon;
+  icon?: ComponentType<{ className?: string; size?: number }>;
   iconPosition?: 'left' | 'right';
 }
 
@@ -29,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-2">
         {label && (
-          <label htmlFor={inputId} className={cn(labelVariants())}>
+          <label htmlFor={inputId} className="block text-sm font-semibold text-gray-700">
             {label}
           </label>
         )}
@@ -39,7 +37,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <Icon
               className={cn(
                 'absolute left-4 top-1/2 -translate-y-1/2 transition-colors',
-                hasError ? 'text-danger-500' : 'text-gray-300'
+                hasError ? 'text-red-500' : 'text-gray-300'
               )}
               size={20}
             />
@@ -49,13 +47,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              inputVariants({ state: hasError ? 'error' : 'default' }),
+              'w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none',
+              hasError
+                ? 'border-red-500 focus:border-red-600 focus:ring-2 focus:ring-red-500/20'
+                : 'border-gray-200 focus:border-[#D70018] focus:ring-2 focus:ring-[#D70018]/20',
               Icon && iconPosition === 'left' && 'pl-12',
               Icon && iconPosition === 'right' && 'pr-12',
               className
             )}
-            aria-invalid={hasError}
-            aria-describedby={hasError ? `${inputId}-error` : undefined}
             {...props}
           />
 
@@ -63,7 +62,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <Icon
               className={cn(
                 'absolute right-4 top-1/2 -translate-y-1/2 transition-colors',
-                hasError ? 'text-danger-500' : 'text-gray-300'
+                hasError ? 'text-red-500' : 'text-gray-300'
               )}
               size={20}
             />
@@ -71,13 +70,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {error && (
-          <p
-            id={`${inputId}-error`}
-            className="text-danger-500 text-xs font-bold ml-1"
-            role="alert"
-          >
-            {error}
-          </p>
+          <p className="text-sm text-red-500 font-medium">{error}</p>
         )}
       </div>
     );
@@ -85,3 +78,5 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+
+export default Input;

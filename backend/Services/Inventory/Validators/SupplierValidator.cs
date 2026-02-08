@@ -1,6 +1,6 @@
 using BuildingBlocks.Validation;
 using InventoryModule.DTOs;
-using InventoryModule.Data;
+using InventoryModule.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryModule.Validators;

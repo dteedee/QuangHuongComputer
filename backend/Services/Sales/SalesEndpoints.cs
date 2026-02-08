@@ -140,25 +140,25 @@ public static class SalesEndpoints
             {
                 if (!coupon.IsActive)
                     return Results.BadRequest(new { Error = "Mã giảm giá không còn hiệu lực" });
-                if (coupon.EndDate.HasValue && DateTime.UtcNow > coupon.EndDate)
+                if (DateTime.UtcNow > coupon.ValidTo)
                     return Results.BadRequest(new { Error = "Mã giảm giá đã hết hạn" });
-                if (coupon.UsageLimit.HasValue && coupon.UsageCount >= coupon.UsageLimit)
+                if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit)
                     return Results.BadRequest(new { Error = "Mã giảm giá đã hết lượt sử dụng" });
-                if (coupon.MinOrderAmount.HasValue && cart.SubtotalAmount < coupon.MinOrderAmount)
-                    return Results.BadRequest(new { Error = $"Đơn hàng tối thiểu {coupon.MinOrderAmount.Value:N0}₫ để sử dụng mã này" });
+                if (cart.SubtotalAmount < coupon.MinOrderAmount)
+                    return Results.BadRequest(new { Error = $"Đơn hàng tối thiểu {coupon.MinOrderAmount:N0}đ để sử dụng mã này" });
             }
 
             // Calculate discount
             decimal discountAmount = 0;
-            if (coupon.Type == DiscountType.Percentage)
+            if (coupon.DiscountType == DiscountType.Percentage)
             {
-                discountAmount = cart.SubtotalAmount * (coupon.Value / 100);
-                if (coupon.MaxDiscountAmount.HasValue && discountAmount > coupon.MaxDiscountAmount.Value)
-                    discountAmount = coupon.MaxDiscountAmount.Value;
+                discountAmount = cart.SubtotalAmount * (coupon.DiscountValue / 100);
+                if (coupon.MaxDiscount.HasValue && discountAmount > coupon.MaxDiscount.Value)
+                    discountAmount = coupon.MaxDiscount.Value;
             }
             else // FixedAmount
             {
-                discountAmount = coupon.Value;
+                discountAmount = coupon.DiscountValue;
             }
 
             cart.ApplyCoupon(dto.CouponCode.ToUpper(), discountAmount);
@@ -235,7 +235,7 @@ public static class SalesEndpoints
         group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) 
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
             // Try get Email
@@ -245,9 +245,9 @@ public static class SalesEndpoints
                 return Results.BadRequest(new { Error = "Cart is empty" });
 
             // Validate Data & Check Stock (Transactional-like in Monolith)
-            
+
             var orderItems = new List<OrderItem>();
-            
+
             // 1. Fetch all products to validate prices
             var productIds = model.Items.Select(i => i.ProductId).ToList();
             var products = await catalogDb.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
@@ -274,12 +274,12 @@ public static class SalesEndpoints
             {
                 var invItem = inventoryItems.First(i => i.ProductId == item.ProductId);
                 invItem.AdjustStock(-item.Quantity);
-                
+
                 // Also update Catalog stock for display purposes if needed
                 var catProduct = products.First(p => p.Id == item.ProductId);
                 catProduct.UpdateStock(-item.Quantity);
             }
-            
+
             // 3. Create Order
             var order = new Order(userId, model.ShippingAddress ?? "", orderItems, 0.1m, model.Notes);
             salesDb.Orders.Add(order);
@@ -292,9 +292,9 @@ public static class SalesEndpoints
             // 5. Publish Event
             await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(order.Id, order.CustomerId, email, order.TotalAmount, order.OrderNumber));
 
-            return Results.Ok(new 
-            { 
-                OrderId = order.Id, 
+            return Results.Ok(new
+            {
+                OrderId = order.Id,
                 OrderNumber = order.OrderNumber,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status.ToString()
@@ -304,7 +304,7 @@ public static class SalesEndpoints
         group.MapGet("/orders", async (SalesDbContext db, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) 
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
             var orders = await db.Orders
@@ -336,7 +336,7 @@ public static class SalesEndpoints
         group.MapGet("/orders/{id:guid}", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) 
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
             var order = await db.Orders
@@ -368,6 +368,165 @@ public static class SalesEndpoints
                     i.Quantity,
                     Subtotal = i.UnitPrice * i.Quantity
                 })
+            });
+        });
+
+        // Cancel Order (Customer)
+        group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var order = await db.Orders
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == userId);
+
+            if (order == null)
+                return Results.NotFound(new { Error = "Order not found" });
+
+            // Only allow cancellation for certain statuses
+            if (order.Status != OrderStatus.Draft && order.Status != OrderStatus.Confirmed)
+            {
+                return Results.BadRequest(new { Error = "Order cannot be cancelled in current status" });
+            }
+
+            order.Cancel(dto.Reason);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Order cancelled successfully", Status = order.Status.ToString() });
+        });
+
+        // Get Order History
+        group.MapGet("/orders/{id:guid}/history", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == userId);
+            if (order == null)
+                return Results.NotFound(new { Error = "Order not found" });
+
+            var history = await db.OrderHistories
+                .Where(h => h.OrderId == id)
+                .OrderByDescending(h => h.ChangedAt)
+                .Select(h => new
+                {
+                    h.Id,
+                    h.FromStatus,
+                    h.ToStatus,
+                    h.Notes,
+                    h.ChangedBy,
+                    h.ChangedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(history);
+        });
+
+        // ==================== RETURN REQUESTS ENDPOINTS ====================
+
+        // Create Return Request
+        group.MapPost("/returns", async (CreateReturnRequestDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            // Verify order exists and belongs to user
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == dto.OrderId && o.CustomerId == userId);
+            if (order == null)
+                return Results.NotFound(new { Error = "Order not found" });
+
+            // Verify order item exists
+            var orderItem = order.Items.FirstOrDefault(i => i.Id == dto.OrderItemId);
+            if (orderItem == null)
+                return Results.NotFound(new { Error = "Order item not found" });
+
+            // Create return request
+            var returnRequest = new ReturnRequest(
+                dto.OrderId,
+                dto.OrderItemId,
+                dto.Reason,
+                dto.Description,
+                orderItem.UnitPrice * orderItem.Quantity);
+
+            db.ReturnRequests.Add(returnRequest);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/sales/returns/{returnRequest.Id}", new
+            {
+                returnRequest.Id,
+                returnRequest.OrderId,
+                returnRequest.Status,
+                Message = "Return request submitted successfully"
+            });
+        });
+
+        // Get My Return Requests
+        group.MapGet("/returns", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            // Get user's orders first
+            var userOrderIds = await db.Orders
+                .Where(o => o.CustomerId == userId)
+                .Select(o => o.Id)
+                .ToListAsync();
+
+            var returnRequests = await db.ReturnRequests
+                .Where(r => userOrderIds.Contains(r.OrderId))
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.OrderId,
+                    r.OrderItemId,
+                    r.Reason,
+                    r.Description,
+                    r.Status,
+                    r.RefundAmount,
+                    r.RequestedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(returnRequests);
+        });
+
+        // Get Return Request by ID
+        group.MapGet("/returns/{id:guid}", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var returnRequest = await db.ReturnRequests.FindAsync(id);
+            if (returnRequest == null)
+                return Results.NotFound(new { Error = "Return request not found" });
+
+            // Verify order belongs to user
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == returnRequest.OrderId && o.CustomerId == userId);
+            if (order == null)
+                return Results.Forbid();
+
+            return Results.Ok(new
+            {
+                returnRequest.Id,
+                returnRequest.OrderId,
+                returnRequest.OrderItemId,
+                returnRequest.Reason,
+                returnRequest.Description,
+                returnRequest.Status,
+                returnRequest.RefundAmount,
+                returnRequest.RequestedAt,
+                returnRequest.ApprovedAt,
+                returnRequest.RejectedAt,
+                returnRequest.RejectionReason,
+                returnRequest.RefundedAt,
+                returnRequest.ProcessedBy
             });
         });
 
@@ -453,9 +612,98 @@ public static class SalesEndpoints
 
             return Results.Ok(stats);
         });
+
+        // ==================== RETURN REQUESTS ADMIN ENDPOINTS ====================
+
+        adminGroup.MapGet("/returns", async (SalesDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
+        {
+            var query = db.ReturnRequests.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<ReturnStatus>(status, true, out var statusEnum))
+            {
+                query = query.Where(r => r.Status == statusEnum);
+            }
+
+            var total = await query.CountAsync();
+            var returns = await query
+                .OrderByDescending(r => r.RequestedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.OrderId,
+                    r.OrderItemId,
+                    r.Reason,
+                    r.Description,
+                    r.Status,
+                    r.RefundAmount,
+                    r.RequestedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(new { Total = total, Page = page, PageSize = pageSize, Returns = returns });
+        });
+
+        adminGroup.MapGet("/returns/{id:guid}", async (Guid id, SalesDbContext db) =>
+        {
+            var returnRequest = await db.ReturnRequests.FindAsync(id);
+            if (returnRequest == null)
+                return Results.NotFound(new { Error = "Return request not found" });
+
+            return Results.Ok(returnRequest);
+        });
+
+        adminGroup.MapPost("/returns/{id:guid}/approve", async (Guid id, SalesDbContext db) =>
+        {
+            var returnRequest = await db.ReturnRequests.FindAsync(id);
+            if (returnRequest == null)
+                return Results.NotFound(new { Error = "Return request not found" });
+
+            if (returnRequest.Status != ReturnStatus.Pending)
+                return Results.BadRequest(new { Error = "Only pending returns can be approved" });
+
+            returnRequest.Approve();
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Return request approved", Status = returnRequest.Status.ToString() });
+        });
+
+        adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db) =>
+        {
+            var returnRequest = await db.ReturnRequests.FindAsync(id);
+            if (returnRequest == null)
+                return Results.NotFound(new { Error = "Return request not found" });
+
+            if (returnRequest.Status != ReturnStatus.Pending)
+                return Results.BadRequest(new { Error = "Only pending returns can be rejected" });
+
+            returnRequest.Reject(dto.Reason);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
+        });
+
+        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db) =>
+        {
+            var returnRequest = await db.ReturnRequests.FindAsync(id);
+            if (returnRequest == null)
+                return Results.NotFound(new { Error = "Return request not found" });
+
+            if (returnRequest.Status != ReturnStatus.Approved)
+                return Results.BadRequest(new { Error = "Only approved returns can be refunded" });
+
+            returnRequest.MarkAsRefunded();
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });
+        });
     }
 }
 
 public record CheckoutDto(List<CheckoutItemDto> Items, string? ShippingAddress, string? Notes);
 public record CheckoutItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
 public record UpdateOrderStatusDto(string Status);
+public record CancelOrderDto(string Reason);
+public record CreateReturnRequestDto(Guid OrderId, Guid OrderItemId, string Reason, string? Description);
+public record RejectReturnDto(string Reason);

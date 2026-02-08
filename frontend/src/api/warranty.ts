@@ -25,6 +25,7 @@ export interface WarrantyClaim {
     preferredResolution: ResolutionPreference;
     attachmentUrls?: string[];
     isManagerOverride?: boolean;
+    customerId?: string;
 }
 
 export interface ClaimHistoryItem {
@@ -57,7 +58,16 @@ export interface CreateClaimRequest {
     isManagerOverride?: boolean;
 }
 
+export interface RegisterWarrantyRequest {
+    productId: string;
+    serialNumber: string;
+    purchaseDate: string;
+    warrantyPeriodMonths: number;
+    orderNumber?: string;
+}
+
 export const warrantyApi = {
+    // Customer endpoints
     getMyClaims: async () => {
         const response = await client.get<WarrantyClaim[]>('/warranty/claims');
         return response.data;
@@ -65,6 +75,12 @@ export const warrantyApi = {
 
     createClaim: async (data: CreateClaimRequest) => {
         const response = await client.post('/warranty/claims', data);
+        return response.data;
+    },
+
+    // Register warranty for a product (typically done via order fulfillment)
+    registerWarranty: async (data: RegisterWarrantyRequest) => {
+        const response = await client.post('/warranty/register', data);
         return response.data;
     },
 
@@ -94,7 +110,21 @@ export const warrantyApi = {
 
     // Legacy endpoint for backward compatibility
     lookupLegacy: async (serialNumber: string) => {
-        const response = await client.get<WarrantyCoverage>(`/warranty/lookup/${serialNumber}`);
+        const response = await client.get<{
+            serialNumber: string;
+            productId: string;
+            status: string;
+            expirationDate: string;
+            isValid: boolean;
+        }>(`/warranty/lookup/${serialNumber}`);
         return response.data;
+    },
+
+    // Admin endpoints
+    admin: {
+        getAllWarranties: async () => {
+            const response = await client.get<any[]>('/warranty/admin/warranties');
+            return response.data;
+        }
     }
 };

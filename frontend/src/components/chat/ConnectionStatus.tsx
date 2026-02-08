@@ -3,13 +3,13 @@ import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 
 export type ConnectionState = 'connected' | 'disconnected' | 'reconnecting' | 'failed';
 
-interface ConnectionStatusProps {
+export interface ConnectionStatusProps {
   status: ConnectionState;
   onRetry?: () => void;
   showLabel?: boolean;
 }
 
-export const ConnectionStatus = memo(({ status, onRetry, showLabel = true }: ConnectionStatusProps) => {
+export const ConnectionStatus = memo<ConnectionStatusProps>(({ status, onRetry, showLabel = true }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'connected':

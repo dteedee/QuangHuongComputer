@@ -1,4 +1,4 @@
-﻿
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import { Mail, Lock, LogIn, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
-import { Input, Button } from '../components/ui';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 import { loginSchema, type LoginFormData } from '../lib/validation/schemas';
 import { useRecaptcha } from '../hooks/useRecaptcha';
 import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';

@@ -166,7 +166,7 @@ public static class InventoryEndpoints
 
             if (!validationResult.IsValid)
             {
-                return validationResult.ToResult();
+                return Results.BadRequest(new { errors = validationResult.Errors });
             }
 
             // Create entity
@@ -182,7 +182,7 @@ public static class InventoryEndpoints
             var entityValidation = supplier.Validate();
             if (!entityValidation.IsValid)
             {
-                return entityValidation.ToResult();
+                return Results.BadRequest(new { errors = entityValidation.Errors });
             }
 
             // Save
@@ -227,7 +227,7 @@ public static class InventoryEndpoints
 
             if (!validationResult.IsValid)
             {
-                return validationResult.ToResult();
+                return Results.BadRequest(new { errors = validationResult.Errors });
             }
 
             // Update entity
@@ -243,7 +243,7 @@ public static class InventoryEndpoints
             var entityValidation = supplier.Validate();
             if (!entityValidation.IsValid)
             {
-                return entityValidation.ToResult();
+                return Results.BadRequest(new { errors = entityValidation.Errors });
             }
 
             // Save

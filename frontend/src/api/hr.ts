@@ -68,13 +68,13 @@ export interface PayrollsResponse {
 export const hrApi = {
     // Employee APIs
     getEmployees: async (page: number = 1, pageSize: number = 15, params?: any) => {
-        const response = await client.get<EmployeesResponse>('/hr/employees', {
+        const response = await client.get<any[]>('/hr/employees', {
             params: { page, pageSize, ...params }
         });
         return response.data;
     },
     getEmployee: async (id: string) => {
-        const response = await client.get<Employee>(`/hr/employees/${id}`);
+        const response = await client.get<any>(`/hr/employees/${id}`);
         return response.data;
     },
     createEmployee: async (data: Partial<Employee>) => {
@@ -90,59 +90,61 @@ export const hrApi = {
         return response.data;
     },
 
-    // Timesheet APIs
-    getTimesheets: async (page: number = 1, pageSize: number = 15, params?: any) => {
-        const response = await client.get<TimesheetsResponse>('/hr/timesheets', {
-            params: { page, pageSize, ...params }
-        });
-        return response.data;
+    // Timesheet APIs - NOTE: Backend only has POST and GET by employee
+    getTimesheets: async (_page: number = 1, _pageSize: number = 15, _params?: any) => {
+        throw new Error('Get timesheets list endpoint not implemented in backend');
     },
-    getTimesheet: async (id: string) => {
-        const response = await client.get<Timesheet>(`/hr/timesheets/${id}`);
-        return response.data;
+    getTimesheet: async (_id: string) => {
+        throw new Error('Get timesheet by ID endpoint not implemented in backend');
     },
     createTimesheet: async (data: Partial<Timesheet>) => {
         const response = await client.post<Timesheet>('/hr/timesheets', data);
         return response.data;
     },
-    updateTimesheet: async (id: string, data: Partial<Timesheet>) => {
-        const response = await client.put<Timesheet>(`/hr/timesheets/${id}`, data);
-        return response.data;
+    updateTimesheet: async (_id: string, _data: Partial<Timesheet>) => {
+        throw new Error('Update timesheet endpoint not implemented in backend');
     },
-    approveTimesheet: async (id: string) => {
-        const response = await client.post<Timesheet>(`/hr/timesheets/${id}/approve`);
-        return response.data;
+    approveTimesheet: async (_id: string) => {
+        throw new Error('Approve timesheet endpoint not implemented in backend');
     },
-    rejectTimesheet: async (id: string, reason?: string) => {
-        const response = await client.post<Timesheet>(`/hr/timesheets/${id}/reject`, { reason });
-        return response.data;
+    rejectTimesheet: async (_id: string, _reason?: string) => {
+        throw new Error('Reject timesheet endpoint not implemented in backend');
     },
-
-    // Payroll APIs
-    getPayrolls: async (page: number = 1, pageSize: number = 15, params?: any) => {
-        const response = await client.get<PayrollsResponse>('/hr/payroll', {
-            params: { page, pageSize, ...params }
+    // Backend only has GET /hr/employees/{id}/timesheets
+    getEmployeeTimesheets: async (employeeId: string, month: number, year: number) => {
+        const response = await client.get<any[]>(`/hr/employees/${employeeId}/timesheets`, {
+            params: { month, year }
         });
         return response.data;
     },
-    getPayroll: async (id: string) => {
-        const response = await client.get<Payroll>(`/hr/payroll/${id}`);
+
+    // Payroll APIs - NOTE: Backend has different endpoints
+    getPayrolls: async (month: number, year: number) => {
+        const response = await client.get<any[]>('/hr/payroll', {
+            params: { month, year }
+        });
         return response.data;
     },
-    createPayroll: async (data: Partial<Payroll>) => {
-        const response = await client.post<Payroll>('/hr/payroll', data);
+    getPayroll: async (_id: string) => {
+        throw new Error('Get payroll by ID endpoint not implemented in backend');
+    },
+    createPayroll: async (_data: Partial<Payroll>) => {
+        throw new Error('Create payroll endpoint not implemented in backend - use generatePayroll');
+    },
+    updatePayroll: async (_id: string, _data: Partial<Payroll>) => {
+        throw new Error('Update payroll endpoint not implemented in backend');
+    },
+    processPayroll: async (_id: string) => {
+        throw new Error('Process payroll endpoint not implemented in backend - use generatePayroll');
+    },
+    generatePayroll: async (month: number, year: number) => {
+        const response = await client.post<any>('/hr/payroll/generate', null, {
+            params: { month, year }
+        });
         return response.data;
     },
-    updatePayroll: async (id: string, data: Partial<Payroll>) => {
-        const response = await client.put<Payroll>(`/hr/payroll/${id}`, data);
-        return response.data;
-    },
-    processPayroll: async (id: string) => {
-        const response = await client.post<Payroll>(`/hr/payroll/${id}/process`);
-        return response.data;
-    },
-    generatePayroll: async (period: string) => {
-        const response = await client.post<Payroll[]>('/hr/payroll/generate', { period });
+    markPayrollPaid: async (id: string) => {
+        const response = await client.put<any>(`/hr/payroll/${id}/pay`);
         return response.data;
     }
 };

@@ -1,122 +1,332 @@
+
 import client from './client';
-import { QueryParams, PagedResult } from '../hooks/useCrudList';
+
+// ============================================
+// Accounting API Types
+// ============================================
 
 export interface OrganizationAccount {
     id: string;
-    organizationName: string;
-    contactEmail: string;
+    name: string;
     creditLimit: number;
     balance: number;
+    isActive: boolean;
+    createdAt: string;
 }
 
 export interface Invoice {
     id: string;
     invoiceNumber: string;
-    accountId: string;
-    amount: number;
+    customerId?: string;
+    organizationAccountId?: string;
+    supplierId?: string;
+    type: InvoiceType;
+    status: InvoiceStatus;
+    currency: string;
+    subtotal: number;
+    vatAmount: number;
+    totalAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
+    issueDate: string;
     dueDate: string;
-    status: string;
+    notes?: string;
+    lines: InvoiceLine[];
 }
+
+export interface InvoiceLine {
+    id: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    vatRate: number;
+    lineTotal: number;
+    vatAmount: number;
+}
+
+export type InvoiceType = 'Receivable' | 'Payable';
+export type InvoiceStatus = 'Draft' | 'Issued' | 'Paid' | 'Overdue' | 'Cancelled';
 
 export interface ARInvoice {
     id: string;
     invoiceNumber: string;
-    customerName: string;
-    amount: number;
-    outstanding: number;
-    agingDays: number;
-    dueDate: string;
+    customerId: string;
     issueDate: string;
-    status: 'current' | 'overdue';
+    dueDate: string;
+    totalAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
+    status: InvoiceStatus;
+    agingBucket: AgingBucket;
 }
 
 export interface APInvoice {
     id: string;
     invoiceNumber: string;
-    supplierName: string;
-    amount: number;
-    poReference?: string;
-    status: 'pending' | 'approved' | 'paid';
-    dueDate: string;
+    supplierId: string;
     issueDate: string;
+    dueDate: string;
+    totalAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
+    status: InvoiceStatus;
+    agingBucket: AgingBucket;
 }
 
-export interface Shift {
+export type AgingBucket = 'Current' | 'Days1To30' | 'Days31To60' | 'Days61To90' | 'Over90Days';
+
+export interface ARPaymentRequest {
+    paymentIntentId: string;
+    amount: number;
+    notes?: string;
+}
+
+export interface ShiftSession {
     id: string;
-    employeeId: string;
-    employeeName: string;
-    startTime: string;
-    endTime?: string;
-    startingCash: number;
-    endingCash?: number;
-    expectedCash?: number;
-    variance?: number;
-    status: 'open' | 'closed';
+    cashierId: string;
+    warehouseId: string;
+    openedAt: string;
+    closedAt?: string;
+    openingBalance: number;
+    closingBalance?: number;
+    status: ShiftStatus;
+    cashVariance?: number;
+    duration?: string;
 }
 
-export interface OpenShiftDto {
-    employeeId: string;
-    startingCash: number;
+export type ShiftStatus = 'Open' | 'Closed';
+
+export interface OpenShiftRequest {
+    cashierId: string;
+    warehouseId: string;
+    openingBalance: number;
 }
+
+export interface CloseShiftRequest {
+    actualCash: number;
+}
+
+export interface AccountingStats {
+    totalReceivables: number;
+    revenueToday: number;
+    totalInvoices: number;
+    activeAccounts: number;
+}
+
+export interface ARAgingSummary {
+    current: number;
+    days1To30: number;
+    days31To60: number;
+    days61To90: number;
+    over90Days: number;
+    totalOutstanding: number;
+}
+
+export interface APAgingSummary {
+    current: number;
+    days1To30: number;
+    days31To60: number;
+    days61To90: number;
+    over90Days: number;
+    totalPayable: number;
+}
+
+export interface PagedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
+// ============================================
+// Accounting API Functions
+// ============================================
 
 export const accountingApi = {
-    // Legacy endpoints
-    getAccounts: async () => {
-        const response = await client.get<OrganizationAccount[]>('/accounting/accounts');
-        return response.data;
+    // ============ Organization Accounts ============
+    accounts: {
+        getAll: async (): Promise<OrganizationAccount[]> => {
+            const response = await client.get('/accounting/accounts');
+            return response.data;
+        },
+        getById: async (id: string): Promise<OrganizationAccount> => {
+            const response = await client.get(`/accounting/accounts/${id}`);
+            return response.data;
+        },
+        create: async (data: { name: string; creditLimit: number }): Promise<OrganizationAccount> => {
+            const response = await client.post('/accounting/accounts', data);
+            return response.data;
+        },
     },
-    getInvoices: async () => {
-        const response = await client.get<Invoice[]>('/accounting/invoices');
-        return response.data;
+
+    // ============ Invoices ============
+    invoices: {
+        getList: async (page = 1, pageSize = 20): Promise<{
+            total: number;
+            invoices: Invoice[];
+        }> => {
+            const response = await client.get('/accounting/invoices', {
+                params: { page, pageSize }
+            });
+            return response.data;
+        },
+        getById: async (id: string): Promise<Invoice> => {
+            const response = await client.get(`/accounting/invoices/${id}`);
+            return response.data;
+        },
+        create: async (data: {
+            customerId?: string;
+            items: { description: string; quantity: number; unitPrice: number }[];
+            notes?: string;
+        }): Promise<Invoice> => {
+            const response = await client.post('/accounting/invoices', data);
+            return response.data;
+        },
+        recordPayment: async (id: string, data: {
+            amount: number;
+            reference: string;
+        }): Promise<Invoice> => {
+            const response = await client.post(`/accounting/invoices/${id}/payments`, data);
+            return response.data;
+        },
+        getHtml: async (id: string): Promise<string> => {
+            const response = await client.get(`/accounting/invoices/${id}/html`);
+            return response.data;
+        },
     },
-    createAccount: async (data: any) => {
-        const response = await client.post('/accounting/accounts', data);
-        return response.data;
+
+    // ============ AR (Accounts Receivable) ============
+    ar: {
+        getList: async (page = 1, pageSize = 20, aging?: AgingBucket): Promise<PagedResult<ARInvoice>> => {
+            const response = await client.get('/accounting/ar', {
+                params: { page, pageSize, aging }
+            });
+            return response.data;
+        },
+        getById: async (id: string): Promise<Invoice> => {
+            const response = await client.get(`/accounting/ar/${id}`);
+            return response.data;
+        },
+        applyPayment: async (id: string, data: ARPaymentRequest): Promise<{
+            message: string;
+            outstandingAmount: number;
+        }> => {
+            const response = await client.post(`/accounting/ar/${id}/apply-payment`, data);
+            return response.data;
+        },
+        getAgingSummary: async (): Promise<ARAgingSummary> => {
+            const response = await client.get('/accounting/ar/aging-summary');
+            return response.data;
+        },
     },
-    createInvoice: async (data: any) => {
-        const response = await client.post('/accounting/invoices', data);
-        return response.data;
+
+    // ============ AP (Accounts Payable) ============
+    ap: {
+        getList: async (page = 1, pageSize = 20, aging?: AgingBucket): Promise<PagedResult<APInvoice>> => {
+            const response = await client.get('/accounting/ap', {
+                params: { page, pageSize, aging }
+            });
+            return response.data;
+        },
+        getById: async (id: string): Promise<Invoice> => {
+            const response = await client.get(`/accounting/ap/${id}`);
+            return response.data;
+        },
+        create: async (data: {
+            supplierId: string;
+            dueDate: string;
+            vatRate: number;
+            currency: string;
+            notes?: string;
+            lines: { description: string; quantity: number; unitPrice: number; vatRate: number }[];
+        }): Promise<{ id: string; invoiceNumber: string }> => {
+            const response = await client.post('/accounting/ap', data);
+            return response.data;
+        },
+        getAgingSummary: async (): Promise<APAgingSummary> => {
+            const response = await client.get('/accounting/ap/aging-summary');
+            return response.data;
+        },
     },
-    recordPayment: async (invoiceId: string, amount: number) => {
-        const response = await client.post(`/accounting/invoices/${invoiceId}/payments`, { amount });
-        return response.data;
+
+    // ============ Shift Management ============
+    shifts: {
+        getList: async (params: {
+            page?: number;
+            pageSize?: number;
+            status?: ShiftStatus;
+            cashierId?: string;
+        } = {}): Promise<PagedResult<ShiftSession>> => {
+            const response = await client.get('/accounting/shifts', { params });
+            return response.data;
+        },
+        getById: async (id: string): Promise<ShiftSession> => {
+            const response = await client.get(`/accounting/shifts/${id}`);
+            return response.data;
+        },
+        open: async (data: OpenShiftRequest): Promise<ShiftSession> => {
+            const response = await client.post('/accounting/shifts/open', data);
+            return response.data;
+        },
+        close: async (id: string, data: CloseShiftRequest): Promise<{
+            id: string;
+            closedAt: string;
+            openingBalance: number;
+            closingBalance: number;
+            cashVariance: number;
+            duration: string;
+            status: ShiftStatus;
+        }> => {
+            const response = await client.post(`/accounting/shifts/${id}/close`, data);
+            return response.data;
+        },
+        recordTransaction: async (id: string, data: {
+            description: string;
+            amount: number;
+            type: string;
+            reference?: string;
+        }): Promise<{ message: string }> => {
+            const response = await client.post(`/accounting/shifts/${id}/transactions`, data);
+            return response.data;
+        },
     },
-    getStats: async () => {
+
+    // ============ Statistics ============
+    stats: async (): Promise<AccountingStats> => {
         const response = await client.get('/accounting/stats');
         return response.data;
     },
+};
 
-    // AR (Accounts Receivable) endpoints
-    getARList: async (params?: QueryParams) => {
-        const response = await client.get<PagedResult<ARInvoice>>('/accounting/ar', { params });
-        return response.data;
-    },
-    applyPayment: async (invoiceId: string, amount: number) => {
-        const response = await client.post(`/accounting/ar/${invoiceId}/payment`, { amount });
-        return response.data;
-    },
+// ============================================
+// Helper Functions
+// ============================================
 
-    // AP (Accounts Payable) endpoints
-    getAPList: async (params?: QueryParams) => {
-        const response = await client.get<PagedResult<APInvoice>>('/accounting/ap', { params });
-        return response.data;
-    },
+export const getInvoiceStatusColor = (status: InvoiceStatus): string => {
+    const colors: Record<InvoiceStatus, string> = {
+        Draft: 'bg-gray-100 text-gray-800',
+        Issued: 'bg-blue-100 text-blue-800',
+        Paid: 'bg-green-100 text-green-800',
+        Overdue: 'bg-red-100 text-red-800',
+        Cancelled: 'bg-gray-100 text-gray-500',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+};
 
-    // Shift Management endpoints
-    getShifts: async (params?: QueryParams) => {
-        const response = await client.get<PagedResult<Shift>>('/accounting/shifts', { params });
-        return response.data;
-    },
-    getCurrentShift: async () => {
-        const response = await client.get<Shift | null>('/accounting/shifts/current');
-        return response.data;
-    },
-    openShift: async (data: OpenShiftDto) => {
-        const response = await client.post<Shift>('/accounting/shifts/open', data);
-        return response.data;
-    },
-    closeShift: async (shiftId: string, actualCash: number) => {
-        const response = await client.post(`/accounting/shifts/${shiftId}/close`, { actualCash });
-        return response.data;
-    },
+export const getAgingBucketLabel = (bucket: AgingBucket): string => {
+    const labels: Record<AgingBucket, string> = {
+        Current: 'Đúng hạn',
+        Days1To30: '1-30 ngày',
+        Days31To60: '31-60 ngày',
+        Days61To90: '61-90 ngày',
+        Over90Days: 'Trên 90 ngày',
+    };
+    return labels[bucket] || bucket;
+};
+
+export const formatCurrency = (amount: number, currency: string = 'VND'): string => {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: currency,
+    }).format(amount);
 };

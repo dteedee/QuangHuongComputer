@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
 using Catalog.Domain;
+using BuildingBlocks.Database;
+using BuildingBlocks.Caching;
 
 namespace Catalog;
 
@@ -15,7 +17,13 @@ public static class CatalogEndpoints
 
         group.MapGet("/products", async (CatalogDbContext db, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null) =>
         {
-            var query = db.Products.AsQueryable();
+            // Validate pagination parameters
+            var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
+            
+            var query = db.Products.AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.IsActive);
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -24,38 +32,157 @@ public static class CatalogEndpoints
                 query = query.Where(p => p.BrandId == brandId.Value);
 
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
+            {
+                // Case-insensitive search using optimized LIKE
+                var searchPattern = $"%{search}%";
+                query = query.Where(p => 
+                    EF.Functions.Like(p.Name, searchPattern) ||
+                    EF.Functions.Like(p.Description, searchPattern) ||
+                    EF.Functions.Like(p.Sku, searchPattern));
+            }
 
             var total = await query.CountAsync();
             var products = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((validPage - 1) * validPageSize)
+                .Take(validPageSize)
                 .ToListAsync();
+
+            // Convert to snake_case for frontend
+            var productsResponse = products.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Sku,
+                p.Price,
+                p.OldPrice,
+                p.Description,
+                p.Specifications,
+                p.WarrantyInfo,
+                p.StockQuantity,
+                p.Status,
+                p.ViewCount,
+                p.SoldCount,
+                p.AverageRating,
+                p.ReviewCount,
+                p.ImageUrl,
+                p.LowStockThreshold,
+                p.IsActive,
+                p.CreatedAt,
+                p.UpdatedAt,
+                p.CreatedBy,
+                p.UpdatedBy,
+                CategoryId = p.CategoryId.ToString(),
+                CategoryName = p.Category?.Name,
+                BrandId = p.BrandId.ToString(),
+                BrandName = p.Brand?.Name
+            });
 
             return Results.Ok(new
             {
                 Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Products = products
+                Page = validPage,
+                PageSize = validPageSize,
+                TotalPages = (total + validPageSize - 1) / validPageSize,
+                HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
+                HasPreviousPage = validPage > 1,
+                Products = productsResponse
             });
         });
 
         group.MapGet("/products/{id:guid}", async (Guid id, CatalogDbContext db) =>
         {
-            return await db.Products.FindAsync(id) is Product product 
-                ? Results.Ok(product) 
-                : Results.NotFound(new { Error = "Product not found" });
+            var product = await db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+                
+            if (product == null)
+                return Results.NotFound(new { Error = "Product not found" });
+
+            return Results.Ok(new
+            {
+                product.Id,
+                product.Name,
+                product.Sku,
+                product.Price,
+                product.OldPrice,
+                product.Description,
+                product.Specifications,
+                product.WarrantyInfo,
+                product.StockQuantity,
+                product.Status,
+                product.ViewCount,
+                product.SoldCount,
+                product.AverageRating,
+                product.ReviewCount,
+                product.ImageUrl,
+                product.LowStockThreshold,
+                product.IsActive,
+                product.CreatedAt,
+                product.UpdatedAt,
+                product.CreatedBy,
+                product.UpdatedBy,
+                CategoryId = product.CategoryId.ToString(),
+                CategoryName = product.Category?.Name,
+                BrandId = product.BrandId.ToString(),
+                BrandName = product.Brand?.Name
+            });
         });
 
-        group.MapGet("/categories", async (CatalogDbContext db) =>
+        group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
         {
-            return await db.Categories.ToListAsync();
+            var cacheKey = CacheKeys.CategoriesKey;
+            var cachedCategories = await cache.GetAsync<List<dynamic>>(cacheKey);
+            
+            if (cachedCategories != null)
+                return Results.Ok(cachedCategories);
+
+            var categories = await db.Categories
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Description,
+                    c.IsActive,
+                    c.CreatedAt,
+                    c.UpdatedAt
+                })
+                .ToListAsync();
+
+            await cache.SetAsync(cacheKey, categories, TimeSpan.FromHours(1));
+            return Results.Ok(categories);
         });
 
-        group.MapGet("/brands", async (CatalogDbContext db) =>
+        group.MapGet("/brands", async (CatalogDbContext db, ICacheService cache) =>
         {
-            return await db.Brands.ToListAsync();
+            var cacheKey = CacheKeys.BrandsKey;
+            var cachedBrands = await cache.GetAsync<List<dynamic>>(cacheKey);
+            
+            if (cachedBrands != null)
+                return Results.Ok(cachedBrands);
+
+            var brands = await db.Brands
+                .AsNoTracking()
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.Name)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.Name,
+                    b.Description,
+                    b.IsActive,
+                    b.CreatedAt,
+                    b.UpdatedAt
+                })
+                .ToListAsync();
+
+            await cache.SetAsync(cacheKey, brands, TimeSpan.FromHours(1));
+            return Results.Ok(brands);
         });
 
         // Advanced Search & Filter
@@ -71,13 +198,23 @@ public static class CatalogEndpoints
             int page = 1,
             int pageSize = 20) =>
         {
-            var productsQuery = db.Products.AsQueryable();
+            // Validate pagination parameters
+            var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
+            
+            var productsQuery = db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.IsActive);
 
             if (!string.IsNullOrWhiteSpace(query))
             {
+                // Case-insensitive search using optimized LIKE
+                var searchPattern = $"%{query}%";
                 productsQuery = productsQuery.Where(p =>
-                    p.Name.Contains(query) ||
-                    p.Description.Contains(query));
+                    EF.Functions.Like(p.Name, searchPattern) ||
+                    EF.Functions.Like(p.Description, searchPattern) ||
+                    EF.Functions.Like(p.Sku, searchPattern));
             }
 
             if (categoryId.HasValue)
@@ -105,29 +242,63 @@ public static class CatalogEndpoints
                 productsQuery = productsQuery.Where(p => p.StockQuantity > 0);
             }
 
-            // Sorting
+            // Sorting with snake_case
             productsQuery = sortBy switch
             {
                 "price_asc" => productsQuery.OrderBy(p => p.Price),
                 "price_desc" => productsQuery.OrderByDescending(p => p.Price),
                 "newest" => productsQuery.OrderByDescending(p => p.CreatedAt),
+                "popular" => productsQuery.OrderByDescending(p => p.ViewCount),
                 "name" => productsQuery.OrderBy(p => p.Name),
                 _ => productsQuery.OrderByDescending(p => p.CreatedAt) // Default: newest first
             };
 
             var total = await productsQuery.CountAsync();
             var products = await productsQuery
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((validPage - 1) * validPageSize)
+                .Take(validPageSize)
                 .ToListAsync();
+
+            // Convert to snake_case for frontend
+            var productsResponse = products.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Sku,
+                p.Price,
+                p.OldPrice,
+                p.Description,
+                p.Specifications,
+                p.WarrantyInfo,
+                p.StockQuantity,
+                p.Status,
+                p.ViewCount,
+                p.SoldCount,
+                p.AverageRating,
+                p.ReviewCount,
+                p.ImageUrl,
+                p.LowStockThreshold,
+                p.IsActive,
+                p.CreatedAt,
+                p.UpdatedAt,
+                p.CreatedBy,
+                p.UpdatedBy,
+                CategoryId = p.CategoryId.ToString(),
+                CategoryName = p.Category?.Name,
+                BrandId = p.BrandId.ToString(),
+                BrandName = p.Brand?.Name
+            });
 
             return Results.Ok(new {
                 Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Products = products
+                Page = validPage,
+                PageSize = validPageSize,
+                TotalPages = (total + validPageSize - 1) / validPageSize,
+                HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
+                HasPreviousPage = validPage > 1,
+                Products = productsResponse
             });
-        });
+        }).RequireRateLimiting("api_general");
 
         // Create Product (Admin only)
         group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db) =>
@@ -135,6 +306,7 @@ public static class CatalogEndpoints
             var product = new Product(
                 model.Name,
                 model.Price,
+                model.CostPrice,
                 model.Description,
                 model.CategoryId,
                 model.BrandId,
@@ -147,7 +319,31 @@ public static class CatalogEndpoints
 
             db.Products.Add(product);
             await db.SaveChangesAsync();
-            return Results.Created($"/api/catalog/products/{product.Id}", product);
+            return Results.Created($"/api/catalog/products/{product.Id}", new {
+                product.Id,
+                product.Name,
+                product.Sku,
+                product.Price,
+                product.OldPrice,
+                product.Description,
+                product.Specifications,
+                product.WarrantyInfo,
+                product.StockQuantity,
+                product.Status,
+                product.ViewCount,
+                product.SoldCount,
+                product.AverageRating,
+                product.ReviewCount,
+                product.ImageUrl,
+                product.LowStockThreshold,
+                product.IsActive,
+                product.CreatedAt,
+                product.UpdatedAt,
+                product.CreatedBy,
+                product.UpdatedBy,
+                CategoryId = product.CategoryId.ToString(),
+                BrandId = product.BrandId.ToString()
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Create Category
@@ -156,7 +352,14 @@ public static class CatalogEndpoints
             var category = new Category(model.Name, model.Description);
             db.Categories.Add(category);
             await db.SaveChangesAsync();
-            return Results.Created($"/api/catalog/categories/{category.Id}", category);
+            return Results.Created($"/api/catalog/categories/{category.Id}", new {
+                category.Id,
+                category.Name,
+                category.Description,
+                category.IsActive,
+                category.CreatedAt,
+                category.UpdatedAt
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Create Brand
@@ -165,7 +368,14 @@ public static class CatalogEndpoints
             var brand = new Brand(model.Name, model.Description);
             db.Brands.Add(brand);
             await db.SaveChangesAsync();
-            return Results.Created($"/api/catalog/brands/{brand.Id}", brand);
+            return Results.Created($"/api/catalog/brands/{brand.Id}", new {
+                brand.Id,
+                brand.Name,
+                brand.Description,
+                brand.IsActive,
+                brand.CreatedAt,
+                brand.UpdatedAt
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Product
@@ -177,7 +387,35 @@ public static class CatalogEndpoints
 
             product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo);
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Product updated", Product = product });
+            
+            return Results.Ok(new { 
+                Message = "Product updated", 
+                Product = new {
+                    product.Id,
+                    product.Name,
+                    product.Sku,
+                    product.Price,
+                    product.OldPrice,
+                    product.Description,
+                    product.Specifications,
+                    product.WarrantyInfo,
+                    product.StockQuantity,
+                    product.Status,
+                    product.ViewCount,
+                    product.SoldCount,
+                    product.AverageRating,
+                    product.ReviewCount,
+                    product.ImageUrl,
+                    product.LowStockThreshold,
+                    product.IsActive,
+                    product.CreatedAt,
+                    product.UpdatedAt,
+                    product.CreatedBy,
+                    product.UpdatedBy,
+                    CategoryId = product.CategoryId.ToString(),
+                    BrandId = product.BrandId.ToString()
+                }
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Product
@@ -202,7 +440,17 @@ public static class CatalogEndpoints
 
             category.UpdateDetails(model.Name, model.Description);
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Category updated", Category = category });
+            return Results.Ok(new { 
+                Message = "Category updated", 
+                Category = new {
+                    category.Id,
+                    category.Name,
+                    category.Description,
+                    category.IsActive,
+                    category.CreatedAt,
+                    category.UpdatedAt
+                }
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Category
@@ -234,7 +482,17 @@ public static class CatalogEndpoints
 
             brand.UpdateDetails(model.Name, model.Description);
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Brand updated", Brand = brand });
+            return Results.Ok(new { 
+                Message = "Brand updated", 
+                Brand = new {
+                    brand.Id,
+                    brand.Name,
+                    brand.Description,
+                    brand.IsActive,
+                    brand.CreatedAt,
+                    brand.UpdatedAt
+                }
+            });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Brand
@@ -263,6 +521,7 @@ public record CreateProductDto(
     string Name,
     string Description,
     decimal Price,
+    decimal CostPrice,
     Guid CategoryId,
     Guid BrandId,
     int StockQuantity,

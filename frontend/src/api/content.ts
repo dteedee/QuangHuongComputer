@@ -54,9 +54,9 @@ export const contentApi = {
             const response = await client.get<Post[]>('/content/admin/posts', { params });
             return response.data;
         },
-        getPost: async (id: string) => {
-            const response = await client.get<Post>(`/content/admin/posts/${id}`);
-            return response.data;
+        // NOTE: Backend doesn't have GET by id endpoint
+        getPost: async (_id: string) => {
+            throw new Error('Get post by ID endpoint not implemented in backend');
         },
         createPost: async (data: any) => {
             const response = await client.post<Post>('/content/admin/posts', data);
@@ -70,9 +70,9 @@ export const contentApi = {
             const response = await client.delete(`/content/admin/posts/${id}`);
             return response.data;
         },
-        publishPost: async (id: string, isPublished: boolean) => {
-            const response = await client.patch<Post>(`/content/admin/posts/${id}/publish`, { isPublished });
-            return response.data;
+        // NOTE: Backend doesn't have publish endpoint
+        publishPost: async (_id: string, _isPublished: boolean) => {
+            throw new Error('Publish post endpoint not implemented in backend');
         },
 
         // Coupons
@@ -80,25 +80,25 @@ export const contentApi = {
             const response = await client.get<Coupon[]>('/content/admin/coupons', { params });
             return response.data;
         },
-        getCoupon: async (id: string) => {
-            const response = await client.get<Coupon>(`/content/admin/coupons/${id}`);
-            return response.data;
+        // NOTE: Backend doesn't have GET by id endpoint
+        getCoupon: async (_id: string) => {
+            throw new Error('Get coupon by ID endpoint not implemented in backend');
         },
         createCoupon: async (data: any) => {
             const response = await client.post<Coupon>('/content/admin/coupons', data);
             return response.data;
         },
-        updateCoupon: async (id: string, data: any) => {
-            const response = await client.put<Coupon>(`/content/admin/coupons/${id}`, data);
-            return response.data;
+        // NOTE: Backend doesn't have PUT endpoint
+        updateCoupon: async (_id: string, _data: any) => {
+            throw new Error('Update coupon endpoint not implemented in backend');
         },
         deleteCoupon: async (id: string) => {
             const response = await client.delete(`/content/admin/coupons/${id}`);
             return response.data;
         },
-        validateCoupon: async (code: string, orderAmount: number) => {
-            const response = await client.post<{ valid: boolean; discount: number; message?: string }>('/content/admin/coupons/validate', { code, orderAmount });
-            return response.data;
+        // NOTE: Backend doesn't have validate endpoint
+        validateCoupon: async (_code: string, _orderAmount: number) => {
+            throw new Error('Validate coupon endpoint not implemented in backend');
         }
     }
 };

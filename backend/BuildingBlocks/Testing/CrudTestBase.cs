@@ -2,6 +2,7 @@ using BuildingBlocks.Repository;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using FluentAssertions;
+using BuildingBlocks.SharedKernel;
 
 namespace BuildingBlocks.Testing;
 

@@ -1,7 +1,10 @@
-import client from './client';
-import { QueryParams, PagedResult } from '../hooks/useCrudList';
 
-// Types
+import client from './client';
+
+// ============================================
+// Admin API Types
+// ============================================
+
 export interface User {
   id: string;
   email: string;
@@ -9,7 +12,6 @@ export interface User {
   roles: string[];
   isActive: boolean;
   createdAt: string;
-  lastLogin?: string;
 }
 
 export interface Role {
@@ -18,7 +20,6 @@ export interface Role {
   description?: string;
   permissions: string[];
   userCount?: number;
-  createdAt: string;
 }
 
 export interface Permission {
@@ -29,142 +30,138 @@ export interface Permission {
   category: string;
 }
 
-export interface CreateUserDto {
-  email: string;
-  password: string;
-  fullName: string;
-  roles: string[];
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
-export interface UpdateUserDto {
-  email?: string;
-  fullName?: string;
-  roles?: string[];
-  isActive?: boolean;
+export interface QueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDescending?: boolean;
 }
 
-export interface CreateRoleDto {
-  name: string;
-  description?: string;
-  permissions?: string[];
-}
+// ============================================
+// Admin API Functions
+// ============================================
 
-export interface UpdateRoleDto {
-  name?: string;
-  description?: string;
-  permissions?: string[];
-}
-
-// Build query string from params
-function buildQueryString(params: QueryParams & { role?: string; isActive?: boolean }): string {
-  const query = new URLSearchParams();
-
-  if (params.page) query.append('page', params.page.toString());
-  if (params.pageSize) query.append('pageSize', params.pageSize.toString());
-  if (params.search) query.append('search', params.search);
-  if (params.sortBy) query.append('sortBy', params.sortBy);
-  if (params.sortDescending !== undefined) query.append('sortDescending', params.sortDescending.toString());
-  if (params.role) query.append('role', params.role);
-  if (params.isActive !== undefined) query.append('isActive', params.isActive.toString());
-
-  return query.toString();
-}
-
-// API Functions
 export const adminApi = {
-  // Users
-  getUsers: async (params: QueryParams & { role?: string; isActive?: boolean }): Promise<PagedResult<User>> => {
-    const queryString = buildQueryString(params);
-    const response = await client.get<PagedResult<User>>(`/admin/users?${queryString}`);
-    return response.data;
+  // ============ Users Management ============
+  users: {
+    getList: async (params: QueryParams & { role?: string; includeInactive?: boolean }): Promise<PagedResult<User>> => {
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+      if (params.search) queryParams.append('search', params.search);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortDescending) queryParams.append('sortDescending', params.sortDescending.toString());
+      if (params.role) queryParams.append('role', params.role);
+      if (params.includeInactive) queryParams.append('includeInactive', params.includeInactive.toString());
+
+      const response = await client.get<PagedResult<User>>(`/auth/users?${queryParams.toString()}`);
+      return response.data;
+    },
+
+    getById: async (id: string): Promise<User> => {
+      const response = await client.get<any>(`/auth/users/${id}`);
+      return response.data;
+    },
+
+    update: async (id: string, data: { email?: string; fullName?: string }): Promise<{ message: string }> => {
+      const response = await client.put<{ message: string }>(`/auth/users/${id}`, data);
+      return response.data;
+    },
+
+    deactivate: async (id: string): Promise<{ message: string }> => {
+      const response = await client.delete<{ message: string }>(`/auth/users/${id}`);
+      return response.data;
+    },
+
+    assignRoles: async (id: string, roles: string[]): Promise<{ message: string; roles: string[] }> => {
+      const response = await client.post<{ message: string; roles: string[] }>(`/auth/users/${id}/roles`, { roles });
+      return response.data;
+    },
   },
 
-  getUser: async (id: string): Promise<User> => {
-    const response = await client.get<User>(`/admin/users/${id}`);
-    return response.data;
+  // ============ Roles Management ============
+  roles: {
+    getList: async (): Promise<Array<{ id: string; name: string }>> => {
+      const response = await client.get<Array<{ id: string; name: string }>>('/auth/roles');
+      return response.data;
+    },
+
+    create: async (name: string): Promise<{ message: string }> => {
+      const response = await client.post<{ message: string }>('/auth/roles', name, {
+        headers: { 'Content-Type': 'text/plain' }
+      });
+      return response.data;
+    },
+
+    delete: async (roleName: string): Promise<{ message: string }> => {
+      const response = await client.delete<{ message: string }>(`/auth/roles/${roleName}`);
+      return response.data;
+    },
+
+    getPermissions: async (roleId: string): Promise<string[]> => {
+      const response = await client.get<string[]>(`/auth/roles/${roleId}/permissions`);
+      return response.data;
+    },
+
+    updatePermissions: async (roleId: string, permissions: string[]): Promise<{ message: string }> => {
+      const response = await client.put<{ message: string }>(`/auth/roles/${roleId}/permissions`, permissions);
+      return response.data;
+    },
   },
 
-  createUser: async (data: CreateUserDto): Promise<User> => {
-    const response = await client.post<User>('/admin/users', data);
-    return response.data;
+  // ============ Permissions ============
+  permissions: {
+    getAll: async (): Promise<string[]> => {
+      const response = await client.get<string[]>('/auth/permissions');
+      return response.data;
+    },
   },
+};
 
-  updateUser: async (id: string, data: UpdateUserDto): Promise<User> => {
-    const response = await client.put<User>(`/admin/users/${id}`, data);
-    return response.data;
-  },
+// ============================================
+// Helper Functions
+// ============================================
 
-  deleteUser: async (id: string): Promise<void> => {
-    await client.delete(`/admin/users/${id}`);
-  },
+// Format date for display
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
-  toggleUserStatus: async (id: string): Promise<User> => {
-    const response = await client.post<User>(`/admin/users/${id}/toggle-status`);
-    return response.data;
-  },
+// Get status badge class
+export const getStatusBadgeClass = (isActive: boolean): string => {
+  return isActive
+    ? 'bg-green-100 text-green-800'
+    : 'bg-gray-100 text-gray-800';
+};
 
-  resetUserPassword: async (id: string, newPassword: string): Promise<void> => {
-    await client.post(`/admin/users/${id}/reset-password`, { newPassword });
-  },
-
-  // Roles
-  getRoles: async (params?: QueryParams): Promise<PagedResult<Role>> => {
-    const queryString = params ? buildQueryString(params) : '';
-    const response = await client.get<PagedResult<Role>>(`/admin/roles?${queryString}`);
-    return response.data;
-  },
-
-  getAllRoles: async (): Promise<Role[]> => {
-    const response = await client.get<Role[]>('/admin/roles/all');
-    return response.data;
-  },
-
-  getRole: async (id: string): Promise<Role> => {
-    const response = await client.get<Role>(`/admin/roles/${id}`);
-    return response.data;
-  },
-
-  createRole: async (data: CreateRoleDto): Promise<Role> => {
-    const response = await client.post<Role>('/admin/roles', data);
-    return response.data;
-  },
-
-  updateRole: async (id: string, data: UpdateRoleDto): Promise<Role> => {
-    const response = await client.put<Role>(`/admin/roles/${id}`, data);
-    return response.data;
-  },
-
-  deleteRole: async (id: string): Promise<void> => {
-    await client.delete(`/admin/roles/${id}`);
-  },
-
-  // Permissions
-  getAllPermissions: async (): Promise<Permission[]> => {
-    const response = await client.get<Permission[]>('/admin/permissions');
-    return response.data;
-  },
-
-  getPermissionsByModule: async (): Promise<Record<string, Permission[]>> => {
-    const response = await client.get<Record<string, Permission[]>>('/admin/permissions/by-module');
-    return response.data;
-  },
-
-  getRolePermissions: async (roleId: string): Promise<string[]> => {
-    const response = await client.get<string[]>(`/admin/roles/${roleId}/permissions`);
-    return response.data;
-  },
-
-  updateRolePermissions: async (roleId: string, permissions: string[]): Promise<void> => {
-    await client.put(`/admin/roles/${roleId}/permissions`, { permissions });
-  },
-
-  // Permission Matrix
-  getPermissionMatrix: async (): Promise<{
-    roles: Role[];
-    permissions: Permission[];
-    matrix: Record<string, string[]>; // roleId -> permissionIds
-  }> => {
-    const response = await client.get('/admin/permissions/matrix');
-    return response.data;
-  },
+// Get role badge color
+export const getRoleBadgeColor = (role: string): string => {
+  const colors: Record<string, string> = {
+    Admin: 'bg-red-100 text-red-800',
+    Manager: 'bg-orange-100 text-orange-800',
+    Customer: 'bg-blue-100 text-blue-800',
+    TechnicianInShop: 'bg-purple-100 text-purple-800',
+    TechnicianOnSite: 'bg-indigo-100 text-indigo-800',
+    Accountant: 'bg-green-100 text-green-800',
+    default: 'bg-gray-100 text-gray-800'
+  };
+  return colors[role] || colors.default;
 };

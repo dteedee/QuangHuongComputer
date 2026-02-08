@@ -57,7 +57,7 @@ public record EmployeeDto(
             employee.Department,
             employee.Position,
             employee.HireDate,
-            employee.Salary,
+            employee.BaseSalary,
             employee.Status,
             employee.IdCardNumber,
             employee.Address,
@@ -88,7 +88,7 @@ public record EmployeeListDto(
             employee.Phone,
             employee.Department,
             employee.Position,
-            employee.Salary,
+            employee.BaseSalary,
             employee.Status,
             employee.HireDate);
     }

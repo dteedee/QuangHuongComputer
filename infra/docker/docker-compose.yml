@@ -39,16 +39,55 @@ services:
 
   # --- Data Stores ---
   postgres:
-    image: postgres:15-alpine
-    container_name: shop_postgres
+    image: postgres:16-alpine
+    container_name: quanghuong_postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: quanghuong
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_INITDB_ARGS: "--auth-host=trust --auth-local=trust"
+      # PostgreSQL collation settings for case-insensitive comparisons
+      LC_COLLATE: en_US.UTF-8
+      LC_CTYPE: en_US.UTF-8
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    command: 
+      - "postgres"
+      - "-c"
+      - "password_encryption=md5"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=1310kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d quanghuong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - shop-network
 
@@ -66,6 +105,20 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - shop-network
+
+  # --- Database Management ---
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: shop_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@quanghuong.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
     networks:
       - shop-network
 

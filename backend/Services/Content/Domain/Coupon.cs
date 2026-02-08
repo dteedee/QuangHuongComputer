@@ -5,10 +5,11 @@ namespace Content.Domain;
 
 public class Coupon : Entity<Guid>
 {
-    public string Code { get; private set; }
+    public string Code { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
     public DiscountType DiscountType { get; private set; }
     public decimal DiscountValue { get; private set; }
-    public decimal? MinPurchase { get; private set; }
+    public decimal MinOrderAmount { get; private set; }
     public decimal? MaxDiscount { get; private set; }
     public DateTime ValidFrom { get; private set; }
     public DateTime ValidTo { get; private set; }
@@ -19,9 +20,10 @@ public class Coupon : Entity<Guid>
 
     public Coupon(
         string code,
+        string description,
         DiscountType discountType,
         decimal discountValue,
-        decimal? minPurchase,
+        decimal minOrderAmount,
         decimal? maxDiscount,
         DateTime validFrom,
         DateTime validTo,
@@ -29,9 +31,10 @@ public class Coupon : Entity<Guid>
     {
         Id = Guid.NewGuid();
         Code = code.ToUpper();
+        Description = description;
         DiscountType = discountType;
         DiscountValue = discountValue;
-        MinPurchase = minPurchase;
+        MinOrderAmount = minOrderAmount;
         MaxDiscount = maxDiscount;
         ValidFrom = validFrom;
         ValidTo = validTo;
@@ -64,7 +67,7 @@ public class Coupon : Entity<Guid>
         if (!IsValid())
             return false;
 
-        if (MinPurchase.HasValue && orderAmount < MinPurchase)
+        if (orderAmount < MinOrderAmount)
             return false;
 
         return true;
@@ -87,7 +90,7 @@ public class Coupon : Entity<Guid>
         decimal discount = DiscountType switch
         {
             DiscountType.Percentage => orderAmount * (DiscountValue / 100m),
-            DiscountType.Fixed => DiscountValue,
+            DiscountType.FixedAmount => DiscountValue,
             _ => 0
         };
 
@@ -102,7 +105,7 @@ public class Coupon : Entity<Guid>
     public void UpdateDetails(
         DiscountType discountType,
         decimal discountValue,
-        decimal? minPurchase,
+        decimal minOrderAmount,
         decimal? maxDiscount,
         DateTime validFrom,
         DateTime validTo,
@@ -110,7 +113,7 @@ public class Coupon : Entity<Guid>
     {
         DiscountType = discountType;
         DiscountValue = discountValue;
-        MinPurchase = minPurchase;
+        MinOrderAmount = minOrderAmount;
         MaxDiscount = maxDiscount;
         ValidFrom = validFrom;
         ValidTo = validTo;
@@ -141,9 +144,9 @@ public class Coupon : Entity<Guid>
             result.AddError(nameof(DiscountValue), "Percentage discount cannot exceed 100%");
         }
 
-        if (MinPurchase.HasValue && !CommonValidators.IsNonNegative(MinPurchase.Value))
+        if (!CommonValidators.IsNonNegative(MinOrderAmount))
         {
-            result.AddError(nameof(MinPurchase), "Minimum purchase must be non-negative");
+            result.AddError(nameof(MinOrderAmount), "Minimum order amount must be non-negative");
         }
 
         if (MaxDiscount.HasValue && !CommonValidators.IsPositive(MaxDiscount.Value))
@@ -168,5 +171,5 @@ public class Coupon : Entity<Guid>
 public enum DiscountType
 {
     Percentage,
-    Fixed
+    FixedAmount
 }

@@ -27,9 +27,23 @@ public class Order : Entity<Guid>
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
     
+    // Phase 1: Enhanced fields
+    public string? CustomerIp { get; private set; }
+    public string? CustomerUserAgent { get; private set; }
+    public string? InternalNotes { get; private set; } // Ghi chú nội bộ
+    public Guid? SourceId { get; private set; } // Website, POS, Mobile
+    public Guid? AffiliateId { get; private set; } // Nếu có affiliate
+    public string? DiscountReason { get; private set; }
+    public string? DeliveryTrackingNumber { get; private set; }
+    public string? DeliveryCarrier { get; private set; }
+    public int RetryCount { get; private set; }
+    public string? FailureReason { get; private set; }
+    
     // Timestamps
     public DateTime OrderDate { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
+    public DateTime? ShippedAt { get; private set; }
+    public DateTime? DeliveredAt { get; private set; }
     public DateTime? PaidAt { get; private set; }
     public DateTime? FulfilledAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
@@ -41,7 +55,10 @@ public class Order : Entity<Guid>
         string shippingAddress, 
         List<OrderItem> items,
         decimal taxRate = 0.1m,
-        string? notes = null)
+        string? notes = null,
+        string? customerIp = null,
+        string? customerUserAgent = null,
+        Guid? sourceId = null)
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Order must have at least one item");
@@ -55,8 +72,12 @@ public class Order : Entity<Guid>
         Items = items;
         ShippingAddress = shippingAddress;
         Notes = notes;
+        CustomerIp = customerIp;
+        CustomerUserAgent = customerUserAgent;
+        SourceId = sourceId;
         OrderDate = DateTime.UtcNow;
         TaxRate = taxRate; // Snapshot tax rate
+        RetryCount = 0;
         
         CalculateAmounts();
     }
@@ -73,7 +94,7 @@ public class Order : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ApplyCoupon(string couponCode, decimal discountAmount, string couponSnapshot)
+    public void ApplyCoupon(string couponCode, decimal discountAmount, string couponSnapshot, string? discountReason = null)
     {
         if (Status != OrderStatus.Draft)
             throw new InvalidOperationException("Cannot apply coupon to non-draft order");
@@ -81,6 +102,7 @@ public class Order : Entity<Guid>
         CouponCode = couponCode;
         DiscountAmount = discountAmount;
         CouponSnapshot = couponSnapshot; // Store coupon details for audit
+        DiscountReason = discountReason;
         CalculateAmounts();
     }
 
@@ -168,6 +190,30 @@ public class Order : Entity<Guid>
         // Check if we can complete the order
         TryComplete();
     }
+    
+    public void MarkAsShipped(string trackingNumber, string carrier)
+    {
+        if (Status == OrderStatus.Cancelled)
+            throw new InvalidOperationException("Cannot ship cancelled order");
+
+        Status = OrderStatus.Shipped;
+        ShippedAt = DateTime.UtcNow;
+        DeliveryTrackingNumber = trackingNumber;
+        DeliveryCarrier = carrier;
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void MarkAsDelivered()
+    {
+        if (Status != OrderStatus.Shipped)
+            throw new InvalidOperationException("Can only mark shipped orders as delivered");
+
+        Status = OrderStatus.Delivered;
+        DeliveredAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+        
+        TryComplete();
+    }
 
     // BUSINESS REQUIREMENT: Order only Completed when Paid + Fulfilled
     private void TryComplete()
@@ -195,6 +241,21 @@ public class Order : Entity<Guid>
         // Raise domain event to release stock reservation
         RaiseDomainEvent(new OrderCancelledDomainEvent(Id, reason));
     }
+    
+    public void AddInternalNote(string note)
+    {
+        InternalNotes = string.IsNullOrWhiteSpace(InternalNotes) 
+            ? note 
+            : $"{InternalNotes}\n{DateTime.UtcNow:yyyy-MM-dd HH:mm}: {note}";
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void IncrementRetryCount(string? failureReason = null)
+    {
+        RetryCount++;
+        FailureReason = failureReason;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     // Legacy method for backward compatibility
     public void SetStatus(OrderStatus status)
@@ -213,17 +274,31 @@ public class OrderItem : Entity<Guid>
     public Guid OrderId { get; private set; }
     public Guid ProductId { get; private set; }
     public string ProductName { get; private set; } = string.Empty;
+    public string? ProductSku { get; private set; }
     public decimal UnitPrice { get; private set; }
+    public decimal? OriginalPrice { get; private set; }
     public int Quantity { get; private set; }
+    public decimal DiscountAmount { get; private set; }
+    public decimal LineTotal { get; private set; }
 
-    public OrderItem(Guid productId, string productName, decimal unitPrice, int quantity)
+    public OrderItem(Guid productId, string productName, decimal unitPrice, int quantity, string? productSku = null, decimal? originalPrice = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
         ProductName = productName;
+        ProductSku = productSku;
         UnitPrice = unitPrice;
+        OriginalPrice = originalPrice;
         Quantity = quantity;
+        DiscountAmount = 0;
+        LineTotal = unitPrice * quantity;
     }
 
     protected OrderItem() { }
+    
+    public void ApplyDiscount(decimal discountAmount)
+    {
+        DiscountAmount = discountAmount;
+        LineTotal = (UnitPrice * Quantity) - discountAmount;
+    }
 }

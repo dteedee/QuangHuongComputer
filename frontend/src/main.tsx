@@ -1,7 +1,40 @@
-﻿import { StrictMode } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import ErrorBoundary from './components/ErrorBoundary'
+
+// Global error handler
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  console.error('Global error caught:', msg, error);
+  
+  // Don't show error details in production
+  if (process.env.NODE_ENV === 'production') {
+    const root = document.getElementById('root');
+    if (root) {
+      root.innerHTML = `<div style="padding: 40px; text-align: center; font-family: system-ui;">
+        <h1 style="color: #d70018;">Đã có lỗi xảy ra</h1>
+        <p>Vui lòng tải lại trang hoặc liên hệ hỗ trợ.</p>
+        <button onclick="window.location.reload()" 
+          style="padding: 12px 24px; background: #d70018; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">
+          Tải lại trang
+        </button>
+      </div>`;
+    }
+  }
+  
+  return false;
+};
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  // Prevent default browser error logging in production
+  if (process.env.NODE_ENV === 'production') {
+    event.preventDefault();
+  }
+});
 
 console.log('Main.tsx is executing');
 
@@ -25,7 +58,9 @@ try {
   console.log('Rendering App component...');
   createRoot(rootElement).render(
     <StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </StrictMode>
   );
   console.log('Render call completed');

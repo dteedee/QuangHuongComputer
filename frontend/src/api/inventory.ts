@@ -104,19 +104,19 @@ export const inventoryApi = {
 
     // Purchase Order methods
     getPurchaseOrders: async () => {
-        const response = await client.get<PurchaseOrder[]>('/inventory/po');
+        const response = await client.get<any[]>('/inventory/po');
         return response.data;
     },
     createPurchaseOrder: async (data: any) => {
         const response = await client.post('/inventory/po', data);
         return response.data;
     },
-    submitPurchaseOrder: async (id: string) => {
-        const response = await client.put(`/inventory/po/${id}/submit`);
-        return response.data;
+    // NOTE: Backend doesn't have submit endpoint
+    submitPurchaseOrder: async (_id: string) => {
+        throw new Error('Submit purchase order endpoint not implemented in backend');
     },
     receivePurchaseOrder: async (id: string) => {
-        const response = await client.post(`/inventory/po/${id}/receive`);
+        const response = await client.put(`/inventory/po/${id}/receive`);
         return response.data;
     },
     adjustStock: async (id: string, amount: number, reason: string) => {

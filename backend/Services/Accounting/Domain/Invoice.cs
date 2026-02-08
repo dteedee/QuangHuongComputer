@@ -124,7 +124,7 @@ public class Invoice : AggregateRoot<Guid>
     /// Applies a payment to this invoice via PaymentApplication.
     /// Validates that the total applications don't exceed outstanding amount.
     /// </summary>
-    public void ApplyPayment(Guid paymentId, decimal amount, string? notes = null)
+    public void ApplyPayment(Guid paymentIntentId, decimal amount, string? notes = null)
     {
         if (Status == InvoiceStatus.Draft)
             throw new InvalidOperationException("Cannot apply payment to draft invoice");
@@ -142,7 +142,7 @@ public class Invoice : AggregateRoot<Guid>
         PaymentApplication.ValidateTotalApplications(OutstandingAmount, existingApplications, amount);
 
         // Create and add the payment application
-        var application = PaymentApplication.Create(paymentId, Id, amount, notes);
+        var application = PaymentApplication.Create(paymentIntentId, Id, amount, notes);
         _paymentApplications.Add(application);
 
         // Update paid amount

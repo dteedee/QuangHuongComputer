@@ -8,25 +8,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand colors (Quang Hưởng red - use as accent)
+        // Brand colors (Quang Hưởng đỏ)
         'brand-red': '#D70018',
         'brand-red-dark': '#B50014',
         'brand-red-light': '#FFEDED',
         'brand-gray': '#f3f4f6',
 
-        // Primary (Blue) - Main interactive elements
+        // Primary (Mặc định là đỏ)
         primary: {
-          50: '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#60A5FA',
-          500: '#2563EB',
-          600: '#1D4ED8',
-          700: '#1E40AF',
-          800: '#1E3A8A',
-          900: '#1E3A8A',
-          DEFAULT: '#2563EB',
+          50: '#FFEDED',
+          100: '#FFD3D3',
+          200: '#FFA8A8',
+          300: '#FF7B7B',
+          400: '#FF4D4D',
+          500: '#D70018',
+          600: '#B50014',
+          700: '#910010',
+          800: '#6D000C',
+          900: '#4A0008',
+          DEFAULT: '#D70018',
         },
 
         // Success (Green)
@@ -77,7 +77,28 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+      boxShadow: {
+        'brand': '0 4px 16px rgba(215, 0, 24, 0.2)',
+        'brand-lg': '0 8px 32px rgba(215, 0, 24, 0.3)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.4s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(20px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],
-}
+};

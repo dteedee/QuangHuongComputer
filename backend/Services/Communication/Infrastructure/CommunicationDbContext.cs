@@ -11,6 +11,8 @@ public class CommunicationDbContext : DbContext
 
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    public DbSet<NotificationLog> NotificationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +32,9 @@ public class CommunicationDbContext : DbContext
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.AssignedToUserId);
             entity.HasIndex(e => new { e.Status, e.LastMessageAt });
+            
+            entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("IX_Conversation_CreatedAt");
 
             // Configure Messages collection
             entity.HasMany(c => c.Messages)
@@ -49,6 +54,40 @@ public class CommunicationDbContext : DbContext
 
             entity.HasIndex(e => e.ConversationId);
             entity.HasIndex(e => new { e.ConversationId, e.CreatedAt });
+        });
+        
+        // NotificationTemplate configuration
+        modelBuilder.Entity<NotificationTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Subject).HasMaxLength(500);
+            entity.Property(e => e.Body).HasColumnType("text");
+            
+            entity.HasIndex(e => new { e.Type, e.IsActive })
+                .HasDatabaseName("IX_NotificationTemplate_Type_Active");
+        });
+        
+        // NotificationLog configuration
+        modelBuilder.Entity<NotificationLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Content).HasColumnType("text");
+            entity.Property(e => e.Subject).HasMaxLength(500);
+            entity.Property(e => e.Error).HasColumnType("text");
+            
+            entity.HasIndex(e => new { e.UserId, e.IsSent, e.CreatedAt })
+                .HasDatabaseName("IX_NotificationLog_User_Sent_Date");
+                
+            entity.HasIndex(e => new { e.Type, e.CreatedAt })
+                .HasDatabaseName("IX_NotificationLog_Type_Date");
+                
+            entity.HasIndex(e => new { e.IsSent, e.RetryCount })
+                .HasFilter("IsSent = false AND RetryCount < 5")
+                .HasDatabaseName("IX_NotificationLog_Failed_Retries");
         });
     }
 }

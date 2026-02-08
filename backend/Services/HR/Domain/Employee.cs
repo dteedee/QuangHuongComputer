@@ -7,6 +7,8 @@ public enum EmployeeStatus
     Active,
     Inactive,
     OnLeave,
+    OnProbation,
+    Resigned,
     Terminated
 }
 
@@ -18,14 +20,33 @@ public class Employee : Entity<Guid>
     public string Department { get; private set; }
     public string Position { get; private set; }
     public DateTime HireDate { get; private set; }
-    public decimal Salary { get; private set; }
+    public decimal BaseSalary { get; private set; }
     public EmployeeStatus Status { get; private set; }
 
     // Additional properties
+    public string? EmployeeCode { get; private set; }
     public string? IdCardNumber { get; private set; }
     public string? Address { get; private set; }
     public DateTime? TerminationDate { get; private set; }
     public string? TerminationReason { get; private set; }
+    
+    // Phase 1: Enhanced fields
+    public DateTime? ProbationEndDate { get; private set; }
+    public string? BankAccount { get; private set; }
+    public string? BankName { get; private set; }
+    public string? EmergencyContact { get; private set; }
+    public string? EmergencyPhone { get; private set; }
+    public string? AvatarUrl { get; private set; }
+    public string? Skills { get; private set; } // JSON array
+    public string? Certifications { get; private set; } // JSON array
+    public decimal? HourlyRate { get; private set; }
+    public Guid? ReportingToId { get; private set; }
+    public string? UserId { get; private set; } // Link to Identity user
+    public DateOnly? DateOfBirth { get; private set; }
+    public string? Gender { get; private set; }
+    public string? TaxCode { get; private set; }
+    public string? SocialInsuranceNumber { get; private set; }
+    public string? WorkLocation { get; private set; }
 
     public Employee(
         string fullName,
@@ -34,9 +55,15 @@ public class Employee : Entity<Guid>
         string department,
         string position,
         DateTime hireDate,
-        decimal salary,
+        decimal baseSalary,
+        string? employeeCode = null,
         string? idCardNumber = null,
-        string? address = null)
+        string? address = null,
+        decimal? hourlyRate = null,
+        Guid? reportingToId = null,
+        string? userId = null,
+        DateOnly? dateOfBirth = null,
+        string? gender = null)
     {
         Id = Guid.NewGuid();
         FullName = fullName;
@@ -45,10 +72,16 @@ public class Employee : Entity<Guid>
         Department = department;
         Position = position;
         HireDate = hireDate;
-        Salary = salary;
-        Status = EmployeeStatus.Active;
+        BaseSalary = baseSalary;
+        EmployeeCode = employeeCode;
         IdCardNumber = idCardNumber;
         Address = address;
+        HourlyRate = hourlyRate;
+        ReportingToId = reportingToId;
+        UserId = userId;
+        DateOfBirth = dateOfBirth;
+        Gender = gender;
+        Status = EmployeeStatus.Active;
 
         Validate();
         RaiseDomainEvent(new EmployeeCreatedEvent(Id, fullName, email, department, position));
@@ -94,15 +127,16 @@ public class Employee : Entity<Guid>
         RaiseDomainEvent(new EmployeeDetailsUpdatedEvent(Id, fullName, email, phone));
     }
 
-    public void UpdateSalary(decimal newSalary)
+    public void UpdateSalary(decimal newBaseSalary, decimal? newHourlyRate = null)
     {
-        if (newSalary <= 0)
-            throw new ArgumentException("Salary must be greater than zero.", nameof(newSalary));
+        if (newBaseSalary <= 0)
+            throw new ArgumentException("Salary must be greater than zero.", nameof(newBaseSalary));
 
-        var oldSalary = Salary;
-        Salary = newSalary;
+        var oldSalary = BaseSalary;
+        BaseSalary = newBaseSalary;
+        HourlyRate = newHourlyRate;
 
-        RaiseDomainEvent(new EmployeeSalaryChangedEvent(Id, FullName, oldSalary, newSalary));
+        RaiseDomainEvent(new EmployeeSalaryChangedEvent(Id, FullName, oldSalary, newBaseSalary));
     }
 
     public void Deactivate()
@@ -144,6 +178,48 @@ public class Employee : Entity<Guid>
 
         RaiseDomainEvent(new EmployeeTerminatedEvent(Id, FullName, reason, TerminationDate.Value));
     }
+    
+    public void SetProbation(DateOnly endDate)
+    {
+        Status = EmployeeStatus.OnProbation;
+        ProbationEndDate = endDate.ToDateTime(TimeOnly.MinValue);
+    }
+    
+    public void CompleteProbation()
+    {
+        if (Status != EmployeeStatus.OnProbation)
+            throw new InvalidOperationException("Employee is not on probation.");
+            
+        Status = EmployeeStatus.Active;
+        ProbationEndDate = null;
+    }
+    
+    public void UpdateBankInfo(string bankAccount, string bankName)
+    {
+        BankAccount = bankAccount;
+        BankName = bankName;
+    }
+    
+    public void UpdateEmergencyContact(string contactName, string phoneNumber)
+    {
+        EmergencyContact = contactName;
+        EmergencyPhone = phoneNumber;
+    }
+    
+    public void SetReportingManager(Guid? managerId)
+    {
+        ReportingToId = managerId;
+    }
+    
+    public void UpdateSkills(string skills)
+    {
+        Skills = skills;
+    }
+    
+    public void UpdateCertifications(string certifications)
+    {
+        Certifications = certifications;
+    }
 
     public void Validate()
     {
@@ -166,7 +242,7 @@ public class Employee : Entity<Guid>
         if (string.IsNullOrWhiteSpace(Position))
             errors.Add("Position is required.");
 
-        if (Salary <= 0)
+        if (BaseSalary <= 0)
             errors.Add("Salary must be greater than zero.");
 
         if (HireDate > DateTime.UtcNow)

@@ -18,7 +18,7 @@ interface MessageBubbleProps {
   showReadStatus?: boolean;
 }
 
-export const MessageBubble = memo(({
+export const MessageBubble = memo<MessageBubbleProps>(({
   message,
   showAvatar = true,
   showTimestamp = true,

@@ -1,20 +1,106 @@
+
 import client from './client';
+
+// ============================================
+// Payment Types
+// ============================================
+export type PaymentProvider = 0 | 1 | 2; // 0 = VNPay, 1 = Mock, 2 = Stripe
+
+export interface PaymentIntent {
+    id: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+    status: PaymentStatus;
+    provider: PaymentProvider;
+    externalId?: string;
+    createdAt: string;
+}
+
+export type PaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export interface InitiatePaymentRequest {
+    orderId: string;
+    amount: number;
+    provider: PaymentProvider;
+    bankCode?: string;
+}
 
 export interface InitiatePaymentResponse {
     paymentId: string;
     clientSecret: string;
-    status: string;
-    paymentUrl?: string; // URL for VNPay/Momo redirection
+    status: PaymentStatus;
+    paymentUrl?: string;
 }
 
+// ============================================
+// Payment API Functions
+// ============================================
 export const paymentApi = {
-    initiate: async (data: { orderId: string; amount: number; provider: number; bankCode?: string }) => {
-        const response = await client.post<InitiatePaymentResponse>('/payments/initiate', data);
+    // Initiate a payment
+    initiate: async (data: InitiatePaymentRequest): Promise<InitiatePaymentResponse> => {
+        const response = await client.post('/payments/initiate', data);
         return response.data;
     },
 
-    mockWebhook: async (data: { paymentId: string; success: boolean }) => {
-        const response = await client.post('/payments/webhook/mock', data);
+    // Get payment status
+    getPayment: async (id: string): Promise<PaymentIntent> => {
+        const response = await client.get(`/payments/${id}`);
         return response.data;
+    },
+
+    // Mock webhook (for testing)
+    mockWebhook: async (data: { paymentId: string; success: boolean }): Promise<void> => {
+        await client.post('/payments/webhook/mock', data);
+    },
+
+    // Helper to create VNPay payment URL (frontend-side)
+    createVNPayUrl: (paymentUrl: string, returnUrl?: string): string => {
+        const baseReturnUrl = returnUrl || `${window.location.origin}/payment/callback`;
+        return paymentUrl.includes('?')
+            ? `${paymentUrl}&vnp_ReturnUrl=${encodeURIComponent(baseReturnUrl)}`
+            : `${paymentUrl}?vnp_ReturnUrl=${encodeURIComponent(baseReturnUrl)}`;
+    },
+
+    // Helper to parse VNPay callback response
+    parseVNPayCallback: (params: URLSearchParams): {
+        success: boolean;
+        orderId: string;
+        amount: number;
+        message: string;
+    } => {
+        const responseCode = params.get('vnp_ResponseCode');
+        const success = responseCode === '00';
+        const orderId = params.get('vnp_OrderInfo')?.replace('Thanh toan don hang ', '') || '';
+        const amount = parseInt(params.get('vnp_Amount') || '0') / 100;
+
+        return {
+            success,
+            orderId,
+            amount,
+            message: success ? 'Thanh toán thành công' : 'Thanh toán thất bại'
+        };
     }
+};
+
+// Helper to get payment provider label
+export const getPaymentProviderLabel = (provider: PaymentProvider): string => {
+    const labels: Record<PaymentProvider, string> = {
+        0: 'VNPay',
+        1: 'Mock Payment',
+        2: 'Stripe'
+    };
+    return labels[provider] || 'Unknown';
+};
+
+// Helper to get payment status color
+export const getPaymentStatusColor = (status: PaymentStatus): string => {
+    const colors: Record<PaymentStatus, string> = {
+        Pending: 'bg-yellow-100 text-yellow-800',
+        Processing: 'bg-blue-100 text-blue-800',
+        Succeeded: 'bg-green-100 text-green-800',
+        Failed: 'bg-red-100 text-red-800',
+        Cancelled: 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
 };

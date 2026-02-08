@@ -5,27 +5,39 @@ namespace Content.Domain;
 
 public class Post : Entity<Guid>
 {
-    public string Title { get; private set; }
-    public string Slug { get; private set; }
-    public string Content { get; private set; }
-    public string? FeaturedImage { get; private set; }
+    public string Title { get; private set; } = string.Empty;
+    public string Slug { get; private set; } = string.Empty;
+    public string Content { get; private set; } = string.Empty;
+    
+    // Mapped to ThumbnailUrl column in database
+    public string? ThumbnailUrl { get; private set; }
+    
     public string? Category { get; private set; }
     public List<string> Tags { get; private set; } = new();
     public PostStatus Status { get; private set; }
     public DateTime? PublishedAt { get; private set; }
+    public PostType Type { get; private set; }
+    public bool IsPublished => Status == PostStatus.Published;
 
     protected Post() { }
 
-    public Post(string title, string slug, string content, string? category = null, string? featuredImage = null)
+    public Post(string title, string slug, string content, string? category = null, string? thumbnailUrl = null)
     {
         Id = Guid.NewGuid();
         Title = title;
         Slug = slug;
         Content = content;
         Category = category;
-        FeaturedImage = featuredImage;
+        ThumbnailUrl = thumbnailUrl;
         Status = PostStatus.Draft;
+        Type = PostType.Article;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    public Post(string title, string slug, string content, PostType type, string? category = null, string? thumbnailUrl = null)
+        : this(title, slug, content, category, thumbnailUrl)
+    {
+        Type = type;
     }
 
     public void Publish()
@@ -47,12 +59,12 @@ public class Post : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateDetails(string title, string content, string? category = null, string? featuredImage = null)
+    public void UpdateDetails(string title, string content, string? category = null, string? thumbnailUrl = null)
     {
         Title = title;
         Content = content;
         Category = category;
-        FeaturedImage = featuredImage;
+        ThumbnailUrl = thumbnailUrl;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -89,9 +101,9 @@ public class Post : Entity<Guid>
             result.AddError(nameof(Content), "Content is required");
         }
 
-        if (FeaturedImage != null && !CommonValidators.IsMaxLength(FeaturedImage, 500))
+        if (ThumbnailUrl != null && !CommonValidators.IsMaxLength(ThumbnailUrl, 500))
         {
-            result.AddError(nameof(FeaturedImage), "Featured image URL must not exceed 500 characters");
+            result.AddError(nameof(ThumbnailUrl), "Featured image URL must not exceed 500 characters");
         }
 
         if (Category != null && !CommonValidators.IsMaxLength(Category, 100))
@@ -107,4 +119,11 @@ public enum PostStatus
 {
     Draft,
     Published
+}
+
+public enum PostType
+{
+    News,
+    Article,
+    Promotion
 }

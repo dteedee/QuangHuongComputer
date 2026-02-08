@@ -1,6 +1,9 @@
+
 import client from './client';
 
-// Enhanced Types
+// ============================================
+// Repair API Types
+// ============================================
 export type ServiceType = 'InShop' | 'OnSite';
 export type ServiceLocation = 'CustomerHome' | 'CustomerOffice' | 'School' | 'Government' | 'Other';
 export type TimeSlot = 'Morning' | 'Afternoon' | 'Evening';
@@ -29,8 +32,8 @@ export interface ServiceBooking {
     deviceModel: string;
     serialNumber?: string;
     issueDescription: string;
-    imageUrls: string[];
-    videoUrls: string[];
+    imageUrls?: string[];
+    videoUrls?: string[];
     preferredDate: string;
     preferredTimeSlot: TimeSlot;
     serviceAddress?: string;
@@ -54,7 +57,7 @@ export interface WorkOrder {
     ticketNumber: string;
     customerId: string;
     deviceModel: string;
-    serialNumber: string;
+    serialNumber?: string;
     description: string;
     status: WorkOrderStatus;
     technicianId?: string;
@@ -76,9 +79,6 @@ export interface WorkOrder {
     approvedAt?: string;
     startedAt?: string;
     finishedAt?: string;
-    parts?: WorkOrderPart[];
-    quotes?: RepairQuote[];
-    activityLogs?: ActivityLog[];
 }
 
 export interface WorkOrderPart {
@@ -124,19 +124,11 @@ export interface ActivityLog {
     createdAt: string;
 }
 
-export interface InventoryItem {
-    id: string;
-    name: string;
-    partNumber?: string;
-    quantityOnHand: number;
-    quantityReserved: number;
-    quantityAvailable: number;
-    unitPrice: number;
-}
-
-// Enhanced API Functions
+// ============================================
+// Repair API Functions
+// ============================================
 export const repairApi = {
-    // Booking Endpoints
+    // ============ Booking Endpoints ============
     booking: {
         create: async (data: {
             serviceType: ServiceType;
@@ -156,121 +148,145 @@ export const repairApi = {
             videoUrls?: string[];
             organizationId?: string;
             allowPayLater?: boolean;
-        }) => {
-            const response = await client.post<{
-                id: string;
-                customerId: string;
-                serviceType: ServiceType;
-                preferredDate: string;
-                preferredTimeSlot: TimeSlot;
-                onSiteFee: number;
-                status: BookingStatus;
-                message: string;
-            }>('/repair/book', data);
+        }): Promise<{
+            id: string;
+            customerId: string;
+            serviceType: ServiceType;
+            preferredDate: string;
+            preferredTimeSlot: TimeSlot;
+            onSiteFee: number;
+            status: BookingStatus;
+            message: string;
+        }> => {
+            const response = await client.post('/repair/book', data);
             return response.data;
         },
 
-        getMyBookings: async () => {
-            const response = await client.get<ServiceBooking[]>('/repair/bookings');
+        getMyBookings: async (): Promise<any[]> => {
+            const response = await client.get('/repair/bookings');
             return response.data;
         },
 
-        getBooking: async (id: string) => {
-            const response = await client.get<ServiceBooking>(`/repair/bookings/${id}`);
+        getBooking: async (id: string): Promise<ServiceBooking> => {
+            const response = await client.get(`/repair/bookings/${id}`);
             return response.data;
         },
     },
 
-    // Customer Work Orders (original endpoints)
-    createWorkOrder: async (data: { deviceModel: string, serialNumber: string, description: string }) => {
-        const response = await client.post<{
+    // ============ Work Order Endpoints ============
+    workOrders: {
+        create: async (data: { deviceModel: string; serialNumber: string; description: string }): Promise<{
             id: string;
             ticketNumber: string;
             status: string;
             description: string;
             message: string;
-        }>('/repair/work-orders', data);
-        return response.data;
-    },
-
-    getMyWorkOrders: async () => {
-        const response = await client.get<WorkOrder[]>('/repair/work-orders');
-        return response.data;
-    },
-
-    getMyWorkOrder: async (id: string) => {
-        const response = await client.get<WorkOrder>(`/repair/work-orders/${id}`);
-        return response.data;
-    },
-
-    // Quote Endpoints
-    quote: {
-        get: async (id: string) => {
-            const response = await client.get<RepairQuote>(`/repair/quotes/${id}`);
+        }> => {
+            const response = await client.post('/repair/work-orders', data);
             return response.data;
         },
 
-        approve: async (id: string) => {
-            const response = await client.put<{
-                message: string;
-                quoteStatus: QuoteStatus;
-                workOrderStatus: WorkOrderStatus;
-            }>(`/repair/quotes/${id}/approve`);
+        getMyWorkOrders: async (): Promise<any[]> => {
+            const response = await client.get('/repair/work-orders');
             return response.data;
         },
 
-        reject: async (id: string, reason: string) => {
-            const response = await client.put<{
-                message: string;
-                quoteStatus: QuoteStatus;
-                workOrderStatus: WorkOrderStatus;
-            }>(`/repair/quotes/${id}/reject`, { reason });
+        getMyWorkOrder: async (id: string): Promise<any> => {
+            const response = await client.get(`/repair/work-orders/${id}`);
+            return response.data;
+        },
+
+        // Legacy repair requests (backward compatibility)
+        createRequest: async (data: { deviceModel: string; serialNumber: string; issueDescription: string }): Promise<any> => {
+            const response = await client.post('/repair/requests', data);
+            return response.data;
+        },
+
+        getMyRequests: async (): Promise<any[]> => {
+            const response = await client.get('/repair/requests');
             return response.data;
         },
     },
 
-    // Technician Endpoints
+    // ============ Quote Endpoints ============
+    quotes: {
+        get: async (id: string): Promise<RepairQuote> => {
+            const response = await client.get(`/repair/quotes/${id}`);
+            return response.data;
+        },
+
+        approve: async (id: string): Promise<{
+            message: string;
+            quoteStatus: QuoteStatus;
+            workOrderStatus: WorkOrderStatus;
+        }> => {
+            const response = await client.put(`/repair/quotes/${id}/approve`);
+            return response.data;
+        },
+
+        reject: async (id: string, reason: string): Promise<{
+            message: string;
+            quoteStatus: QuoteStatus;
+            workOrderStatus: WorkOrderStatus;
+        }> => {
+            const response = await client.put(`/repair/quotes/${id}/reject`, { reason });
+            return response.data;
+        },
+
+        // Technician: Update quote
+        update: async (id: string, updates: {
+            partsCost?: number;
+            laborCost?: number;
+            serviceFee?: number;
+        }): Promise<{ message: string; totalCost: number }> => {
+            const response = await client.put(`/repair/quotes/${id}`, updates);
+            return response.data;
+        },
+
+        // Technician: Mark as awaiting approval
+        markAwaitingApproval: async (id: string): Promise<{
+            message: string;
+            workOrderStatus: WorkOrderStatus;
+        }> => {
+            const response = await client.put(`/repair/quotes/${id}/await-approval`);
+            return response.data;
+        },
+    },
+
+    // ============ Technician Endpoints ============
     technician: {
-        getMyWorkOrders: async (page = 1, pageSize = 20) => {
-            const response = await client.get<{
-                total: number;
-                page: number;
-                pageSize: number;
-                workOrders: WorkOrder[];
-            }>('/repair/tech/work-orders', { params: { page, pageSize } });
+        getMyWorkOrders: async (page = 1, pageSize = 20): Promise<{
+            total: number;
+            page: number;
+            pageSize: number;
+            workOrders: any[];
+        }> => {
+            const response = await client.get('/repair/tech/work-orders', { params: { page, pageSize } });
             return response.data;
         },
 
-        getUnassignedWorkOrders: async () => {
-            const response = await client.get<WorkOrder[]>('/repair/tech/work-orders/unassigned');
+        getUnassignedWorkOrders: async (): Promise<any[]> => {
+            const response = await client.get('/repair/tech/work-orders/unassigned');
             return response.data;
         },
 
-        getWorkOrderDetail: async (id: string) => {
-            const response = await client.get<WorkOrder>(`/repair/tech/work-orders/${id}`);
+        getWorkOrderDetail: async (id: string): Promise<any> => {
+            const response = await client.get(`/repair/tech/work-orders/${id}`);
             return response.data;
         },
 
-        acceptAssignment: async (id: string) => {
-            const response = await client.put<{ message: string; status: WorkOrderStatus }>(
-                `/repair/tech/work-orders/${id}/accept`
-            );
+        acceptAssignment: async (id: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/tech/work-orders/${id}/accept`);
             return response.data;
         },
 
-        declineAssignment: async (id: string, reason: string) => {
-            const response = await client.put<{ message: string; status: WorkOrderStatus }>(
-                `/repair/tech/work-orders/${id}/decline`,
-                { reason }
-            );
+        declineAssignment: async (id: string, reason: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/tech/work-orders/${id}/decline`, { reason });
             return response.data;
         },
 
-        updateStatus: async (id: string, status: WorkOrderStatus, notes?: string) => {
-            const response = await client.put<{ message: string; status: WorkOrderStatus }>(
-                `/repair/tech/work-orders/${id}/status`,
-                { status, notes }
-            );
+        updateStatus: async (id: string, status: WorkOrderStatus, notes?: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/tech/work-orders/${id}/status`, { status, notes });
             return response.data;
         },
 
@@ -280,27 +296,18 @@ export const repairApi = {
             quantity: number;
             unitPrice: number;
             partNumber?: string;
-        }) => {
-            const response = await client.post<{
-                message: string;
-                partId: string;
-                totalPartsCost: number;
-            }>(`/repair/tech/work-orders/${id}/parts`, part);
+        }): Promise<{ message: string; partId: string; totalPartsCost: number }> => {
+            const response = await client.post(`/repair/tech/work-orders/${id}/parts`, part);
             return response.data;
         },
 
-        removePart: async (workOrderId: string, partId: string) => {
-            const response = await client.delete<{ message: string; totalPartsCost: number }>(
-                `/repair/tech/work-orders/${workOrderId}/parts/${partId}`
-            );
+        removePart: async (workOrderId: string, partId: string): Promise<{ message: string; totalPartsCost: number }> => {
+            const response = await client.delete(`/repair/tech/work-orders/${workOrderId}/parts/${partId}`);
             return response.data;
         },
 
-        addLog: async (id: string, note: string) => {
-            const response = await client.post<{ message: string }>(
-                `/repair/tech/work-orders/${id}/log`,
-                { note }
-            );
+        addLog: async (id: string, note: string): Promise<{ message: string }> => {
+            const response = await client.post(`/repair/tech/work-orders/${id}/log`, { note });
             return response.data;
         },
 
@@ -312,163 +319,133 @@ export const repairApi = {
             hourlyRate: number;
             description?: string;
             notes?: string;
-        }) => {
-            const response = await client.post<{
-                message: string;
-                quoteId: string;
-                quoteNumber: string;
-                totalCost: number;
-                validUntil: string;
-            }>(`/repair/work-orders/${id}/quote`, quote);
-            return response.data;
-        },
-
-        updateQuote: async (id: string, updates: {
-            partsCost?: number;
-            laborCost?: number;
-            serviceFee?: number;
-        }) => {
-            const response = await client.put<{
-                message: string;
-                totalCost: number;
-            }>(`/repair/quotes/${id}`, updates);
-            return response.data;
-        },
-
-        markQuoteAwaitingApproval: async (quoteId: string) => {
-            const response = await client.put<{
-                message: string;
-                workOrderStatus: WorkOrderStatus;
-            }>(`/repair/quotes/${quoteId}/await-approval`);
+        }): Promise<{
+            message: string;
+            quoteId: string;
+            quoteNumber: string;
+            totalCost: number;
+            validUntil: string;
+        }> => {
+            const response = await client.post(`/repair/work-orders/${id}/quote`, quote);
             return response.data;
         },
     },
 
-    // Admin Endpoints (enhanced)
+    // ============ Admin Endpoints ============
     admin: {
         // Bookings
-        getAllBookings: async (page = 1, pageSize = 20, status?: string) => {
-            const response = await client.get<{
-                total: number;
-                page: number;
-                pageSize: number;
-                bookings: ServiceBooking[];
-            }>('/repair/admin/bookings', { params: { page, pageSize, status } });
+        getAllBookings: async (page = 1, pageSize = 20, status?: string): Promise<{
+            total: number;
+            page: number;
+            pageSize: number;
+            bookings: any[];
+        }> => {
+            const response = await client.get('/repair/admin/bookings', { params: { page, pageSize, status } });
             return response.data;
         },
 
-        getBooking: async (id: string) => {
-            const response = await client.get<ServiceBooking>(`/repair/admin/bookings/${id}`);
+        getBooking: async (id: string): Promise<any> => {
+            const response = await client.get(`/repair/admin/bookings/${id}`);
             return response.data;
         },
 
-        approveBooking: async (id: string) => {
-            const response = await client.put<{ message: string; status: BookingStatus }>(
-                `/repair/admin/bookings/${id}/approve`
-            );
+        approveBooking: async (id: string): Promise<{ message: string; status: BookingStatus }> => {
+            const response = await client.put(`/repair/admin/bookings/${id}/approve`);
             return response.data;
         },
 
-        rejectBooking: async (id: string, reason: string) => {
-            const response = await client.put<{ message: string; status: BookingStatus }>(
-                `/repair/admin/bookings/${id}/reject`,
-                { reason }
-            );
+        rejectBooking: async (id: string, reason: string): Promise<{ message: string; status: BookingStatus }> => {
+            const response = await client.put(`/repair/admin/bookings/${id}/reject`, { reason });
             return response.data;
         },
 
-        convertBooking: async (id: string, technicianId?: string) => {
-            const response = await client.post<{
-                message: string;
-                workOrderId: string;
-                ticketNumber: string;
-            }>(`/repair/admin/bookings/${id}/convert`, { technicianId });
+        convertBooking: async (id: string, technicianId?: string): Promise<{
+            message: string;
+            workOrderId: string;
+            ticketNumber: string;
+        }> => {
+            const response = await client.post(`/repair/admin/bookings/${id}/convert`, { technicianId });
             return response.data;
         },
 
-        // Work Orders (original methods)
-        getWorkOrders: async (page = 1, pageSize = 20, status?: string) => {
-            const response = await client.get<{
-                total: number;
-                page: number;
-                pageSize: number;
-                workOrders: WorkOrder[];
-            }>('/repair/admin/work-orders', { params: { page, pageSize, status } });
+        // Work Orders
+        getWorkOrders: async (page = 1, pageSize = 20, status?: string): Promise<{
+            total: number;
+            page: number;
+            pageSize: number;
+            workOrders: any[];
+        }> => {
+            const response = await client.get('/repair/admin/work-orders', { params: { page, pageSize, status } });
             return response.data;
         },
 
-        getWorkOrder: async (id: string) => {
-            const response = await client.get<WorkOrder>(`/repair/admin/work-orders/${id}`);
+        getWorkOrder: async (id: string): Promise<any> => {
+            const response = await client.get(`/repair/admin/work-orders/${id}`);
             return response.data;
         },
 
-        assignTechnician: async (id: string, technicianId: string) => {
-            const response = await client.put<{ message: string; status: string }>(
-                `/repair/admin/work-orders/${id}/assign`,
-                { technicianId }
-            );
+        assignTechnician: async (id: string, technicianId: string): Promise<{ message: string; status: string }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/assign`, { technicianId });
             return response.data;
         },
 
-        startRepair: async (id: string) => {
-            const response = await client.put<{ message: string; status: string }>(
-                `/repair/admin/work-orders/${id}/start`
-            );
+        startRepair: async (id: string): Promise<{ message: string; status: string }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/start`);
             return response.data;
         },
 
-        completeRepair: async (id: string, data: { partsCost: number; laborCost: number; notes?: string }) => {
-            const response = await client.put<{ message: string; status: string; totalCost: number }>(
-                `/repair/admin/work-orders/${id}/complete`,
-                data
-            );
+        completeRepair: async (id: string, data: { partsCost: number; laborCost: number; notes?: string }): Promise<{
+            message: string;
+            status: string;
+            totalCost: number;
+        }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/complete`, data);
             return response.data;
         },
 
-        cancelWorkOrder: async (id: string, reason: string) => {
-            const response = await client.put<{ message: string; status: string }>(
-                `/repair/admin/work-orders/${id}/cancel`,
-                { reason }
-            );
+        cancelWorkOrder: async (id: string, reason: string): Promise<{ message: string; status: string }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/cancel`, { reason });
             return response.data;
         },
 
-        getStats: async () => {
-            const response = await client.get<{
-                totalWorkOrders: number;
-                todayWorkOrders: number;
-                monthWorkOrders: number;
-                pendingWorkOrders: number;
-                inProgressWorkOrders: number;
-                completedWorkOrders: number;
-                totalRevenue: number;
-            }>('/repair/admin/stats');
+        getStats: async (): Promise<{
+            totalWorkOrders: number;
+            todayWorkOrders: number;
+            monthWorkOrders: number;
+            pendingWorkOrders: number;
+            inProgressWorkOrders: number;
+            completedWorkOrders: number;
+            totalRevenue: number;
+        }> => {
+            const response = await client.get('/repair/admin/stats');
             return response.data;
         },
 
-        getTechnicians: async () => {
-            const response = await client.get<Array<{
-                id: string;
-                name: string;
-                specialty: string;
-                hourlyRate: number;
-                isAvailable: boolean;
-                activeWorkOrders: number;
-            }>>('/repair/admin/technicians');
+        getTechnicians: async (): Promise<Array<{
+            id: string;
+            name: string;
+            specialty: string;
+            hourlyRate: number;
+            isAvailable: boolean;
+            activeWorkOrders: number;
+        }>> => {
+            const response = await client.get('/repair/admin/technicians');
             return response.data;
         },
 
-        createTechnician: async (data: { name: string; specialty: string; hourlyRate?: number }) => {
-            const response = await client.post<{ message: string; technicianId: string }>(
-                '/repair/admin/technicians',
-                data
-            );
+        createTechnician: async (data: { name: string; specialty: string; hourlyRate?: number }): Promise<{
+            message: string;
+            technicianId: string;
+        }> => {
+            const response = await client.post('/repair/admin/technicians', data);
             return response.data;
         },
     },
 };
 
-// Helper functions
+// ============================================
+// Helper Functions
+// ============================================
 export const getStatusColor = (status: WorkOrderStatus): string => {
     const colors: Record<WorkOrderStatus, string> = {
         Requested: 'bg-blue-100 text-blue-800',

@@ -103,6 +103,92 @@ public static class IdentityEndpoints
             return Results.Unauthorized();
         });
 
+        // Refresh Token Endpoint
+        group.MapPost("/refresh-token", async (RefreshTokenRequestDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration) =>
+        {
+            if (string.IsNullOrEmpty(model.RefreshToken))
+            {
+                return Results.BadRequest(new { Error = "Refresh token is required" });
+            }
+
+            // Get the principal from the expired token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(configuration["Jwt:Key"] ?? "super_secret_key_1234567890123456");
+
+            try
+            {
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = false, // Don't validate expiration for refresh
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"] ?? "QuangHuongComputer",
+                    ValidAudience = configuration["Jwt:Audience"] ?? "QuangHuongComputer",
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                };
+
+                var principal = tokenHandler.ValidateToken(model.RefreshToken, tokenValidationParameters, out var validatedToken);
+
+                if (validatedToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return Results.BadRequest(new { Error = "Invalid refresh token" });
+                }
+
+                var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Results.BadRequest(new { Error = "Invalid token payload" });
+                }
+
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null || !user.IsActive)
+                {
+                    return Results.BadRequest(new { Error = "User not found or inactive" });
+                }
+
+                // Get roles and claims
+                var roles = await userManager.GetRolesAsync(user);
+                var roleClaims = new List<Claim>();
+                foreach (var roleName in roles)
+                {
+                    var role = await roleManager.FindByNameAsync(roleName);
+                    if (role != null)
+                    {
+                        roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
+                    }
+                }
+
+                // Generate new JWT token
+                var newToken = GenerateJwtToken(user, roles, roleClaims, configuration);
+
+                return Results.Ok(new
+                {
+                    Token = newToken,
+                    User = new UserInfoDto
+                    {
+                        Email = user.Email ?? string.Empty,
+                        FullName = user.FullName,
+                        Roles = roles.ToList(),
+                        Permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = $"Invalid refresh token: {ex.Message}" });
+            }
+        });
+
+        // Logout (for blacklisting tokens if needed)
+        group.MapPost("/logout", async () =>
+        {
+            // In a stateless JWT setup, logout is handled client-side
+            // For future: implement token blacklisting with Redis
+            return Results.Ok(new { Message = "Logged out successfully" });
+        });
+
         group.MapGet("/users", async (UserManager<ApplicationUser> userManager, [AsParameters] UserQueryParams queryParams) =>
         {
             var query = userManager.Users.AsQueryable();
@@ -325,13 +411,13 @@ public static class IdentityEndpoints
             var result = await userManager.RemoveFromRolesAsync(user, currentRoles);
             if (!result.Succeeded) return Results.BadRequest(result.Errors);
 
-            result = await userManager.AddToRolesAsync(user, roles);
+            result = await userManager.AddToRolesAsync(user, model.Roles);
             if (!result.Succeeded) return Results.BadRequest(result.Errors);
 
             var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
-            await auditService.LogAsync(performedBy, "UpdateUserRoles", "ApplicationUser", user.Id, $"Updated roles to: {string.Join(", ", roles)}");
+            await auditService.LogAsync(performedBy, "UpdateUserRoles", "ApplicationUser", user.Id, $"Updated roles to: {string.Join(", ", model.Roles)}");
 
-            return Results.Ok(new { Message = "Roles updated successfully", Roles = roles });
+            return Results.Ok(new { Message = "Roles updated successfully", Roles = model.Roles });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.ManageRoles));
 
         group.MapGet("/roles", async (RoleManager<IdentityRole> roleManager) =>
@@ -541,6 +627,7 @@ public static class IdentityEndpoints
 
 public record RegisterDto(string Email, string Password, string FullName);
 public record LoginDto(string Email, string Password);
+public record RefreshTokenRequestDto(string RefreshToken);
 public record UpdateUserDto(string Email, string FullName);
 public record GoogleLoginDto(string? IdToken);
 public record ForgotPasswordDto(string Email);

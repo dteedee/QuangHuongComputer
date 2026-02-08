@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.SharedKernel;
 
 namespace BuildingBlocks.Endpoints;
 
@@ -73,7 +74,7 @@ public class CrudEndpointBuilder<TEntity, TId, TDbContext>
                 var validationResult = await validator.ValidateAsync(dto);
                 if (!validationResult.IsValid)
                 {
-                    return validationResult.ToResult();
+                    return Results.BadRequest(new { errors = validationResult.Errors });
                 }
             }
 
@@ -107,7 +108,7 @@ public class CrudEndpointBuilder<TEntity, TId, TDbContext>
                 var validationResult = await validator.ValidateAsync(dto);
                 if (!validationResult.IsValid)
                 {
-                    return validationResult.ToResult();
+                    return Results.BadRequest(new { errors = validationResult.Errors });
                 }
             }
 
