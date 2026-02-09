@@ -39,19 +39,19 @@ export const Footer = () => {
                     <div className="space-y-4 text-gray-600">
                         <div className="flex gap-3" data-testid="company-address">
                             <MapPin size={20} className="text-[#D70018] flex-shrink-0" />
-                            <p className="text-sm">Trụ sở: 91 Nguyễn Xiển, Hạ Đình, Thanh Xuân, Hà Nội</p>
+                            <p className="text-sm">Công ty: Số 179, Thôn 3/2 Xã Vĩnh Bảo Thành Phố Hải Phòng</p>
                         </div>
                         <div className="flex gap-3" data-testid="company-phone">
                             <Phone size={20} className="text-[#D70018] flex-shrink-0" />
-                            <p className="text-sm font-black">1800.6321 - 0914.xxx.xxx</p>
+                            <p className="text-sm font-black">02253.xxx.xxx - 0904.235.090</p>
                         </div>
                         <div className="flex gap-3" data-testid="company-email">
                             <Mail size={20} className="text-[#D70018] flex-shrink-0" />
-                            <p className="text-sm">kinhdoanh@qhcomputer.com</p>
+                            <p className="text-sm">quanghuongvbhp@gmail.com</p>
                         </div>
                         <div className="flex gap-3" data-testid="company-tax">
                             <div className="text-sm">
-                                <span className="font-bold">MST:</span> 0123456789
+                                <span className="font-bold">MST:</span> 0200807633
                             </div>
                         </div>
                     </div>
@@ -104,10 +104,10 @@ export const Footer = () => {
             {/* Bottom Bar */}
             <div className="bg-gray-100 py-6 border-t border-gray-200">
                 <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                    <p>© 2026 Bản quyền thuộc về Công ty Cổ phần Máy tính Quang Hưởng.</p>
+                    <p>© 2026 Bản quyền thuộc về Công ty TNHH Máy tính Quang Hưởng.</p>
                     <div className="flex gap-6">
                         <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Hệ thống đang hoạt động</span>
-                        <span>Thiết kế bởi Antigravity</span>
+                        <span>Thiết kế bởi Đỗ Tùng Dương</span>
                     </div>
                 </div>
             </div>
