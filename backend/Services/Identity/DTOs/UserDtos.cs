@@ -27,11 +27,13 @@ public record UserQueryParams
     public string? Search { get; set; }
     public string? Role { get; set; }
     public string? SortBy { get; set; } = "Email";
-    public bool SortDescending { get; set; } = false;
-    public bool IncludeInactive { get; set; } = false;
+    public bool? SortDescending { get; set; } = false;
+    public bool? IncludeInactive { get; set; } = false;
 
     public int Skip => (Page - 1) * PageSize;
     public int Take => PageSize;
+    public bool SortDesc => SortDescending ?? false;
+    public bool ShowInactive => IncludeInactive ?? false;
 }
 
 public record LoginResponseDto

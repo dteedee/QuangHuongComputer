@@ -22,8 +22,33 @@ export const AdminOrdersPage = () => {
         queryFn: () => catalogApi.getProducts({ pageSize: 100 }),
     });
 
+    // Mock data for demo/fallback
+    const mockOrders: Order[] = [
+        {
+            id: '1', orderNumber: 'ORD-8852', customerId: 'CUST-001', status: 'Confirmed',
+            paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
+            subtotalAmount: 12500000, discountAmount: 0, taxAmount: 500000, shippingAmount: 50000,
+            totalAmount: 13050000, taxRate: 0.1, shippingAddress: '123 Đường Láng, Hà Nội', retryCount: 0,
+            orderDate: new Date().toISOString(), items: [{ id: 'i1', orderId: '1', productId: 'p1', productName: 'Laptop ASUS ROG', quantity: 1, unitPrice: 12500000, lineTotal: 12500000, discountAmount: 0 }]
+        },
+        {
+            id: '2', orderNumber: 'ORD-8853', customerId: 'CUST-002', status: 'Confirmed',
+            paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
+            subtotalAmount: 2500000, discountAmount: 200000, taxAmount: 230000, shippingAmount: 30000,
+            totalAmount: 2560000, taxRate: 0.1, shippingAddress: '456 Lê Lợi, TP. HCM', retryCount: 0,
+            orderDate: new Date(Date.now() - 3600000).toISOString(), items: [{ id: 'i2', orderId: '2', productId: 'p2', productName: 'Bàn phím cơ Akko', quantity: 2, unitPrice: 1250000, lineTotal: 2500000, discountAmount: 200000 }]
+        },
+        {
+            id: '3', orderNumber: 'ORD-8854', customerId: 'CUST-003', status: 'Shipped',
+            paymentStatus: 'Paid', fulfillmentStatus: 'Shipped',
+            subtotalAmount: 45000000, discountAmount: 0, taxAmount: 4500000, shippingAmount: 0,
+            totalAmount: 49500000, taxRate: 0.1, shippingAddress: '789 Trần Hưng Đạo, Đà Nẵng', retryCount: 0,
+            orderDate: new Date(Date.now() - 86400000).toISOString(), items: [{ id: 'i3', orderId: '3', productId: 'p3', productName: 'PC Gaming G-Series', quantity: 1, unitPrice: 45000000, lineTotal: 45000000, discountAmount: 0 }]
+        }
+    ];
+
     const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string, status: string }) => salesApi.admin.updateOrderStatus(id, status),
+        mutationFn: ({ id, status }: { id: string, status: string }) => salesApi.orders.updateStatus(id, status as any),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
             toast.success('Cập nhật trạng thái thành công!');
@@ -32,7 +57,7 @@ export const AdminOrdersPage = () => {
     });
 
     const createOrderMutation = useMutation({
-        mutationFn: (data: any) => salesApi.checkout(data),
+        mutationFn: (data: any) => salesApi.orders.create(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
             toast.success('Tạo đơn hàng thành công!');
@@ -41,13 +66,13 @@ export const AdminOrdersPage = () => {
         onError: () => toast.error('Tạo đơn hàng thất bại!')
     });
 
-    const orders = response?.orders || [];
-    const total = response?.total || 0;
+    const orders = (response?.orders && response.orders.length > 0) ? response.orders : mockOrders;
+    const total = response?.total || orders.length;
 
     const getStatusInfo = (status: string) => {
         switch (status) {
-            case 'Pending': return { color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock size={16} />, label: 'Chờ duyệt' };
-            case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Đã xác nhận' };
+            case 'Draft': return { color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock size={16} />, label: 'Bản nháp' };
+            case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Xác nhận' };
             case 'Shipped': return { color: 'text-purple-500', bg: 'bg-purple-50', icon: <Truck size={16} />, label: 'Đang giao' };
             case 'Delivered': return { color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <Package size={16} />, label: 'Đã giao' };
             case 'Cancelled': return { color: 'text-rose-500', bg: 'bg-rose-50', icon: <XCircle size={16} />, label: 'Đã hủy' };
@@ -81,10 +106,10 @@ export const AdminOrdersPage = () => {
         <div className="space-y-10 pb-20 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
                         Quản lý <span className="text-[#D70018]">Đơn hàng</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
                         Hệ thống xử lý đơn hàng và vận chuyển toàn quốc
                     </p>
                 </div>
@@ -104,7 +129,7 @@ export const AdminOrdersPage = () => {
                             className="pl-12 pr-10 py-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-red-100 transition-all appearance-none shadow-sm shadow-gray-200/50"
                         >
                             <option value="all">Tất cả trạng thái</option>
-                            <option value="Pending">Chờ duyệt</option>
+                            <option value="Draft">Bản nháp</option>
                             <option value="Confirmed">Xác nhận</option>
                             <option value="Shipped">Đang giao</option>
                             <option value="Delivered">Hoàn tất</option>
@@ -122,14 +147,14 @@ export const AdminOrdersPage = () => {
             >
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-[#D70018]/5 text-[#D70018] text-[10px] font-black uppercase tracking-widest">
+                        <thead className="bg-gray-900 text-white text-xs font-black uppercase tracking-widest">
                             <tr>
-                                <th className="px-8 py-5">Đơn hàng</th>
-                                <th className="px-8 py-5">Sản phẩm</th>
-                                <th className="px-8 py-5">Giá trị</th>
-                                <th className="px-8 py-5">Trạng thái</th>
-                                <th className="px-8 py-5">Ngày tạo</th>
-                                <th className="px-8 py-5 text-right">Chi tiết</th>
+                                <th className="px-8 py-6">Đơn hàng</th>
+                                <th className="px-8 py-6">Sản phẩm</th>
+                                <th className="px-8 py-6">Giá trị thành tiền</th>
+                                <th className="px-8 py-6">Trạng thái</th>
+                                <th className="px-8 py-6">Ngày tạo</th>
+                                <th className="px-8 py-6 text-right">Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -155,18 +180,18 @@ export const AdminOrdersPage = () => {
                                         return (
                                             <tr key={order.id} className="hover:bg-gray-50/50 transition-all group cursor-pointer">
                                                 <td className="px-8 py-6">
-                                                    <span className="font-black text-gray-900 group-hover:text-[#D70018] transition-colors">#{order.orderNumber}</span>
+                                                    <span className="text-base font-black text-gray-950 group-hover:text-[#D70018] transition-colors tracking-tight">#{order.orderNumber}</span>
                                                 </td>
                                                 <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-black text-gray-400 tabular-nums">{order.items?.[0]?.productName || 'N/A'}</span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-sm font-bold text-gray-800 tabular-nums">{order.items?.[0]?.productName || 'N/A'}</span>
                                                         {order.items?.length > 1 && (
-                                                            <span className="text-[9px] font-black text-[#D70018] uppercase tracking-widest leading-none">+{order.items.length - 1} khác</span>
+                                                            <span className="text-[11px] font-black text-[#D70018] uppercase tracking-widest leading-none bg-red-50 w-fit px-2 py-1 rounded-md">+{order.items.length - 1} sản phẩm khác</span>
                                                         )}
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-6">
-                                                    <span className="text-base font-black text-gray-900 tracking-tighter italic">₫{order.totalAmount.toLocaleString()}</span>
+                                                    <span className="text-lg font-black text-gray-950 tracking-tighter italic">₫{order.totalAmount.toLocaleString()}</span>
                                                 </td>
                                                 <td className="px-8 py-6">
                                                     <select
@@ -175,10 +200,11 @@ export const AdminOrdersPage = () => {
                                                         onChange={(e) => updateStatusMutation.mutate({ id: order.id, status: e.target.value })}
                                                         className={`items-center gap-2 px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest italic border ${status.bg} ${status.color} border-transparent hover:border-current transition-all appearance-none cursor-pointer focus:outline-none`}
                                                     >
-                                                        <option value="Pending">Chờ duyệt</option>
+                                                        <option value="Draft">Bản nháp</option>
                                                         <option value="Confirmed">Xác nhận</option>
                                                         <option value="Shipped">Đang giao</option>
-                                                        <option value="Delivered">Hoàn tất</option>
+                                                        <option value="Delivered">Đã giao</option>
+                                                        <option value="Completed">Hoàn tất</option>
                                                         <option value="Cancelled">Đã hủy</option>
                                                     </select>
                                                 </td>

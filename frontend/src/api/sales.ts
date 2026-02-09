@@ -131,6 +131,16 @@ export interface CartItemDto {
     subtotal: number;
 }
 
+export interface SalesStats {
+    totalOrders: number;
+    todayOrders: number;
+    monthOrders: number;
+    totalRevenue: number;
+    monthRevenue: number;
+    pendingOrders: number;
+    completedOrders: number;
+}
+
 // API Functions
 export const salesApi = {
     // Cart Endpoints
@@ -255,16 +265,21 @@ export const salesApi = {
     // Stats Endpoints
     stats: {
         get: async (params?: { startDate?: string; endDate?: string }) => {
-            const response = await client.get<{
-                totalOrders: number;
-                todayOrders: number;
-                monthOrders: number;
-                totalRevenue: number;
-                monthRevenue: number;
-                pendingOrders: number;
-                completedOrders: number;
-            }>('/sales/admin/stats', { params });
+            const response = await client.get<SalesStats>('/sales/admin/stats', { params });
             return response.data;
         },
     },
+
+    // Admin Endpoints alias for compatibility
+    admin: {
+        getOrders: async (page: number, pageSize: number) => {
+            const response = await client.get<Order[]>('/sales/orders', { params: { page, pageSize } });
+            // Wrap in expected structure if needed, or update SalePortal to expect just array
+            return { orders: response.data, total: response.data.length };
+        },
+        getStats: async () => {
+            const response = await client.get<SalesStats>('/sales/admin/stats');
+            return response.data;
+        }
+    }
 };

@@ -1,57 +1,51 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useQuery } from '@tanstack/react-query';
 import {
     BarChart3, PieChart, TrendingUp, TrendingDown,
     Download, Calendar, Filter, ArrowUpRight,
     Search, Activity, FileStack, Clock
 } from 'lucide-react';
-import client from '../../api/client';
+import { reportingApi } from '../../api/reporting';
+import type { ArAgingAccount } from '../../api/reporting';
 import { motion } from 'framer-motion';
 
 export const ReportsPortal = () => {
-    const [salesStats, setSalesStats] = useState<any>(null);
-    const [invValue, setInvValue] = useState<any>(null);
-    const [arAging, setArAging] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: salesStats, isLoading: isLoadingSales } = useQuery({
+        queryKey: ['reports', 'sales-summary'],
+        queryFn: () => reportingApi.getSalesSummary()
+    });
 
-    useEffect(() => {
-        const fetchReports = async () => {
-            setIsLoading(true);
-            try {
-                const [salesRes, invRes, arRes] = await Promise.all([
-                    client.get('/reports/sales-summary'),
-                    client.get('/reports/inventory-value'),
-                    client.get('/reports/ar-aging')
-                ]);
-                setSalesStats(salesRes.data);
-                setInvValue(invRes.data);
-                setArAging(arRes.data);
-            } catch (error) {
-                console.error('Failed to fetch reporting data', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchReports();
-    }, []);
+    const { data: invValue, isLoading: isLoadingInv } = useQuery({
+        queryKey: ['reports', 'inventory-value'],
+        queryFn: () => reportingApi.getInventoryValue()
+    });
+
+    const { data: arAgingData, isLoading: isLoadingAr } = useQuery({
+        queryKey: ['reports', 'ar-aging'],
+        queryFn: () => reportingApi.getArAging()
+    });
+
+    const arAging = Array.isArray(arAgingData) ? arAgingData : [];
+    const isLoading = isLoadingSales || isLoadingInv || isLoadingAr;
 
     return (
-        <div className="space-y-10 pb-20 animate-fade-in">
+        <div className="space-y-10 pb-20 animate-fade-in admin-area">
+            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
                         Báo cáo & <span className="text-[#D70018]">Phân tích</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
                         Dữ liệu vận hành thời gian thực của doanh nghiệp
                     </p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="flex items-center gap-3 px-6 py-3.5 bg-white border border-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:shadow-md transition-all active:scale-95">
-                        <Calendar size={18} />
+                    <button className="flex items-center gap-3 px-8 py-4 bg-white border-2 border-gray-100 text-gray-950 text-xs font-black uppercase tracking-widest rounded-2xl hover:border-[#D70018] transition-all shadow-sm active:scale-95">
+                        <Calendar size={20} />
                         Phạm vi ngày
                     </button>
-                    <button className="flex items-center gap-3 px-6 py-3.5 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95">
-                        <Download size={18} />
+                    <button className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95">
+                        <Download size={20} />
                         Xuất báo cáo PDF
                     </button>
                 </div>
@@ -59,145 +53,128 @@ export const ReportsPortal = () => {
 
             {/* Top Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="premium-card p-10 group cursor-pointer"
-                >
+                <div className="premium-card p-10 group cursor-pointer border-2 hover:border-emerald-500/20">
                     <div className="absolute top-0 right-0 p-8 text-emerald-500/5 group-hover:scale-125 transition-transform duration-700">
-                        <TrendingUp size={120} />
+                        <TrendingUp size={160} />
                     </div>
-                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Tổng doanh thu bán hàng</p>
-                    <h3 className="text-4xl font-black text-gray-900 flex items-baseline gap-3 tracking-tighter">
+                    <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Tổng doanh thu bán hàng</p>
+                    <h3 className="text-5xl font-black text-gray-950 flex items-baseline gap-4 tracking-tighter italic">
                         {salesStats?.totalRevenue?.toLocaleString() || '0'}₫
-                        <span className="text-xs font-black text-emerald-500 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg">
-                            <ArrowUpRight size={14} /> 12%
+                        <span className="text-sm font-black text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                            <ArrowUpRight size={18} /> +12%
                         </span>
                     </h3>
-                    <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
-                        <Activity size={14} className="text-[#D70018]" />
-                        <p className="text-gray-400 text-[9px] font-bold uppercase tracking-wider">Dựa trên {salesStats?.totalOrders || 0} đơn hàng hoàn tất</p>
+                    <div className="mt-10 pt-8 border-t-2 border-gray-50 flex items-center gap-3 opacity-80">
+                        <Activity size={18} className="text-[#D70018]" />
+                        <p className="text-gray-900 text-[10px] font-black uppercase tracking-widest">Dựa trên {salesStats?.totalOrders || 0} đơn hàng hoàn tất</p>
                     </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="premium-card p-10 group cursor-pointer"
-                >
+                <div className="premium-card p-10 group cursor-pointer border-2 hover:border-blue-500/20">
                     <div className="absolute top-0 right-0 p-8 text-blue-500/5 group-hover:scale-125 transition-transform duration-700">
-                        <PieChart size={120} />
+                        <PieChart size={160} />
                     </div>
-                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Giá trị tài sản kho</p>
-                    <h3 className="text-4xl font-black text-gray-900 tracking-tighter">
+                    <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Giá trị tài sản kho</p>
+                    <h3 className="text-5xl font-black text-gray-950 tracking-tighter italic">
                         {invValue?.totalValue?.toLocaleString() || '0'}₫
                     </h3>
-                    <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
-                        <BarChart3 size={14} className="text-blue-500" />
-                        <p className="text-gray-400 text-[9px] font-bold uppercase tracking-wider">Tồn kho hiện tại theo giá nhập</p>
+                    <div className="mt-10 pt-8 border-t-2 border-gray-50 flex items-center gap-3 opacity-80">
+                        <BarChart3 size={18} className="text-blue-600" />
+                        <p className="text-gray-900 text-[10px] font-black uppercase tracking-widest">Tồn kho hiện tại theo giá nhập</p>
                     </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="premium-card p-10 group cursor-pointer"
-                >
+                <div className="premium-card p-10 group cursor-pointer border-2 hover:border-red-500/20">
                     <div className="absolute top-0 right-0 p-8 text-red-500/5 group-hover:scale-125 transition-transform duration-700">
-                        <FileStack size={120} />
+                        <FileStack size={160} />
                     </div>
-                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 italic">Công nợ phải thu</p>
-                    <h3 className="text-4xl font-black text-[#D70018] tracking-tighter">
+                    <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Công nợ phải thu</p>
+                    <h3 className="text-5xl font-black text-[#D70018] tracking-tighter italic">
                         {arAging?.reduce((acc, curr) => acc + curr.balance, 0)?.toLocaleString() || '0'}₫
                     </h3>
-                    <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
-                        <Clock size={14} className="text-amber-500" />
-                        <p className="text-gray-400 text-[9px] font-bold uppercase tracking-wider">Khoản thanh toán chờ từ tổ chức</p>
+                    <div className="mt-10 pt-8 border-t-2 border-gray-50 flex items-center gap-3 opacity-80">
+                        <Clock size={18} className="text-amber-500" />
+                        <p className="text-gray-900 text-[10px] font-black uppercase tracking-widest">Khoản thanh toán chờ từ tổ chức</p>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* AR Aging Table */}
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="premium-card p-8"
-                >
-                    <div className="flex justify-between items-center mb-10 border-b border-gray-50 pb-6">
-                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Chi tiết công nợ</h3>
-                        <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl text-gray-400 transition-colors border border-gray-100 cursor-pointer hover:text-[#D70018]">
-                            <Filter size={18} />
+                <div className="premium-card p-10 border-2 bg-white">
+                    <div className="flex justify-between items-center mb-10 border-b-2 border-gray-50 pb-8">
+                        <h3 className="text-2xl font-black text-gray-950 uppercase italic tracking-tighter">Chi tiết công nợ</h3>
+                        <div className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-2xl text-gray-400 transition-all border-2 border-gray-100 cursor-pointer hover:border-[#D70018] hover:text-[#D70018] shadow-sm">
+                            <Filter size={20} />
                         </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {arAging.map((account, i) => (
-                            <motion.div
+                            <div
                                 key={i}
-                                whileHover={{ x: 10 }}
-                                className="flex justify-between items-center p-6 bg-gray-50 hover:bg-white rounded-2xl border border-transparent hover:border-red-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all cursor-pointer group"
+                                className="flex justify-between items-center p-8 bg-gray-50 hover:bg-white rounded-3xl border-2 border-transparent hover:border-red-100 hover:shadow-2xl hover:shadow-gray-200/40 transition-all cursor-pointer group"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-white shadow-inner flex items-center justify-center font-black text-gray-300 group-hover:text-[#D70018]">
-                                        {account.organizationName.charAt(0).toUpperCase()}
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 rounded-2xl bg-gray-950 text-white shadow-xl flex items-center justify-center font-black text-xl group-hover:scale-110 transition-transform italic">
+                                        {account.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <p className="font-black text-gray-800 text-sm uppercase tracking-tight italic leading-none">{account.organizationName}</p>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-2">Hạn mức: {account.creditLimit?.toLocaleString()}₫</p>
+                                        <p className="font-black text-gray-950 text-lg uppercase tracking-tight italic leading-none mb-2">{account.name}</p>
+                                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Hạn mức tín dụng: <span className="text-gray-950 underline">{account.creditLimit?.toLocaleString()}₫</span></p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-[#D70018] text-lg tracking-tighter">{account.balance?.toLocaleString()}₫</p>
-                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black">Số dư chưa thanh toán</p>
+                                    <p className="font-black text-[#D70018] text-2xl tracking-tighter italic">{account.balance?.toLocaleString()}₫</p>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mt-1">Chưa thanh toán</p>
                                 </div>
-                            </motion.div>
+                            </div>
                         ))}
                         {arAging.length === 0 && (
-                            <div className="p-20 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
-                                Không có dữ liệu công nợ.
+                            <div className="p-24 text-center">
+                                <FileStack className="mx-auto text-gray-100 mb-6" size={80} />
+                                <p className="text-gray-400 font-black uppercase text-sm tracking-widest italic text-center px-10">Hiện tại không có dữ liệu công nợ cần xử lý.</p>
                             </div>
                         )}
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Growth Chart */}
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="premium-card p-10 flex flex-col justify-between"
-                >
-                    <div className="mb-10">
-                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Tăng trưởng hàng năm</h3>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">So sánh doanh thu với năm trước</p>
+                <div className="premium-card p-12 border-2 bg-white flex flex-col justify-between overflow-hidden">
+                    <div className="mb-14">
+                        <h3 className="text-2xl font-black text-gray-950 uppercase italic tracking-tighter">Tăng trưởng hàng năm</h3>
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-2">Phân tích hiệu suất doanh thu định kỳ</p>
                     </div>
 
-                    <div className="h-60 flex items-end gap-3 px-4">
+                    <div className="h-72 flex items-end gap-3 px-4 relative">
                         {[30, 45, 25, 60, 80, 55, 90, 70, 85, 40, 65, 100].map((h, i) => (
-                            <div key={i} className="flex-1 group relative">
+                            <div key={i} className="flex-1 group relative h-full flex items-end">
                                 <motion.div
                                     initial={{ height: 0 }}
                                     animate={{ height: `${h}%` }}
                                     transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                    className={`w-full rounded-t-xl transition-all duration-300 relative ${i === 11 ? 'bg-[#D70018]' : 'bg-gray-100 group-hover:bg-red-100'}`}
+                                    className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gray-950 shadow-2xl' : 'bg-gray-100 group-hover:bg-red-500 group-hover:shadow-lg shadow-red-500/20'}`}
                                 >
-                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-xl">
+                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-2xl border border-gray-800 z-10">
                                         {h}%
                                     </div>
                                 </motion.div>
-                                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
-                                    <span className={`text-[9px] font-black uppercase ${i === 11 ? 'text-[#D70018]' : 'text-gray-300'}`}>T{i + 1}</span>
+                                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                                    <span className={`text-[10px] font-black uppercase tracking-tighter ${i === 11 ? 'text-[#D70018] scale-125 decoration-4 underline underline-offset-4' : 'text-gray-400'}`}>T{i + 1}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-20 flex items-center justify-center gap-8">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-[#D70018] rounded-full" />
-                            <span className="text-[10px] font-black text-gray-500 uppercase">Năm nay</span>
+                    <div className="mt-20 flex items-center justify-center gap-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-gray-950 rounded-full shadow-lg" />
+                            <span className="text-xs font-black text-gray-950 uppercase tracking-widest italic">Năm nay</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-gray-100 rounded-full" />
-                            <span className="text-[10px] font-black text-gray-500 uppercase">Năm trước</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-gray-100 rounded-full border-2 border-gray-200" />
+                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest italic">Năm trước</span>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </div>
     );

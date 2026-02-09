@@ -151,9 +151,52 @@ img[loaded] {
   animation: slideUp 0.3s ease-out;
 }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
+/* Backoffice Branding & High Contrast */
+.premium-card {
+    background: white;
+    border: 1px solid #e5e7eb; /* gray-200 */
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.premium-card:hover {
+    border-color: #d1d5db; /* gray-300 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+.admin-title {
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: #111827; /* gray-900 */
+    text-transform: uppercase;
+}
+
+.admin-label {
+    font-weight: 700;
+    color: #374151; /* gray-700 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.875rem; /* 14px */
+}
+
+.admin-value {
+    font-weight: 800;
+    color: #111827; /* gray-900 */
+}
+
+/* Override small text in admin */
+.admin-area .text-xs { font-size: 0.875rem !important; } /* force to 14px */
+.admin-area .text-\[10px\] { font-size: 0.8125rem !important; } /* force to 13px */
+.admin-area .text-\[11px\] { font-size: 0.8125rem !important; } /* force to 13px */
+
+/* High-contrast colors */
+.text-gray-400 { color: #6b7280 !important; } /* force to gray-500 */
+.text-gray-500 { color: #374151 !important; } /* force to gray-700 */
+
+/* Branding overrides */
+.backoffice-active {
+    background-color: #fef2f2 !important; /* red-50 */
+    color: #b91c1c !important; /* red-700 */
+    border-left: 4px solid #dc2626 !important; /* red-600 */
 }

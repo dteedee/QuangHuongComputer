@@ -34,8 +34,8 @@ import { ReportsPortal } from './pages/backoffice/ReportsPortal';
 import { ConfigPortal } from './pages/backoffice/ConfigPortal';
 import { AdminProductsPage } from './pages/admin/ProductsPage';
 import { AdminOrdersPage } from './pages/admin/OrdersPage';
-import { AdminUsersPage } from './pages/admin/UsersPage';
-import { RolesPage } from './pages/admin/RolesPage';
+import { PermissionsPage as RolesPage } from './pages/backoffice/admin/PermissionsPage';
+import { UsersPage as AdminUsersPage } from './pages/backoffice/admin/UsersPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
@@ -128,7 +128,7 @@ function App() {
 
                 {/* Admin Routes */}
                 <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminPortal />} />
                   <Route path="/admin/products" element={<AdminProductsPage />} />
                   <Route path="/admin/products/new" element={<AdminProductsPage />} />
                   <Route path="/admin/orders" element={<AdminOrdersPage />} />

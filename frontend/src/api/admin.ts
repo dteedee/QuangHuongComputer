@@ -88,12 +88,27 @@ export const adminApi = {
       const response = await client.post<{ message: string; roles: string[] }>(`/auth/users/${id}/roles`, { roles });
       return response.data;
     },
+
+    create: async (data: any): Promise<{ message: string; user: User }> => {
+      const response = await client.post<{ message: string; user: User }>('/auth/users', data);
+      return response.data;
+    },
+
+    delete: async (id: string): Promise<{ message: string }> => {
+      const response = await client.delete<{ message: string }>(`/auth/users/${id}`);
+      return response.data;
+    },
+
+    resetPassword: async (id: string, password: string): Promise<{ message: string }> => {
+      const response = await client.post<{ message: string }>(`/auth/users/${id}/reset-password`, { password });
+      return response.data;
+    },
   },
 
   // ============ Roles Management ============
   roles: {
-    getList: async (): Promise<Array<{ id: string; name: string }>> => {
-      const response = await client.get<Array<{ id: string; name: string }>>('/auth/roles');
+    getList: async (): Promise<Role[]> => {
+      const response = await client.get<Role[]>('/auth/roles');
       return response.data;
     },
 

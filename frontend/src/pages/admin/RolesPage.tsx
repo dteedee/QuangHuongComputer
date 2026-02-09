@@ -53,13 +53,14 @@ export const RolesPage = () => {
 
     const handleCreateRole = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!newRoleName) return;
         try {
             await authApi.createRole(newRoleName);
-            toast.success('Role created successfully');
+            toast.success('Đã tạo vai trò mới!');
             setNewRoleName('');
             loadRoles();
         } catch (error) {
-            toast.error('Failed to create role');
+            toast.error('Lỗi khi tạo vai trò');
         }
     };
 
@@ -68,9 +69,9 @@ export const RolesPage = () => {
         setIsSaving(true);
         try {
             await authApi.updateRolePermissions(selectedRole.id, rolePermissions);
-            toast.success('Permissions updated successfully');
+            toast.success('Cập nhật quyền thành công!');
         } catch (error) {
-            toast.error('Failed to update permissions');
+            toast.error('Lỗi khi lưu quyền');
         } finally {
             setIsSaving(false);
         }
@@ -82,61 +83,66 @@ export const RolesPage = () => {
         );
     };
 
-    // Group permissions by category (prefix)
     const groupedPermissions = permissions.reduce((acc, perm) => {
-        const category = perm.split('.')[1] || 'Other';
+        const category = perm.split('.')[1] || 'Hệ thống';
         if (!acc[category]) acc[category] = [];
         acc[category].push(perm);
         return acc;
     }, {} as Record<string, string[]>);
 
     return (
-        <div className="container mx-auto px-6 py-8">
-            <h1 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <Shield className="text-blue-500" />
-                Role & Permission Management
-            </h1>
+        <div className="space-y-10 pb-20 animate-fade-in admin-area">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                        Quản lý <span className="text-[#D70018]">Quyền hạn</span>
+                    </h1>
+                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                        Cấu hình các nhóm quyền hạn và vai trò người dùng
+                    </p>
+                </div>
+            </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Roles List */}
-                <div className="lg:w-1/3 space-y-6">
-                    <div className="glass p-6 rounded-2xl border-white/5">
-                        <h2 className="text-xl font-bold text-white mb-4">Roles</h2>
+                <div className="lg:w-1/3">
+                    <div className="premium-card p-8 border-2 bg-white sticky top-10">
+                        <h2 className="text-xl font-black text-gray-950 uppercase italic tracking-widest mb-6 border-b-2 border-red-50 pb-2">Danh sách vai trò</h2>
 
-                        <form onSubmit={handleCreateRole} className="flex gap-2 mb-6">
+                        <form onSubmit={handleCreateRole} className="flex gap-3 mb-8">
                             <input
                                 type="text"
                                 value={newRoleName}
                                 onChange={e => setNewRoleName(e.target.value)}
-                                placeholder="New Role Name"
-                                className="flex-1 bg-slate-800 border-none rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="Tên vai trò mới..."
+                                className="flex-1 px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-950 focus:outline-none focus:border-[#D70018] shadow-sm transition-all"
                             />
-                            <button className="p-2 bg-blue-600 rounded-lg text-white hover:bg-blue-500">
-                                <Plus size={20} />
+                            <button className="p-4 bg-gray-950 text-white rounded-2xl hover:bg-black shadow-lg shadow-gray-900/20 active:scale-95 transition-all">
+                                <Plus size={24} />
                             </button>
                         </form>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {roles.map(role => (
                                 <div
                                     key={role.id}
                                     onClick={() => setSelectedRole(role)}
-                                    className={`p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${selectedRole?.id === role.id
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                                        : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                                    className={`p-5 rounded-2xl cursor-pointer transition-all flex justify-between items-center group ${selectedRole?.id === role.id
+                                        ? 'bg-gray-950 text-white shadow-xl shadow-gray-900/30 -translate-x-2'
+                                        : 'bg-white border-2 border-gray-50 text-gray-700 hover:border-gray-200 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <span className="font-bold">{role.name}</span>
-                                    {/* Don't allow deleting Admin/Manager/Customer if you want safety, but for now allow all except maybe Admin */}
+                                    <span className="font-black uppercase tracking-tight text-sm italic">{role.name}</span>
                                     {role.name !== 'Admin' && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (confirm('Delete role?')) authApi.deleteRole(role.name).then(loadRoles);
+                                                if (window.confirm('Xóa vai trò này?')) authApi.deleteRole(role.name).then(loadRoles);
                                             }}
-                                            className="text-white/50 hover:text-white"
+                                            className={`transition-all ${selectedRole?.id === role.id ? 'text-white/50 hover:text-white' : 'text-gray-300 hover:text-red-500'}`}
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={18} />
                                         </button>
                                     )}
                                 </div>
@@ -148,42 +154,41 @@ export const RolesPage = () => {
                 {/* Permissions Matrix */}
                 <div className="lg:w-2/3">
                     {selectedRole ? (
-                        <div className="glass p-8 rounded-2xl border-white/5">
-                            <div className="flex justify-between items-center mb-6">
+                        <div className="premium-card p-10 border-2 bg-white">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 pb-6 border-b-2 border-gray-50">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white mb-1">Permissions for {selectedRole.name}</h2>
-                                    <p className="text-slate-500">Manage what this role can access.</p>
+                                    <h2 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter">
+                                        QUYỀN HẠN: <span className="text-[#D70018]">{selectedRole.name}</span>
+                                    </h2>
+                                    <p className="text-xs font-black text-gray-500 uppercase tracking-widest mt-1 italic">Tích chọn các hành động được phép thực hiện</p>
                                 </div>
                                 <button
                                     onClick={savePermissions}
                                     disabled={isSaving}
-                                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                                    className="flex items-center gap-3 px-8 py-5 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-gray-900/20 disabled:opacity-50 active:scale-95"
                                 >
                                     <Save size={20} />
-                                    {isSaving ? 'Saving...' : 'Save Changes'}
+                                    {isSaving ? 'Đang lưu...' : 'Lưu quyền hạn'}
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[700px] overflow-y-auto pr-4 custom-scrollbar">
                                 {Object.entries(groupedPermissions).map(([category, perms]) => (
-                                    <div key={category} className="bg-white/5 p-5 rounded-xl border border-white/5">
-                                        <h3 className="text-lg font-bold text-blue-400 mb-4 border-b border-white/10 pb-2">{category}</h3>
-                                        <div className="space-y-3">
+                                    <div key={category} className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100">
+                                        <h3 className="text-lg font-black text-[#D70018] uppercase italic tracking-widest mb-6 border-b-2 border-red-100 pb-2">{category}</h3>
+                                        <div className="space-y-4">
                                             {perms.map(perm => (
-                                                <label key={perm} className="flex items-center gap-3 cursor-pointer group">
-                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${rolePermissions.includes(perm)
-                                                        ? 'bg-blue-500 border-blue-500 text-white'
-                                                        : 'border-slate-600 group-hover:border-blue-400'
-                                                        }`}>
-                                                        {rolePermissions.includes(perm) && <Check size={14} strokeWidth={4} />}
+                                                <label key={perm} className="flex items-center gap-4 cursor-pointer group">
+                                                    <div
+                                                        onClick={() => togglePermission(perm)}
+                                                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all ${rolePermissions.includes(perm)
+                                                            ? 'bg-gray-900 border-gray-900 text-white shadow-md'
+                                                            : 'bg-white border-gray-200 group-hover:border-gray-400'
+                                                            }`}
+                                                    >
+                                                        {rolePermissions.includes(perm) && <Check size={18} strokeWidth={4} />}
                                                     </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={rolePermissions.includes(perm)}
-                                                        onChange={() => togglePermission(perm)}
-                                                        className="hidden"
-                                                    />
-                                                    <span className={`text-sm font-medium transition ${rolePermissions.includes(perm) ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                                                    <span className={`text-sm font-black uppercase tracking-tight transition-all ${rolePermissions.includes(perm) ? 'text-gray-950' : 'text-gray-400 group-hover:text-gray-600'
                                                         }`}>
                                                         {perm.split('.').slice(2).join(' ')}
                                                     </span>
@@ -195,9 +200,11 @@ export const RolesPage = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-500 p-12 glass rounded-2xl border-white/5">
-                            <Shield size={64} className="mb-4 opacity-20" />
-                            <p className="text-xl font-bold">Select a role to manage permissions</p>
+                        <div className="h-[600px] flex flex-col items-center justify-center premium-card border-2 border-dashed border-gray-200 bg-gray-50/30">
+                            <div className="w-24 h-24 rounded-3xl bg-white border-2 border-gray-100 flex items-center justify-center mb-6 shadow-sm">
+                                <Shield size={48} className="text-gray-200" />
+                            </div>
+                            <p className="text-xl font-black text-gray-400 uppercase italic tracking-tighter">Chọn một vai trò để bắt đầu cấu hình</p>
                         </div>
                     )}
                 </div>

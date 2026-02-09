@@ -203,7 +203,7 @@ public static class IdentityEndpoints
             var query = userManager.Users.AsQueryable();
 
             // Filter by active status
-            if (!queryParams.IncludeInactive)
+            if (!queryParams.ShowInactive)
             {
                 query = query.Where(u => u.IsActive);
             }
@@ -223,13 +223,13 @@ public static class IdentityEndpoints
             // Sort
             query = queryParams.SortBy?.ToLower() switch
             {
-                "email" => queryParams.SortDescending
+                "email" => queryParams.SortDesc
                     ? query.OrderByDescending(u => u.Email)
                     : query.OrderBy(u => u.Email),
-                "fullname" => queryParams.SortDescending
+                "fullname" => queryParams.SortDesc
                     ? query.OrderByDescending(u => u.FullName)
                     : query.OrderBy(u => u.FullName),
-                "createdat" => queryParams.SortDescending
+                "createdat" => queryParams.SortDesc
                     ? query.OrderByDescending(u => u.Id)
                     : query.OrderBy(u => u.Id),
                 _ => query.OrderBy(u => u.Email)

@@ -19,11 +19,27 @@ interface AuthResponse {
     user: User;
 }
 
-interface User {
+export interface User {
+    id: string;
     email: string;
     fullName: string;
     roles: string[];
-    permissions: string[];
+    permissions?: string[];
+    isActive?: boolean;
+    createdAt?: string;
+    lastLogin?: string;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+}
+
+export interface PagedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
 }
 
 // ========================================
@@ -87,6 +103,99 @@ export const authApi = {
      */
     resetPassword: async (token: string, newPassword: string): Promise<void> => {
         await client.post('/auth/reset-password', { token, newPassword });
+    },
+
+    // ========================================
+    // Admin - User Management
+    // ========================================
+
+    /**
+     * Get paginated list of users (Admin only)
+     */
+    getUsers: async (page: number = 1, pageSize: number = 10, search?: string, role?: string, includeInactive?: boolean): Promise<PagedResult<User>> => {
+        const params = new URLSearchParams();
+        params.append('page', page.toString());
+        params.append('pageSize', pageSize.toString());
+        if (search) params.append('search', search);
+        if (role) params.append('role', role);
+        if (includeInactive) params.append('includeInactive', 'true');
+
+        const response = await client.get<PagedResult<User>>(`/auth/users?${params.toString()}`);
+        return response.data;
+    },
+
+    /**
+     * Get all roles
+     */
+    getRoles: async (): Promise<Role[]> => {
+        const response = await client.get<Role[]>('/auth/roles');
+        return response.data;
+    },
+
+    /**
+     * Update user roles
+     */
+    updateUserRoles: async (userId: string, roles: string[]): Promise<{ message: string; roles: string[] }> => {
+        const response = await client.post<{ message: string; roles: string[] }>(`/auth/users/${userId}/roles`, { roles });
+        return response.data;
+    },
+
+    /**
+     * Delete/deactivate user
+     */
+    deleteUser: async (userId: string): Promise<{ message: string }> => {
+        const response = await client.delete<{ message: string }>(`/auth/users/${userId}`);
+        return response.data;
+    },
+
+    /**
+     * Update user details
+     */
+    updateUser: async (userId: string, data: { email?: string; fullName?: string }): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/auth/users/${userId}`, data);
+        return response.data;
+    },
+
+    /**
+     * Create new role
+     */
+    createRole: async (name: string): Promise<{ message: string }> => {
+        const response = await client.post<{ message: string }>('/auth/roles', name, {
+            headers: { 'Content-Type': 'text/plain' }
+        });
+        return response.data;
+    },
+
+    /**
+     * Delete role
+     */
+    deleteRole: async (roleName: string): Promise<{ message: string }> => {
+        const response = await client.delete<{ message: string }>(`/auth/roles/${roleName}`);
+        return response.data;
+    },
+
+    /**
+     * Get all permissions
+     */
+    getPermissions: async (): Promise<string[]> => {
+        const response = await client.get<string[]>('/auth/permissions');
+        return response.data;
+    },
+
+    /**
+     * Get role permissions
+     */
+    getRolePermissions: async (roleId: string): Promise<string[]> => {
+        const response = await client.get<string[]>(`/auth/roles/${roleId}/permissions`);
+        return response.data;
+    },
+
+    /**
+     * Update role permissions
+     */
+    updateRolePermissions: async (roleId: string, permissions: string[]): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/auth/roles/${roleId}/permissions`, permissions);
+        return response.data;
     }
 };
 

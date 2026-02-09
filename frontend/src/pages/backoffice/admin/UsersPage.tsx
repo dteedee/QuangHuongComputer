@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Trash2, UserCheck, UserX, Key, Shield } from 'lucide-react';
-import { CrudListPage } from '../../../components/crud/CrudListPage';
-import { Column } from '../../../components/crud/DataTable';
-import { FilterBar } from '../../../components/crud/FilterBar';
-import { SearchInput } from '../../../components/crud/SearchInput';
-import { useCrudList } from '../../../hooks/useCrudList';
-import { usePermissions } from '../../../hooks/usePermissions';
-import { adminApi, User, CreateUserDto, UpdateUserDto } from '../../../api/admin';
-import { UserFormModal } from '../../../components/admin/UserFormModal';
-import { RoleAssignModal } from '../../../components/admin/RoleAssignModal';
-import { PasswordResetModal } from '../../../components/admin/PasswordResetModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Edit, Trash2, UserCheck, UserX, Key, Shield, Search, Filter,
+  Plus, MoreHorizontal, User as UserIcon, Mail, Calendar,
+  ChevronRight, ChevronLeft, RefreshCw
+} from 'lucide-react';
+import { adminApi, type User } from '@api/admin';
+import { usePermissions } from '@hooks/usePermissions';
+import { UserFormModal } from '@components/admin/UserFormModal';
+import { RoleAssignModal } from '@components/admin/RoleAssignModal';
+import { PasswordResetModal } from '@components/admin/PasswordResetModal';
+import { formatDate, getStatusBadgeClass, getRoleBadgeColor } from '@api/admin';
 
 export function UsersPage() {
   const { hasPermission } = usePermissions();
@@ -20,8 +21,12 @@ export function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   // Permissions
   const canCreate = hasPermission('admin.users.create');
@@ -29,48 +34,35 @@ export function UsersPage() {
   const canDelete = hasPermission('admin.users.delete');
   const canManageRoles = hasPermission('admin.users.manage_roles');
 
-  // Fetch roles for filter
-  const { data: rolesData } = useQuery({
+  // Fetch roles
+  const { data: roles } = useQuery({
     queryKey: ['admin', 'roles', 'all'],
-    queryFn: () => adminApi.getAllRoles(),
+    queryFn: () => adminApi.roles.getList(),
   });
 
-  // CRUD list hook
-  const {
-    data,
-    total,
-    page,
-    pageSize,
-    isLoading,
-    search,
-    handlePageChange,
-    handleSearch,
-    handleSort,
-    clearFilters,
-    refetch,
-  } = useCrudList<User>({
-    queryKey: ['admin', 'users'],
-    fetchFn: (params) =>
-      adminApi.getUsers({
-        ...params,
-        role: roleFilter || undefined,
-        isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
-      }),
+  // Fetch users
+  const { data: usersData, isLoading, refetch } = useQuery({
+    queryKey: ['admin', 'users', page, search, roleFilter, statusFilter],
+    queryFn: () => adminApi.users.getList({
+      page,
+      pageSize,
+      search,
+      role: roleFilter || undefined,
+      includeInactive: statusFilter !== 'active'
+    })
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (data: CreateUserDto) => adminApi.createUser(data),
+    mutationFn: (data: any) => adminApi.users.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setIsFormOpen(false);
-      setSelectedUser(null);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
-      adminApi.updateUser(id, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => adminApi.users.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setIsFormOpen(false);
@@ -79,14 +71,16 @@ export function UsersPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminApi.deleteUser(id),
+    mutationFn: (id: string) => adminApi.users.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: (id: string) => adminApi.toggleUserStatus(id),
+    mutationFn: (user: User) => user.isActive
+      ? adminApi.users.deactivate(user.id)
+      : adminApi.users.update(user.id, { isActive: true } as any), // Fallback since toggle might not exist
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
@@ -94,7 +88,7 @@ export function UsersPage() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: ({ id, password }: { id: string; password: string }) =>
-      adminApi.resetUserPassword(id, password),
+      adminApi.users.resetPassword(id, password),
     onSuccess: () => {
       setIsPasswordModalOpen(false);
       setSelectedUser(null);
@@ -113,13 +107,13 @@ export function UsersPage() {
   };
 
   const handleDelete = async (user: User) => {
-    if (window.confirm(`Are you sure you want to delete user "${user.fullName}"?`)) {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.fullName}"?`)) {
       deleteMutation.mutate(user.id);
     }
   };
 
   const handleToggleStatus = (user: User) => {
-    toggleStatusMutation.mutate(user.id);
+    toggleStatusMutation.mutate(user);
   };
 
   const handleManageRoles = (user: User) => {
@@ -132,241 +126,259 @@ export function UsersPage() {
     setIsPasswordModalOpen(true);
   };
 
-  const handleFormSubmit = (data: CreateUserDto | UpdateUserDto) => {
+  const handleFormSubmit = (data: any) => {
     if (selectedUser) {
-      updateMutation.mutate({ id: selectedUser.id, data: data as UpdateUserDto });
+      updateMutation.mutate({ id: selectedUser.id, data });
     } else {
-      createMutation.mutate(data as CreateUserDto);
+      createMutation.mutate(data);
     }
   };
 
   const handleRoleUpdate = async (userId: string, roles: string[]) => {
-    await adminApi.updateUser(userId, { roles });
+    await adminApi.users.assignRoles(userId, roles);
     queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     setIsRoleModalOpen(false);
     setSelectedUser(null);
   };
 
-  const handleClearFilters = () => {
-    clearFilters();
-    setRoleFilter('');
-    setStatusFilter('all');
-  };
-
-  // Table columns
-  const columns: Column<User>[] = [
-    {
-      key: 'fullName',
-      label: 'Full Name',
-      sortable: true,
-      render: (user) => (
-        <div className="font-medium text-gray-900">{user.fullName}</div>
-      ),
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      sortable: true,
-      render: (user) => (
-        <div className="text-gray-700">{user.email}</div>
-      ),
-    },
-    {
-      key: 'roles',
-      label: 'Roles',
-      render: (user) => (
-        <div className="flex flex-wrap gap-1">
-          {user.roles.map((role) => (
-            <span
-              key={role}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-            >
-              {role}
-            </span>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: 'isActive',
-      label: 'Status',
-      sortable: true,
-      render: (user) => (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            user.isActive
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}
-        >
-          {user.isActive ? 'Active' : 'Inactive'}
-        </span>
-      ),
-    },
-    {
-      key: 'lastLogin',
-      label: 'Last Login',
-      sortable: true,
-      render: (user) => (
-        <div className="text-sm text-gray-600">
-          {user.lastLogin
-            ? new Date(user.lastLogin).toLocaleString()
-            : 'Never'}
-        </div>
-      ),
-    },
-    {
-      key: 'createdAt',
-      label: 'Created',
-      sortable: true,
-      render: (user) => (
-        <div className="text-sm text-gray-600">
-          {new Date(user.createdAt).toLocaleDateString()}
-        </div>
-      ),
-    },
-  ];
-
-  // Action buttons
-  const renderActions = (user: User) => (
-    <div className="flex items-center gap-2">
-      {canManageRoles && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleManageRoles(user);
-          }}
-          className="text-purple-600 hover:text-purple-900"
-          title="Manage Roles"
-        >
-          <Shield size={18} />
-        </button>
-      )}
-      {canEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleResetPassword(user);
-          }}
-          className="text-orange-600 hover:text-orange-900"
-          title="Reset Password"
-        >
-          <Key size={18} />
-        </button>
-      )}
-      {canEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleStatus(user);
-          }}
-          className={user.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
-          title={user.isActive ? 'Deactivate' : 'Activate'}
-        >
-          {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
-        </button>
-      )}
-      {canEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEdit(user);
-          }}
-          className="text-blue-600 hover:text-blue-900"
-          title="Edit"
-        >
-          <Edit size={18} />
-        </button>
-      )}
-      {canDelete && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(user);
-          }}
-          className="text-red-600 hover:text-red-900"
-          title="Delete"
-        >
-          <Trash2 size={18} />
-        </button>
-      )}
-    </div>
-  );
-
-  // Filters
-  const filters = (
-    <FilterBar onClear={handleClearFilters}>
-      <div className="flex-1 min-w-[300px]">
-        <SearchInput
-          value={search}
-          onChange={handleSearch}
-          placeholder="Search by name or email..."
-        />
-      </div>
-      <div className="min-w-[200px]">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Role
-        </label>
-        <select
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value);
-            refetch();
-          }}
-          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        >
-          <option value="">All Roles</option>
-          {rolesData?.map((role) => (
-            <option key={role.id} value={role.name}>
-              {role.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="min-w-[150px]">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Status
-        </label>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            refetch();
-          }}
-          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        >
-          <option value="all">All</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-    </FilterBar>
-  );
-
   return (
-    <>
-      <CrudListPage
-        title="User Management"
-        subtitle="Manage system users, roles, and permissions"
-        columns={columns}
-        data={data}
-        total={total}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={handlePageChange}
-        onSort={handleSort}
-        isLoading={isLoading}
-        onAdd={canCreate ? handleAdd : undefined}
-        actions={renderActions}
-        filters={filters}
-        addButtonLabel="Add User"
-        canAdd={canCreate}
-      />
+    <div className="space-y-8 pb-10 animate-fade-in max-w-[1600px] mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Người dùng</h1>
+          <p className="text-gray-500">Quản lý tài khoản hệ thống, vai trò và trạng thái hoạt động.</p>
+        </div>
+
+        {canCreate && (
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAdd}
+            className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-2xl shadow-lg shadow-red-500/20 font-bold transition-all"
+          >
+            <Plus size={20} />
+            <span>Thêm Người dùng</span>
+          </motion.button>
+        )}
+      </div>
+
+      {/* Filters & Search */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên hoặc email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all"
+          />
+        </div>
+
+        <div className="flex gap-3 w-full md:w-auto">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="bg-gray-50 border-none rounded-xl text-sm font-medium px-4 py-3 focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[150px]"
+          >
+            <option value="">Tất cả Vai trò</option>
+            {roles?.map(role => (
+              <option key={role.id} value={role.name}>{role.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="bg-gray-50 border-none rounded-xl text-sm font-medium px-4 py-3 focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[150px]"
+          >
+            <option value="all">Tất cả Trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Đã khóa</option>
+          </select>
+
+          <button
+            onClick={() => refetch()}
+            className="p-3 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 transition-colors"
+            title="Tải lại"
+          >
+            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50">
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest pl-10">Người dùng</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Vai trò</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Ngày tạo</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right pr-10">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              <AnimatePresence mode="popLayout">
+                {usersData?.items.map((user, idx) => (
+                  <motion.tr
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: idx * 0.05 }}
+                    key={user.id}
+                    className="group hover:bg-blue-50/30 transition-colors"
+                  >
+                    <td className="px-6 py-5 pl-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                          {user.fullName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900">{user.fullName}</div>
+                          <div className="text-sm text-gray-500 flex items-center gap-1">
+                            <Mail size={12} />
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-wrap gap-1">
+                        {user.roles.map((role) => (
+                          <span
+                            key={role}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${getRoleBadgeColor(role)}`}
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeClass(user.isActive)}`}>
+                        {user.isActive ? 'Hoạt động' : 'Đã khóa'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="text-sm text-gray-500 font-medium">
+                        {formatDate(user.createdAt)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 pr-10 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {canManageRoles && (
+                          <button
+                            onClick={() => handleManageRoles(user)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                            title="Phân vai trò"
+                          >
+                            <Shield size={18} />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => handleResetPassword(user)}
+                              className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                              title="Đổi mật khẩu"
+                            >
+                              <Key size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(user)}
+                              className={`p-2 rounded-lg transition-colors ${user.isActive ? 'text-red-600 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                              title={user.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
+                            >
+                              {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                            </button>
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Chỉnh sửa"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          </>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(user)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+
+              {isLoading && [...Array(5)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={5} className="px-10 py-6">
+                    <div className="h-12 bg-gray-100 rounded-2xl w-full"></div>
+                  </td>
+                </tr>
+              ))}
+
+              {!isLoading && usersData?.items.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center">
+                    <UserIcon size={48} className="mx-auto text-gray-200 mb-4" />
+                    <p className="text-gray-400 font-medium">Không tìm thấy người dùng nào</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {usersData && usersData.totalPages > 1 && (
+          <div className="px-10 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+            <p className="text-sm text-gray-500 font-medium">
+              Hiển thị <span className="text-gray-900">{usersData.items.length}</span> trên <span className="text-gray-900">{usersData.total}</span> người dùng
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(prev => prev - 1)}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              {[...Array(usersData.totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${page === i + 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                disabled={page === usersData.totalPages}
+                onClick={() => setPage(prev => prev + 1)}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {isFormOpen && (
         <UserFormModal
           user={selectedUser}
-          roles={rolesData || []}
+          roles={roles || []}
           onClose={() => {
             setIsFormOpen(false);
             setSelectedUser(null);
@@ -379,7 +391,7 @@ export function UsersPage() {
       {isRoleModalOpen && selectedUser && (
         <RoleAssignModal
           user={selectedUser}
-          availableRoles={rolesData || []}
+          availableRoles={roles || []}
           onClose={() => {
             setIsRoleModalOpen(false);
             setSelectedUser(null);
@@ -395,12 +407,12 @@ export function UsersPage() {
             setIsPasswordModalOpen(false);
             setSelectedUser(null);
           }}
-          onSubmit={(password) =>
+          onSubmit={(password: string) =>
             resetPasswordMutation.mutate({ id: selectedUser.id, password })
           }
           isLoading={resetPasswordMutation.isPending}
         />
       )}
-    </>
+    </div>
   );
 }

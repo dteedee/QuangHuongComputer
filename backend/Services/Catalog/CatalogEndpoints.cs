@@ -301,7 +301,7 @@ public static class CatalogEndpoints
                 HasPreviousPage = validPage > 1,
                 Products = productsResponse
             });
-        }).RequireRateLimiting("api_general");
+        });
 
         // Create Product (Admin only)
         group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db) =>
