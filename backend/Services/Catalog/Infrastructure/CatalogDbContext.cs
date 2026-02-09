@@ -61,7 +61,7 @@ public class CatalogDbContext : DbContext
             // Unique constraints
             entity.HasIndex(p => p.Sku)
                 .IsUnique()
-                .HasFilter("is_active = true")
+                .HasFilter("\"IsActive\" = true")
                 .HasDatabaseName("uq_products_sku");
             
             // Indexes for common queries
@@ -81,7 +81,7 @@ public class CatalogDbContext : DbContext
                 .HasDatabaseName("ix_products_created_at");
                 
             entity.HasIndex(p => new { p.StockQuantity, p.IsActive })
-                .HasFilter("stock_quantity <= low_stock_threshold")
+                .HasFilter("\"StockQuantity\" <= \"LowStockThreshold\"")
                 .HasDatabaseName("ix_products_low_stock");
         });
 

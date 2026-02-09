@@ -1,10 +1,9 @@
-﻿
-import { useState, useRef, useEffect, useCallback } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, PackageCheck, MapPin, Cpu, HardDrive, Monitor, MemoryStick, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Star, PackageCheck, MapPin, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductCardProps {
@@ -31,11 +30,15 @@ const parseSpecifications = (specs?: string) => {
     }
 };
 
-// Mock store locations
-const storeLocations = [
-    { city: 'Hải Phòng', address: 'Số 179 Thôn 3/2 Xã Vĩnh Bảo' },
-    { city: 'Hải Phòng', address: 'Đường 10, Hưng Nhân, Vĩnh Bảo' },
-];
+// Helper to parse locations
+const parseStockLocations = (locationsJson?: string) => {
+    if (!locationsJson) return [];
+    try {
+        return JSON.parse(locationsJson);
+    } catch {
+        return [];
+    }
+};
 
 // Popup component rendered via Portal
 const ProductHoverPopup = ({
@@ -43,16 +46,19 @@ const ProductHoverPopup = ({
     cardRect,
     onMouseEnter,
     onMouseLeave,
-    addToCart
+    addToCart,
+    isVisible
 }: {
     product: Product;
     cardRect: DOMRect;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     addToCart: (product: Product) => void;
+    isVisible: boolean;
 }) => {
     const oldPrice = product.oldPrice || product.price * 1.15;
     const specs = parseSpecifications(product.specifications);
+    const locations = parseStockLocations(product.stockLocations);
 
     // Calculate position
     const windowWidth = window.innerWidth;
@@ -86,129 +92,111 @@ const ProductHoverPopup = ({
     };
 
     return createPortal(
-        <motion.div
-            initial={{ opacity: 0, x: showOnLeft ? 20 : -20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            style={style}
-            className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ring-1 ring-black/5"
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-        >
-            {/* Header */}
-            <div className="bg-[#D70018] text-white p-3">
-                <h4 className="font-bold text-sm leading-tight line-clamp-2">
-                    {product.name}
-                </h4>
-            </div>
+        <AnimatePresence>
+            {isVisible && (
+                <motion.div
+                    initial={{ opacity: 0, x: showOnLeft ? 20 : -20, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    style={style}
+                    className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden ring-1 ring-black/5"
+                    onMouseEnter={onMouseEnter}
+                    onMouseLeave={onMouseLeave}
+                >
+                    {/* Header */}
+                    <div className="bg-[#D70018] text-white p-3">
+                        <h4 className="font-bold text-sm leading-tight line-clamp-2">
+                            {product.name}
+                        </h4>
+                    </div>
 
-            {/* Body */}
-            <div className="p-4 space-y-3 max-h-[380px] overflow-y-auto text-sm">
-                {/* Price Info */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500">- Giá bán:</span>
-                        <span className="text-gray-400 line-through">{oldPrice.toLocaleString()}đ</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500">- Giá QH:</span>
-                        <span className="text-[#D70018] font-bold text-base">{product.price.toLocaleString()}đ</span>
-                        <span className="text-xs text-gray-400">[Đã bao gồm VAT]</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500">- Bảo hành:</span>
-                        <span className="text-gray-800 font-medium">{product.warrantyInfo || '12 Tháng'}</span>
-                    </div>
-                </div>
-
-                {/* Store Locations */}
-                <div className="space-y-2 border-t border-gray-100 pt-3">
-                    <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin size={14} className="text-[#D70018]" />
-                        <span className="font-medium">Kho hàng:</span>
-                    </div>
-                    <div className="pl-5 space-y-1">
-                        {storeLocations.map((store, idx) => (
-                            <div key={idx} className="flex items-start gap-1 text-xs">
-                                <MapPin size={10} className="text-[#D70018] mt-0.5 flex-shrink-0" />
-                                <span className="text-[#D70018]">
-                                    {store.address} - Thành phố {store.city}
-                                </span>
+                    {/* Body */}
+                    <div className="p-4 space-y-3 max-h-[380px] overflow-y-auto text-sm">
+                        {/* Price Info */}
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-500">- Giá bán:</span>
+                                <span className="text-gray-400 line-through">{oldPrice.toLocaleString()}đ</span>
                             </div>
-                        ))}
-                        <button className="text-[#D70018] text-xs font-medium hover:underline flex items-center gap-1 mt-1">
-                            Và 6 Showroom khác
-                            <ChevronRight size={12} />
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-500">- Giá QH:</span>
+                                <span className="text-[#D70018] font-bold text-base">{product.price.toLocaleString()}đ</span>
+                                <span className="text-xs text-gray-400">[Đã bao gồm VAT]</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-500">- Bảo hành:</span>
+                                <span className="text-gray-800 font-medium">{product.warrantyInfo || '12 Tháng'}</span>
+                            </div>
+                        </div>
+
+                        {/* Store Locations */}
+                        <div className="space-y-2 border-t border-gray-100 pt-3">
+                            <div className="flex items-center gap-2 text-gray-600">
+                                <MapPin size={14} className="text-[#D70018]" />
+                                <span className="font-medium">Kho hàng:</span>
+                            </div>
+                            <div className="pl-5 space-y-1">
+                                {locations.length > 0 ? (
+                                    locations.map((store: { city: string, address: string }, idx: number) => (
+                                        <div key={idx} className="flex items-start gap-1 text-xs">
+                                            <MapPin size={10} className="text-[#D70018] mt-0.5 flex-shrink-0" />
+                                            <span className="text-[#D70018]">
+                                                {store.address}
+                                                {store.city && ` - ${store.city}`}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-xs text-gray-500 italic">
+                                        Liên hệ để kiểm tra tình trạng kho
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Specifications */}
+                        <div className="border-t border-gray-100 pt-3">
+                            <div className="flex items-center gap-2 mb-2 bg-gray-100 -mx-4 px-4 py-2">
+                                <Cpu size={14} className="text-gray-600" />
+                                <span className="font-bold text-gray-800">Thông số sản phẩm</span>
+                            </div>
+
+                            <div className="space-y-1.5 text-xs">
+                                {specs ? (
+                                    Object.entries(specs).slice(0, 6).map(([key, value]) => (
+                                        <div key={key} className="flex gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-500 min-w-[70px] max-w-[80px]">{key}:</span>
+                                            <span className="text-gray-800 font-medium truncate">{String(value)}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-gray-400 italic text-xs">Đang cập nhật thông số kỹ thuật...</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="border-t border-gray-100 p-3 flex gap-2 bg-gray-50">
+                        <Link
+                            to={`/product/${product.id}`}
+                            className="flex-1 bg-[#D70018] text-white text-center py-2 rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors"
+                        >
+                            Xem chi tiết
+                        </Link>
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
+                            className="flex-1 bg-amber-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <ShoppingCart size={16} />
+                            Mua ngay
                         </button>
                     </div>
-                </div>
-
-                {/* Specifications */}
-                <div className="border-t border-gray-100 pt-3">
-                    <div className="flex items-center gap-2 mb-2 bg-gray-100 -mx-4 px-4 py-2">
-                        <Cpu size={14} className="text-gray-600" />
-                        <span className="font-bold text-gray-800">Thông số sản phẩm</span>
-                    </div>
-
-                    <div className="space-y-1.5 text-xs">
-                        {specs ? (
-                            Object.entries(specs).slice(0, 6).map(([key, value]) => (
-                                <div key={key} className="flex gap-2">
-                                    <span className="text-gray-500">- {key}:</span>
-                                    <span className="text-gray-800 font-medium">{String(value)}</span>
-                                </div>
-                            ))
-                        ) : (
-                            <>
-                                <div className="flex gap-2 items-start">
-                                    <Cpu size={12} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-500">Bộ xử lý:</span>
-                                    <span className="text-gray-800 font-medium">Intel Core i5-1340P (12MB, up to 4.6GHz)</span>
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                    <MemoryStick size={12} className="text-green-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-500">Bộ nhớ:</span>
-                                    <span className="text-gray-800 font-medium">8GB DDR4 3200MHz (1×8GB)</span>
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                    <HardDrive size={12} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-500">Ổ cứng:</span>
-                                    <span className="text-gray-800 font-medium">256GB PCIe NVMe SSD</span>
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                    <Monitor size={12} className="text-cyan-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-500">Card VGA:</span>
-                                    <span className="text-gray-800 font-medium">Intel UHD Graphics</span>
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                    <Monitor size={12} className="text-orange-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-gray-500">Màn hình:</span>
-                                    <span className="text-gray-800 font-medium">15.6" FHD, IPS, 60Hz, 350 nits, 45% NTSC</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="border-t border-gray-100 p-3 flex gap-2 bg-gray-50">
-                <Link
-                    to={`/product/${product.id}`}
-                    className="flex-1 bg-[#D70018] text-white text-center py-2 rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors"
-                >
-                    Xem chi tiết
-                </Link>
-                <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
-                    className="flex-1 bg-amber-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                >
-                    <ShoppingCart size={16} />
-                    Mua ngay
-                </button>
-            </div>
-        </motion.div>,
+                </motion.div>
+            )}
+        </AnimatePresence>,
         document.body
     );
 };
@@ -391,18 +379,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 </motion.div>
             </div>
 
-            {/* Hover Popup - Rendered via Portal */}
-            <AnimatePresence>
-                {showPopup && cardRect && (
-                    <ProductHoverPopup
-                        product={product}
-                        cardRect={cardRect}
-                        onMouseEnter={handlePopupMouseEnter}
-                        onMouseLeave={handlePopupMouseLeave}
-                        addToCart={addToCart}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Hover Popup - Rendered via Portal by itself, controlled via isVisible prop */}
+            {cardRect && (
+                <ProductHoverPopup
+                    product={product}
+                    cardRect={cardRect}
+                    onMouseEnter={handlePopupMouseEnter}
+                    onMouseLeave={handlePopupMouseLeave}
+                    addToCart={addToCart}
+                    isVisible={showPopup}
+                />
+            )}
         </>
     );
 };

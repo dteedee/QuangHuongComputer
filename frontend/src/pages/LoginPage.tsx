@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import { Mail, Lock, LogIn, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Mail, Lock, LogIn, ArrowRight, ShieldCheck, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -21,6 +21,7 @@ export const LoginPage = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { isLoaded, executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
     const getRedirectPath = (roles: string[]) => {
@@ -143,11 +144,24 @@ export const LoginPage = () => {
                                 <Link to="/forgot-password" className="text-[11px] text-[#D70018] hover:underline font-black uppercase">Quên mật khẩu?</Link>
                             </div>
                             <Input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 icon={Lock}
                                 placeholder="••••••••"
                                 error={errors.password?.message}
                                 {...register('password')}
+                                suffix={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff size={18} />
+                                        ) : (
+                                            <Eye size={18} />
+                                        )}
+                                    </button>
+                                }
                             />
                         </div>
 
@@ -160,7 +174,7 @@ export const LoginPage = () => {
 
                         <Button
                             type="submit"
-                            variant="brand"
+                            variant="primary"
                             size="lg"
                             loading={isLoading}
                             icon={ArrowRight}

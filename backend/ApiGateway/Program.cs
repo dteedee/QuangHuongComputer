@@ -259,6 +259,17 @@ if (app.Environment.IsDevelopment())
         {
             logger.LogError(ex, "Catalog seeding failed (tables may not exist yet)");
         }
+
+        // Add Identity Seeding
+        try
+        {
+            await IdentitySeeder.SeedAsync(services);
+            logger.LogInformation("Identity seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Identity seeding failed");
+        }
     }
 }
 

@@ -59,6 +59,7 @@ public static class CatalogEndpoints
                 p.Description,
                 p.Specifications,
                 p.WarrantyInfo,
+                p.StockLocations,
                 p.StockQuantity,
                 p.Status,
                 p.ViewCount,
@@ -111,6 +112,7 @@ public static class CatalogEndpoints
                 product.Description,
                 product.Specifications,
                 product.WarrantyInfo,
+                product.StockLocations,
                 product.StockQuantity,
                 product.Status,
                 product.ViewCount,
@@ -270,6 +272,7 @@ public static class CatalogEndpoints
                 p.Description,
                 p.Specifications,
                 p.WarrantyInfo,
+                p.StockLocations,
                 p.StockQuantity,
                 p.Status,
                 p.ViewCount,
@@ -314,7 +317,9 @@ public static class CatalogEndpoints
                 model.Sku,
                 model.OldPrice,
                 model.Specifications,
-                model.WarrantyInfo
+                model.WarrantyInfo,
+                stockLocations: model.StockLocations,
+                imageUrl: model.ImageUrl
             );
 
             db.Products.Add(product);
@@ -328,6 +333,7 @@ public static class CatalogEndpoints
                 product.Description,
                 product.Specifications,
                 product.WarrantyInfo,
+                product.StockLocations,
                 product.StockQuantity,
                 product.Status,
                 product.ViewCount,
@@ -385,7 +391,8 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo);
+            product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo, model.StockLocations);
+            if (model.ImageUrl != null) product.UpdateImage(model.ImageUrl);
             await db.SaveChangesAsync();
             
             return Results.Ok(new { 
@@ -399,6 +406,7 @@ public static class CatalogEndpoints
                     product.Description,
                     product.Specifications,
                     product.WarrantyInfo,
+                    product.StockLocations,
                     product.StockQuantity,
                     product.Status,
                     product.ViewCount,
@@ -607,6 +615,7 @@ public static class CatalogEndpoints
                 
                 new Product("Dell XPS 15 2024", 45990000, 42000000, "Laptop cao cấp Intel Core Ultra 7-155H, 32GB RAM, 1TB SSD, OLED 3.5K", catLaptop, brandDell, 10, 
                     specifications: "{\"CPU\": \"Intel Core Ultra 7-155H\", \"RAM\": \"32GB DDR5\", \"SSD\": \"1TB\", \"Display\": \"15.6 inch OLED 3.5K\"}", 
+                    stockLocations: "[{\"city\": \"TP. HCM\", \"address\": \"499/1 Quang Trung - Gò Vấp\"}]",
                     imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/dell-xps-15_kfqzxm.jpg"),
                 
                 new Product("Dell Inspiron 15 3520", 15990000, 13500000, "Laptop văn phòng Intel Core i5-1235U, 8GB RAM, 512GB SSD", catLaptop, brandDell, 30, 
@@ -632,6 +641,7 @@ public static class CatalogEndpoints
                 // PC Gaming
                 new Product("PC Gaming QH Beast i9-14900K RTX 4090", 89990000, 82000000, "PC Gaming cao cấp Intel Core i9-14900K, RTX 4090 24GB, 64GB DDR5, 2TB NVMe", catPCGaming, brandAsus, 5, 
                     specifications: "{\"CPU\": \"Intel Core i9-14900K\", \"RAM\": \"64GB DDR5 6000MHz\", \"SSD\": \"2TB NVMe Gen4\", \"GPU\": \"RTX 4090 24GB\", \"PSU\": \"1000W Gold\", \"Case\": \"NZXT H9 Elite\"}", 
+                    stockLocations: "[{\"city\": \"Hà Nội\", \"address\": \"Số 131 Lê Thanh Nghị - Phường Bạch Mai\"}]",
                     imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/pc-gaming-beast_yzabcd.jpg"),
                 
                 new Product("PC Gaming QH Pro i7-14700K RTX 4070 Ti", 52990000, 47000000, "PC Gaming Intel Core i7-14700K, RTX 4070 Ti Super, 32GB DDR5, 1TB NVMe", catPCGaming, brandMSI, 8, 
@@ -736,7 +746,9 @@ public record CreateProductDto(
     string? Sku = null,
     decimal? OldPrice = null,
     string? Specifications = null,
-    string? WarrantyInfo = null);
+    string? WarrantyInfo = null,
+    string? StockLocations = null,
+    string? ImageUrl = null);
 
 public record UpdateProductDto(
     string Name,
@@ -744,7 +756,9 @@ public record UpdateProductDto(
     decimal Price,
     decimal? OldPrice = null,
     string? Specifications = null,
-    string? WarrantyInfo = null);
+    string? WarrantyInfo = null,
+    string? StockLocations = null,
+    string? ImageUrl = null);
 
 public record CreateCategoryDto(string Name, string Description);
 public record UpdateCategoryDto(string Name, string Description);

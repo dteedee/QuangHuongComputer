@@ -33,11 +33,14 @@ VALUES
     ('22222222-2222-2222-2222-000000000015', 'Corsair', 'RAM và phụ kiện gaming', true, NOW(), NULL, 'system', NULL),
     ('22222222-2222-2222-2222-000000000016', 'Kingston', 'RAM và SSD', true, NOW(), NULL, 'system', NULL)
 ON CONFLICT ("Id") DO NOTHING;
+ 
+-- Add StockLocations column if not exists
+ALTER TABLE IF EXISTS public."Products" ADD COLUMN IF NOT EXISTS "StockLocations" TEXT;
 
 -- Seed Products
 INSERT INTO public."Products" (
     "Id", "Name", "Sku", "Price", "OldPrice", "CostPrice", "Description", "Specifications", "WarrantyInfo",
-    "CategoryId", "BrandId", "StockQuantity", "Status", "Barcode", "Weight", "ImageUrl", "GalleryImages",
+    "CategoryId", "BrandId", "StockQuantity", "Status", "Barcode", "Weight", "ImageUrl", "GalleryImages", "StockLocations",
     "ViewCount", "SoldCount", "AverageRating", "ReviewCount", "PublishedAt", "DiscontinuedAt", "LowStockThreshold",
     "CreatedByUserId", "UpdatedByUserId", "MetaTitle", "MetaDescription", "MetaKeywords", "CanonicalUrl",
     "IsActive", "CreatedAt", "UpdatedAt", "CreatedBy", "UpdatedBy"
@@ -50,6 +53,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000001', 15, 0, NULL, 2.5,
      'https://dlcdnwebimgs.asus.com/gain/A7FE8F03-20E0-4CBB-8A31-FF0E47A30A85/w1000/h732', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      150, 12, 4.8, 5, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'ASUS TUF Gaming F15 2024', 'QH-TUFF15', 28990000, 31990000, 25000000,
@@ -58,6 +62,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000001', 25, 0, NULL, 2.2,
      'https://dlcdnwebimgs.asus.com/gain/6AF5D54D-EA93-4428-8F15-22A3CF06AD48/w1000/h732', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      230, 20, 4.6, 8, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Dell XPS 15 2024', 'QH-XPS15', 45990000, 49990000, 42000000,
@@ -66,6 +71,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000002', 10, 0, NULL, 1.9,
      'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-15-9530/media-gallery/touch-black/notebook-xps-15-9530-t-black-gallery-1.psd', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      180, 8, 4.9, 6, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Dell Inspiron 15 3520', 'QH-INSP15', 15990000, 17990000, 13500000,
@@ -74,6 +80,7 @@ VALUES
      'Bảo hành 12 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000002', 30, 0, NULL, 1.8,
      'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3520/media-gallery/in3520-xnb-shot-01-sl.psd', NULL,
+     NULL,
      320, 35, 4.3, 15, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'HP Victus 16 2024', 'QH-VICTUS16', 26990000, 29990000, 23000000,
@@ -82,6 +89,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000003', 20, 0, NULL, 2.3,
      'https://ssl-product-images.www8-hp.com/digmedialib/prodimg/lowres/c08481847.png', NULL,
+     NULL,
      200, 18, 4.5, 10, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Lenovo ThinkPad X1 Carbon Gen 12', 'QH-X1CARBON', 52990000, 56990000, 48000000,
@@ -90,6 +98,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000004', 8, 0, NULL, 1.1,
      'https://p3-ofp.static.pub/fes/cms/2023/11/09/w4fv7e8apu8kkxxkbmbn0bbk57e5xq553312.png', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      120, 5, 4.9, 4, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'MSI Katana 15 2024', 'QH-KATANA15', 24990000, 27990000, 21500000,
@@ -98,6 +107,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000005', 18, 0, NULL, 2.25,
      'https://asset.msi.com/resize/image/global/product/product_1706691251b0aa6c2f21e7bd04f1e58dbb01a99395.png62405b38c58fe0f07fcef2367d8a9ba1/1024.png', NULL,
+     NULL,
      180, 15, 4.4, 7, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Acer Nitro V 15 ANV15-51', 'QH-NITROV15', 22990000, 25990000, 19500000,
@@ -106,6 +116,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000001', '22222222-2222-2222-2222-000000000006', 22, 0, NULL, 2.1,
      'https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-wallpaper', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      250, 22, 4.3, 12, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- PC Gaming
@@ -115,6 +126,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000002', '22222222-2222-2222-2222-000000000001', 5, 0, NULL, 15,
      'https://cdn.tgdd.vn/Products/Images/2970/315952/s16/thiet-ke-pc-workstation-i7-14700-1-650x650.png', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      300, 3, 5.0, 3, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'PC Gaming QH Pro i7-14700K RTX 4070 Ti', 'QH-PRO4070TI', 52990000, 58990000, 47000000,
@@ -123,6 +135,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000002', '22222222-2222-2222-2222-000000000005', 8, 0, NULL, 12,
      'https://cdn.tgdd.vn/Products/Images/2970/315955/s16/thiet-ke-pc-workstation-i5-14400f-1-650x650.png', NULL,
+     NULL,
      220, 6, 4.8, 4, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'PC Gaming QH Starter R5-7600 RTX 4060', 'QH-STARTER4060', 22990000, 25990000, 19500000,
@@ -131,6 +144,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000002', '22222222-2222-2222-2222-000000000007', 15, 0, NULL, 10,
      'https://cdn.tgdd.vn/Products/Images/2970/302657/s16/pc-gaming-gen-s-r5-5500-rtx-3060-12g-12gb-250gb-7-650x650.png', NULL,
+     NULL,
      350, 25, 4.6, 18, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- Components
@@ -140,6 +154,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000008', 12, 0, NULL, 0.05,
      'https://ark.intel.com/content/dam/ark/images/badges/intel_core_i9_badge.png', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      180, 10, 4.9, 6, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'AMD Ryzen 9 7950X3D', 'QH-7950X3D', 17990000, 19990000, 16000000,
@@ -148,6 +163,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000009', 8, 0, NULL, 0.05,
      'https://www.amd.com/system/files/2023-01/1544503-amd-ryzen-9-702x350.jpg', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      200, 8, 4.9, 5, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'NVIDIA GeForce RTX 4090 Founders Edition', 'QH-RTX4090FE', 52990000, 56990000, 48000000,
@@ -156,6 +172,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000010', 3, 1, NULL, 2.2,
      'https://www.nvidia.com/content/dam/en-zz/Solutions/geforce/ada/rtx-4090/geforce-ada-4090-web-og-1200x630.jpg', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      500, 3, 5.0, 3, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'ASUS ROG STRIX RTX 4080 Super OC', 'QH-4080STRIX', 32990000, 35990000, 29000000,
@@ -164,6 +181,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000001', 6, 0, NULL, 1.8,
      'https://dlcdnwebimgs.asus.com/gain/FC3F1F93-BFCC-4E45-B5E3-C7A1AB1B3B3B/w1000/h732', NULL,
+     NULL,
      280, 5, 4.8, 4, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Corsair Vengeance DDR5 32GB (2x16GB) 6000MHz', 'QH-DDR5-32G', 3990000, 4490000, 3400000,
@@ -172,6 +190,7 @@ VALUES
      'Bảo hành lifetime',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000015', 40, 0, NULL, 0.1,
      'https://www.corsair.com/corsairmedia/sys_master/productcontent/CMH32GX5M2B6000C36-Gallery-QUADSINGLE-01.png', NULL,
+     NULL,
      350, 30, 4.7, 12, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Samsung 990 Pro 2TB NVMe', 'QH-990PRO-2TB', 5490000, 5990000, 4800000,
@@ -180,6 +199,7 @@ VALUES
      'Bảo hành 60 tháng',
      '11111111-1111-1111-1111-000000000004', '22222222-2222-2222-2222-000000000011', 25, 0, NULL, 0.05,
      'https://images.samsung.com/is/image/samsung/p6pim/vn/mz-v9p2t0bw/gallery/vn-990-pro-nvme-mz-v9p2t0bw-533186620', NULL,
+     NULL,
      400, 35, 4.8, 20, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- Monitors
@@ -189,6 +209,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000005', '22222222-2222-2222-2222-000000000001', 4, 0, NULL, 8,
      'https://dlcdnwebimgs.asus.com/gain/51C9CDA2-31DC-4ECE-8B15-63B8F3D9B8B1/w1000/h732', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      150, 2, 5.0, 2, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'LG UltraGear 27GP950-B', 'QH-27GP950', 18990000, 21990000, 16500000,
@@ -197,6 +218,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000005', '22222222-2222-2222-2222-000000000012', 10, 0, NULL, 7,
      'https://www.lg.com/vn/images/monitors/md08003697/gallery/D-01.jpg', NULL,
+     NULL,
      220, 8, 4.7, 6, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Samsung Odyssey G9 49 inch', 'QH-ODYSSEYG9', 35990000, 39990000, 32000000,
@@ -205,6 +227,7 @@ VALUES
      'Bảo hành 36 tháng',
      '11111111-1111-1111-1111-000000000005', '22222222-2222-2222-2222-000000000011', 6, 0, NULL, 15,
      'https://images.samsung.com/is/image/samsung/p6pim/vn/ls49ag950nexv/gallery/vn-odyssey-g9-49-ls49ag950nexv-478349011', NULL,
+     NULL,
      180, 4, 4.9, 3, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- Keyboards
@@ -214,6 +237,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000007', '22222222-2222-2222-2222-000000000013', 30, 0, NULL, 0.8,
      'https://resource.logitechg.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/pro-x-tkl/pro-x-tkl-gallery-1-black.png', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      280, 25, 4.6, 15, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Razer BlackWidow V4 Pro', 'QH-BWV4PRO', 5990000, 6490000, 5200000,
@@ -222,6 +246,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000007', '22222222-2222-2222-2222-000000000014', 15, 0, NULL, 1.2,
      'https://assets3.razerzone.com/mAnY7Zn7p2f1WP0X9qnaPcWP8no=/1500x1000/https%3A%2F%2Fhybrismediaprod.blob.core.windows.net%2Fsys-master-phoenix-images-container%2Fh9e%2Fh69%2F9630481530910%2Fblackwidow-v4-pro-usp-kv-desktop-FHD.jpg', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      200, 12, 4.5, 8, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Corsair K100 RGB', 'QH-K100RGB', 6490000, 6990000, 5700000,
@@ -230,6 +255,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000007', '22222222-2222-2222-2222-000000000015', 12, 0, NULL, 1.3,
      'https://www.corsair.com/corsairmedia/sys_master/productcontent/CH-912A01A-NA-Gallery-K100-01.png', NULL,
+     NULL,
      180, 10, 4.7, 6, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- Mice
@@ -239,6 +265,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000008', '22222222-2222-2222-2222-000000000013', 25, 0, NULL, 0.06,
      'https://resource.logitechg.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/pro-x-superlight-2-lightspeed/pro-x-superlight-2-magenta-gallery-1.png', NULL,
+     NULL,
      350, 30, 4.9, 20, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Razer DeathAdder V3 Pro', 'QH-DAV3PRO', 4590000, 4990000, 4000000,
@@ -247,6 +274,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000008', '22222222-2222-2222-2222-000000000014', 20, 0, NULL, 0.063,
      'https://assets3.razerzone.com/G8j6kqkPpP7vPZAm0gw1mGbH9LE=/1500x1000/https%3A%2F%2Fhybrismediaprod.blob.core.windows.net%2Fsys-master-phoenix-images-container%2Fha5%2Fhf2%2F9558131089438%2Frazer-deathadder-v3-pro-usp-kv-desktop.jpg', NULL,
+     '[{"city": "Hải Phòng", "address": "Số 179, thôn 3/2, xã Vĩnh Bảo"}]',
      300, 22, 4.8, 15, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     -- Headsets
@@ -256,6 +284,7 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000009', '22222222-2222-2222-2222-000000000013', 15, 0, NULL, 0.345,
      'https://resource.logitechg.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/pro-x-2-lightspeed/pro-x-2-gallery-1-black.png', NULL,
+     NULL,
      200, 12, 4.8, 8, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL),
 
     (gen_random_uuid(), 'Razer BlackShark V2 Pro 2023', 'QH-BSHARV2PRO', 5490000, 5990000, 4800000,
@@ -264,5 +293,5 @@ VALUES
      'Bảo hành 24 tháng',
      '11111111-1111-1111-1111-000000000009', '22222222-2222-2222-2222-000000000014', 18, 0, NULL, 0.32,
      'https://assets3.razerzone.com/Lv6e5V8LVd7L8WlBV4oMD5FKqhw=/1500x1000/https%3A%2F%2Fhybrismediaprod.blob.core.windows.net%2Fsys-master-phoenix-images-container%2Fh43%2Fhff%2F9630547394590%2Frazer-blackshark-v2-pro-2023-usp-kv-desktop.jpg', NULL,
-     220, 15, 4.7, 10, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL)
+     NULL, 220, 15, 4.7, 10, NOW(), NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, true, NOW(), NULL, 'system', NULL)
 ON CONFLICT ("Id") DO NOTHING;

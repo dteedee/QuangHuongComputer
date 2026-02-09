@@ -56,51 +56,60 @@ public static class IdentityEndpoints
 
         group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IRateLimitService rateLimitService) =>
         {
-            // Rate limiting: 5 failed login attempts per 10 minutes per email
-            var rateLimitKey = $"login:{model.Email}";
-            if (await rateLimitService.IsRateLimitedAsync(rateLimitKey, 5, TimeSpan.FromMinutes(10)))
+            try
             {
-                return Results.StatusCode(429); // Too Many Requests
-            }
-
-            var user = await userManager.FindByEmailAsync(model.Email);
-            if (user != null && user.IsActive && await userManager.CheckPasswordAsync(user, model.Password))
-            {
-                // Reset rate limit on successful login
-                await rateLimitService.ResetAsync(rateLimitKey);
-                var roles = await userManager.GetRolesAsync(user);
-                var roleClaims = new List<Claim>();
-                foreach (var roleName in roles)
+                // Rate limiting: 5 failed login attempts per 10 minutes per email
+                var rateLimitKey = $"login:{model.Email}";
+                if (await rateLimitService.IsRateLimitedAsync(rateLimitKey, 5, TimeSpan.FromMinutes(10)))
                 {
-                    var role = await roleManager.FindByNameAsync(roleName);
-                    if (role != null)
-                    {
-                        roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
-                    }
+                    return Results.StatusCode(429); // Too Many Requests
                 }
-                
-                var token = GenerateJwtToken(user, roles, roleClaims, configuration);
-                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
-                var response = new LoginResponseDto
+                var user = await userManager.FindByEmailAsync(model.Email);
+                if (user != null && user.IsActive && await userManager.CheckPasswordAsync(user, model.Password))
                 {
-                    Token = token,
-                    User = new UserInfoDto
+                    // Reset rate limit on successful login
+                    await rateLimitService.ResetAsync(rateLimitKey);
+                    var roles = await userManager.GetRolesAsync(user);
+                    var roleClaims = new List<Claim>();
+                    foreach (var roleName in roles)
                     {
-                        Email = user.Email ?? string.Empty,
-                        FullName = user.FullName,
-                        Roles = roles.ToList(),
-                        Permissions = permissions
+                        var role = await roleManager.FindByNameAsync(roleName);
+                        if (role != null)
+                        {
+                            roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
+                        }
                     }
-                };
+                    
+                    var token = GenerateJwtToken(user, roles, roleClaims, configuration);
+                    var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
-                return Results.Ok(response);
+                    var response = new LoginResponseDto
+                    {
+                        Token = token,
+                        User = new UserInfoDto
+                        {
+                            Email = user.Email ?? string.Empty,
+                            FullName = user.FullName,
+                            Roles = roles.ToList(),
+                            Permissions = permissions
+                        }
+                    };
+
+                    return Results.Ok(response);
+                }
+
+                // Increment failed login attempts
+                await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(10));
+
+                return Results.Unauthorized();
             }
-
-            // Increment failed login attempts
-            await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(10));
-
-            return Results.Unauthorized();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Login Error] {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Results.Problem(detail: ex.Message, statusCode: 500);
+            }
         });
 
         // Refresh Token Endpoint

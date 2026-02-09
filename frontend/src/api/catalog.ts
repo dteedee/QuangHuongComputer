@@ -11,8 +11,9 @@ export interface Product {
     categoryId: string;
     brandId: string;
     stockQuantity: number;
+    stockLocations?: string; // JSON string
     status: 'InStock' | 'LowStock' | 'OutOfStock' | 'PreOrder';
-    
+
     // Enhanced fields
     price: number;
     oldPrice?: number;
@@ -30,13 +31,13 @@ export interface Product {
     lowStockThreshold: number;
     createdByUserId?: string;
     updatedByUserId?: string;
-    
+
     // SEO fields
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string;
     canonicalUrl?: string;
-    
+
     // Audit fields
     isActive: boolean;
     createdAt: string;

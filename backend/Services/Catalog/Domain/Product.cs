@@ -12,6 +12,7 @@ public class Product : Entity<Guid>
     public string Description { get; private set; }
     public string? Specifications { get; private set; } // JSON string storing specs like RAM, SSD, etc.
     public string? WarrantyInfo { get; private set; }
+    public string? StockLocations { get; private set; } // JSON string storing list of store addresses
     public Guid CategoryId { get; private set; }
     public Guid BrandId { get; private set; }
     public int StockQuantity { get; private set; }
@@ -60,6 +61,7 @@ public class Product : Entity<Guid>
         decimal weight = 0,
         string? imageUrl = null,
         string? galleryImages = null,
+        string? stockLocations = null,
         string? metaTitle = null,
         string? metaDescription = null,
         string? metaKeywords = null,
@@ -82,6 +84,7 @@ public class Product : Entity<Guid>
         Weight = weight;
         ImageUrl = imageUrl;
         GalleryImages = galleryImages;
+        StockLocations = stockLocations;
         ViewCount = 0;
         SoldCount = 0;
         AverageRating = 0;
@@ -114,7 +117,7 @@ public class Product : Entity<Guid>
         Status = DetermineStatus(StockQuantity);
     }
 
-    public void UpdateDetails(string name, string description, decimal price, decimal? oldPrice = null, string? specifications = null, string? warrantyInfo = null)
+    public void UpdateDetails(string name, string description, decimal price, decimal? oldPrice = null, string? specifications = null, string? warrantyInfo = null, string? stockLocations = null)
     {
         Name = name;
         Description = description;
@@ -122,6 +125,7 @@ public class Product : Entity<Guid>
         if (oldPrice.HasValue) OldPrice = oldPrice;
         if (specifications != null) Specifications = specifications;
         if (warrantyInfo != null) WarrantyInfo = warrantyInfo;
+        if (stockLocations != null) StockLocations = stockLocations;
     }
 
     public void UpdatePrice(decimal price, decimal? oldPrice = null)

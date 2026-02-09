@@ -77,7 +77,8 @@ export const AdminProductsPage = () => {
             price: Number(formData.get('price')),
             categoryId: formData.get('categoryId') as string,
             brandId: formData.get('brandId') as string,
-            stockQuantity: Number(formData.get('stockQuantity'))
+            stockQuantity: Number(formData.get('stockQuantity')),
+            imageUrl: formData.get('imageUrl') as string
         };
 
         if (editingProduct) {
@@ -323,6 +324,15 @@ export const AdminProductsPage = () => {
                                             required
                                             className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-red-100 transition-all font-mono"
                                             placeholder="100"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Link Ảnh Sản phẩm</label>
+                                        <input
+                                            name="imageUrl"
+                                            defaultValue={editingProduct?.imageUrl}
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-red-100 transition-all font-mono"
+                                            placeholder="https://example.com/image.jpg"
                                         />
                                     </div>
                                     <div className="col-span-2 space-y-2">

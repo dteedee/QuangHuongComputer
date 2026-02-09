@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef, ComponentType } from 'react';
+import { type InputHTMLAttributes, forwardRef, type ComponentType } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,6 +6,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   icon?: ComponentType<{ className?: string; size?: number }>;
   iconPosition?: 'left' | 'right';
+  suffix?: React.ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -16,6 +17,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       error,
       icon: Icon,
       iconPosition = 'left',
+      suffix,
       id,
       ...props
     },
@@ -66,6 +68,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               )}
               size={20}
             />
+          )}
+
+          {suffix && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              {suffix}
+            </div>
           )}
         </div>
 

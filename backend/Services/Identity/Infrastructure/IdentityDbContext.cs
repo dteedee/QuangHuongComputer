@@ -102,7 +102,7 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
         base.OnModelCreating(builder);
 
         // Set schema cho Identity module
-        builder.HasDefaultSchema("identity");
+        // builder.HasDefaultSchema("identity");
 
         builder.Entity<ApplicationUser>().HasQueryFilter(u => u.IsActive);
 
