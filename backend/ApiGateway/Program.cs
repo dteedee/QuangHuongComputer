@@ -82,14 +82,17 @@ builder.Services.AddRateLimiter(options =>
 
     options.OnRejected = async (context, cancellationToken) =>
     {
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        context.HttpContext.Response.Headers.Add("Retry-After", "60");
-        
-        await context.HttpContext.Response.WriteAsJsonAsync(new 
-        { 
-            error = "Too many requests. Please try again later.",
-            retryAfter = 60
-        }, cancellationToken);
+        if (!context.HttpContext.Response.HasStarted)
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response.Headers.TryAdd("Retry-After", "60");
+            
+            await context.HttpContext.Response.WriteAsJsonAsync(new 
+            { 
+                error = "Too many requests. Please try again later.",
+                retryAfter = 60
+            }, cancellationToken);
+        }
     };
 });
 
@@ -269,7 +272,8 @@ app.UseResponseCompression();
 app.UseGlobalExceptionHandling();
 app.UseSecurityHeaders();
 app.UsePerformanceMonitoring();
-app.UseApiResponseTime();
+// Note: Removed UseApiResponseTime() as UsePerformanceMonitoring() already adds X-Response-Time-Ms header
+
 
 // ========================================
 // RATE LIMITING MIDDLEWARE

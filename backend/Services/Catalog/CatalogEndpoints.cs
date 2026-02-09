@@ -514,6 +514,214 @@ public static class CatalogEndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = "Brand and associated products deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        // Seed Data Endpoint (Development only)
+        group.MapPost("/seed", async (CatalogDbContext db) =>
+        {
+            // Check if data already exists
+            if (await db.Categories.AnyAsync() || await db.Brands.AnyAsync())
+            {
+                return Results.BadRequest(new { Error = "Data already exists. Clear database first." });
+            }
+
+            // Create Categories
+            var categories = new List<Category>
+            {
+                new Category("Laptop", "Laptop văn phòng và gaming"),
+                new Category("PC Gaming", "Máy tính để bàn gaming"),
+                new Category("PC Văn Phòng", "Máy tính để bàn văn phòng"),
+                new Category("Linh Kiện", "Linh kiện máy tính"),
+                new Category("Màn Hình", "Màn hình máy tính"),
+                new Category("Phụ Kiện", "Phụ kiện máy tính"),
+                new Category("Bàn Phím", "Bàn phím cơ và gaming"),
+                new Category("Chuột", "Chuột gaming và văn phòng"),
+                new Category("Tai Nghe", "Tai nghe gaming và âm nhạc"),
+                new Category("Ghế Gaming", "Ghế gaming cao cấp")
+            };
+            db.Categories.AddRange(categories);
+            await db.SaveChangesAsync();
+
+            // Create Brands
+            var brands = new List<Brand>
+            {
+                new Brand("ASUS", "Thương hiệu laptop và linh kiện hàng đầu"),
+                new Brand("Dell", "Thương hiệu laptop doanh nghiệp"),
+                new Brand("HP", "Hewlett-Packard - Laptop và PC"),
+                new Brand("Lenovo", "ThinkPad và gaming laptop"),
+                new Brand("MSI", "Laptop và linh kiện gaming"),
+                new Brand("Acer", "Laptop giá tốt"),
+                new Brand("Gigabyte", "VGA và mainboard cao cấp"),
+                new Brand("Intel", "CPU và chipset"),
+                new Brand("AMD", "CPU và GPU"),
+                new Brand("NVIDIA", "Card đồ họa"),
+                new Brand("Samsung", "Màn hình và SSD"),
+                new Brand("LG", "Màn hình UltraWide"),
+                new Brand("Logitech", "Chuột và bàn phím"),
+                new Brand("Razer", "Gaming gear"),
+                new Brand("Corsair", "RAM và phụ kiện gaming"),
+                new Brand("Kingston", "RAM và SSD"),
+                new Brand("Western Digital", "Ổ cứng HDD và SSD"),
+                new Brand("Seagate", "Ổ cứng HDD"),
+                new Brand("HyperX", "Gaming gear Kingston"),
+                new Brand("SteelSeries", "Gaming gear")
+            };
+            db.Brands.AddRange(brands);
+            await db.SaveChangesAsync();
+
+            // Get category and brand IDs
+            var catLaptop = categories.First(c => c.Name == "Laptop").Id;
+            var catPCGaming = categories.First(c => c.Name == "PC Gaming").Id;
+            var catLinhKien = categories.First(c => c.Name == "Linh Kiện").Id;
+            var catManHinh = categories.First(c => c.Name == "Màn Hình").Id;
+            var catBanPhim = categories.First(c => c.Name == "Bàn Phím").Id;
+            var catChuot = categories.First(c => c.Name == "Chuột").Id;
+            var catTaiNghe = categories.First(c => c.Name == "Tai Nghe").Id;
+
+            var brandAsus = brands.First(b => b.Name == "ASUS").Id;
+            var brandDell = brands.First(b => b.Name == "Dell").Id;
+            var brandHP = brands.First(b => b.Name == "HP").Id;
+            var brandLenovo = brands.First(b => b.Name == "Lenovo").Id;
+            var brandMSI = brands.First(b => b.Name == "MSI").Id;
+            var brandAcer = brands.First(b => b.Name == "Acer").Id;
+            var brandGigabyte = brands.First(b => b.Name == "Gigabyte").Id;
+            var brandIntel = brands.First(b => b.Name == "Intel").Id;
+            var brandAMD = brands.First(b => b.Name == "AMD").Id;
+            var brandNVIDIA = brands.First(b => b.Name == "NVIDIA").Id;
+            var brandSamsung = brands.First(b => b.Name == "Samsung").Id;
+            var brandLG = brands.First(b => b.Name == "LG").Id;
+            var brandLogitech = brands.First(b => b.Name == "Logitech").Id;
+            var brandRazer = brands.First(b => b.Name == "Razer").Id;
+            var brandCorsair = brands.First(b => b.Name == "Corsair").Id;
+
+            // Create Products
+            var products = new List<Product>
+            {
+                // Laptops
+                new Product("ASUS ROG Strix G16 2024", 42990000, 38000000, "Laptop gaming cao cấp Intel Core i9-14900HX, RTX 4070, 16GB DDR5, 1TB SSD", catLaptop, brandAsus, 15, 
+                    specifications: "{\"CPU\": \"Intel Core i9-14900HX\", \"RAM\": \"16GB DDR5\", \"SSD\": \"1TB\", \"GPU\": \"RTX 4070 8GB\", \"Display\": \"16 inch QHD+ 240Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/asus-rog-strix-g16_j5dhxn.jpg"),
+                
+                new Product("ASUS TUF Gaming F15 2024", 28990000, 25000000, "Laptop gaming Intel Core i7-13620H, RTX 4060, 16GB DDR5, 512GB SSD", catLaptop, brandAsus, 25, 
+                    specifications: "{\"CPU\": \"Intel Core i7-13620H\", \"RAM\": \"16GB DDR5\", \"SSD\": \"512GB\", \"GPU\": \"RTX 4060 8GB\", \"Display\": \"15.6 inch FHD 144Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/asus-tuf-f15_xvzrpc.jpg"),
+                
+                new Product("Dell XPS 15 2024", 45990000, 42000000, "Laptop cao cấp Intel Core Ultra 7-155H, 32GB RAM, 1TB SSD, OLED 3.5K", catLaptop, brandDell, 10, 
+                    specifications: "{\"CPU\": \"Intel Core Ultra 7-155H\", \"RAM\": \"32GB DDR5\", \"SSD\": \"1TB\", \"Display\": \"15.6 inch OLED 3.5K\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/dell-xps-15_kfqzxm.jpg"),
+                
+                new Product("Dell Inspiron 15 3520", 15990000, 13500000, "Laptop văn phòng Intel Core i5-1235U, 8GB RAM, 512GB SSD", catLaptop, brandDell, 30, 
+                    specifications: "{\"CPU\": \"Intel Core i5-1235U\", \"RAM\": \"8GB DDR4\", \"SSD\": \"512GB\", \"Display\": \"15.6 inch FHD\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/dell-inspiron-15_qweabc.jpg"),
+                
+                new Product("HP Victus 16 2024", 26990000, 23000000, "Laptop gaming AMD Ryzen 7 7840HS, RTX 4060, 16GB DDR5, 512GB SSD", catLaptop, brandHP, 20, 
+                    specifications: "{\"CPU\": \"AMD Ryzen 7 7840HS\", \"RAM\": \"16GB DDR5\", \"SSD\": \"512GB\", \"GPU\": \"RTX 4060 8GB\", \"Display\": \"16.1 inch FHD 144Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/hp-victus-16_abcdef.jpg"),
+                
+                new Product("Lenovo ThinkPad X1 Carbon Gen 12", 52990000, 48000000, "Laptop doanh nhân Intel Core Ultra 7, 32GB RAM, 1TB SSD", catLaptop, brandLenovo, 8, 
+                    specifications: "{\"CPU\": \"Intel Core Ultra 7-155U\", \"RAM\": \"32GB LPDDR5\", \"SSD\": \"1TB\", \"Display\": \"14 inch 2.8K OLED\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/lenovo-thinkpad-x1_ghijkl.jpg"),
+                
+                new Product("MSI Katana 15 2024", 24990000, 21500000, "Laptop gaming Intel Core i7-13620H, RTX 4050, 16GB DDR5, 512GB SSD", catLaptop, brandMSI, 18, 
+                    specifications: "{\"CPU\": \"Intel Core i7-13620H\", \"RAM\": \"16GB DDR5\", \"SSD\": \"512GB\", \"GPU\": \"RTX 4050 6GB\", \"Display\": \"15.6 inch FHD 144Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/msi-katana-15_mnopqr.jpg"),
+                
+                new Product("Acer Nitro V 15 ANV15-51", 22990000, 19500000, "Laptop gaming Intel Core i5-13420H, RTX 4050, 16GB DDR5, 512GB SSD", catLaptop, brandAcer, 22, 
+                    specifications: "{\"CPU\": \"Intel Core i5-13420H\", \"RAM\": \"16GB DDR5\", \"SSD\": \"512GB\", \"GPU\": \"RTX 4050 6GB\", \"Display\": \"15.6 inch FHD 144Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/acer-nitro-v15_stuvwx.jpg"),
+
+                // PC Gaming
+                new Product("PC Gaming QH Beast i9-14900K RTX 4090", 89990000, 82000000, "PC Gaming cao cấp Intel Core i9-14900K, RTX 4090 24GB, 64GB DDR5, 2TB NVMe", catPCGaming, brandAsus, 5, 
+                    specifications: "{\"CPU\": \"Intel Core i9-14900K\", \"RAM\": \"64GB DDR5 6000MHz\", \"SSD\": \"2TB NVMe Gen4\", \"GPU\": \"RTX 4090 24GB\", \"PSU\": \"1000W Gold\", \"Case\": \"NZXT H9 Elite\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/pc-gaming-beast_yzabcd.jpg"),
+                
+                new Product("PC Gaming QH Pro i7-14700K RTX 4070 Ti", 52990000, 47000000, "PC Gaming Intel Core i7-14700K, RTX 4070 Ti Super, 32GB DDR5, 1TB NVMe", catPCGaming, brandMSI, 8, 
+                    specifications: "{\"CPU\": \"Intel Core i7-14700K\", \"RAM\": \"32GB DDR5 5600MHz\", \"SSD\": \"1TB NVMe Gen4\", \"GPU\": \"RTX 4070 Ti Super 16GB\", \"PSU\": \"850W Gold\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/pc-gaming-pro_efghij.jpg"),
+                
+                new Product("PC Gaming QH Starter R5-7600 RTX 4060", 22990000, 19500000, "PC Gaming AMD Ryzen 5 7600, RTX 4060, 16GB DDR5, 512GB NVMe", catPCGaming, brandGigabyte, 15, 
+                    specifications: "{\"CPU\": \"AMD Ryzen 5 7600\", \"RAM\": \"16GB DDR5 5200MHz\", \"SSD\": \"512GB NVMe\", \"GPU\": \"RTX 4060 8GB\", \"PSU\": \"650W Bronze\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/pc-gaming-starter_klmnop.jpg"),
+
+                // Components
+                new Product("Intel Core i9-14900K", 15990000, 14000000, "CPU Intel thế hệ 14 cao cấp nhất, 24 nhân 32 luồng, 6.0GHz", catLinhKien, brandIntel, 12, 
+                    specifications: "{\"Cores\": \"24 (8P+16E)\", \"Threads\": \"32\", \"Base Clock\": \"3.2GHz\", \"Boost Clock\": \"6.0GHz\", \"TDP\": \"125W\", \"Socket\": \"LGA 1700\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/intel-i9-14900k_qrstuv.jpg"),
+                
+                new Product("AMD Ryzen 9 7950X3D", 17990000, 16000000, "CPU AMD cao cấp nhất cho gaming, 16 nhân 32 luồng, 3D V-Cache", catLinhKien, brandAMD, 8, 
+                    specifications: "{\"Cores\": \"16\", \"Threads\": \"32\", \"Base Clock\": \"4.2GHz\", \"Boost Clock\": \"5.7GHz\", \"L3 Cache\": \"128MB 3D V-Cache\", \"TDP\": \"120W\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/amd-7950x3d_wxyzab.jpg"),
+                
+                new Product("NVIDIA GeForce RTX 4090 Founders Edition", 52990000, 48000000, "Card đồ họa mạnh nhất thế giới, 24GB GDDR6X", catLinhKien, brandNVIDIA, 3, 
+                    specifications: "{\"VRAM\": \"24GB GDDR6X\", \"Cores\": \"16384 CUDA\", \"Boost Clock\": \"2.52GHz\", \"TDP\": \"450W\", \"Interface\": \"PCIe 4.0 x16\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/rtx-4090-fe_cdefgh.jpg"),
+                
+                new Product("ASUS ROG STRIX RTX 4080 Super OC", 32990000, 29000000, "Card đồ họa gaming cao cấp, 16GB GDDR6X, tản nhiệt 3 quạt", catLinhKien, brandAsus, 6, 
+                    specifications: "{\"VRAM\": \"16GB GDDR6X\", \"Cores\": \"10240 CUDA\", \"Boost Clock\": \"2.62GHz\", \"TDP\": \"320W\", \"Cooling\": \"3 Fan Axial-tech\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/asus-rog-4080-super_ijklmn.jpg"),
+                
+                new Product("Corsair Vengeance DDR5 32GB (2x16GB) 6000MHz", 3990000, 3400000, "RAM DDR5 cao cấp cho gaming và workstation", catLinhKien, brandCorsair, 40, 
+                    specifications: "{\"Capacity\": \"32GB (2x16GB)\", \"Speed\": \"6000MHz\", \"Latency\": \"CL36\", \"Voltage\": \"1.35V\", \"RGB\": \"Yes\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/corsair-vengeance-ddr5_opqrst.jpg"),
+                
+                new Product("Samsung 990 Pro 2TB NVMe", 5490000, 4800000, "SSD NVMe Gen4 cao cấp, tốc độ đọc 7450MB/s", catLinhKien, brandSamsung, 25, 
+                    specifications: "{\"Capacity\": \"2TB\", \"Interface\": \"PCIe 4.0 x4 NVMe\", \"Read Speed\": \"7450MB/s\", \"Write Speed\": \"6900MB/s\", \"TBW\": \"1200TB\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/samsung-990-pro_uvwxyz.jpg"),
+
+                // Monitors
+                new Product("ASUS ROG Swift PG32UQX", 52990000, 47000000, "Màn hình gaming 32 inch 4K 144Hz Mini LED HDR 1400", catManHinh, brandAsus, 4, 
+                    specifications: "{\"Size\": \"32 inch\", \"Resolution\": \"3840x2160 4K\", \"Refresh Rate\": \"144Hz\", \"Panel\": \"IPS Mini LED\", \"HDR\": \"HDR 1400\", \"Response\": \"1ms\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/asus-pg32uqx_123456.jpg"),
+                
+                new Product("LG UltraGear 27GP950-B", 18990000, 16500000, "Màn hình gaming 27 inch 4K 160Hz Nano IPS", catManHinh, brandLG, 10, 
+                    specifications: "{\"Size\": \"27 inch\", \"Resolution\": \"3840x2160 4K\", \"Refresh Rate\": \"160Hz\", \"Panel\": \"Nano IPS\", \"HDR\": \"HDR 600\", \"Response\": \"1ms\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/lg-27gp950_789012.jpg"),
+                
+                new Product("Samsung Odyssey G9 49 inch", 35990000, 32000000, "Màn hình cong gaming 49 inch DQHD 240Hz", catManHinh, brandSamsung, 6, 
+                    specifications: "{\"Size\": \"49 inch\", \"Resolution\": \"5120x1440 DQHD\", \"Refresh Rate\": \"240Hz\", \"Panel\": \"VA Curved 1000R\", \"HDR\": \"HDR 1000\", \"Response\": \"1ms\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/samsung-odyssey-g9_345678.jpg"),
+
+                // Keyboards
+                new Product("Logitech G Pro X TKL", 3290000, 2800000, "Bàn phím cơ gaming TKL, hot-swap, RGB", catBanPhim, brandLogitech, 30, 
+                    specifications: "{\"Layout\": \"TKL\", \"Switch\": \"GX Red/Blue/Brown\", \"Hot-swap\": \"Yes\", \"RGB\": \"LIGHTSYNC RGB\", \"Connection\": \"Wired USB-C\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/logitech-gpro-tkl_901234.jpg"),
+                
+                new Product("Razer BlackWidow V4 Pro", 5990000, 5200000, "Bàn phím cơ gaming full-size, Green Switch, RGB", catBanPhim, brandRazer, 15, 
+                    specifications: "{\"Layout\": \"Full-size\", \"Switch\": \"Razer Green\", \"RGB\": \"Razer Chroma\", \"Wrist Rest\": \"Included\", \"Media Keys\": \"Yes\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/razer-blackwidow-v4_567890.jpg"),
+                
+                new Product("Corsair K100 RGB", 6490000, 5700000, "Bàn phím cơ gaming cao cấp, OPX Switch, iCUE", catBanPhim, brandCorsair, 12, 
+                    specifications: "{\"Layout\": \"Full-size\", \"Switch\": \"Corsair OPX\", \"RGB\": \"per-key iCUE\", \"Macro\": \"6 keys\", \"Polling Rate\": \"4000Hz\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/corsair-k100_abcdef.jpg"),
+
+                // Mice
+                new Product("Logitech G Pro X Superlight 2", 4290000, 3700000, "Chuột gaming không dây nhẹ nhất thế giới, 60g", catChuot, brandLogitech, 25, 
+                    specifications: "{\"Sensor\": \"HERO 2\", \"DPI\": \"32000\", \"Weight\": \"60g\", \"Battery\": \"95 hours\", \"Connection\": \"LIGHTSPEED Wireless\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/logitech-superlight2_ghijkl.jpg"),
+                
+                new Product("Razer DeathAdder V3 Pro", 4590000, 4000000, "Chuột gaming không dây ergonomic, Focus Pro sensor", catChuot, brandRazer, 20, 
+                    specifications: "{\"Sensor\": \"Focus Pro 30K\", \"DPI\": \"30000\", \"Weight\": \"63g\", \"Battery\": \"90 hours\", \"Connection\": \"HyperSpeed Wireless\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/razer-deathadder-v3_mnopqr.jpg"),
+
+                // Headsets
+                new Product("Logitech G Pro X 2 Lightspeed", 6290000, 5500000, "Tai nghe gaming không dây cao cấp, Graphene drivers", catTaiNghe, brandLogitech, 15, 
+                    specifications: "{\"Driver\": \"50mm Graphene\", \"Frequency\": \"20Hz-20kHz\", \"Mic\": \"Detachable Blue Voice\", \"Battery\": \"50 hours\", \"Connection\": \"LIGHTSPEED/Bluetooth\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/logitech-gpro-x2_stuvwx.jpg"),
+                
+                new Product("Razer BlackShark V2 Pro 2023", 5490000, 4800000, "Tai nghe gaming không dây, THX Spatial Audio", catTaiNghe, brandRazer, 18, 
+                    specifications: "{\"Driver\": \"50mm TriForce Titanium\", \"Frequency\": \"12Hz-28kHz\", \"Mic\": \"Detachable HyperClear Super Wideband\", \"Battery\": \"70 hours\", \"Connection\": \"HyperSpeed Wireless\"}", 
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/razer-blackshark-v2-pro_yzabcd.jpg"),
+            };
+
+            db.Products.AddRange(products);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { 
+                Message = "Seed data created successfully",
+                Categories = categories.Count,
+                Brands = brands.Count,
+                Products = products.Count
+            });
+        });
     }
 }
 
