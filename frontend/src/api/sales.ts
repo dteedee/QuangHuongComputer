@@ -58,7 +58,7 @@ export interface OrderItem {
     lineTotal: number;
 }
 
-export type OrderStatus = 'Draft' | 'Confirmed' | 'Paid' | 'Shipped' | 'Delivered' | 'Completed' | 'Cancelled';
+export type OrderStatus = 'Pending' | 'Draft' | 'Confirmed' | 'Paid' | 'Shipped' | 'Delivered' | 'Completed' | 'Cancelled';
 export type PaymentStatus = 'Pending' | 'Processing' | 'Paid' | 'Failed' | 'Refunded';
 export type FulfillmentStatus = 'Pending' | 'Processing' | 'Fulfilled' | 'Shipped' | 'Delivered';
 
@@ -281,5 +281,14 @@ export const salesApi = {
             const response = await client.get<SalesStats>('/sales/admin/stats');
             return response.data;
         }
+    },
+    // Compatibility aliases
+    getMyOrders: async () => {
+        const response = await client.get<Order[]>('/sales/orders');
+        return response.data;
+    },
+    getMyOrder: async (id: string) => {
+        const response = await client.get<Order>(`/sales/orders/${id}`);
+        return response.data;
     }
 };

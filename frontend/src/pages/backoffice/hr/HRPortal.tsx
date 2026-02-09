@@ -1,26 +1,32 @@
 ﻿import { useState } from 'react';
 import {
     Users2, CreditCard, Calendar, BarChart,
-    UserPlus, Search, Download, CheckCircle,
-    UserCheck, TrendingUp, MoreHorizontal, X, Check, Loader2
+    UserPlus, CheckCircle,
+    UserCheck, Loader2, X, Check
 } from 'lucide-react';
 import { hrApi, type Employee, type Payroll } from '../../../api/hr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../../../utils/format';
 
 export const HRPortal = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: employees = [], isLoading: empLoading } = useQuery({
+    const currentMonth = 12;
+    const currentYear = 2024;
+
+    const { data: employeesResponse, isLoading: empLoading } = useQuery({
         queryKey: ['hr-employees'],
-        queryFn: hrApi.getEmployees,
+        queryFn: () => hrApi.getEmployees(),
     });
 
-    const { data: payrolls = [], isLoading: payLoading } = useQuery({
-        queryKey: ['hr-payroll'],
-        queryFn: hrApi.getPayroll,
+    const employees = employeesResponse?.items || [];
+
+    const { data: payrolls = [], isLoading: payLoading } = useQuery<Payroll[]>({
+        queryKey: ['hr-payroll', currentMonth, currentYear],
+        queryFn: () => hrApi.getPayrolls(currentMonth, currentYear),
     });
 
     const createEmployeeMutation = useMutation({
@@ -45,12 +51,13 @@ export const HRPortal = () => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const data = {
-            fullName: formData.get('fullName'),
-            email: formData.get('email'),
-            position: formData.get('position'),
+            fullName: formData.get('fullName') as string,
+            email: formData.get('email') as string,
+            position: formData.get('position') as string,
             baseSalary: Number(formData.get('baseSalary')),
+            department: 'IT',
             hireDate: new Date().toISOString(),
-            isActive: true
+            status: 'Active' as const,
         };
         createEmployeeMutation.mutate(data);
     };
@@ -81,8 +88,8 @@ export const HRPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {[
                     { label: 'Tổng nhân sự', value: employees.length, icon: <Users2 size={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
-                    { label: 'Kỳ lương hiện tại', value: '12/2024', icon: <CreditCard size={22} />, color: 'text-amber-500', bg: 'bg-amber-50' },
-                    { label: 'Đang làm việc', value: employees.filter(e => e.isActive).length, icon: <Calendar size={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
+                    { label: 'Kỳ lương hiện tại', value: `${currentMonth}/${currentYear}`, icon: <CreditCard size={22} />, color: 'text-amber-500', bg: 'bg-amber-50' },
+                    { label: 'Đang làm việc', value: employees.filter(e => e.status === 'Active').length, icon: <Calendar size={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
                     { label: 'Hiệu suất TB', value: '98%', icon: <BarChart size={22} />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                 ].map((stat, i) => (
                     <motion.div whileHover={{ y: -5 }} key={i} className="premium-card p-8 group">
@@ -115,8 +122,8 @@ export const HRPortal = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-base font-black text-gray-900 tracking-tighter">₫{emp.baseSalary.toLocaleString()}</p>
-                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black italic mt-1">{emp.isActive ? 'Đang làm việc' : 'Đã nghỉ việc'}</p>
+                                    <p className="text-base font-black text-gray-900 tracking-tighter">{formatCurrency(emp.baseSalary)}</p>
+                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black italic mt-1">{emp.status === 'Active' ? 'Đang làm việc' : 'Nghỉ việc/Vắng mặt'}</p>
                                 </div>
                             </div>
                         ))}
@@ -125,9 +132,9 @@ export const HRPortal = () => {
 
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="premium-card p-8 flex flex-col">
                     <div className="flex justify-between items-center mb-8 border-b border-gray-50 pb-6">
-                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Bảng lương tháng 12</h3>
+                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Bảng lương tháng {currentMonth}</h3>
                         <button
-                            onClick={() => generatePayrollMutation.mutate({ month: 12, year: 2024 })}
+                            onClick={() => generatePayrollMutation.mutate({ month: currentMonth, year: currentYear })}
                             className="text-[10px] font-black text-[#D70018] uppercase tracking-widest hover:underline italic"
                         >
                             Chốt lương &gt;
@@ -141,15 +148,15 @@ export const HRPortal = () => {
                         ) : payrolls.map((pay) => (
                             <div key={pay.id} className="p-5 bg-gray-50/50 hover:bg-white rounded-[20px] border border-transparent hover:border-red-100 transition-all flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 flex items-center justify-center rounded-xl ${pay.isPaid ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}><CheckCircle size={18} /></div>
+                                    <div className={`w-10 h-10 flex items-center justify-center rounded-xl ${pay.status === 'Paid' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}><CheckCircle size={18} /></div>
                                     <div>
                                         <p className="text-xs font-black text-gray-800 uppercase italic leading-none mb-1.5">{pay.employeeName || 'Thành viên'}</p>
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">₫{pay.amount.toLocaleString()}</p>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{formatCurrency(pay.netPay)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${pay.isPaid ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                                        {pay.isPaid ? 'Đã thanh toán' : 'Chờ trả'}
+                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${pay.status === 'Paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                        {pay.status === 'Paid' ? 'Đã thanh toán' : pay.status === 'Processed' ? 'Đã xử lý' : 'Chờ xử lý'}
                                     </span>
                                 </div>
                             </div>
@@ -176,7 +183,7 @@ export const HRPortal = () => {
                                         <input name="position" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lương cơ bản (₫)</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lương cơ bản</label>
                                         <input name="baseSalary" type="number" required defaultValue={10000000} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
                                     </div>
                                 </div>

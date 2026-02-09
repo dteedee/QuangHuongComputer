@@ -294,11 +294,11 @@ export const AdminPortal = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
-                        Trung tâm <span className="text-[#D70018]">Quản trị</span>
+                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
+                        Trung tâm <span className="text-[#D70018]">Điều hành</span>
                     </h1>
-                    <p className="text-gray-600 font-extrabold uppercase text-xs tracking-widest flex items-center gap-2">
-                        Giám sát và quản lý toàn bộ hệ thống Quang Hưởng Computer
+                    <p className="text-sm text-gray-500 font-medium italic">
+                        Giám sát và quản trị hệ thống Quang Hưởng Computer chuyên sâu.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Category, type Brand } from '../api/catalog';
 import { Filter, SlidersHorizontal, Grid, List, ChevronDown } from 'lucide-react';
+import { ProductCard } from '../components/ProductCard';
 
 interface ProductCatalogProps {
   categorySlug?: string;
@@ -191,26 +192,26 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
               <div className="mb-6">
                 <h3 className="font-medium mb-3">Danh mục</h3>
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="radio"
                       name="category"
                       checked={selectedCategory === ''}
                       onChange={() => setSelectedCategory('')}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Tất cả</span>
+                    <span className="text-gray-700 group-hover:text-blue-600">All Categories</span>
                   </label>
                   {categories.map((category) => (
-                    <label key={category.id} className="flex items-center gap-2 cursor-pointer">
+                    <label key={category.id} className="flex items-center gap-2 cursor-pointer group">
                       <input
                         type="radio"
                         name="category"
                         checked={selectedCategory === category.id}
                         onChange={() => setSelectedCategory(category.id)}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                       />
-                      <span>{category.name}</span>
+                      <span className="text-gray-700 group-hover:text-blue-600">{category.name || 'Unnamed Category'}</span>
                     </label>
                   ))}
                 </div>
@@ -220,26 +221,26 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
               <div className="mb-6">
                 <h3 className="font-medium mb-3">Thương hiệu</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="radio"
                       name="brand"
                       checked={selectedBrand === ''}
                       onChange={() => setSelectedBrand('')}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Tất cả</span>
+                    <span className="text-gray-700 group-hover:text-blue-600">All Brands</span>
                   </label>
                   {brands.map((brand) => (
-                    <label key={brand.id} className="flex items-center gap-2 cursor-pointer">
+                    <label key={brand.id} className="flex items-center gap-2 cursor-pointer group">
                       <input
                         type="radio"
                         name="brand"
                         checked={selectedBrand === brand.id}
                         onChange={() => setSelectedBrand(brand.id)}
-                        className="w-4 h-4 text-blue-600"
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                       />
-                      <span>{brand.name}</span>
+                      <span className="text-gray-700 group-hover:text-blue-600">{brand.name || 'Unnamed Brand'}</span>
                     </label>
                   ))}
                 </div>
@@ -358,73 +359,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => {
-                  const discount = getDiscountPercentage(product);
-                  const stockStatus = getStockStatus(product.stockQuantity);
-
-                  return (
-                    <div
-                      key={product.id}
-                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
-                    >
-                      <div className="relative">
-                        <img
-                          src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=400&h=300&fit=crop`}
-                          alt={product.name}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {discount && (
-                          <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-medium">
-                            -{discount}%
-                          </span>
-                        )}
-                        <span className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${stockStatus.className}`}>
-                          {stockStatus.text}
-                        </span>
-                      </div>
-
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[48px]">
-                          {product.name}
-                        </h3>
-
-                        <div className="mb-3">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-blue-600">
-                              {formatPrice(product.price)}
-                            </span>
-                            {product.oldPrice && (
-                              <span className="text-sm text-gray-400 line-through">
-                                {formatPrice(product.oldPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                          {product.description}
-                        </p>
-
-                        <div className="flex gap-2">
-                          <button
-                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                            onClick={() => (window.location.href = `/products/${product.id}`)}
-                          >
-                            Xem chi tiết
-                          </button>
-                          <button
-                            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                            disabled={product.stockQuantity === 0}
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             ) : (
               <div className="space-y-4">
@@ -437,11 +374,19 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       key={product.id}
                       className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 flex gap-4"
                     >
-                      <img
-                        src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200&h=200&fit=crop`}
-                        alt={product.name}
-                        className="w-48 h-48 object-cover rounded-lg flex-shrink-0"
-                      />
+                      <div className="w-48 h-48 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-100">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-gray-300 font-bold text-4xl select-none">
+                            {product.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
 
                       <div className="flex-1">
                         <div className="flex justify-between gap-4">
@@ -532,8 +477,8 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
                         className={`px-4 py-2 rounded-lg ${page === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
                           }`}
                       >
                         {pageNum}

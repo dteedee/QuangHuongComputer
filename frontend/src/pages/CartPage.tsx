@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, X } from 'lucide-react';
+import { formatCurrency } from '../utils/format';
 
 export const CartPage = () => {
     const {
@@ -109,8 +109,8 @@ export const CartPage = () => {
                                         </div>
 
                                         <div className="text-right min-w-[120px]">
-                                            <p className="text-xl font-black text-[#D70018] tracking-tight">{(item.price * item.quantity).toLocaleString()}₫</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 italic">{item.price.toLocaleString()}₫/cái</p>
+                                            <p className="text-xl font-black text-[#D70018] tracking-tight">{formatCurrency(item.price * item.quantity)}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 italic">{formatCurrency(item.price)}/cái</p>
                                         </div>
                                     </div>
                                 ))}
@@ -196,7 +196,7 @@ export const CartPage = () => {
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
                                     <span>Tạm tính</span>
-                                    <span className="text-gray-900">{subtotal.toLocaleString()}₫</span>
+                                    <span className="text-gray-900">{formatCurrency(subtotal)}</span>
                                 </div>
 
                                 {discountAmount > 0 && (
@@ -205,13 +205,13 @@ export const CartPage = () => {
                                             <Tag className="w-3 h-3" />
                                             Giảm giá
                                         </span>
-                                        <span>-{discountAmount.toLocaleString()}₫</span>
+                                        <span>-{formatCurrency(discountAmount)}</span>
                                     </div>
                                 )}
 
                                 <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
                                     <span>Thuế GTGT (10%)</span>
-                                    <span className="text-gray-900">{tax.toLocaleString()}₫</span>
+                                    <span className="text-gray-900">{formatCurrency(tax)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide pb-4 border-b border-gray-100">
                                     <span>Vận chuyển</span>
@@ -220,7 +220,7 @@ export const CartPage = () => {
                                 <div className="flex justify-between items-end pt-2">
                                     <span className="text-sm font-black text-gray-900 uppercase tracking-wide">Tổng cộng</span>
                                     <div className="text-right">
-                                        <p className="text-3xl font-black text-[#D70018] tracking-tight">{total.toLocaleString()}₫</p>
+                                        <p className="text-3xl font-black text-[#D70018] tracking-tight">{formatCurrency(total)}</p>
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 italic">Đã bao gồm VAT</p>
                                     </div>
                                 </div>

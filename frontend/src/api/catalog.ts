@@ -274,4 +274,14 @@ export const catalogApi = {
         const response = await client.delete<{ message: string }>(`/catalog/brands/${id}`);
         return response.data;
     },
+
+    // Media
+    uploadImage: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await client.post<{ url: string }>('/media/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
 };

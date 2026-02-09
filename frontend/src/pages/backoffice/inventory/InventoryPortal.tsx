@@ -2,6 +2,7 @@
 import { Package, TrendingDown, AlertTriangle, ShoppingCart, Plus, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import client from '../../../api/client';
+import { formatCurrency } from '../../../utils/format';
 
 interface InventoryItem {
     id: string;
@@ -205,7 +206,7 @@ export const InventoryPortal = () => {
                                             </p>
                                         </div>
                                         <p className="text-lg font-black text-gray-900 tracking-tighter">
-                                            {po.totalAmount.toLocaleString()}₫
+                                            {formatCurrency(po.totalAmount)}
                                         </p>
                                     </div>
                                 </div>

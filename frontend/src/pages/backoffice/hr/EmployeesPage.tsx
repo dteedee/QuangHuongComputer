@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hrApi, type Employee } from '../../../api/hr';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../../../utils/format';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -59,7 +60,7 @@ export const EmployeesPage = () => {
     const total = response?.total || 0;
 
     const filteredEmployees = employees.filter((emp: Employee) =>
-        (emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         emp.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
@@ -421,7 +422,7 @@ export const EmployeesPage = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Lương cơ bản (₫) <span className="text-red-500">*</span>
+                                            Lương cơ bản (VND) <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             name="baseSalary"

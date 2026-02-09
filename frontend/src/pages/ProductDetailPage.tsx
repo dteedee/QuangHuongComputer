@@ -81,7 +81,15 @@ export default function ProductDetailPage() {
     if (!specString) return {};
 
     try {
-      return JSON.parse(specString);
+      const parsed = JSON.parse(specString);
+      if (Array.isArray(parsed)) {
+        const res: Specification = {};
+        parsed.forEach((item: any) => {
+          if (item && item.label) res[item.label] = item.value;
+        });
+        return res;
+      }
+      return parsed;
     } catch {
       // If not JSON, try parsing line-by-line
       const specs: Specification = {};

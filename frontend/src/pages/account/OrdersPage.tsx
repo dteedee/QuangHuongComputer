@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { salesApi, type Order, type OrderStatus } from '../../api/sales';
-import { Package, Search, Filter, Eye, XCircle, RotateCcw, Clock, CheckCircle, Truck, Ban } from 'lucide-react';
+import { Package, Search, Filter, Eye, XCircle, RotateCcw, Clock, CheckCircle, Truck, Ban, ArrowLeft, MapPin, CreditCard, FileText, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../../utils/format';
 
 const statusConfig: Record<OrderStatus, { label: string; icon: JSX.Element; color: string; bgColor: string }> = {
+    'Draft': { label: 'Bản nháp', icon: <FileText className="w-4 h-4" />, color: 'text-gray-700', bgColor: 'bg-gray-100' },
     'Pending': { label: 'Chờ xử lý', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
     'Confirmed': { label: 'Đã xác nhận', icon: <CheckCircle className="w-4 h-4" />, color: 'text-blue-700', bgColor: 'bg-blue-100' },
     'Paid': { label: 'Đã thanh toán', icon: <CheckCircle className="w-4 h-4" />, color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
     'Shipped': { label: 'Đang giao', icon: <Truck className="w-4 h-4" />, color: 'text-indigo-700', bgColor: 'bg-indigo-100' },
     'Delivered': { label: 'Đã giao', icon: <Package className="w-4 h-4" />, color: 'text-green-700', bgColor: 'bg-green-100' },
+    'Completed': { label: 'Hoàn thành', icon: <CheckCircle className="w-4 h-4" />, color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
     'Cancelled': { label: 'Đã hủy', icon: <Ban className="w-4 h-4" />, color: 'text-red-700', bgColor: 'bg-red-100' },
 };
 
@@ -93,11 +96,10 @@ export const OrdersPage = () => {
                             <Filter className="text-gray-400 w-5 h-5 flex-shrink-0" />
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${
-                                    filter === 'all'
-                                        ? 'bg-[#D70018] text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
+                                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${filter === 'all'
+                                    ? 'bg-[#D70018] text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
                             >
                                 Tất cả
                             </button>
@@ -105,11 +107,10 @@ export const OrdersPage = () => {
                                 <button
                                     key={status}
                                     onClick={() => setFilter(status as OrderStatus)}
-                                    className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${
-                                        filter === status
-                                            ? 'bg-[#D70018] text-white'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
+                                    className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${filter === status
+                                        ? 'bg-[#D70018] text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
                                 >
                                     {statusConfig[status as OrderStatus].label}
                                 </button>
@@ -145,9 +146,8 @@ export const OrdersPage = () => {
                                                 {order.orderNumber}
                                             </h3>
                                             <span
-                                                className={`px-3 py-1 rounded-full text-xs font-black uppercase flex items-center gap-1 ${
-                                                    statusConfig[order.status].bgColor
-                                                } ${statusConfig[order.status].color}`}
+                                                className={`px-3 py-1 rounded-full text-xs font-black uppercase flex items-center gap-1 ${statusConfig[order.status].bgColor
+                                                    } ${statusConfig[order.status].color}`}
                                             >
                                                 {statusConfig[order.status].icon}
                                                 {statusConfig[order.status].label}
@@ -174,7 +174,7 @@ export const OrdersPage = () => {
                                                     Tổng tiền
                                                 </p>
                                                 <p className="text-[#D70018] font-black text-xl tracking-tight">
-                                                    {order.totalAmount.toLocaleString()}₫
+                                                    {formatCurrency(order.totalAmount)}
                                                 </p>
                                             </div>
                                         </div>

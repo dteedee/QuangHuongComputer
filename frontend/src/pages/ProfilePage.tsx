@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { salesApi } from '../api/sales';
 import type { Order } from '../api/sales';
 import { Package, Clock, Hash, MapPin, DollarSign, AlertCircle } from 'lucide-react';
+import { formatCurrency } from '../utils/format';
 
 export const ProfilePage = () => {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -130,7 +131,7 @@ export const ProfilePage = () => {
                                             <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-3 italic">
                                                 <DollarSign className="w-3 h-3" /> Tổng thanh toán
                                             </div>
-                                            <p className="text-[#D70018] text-3xl font-black tracking-tighter">{order.totalAmount.toLocaleString()}₫</p>
+                                            <p className="text-[#D70018] text-3xl font-black tracking-tighter">{formatCurrency(order.totalAmount)}</p>
                                         </div>
                                     </div>
 
@@ -145,7 +146,7 @@ export const ProfilePage = () => {
                                                         </div>
                                                         <span className="text-gray-900 font-bold italic">{item.productName}</span>
                                                     </div>
-                                                    <span className="text-gray-400 font-black">{(item.unitPrice * item.quantity).toLocaleString()}₫</span>
+                                                    <span className="text-gray-400 font-black">{formatCurrency(item.unitPrice * item.quantity)}</span>
                                                 </div>
                                             ))}
                                         </div>

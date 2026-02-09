@@ -1,6 +1,8 @@
-﻿import { Package, ShoppingCart, Users, DollarSign, Loader2, ArrowUpRight, Clock } from 'lucide-react';
+﻿import { Package, ShoppingCart, Users, DollarSign, Loader2, ArrowUpRight, Clock, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '../../api/sales';
+import { motion } from 'framer-motion';
+import { formatCurrency } from '../../utils/format';
 
 export const AdminDashboard = () => {
 
@@ -14,104 +16,107 @@ export const AdminDashboard = () => {
         queryFn: () => salesApi.admin.getOrders(1, 10)
     });
 
-    const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
-    };
+
 
     if (statsLoading || ordersLoading) {
         return (
-            <div className="flex flex-col justify-center items-center h-full min-h-[500px] admin-area">
-                <Loader2 className="w-16 h-16 animate-spin text-[#D70018]" />
-                <p className="mt-6 text-gray-950 font-black uppercase tracking-widest italic animate-pulse">Khởi tạo trung tâm điều hành...</p>
+            <div className="flex flex-col justify-center items-center h-full min-h-[500px]">
+                <Loader2 className="w-12 h-12 animate-spin text-[#D70018]" />
+                <p className="mt-4 text-gray-500 font-semibold animate-pulse">Đang tải dữ liệu hệ thống...</p>
             </div>
         );
     }
 
     const statCards = [
-        { label: 'Tổng doanh thu', value: formatCurrency(stats?.totalRevenue || 0), icon: DollarSign, color: 'bg-rose-600' },
-        { label: 'Số lượng đơn hàng', value: stats?.totalOrders?.toLocaleString() || '0', icon: ShoppingCart, color: 'bg-blue-600' },
-        { label: 'Đơn chờ xử lý', value: stats?.pendingOrders?.toLocaleString() || '0', icon: Clock, color: 'bg-amber-500' },
-        { label: 'Đơn hoàn tất', value: stats?.completedOrders?.toLocaleString() || '0', icon: Package, color: 'bg-emerald-600' },
+        { label: 'Tổng doanh thu', value: formatCurrency(stats?.totalRevenue || 0), icon: DollarSign, color: 'text-rose-600', bg: 'bg-rose-50' },
+        { label: 'Đơn hàng mới', value: stats?.totalOrders?.toLocaleString() || '0', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Chờ xử lý', value: stats?.pendingOrders?.toLocaleString() || '0', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Đã hoàn tất', value: stats?.completedOrders?.toLocaleString() || '0', icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
     return (
-        <div className="space-y-12 pb-24 animate-fade-in admin-area">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                <div>
-                    <h1 className="text-5xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-3">
-                        Hệ thống <span className="text-[#D70018]">Tổng quan</span>
-                    </h1>
-                    <div className="flex items-center gap-4">
-                        <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2 italic">
-                            Giám sát hoạt động kinh doanh trực tiếp
-                        </p>
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
-                    </div>
+        <div className="space-y-10 pb-20 fade-in">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Chào buổi sáng, Quản trị viên</h1>
+                    <p className="text-sm text-gray-500 font-medium italic">Hôm nay hệ thống đang vận hành ổn định.</p>
+                </div>
+                <div className="flex items-center gap-3 px-5 py-2.5 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100 shadow-sm">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Hệ thống đang trực tuyến</span>
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat, index) => (
-                    <div
+                    <motion.div
                         key={index}
-                        className="premium-card p-10 border-2 bg-white transition-all hover:border-gray-950/10 group active:scale-95"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
                     >
-                        <div className="flex items-center justify-between mb-8">
-                            <div className={`${stat.color} p-5 rounded-3xl shadow-2xl shadow-gray-200 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
-                                <stat.icon size={28} className="text-white" />
-                            </div>
-                            <div className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm italic">
-                                <ArrowUpRight size={14} /> LIVE
-                            </div>
+                        <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} rounded-bl-full opacity-30 -mr-8 -mt-8`} />
+                        <div className={`${stat.bg} ${stat.color} w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-inner relative z-10`}>
+                            <stat.icon size={24} />
                         </div>
-                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 italic">{stat.label}</p>
-                        <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic leading-none">{stat.value}</h3>
-                    </div>
+                        <div className="space-y-1 relative z-10">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+                            <h3 className="text-2xl font-black text-gray-900 tracking-tight">{stat.value}</h3>
+                        </div>
+                    </motion.div>
                 ))}
             </div>
 
-            {/* Recent Activity */}
-            <div className="premium-card border-2 bg-white overflow-hidden">
-                <div className="p-10 border-b-2 border-gray-50 flex items-center justify-between bg-gray-50/20">
+            {/* Recent Orders Section */}
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-10 py-8 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic leading-none">Giao dịch <span className="text-[#D70018]">Hiện tại</span></h2>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 italic">Danh sách 10 đơn hàng phát sinh gần nhất</p>
+                        <h2 className="text-xl font-bold text-gray-900 tracking-tight">Giao dịch gần đây</h2>
+                        <p className="text-xs text-gray-400 font-medium">Theo dõi hoạt động mua sắm mới nhất của khách hàng.</p>
                     </div>
-                    <button className="px-8 py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-gray-900/40 hover:bg-black transition-all active:scale-95 italic">
-                        Xem chi tiết tất cả đơn
+                    <button className="px-6 py-3 bg-gray-50 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2">
+                        Xem tất cả <ChevronRight size={16} />
                     </button>
                 </div>
-                <div className="divide-y-2 divide-gray-50">
+                <div className="divide-y divide-gray-50">
                     {ordersData?.orders.map((order) => (
-                        <div key={order.id} className="flex items-center justify-between p-10 hover:bg-gray-50/80 transition-all group cursor-pointer">
-                            <div className="flex items-center gap-8">
-                                <div className="w-20 h-20 rounded-[1.5rem] bg-gray-950 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                                    <ShoppingCart size={32} />
+                        <div key={order.id} className="group p-8 hover:bg-gray-50/50 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer">
+                            <div className="flex items-center gap-6">
+                                <div className="w-14 h-14 bg-gray-50 text-gray-400 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:shadow-md transition-all">
+                                    <ShoppingCart size={24} />
                                 </div>
-                                <div>
-                                    <p className="text-xl font-black text-gray-950 italic uppercase tracking-tighter">Đơn hàng #{order.orderNumber}</p>
-                                    <div className="flex items-center gap-3 mt-3">
-                                        <p className="text-xs font-black text-gray-400 uppercase italic truncate max-w-md">{order.shippingAddress || 'Trực tiếp tại cửa hàng'}</p>
-                                        <span className="w-1.5 h-1.5 bg-gray-200 rounded-full" />
-                                        <p className="text-xs font-black text-[#D70018] uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded-lg border border-red-100">{order.items?.length || 0} sản phẩm</p>
+                                <div className="space-y-1">
+                                    <p className="text-base font-bold text-gray-900">Đơn hàng #{order.orderNumber}</p>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs text-gray-400 font-medium truncate max-w-[200px]">{order.shippingAddress || 'Trực tiếp tại shop'}</span>
+                                        <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                                        <span className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-md">{order.items?.length || 0} sản phẩm</span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="text-right flex flex-col items-end gap-3">
-                                <p className="text-2xl font-black text-gray-950 tracking-tighter italic underline decoration-[#D70018] decoration-4 underline-offset-4">{formatCurrency(order.totalAmount)}</p>
-                                <span className={`text-[10px] font-black uppercase tracking-widest italic px-5 py-2 rounded-2xl border-2 shadow-sm ${order.status === 'Draft' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                    order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                        'bg-blue-50 text-blue-700 border-blue-200'
-                                    }`}>{order.status}</span>
+                            <div className="flex items-center justify-between md:justify-end gap-10">
+                                <div className="text-right">
+                                    <p className="text-lg font-black text-gray-900 tracking-tight">{formatCurrency(order.totalAmount)}</p>
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest italic">{new Date(order.orderDate).toLocaleTimeString()}</span>
+                                </div>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl ring-1 shadow-sm ${order.status === 'Draft' ? 'bg-amber-50 text-amber-600 ring-amber-100' :
+                                    order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600 ring-emerald-100' :
+                                        'bg-blue-50 text-blue-600 ring-blue-100'
+                                    }`}>
+                                    {order.status}
+                                </span>
                             </div>
                         </div>
                     ))}
-                    {(ordersData?.orders.length || 0) === 0 && (
-                        <div className="py-24 text-center">
-                            <ShoppingCart size={80} className="mx-auto text-gray-100 mb-6" />
-                            <p className="text-gray-400 font-black uppercase italic tracking-widest">Hiện tại hệ thống chưa ghi nhận giao dịch mới.</p>
+                    {(!ordersData?.orders || ordersData.orders.length === 0) && (
+                        <div className="py-20 text-center space-y-3">
+                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-100">
+                                <Package size={32} />
+                            </div>
+                            <p className="text-sm text-gray-400 font-medium italic">Chưa có giao dịch phát sinh hôm nay.</p>
                         </div>
                     )}
                 </div>

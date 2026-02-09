@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { salesApi, type Order } from '../../api/sales';
 import { ArrowLeft, Package, MapPin, CreditCard, FileText, Clock, CheckCircle, Truck, Ban, XCircle, RotateCcw, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../../utils/format';
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -135,20 +136,18 @@ export const OrderDetailPage = () => {
                                             {index < timelineSteps.length - 1 && (
                                                 <div className="absolute left-[18px] top-[40px] bottom-0 w-0.5 bg-gray-200">
                                                     <div
-                                                        className={`w-full transition-all duration-500 ${
-                                                            step.completed ? 'bg-emerald-500 h-full' : 'bg-gray-200 h-0'
-                                                        }`}
+                                                        className={`w-full transition-all duration-500 ${step.completed ? 'bg-emerald-500 h-full' : 'bg-gray-200 h-0'
+                                                            }`}
                                                     />
                                                 </div>
                                             )}
 
                                             {/* Icon */}
                                             <div
-                                                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                                    step.completed
+                                                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${step.completed
                                                         ? 'bg-emerald-500 text-white'
                                                         : 'bg-gray-100 text-gray-400'
-                                                }`}
+                                                    }`}
                                             >
                                                 {step.icon}
                                             </div>
@@ -156,9 +155,8 @@ export const OrderDetailPage = () => {
                                             {/* Content */}
                                             <div className="flex-1 pt-1">
                                                 <h4
-                                                    className={`font-black uppercase text-sm tracking-wide ${
-                                                        step.completed ? 'text-gray-900' : 'text-gray-400'
-                                                    }`}
+                                                    className={`font-black uppercase text-sm tracking-wide ${step.completed ? 'text-gray-900' : 'text-gray-400'
+                                                        }`}
                                                 >
                                                     {step.label}
                                                 </h4>
@@ -192,12 +190,12 @@ export const OrderDetailPage = () => {
                                         <div className="flex-1">
                                             <h4 className="font-bold text-gray-900 mb-1">{item.productName}</h4>
                                             <p className="text-gray-500 text-sm">
-                                                {item.unitPrice.toLocaleString()}₫ × {item.quantity}
+                                                {formatCurrency(item.unitPrice)} × {item.quantity}
                                             </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-black text-[#D70018] text-lg">
-                                                {(item.unitPrice * item.quantity).toLocaleString()}₫
+                                                {formatCurrency(item.unitPrice * item.quantity)}
                                             </p>
                                         </div>
                                     </div>
@@ -218,17 +216,17 @@ export const OrderDetailPage = () => {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-bold uppercase">Tạm tính</span>
                                     <span className="text-gray-900 font-bold">
-                                        {order.subtotalAmount.toLocaleString()}₫
+                                        {formatCurrency(order.subtotalAmount)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-bold uppercase">Thuế VAT</span>
-                                    <span className="text-gray-900 font-bold">{order.taxAmount.toLocaleString()}₫</span>
+                                    <span className="text-gray-900 font-bold">{formatCurrency(order.taxAmount)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-3 border-t border-gray-200">
                                     <span className="font-black uppercase">Tổng cộng</span>
                                     <span className="font-black text-[#D70018] text-xl">
-                                        {order.totalAmount.toLocaleString()}₫
+                                        {formatCurrency(order.totalAmount)}
                                     </span>
                                 </div>
                             </div>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,7 @@ import {
     ChevronRight, ChevronDown, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatCurrency } from '../utils/format';
 
 export const ProductDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -19,6 +20,37 @@ export const ProductDetailsPage = () => {
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
     const [quantity, setQuantity] = useState(1);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+    const productImages = useMemo(() => {
+        if (!product) return [];
+        const images: string[] = [];
+        if (product.imageUrl) images.push(product.imageUrl);
+        if (product.galleryImages) {
+            try {
+                const gallery = JSON.parse(product.galleryImages);
+                if (Array.isArray(gallery)) {
+                    images.push(...gallery);
+                }
+            } catch (e) {
+                console.error("Error parsing gallery images:", e);
+            }
+        }
+        return images;
+    }, [product]);
+
+    const parsedSpecs = useMemo(() => {
+        if (!product?.specifications) return [];
+        try {
+            const parsed = JSON.parse(product.specifications);
+            if (Array.isArray(parsed)) {
+                return parsed;
+            }
+        } catch (e) {
+            console.error("Error parsing specs:", e);
+        }
+        return [];
+    }, [product]);
 
     useEffect(() => {
         if (!id) return;
@@ -88,9 +120,18 @@ export const ProductDetailsPage = () => {
                             className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm overflow-hidden group relative"
                         >
                             <div className="aspect-[4/3] flex items-center justify-center bg-gray-50 rounded-xl relative overflow-hidden">
-                                <div className="text-gray-200 font-black text-9xl select-none opacity-20">
-                                    {product.name.charAt(0).toUpperCase()}
-                                </div>
+                                {productImages.length > 0 ? (
+                                    <img
+                                        src={productImages[selectedImageIndex]}
+                                        alt={product.name}
+                                        className="w-full h-full object-contain mix-blend-multiply"
+                                    />
+                                ) : (
+                                    <div className="text-gray-200 font-black text-9xl select-none opacity-20">
+                                        {product.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                 <div className="absolute top-4 left-4 bg-[#D70018] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-red-500/30 animate-pulse">
@@ -99,19 +140,22 @@ export const ProductDetailsPage = () => {
                             </div>
                         </motion.div>
 
-                        <div className="grid grid-cols-4 gap-3">
-                            {[1, 2, 3, 4].map((i) => (
-                                <motion.div
-                                    key={i}
-                                    whileHover={{ y: -2 }}
-                                    className="bg-white border border-gray-200 rounded-xl p-2 cursor-pointer hover:border-[#D70018] transition-all aspect-square flex items-center justify-center hover:shadow-md"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400">
-                                        Img {i}
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
+                        {productImages.length > 1 && (
+                            <div className="grid grid-cols-4 gap-3">
+                                {productImages.map((img, i) => (
+                                    <motion.div
+                                        key={i}
+                                        whileHover={{ y: -2 }}
+                                        onClick={() => setSelectedImageIndex(i)}
+                                        className={`bg-white border rounded-xl p-2 cursor-pointer transition-all aspect-square flex items-center justify-center hover:shadow-md ${selectedImageIndex === i ? 'border-[#D70018] ring-1 ring-[#D70018]' : 'border-gray-200 hover:border-[#D70018]'}`}
+                                    >
+                                        <div className="w-full h-full rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                                            <img src={img} alt={`Thumbnail ${i}`} className="w-full h-full object-contain mix-blend-multiply" />
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* USPs */}
                         <div className="grid grid-cols-2 gap-3 mt-4">
@@ -166,9 +210,9 @@ export const ProductDetailsPage = () => {
                             </div>
 
                             <div className="flex flex-col mb-2">
-                                <span className="text-sm text-gray-400 line-through font-medium">Giá niêm yết: {oldPrice.toLocaleString()}đ</span>
+                                <span className="text-sm text-gray-400 font-medium">Giá niêm yết: <span className="line-through">{formatCurrency(oldPrice)}</span></span>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-black text-[#D70018] tracking-tight">{product.price.toLocaleString()}đ</span>
+                                    <span className="text-4xl font-black text-[#D70018] tracking-tight">{formatCurrency(product.price)}</span>
                                     <span className="mb-1.5 text-xs font-bold text-[#D70018] bg-red-50 px-2 py-1 rounded-lg">-{discount}%</span>
                                 </div>
                             </div>
@@ -301,13 +345,18 @@ export const ProductDetailsPage = () => {
                                     <p className="mb-4">
                                         {product.description || 'Đang cập nhật nội dung chi tiết cho sản phẩm này...'}
                                     </p>
-                                    <div className="grid grid-cols-2 gap-4 my-8">
-                                        <div className="bg-gray-50 rounded-xl p-6 h-64 flex items-center justify-center text-gray-300 font-bold border border-gray-100">
-                                            Hình ảnh minh họa 1
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-6 h-64 flex items-center justify-center text-gray-300 font-bold border border-gray-100">
-                                            Hình ảnh minh họa 2
-                                        </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+                                        {productImages.length > 0 ? (
+                                            productImages.map((img, idx) => (
+                                                <div key={idx} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                                                    <img
+                                                        src={img}
+                                                        alt={`${product.name} - ${idx + 1}`}
+                                                        className="w-full h-64 object-contain bg-gray-50 group-hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                </div>
+                                            ))
+                                        ) : null}
                                     </div>
                                     <p>
                                         Được trang bị những công nghệ tiên tiến nhất, {product.name} đảm bảo sự ổn định và tốc độ xử lý vượt trội.
@@ -324,24 +373,20 @@ export const ProductDetailsPage = () => {
                                 >
                                     <h3 className="text-lg font-bold text-gray-900 mb-6 text-center uppercase">Cấu hình chi tiết</h3>
                                     <div className="border border-gray-200 rounded-xl overflow-hidden">
-                                        {[
-                                            { label: "Vi xử lý (CPU)", value: "Intel Core i5-12400F / AMD Ryzen 5 5600X" },
-                                            { label: "Bo mạch chủ (Mainboard)", value: "B660M / B550M WiFi" },
-                                            { label: "Bộ nhớ trong (RAM)", value: "16GB (8GBx2) DDR4 3200MHz" },
-                                            { label: "Ổ cứng (SSD)", value: "512GB NVMe M.2 PCIe Gen 3x4" },
-                                            { label: "Card đồ họa (VGA)", value: "NVIDIA GeForce RTX 3060 12GB" },
-                                            { label: "Nguồn (PSU)", value: "650W 80 Plus Bronze" },
-                                            { label: "Vỏ máy (Case)", value: "ATX Gaming Tempered Glass" },
-                                            { label: "Tản nhiệt", value: "Tản nhiệt khí LED RGB" },
-                                            { label: "Hệ điều hành", value: "Windows 11 Home bản quyền" },
-                                            { label: "Bảo hành", value: "36 Tháng chính hãng" },
-                                        ].map((row, i) => (
-                                            <div key={i} className={`flex p-4 border-b last:border-0 border-gray-100 ${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                                                <div className="w-1/3 text-gray-500 font-semibold text-sm">{row.label}</div>
-                                                <div className="w-2/3 text-gray-900 font-bold text-sm">{row.value}</div>
+                                        {parsedSpecs.length > 0 ? (
+                                            parsedSpecs.map((row: any, i: number) => (
+                                                <div key={i} className={`flex p-4 border-b last:border-0 border-gray-100 ${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                                                    <div className="w-1/3 text-gray-500 font-semibold text-sm">{row.label}</div>
+                                                    <div className="w-2/3 text-gray-900 font-bold text-sm">{row.value}</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-8 text-center text-gray-400 italic">
+                                                Chưa có thông số kỹ thuật chi tiết.
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
+
                                 </motion.div>
                             )}
 
@@ -382,6 +427,6 @@ export const ProductDetailsPage = () => {
                     ))}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

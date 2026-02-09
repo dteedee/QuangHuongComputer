@@ -68,7 +68,7 @@ export interface PayrollsResponse {
 export const hrApi = {
     // Employee APIs
     getEmployees: async (page: number = 1, pageSize: number = 15, params?: any) => {
-        const response = await client.get<any[]>('/hr/employees', {
+        const response = await client.get<EmployeesResponse>('/hr/employees', {
             params: { page, pageSize, ...params }
         });
         return response.data;

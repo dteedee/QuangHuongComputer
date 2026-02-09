@@ -5,6 +5,7 @@ import { catalogApi, type Product } from '../../api/catalog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../../utils/format';
 
 export const AdminOrdersPage = () => {
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -191,7 +192,7 @@ export const AdminOrdersPage = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-6">
-                                                    <span className="text-lg font-black text-gray-950 tracking-tighter italic">₫{order.totalAmount.toLocaleString()}</span>
+                                                    <span className="text-lg font-black text-gray-950 tracking-tighter italic">{formatCurrency(order.totalAmount)}</span>
                                                 </td>
                                                 <td className="px-8 py-6">
                                                     <select
@@ -290,7 +291,7 @@ export const AdminOrdersPage = () => {
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Chọn sản phẩm</label>
                                                 <select name="productId" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-100 appearance-none">
                                                     {productsData?.products.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} - ₫{p.price.toLocaleString()}</option>
+                                                        <option key={p.id} value={p.id}>{p.name} - {formatCurrency(p.price)}</option>
                                                     ))}
                                                 </select>
                                             </div>

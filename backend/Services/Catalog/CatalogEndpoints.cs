@@ -76,7 +76,8 @@ public static class CatalogEndpoints
                 CategoryId = p.CategoryId.ToString(),
                 CategoryName = p.Category?.Name,
                 BrandId = p.BrandId.ToString(),
-                BrandName = p.Brand?.Name
+                BrandName = p.Brand?.Name,
+                p.GalleryImages
             });
 
             return Results.Ok(new
@@ -129,7 +130,8 @@ public static class CatalogEndpoints
                 CategoryId = product.CategoryId.ToString(),
                 CategoryName = product.Category?.Name,
                 BrandId = product.BrandId.ToString(),
-                BrandName = product.Brand?.Name
+                BrandName = product.Brand?.Name,
+                product.GalleryImages
             });
         });
 
@@ -289,7 +291,8 @@ public static class CatalogEndpoints
                 CategoryId = p.CategoryId.ToString(),
                 CategoryName = p.Category?.Name,
                 BrandId = p.BrandId.ToString(),
-                BrandName = p.Brand?.Name
+                BrandName = p.Brand?.Name,
+                p.GalleryImages
             });
 
             return Results.Ok(new {
@@ -319,7 +322,8 @@ public static class CatalogEndpoints
                 model.Specifications,
                 model.WarrantyInfo,
                 stockLocations: model.StockLocations,
-                imageUrl: model.ImageUrl
+                imageUrl: model.ImageUrl,
+                galleryImages: model.GalleryImages
             );
 
             db.Products.Add(product);
@@ -348,7 +352,8 @@ public static class CatalogEndpoints
                 product.CreatedBy,
                 product.UpdatedBy,
                 CategoryId = product.CategoryId.ToString(),
-                BrandId = product.BrandId.ToString()
+                BrandId = product.BrandId.ToString(),
+                product.GalleryImages
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
@@ -391,8 +396,9 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
+            Console.WriteLine($"Updating product {id}: Name={model.Name}, Price={model.Price}");
             product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo, model.StockLocations);
-            if (model.ImageUrl != null) product.UpdateImage(model.ImageUrl);
+            product.UpdateImage(model.ImageUrl ?? product.ImageUrl, model.GalleryImages);
             await db.SaveChangesAsync();
             
             return Results.Ok(new { 
@@ -421,7 +427,8 @@ public static class CatalogEndpoints
                     product.CreatedBy,
                     product.UpdatedBy,
                     CategoryId = product.CategoryId.ToString(),
-                    BrandId = product.BrandId.ToString()
+                    BrandId = product.BrandId.ToString(),
+                    product.GalleryImages
                 }
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
@@ -748,7 +755,8 @@ public record CreateProductDto(
     string? Specifications = null,
     string? WarrantyInfo = null,
     string? StockLocations = null,
-    string? ImageUrl = null);
+    string? ImageUrl = null,
+    string? GalleryImages = null);
 
 public record UpdateProductDto(
     string Name,
@@ -758,7 +766,8 @@ public record UpdateProductDto(
     string? Specifications = null,
     string? WarrantyInfo = null,
     string? StockLocations = null,
-    string? ImageUrl = null);
+    string? ImageUrl = null,
+    string? GalleryImages = null);
 
 public record CreateCategoryDto(string Name, string Description);
 public record UpdateCategoryDto(string Name, string Description);

@@ -2,6 +2,7 @@
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '../utils/format';
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -51,7 +52,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                 <div key={item.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div className="flex-1">
                                         <h3 className="font-medium text-white line-clamp-1">{item.name}</h3>
-                                        <p className="text-blue-400 font-bold">${item.price.toLocaleString()}</p>
+                                        <p className="text-blue-400 font-bold">{formatCurrency(item.price)}</p>
                                     </div>
                                     <div className="flex items-center gap-2 bg-black/20 rounded-lg p-1">
                                         <button
@@ -81,7 +82,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                     <div className="p-6 border-t border-white/10 bg-slate-900">
                         <div className="flex justify-between text-xl font-bold text-white mb-6">
                             <span>Total:</span>
-                            <span className="text-blue-400">${total.toLocaleString()}</span>
+                            <span className="text-blue-400">{formatCurrency(total)}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <button

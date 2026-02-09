@@ -2,6 +2,7 @@
 import { DollarSign, FileText, TrendingUp, Clock, Download, Eye, Calendar, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 import client from '../../../api/client';
+import { formatCurrency } from '../../../utils/format';
 
 interface Invoice {
     id: string;
@@ -88,7 +89,7 @@ export const AccountingPortal = () => {
                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Công nợ</span>
                     </div>
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
-                        ${(stats?.totalReceivables || 0).toLocaleString()}
+                        {formatCurrency(stats?.totalReceivables || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Phải thu khách hàng</p>
                 </motion.div>
@@ -101,7 +102,7 @@ export const AccountingPortal = () => {
                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Doanh thu</span>
                     </div>
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
-                        ${(stats?.revenueToday || 0).toLocaleString()}
+                        {formatCurrency(stats?.revenueToday || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Hôm nay</p>
                 </motion.div>
@@ -194,12 +195,12 @@ export const AccountingPortal = () => {
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className="font-black text-gray-900 text-base">
-                                                ${invoice.totalAmount.toLocaleString()}
+                                                {formatCurrency(invoice.totalAmount)}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className="text-xs text-gray-600 font-bold">
-                                                ${invoice.paidAmount.toLocaleString()}
+                                                {formatCurrency(invoice.paidAmount)}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">{getStatusBadge(invoice.status)}</td>

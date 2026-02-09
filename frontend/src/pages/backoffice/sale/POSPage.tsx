@@ -17,6 +17,7 @@ import {
   Tag,
   Scan
 } from 'lucide-react';
+import { formatCurrency } from '../../../utils/format';
 
 interface Customer {
   id: string;
@@ -116,12 +117,7 @@ export default function POSPage() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
+
 
   const calculateFinalTotal = () => {
     const discountAmount = discountType === 'percentage' ? (total * discount) / 100 : discount;
@@ -229,7 +225,7 @@ export default function POSPage() {
                     </div>
                     <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-2">{product.name}</h3>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-lg font-bold text-blue-600">{formatPrice(product.price)}</span>
+                      <span className="text-lg font-bold text-blue-600">{formatCurrency(product.price)}</span>
                       <span className={`text-xs px-2 py-1 rounded ${product.stockQuantity > 10 ? 'bg-green-100 text-green-700' :
                         product.stockQuantity > 0 ? 'bg-yellow-100 text-yellow-700' :
                           'bg-red-100 text-red-700'
@@ -290,7 +286,7 @@ export default function POSPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                      <p className="text-blue-600 font-semibold">{formatPrice(item.price)}</p>
+                      <p className="text-blue-600 font-semibold">{formatCurrency(item.price)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button
@@ -341,7 +337,7 @@ export default function POSPage() {
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
               >
                 <option value="percentage">%</option>
-                <option value="fixed">₫</option>
+                <option value="fixed">VND</option>
               </select>
             </div>
             <textarea
@@ -358,23 +354,23 @@ export default function POSPage() {
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Tạm tính</span>
-                <span className="font-medium">{formatPrice(subtotal)}</span>
+                <span className="font-medium">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Thuế VAT (10%)</span>
-                <span className="font-medium">{formatPrice(tax)}</span>
+                <span className="font-medium">{formatCurrency(tax)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Giảm giá</span>
                   <span className="font-medium">
-                    -{formatPrice(discountType === 'percentage' ? (total * discount) / 100 : discount)}
+                    {formatCurrency(discountType === 'percentage' ? (total * discount) / 100 : discount)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">Tổng cộng</span>
-                <span className="text-xl font-bold text-blue-600">{formatPrice(calculateFinalTotal())}</span>
+                <span className="text-xl font-bold text-blue-600">{formatCurrency(calculateFinalTotal())}</span>
               </div>
             </div>
 

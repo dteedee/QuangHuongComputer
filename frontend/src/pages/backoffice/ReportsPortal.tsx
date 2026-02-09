@@ -7,6 +7,7 @@ import {
 import { reportingApi } from '../../api/reporting';
 import type { ArAgingAccount } from '../../api/reporting';
 import { motion } from 'framer-motion';
+import { formatCurrency } from '../../utils/format';
 
 export const ReportsPortal = () => {
     const { data: salesStats, isLoading: isLoadingSales } = useQuery({
@@ -59,7 +60,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Tổng doanh thu bán hàng</p>
                     <h3 className="text-5xl font-black text-gray-950 flex items-baseline gap-4 tracking-tighter italic">
-                        {salesStats?.totalRevenue?.toLocaleString() || '0'}₫
+                        {formatCurrency(salesStats?.totalRevenue || 0)}
                         <span className="text-sm font-black text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
                             <ArrowUpRight size={18} /> +12%
                         </span>
@@ -76,7 +77,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Giá trị tài sản kho</p>
                     <h3 className="text-5xl font-black text-gray-950 tracking-tighter italic">
-                        {invValue?.totalValue?.toLocaleString() || '0'}₫
+                        {formatCurrency(invValue?.totalValue || 0)}
                     </h3>
                     <div className="mt-10 pt-8 border-t-2 border-gray-50 flex items-center gap-3 opacity-80">
                         <BarChart3 size={18} className="text-blue-600" />
@@ -90,7 +91,7 @@ export const ReportsPortal = () => {
                     </div>
                     <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-3 italic">Công nợ phải thu</p>
                     <h3 className="text-5xl font-black text-[#D70018] tracking-tighter italic">
-                        {arAging?.reduce((acc, curr) => acc + curr.balance, 0)?.toLocaleString() || '0'}₫
+                        {formatCurrency(arAging?.reduce((acc, curr) => acc + curr.balance, 0) || 0)}
                     </h3>
                     <div className="mt-10 pt-8 border-t-2 border-gray-50 flex items-center gap-3 opacity-80">
                         <Clock size={18} className="text-amber-500" />
@@ -120,11 +121,11 @@ export const ReportsPortal = () => {
                                     </div>
                                     <div>
                                         <p className="font-black text-gray-950 text-lg uppercase tracking-tight italic leading-none mb-2">{account.name}</p>
-                                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Hạn mức tín dụng: <span className="text-gray-950 underline">{account.creditLimit?.toLocaleString()}₫</span></p>
+                                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Hạn mức tín dụng: <span className="text-gray-950 underline">{formatCurrency(account.creditLimit || 0)}</span></p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-[#D70018] text-2xl tracking-tighter italic">{account.balance?.toLocaleString()}₫</p>
+                                    <p className="font-black text-[#D70018] text-2xl tracking-tighter italic">{formatCurrency(account.balance || 0)}</p>
                                     <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mt-1">Chưa thanh toán</p>
                                 </div>
                             </div>

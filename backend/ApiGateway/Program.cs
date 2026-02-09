@@ -18,6 +18,8 @@ using Catalog.Infrastructure.Data;
 using Sales.Infrastructure;
 using Repair.Infrastructure;
 using Accounting.Infrastructure;
+
+
 using Warranty.Infrastructure;
 using InventoryModule.Infrastructure;
 using Payments.Infrastructure;
@@ -40,6 +42,8 @@ using Microsoft.AspNetCore.ResponseCompression;
 using DotNetEnv;
 
 Env.TraversePath().Load();
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -275,7 +279,45 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
+
+// Ensure wwwroot/uploads exists
+var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+var uploadsPath = Path.Combine(webRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(); // Enable static file serving from wwwroot
 app.UseResponseCompression();
+
+// ========================================
+// MEDIA UPLOAD ENDPOINT
+// ========================================
+app.MapPost("/api/media/upload", async (IFormFile file, IWebHostEnvironment env, HttpContext context) =>
+{
+    if (file == null || file.Length == 0)
+        return Results.BadRequest("No file uploaded");
+
+    var uploadsFolder = Path.Combine(env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot"), "uploads");
+    if (!Directory.Exists(uploadsFolder))
+        Directory.CreateDirectory(uploadsFolder);
+
+    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+    var filePath = Path.Combine(uploadsFolder, fileName);
+
+    using (var stream = new FileStream(filePath, FileMode.Create))
+    {
+        await file.CopyToAsync(stream);
+    }
+
+    // Return the relative path or absolute URL
+    // For local dev, absolute URL is easier
+    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+    var fileUrl = $"{baseUrl}/uploads/{fileName}";
+
+    return Results.Ok(new { Url = fileUrl });
+}).DisableAntiforgery();
 
 // ========================================
 // CUSTOM MIDDLEWARE
@@ -283,8 +325,6 @@ app.UseResponseCompression();
 app.UseGlobalExceptionHandling();
 app.UseSecurityHeaders();
 app.UsePerformanceMonitoring();
-// Note: Removed UseApiResponseTime() as UsePerformanceMonitoring() already adds X-Response-Time-Ms header
-
 
 // ========================================
 // RATE LIMITING MIDDLEWARE

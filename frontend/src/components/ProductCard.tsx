@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
 import { ShoppingCart, Star, PackageCheck, MapPin, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatCurrency } from '../utils/format';
 
 interface ProductCardProps {
     product: Product;
@@ -16,6 +17,13 @@ const parseSpecifications = (specs?: string) => {
 
     try {
         const parsed = JSON.parse(specs);
+        if (Array.isArray(parsed)) {
+            const res: Record<string, string> = {};
+            parsed.forEach((item: any) => {
+                if (item && item.label) res[item.label] = item.value;
+            });
+            return res;
+        }
         return parsed;
     } catch {
         const result: Record<string, string> = {};
@@ -117,11 +125,11 @@ const ProductHoverPopup = ({
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">- Giá bán:</span>
-                                <span className="text-gray-400 line-through">{oldPrice.toLocaleString()}đ</span>
+                                <span className="text-gray-400 line-through">{formatCurrency(oldPrice)}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">- Giá QH:</span>
-                                <span className="text-[#D70018] font-bold text-base">{product.price.toLocaleString()}đ</span>
+                                <span className="text-[#D70018] font-bold text-base">{formatCurrency(product.price)}</span>
                                 <span className="text-xs text-gray-400">[Đã bao gồm VAT]</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -339,15 +347,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         </div>
 
                         <Link to={`/product/${product.id}`} className="mb-3 block">
-                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight uppercase italic tracking-tighter">
+                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight group-hover:underline">
                                 {product.name}
                             </h3>
                         </Link>
 
                         <div className="mt-auto space-y-2">
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-400 line-through leading-none">{oldPrice.toLocaleString()}đ</span>
-                                <span className="text-lg font-black text-[#D70018] leading-tight">{product.price.toLocaleString()}đ</span>
+                                <span className="text-xs text-gray-400 line-through leading-none">{formatCurrency(oldPrice)}</span>
+                                <span className="text-lg font-black text-[#D70018] leading-tight">{formatCurrency(product.price)}</span>
                             </div>
 
                             <div className="flex items-center justify-between pt-2 border-t border-gray-100">

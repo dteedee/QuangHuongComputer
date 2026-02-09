@@ -4,6 +4,7 @@ import { salesApi, type Order } from '../api/sales';
 import { paymentApi } from '../api/payment';
 import { CreditCard, Lock, CheckCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrency } from '../utils/format';
 
 export const PaymentPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -21,7 +22,7 @@ export const PaymentPage = () => {
 
     const loadOrder = async (id: string) => {
         try {
-            const data = await salesApi.getMyOrder(id);
+            const data = await salesApi.orders.getById(id);
             if (data.status === 'Paid' || data.status === 'Cancelled') {
                 toast('Order already processed');
                 navigate('/profile');
@@ -109,7 +110,7 @@ export const PaymentPage = () => {
                             </div>
                             <div className="flex justify-between text-lg font-bold">
                                 <span className="text-gray-300">Total</span>
-                                <span className="text-green-400">${order.totalAmount.toLocaleString()}</span>
+                                <span className="text-green-400">{formatCurrency(order.totalAmount)}</span>
                             </div>
                         </div>
 
