@@ -27,7 +27,7 @@ public static class CatalogEndpoints
             // Try to get from cache
             var cacheKey = CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, searchTerm);
             var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
-            if (cachedResponse != null) return Results.Ok(cachedResponse);
+            if (cachedResponse is not null) return Results.Ok(cachedResponse);
 
             var query = db.Products.AsNoTracking()
                 .Include(p => p.Category)
@@ -60,44 +60,44 @@ public static class CatalogEndpoints
             // Convert to snake_case for frontend
             var productsResponse = products.Select(p => new
             {
-                p.Id,
-                p.Name,
-                p.Sku,
-                p.Price,
-                p.OldPrice,
-                p.Description,
-                p.Specifications,
-                p.WarrantyInfo,
-                p.StockLocations,
-                p.StockQuantity,
-                p.Status,
-                p.ViewCount,
-                p.SoldCount,
-                p.AverageRating,
-                p.ReviewCount,
-                p.ImageUrl,
-                p.LowStockThreshold,
-                p.IsActive,
-                p.CreatedAt,
-                p.UpdatedAt,
-                p.CreatedBy,
-                p.UpdatedBy,
-                CategoryId = p.CategoryId.ToString(),
-                CategoryName = p.Category?.Name,
-                BrandId = p.BrandId.ToString(),
-                BrandName = p.Brand?.Name,
-                p.GalleryImages
+                id = p.Id,
+                name = p.Name,
+                sku = p.Sku,
+                price = p.Price,
+                oldPrice = p.OldPrice,
+                description = p.Description,
+                specifications = p.Specifications,
+                warrantyInfo = p.WarrantyInfo,
+                stockLocations = p.StockLocations,
+                stockQuantity = p.StockQuantity,
+                status = p.Status,
+                viewCount = p.ViewCount,
+                soldCount = p.SoldCount,
+                averageRating = p.AverageRating,
+                reviewCount = p.ReviewCount,
+                imageUrl = p.ImageUrl,
+                lowStockThreshold = p.LowStockThreshold,
+                isActive = p.IsActive,
+                createdAt = p.CreatedAt,
+                updatedAt = p.UpdatedAt,
+                createdBy = p.CreatedBy,
+                updatedBy = p.UpdatedBy,
+                categoryId = p.CategoryId.ToString(),
+                categoryName = p.Category?.Name,
+                brandId = p.BrandId.ToString(),
+                brandName = p.Brand?.Name,
+                galleryImages = p.GalleryImages
             });
 
             var result = new
             {
-                Total = total,
-                Page = validPage,
-                PageSize = validPageSize,
-                TotalPages = (total + validPageSize - 1) / validPageSize,
-                HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
-                HasPreviousPage = validPage > 1,
-                Products = productsResponse
+                total = total,
+                page = validPage,
+                pageSize = validPageSize,
+                totalPages = (total + validPageSize - 1) / validPageSize,
+                hasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
+                hasPreviousPage = validPage > 1,
+                products = productsResponse
             };
 
             // Cache for 10 minutes
@@ -123,33 +123,33 @@ public static class CatalogEndpoints
 
             var result = new
             {
-                product.Id,
-                product.Name,
-                product.Sku,
-                product.Price,
-                product.OldPrice,
-                product.Description,
-                product.Specifications,
-                product.WarrantyInfo,
-                product.StockLocations,
-                product.StockQuantity,
-                product.Status,
-                product.ViewCount,
-                product.SoldCount,
-                product.AverageRating,
-                product.ReviewCount,
-                product.ImageUrl,
-                product.LowStockThreshold,
-                product.IsActive,
-                product.CreatedAt,
-                product.UpdatedAt,
-                product.CreatedBy,
-                product.UpdatedBy,
-                CategoryId = product.CategoryId.ToString(),
-                CategoryName = product.Category?.Name,
-                BrandId = product.BrandId.ToString(),
-                BrandName = product.Brand?.Name,
-                product.GalleryImages
+                id = product.Id,
+                name = product.Name,
+                sku = product.Sku,
+                price = product.Price,
+                oldPrice = product.OldPrice,
+                description = product.Description,
+                specifications = product.Specifications,
+                warrantyInfo = product.WarrantyInfo,
+                stockLocations = product.StockLocations,
+                stockQuantity = product.StockQuantity,
+                status = product.Status,
+                viewCount = product.ViewCount,
+                soldCount = product.SoldCount,
+                averageRating = product.AverageRating,
+                reviewCount = product.ReviewCount,
+                imageUrl = product.ImageUrl,
+                lowStockThreshold = product.LowStockThreshold,
+                isActive = product.IsActive,
+                createdAt = product.CreatedAt,
+                updatedAt = product.UpdatedAt,
+                createdBy = product.CreatedBy,
+                updatedBy = product.UpdatedBy,
+                categoryId = product.CategoryId.ToString(),
+                categoryName = product.Category?.Name,
+                brandId = product.BrandId.ToString(),
+                brandName = product.Brand?.Name,
+                galleryImages = product.GalleryImages
             };
 
             // Cache for 30 minutes
@@ -163,7 +163,7 @@ public static class CatalogEndpoints
             var cacheKey = CacheKeys.CategoriesKey + "_v3";
             var cachedCategories = await cache.GetAsync<List<dynamic>>(cacheKey);
             
-            if (cachedCategories != null)
+            if (cachedCategories is not null)
                 return Results.Ok(cachedCategories);
 
             var categories = await db.Categories
@@ -190,7 +190,7 @@ public static class CatalogEndpoints
             var cacheKey = CacheKeys.BrandsKey + "_v3";
             var cachedBrands = await cache.GetAsync<List<dynamic>>(cacheKey);
             
-            if (cachedBrands != null)
+            if (cachedBrands is not null)
                 return Results.Ok(cachedBrands);
 
             var brands = await db.Brands
@@ -232,7 +232,7 @@ public static class CatalogEndpoints
             // Try to get from cache
             var cacheKey = $"{CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, query)}:{minPrice}:{maxPrice}:{inStock}:{sortBy}";
             var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
-            if (cachedResponse != null) return Results.Ok(cachedResponse);
+            if (cachedResponse is not null) return Results.Ok(cachedResponse);
 
             var productsQuery = db.Products
                 .AsNoTracking()
@@ -295,43 +295,43 @@ public static class CatalogEndpoints
             // Convert to snake_case for frontend
             var productsResponse = products.Select(p => new
             {
-                p.Id,
-                p.Name,
-                p.Sku,
-                p.Price,
-                p.OldPrice,
-                p.Description,
-                p.Specifications,
-                p.WarrantyInfo,
-                p.StockLocations,
-                p.StockQuantity,
-                p.Status,
-                p.ViewCount,
-                p.SoldCount,
-                p.AverageRating,
-                p.ReviewCount,
-                p.ImageUrl,
-                p.LowStockThreshold,
-                p.IsActive,
-                p.CreatedAt,
-                p.UpdatedAt,
-                p.CreatedBy,
-                p.UpdatedBy,
-                CategoryId = p.CategoryId.ToString(),
-                CategoryName = p.Category?.Name,
-                BrandId = p.BrandId.ToString(),
-                BrandName = p.Brand?.Name,
-                p.GalleryImages
+                id = p.Id,
+                name = p.Name,
+                sku = p.Sku,
+                price = p.Price,
+                oldPrice = p.OldPrice,
+                description = p.Description,
+                specifications = p.Specifications,
+                warrantyInfo = p.WarrantyInfo,
+                stockLocations = p.StockLocations,
+                stockQuantity = p.StockQuantity,
+                status = p.Status,
+                viewCount = p.ViewCount,
+                soldCount = p.SoldCount,
+                averageRating = p.AverageRating,
+                reviewCount = p.ReviewCount,
+                imageUrl = p.ImageUrl,
+                lowStockThreshold = p.LowStockThreshold,
+                isActive = p.IsActive,
+                createdAt = p.CreatedAt,
+                updatedAt = p.UpdatedAt,
+                createdBy = p.CreatedBy,
+                updatedBy = p.UpdatedBy,
+                categoryId = p.CategoryId.ToString(),
+                categoryName = p.Category?.Name,
+                brandId = p.BrandId.ToString(),
+                brandName = p.Brand?.Name,
+                galleryImages = p.GalleryImages
             });
 
             var result = new {
-                Total = total,
-                Page = validPage,
-                PageSize = validPageSize,
-                TotalPages = (total + validPageSize - 1) / validPageSize,
-                HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
-                HasPreviousPage = validPage > 1,
-                Products = productsResponse
+                total = total,
+                page = validPage,
+                pageSize = validPageSize,
+                totalPages = (total + validPageSize - 1) / validPageSize,
+                hasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
+                hasPreviousPage = validPage > 1,
+                products = productsResponse
             };
 
             // Cache for 5 minutes (search results are dynamic)

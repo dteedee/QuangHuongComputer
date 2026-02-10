@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
     children: ReactNode;
@@ -38,13 +38,13 @@ class ErrorBoundary extends Component<Props, State> {
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         // Log the error to an error reporting service
         console.error('Error caught by ErrorBoundary:', error, errorInfo);
-        
+
         // Log additional component stack
         console.error('Component Stack:', errorInfo.componentStack);
-        
+
         // Send to error tracking service (e.g., Sentry, LogRocket)
         // Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
-        
+
         this.setState({
             error,
             errorInfo
@@ -57,7 +57,7 @@ class ErrorBoundary extends Component<Props, State> {
             error: null,
             errorInfo: null
         });
-        
+
         // Refresh the page to reset state
         window.location.reload();
     };
@@ -100,8 +100,8 @@ class ErrorBoundary extends Component<Props, State> {
                                 </button>
                             </div>
                         </div>
-                        
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
+
+                        {import.meta.env.MODE === 'development' && this.state.error && (
                             <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                                 <h4 className="text-red-800 font-semibold mb-2">
                                     Chi tiết lỗi (Development Mode):

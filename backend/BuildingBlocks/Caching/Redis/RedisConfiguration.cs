@@ -40,17 +40,14 @@ public static class RedisConfiguration
         var instanceName = redisConfig["InstanceName"] ?? "quanghc:";
         var defaultTtl = int.TryParse(redisConfig["DefaultTtl"], out var ttl) ? ttl : 3600;
 
-        var options = new ConfigurationOptions
-        {
-            EndPoints = { connectionString },
-            AbortOnConnectFail = false,
-            AllowAdmin = false,
-            SyncTimeout = 5000,
-            ConnectTimeout = 5000,
-            KeepAlive = 180,
-            DefaultVersion = new Version(6, 0),
-            SocketManager = SocketManager.ThreadPool,
-        };
+        var options = ConfigurationOptions.Parse(connectionString);
+        options.AbortOnConnectFail = false;
+        options.AllowAdmin = false;
+        options.SyncTimeout = 5000;
+        options.ConnectTimeout = 5000;
+        options.KeepAlive = 180;
+        options.DefaultVersion = new Version(6, 0);
+        options.SocketManager = SocketManager.ThreadPool;
 
         // Connection pooling with retry
         var connection = ConnectionMultiplexer.Connect(options);

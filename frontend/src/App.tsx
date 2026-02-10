@@ -58,9 +58,11 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function App() {
   return (
+
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-right" reverseOrder={false} />
+
         <BrowserRouter>
           <AuthProvider>
             <CartProvider>

@@ -6,7 +6,9 @@ import {
     DollarSign, Users, Clock, Percent, Phone,
     Mail, MapPin, Award, ShoppingBag, Wrench
 } from 'lucide-react';
-import { systemConfigApi, ConfigurationEntry } from '../../api/systemConfig';
+import { systemConfigApi } from '../../api/systemConfig';
+import type { ConfigurationEntry } from '../../api/systemConfig';
+
 import toast from 'react-hot-toast';
 
 // Extended config structure with default values
