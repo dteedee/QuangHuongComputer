@@ -33,27 +33,7 @@ public static class FileValidator
         // Validate Magic Number (Signature)
         try
         {
-            using var reader = new BinaryReader(file.OpenReadStream());
-            var signatures = ImageSignatures[extension];
-            var headerBytes = reader.ReadBytes(signatures.Max(s => s.Length));
-
-            var isValidSignature = signatures.Any(signature =>
-                headerBytes.Take(signature.Length).SequenceEqual(signature));
-
-            // Special check for WEBP
-            if (isValidSignature && extension == ".webp")
-            {
-                // WebP starts with RIFF, then 4 bytes of size, then WEBPVP8
-                // We already checked RIFF, now skip 4 bytes and check for WEBP
-                file.OpenReadStream().Position = 8;
-                var webpHeader = new byte[4];
-                file.OpenReadStream().Read(webpHeader, 0, 4);
-                var webpStr = System.Text.Encoding.ASCII.GetString(webpHeader);
-                if (webpStr != "WEBP")
-                    return (false, "Invalid WebP file structure.");
-            }
-
-            if (!isValidSignature)
+            if (!IsValidSignature(file.OpenReadStream(), extension))
                 return (false, "File content does not match its extension (Magic number mismatch). Security risk detected.");
 
             return (true, null);
@@ -62,5 +42,32 @@ public static class FileValidator
         {
             return (false, $"Error validating file content: {ex.Message}");
         }
+    }
+
+    public static bool IsValidSignature(Stream stream, string extension)
+    {
+        extension = extension.ToLowerInvariant();
+        if (!ImageSignatures.ContainsKey(extension))
+            return false;
+
+        using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true);
+        var signatures = ImageSignatures[extension];
+        var headerBytes = reader.ReadBytes(signatures.Max(s => s.Length));
+
+        var isValidSignature = signatures.Any(signature =>
+            headerBytes.Take(signature.Length).SequenceEqual(signature));
+
+        // Special check for WEBP
+        if (isValidSignature && extension == ".webp")
+        {
+            if (stream.Length < 12) return false;
+            stream.Position = 8;
+            var webpHeader = new byte[4];
+            stream.Read(webpHeader, 0, 4);
+            var webpStr = System.Text.Encoding.ASCII.GetString(webpHeader);
+            return webpStr == "WEBP";
+        }
+
+        return isValidSignature;
     }
 }

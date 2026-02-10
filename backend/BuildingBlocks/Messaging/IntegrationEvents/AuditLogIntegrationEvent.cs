@@ -10,4 +10,4 @@ public record AuditLogIntegrationEvent(
     string? UserAgent = null,
     string? RequestPath = null,
     string? RequestMethod = null
-) : IntegrationEvent;
+);
