@@ -614,6 +614,7 @@ public static class CatalogEndpoints
                 // Laptops
                 new Product("ASUS ROG Strix G16 2024", 42990000, 38000000, "Laptop gaming cao cấp Intel Core i9-14900HX, RTX 4070, 16GB DDR5, 1TB SSD", catLaptop, brandAsus, 15, 
                     specifications: "{\"CPU\": \"Intel Core i9-14900HX\", \"RAM\": \"16GB DDR5\", \"SSD\": \"1TB\", \"GPU\": \"RTX 4070 8GB\", \"Display\": \"16 inch QHD+ 240Hz\"}", 
+                    stockLocations: "[{\"city\": \"TP. HCM\", \"address\": \"285 Hai Bà Trưng - Quận 1\"}, {\"city\": \"Hà Nội\", \"address\": \"131 Lê Thanh Nghị\"}]",
                     imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/asus-rog-strix-g16_j5dhxn.jpg"),
                 
                 new Product("ASUS TUF Gaming F15 2024", 28990000, 25000000, "Laptop gaming Intel Core i7-13620H, RTX 4060, 16GB DDR5, 512GB SSD", catLaptop, brandAsus, 25, 
@@ -713,7 +714,13 @@ public static class CatalogEndpoints
                 // Mice
                 new Product("Logitech G Pro X Superlight 2", 4290000, 3700000, "Chuột gaming không dây nhẹ nhất thế giới, 60g", catChuot, brandLogitech, 25, 
                     specifications: "{\"Sensor\": \"HERO 2\", \"DPI\": \"32000\", \"Weight\": \"60g\", \"Battery\": \"95 hours\", \"Connection\": \"LIGHTSPEED Wireless\"}", 
+                    stockLocations: "[{\"city\": \"Đà Nẵng\", \"address\": \"123 Nguyễn Văn Linh\"}]",
                     imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/logitech-superlight2_ghijkl.jpg"),
+                
+                new Product("Chuột Logitech G502 Hero", 1200000, 1380000, "Chuột gaming huyền thoại, cảm biến HERO 25K, 11 nút lập trình", catChuot, brandLogitech, 40, 
+                    specifications: "{\"Sensor\": \"HERO 25K\", \"DPI\": \"25600\", \"IPS\": \"400+\", \"Buttons\": \"11\", \"Weight\": \"121g\", \"RGB\": \"LIGHTSYNC\"}",
+                    stockLocations: "[{\"city\": \"TP. HCM\", \"address\": \"ABC Cách Mạng Tháng 8\"}, {\"city\": \"Hà Nội\", \"address\": \"XYZ Thái Hà\"}]",
+                    imageUrl: "https://res.cloudinary.com/dnmoxu3yq/image/upload/v1736619282/logitech-g502-hero_abcdef.jpg"),
                 
                 new Product("Razer DeathAdder V3 Pro", 4590000, 4000000, "Chuột gaming không dây ergonomic, Focus Pro sensor", catChuot, brandRazer, 20, 
                     specifications: "{\"Sensor\": \"Focus Pro 30K\", \"DPI\": \"30000\", \"Weight\": \"63g\", \"Battery\": \"90 hours\", \"Connection\": \"HyperSpeed Wireless\"}", 

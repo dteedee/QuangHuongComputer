@@ -114,7 +114,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#D70018] mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Không tìm thấy sản phẩm</h2>
           <button
             onClick={() => navigate('/products')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-6 py-3 bg-[#D70018] text-white rounded-lg hover:bg-[#b50014]"
           >
             Quay lại danh sách
           </button>
@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
   const specifications = parseSpecifications(product.specifications);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-sans">
       {/* Added to Cart Notification */}
       {showAddedNotification && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-slide-in">
@@ -154,15 +154,15 @@ export default function ProductDetailPage() {
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-2 text-sm">
-            <button onClick={() => navigate('/')} className="text-blue-600 hover:text-blue-700">
+            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-[#D70018] font-medium">
               Trang chủ
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <button onClick={() => navigate('/products')} className="text-blue-600 hover:text-blue-700">
+            <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-[#D70018] font-medium">
               Sản phẩm
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">{product.name}</span>
+            <span className="text-gray-900 font-bold">{product.name}</span>
           </nav>
         </div>
       </div>
@@ -172,14 +172,14 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
             {/* Product Images */}
             <div className="space-y-4">
-              <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
                 <img
                   src={productImages[selectedImage]}
                   alt={product.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain mix-blend-multiply"
                 />
                 {discount && (
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full font-semibold">
+                  <div className="absolute top-4 left-4 bg-[#D70018] text-white px-3 py-1 rounded-full font-bold text-xs shadow-lg shadow-red-500/30">
                     -{discount}%
                   </div>
                 )}
@@ -191,10 +191,10 @@ export default function ProductDetailPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === index ? 'border-blue-600' : 'border-transparent hover:border-gray-300'
+                    className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-[#D70018] ring-1 ring-[#D70018]' : 'border-transparent hover:border-[#D70018]/50'
                       }`}
                   >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
                   </button>
                 ))}
               </div>
@@ -203,37 +203,38 @@ export default function ProductDetailPage() {
             {/* Product Info */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                <p className="text-lg text-gray-600">{product.sku}</p>
+                <h1 className="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tight">{product.name}</h1>
+                <p className="text-lg text-gray-500 font-medium">Mã SP: <span className="text-gray-900">{product.sku}</span></p>
               </div>
 
               {/* Price */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
                 <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-bold text-blue-600">{formatPrice(product.price)}</span>
+                  <span className="text-4xl font-black text-[#D70018] tracking-tight">{formatPrice(product.price)}</span>
                   {product.oldPrice && (
                     <>
-                      <span className="text-xl text-gray-400 line-through">
+                      <span className="text-lg text-gray-400 line-through font-medium">
                         {formatPrice(product.oldPrice)}
                       </span>
                       {discount && (
-                        <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
+                        <span className="bg-red-100 text-[#D70018] px-2 py-1 rounded-lg text-xs font-bold uppercase">
                           Tiết kiệm {formatPrice(product.oldPrice - product.price)}
                         </span>
                       )}
                     </>
                   )}
                 </div>
+                <p className="text-xs text-gray-500 mt-2 italic">Giá đã bao gồm VAT</p>
               </div>
 
               {/* Stock Status */}
-              <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${product.stockQuantity > 10 ? 'bg-green-50 text-green-700' :
-                product.stockQuantity > 0 ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-red-50 text-red-700'
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border ${product.stockQuantity > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                product.stockQuantity > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                  'bg-red-50 text-red-700 border-red-100'
                 }`}>
                 {product.stockQuantity > 10 && <Check className="w-5 h-5" />}
-                <span className="font-medium">
-                  {product.stockQuantity > 10 ? 'Còn hàng' :
+                <span className="font-bold text-sm">
+                  {product.stockQuantity > 10 ? 'Còn hàng (Sẵn sàng giao ngay)' :
                     product.stockQuantity > 0 ? `Chỉ còn ${product.stockQuantity} sản phẩm` :
                       'Hết hàng'}
                 </span>
@@ -241,140 +242,148 @@ export default function ProductDetailPage() {
 
               {/* Quantity Selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Số lượng</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2 tracking-wide">Số lượng</label>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={quantity <= 1}
-                  >
-                    <Minus className="w-5 h-5" />
-                  </button>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Math.min(product.stockQuantity, Number(e.target.value))))}
-                    className="w-20 h-12 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    min="1"
-                    max={product.stockQuantity}
-                  />
-                  <button
-                    onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
-                    className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={quantity >= product.stockQuantity}
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                  <span className="text-gray-600 text-sm ml-2">
+                  <div className="flex items-center rounded-lg border border-gray-200 bg-white">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50"
+                      disabled={quantity <= 1}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(product.stockQuantity, Number(e.target.value))))}
+                      className="w-16 h-12 text-center border-x border-gray-200 focus:outline-none font-bold text-gray-900"
+                      min="1"
+                      max={product.stockQuantity}
+                    />
+                    <button
+                      onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50"
+                      disabled={quantity >= product.stockQuantity}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <span className="text-gray-500 text-xs font-medium">
                     {product.stockQuantity} sản phẩm có sẵn
                   </span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={product.stockQuantity === 0 || addingToCart}
-                  className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
-                </button>
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={handleBuyNow}
                   disabled={product.stockQuantity === 0}
-                  className="flex-1 px-6 py-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-6 py-4 bg-[#D70018] text-white rounded-xl hover:bg-[#b50014] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-black uppercase text-sm shadow-lg shadow-red-500/20 active:scale-95"
                 >
                   Mua ngay
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stockQuantity === 0 || addingToCart}
+                  className="px-6 py-4 bg-white border-2 border-[#D70018] text-[#D70018] rounded-xl hover:bg-red-50 disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all font-bold uppercase text-sm flex items-center justify-center gap-2 active:scale-95 group"
+                >
+                  <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
                 </button>
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <div className="flex flex-col items-center text-center p-3">
-                  <Truck className="w-8 h-8 text-blue-600 mb-2" />
-                  <span className="text-sm font-medium">Giao hàng miễn phí</span>
-                  <span className="text-xs text-gray-500">Đơn từ 5 triệu</span>
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
+                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
+                  <Truck className="w-6 h-6 text-[#D70018] mb-2" />
+                  <span className="text-xs font-bold uppercase">Miễn phí vẫn chuyển</span>
+                  <span className="text-[10px] text-gray-500 mt-1">Đơn hàng > 5tr</span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3">
-                  <Shield className="w-8 h-8 text-blue-600 mb-2" />
-                  <span className="text-sm font-medium">Bảo hành</span>
-                  <span className="text-xs text-gray-500">{product.warrantyInfo || '12 tháng'}</span>
+                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
+                  <Shield className="w-6 h-6 text-[#D70018] mb-2" />
+                  <span className="text-xs font-bold uppercase">Bảo hành chính hãng</span>
+                  <span className="text-[10px] text-gray-500 mt-1">{product.warrantyInfo || '12 tháng'}</span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3">
-                  <HeadphonesIcon className="w-8 h-8 text-blue-600 mb-2" />
-                  <span className="text-sm font-medium">Hỗ trợ 24/7</span>
-                  <span className="text-xs text-gray-500">Hotline: 1900 xxxx</span>
+                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
+                  <HeadphonesIcon className="w-6 h-6 text-[#D70018] mb-2" />
+                  <span className="text-xs font-bold uppercase">Hỗ trợ 24/7</span>
+                  <span className="text-[10px] text-gray-500 mt-1">1900.6321</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Product Details Tabs */}
-          <div className="border-t">
-            <div className="flex border-b">
+          <div className="border-t border-gray-100">
+            <div className="flex border-b border-gray-100">
               <button
                 onClick={() => setActiveTab('description')}
-                className={`px-6 py-4 font-medium border-b-2 transition-colors ${activeTab === 'description'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'description'
+                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 Mô tả sản phẩm
               </button>
               <button
                 onClick={() => setActiveTab('specifications')}
-                className={`px-6 py-4 font-medium border-b-2 transition-colors ${activeTab === 'specifications'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'specifications'
+                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 Thông số kỹ thuật
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`px-6 py-4 font-medium border-b-2 transition-colors ${activeTab === 'reviews'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'reviews'
+                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
                 Đánh giá
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-8 bg-gray-50/30">
               {activeTab === 'description' && (
-                <div className="prose max-w-none">
-                  <h3 className="text-xl font-semibold mb-4">Giới thiệu sản phẩm</h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                <div className="prose max-w-none text-gray-600">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase">Giới thiệu sản phẩm</h3>
+                  <p className="leading-relaxed whitespace-pre-line">
                     {product.description}
                   </p>
                 </div>
               )}
 
               {activeTab === 'specifications' && (
-                <div className="max-w-2xl">
-                  <h3 className="text-xl font-semibold mb-4">Thông số kỹ thuật</h3>
+                <div className="max-w-3xl">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase">Thông số kỹ thuật</h3>
                   {Object.keys(specifications).length > 0 ? (
-                    <div className="space-y-3">
-                      {Object.entries(specifications).map(([key, value]) => (
-                        <div key={key} className="grid grid-cols-3 gap-4 py-3 border-b">
-                          <div className="text-gray-600 font-medium">{key}</div>
-                          <div className="col-span-2 text-gray-900">{value}</div>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                      {Object.entries(specifications).map(([key, value], index) => (
+                        <div key={key} className={`grid grid-cols-3 gap-4 py-3 px-4 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                          <div className="text-gray-500 font-semibold text-sm">{key}</div>
+                          <div className="col-span-2 text-gray-900 font-medium text-sm">{value}</div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500">Chưa có thông số kỹ thuật</p>
+                    <p className="text-gray-500 italic">Chưa có thông số kỹ thuật</p>
                   )}
                 </div>
               )}
 
               {activeTab === 'reviews' && (
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">Đánh giá từ khách hàng</h3>
-                  <p className="text-gray-500">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 text-gray-400 mb-4">
+                    <HeadphonesIcon size={32} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Đánh giá từ khách hàng</h3>
+                  <p className="text-gray-500 mb-6">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                  <button className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:border-[#D70018] hover:text-[#D70018] transition-all">
+                    Viết đánh giá
+                  </button>
                 </div>
               )}
             </div>
@@ -382,24 +391,30 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Related Products */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Sản phẩm liên quan</h2>
+        <div className="mt-12 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-gray-900 uppercase italic">Sản phẩm liên quan</h2>
+            <button className="text-[#D70018] font-bold text-sm hover:underline">Xem tất cả</button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden group cursor-pointer"
               >
-                <img
-                  src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
-                  alt="Related product"
-                  className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                <div className="aspect-[4/3] bg-gray-50 p-4 flex items-center justify-center">
+                  <img
+                    src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
+                    alt="Related product"
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
                 <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
-                    Sản phẩm liên quan {i}
+                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm h-10 group-hover:text-[#D70018] transition-colors">
+                    Sản phẩm liên quan {i} - Laptop Gaming High Performance
                   </h3>
-                  <p className="text-blue-600 font-bold">
+                  <p className="text-[#D70018] font-black text-lg">
                     {formatPrice(product.price * (0.8 + Math.random() * 0.4))}
                   </p>
                 </div>

@@ -14,7 +14,7 @@ interface CartItem extends Partial<Product> {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: Product) => void;
+    addToCart: (product: Product, quantity?: number) => void;
     removeFromCart: (productId: string) => void;
     updateQuantity: (productId: string, quantity: number) => void;
     clearCart: () => void;
@@ -93,7 +93,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const addToCart = async (product: Product) => {
+    const addToCart = async (product: Product, quantity: number = 1) => {
         if (!isAuthenticated) {
             toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
             return;
@@ -104,7 +104,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 productId: product.id,
                 productName: product.name,
                 price: product.price,
-                quantity: 1
+                quantity: quantity
             });
 
             // Optimistically update UI
@@ -113,11 +113,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 if (existing) {
                     return prev.map(item =>
                         item.id === product.id
-                            ? { ...item, quantity: item.quantity + 1 }
+                            ? { ...item, quantity: item.quantity + quantity }
                             : item
                     );
                 }
-                return [...prev, { ...product, quantity: 1 }];
+                return [...prev, { ...product, quantity: quantity }];
             });
 
             toast.success(`Đã thêm ${product.name} vào giỏ hàng`, {

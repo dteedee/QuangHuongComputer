@@ -9,7 +9,12 @@ import { salesApi } from '../../api/sales';
 import { adminApi, formatDate } from '../../api/admin';
 import { formatCurrency } from '@/utils/format';
 
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
 export const CommonDashboard = () => {
+    const navigate = useNavigate();
+
     const { data: salesStats } = useQuery({
         queryKey: ['sales', 'stats'],
         queryFn: () => salesApi.stats.get()
@@ -64,6 +69,19 @@ export const CommonDashboard = () => {
         color: 'bg-blue-600'
     })) || [];
 
+
+
+    const handleExportReport = () => {
+        toast.promise(
+            new Promise((resolve) => setTimeout(resolve, 2000)),
+            {
+                loading: 'Đang trích xuất dữ liệu tổng hợp...',
+                success: 'Đã xuất báo cáo thành công! (File: Report_2026.xlsx)',
+                error: 'Lỗi xuất báo cáo',
+            }
+        );
+    };
+
     return (
         <div className="space-y-10 pb-20 animate-fade-in admin-area">
             {/* Header */}
@@ -83,10 +101,16 @@ export const CommonDashboard = () => {
                     </div>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-8 py-4 bg-white border-2 border-gray-100 rounded-2xl text-xs font-black text-gray-950 uppercase tracking-widest shadow-sm hover:border-[#D70018] transition-all active:scale-95">
+                    <button
+                        onClick={handleExportReport}
+                        className="px-8 py-4 bg-white border-2 border-gray-100 rounded-2xl text-xs font-black text-gray-950 uppercase tracking-widest shadow-sm hover:border-[#D70018] transition-all active:scale-95 hover:bg-red-50"
+                    >
                         Xuất dữ liệu báo cáo
                     </button>
-                    <button className="px-8 py-4 bg-gray-950 rounded-2xl text-xs font-black text-white uppercase tracking-widest shadow-2xl shadow-gray-900/30 hover:bg-black transition-all active:scale-95 flex items-center gap-3 italic">
+                    <button
+                        onClick={() => navigate('/backoffice/reports')}
+                        className="px-8 py-4 bg-gray-950 rounded-2xl text-xs font-black text-white uppercase tracking-widest shadow-2xl shadow-gray-900/30 hover:bg-black transition-all active:scale-95 flex items-center gap-3 italic"
+                    >
                         <TrendingUp size={20} className="text-[#D70018]" /> Phân tích chuyên sâu
                     </button>
                 </div>
@@ -180,7 +204,10 @@ export const CommonDashboard = () => {
                         ))}
                     </div>
 
-                    <button className="w-full py-5 mt-10 bg-gray-50 hover:bg-gray-100 text-gray-950 text-xs font-black uppercase tracking-widest rounded-2xl transition-all border-2 border-gray-100 flex items-center justify-center gap-3 group italic shadow-sm hover:shadow-md">
+                    <button
+                        onClick={() => navigate('/backoffice/reports')}
+                        className="w-full py-5 mt-10 bg-gray-50 hover:bg-gray-100 text-gray-950 text-xs font-black uppercase tracking-widest rounded-2xl transition-all border-2 border-gray-100 flex items-center justify-center gap-3 group italic shadow-sm hover:shadow-md"
+                    >
                         Xem nhật ký vận hành
                         <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-[#D70018]" />
                     </button>

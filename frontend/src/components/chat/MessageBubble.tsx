@@ -36,7 +36,7 @@ export const MessageBubble = memo<MessageBubbleProps>(({
   if (isSystem) {
     return (
       <div className="flex justify-center my-2">
-        <div className="bg-gray-800/50 text-gray-400 text-xs italic px-4 py-2 rounded-full max-w-md text-center">
+        <div className="bg-gray-100 text-gray-600 text-xs italic px-4 py-2 rounded-full max-w-md text-center border border-gray-200">
           {text}
         </div>
       </div>
@@ -46,21 +46,21 @@ export const MessageBubble = memo<MessageBubbleProps>(({
   return (
     <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       {showAvatar && !isOwn && (
-        <span className="text-xs text-gray-500 mb-1 px-1">{sender}</span>
+        <span className="text-xs text-gray-500 mb-1 px-1 font-medium">{sender}</span>
       )}
 
       <div className="flex items-end gap-2 max-w-[75%]">
         {isOwn && showTimestamp && (
-          <span className="text-xs text-gray-500 whitespace-nowrap">
+          <span className="text-xs text-gray-400 whitespace-nowrap">
             {formatTime(timestamp)}
           </span>
         )}
 
         <div
-          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isOwn
-              ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-sm'
-              : 'bg-white/10 text-gray-200 rounded-bl-sm'
+              ? 'bg-[#D70018] text-white rounded-br-sm shadow-lg shadow-red-500/20'
+              : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
           }`}
         >
           <div className="break-words whitespace-pre-wrap">{text}</div>
@@ -68,16 +68,16 @@ export const MessageBubble = memo<MessageBubbleProps>(({
           {isOwn && showReadStatus && (
             <div className="flex justify-end mt-1">
               {isRead ? (
-                <CheckCheck className="w-4 h-4 text-blue-300" />
+                <CheckCheck className="w-4 h-4 text-blue-200" />
               ) : (
-                <Check className="w-4 h-4 text-gray-400" />
+                <Check className="w-4 h-4 text-white/60" />
               )}
             </div>
           )}
         </div>
 
         {!isOwn && showTimestamp && (
-          <span className="text-xs text-gray-500 whitespace-nowrap">
+          <span className="text-xs text-gray-400 whitespace-nowrap">
             {formatTime(timestamp)}
           </span>
         )}

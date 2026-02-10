@@ -34,31 +34,31 @@ export const ProductCard = memo(({ product, onClick }: ProductCardProps) => {
   return (
     <button
       onClick={handleClick}
-      className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-3 transition-all hover:scale-[1.02] group text-left"
+      className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-3 transition-all hover:scale-[1.02] group text-left shadow-sm"
     >
       <div className="flex gap-3">
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
-            className="w-16 h-16 object-cover rounded bg-gray-800"
+            className="w-16 h-16 object-cover rounded bg-gray-100"
           />
         ) : (
-          <div className="w-16 h-16 bg-gray-800 rounded flex items-center justify-center">
-            <Package className="w-8 h-8 text-gray-600" />
+          <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+            <Package className="w-8 h-8 text-gray-400" />
           </div>
         )}
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+            <h4 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-[#D70018] transition-colors">
               {product.name}
             </h4>
-            <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#D70018] transition-colors flex-shrink-0" />
           </div>
 
           {product.price && (
-            <p className="text-xs font-bold text-blue-400 mt-1">
+            <p className="text-xs font-bold text-[#D70018] mt-1">
               {formatPrice(product.price)}
             </p>
           )}

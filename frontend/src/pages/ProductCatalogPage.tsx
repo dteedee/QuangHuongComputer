@@ -9,7 +9,10 @@ interface ProductCatalogProps {
   brandSlug?: string;
 }
 
+import { useCart } from '../context/CartContext';
+
 export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductCatalogProps) {
+  const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -200,7 +203,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
 
               {/* Category Filter */}
               <div className="mb-6">
-                <h3 className="font-medium mb-3">Danh mục</h3>
+                <h3 className="font-bold text-gray-900 mb-3 uppercase text-sm tracking-wide">Danh mục</h3>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
@@ -210,7 +213,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       onChange={() => setSelectedCategory('')}
                       className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                     />
-                    <span className="text-gray-700 group-hover:text-[#D70018]">Tất cả</span>
+                    <span className="text-gray-900 font-medium group-hover:text-[#D70018]">Tất cả</span>
                   </label>
                   {categories.map((category) => (
                     <label key={category.id} className="flex items-center gap-2 cursor-pointer group">
@@ -221,7 +224,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                         onChange={() => setSelectedCategory(category.id)}
                         className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                       />
-                      <span className="text-gray-700 group-hover:text-[#D70018]">{category.name || 'Đang cập nhật'}</span>
+                      <span className="text-gray-800 group-hover:text-[#D70018] transition-colors">{category.name || 'Đang cập nhật'}</span>
                     </label>
                   ))}
                 </div>
@@ -229,8 +232,8 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
 
               {/* Brand Filter */}
               <div className="mb-6">
-                <h3 className="font-medium mb-3">Thương hiệu</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <h3 className="font-bold text-gray-900 mb-3 uppercase text-sm tracking-wide">Thương hiệu</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="radio"
@@ -239,7 +242,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       onChange={() => setSelectedBrand('')}
                       className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                     />
-                    <span className="text-gray-700 group-hover:text-[#D70018]">Tất cả</span>
+                    <span className="text-gray-900 font-medium group-hover:text-[#D70018]">Tất cả</span>
                   </label>
                   {brands.map((brand) => (
                     <label key={brand.id} className="flex items-center gap-2 cursor-pointer group">
@@ -250,7 +253,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                         onChange={() => setSelectedBrand(brand.id)}
                         className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                       />
-                      <span className="text-gray-700 group-hover:text-[#D70018]">{brand.name || 'Đang cập nhật'}</span>
+                      <span className="text-gray-800 group-hover:text-[#D70018] transition-colors">{brand.name || 'Đang cập nhật'}</span>
                     </label>
                   ))}
                 </div>
@@ -440,6 +443,10 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                             <button
                               className="px-6 py-3 border-2 border-[#D70018] text-[#D70018] rounded-lg hover:bg-red-50 transition-colors font-bold"
                               disabled={product.stockQuantity === 0}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                addToCart(product);
+                              }}
                             >
                               Thêm vào giỏ
                             </button>

@@ -164,11 +164,11 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                         {/* Chat */}
                         <button
                             onClick={onChatClick}
-                            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all border border-blue-200 group"
+                            className="flex items-center gap-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all border border-red-200 group"
                             data-testid="chat-button"
                         >
-                            <MessageCircle size={22} className="text-blue-600 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-bold text-blue-600 hidden sm:block">Chat</span>
+                            <MessageCircle size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-bold text-[#D70018] hidden sm:block">Chat</span>
                         </button>
 
                         {/* Account Menu Removed as per request to move to Top Bar */}

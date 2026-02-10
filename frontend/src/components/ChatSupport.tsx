@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
-import { Users, Send, Info, AlertCircle } from 'lucide-react';
+import { Users, Send, Info, AlertCircle, Phone, X, RefreshCw } from 'lucide-react';
 import { MessageBubble, type MessageData } from './chat/MessageBubble';
 import { TypingIndicator } from './chat/TypingIndicator';
 import { ConnectionStatus, type ConnectionState } from './chat/ConnectionStatus';
@@ -245,31 +246,49 @@ export const ChatSupport = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto bg-slate-900 rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex flex-col h-[700px]">
+    <div className="container mx-auto px-4 py-8 font-sans">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xl flex flex-col h-[700px]">
         {/* Header */}
-        <div className="p-4 bg-white/5 border-b border-white/10">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <Users className="text-white" size={20} />
-              </div>
-              <div>
-                <h3 className="text-white font-bold">QUANG HƯỞNG Live Support</h3>
-                <p className="text-xs text-gray-400">Hỗ trợ trực tuyến 24/7</p>
+        <div className="p-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#D70018] rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
+              <Users className="text-white" size={20} />
+            </div>
+            <div>
+              <h3 className="text-gray-900 font-black uppercase text-sm tracking-wide">QUANG HƯỞNG Live Support</h3>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <p className="text-xs text-gray-500 font-medium">Hỗ trợ trực tuyến 24/7</p>
               </div>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
             <ConnectionStatus status={connectionStatus} onRetry={handleRetry} />
+            {connectionStatus === 'failed' && (
+              <button onClick={handleRetry} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600 transition">
+                <RefreshCw size={16} />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Messages Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-800/30">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-3">
-              <Info size={48} className="opacity-20" />
-              <p className="text-center">Bắt đầu cuộc trò chuyện với đội ngũ kỹ thuật của chúng tôi.</p>
-              <p className="text-xs text-center text-gray-600">Chúng tôi luôn sẵn sàng hỗ trợ bạn!</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-4">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-[#D70018]">
+                <Info size={40} />
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-gray-900 mb-1">Bắt đầu cuộc trò chuyện</p>
+                <p className="text-xs text-gray-500 max-w-xs">Đội ngũ kỹ thuật viên của Quang Hưởng Computer luôn sẵn sàng hỗ trợ bạn.</p>
+              </div>
+              <button
+                onClick={() => handleSendMessage()} // Mock action
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase text-gray-600 shadow-sm hover:border-[#D70018] hover:text-[#D70018] transition-all"
+              >
+                <Phone size={14} /> Hotline: 1900.6321
+              </button>
             </div>
           )}
 
@@ -293,19 +312,19 @@ export const ChatSupport = () => {
 
           {/* Queued Messages Warning */}
           {messageQueue.length > 0 && (
-            <div className="flex items-center gap-2 justify-center text-yellow-500 text-xs bg-yellow-500/10 py-2 px-4 rounded-lg">
+            <div className="flex items-center gap-2 justify-center text-amber-600 text-xs bg-amber-50 py-2 px-4 rounded-lg font-medium border border-amber-100">
               <AlertCircle size={16} />
-              <span>{messageQueue.length} tin nhắn đang chờ gửi</span>
+              <span>{messageQueue.length} tin nhắn đang chờ gửi...</span>
             </div>
           )}
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white/5 border-t border-white/10">
+        <div className="p-4 bg-white border-t border-gray-100">
           {connectionStatus === 'failed' && (
-            <div className="mb-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-2 text-red-400 text-sm">
+            <div className="mb-3 bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-2 text-red-600 text-xs font-medium">
               <AlertCircle size={16} />
-              <span>Không có kết nối. Tin nhắn sẽ được gửi khi kết nối lại.</span>
+              <span>Mất kết nối. Tin nhắn sẽ được gửi tự động khi có mạng.</span>
             </div>
           )}
 
@@ -322,20 +341,20 @@ export const ChatSupport = () => {
                   handleSendMessage();
                 }
               }}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder={connectionStatus === 'connected' ? 'Nhập tin nhắn...' : 'Chờ kết nối...'}
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all font-medium text-sm"
+              placeholder={connectionStatus === 'connected' ? 'Nhập tin nhắn hỗ trợ...' : 'Đang kết nối lại...'}
               disabled={!connection}
             />
             <button
               onClick={handleSendMessage}
               disabled={!input.trim() || !connection}
-              className="px-6 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+              className="px-6 bg-[#D70018] hover:bg-[#b50014] text-white rounded-xl transition-all flex items-center gap-2 font-bold text-sm shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
             >
               <Send size={18} /> Gửi
             </button>
           </div>
 
-          <div className="mt-2 text-xs text-gray-500 text-center">
+          <div className="mt-2 text-[10px] text-gray-400 text-center font-medium">
             Nhấn Enter để gửi, Shift+Enter để xuống dòng
           </div>
         </div>

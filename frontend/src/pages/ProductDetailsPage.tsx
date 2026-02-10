@@ -225,18 +225,18 @@ export const ProductDetailsPage = () => {
                                 <Cpu size={16} /> Thông số nổi bật
                             </h3>
                             <ul className="space-y-2">
-                                {[
-                                    "CPU: Intel Core i5 / AMD Ryzen 5 mới nhất",
-                                    "RAM: 16GB DDR4 3200MHz",
-                                    "SSD: 512GB NVMe PCIe Gen4",
-                                    "VGA: NVIDIA GeForce RTX 3050 4GB",
-                                    "Màn hình: 15.6 inch FHD IPS 144Hz"
-                                ].map((spec, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600 bg-white p-2 rounded border border-dashed border-gray-200">
-                                        <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                                        <span>{spec}</span>
+                                {parsedSpecs.length > 0 ? (
+                                    parsedSpecs.slice(0, 6).map((spec: any, i: number) => (
+                                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600 bg-white p-2 rounded border border-dashed border-gray-200">
+                                            <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                                            <span><span className="font-semibold">{spec.label}:</span> {spec.value}</span>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="flex items-start gap-2 text-sm text-gray-500 bg-white p-2 rounded border border-dashed border-gray-200 italic">
+                                        <span>Đang cập nhật thông số...</span>
                                     </li>
-                                ))}
+                                )}
                             </ul>
                         </div>
                     </div>
@@ -263,10 +263,10 @@ export const ProductDetailsPage = () => {
                                 </button>
 
                                 <button
-                                    onClick={() => addToCart({ ...product, quantity })}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    onClick={() => addToCart(product, quantity)}
+                                    className="w-full bg-white border-2 border-[#D70018] text-[#D70018] hover:bg-red-50 py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/10 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                                 >
-                                    <ShoppingBag size={18} />
+                                    <ShoppingBag size={18} className="group-hover:scale-110 transition-transform" />
                                     <span className="uppercase text-sm">Thêm vào giỏ</span>
                                 </button>
 
