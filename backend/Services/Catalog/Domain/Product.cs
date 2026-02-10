@@ -117,7 +117,7 @@ public class Product : Entity<Guid>
         Status = DetermineStatus(StockQuantity);
     }
 
-    public void UpdateDetails(string name, string description, decimal price, decimal? oldPrice = null, string? specifications = null, string? warrantyInfo = null, string? stockLocations = null)
+    public void UpdateDetails(string name, string description, decimal price, decimal? oldPrice = null, string? specifications = null, string? warrantyInfo = null, string? stockLocations = null, decimal? weight = null, string? barcode = null)
     {
         Name = name;
         Description = description;
@@ -126,6 +126,35 @@ public class Product : Entity<Guid>
         if (specifications != null) Specifications = specifications;
         if (warrantyInfo != null) WarrantyInfo = warrantyInfo;
         if (stockLocations != null) StockLocations = stockLocations;
+        if (weight.HasValue) Weight = weight.Value;
+        if (barcode != null) Barcode = barcode;
+    }
+
+    public void UpdateCategory(Guid categoryId)
+    {
+        CategoryId = categoryId;
+    }
+
+    public void UpdateBrand(Guid brandId)
+    {
+        BrandId = brandId;
+    }
+
+    public void UpdateStockQuantity(int quantity)
+    {
+        StockQuantity = quantity;
+        Status = DetermineStatus(StockQuantity);
+    }
+
+    public void UpdateLowStockThreshold(int threshold)
+    {
+        LowStockThreshold = threshold;
+    }
+
+    public void UpdateSku(string sku)
+    {
+        if (!string.IsNullOrWhiteSpace(sku))
+            Sku = sku;
     }
 
     public void UpdatePrice(decimal price, decimal? oldPrice = null)

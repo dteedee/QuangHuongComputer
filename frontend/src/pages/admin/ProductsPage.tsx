@@ -155,20 +155,20 @@ export const AdminProductsPage = () => {
             price: Number(formData.get('price')) || editingProduct?.price || 0,
             oldPrice: formData.get('oldPrice') ? Number(formData.get('oldPrice')) : undefined,
             costPrice: formData.get('costPrice') ? Number(formData.get('costPrice')) : undefined,
-            categoryId: formData.get('categoryId') as string,
-            brandId: formData.get('brandId') as string,
+            categoryId: (formData.get('categoryId') as string) || editingProduct?.categoryId,
+            brandId: (formData.get('brandId') as string) || editingProduct?.brandId,
             stockQuantity: Number(formData.get('stockQuantity')),
             lowStockThreshold: formData.get('lowStockThreshold') ? Number(formData.get('lowStockThreshold')) : 5,
-            sku: formData.get('sku') as string,
-            barcode: formData.get('barcode') as string,
+            sku: (formData.get('sku') as string) || editingProduct?.sku,
+            barcode: (formData.get('barcode') as string) || editingProduct?.barcode,
             weight: formData.get('weight') ? Number(formData.get('weight')) : 0,
-            imageUrl: formData.get('imageUrl') as string,
+            imageUrl: (formData.get('imageUrl') as string) || editingProduct?.imageUrl,
             galleryImages: JSON.stringify(gallery), // Store as JSON array for PostgreSQL jsonb
             specifications: specsJson,
-            warrantyInfo: formData.get('warrantyInfo') as string,
-            metaTitle: formData.get('metaTitle') as string,
-            metaDescription: formData.get('metaDescription') as string,
-            metaKeywords: formData.get('metaKeywords') as string,
+            warrantyInfo: (formData.get('warrantyInfo') as string) || editingProduct?.warrantyInfo,
+            metaTitle: (formData.get('metaTitle') as string) || editingProduct?.metaTitle,
+            metaDescription: (formData.get('metaDescription') as string) || editingProduct?.metaDescription,
+            metaKeywords: (formData.get('metaKeywords') as string) || editingProduct?.metaKeywords,
         };
 
         if (editingProduct) {
@@ -407,14 +407,10 @@ export const AdminProductsPage = () => {
                                     </motion.div>
                                 ) : (
                                     <div className="hidden">
-                                        <input name="name" defaultValue={editingProduct?.name} />
-                                        <select name="categoryId" defaultValue={editingProduct?.categoryId}>
-                                            {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                        </select>
-                                        <select name="brandId" defaultValue={editingProduct?.brandId}>
-                                            {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                        </select>
-                                        <textarea name="description" defaultValue={editingProduct?.description} />
+                                        <input type="hidden" name="name" defaultValue={editingProduct?.name} />
+                                        <input type="hidden" name="categoryId" defaultValue={editingProduct?.categoryId} />
+                                        <input type="hidden" name="brandId" defaultValue={editingProduct?.brandId} />
+                                        <textarea className="hidden" name="description" defaultValue={editingProduct?.description} />
                                     </div>
                                 )}
 
@@ -445,10 +441,14 @@ export const AdminProductsPage = () => {
                                     </motion.div>
                                 ) : (
                                     <div className="hidden">
-                                        <input name="price" type="number" defaultValue={editingProduct?.price} />
-                                        <input name="oldPrice" type="number" defaultValue={editingProduct?.oldPrice} />
-                                        <input name="sku" defaultValue={editingProduct?.sku} />
-                                        <input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} />
+                                        <input type="hidden" name="price" defaultValue={editingProduct?.price} />
+                                        <input type="hidden" name="oldPrice" defaultValue={editingProduct?.oldPrice} />
+                                        <input type="hidden" name="sku" defaultValue={editingProduct?.sku} />
+                                        <input type="hidden" name="stockQuantity" defaultValue={editingProduct?.stockQuantity} />
+                                        <input type="hidden" name="costPrice" defaultValue={editingProduct?.costPrice} />
+                                        <input type="hidden" name="barcode" defaultValue={editingProduct?.barcode} />
+                                        <input type="hidden" name="weight" defaultValue={editingProduct?.weight} />
+                                        <input type="hidden" name="lowStockThreshold" defaultValue={editingProduct?.lowStockThreshold} />
                                     </div>
                                 )}
 
@@ -659,8 +659,9 @@ export const AdminProductsPage = () => {
                                     </motion.div>
                                 ) : (
                                     <div className="hidden">
-                                        <input name="metaTitle" defaultValue={editingProduct?.metaTitle} />
-                                        <textarea name="metaDescription" defaultValue={editingProduct?.metaDescription} />
+                                        <input type="hidden" name="metaTitle" defaultValue={editingProduct?.metaTitle} />
+                                        <textarea className="hidden" name="metaDescription" defaultValue={editingProduct?.metaDescription} />
+                                        <input type="hidden" name="metaKeywords" defaultValue={editingProduct?.metaKeywords} />
                                     </div>
                                 )}
                             </form>

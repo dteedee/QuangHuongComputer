@@ -451,9 +451,29 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            Console.WriteLine($"Updating product {id}: Name={model.Name}, Price={model.Price}");
-            product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo, model.StockLocations);
+            product.UpdateDetails(
+                model.Name,
+                model.Description,
+                model.Price,
+                model.OldPrice,
+                model.Specifications,
+                model.WarrantyInfo,
+                model.StockLocations,
+                model.Weight,
+                model.Barcode
+            );
+
             product.UpdateImage(model.ImageUrl ?? product.ImageUrl, model.GalleryImages);
+
+            if (model.CategoryId.HasValue) product.UpdateCategory(model.CategoryId.Value);
+            if (model.BrandId.HasValue) product.UpdateBrand(model.BrandId.Value);
+            if (model.StockQuantity.HasValue) product.UpdateStockQuantity(model.StockQuantity.Value);
+            if (model.LowStockThreshold.HasValue) product.UpdateLowStockThreshold(model.LowStockThreshold.Value);
+            if (model.CostPrice.HasValue) product.UpdateCostPrice(model.CostPrice.Value);
+            if (!string.IsNullOrEmpty(model.Sku)) product.UpdateSku(model.Sku);
+
+            product.UpdateSeo(model.MetaTitle, model.MetaDescription, model.MetaKeywords);
+
             await db.SaveChangesAsync();
 
             // Log Audit
@@ -1042,11 +1062,22 @@ public record UpdateProductDto(
     string Description,
     decimal Price,
     decimal? OldPrice = null,
+    decimal? CostPrice = null,
+    Guid? CategoryId = null,
+    Guid? BrandId = null,
+    int? StockQuantity = null,
+    int? LowStockThreshold = null,
+    string? Sku = null,
+    string? Barcode = null,
+    decimal? Weight = null,
     string? Specifications = null,
     string? WarrantyInfo = null,
     string? StockLocations = null,
     string? ImageUrl = null,
-    string? GalleryImages = null);
+    string? GalleryImages = null,
+    string? MetaTitle = null,
+    string? MetaDescription = null,
+    string? MetaKeywords = null);
 
 public record CreateCategoryDto(string Name, string Description);
 
