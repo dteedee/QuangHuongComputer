@@ -72,6 +72,11 @@ export interface PagedResult<T> {
 export const systemConfigApi = {
     // ============ Configuration ============
     config: {
+        getPublic: async (): Promise<ConfigurationEntry[]> => {
+            const response = await client.get('/config/public');
+            return response.data;
+        },
+
         getAll: async (category?: string): Promise<ConfigurationEntry[]> => {
             const response = await client.get('/config', { params: { category } });
             return response.data;

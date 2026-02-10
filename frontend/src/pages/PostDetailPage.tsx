@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
 import { Loader2, ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export const PostDetailPage = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -39,6 +40,12 @@ export const PostDetailPage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen pb-20 font-sans">
+            <SEO
+                title={post.title}
+                description={post.summary || post.content?.replace(/<[^>]*>?/gm, '').substring(0, 150)}
+                image={post.featuredImage}
+                type="article"
+            />
             {/* Breadcrumb */}
             <div className="bg-white border-b border-gray-200">
                 <div className="container mx-auto px-4 py-4">

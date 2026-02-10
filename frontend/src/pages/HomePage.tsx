@@ -1,5 +1,6 @@
 import { useProducts } from '../hooks/useProducts';
 import { ProductCard } from '../components/ProductCard';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import {
     Monitor, ChevronRight, Gamepad, Server, Cpu,
@@ -96,6 +97,10 @@ export const HomePage = () => {
 
     return (
         <div className="bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 min-h-screen pb-20 font-sans selection:bg-red-100 relative overflow-hidden">
+            <SEO
+                title="Trang chủ"
+                description="Quang Hưởng Computer - Chuyên cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt tại Hải Dương. Hệ thống bán lẻ máy tính uy tín số 1."
+            />
             {/* Tết Decorations - Floating Icons */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
                 {tetDecorations.map((deco, i) => (

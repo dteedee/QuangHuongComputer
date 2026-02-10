@@ -1,9 +1,14 @@
 ﻿import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export const ContactPage = () => {
     return (
         <div className="bg-gray-50 min-h-screen pb-10">
+            <SEO
+                title="Liên hệ"
+                description="Liên hệ với Quang Hưởng Computer - Hotline: 1800.6321. Địa chỉ: Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội. Hỗ trợ kỹ thuật và tư vấn mua hàng 24/7."
+            />
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
                     <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
