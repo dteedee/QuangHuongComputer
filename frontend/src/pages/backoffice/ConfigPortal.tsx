@@ -6,12 +6,11 @@ import {
     DollarSign, Users, Clock, Percent, Phone,
     Mail, MapPin, Award, ShoppingBag, Wrench
 } from 'lucide-react';
-import { systemConfigApi } from '../../api/systemConfig';
-import type { ConfigEntry } from '../../api/systemConfig';
+import { systemConfigApi, ConfigurationEntry } from '../../api/systemConfig';
 import toast from 'react-hot-toast';
 
 // Extended config structure with default values
-const DEFAULT_CONFIGS: Record<string, ConfigEntry[]> = {
+const DEFAULT_CONFIGS: Record<string, ConfigurationEntry[]> = {
     'Company': [
         { key: 'COMPANY_NAME', value: 'Quang Hưởng Computer', description: 'Tên công ty hiển thị trên website', category: 'Company', lastUpdated: new Date().toISOString() },
         { key: 'COMPANY_FULL_NAME', value: 'CÔNG TY TNHH QUANG HƯỞNG COMPUTER', description: 'Tên đầy đủ công ty (dùng cho hóa đơn)', category: 'Company', lastUpdated: new Date().toISOString() },
@@ -80,7 +79,7 @@ const DEFAULT_CONFIGS: Record<string, ConfigEntry[]> = {
 };
 
 export const ConfigPortal = () => {
-    const [configs, setConfigs] = useState<ConfigEntry[]>([]);
+    const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('Company');
     const [hasChanges, setHasChanges] = useState(false);
