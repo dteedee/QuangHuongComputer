@@ -1,9 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Building2, ChevronRight, Target, Users, Award, TrendingUp } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export const AboutPage = () => {
     return (
         <div className="bg-gray-50 min-h-screen pb-10">
+            <SEO
+                title="Giới thiệu"
+                description="Tìm hiểu về Quang Hưởng Computer - Đơn vị hàng đầu cung cấp giải pháp máy tính, linh kiện và dịch vụ sửa chữa chuyên nghiệp với hơn 10 năm kinh nghiệm."
+            />
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">

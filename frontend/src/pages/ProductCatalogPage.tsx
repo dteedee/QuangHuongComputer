@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Category, type Brand } from '../api/catalog';
 import { Filter, SlidersHorizontal, Grid, List, ChevronDown } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
+import SEO from '../components/SEO';
 
 interface ProductCatalogProps {
   categorySlug?: string;
@@ -134,8 +135,18 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
     return { text: 'Còn hàng', className: 'bg-green-100 text-green-800' };
   };
 
+  const currentCategoryName = categories.find(c => c.id === selectedCategory)?.name || 'Tất cả sản phẩm';
+  const currentBrandName = brands.find(b => b.id === selectedBrand)?.name;
+  const seoTitle = currentBrandName
+    ? `${currentBrandName} - ${currentCategoryName}`
+    : currentCategoryName;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title={seoTitle}
+        description={`Danh mục ${seoTitle} tại Quang Hưởng Computer. Cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt nhất.`}
+      />
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-4">
         {/* Breadcrumb / Header */}

@@ -6,15 +6,11 @@ import client from './client';
 // ============================================
 
 export interface ConfigurationEntry {
-    id: string;
     key: string;
     value: string;
-    description?: string;
-    category?: string;
-    isEncrypted: boolean;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt?: string;
+    description: string;
+    category: string;
+    lastUpdated: string;
 }
 
 export interface CreateConfigRequest {
@@ -76,81 +72,46 @@ export interface PagedResult<T> {
 export const systemConfigApi = {
     // ============ Configuration ============
     config: {
-        getAll: async (): Promise<ConfigurationEntry[]> => {
-            const response = await client.get('/system-config');
+        getPublic: async (): Promise<ConfigurationEntry[]> => {
+            const response = await client.get('/config/public');
+            return response.data;
+        },
+
+        getAll: async (category?: string): Promise<ConfigurationEntry[]> => {
+            const response = await client.get('/config', { params: { category } });
             return response.data;
         },
 
         getByKey: async (key: string): Promise<ConfigurationEntry> => {
-            const response = await client.get(`/system-config/${key}`);
+            const response = await client.get(`/config/${key}`);
             return response.data;
         },
 
-        getByCategory: async (category: string): Promise<ConfigurationEntry[]> => {
-            const response = await client.get(`/system-config/category/${category}`);
+        upsert: async (entry: ConfigurationEntry): Promise<ConfigurationEntry> => {
+            const response = await client.post('/config', entry);
             return response.data;
         },
 
-        getCategories: async (): Promise<ConfigCategory[]> => {
-            const response = await client.get('/system-config/categories');
-            return response.data;
-        },
-
-        create: async (data: CreateConfigRequest): Promise<ConfigurationEntry> => {
-            const response = await client.post('/system-config', data);
-            return response.data;
-        },
-
-        update: async (key: string, data: UpdateConfigRequest): Promise<ConfigurationEntry> => {
-            const response = await client.put(`/system-config/${key}`, data);
+        upsertByKey: async (key: string, entry: ConfigurationEntry): Promise<ConfigurationEntry> => {
+            const response = await client.post(`/config/${key}`, entry);
             return response.data;
         },
 
         delete: async (key: string): Promise<void> => {
-            await client.delete(`/system-config/${key}`);
-        },
-
-        toggleActive: async (key: string): Promise<ConfigurationEntry> => {
-            const response = await client.put(`/system-config/${key}/toggle-active`);
-            return response.data;
+            await client.delete(`/config/${key}`);
         },
     },
 
-    // ============ System Info ============
-    system: {
-        getInfo: async (): Promise<SystemInfo> => {
-            const response = await client.get('/system-config/system/info');
-            return response.data;
-        },
-
-        getHealth: async (): Promise<{
-            status: 'healthy' | 'degraded' | 'unhealthy';
-            checks: Record<string, { status: string; message?: string; duration?: number }>;
-        }> => {
-            const response = await client.get('/system-config/system/health');
-            return response.data;
-        },
+    // ============ Convenience Methods (used by ConfigPortal) ============
+    getConfigs: async (category?: string): Promise<ConfigurationEntry[]> => {
+        return systemConfigApi.config.getAll(category);
     },
 
-    // ============ Audit Logs ============
-    audit: {
-        getLogs: async (params: {
-            page?: number;
-            pageSize?: number;
-            userId?: string;
-            action?: string;
-            entityType?: string;
-            startDate?: string;
-            endDate?: string;
-        } = {}): Promise<PagedResult<AuditLog>> => {
-            const response = await client.get('/system-config/audit', { params });
-            return response.data;
-        },
-
-        getLogById: async (id: string): Promise<AuditLog> => {
-            const response = await client.get(`/system-config/audit/${id}`);
-            return response.data;
-        },
+    updateConfigs: async (configs: ConfigurationEntry[]): Promise<void> => {
+        // Batch update all configs
+        await Promise.all(
+            configs.map(config => systemConfigApi.config.upsert(config))
+        );
     },
 };
 
@@ -165,7 +126,7 @@ export const getConfigValue = <T>(
     defaultValue: T,
     parser: (value: string) => T
 ): T => {
-    const config = configs.find(c => c.key === key && c.isActive);
+    const config = configs.find(c => c.key === key);
     if (!config) return defaultValue;
     try {
         return parser(config.value);

@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight, Zap, FileText, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
+import SEO from '../components/SEO';
 
 const iconMapping: Record<string, any> = {
     'warranty': ShieldCheck,
@@ -69,6 +70,10 @@ export const PolicyPage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen pb-10">
+            <SEO
+                title={titleMapping[currentType] || 'Chính sách'}
+                description={page?.summary || `Thông tin chi tiết về ${titleMapping[currentType]} tại Quang Hưởng Computer.`}
+            />
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">

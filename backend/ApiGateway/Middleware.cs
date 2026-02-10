@@ -150,49 +150,6 @@ public class SecurityHeadersMiddleware
 }
 
 /// <summary>
-/// Middleware for global exception handling
-/// </summary>
-public class GlobalExceptionHandlingMiddleware
-{
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
-
-    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
-        {
-            await _next(context);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unhandled exception occurred");
-
-            // Only modify response if it hasn't started
-            if (!context.Response.HasStarted)
-            {
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-                var response = new
-                {
-                    statusCode = context.Response.StatusCode,
-                    message = "An error occurred processing your request",
-                    traceId = context.TraceIdentifier
-                };
-
-                await context.Response.WriteAsJsonAsync(response);
-            }
-        }
-    }
-}
-
-/// <summary>
 /// Extension methods for registering middleware
 /// </summary>
 public static class MiddlewareExtensions
@@ -210,10 +167,5 @@ public static class MiddlewareExtensions
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
     {
         return app.UseMiddleware<SecurityHeadersMiddleware>();
-    }
-
-    public static IApplicationBuilder UseGlobalExceptionHandling(this IApplicationBuilder app)
-    {
-        return app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
     }
 }

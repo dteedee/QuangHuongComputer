@@ -13,6 +13,7 @@ public class CommunicationDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
     public DbSet<NotificationLog> NotificationLogs { get; set; }
+    public DbSet<NewsletterSubscription> NewsletterSubscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +89,21 @@ public class CommunicationDbContext : DbContext
             entity.HasIndex(e => new { e.IsSent, e.RetryCount })
                 .HasFilter("IsSent = false AND RetryCount < 5")
                 .HasDatabaseName("IX_NotificationLog_Failed_Retries");
+        });
+
+        // NewsletterSubscription configuration
+        modelBuilder.Entity<NewsletterSubscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.SubscriptionSource).HasMaxLength(50);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.UnsubscribeReason).HasMaxLength(1000);
+
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => new { e.IsActive, e.SubscribedAt });
         });
     }
 }

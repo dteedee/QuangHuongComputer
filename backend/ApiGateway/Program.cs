@@ -27,10 +27,12 @@ using Content.Infrastructure;
 using Ai.Infrastructure;
 using HR.Infrastructure;
 using SystemConfig.Infrastructure;
+using SystemConfig.Infrastructure.Data;
 using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
 using BuildingBlocks.Email;
 using BuildingBlocks.Caching;
+using BuildingBlocks.Caching.Redis;
 using BuildingBlocks.Endpoints;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -122,12 +124,7 @@ builder.Services.AddCors(options =>
 // ========================================
 // REDIS CACHING CONFIGURATION
 // ========================================
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-    options.InstanceName = "quanghc:";
-});
-builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddRedisCache(builder.Configuration);
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
@@ -157,6 +154,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumers(typeof(Sales.DependencyInjection).Assembly);
     x.AddConsumers(typeof(Accounting.DependencyInjection).Assembly);
     x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
+    x.AddConsumers(typeof(Identity.DependencyInjection).Assembly);
     
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -252,6 +250,14 @@ if (app.Environment.IsDevelopment())
         {
             try
             {
+                // Ensure Schema exists for contexts using EnsureCreated
+                var schema = ctx.Model.GetDefaultSchema();
+                if (!string.IsNullOrEmpty(schema))
+                {
+                    logger.LogInformation("Creating schema {Schema} for {Context} if not exists...", schema, ctx.GetType().Name);
+                    await ctx.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{schema}\";");
+                }
+
                 logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);
                 await ctx.Database.EnsureCreatedAsync();
             }
@@ -269,6 +275,17 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             logger.LogError(ex, "Catalog seeding failed (tables may not exist yet)");
+        }
+
+        // Add SystemConfig Seeding
+        try
+        {
+            await SystemConfigDbSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
+            logger.LogInformation("SystemConfig seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "SystemConfig seeding failed");
         }
 
         // Add Identity Seeding

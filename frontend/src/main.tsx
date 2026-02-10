@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -29,14 +30,12 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  
+
   // Prevent default browser error logging in production
   if (process.env.NODE_ENV === 'production') {
     event.preventDefault();
   }
 });
-
-console.log('Main.tsx is executing');
 
 window.onerror = function (msg, url, lineNo, columnNo, error) {
   console.error('Frontend Crash:', msg, error);
@@ -55,15 +54,15 @@ try {
   const rootElement = document.getElementById('root');
   if (!rootElement) throw new Error('Root element not found');
 
-  console.log('Rendering App component...');
   createRoot(rootElement).render(
     <StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
+      <HelmetProvider>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </HelmetProvider>
     </StrictMode>
   );
-  console.log('Render call completed');
 } catch (error) {
   console.error('Initial render failed:', error);
 }

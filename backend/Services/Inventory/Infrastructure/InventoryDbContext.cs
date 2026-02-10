@@ -14,6 +14,7 @@ public class InventoryDbContext : DbContext
     public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
     public DbSet<StockTransfer> StockTransfers { get; set; }
     public DbSet<StockAdjustment> StockAdjustments { get; set; }
+    public DbSet<StockReservation> StockReservations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,7 @@ public class InventoryDbContext : DbContext
         modelBuilder.Entity<PurchaseOrder>().HasQueryFilter(e => e.IsActive);
         modelBuilder.Entity<StockTransfer>().HasQueryFilter(e => e.IsActive);
         modelBuilder.Entity<StockAdjustment>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<StockReservation>().HasQueryFilter(e => e.IsActive);
 
         modelBuilder.Entity<InventoryItem>(entity =>
         {
@@ -106,6 +108,14 @@ public class InventoryDbContext : DbContext
                 
             entity.HasIndex(e => new { e.IsApproved, e.AdjustedAt })
                 .HasDatabaseName("IX_StockAdjustment_Approved_Date");
+        });
+
+        modelBuilder.Entity<StockReservation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ReferenceId);
+            entity.HasIndex(e => new { e.ProductId, e.InventoryItemId, e.Status });
+            entity.HasIndex(e => e.ExpiresAt);
         });
     }
 }

@@ -111,7 +111,10 @@ export const SalePortal = () => {
                         <CreditCard size={18} className="group-hover:scale-110 transition-transform" />
                         POS Bán hàng
                     </button>
-                    <button className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group">
+                    <button
+                        onClick={() => navigate('/backoffice/pos')}
+                        className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                    >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo đơn hàng
                     </button>

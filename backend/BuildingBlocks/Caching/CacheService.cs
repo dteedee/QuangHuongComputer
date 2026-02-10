@@ -131,14 +131,28 @@ public static class CacheKeys
     public static string ProductKey(Guid id) => $"{Prefix}product:{id}";
     public static string ProductsListKey(int page, int pageSize, Guid? categoryId, Guid? brandId, string? search)
         => $"{Prefix}products:list:{page}:{pageSize}:{categoryId}:{brandId}:{search}";
-    
+    public static string RelatedProductsKey(Guid productId) => $"{Prefix}products:related:{productId}";
+    public static string ProductsPattern => $"{Prefix}product*";
+    public static string ProductsListPattern => $"{Prefix}products:list*";
+
     // Categories
     public static string CategoriesKey => $"{Prefix}categories:all";
     public static string CategoryKey(Guid id) => $"{Prefix}category:{id}";
+    public static string CategoriesPattern => $"{Prefix}categor*";
 
     // Brands
     public static string BrandsKey => $"{Prefix}brands:all";
     public static string BrandKey(Guid id) => $"{Prefix}brand:{id}";
+    public static string BrandsPattern => $"{Prefix}brand*";
+
+    // Content/Banners
+    public static string BannersKey(string? position) => $"{Prefix}banners:{position ?? "all"}";
+    public static string BannersPattern => $"{Prefix}banners*";
+
+    // System Config
+    public static string SystemConfigsKey => $"{Prefix}systemconfigs:all";
+    public static string SystemConfigKey(string key) => $"{Prefix}systemconfig:{key}";
+    public static string SystemConfigPattern => $"{Prefix}systemconfig*";
 
     // Orders
     public static string OrderKey(Guid id) => $"{Prefix}order:{id}";

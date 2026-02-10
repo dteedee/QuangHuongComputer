@@ -4,8 +4,47 @@ import {
     Instagram, Twitter, CreditCard, ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { systemConfigApi } from '../api/systemConfig';
+import client from '../api/client';
 
 export const Footer = () => {
+    const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [isSubscribing, setIsSubscribing] = useState(false);
+
+    const handleNewsletterSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newsletterEmail.trim()) {
+            toast.error('Vui lòng nhập email');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newsletterEmail)) {
+            toast.error('Email không hợp lệ');
+            return;
+        }
+
+        setIsSubscribing(true);
+        try {
+            const response = await client.post('/communication/newsletter/subscribe', {
+                email: newsletterEmail
+            });
+
+            if (response.data.success) {
+                toast.success(response.data.message || 'Đăng ký nhận tin thành công!');
+                setNewsletterEmail('');
+            } else if (response.data.alreadySubscribed) {
+                toast.error('Email này đã được đăng ký trước đó');
+            }
+        } catch (error: any) {
+            console.error('Newsletter subscription error:', error);
+            const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.';
+            toast.error(message);
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
+
     return (
         <footer className="bg-white border-t-2 border-[#D70018] pt-16 mt-16 font-sans">
             {/* Top Newsletter / CTA */}
@@ -15,16 +54,18 @@ export const Footer = () => {
                         <h3 className="text-2xl font-black text-gray-800 uppercase italic">Đăng ký nhận tin khuyến mãi</h3>
                         <p className="text-gray-500 text-sm font-medium">Đừng bỏ lỡ những deal hot và mã giảm giá cực hời từ Quang Hưởng Computer.</p>
                     </div>
-                    <div className="flex w-full lg:w-auto gap-2">
+                    <form onSubmit={handleNewsletterSubmit} className="flex w-full lg:w-auto gap-2">
                         <input
                             type="email"
                             placeholder="Nhập email của bạn..."
                             className="px-6 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-800 text-sm w-full lg:w-96 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 transition-all"
+                            value={newsletterEmail}
+                            onChange={(e) => setNewsletterEmail(e.target.value)}
                         />
-                        <button className="bg-[#D70018] hover:bg-[#b50014] text-white font-black px-8 py-3.5 rounded-xl text-sm transition-all uppercase shadow-lg shadow-red-500/10 active:scale-95">
+                        <button type="submit" className="bg-[#D70018] hover:bg-[#b50014] text-white font-black px-8 py-3.5 rounded-xl text-sm transition-all uppercase shadow-lg shadow-red-500/10 active:scale-95">
                             Gửi ngay
                         </button>
-                    </div>
+                    </form>
                 </div>
             </div>
 

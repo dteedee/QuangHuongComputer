@@ -395,7 +395,7 @@ public static class SalesEndpoints
         });
 
         // Cancel Order (Customer)
-        group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -409,15 +409,42 @@ public static class SalesEndpoints
                 return Results.NotFound(new { Error = "Order not found" });
 
             // Only allow cancellation for certain statuses
-            if (order.Status != OrderStatus.Draft && order.Status != OrderStatus.Confirmed)
+            if (order.Status != OrderStatus.Draft && order.Status != OrderStatus.Confirmed && order.Status != OrderStatus.Pending)
             {
                 return Results.BadRequest(new { Error = "Order cannot be cancelled in current status" });
             }
 
+            // 1. Restock items
+            var productIds = order.Items.Select(i => i.ProductId).ToList();
+            var products = await catalogDb.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+            var inventoryItems = await inventoryDb.InventoryItems.Where(i => productIds.Contains(i.ProductId)).ToListAsync();
+
+            foreach (var item in order.Items)
+            {
+                // Restock in Inventory
+                var invItem = inventoryItems.FirstOrDefault(i => i.ProductId == item.ProductId);
+                if (invItem != null)
+                {
+                    invItem.AdjustStock(item.Quantity);
+                }
+
+                // Restock in Catalog for display
+                var catProduct = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (catProduct != null)
+                {
+                    catProduct.UpdateStock(item.Quantity);
+                }
+            }
+
+            // 2. Cancel order
             order.Cancel(dto.Reason);
+
+            // 3. Save changes
+            await inventoryDb.SaveChangesAsync();
+            await catalogDb.SaveChangesAsync();
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { Message = "Order cancelled successfully", Status = order.Status.ToString() });
+            return Results.Ok(new { Message = "Order cancelled and items restocked successfully", Status = order.Status.ToString() });
         });
 
         // Get Order History
@@ -636,6 +663,44 @@ public static class SalesEndpoints
             return Results.Ok(stats);
         });
 
+        adminGroup.MapGet("/stats/revenue-chart", async (SalesDbContext db, int year = 0) =>
+        {
+            var targetYear = year == 0 ? DateTime.UtcNow.Year : year;
+            var startDate = new DateTime(targetYear, 1, 1);
+            var endDate = new DateTime(targetYear, 12, 31, 23, 59, 59);
+
+            var monthlyRevenue = await db.Orders
+                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                .GroupBy(o => o.OrderDate.Month)
+                .Select(g => new
+                {
+                    Month = g.Key,
+                    Revenue = g.Sum(o => o.TotalAmount),
+                    OrderCount = g.Count()
+                })
+                .OrderBy(x => x.Month)
+                .ToListAsync();
+
+            // Fill missing months with 0
+            var allMonths = Enumerable.Range(1, 12)
+                .Select(month => {
+                    var data = monthlyRevenue.FirstOrDefault(m => m.Month == month);
+                    return new
+                    {
+                        Month = month,
+                        Revenue = data?.Revenue ?? 0,
+                        OrderCount = data?.OrderCount ?? 0
+                    };
+                })
+                .ToList();
+
+            return Results.Ok(new
+            {
+                Year = targetYear,
+                MonthlyData = allMonths
+            });
+        });
+
         // ==================== RETURN REQUESTS ADMIN ENDPOINTS ====================
 
         adminGroup.MapGet("/returns", async (SalesDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
@@ -677,7 +742,7 @@ public static class SalesEndpoints
             return Results.Ok(returnRequest);
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/approve", async (Guid id, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/approve", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -686,13 +751,16 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be approved" });
 
-            returnRequest.Approve("Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.Approve(userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request approved", Status = returnRequest.Status.ToString() });
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -701,13 +769,16 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be rejected" });
 
-            returnRequest.Reject(dto.Reason, "Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.Reject(dto.Reason, userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -716,7 +787,10 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Approved)
                 return Results.BadRequest(new { Error = "Only approved returns can be refunded" });
 
-            returnRequest.ProcessRefund("Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.ProcessRefund(userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });

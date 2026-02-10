@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Content.Domain;
 using Content.Infrastructure;
+using BuildingBlocks.Caching;
 
 namespace Content;
 
@@ -62,23 +63,74 @@ public static class ContentEndpoints
             });
         });
 
+        // Public Banners (For Homepage, Tết Theme, etc.)
+        group.MapGet("/banners", async (BannerPosition? position, ContentDbContext db, ICacheService cache) =>
+        {
+            var cacheKey = CacheKeys.BannersKey(position?.ToString());
+            var cachedBanners = await cache.GetAsync<List<dynamic>>(cacheKey);
+            if (cachedBanners != null) return Results.Ok(cachedBanners);
+
+            var now = DateTime.UtcNow;
+            var query = db.Banners
+                .Where(b => b.IsActive && b.StartDate <= now && (b.EndDate == null || b.EndDate >= now));
+
+            if (position.HasValue)
+            {
+                query = query.Where(b => b.Position == position.Value);
+            }
+
+            var banners = await query
+                .OrderBy(b => b.DisplayOrder)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.Title,
+                    b.ImageUrl,
+                    b.LinkUrl,
+                    b.Position,
+                    b.DisplayOrder,
+                    b.AltText
+                })
+                .ToListAsync<object>();
+
+            // Cache for 1 hour
+            await cache.SetAsync(cacheKey, banners, TimeSpan.FromHours(1));
+
+            return Results.Ok(banners);
+        });
+
         // ==================== ADMIN ENDPOINTS ====================
 
         // ==================== PAGES ENDPOINTS ====================
 
-        group.MapGet("/pages/{slug}", async (string slug, ContentDbContext db) =>
+        group.MapGet("/pages/{slug}", async (string slug, ContentDbContext db, ICacheService cache) =>
         {
+            var cacheKey = $"cache:page:{slug}";
+            var cachedPage = await cache.GetAsync<dynamic>(cacheKey);
+            if (cachedPage != null) return Results.Ok(cachedPage);
+
             var page = await db.Pages.FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished);
-            return page != null ? Results.Ok(page) : Results.NotFound();
+            if (page == null) return Results.NotFound();
+
+            // Cache for 1 hour
+            await cache.SetAsync(cacheKey, (object)page, TimeSpan.FromHours(1));
+
+            return Results.Ok(page);
         });
 
         // ==================== ADMIN ENDPOINTS ====================
-        
+
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
 
-        adminGroup.MapPost("/seed", async (ContentDbContext db) =>
+        adminGroup.MapPost("/seed", async (ContentDbContext db, ICacheService cache) =>
         {
             await Content.Infrastructure.Data.ContentDbSeeder.SeedAsync(db);
+
+            // Invalidate all content caches
+            await cache.RemoveByPatternAsync("cache:banners*");
+            await cache.RemoveByPatternAsync("cache:page*");
+            await cache.RemoveByPatternAsync("cache:posts*");
+
             return Results.Ok(new { Message = "Content seeded successfully" });
         });
 
@@ -307,6 +359,88 @@ public static class ContentEndpoints
                 }.Where(r => r != null).ToArray() : null
             });
         });
+
+        // Banner Management (Admin)
+        adminGroup.MapGet("/banners", async (ContentDbContext db) =>
+        {
+            var banners = await db.Banners
+                .OrderBy(b => b.Position)
+                .ThenBy(b => b.DisplayOrder)
+                .ToListAsync();
+            return Results.Ok(banners);
+        });
+
+        adminGroup.MapPost("/banners", async (CreateBannerDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var banner = new Banner(
+                name: dto.Title,
+                imageUrl: dto.ImageUrl,
+                position: dto.Position,
+                linkUrl: dto.LinkUrl,
+                title: dto.Title,
+                startDate: dto.StartDate,
+                endDate: dto.EndDate,
+                displayOrder: dto.DisplayOrder,
+                altText: dto.AltText
+            );
+
+            if (!dto.IsActive)
+            {
+                banner.SetActive(false);
+            }
+
+            db.Banners.Add(banner);
+            await db.SaveChangesAsync();
+
+            // Invalidate banner caches
+            await cache.RemoveByPatternAsync(CacheKeys.BannersPattern);
+
+            return Results.Created($"/api/content/admin/banners/{banner.Id}", banner);
+        });
+
+        adminGroup.MapPut("/banners/{id:guid}", async (Guid id, UpdateBannerDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var banner = await db.Banners.FindAsync(id);
+            if (banner == null)
+            {
+                return Results.NotFound();
+            }
+
+            banner.Update(dto.Title, dto.ImageUrl, dto.LinkUrl);
+
+            if (dto.DisplayOrder.HasValue)
+            {
+                banner.SetDisplayOrder(dto.DisplayOrder.Value);
+            }
+
+            if (dto.IsActive.HasValue)
+            {
+                banner.SetActive(dto.IsActive.Value);
+            }
+
+            await db.SaveChangesAsync();
+
+            // Invalidate banner caches
+            await cache.RemoveByPatternAsync(CacheKeys.BannersPattern);
+
+            return Results.Ok(banner);
+        });
+        adminGroup.MapDelete("/banners/{id:guid}", async (Guid id, ContentDbContext db, ICacheService cache) =>
+        {
+            var banner = await db.Banners.FindAsync(id);
+            if (banner == null)
+            {
+                return Results.NotFound();
+            }
+
+            db.Banners.Remove(banner);
+            await db.SaveChangesAsync();
+
+            // Invalidate banner caches
+            await cache.RemoveByPatternAsync(CacheKeys.BannersPattern);
+
+            return Results.Ok(new { Message = "Banner deleted successfully" });
+        });
     }
 }
 
@@ -345,3 +479,26 @@ public record ValidateCouponDto(
 
 public record CreatePageDto(string Title, string Slug, string Content, PageType Type, bool IsPublished);
 public record UpdatePageDto(string Title, string Content, bool IsPublished);
+
+public record CreateBannerDto(
+    string Title,
+    string ImageUrl,
+    string? LinkUrl,
+    BannerPosition Position,
+    int DisplayOrder,
+    string? AltText = null,
+    DateTime? StartDate = null,
+    DateTime? EndDate = null,
+    bool IsActive = true
+);
+
+public record UpdateBannerDto(
+    string Title,
+    string ImageUrl,
+    string? LinkUrl,
+    string? AltText = null,
+    int? DisplayOrder = null,
+    DateTime? StartDate = null,
+    DateTime? EndDate = null,
+    bool? IsActive = null
+);

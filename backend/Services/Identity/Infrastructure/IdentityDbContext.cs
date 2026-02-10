@@ -75,8 +75,28 @@ public class CustomerAddress
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
-    
+
     public ApplicationUser User { get; set; } = null!;
+}
+
+public class RefreshToken
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty;
+    public string JwtId { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ExpiresAt { get; set; }
+    public bool IsRevoked { get; set; } = false;
+    public DateTime? RevokedAt { get; set; }
+    public string? RevokedByIp { get; set; }
+    public string? ReplacedByToken { get; set; }
+    public string CreatedByIp { get; set; } = string.Empty;
+
+    public ApplicationUser User { get; set; } = null!;
+
+    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+    public bool IsActive => !IsRevoked && !IsExpired;
 }
 
 public enum CustomerType
@@ -94,6 +114,7 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
 
@@ -152,6 +173,26 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             
             entity.HasIndex(e => new { e.UserId, e.IsDefault });
             entity.HasIndex(e => e.City);
+        });
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.JwtId).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.CreatedByIp).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.JwtId);
+            entity.HasIndex(e => new { e.UserId, e.IsRevoked, e.ExpiresAt });
         });
     }
 }

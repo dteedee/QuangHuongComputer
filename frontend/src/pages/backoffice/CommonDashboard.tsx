@@ -20,6 +20,11 @@ export const CommonDashboard = () => {
         queryFn: () => salesApi.stats.get()
     });
 
+    const { data: revenueChart } = useQuery({
+        queryKey: ['sales', 'revenue-chart', new Date().getFullYear()],
+        queryFn: () => salesApi.stats.getRevenueChart(new Date().getFullYear())
+    });
+
     const { data: latestOrders } = useQuery({
         queryKey: ['sales', 'orders', 'latest'],
         queryFn: () => salesApi.orders.getList({ page: 1, pageSize: 5 })
@@ -71,15 +76,36 @@ export const CommonDashboard = () => {
 
 
 
-    const handleExportReport = () => {
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 2000)),
-            {
-                loading: 'Đang trích xuất dữ liệu tổng hợp...',
-                success: 'Đã xuất báo cáo thành công! (File: Report_2026.xlsx)',
-                error: 'Lỗi xuất báo cáo',
-            }
-        );
+    const handleExportReport = async () => {
+        try {
+            const response = await salesApi.stats.getRevenueChart(new Date().getFullYear());
+
+            // Create CSV content
+            const csvContent = [
+                ['Month', 'Revenue', 'Order Count'],
+                ...response.monthlyData.map(m => [
+                    `T${m.month}/${response.year}`,
+                    m.revenue.toString(),
+                    m.orderCount.toString()
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Revenue_Report_${response.year}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            toast.success(`Đã xuất báo cáo thành công! (File: Revenue_Report_${response.year}.csv)`);
+        } catch (error) {
+            toast.error('Lỗi xuất báo cáo');
+            console.error(error);
+        }
     };
 
     return (
@@ -155,7 +181,28 @@ export const CommonDashboard = () => {
                     </div>
 
                     <div className="flex-1 flex items-end gap-3 md:gap-4 px-2 relative h-full">
-                        {[40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
+                        {revenueChart?.monthlyData.map((data, i) => {
+                            const maxRevenue = Math.max(...(revenueChart.monthlyData.map(m => m.revenue) || [1]));
+                            const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+
+                            return (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full justify-end">
+                                    <div className="relative w-full">
+                                        <motion.div
+                                            initial={{ height: 0 }}
+                                            animate={{ height: `${heightPercent}%` }}
+                                            transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
+                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gray-950 shadow-2xl' : 'bg-gray-100 group-hover:bg-red-500 group-hover:shadow-red-500/30'}`}
+                                        >
+                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
+                                                {formatCurrency(data.revenue)}
+                                            </div>
+                                        </motion.div>
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase italic tracking-tighter ${i === new Date().getMonth() ? 'text-[#D70018] scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
+                                </div>
+                            );
+                        }) || [40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full justify-end">
                                 <div className="relative w-full">
                                     <motion.div

@@ -142,6 +142,15 @@ export interface SalesStats {
     completedOrders: number;
 }
 
+export interface RevenueChartData {
+    year: number;
+    monthlyData: {
+        month: number;
+        revenue: number;
+        orderCount: number;
+    }[];
+}
+
 // API Functions
 export const salesApi = {
     // Cart Endpoints
@@ -268,6 +277,12 @@ export const salesApi = {
     stats: {
         get: async (params?: { startDate?: string; endDate?: string }) => {
             const response = await client.get<SalesStats>('/sales/admin/stats', { params });
+            return response.data;
+        },
+        getRevenueChart: async (year?: number) => {
+            const response = await client.get<RevenueChartData>('/sales/admin/stats/revenue-chart', {
+                params: year ? { year } : undefined
+            });
             return response.data;
         },
     },

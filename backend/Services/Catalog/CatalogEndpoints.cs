@@ -6,6 +6,7 @@ using Catalog.Infrastructure;
 using Catalog.Domain;
 using BuildingBlocks.Database;
 using BuildingBlocks.Caching;
+using BuildingBlocks.Endpoints;
 
 namespace Catalog;
 
@@ -15,11 +16,19 @@ public static class CatalogEndpoints
     {
         var group = app.MapGroup("/api/catalog");
 
-        group.MapGet("/products", async (CatalogDbContext db, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null) =>
+        group.MapGet("/products", async (CatalogDbContext db, ICacheService cache, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null, string? q = null) =>
         {
             // Validate pagination parameters
             var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
-            
+
+            // Support both 'search' and 'q' parameters (q is an alias for search)
+            var searchTerm = search ?? q;
+
+            // Try to get from cache
+            var cacheKey = CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, searchTerm);
+            var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
+            if (cachedResponse != null) return Results.Ok(cachedResponse);
+
             var query = db.Products.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
@@ -31,11 +40,11 @@ public static class CatalogEndpoints
             if (brandId.HasValue)
                 query = query.Where(p => p.BrandId == brandId.Value);
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrEmpty(searchTerm))
             {
                 // Case-insensitive search using optimized LIKE
-                var searchPattern = $"%{search}%";
-                query = query.Where(p => 
+                var searchPattern = $"%{searchTerm}%";
+                query = query.Where(p =>
                     EF.Functions.Like(p.Name, searchPattern) ||
                     EF.Functions.Like(p.Description, searchPattern) ||
                     EF.Functions.Like(p.Sku, searchPattern));
@@ -80,7 +89,7 @@ public static class CatalogEndpoints
                 p.GalleryImages
             });
 
-            return Results.Ok(new
+            var result = new
             {
                 Total = total,
                 Page = validPage,
@@ -89,21 +98,30 @@ public static class CatalogEndpoints
                 HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
                 HasPreviousPage = validPage > 1,
                 Products = productsResponse
-            });
+            };
+
+            // Cache for 10 minutes
+            await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(10));
+
+            return Results.Ok(result);
         });
 
-        group.MapGet("/products/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        group.MapGet("/products/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache) =>
         {
+            var cacheKey = CacheKeys.ProductKey(id);
+            var cachedProduct = await cache.GetAsync<dynamic>(cacheKey);
+            if (cachedProduct != null) return Results.Ok(cachedProduct);
+
             var product = await db.Products
                 .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
-                
+
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            return Results.Ok(new
+            var result = new
             {
                 product.Id,
                 product.Name,
@@ -132,7 +150,12 @@ public static class CatalogEndpoints
                 BrandId = product.BrandId.ToString(),
                 BrandName = product.Brand?.Name,
                 product.GalleryImages
-            });
+            };
+
+            // Cache for 30 minutes
+            await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(30));
+
+            return Results.Ok(result);
         });
 
         group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
@@ -199,12 +222,18 @@ public static class CatalogEndpoints
             bool? inStock,
             string? sortBy,
             CatalogDbContext db,
+            ICacheService cache,
             int page = 1,
             int pageSize = 20) =>
         {
             // Validate pagination parameters
             var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
-            
+
+            // Try to get from cache
+            var cacheKey = $"{CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, query)}:{minPrice}:{maxPrice}:{inStock}:{sortBy}";
+            var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
+            if (cachedResponse != null) return Results.Ok(cachedResponse);
+
             var productsQuery = db.Products
                 .AsNoTracking()
                 .Include(p => p.Category)
@@ -295,7 +324,7 @@ public static class CatalogEndpoints
                 p.GalleryImages
             });
 
-            return Results.Ok(new {
+            var result = new {
                 Total = total,
                 Page = validPage,
                 PageSize = validPageSize,
@@ -303,11 +332,16 @@ public static class CatalogEndpoints
                 HasNextPage = validPage < (total + validPageSize - 1) / validPageSize,
                 HasPreviousPage = validPage > 1,
                 Products = productsResponse
-            });
+            };
+
+            // Cache for 5 minutes (search results are dynamic)
+            await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(5));
+
+            return Results.Ok(result);
         });
 
         // Create Product (Admin only)
-        group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db) =>
+        group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var product = new Product(
                 model.Name,
@@ -328,6 +362,13 @@ public static class CatalogEndpoints
 
             db.Products.Add(product);
             await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Create", "Product", product.Id.ToString(), $"Name: {product.Name}, Price: {product.Price}");
+
+            // Invalidate product caches
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+
             return Results.Created($"/api/catalog/products/{product.Id}", new {
                 product.Id,
                 product.Name,
@@ -358,11 +399,18 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Create Category
-        group.MapPost("/categories", async (CreateCategoryDto model, CatalogDbContext db) =>
+        group.MapPost("/categories", async (CreateCategoryDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var category = new Category(model.Name, model.Description);
             db.Categories.Add(category);
             await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Create", "Category", category.Id.ToString(), $"Name: {category.Name}");
+
+            // Invalidate category caches
+            await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
+
             return Results.Created($"/api/catalog/categories/{category.Id}", new {
                 category.Id,
                 category.Name,
@@ -374,11 +422,18 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Create Brand
-        group.MapPost("/brands", async (CreateBrandDto model, CatalogDbContext db) =>
+        group.MapPost("/brands", async (CreateBrandDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var brand = new Brand(model.Name, model.Description);
             db.Brands.Add(brand);
             await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Create", "Brand", brand.Id.ToString(), $"Name: {brand.Name}");
+
+            // Invalidate brand caches
+            await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
+
             return Results.Created($"/api/catalog/brands/{brand.Id}", new {
                 brand.Id,
                 brand.Name,
@@ -390,7 +445,7 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Product
-        group.MapPut("/products/{id:guid}", async (Guid id, UpdateProductDto model, CatalogDbContext db) =>
+        group.MapPut("/products/{id:guid}", async (Guid id, UpdateProductDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var product = await db.Products.FindAsync(id);
             if (product == null)
@@ -400,9 +455,17 @@ public static class CatalogEndpoints
             product.UpdateDetails(model.Name, model.Description, model.Price, model.OldPrice, model.Specifications, model.WarrantyInfo, model.StockLocations);
             product.UpdateImage(model.ImageUrl ?? product.ImageUrl, model.GalleryImages);
             await db.SaveChangesAsync();
-            
-            return Results.Ok(new { 
-                Message = "Product updated", 
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Update", "Product", id.ToString(), $"Name: {product.Name}, Price: {product.Price}");
+
+            // Invalidate product caches
+            await cache.RemoveAsync(CacheKeys.ProductKey(id));
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+            await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
+
+            return Results.Ok(new {
+                Message = "Product updated",
                 Product = new {
                     product.Id,
                     product.Name,
@@ -434,7 +497,7 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Product
-        group.MapDelete("/products/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        group.MapDelete("/products/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var product = await db.Products.FindAsync(id);
             if (product == null)
@@ -443,11 +506,20 @@ public static class CatalogEndpoints
             product.IsActive = false;
             product.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Deactivate", "Product", id.ToString(), $"Name: {product.Name}");
+
+            // Invalidate product caches
+            await cache.RemoveAsync(CacheKeys.ProductKey(id));
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+            await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
+
             return Results.Ok(new { Message = "Product deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Category
-        group.MapPut("/categories/{id:guid}", async (Guid id, UpdateCategoryDto model, CatalogDbContext db) =>
+        group.MapPut("/categories/{id:guid}", async (Guid id, UpdateCategoryDto model, CatalogDbContext db, ICacheService cache) =>
         {
             var category = await db.Categories.FindAsync(id);
             if (category == null)
@@ -455,8 +527,13 @@ public static class CatalogEndpoints
 
             category.UpdateDetails(model.Name, model.Description);
             await db.SaveChangesAsync();
-            return Results.Ok(new { 
-                Message = "Category updated", 
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+
+            return Results.Ok(new {
+                Message = "Category updated",
                 Category = new {
                     category.Id,
                     category.Name,
@@ -469,7 +546,7 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Category
-        group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache) =>
         {
             var category = await db.Categories.FindAsync(id);
             if (category == null)
@@ -477,7 +554,7 @@ public static class CatalogEndpoints
 
             category.IsActive = false;
             category.UpdatedAt = DateTime.UtcNow;
-            
+
             // High-performance cascading deactivation
             await db.Products
                 .Where(p => p.CategoryId == id)
@@ -485,11 +562,16 @@ public static class CatalogEndpoints
                                          .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
             await db.SaveChangesAsync();
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
+
             return Results.Ok(new { Message = "Category and associated products deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Brand
-        group.MapPut("/brands/{id:guid}", async (Guid id, UpdateBrandDto model, CatalogDbContext db) =>
+        group.MapPut("/brands/{id:guid}", async (Guid id, UpdateBrandDto model, CatalogDbContext db, ICacheService cache) =>
         {
             var brand = await db.Brands.FindAsync(id);
             if (brand == null)
@@ -497,8 +579,13 @@ public static class CatalogEndpoints
 
             brand.UpdateDetails(model.Name, model.Description);
             await db.SaveChangesAsync();
-            return Results.Ok(new { 
-                Message = "Brand updated", 
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+
+            return Results.Ok(new {
+                Message = "Brand updated",
                 Brand = new {
                     brand.Id,
                     brand.Name,
@@ -511,7 +598,7 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Delete Brand
-        group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache) =>
         {
             var brand = await db.Brands.FindAsync(id);
             if (brand == null)
@@ -519,7 +606,7 @@ public static class CatalogEndpoints
 
             brand.IsActive = false;
             brand.UpdatedAt = DateTime.UtcNow;
-            
+
             // High-performance cascading deactivation for brands
             await db.Products
                 .Where(p => p.BrandId == id)
@@ -527,6 +614,11 @@ public static class CatalogEndpoints
                                          .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
             await db.SaveChangesAsync();
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
+
             return Results.Ok(new { Message = "Brand and associated products deactivated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
@@ -739,12 +831,192 @@ public static class CatalogEndpoints
             db.Products.AddRange(products);
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { 
+            return Results.Ok(new {
                 Message = "Seed data created successfully",
                 Categories = categories.Count,
                 Brands = brands.Count,
                 Products = products.Count
             });
+        });
+
+        // ============================================
+        // Product Reviews Endpoints
+        // ============================================
+
+        // Get reviews for a product
+        group.MapGet("/products/{productId:guid}/reviews", async (Guid productId, CatalogDbContext db, bool? approvedOnly = true) =>
+        {
+            var query = db.ProductReviews
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId);
+
+            if (approvedOnly == true)
+            {
+                query = query.Where(r => r.IsApproved);
+            }
+
+            var reviews = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ProductId,
+                    r.CustomerId,
+                    r.Rating,
+                    r.Title,
+                    r.Comment,
+                    r.IsVerifiedPurchase,
+                    r.IsApproved,
+                    r.HelpfulCount,
+                    r.CreatedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(reviews);
+        });
+
+        // Create a new review (Public endpoint)
+        group.MapPost("/products/{productId:guid}/reviews", async (
+            Guid productId,
+            CreateProductReviewDto dto,
+            CatalogDbContext db,
+            HttpContext context) =>
+        {
+            // Get user ID from claims if authenticated, otherwise use anonymous
+            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? $"anonymous_{Guid.NewGuid()}";
+
+            // Check if product exists
+            var productExists = await db.Products.AnyAsync(p => p.Id == productId);
+            if (!productExists)
+            {
+                return Results.NotFound(new { message = "Sản phẩm không tồn tại" });
+            }
+
+            // Check if user already reviewed this product
+            var existingReview = await db.ProductReviews
+                .FirstOrDefaultAsync(r => r.ProductId == productId && r.CustomerId == userId);
+
+            if (existingReview != null)
+            {
+                return Results.BadRequest(new { message = "Bạn đã đánh giá sản phẩm này rồi" });
+            }
+
+            var review = new ProductReview(
+                productId: productId,
+                customerId: userId,
+                rating: dto.Rating,
+                comment: dto.Comment,
+                title: dto.Title,
+                isVerifiedPurchase: false // Can be updated later based on purchase history
+            );
+
+            db.ProductReviews.Add(review);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/catalog/products/{productId}/reviews/{review.Id}", new
+            {
+                review.Id,
+                message = "Đánh giá của bạn đang chờ duyệt"
+            });
+        });
+
+        // Admin: Approve a review
+        var reviewsAdmin = app.MapGroup("/api/catalog/reviews/admin")
+            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        reviewsAdmin.MapPost("/{reviewId:guid}/approve", async (
+            Guid reviewId,
+            CatalogDbContext db,
+            HttpContext context) =>
+        {
+            var review = await db.ProductReviews.FindAsync(reviewId);
+            if (review == null)
+            {
+                return Results.NotFound();
+            }
+
+            var approverUserId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "Admin";
+            review.Approve(approverUserId);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Đã duyệt đánh giá thành công" });
+        });
+
+        reviewsAdmin.MapGet("/pending", async (CatalogDbContext db) =>
+        {
+            var pendingReviews = await db.ProductReviews
+                .AsNoTracking()
+                .Where(r => !r.IsApproved)
+                .Join(db.Products,
+                    review => review.ProductId,
+                    product => product.Id,
+                    (review, product) => new
+                    {
+                        review.Id,
+                        review.ProductId,
+                        ProductName = product.Name,
+                        review.CustomerId,
+                        review.Rating,
+                        review.Title,
+                        review.Comment,
+                        review.IsVerifiedPurchase,
+                        review.CreatedAt
+                    })
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return Results.Ok(pendingReviews);
+        });
+
+        // ============================================
+        // Related Products Endpoint
+        // ============================================
+
+        group.MapGet("/products/{productId:guid}/related", async (Guid productId, CatalogDbContext db, ICacheService cache, int limit = 8) =>
+        {
+            var cacheKey = CacheKeys.RelatedProductsKey(productId);
+            var cachedRelated = await cache.GetAsync<List<dynamic>>(cacheKey);
+            if (cachedRelated != null) return Results.Ok(cachedRelated);
+
+            // Get the current product to find related ones
+            var product = await db.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Results.NotFound();
+            }
+
+            // Find related products: same category or brand, excluding current product
+            var relatedProducts = await db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.IsActive && p.Id != productId)
+                .Where(p => p.CategoryId == product.CategoryId || p.BrandId == product.BrandId)
+                .OrderByDescending(p => p.CategoryId == product.CategoryId) // Prioritize same category
+                .ThenByDescending(p => p.CreatedAt)
+                .Take(limit)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Description,
+                    p.Price,
+                    p.OldPrice,
+                    p.ImageUrl,
+                    p.StockQuantity,
+                    Category = new { p.Category.Id, p.Category.Name },
+                    Brand = new { p.Brand.Id, p.Brand.Name }
+                })
+                .ToListAsync<object>();
+
+            // Cache for 30 minutes
+            await cache.SetAsync(cacheKey, relatedProducts, TimeSpan.FromMinutes(30));
+
+            return Results.Ok(relatedProducts);
         });
     }
 }
@@ -777,6 +1049,8 @@ public record UpdateProductDto(
     string? GalleryImages = null);
 
 public record CreateCategoryDto(string Name, string Description);
+
+public record CreateProductReviewDto(int Rating, string Comment, string? Title = null);
 public record UpdateCategoryDto(string Name, string Description);
 public record CreateBrandDto(string Name, string Description);
 public record UpdateBrandDto(string Name, string Description);

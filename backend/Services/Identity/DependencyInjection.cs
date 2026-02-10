@@ -64,7 +64,11 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddScoped<Identity.Services.IAuditService, Identity.Services.AuditService>();
         services.AddScoped<Identity.Services.IEmailService, Identity.Services.EmailService>();
+        services.AddScoped<Identity.Services.IRefreshTokenService, Identity.Services.RefreshTokenService>();
         services.AddSingleton<Identity.Services.IRateLimitService, Identity.Services.RateLimitService>();
+
+        // Background Services
+        services.AddHostedService<Identity.Services.RefreshTokenCleanupService>();
 
         return services;
     }
