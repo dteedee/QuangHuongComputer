@@ -44,49 +44,163 @@ public record InventoryItemDto(
 );
 
 /// <summary>
-/// Placeholder implementation - to be replaced with actual API integration
+/// Actual implementation integrating with Inventory Service
 /// </summary>
-public class InventoryServicePlaceholder : IInventoryService
+public class InventoryService : IInventoryService
 {
-    public Task<bool> ConsumePartsAsync(Guid workOrderId)
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<InventoryService> _logger;
+    private const string InventoryServiceBaseUrl = "http://localhost:5001/api/inventory";
+
+    public InventoryService(IHttpClientFactory httpClientFactory, ILogger<InventoryService> logger)
     {
-        // TODO: Implement actual API call to inventory service
-        return Task.FromResult(true);
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
-    public Task<InventoryItemDto?> GetItemAsync(Guid itemId)
+    public async Task<bool> ReservePartsAsync(Guid workOrderId, List<ReservePartDto> parts)
     {
-        // TODO: Implement actual API call to inventory service
-        return Task.FromResult<InventoryItemDto?>(new InventoryItemDto(
-            itemId,
-            "Sample Part",
-            "PART-001",
-            100,
-            0,
-            100,
-            50.00m
-        ));
-    }
-
-    public Task<bool> ReleaseReservationAsync(Guid workOrderId)
-    {
-        // TODO: Implement actual API call to inventory service
-        return Task.FromResult(true);
-    }
-
-    public Task<bool> ReservePartsAsync(Guid workOrderId, List<ReservePartDto> parts)
-    {
-        // TODO: Implement actual API call to inventory service
-        return Task.FromResult(true);
-    }
-
-    public Task<List<InventoryItemDto>> SearchItemsAsync(string searchTerm, int maxResults = 20)
-    {
-        // TODO: Implement actual API call to inventory service
-        return Task.FromResult(new List<InventoryItemDto>
+        try
         {
-            new InventoryItemDto(Guid.NewGuid(), "Sample Part 1", "PART-001", 100, 0, 100, 50.00m),
-            new InventoryItemDto(Guid.NewGuid(), "Sample Part 2", "PART-002", 50, 0, 50, 75.00m)
-        });
+            var client = _httpClientFactory.CreateClient("InventoryService");
+
+            foreach (var part in parts)
+            {
+                var response = await client.PostAsJsonAsync(
+                    $"{InventoryServiceBaseUrl}/stock/{part.ItemId}/reserve",
+                    new
+                    {
+                        Quantity = part.Quantity,
+                        ReferenceId = workOrderId.ToString(),
+                        ReferenceType = "WorkOrder"
+                    });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Failed to reserve part {ItemId} for work order {WorkOrderId}",
+                        part.ItemId, workOrderId);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reserving parts for work order {WorkOrderId}", workOrderId);
+            return false;
+        }
     }
+
+    public async Task<bool> ConsumePartsAsync(Guid workOrderId)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("InventoryService");
+            var response = await client.PostAsync(
+                $"{InventoryServiceBaseUrl}/reservations/{workOrderId}/fulfill",
+                null);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error consuming parts for work order {WorkOrderId}", workOrderId);
+            return false;
+        }
+    }
+
+    public async Task<bool> ReleaseReservationAsync(Guid workOrderId)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("InventoryService");
+            var response = await client.PostAsJsonAsync(
+                $"{InventoryServiceBaseUrl}/reservations/{workOrderId}/release",
+                new { Reason = "Work order cancelled or changed" });
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error releasing reservation for work order {WorkOrderId}", workOrderId);
+            return false;
+        }
+    }
+
+    public async Task<InventoryItemDto?> GetItemAsync(Guid itemId)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("InventoryService");
+            var response = await client.GetAsync($"{InventoryServiceBaseUrl}/stock/{itemId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var item = await response.Content.ReadFromJsonAsync<InventoryItemResponse>();
+            if (item == null) return null;
+
+            return new InventoryItemDto(
+                item.Id,
+                item.ProductName ?? "Unknown",
+                item.Barcode,
+                item.QuantityOnHand,
+                item.ReservedQuantity,
+                item.AvailableQuantity,
+                item.AverageCost
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching inventory item {ItemId}", itemId);
+            return null;
+        }
+    }
+
+    public async Task<List<InventoryItemDto>> SearchItemsAsync(string searchTerm, int maxResults = 20)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("InventoryService");
+            var response = await client.GetAsync(
+                $"{InventoryServiceBaseUrl}/stock?search={Uri.EscapeDataString(searchTerm)}&pageSize={maxResults}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<InventoryItemDto>();
+            }
+
+            var items = await response.Content.ReadFromJsonAsync<List<InventoryItemResponse>>();
+            if (items == null) return new List<InventoryItemDto>();
+
+            return items.Select(i => new InventoryItemDto(
+                i.Id,
+                i.ProductName ?? "Unknown",
+                i.Barcode,
+                i.QuantityOnHand,
+                i.ReservedQuantity,
+                i.AvailableQuantity,
+                i.AverageCost
+            )).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching inventory items with term '{SearchTerm}'", searchTerm);
+            return new List<InventoryItemDto>();
+        }
+    }
+
+    private record InventoryItemResponse(
+        Guid Id,
+        Guid ProductId,
+        string? ProductName,
+        string? Barcode,
+        int QuantityOnHand,
+        int ReservedQuantity,
+        int AvailableQuantity,
+        decimal AverageCost
+    );
 }

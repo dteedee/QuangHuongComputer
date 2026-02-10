@@ -24,7 +24,13 @@ public static class DependencyInjection
             poolSize: 128);
 
         // Register services
-        services.AddScoped<IInventoryService, InventoryServicePlaceholder>();
+        services.AddHttpClient("InventoryService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:Inventory:Url"] ?? "http://localhost:5001");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        services.AddScoped<IInventoryService, InventoryService>();
 
         return services;
     }

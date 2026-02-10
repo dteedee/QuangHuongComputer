@@ -37,10 +37,87 @@ public static class InventoryEndpoints
             var item = await db.InventoryItems.FindAsync(id);
             if (item == null) return Results.NotFound();
 
-            item.AdjustStock(amount);
+            item.AdjustStock(amount, reason);
             // In a real app, we'd log the reason to a StockMovement table
             await db.SaveChangesAsync();
             return Results.Ok(item);
+        });
+
+        // Stock Reservations
+        group.MapPost("/stock/{productId:guid}/reserve", async (Guid productId, ReserveStockDto dto, InventoryDbContext db) =>
+        {
+            var item = await db.InventoryItems.FirstOrDefaultAsync(i => i.ProductId == productId);
+            if (item == null) return Results.NotFound(new { error = "Product not found in inventory" });
+
+            try
+            {
+                item.ReserveStock(dto.Quantity);
+
+                var reservation = new StockReservation(
+                    item.Id,
+                    productId,
+                    dto.Quantity,
+                    dto.ReferenceId,
+                    dto.ReferenceType,
+                    dto.ExpirationHours ?? 24,
+                    dto.Notes
+                );
+
+                db.StockReservations.Add(reservation);
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new { success = true, reservationId = reservation.Id });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        group.MapPost("/reservations/{referenceId}/fulfill", async (string referenceId, InventoryDbContext db) =>
+        {
+            var reservations = await db.StockReservations
+                .Where(r => r.ReferenceId == referenceId && r.Status == ReservationStatus.Active)
+                .ToListAsync();
+
+            if (!reservations.Any())
+                return Results.NotFound(new { error = "No active reservations found" });
+
+            foreach (var reservation in reservations)
+            {
+                var item = await db.InventoryItems.FindAsync(reservation.InventoryItemId);
+                if (item != null)
+                {
+                    item.ConfirmReservedStock(reservation.Quantity);
+                    reservation.Fulfill();
+                }
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { success = true, fulfilledCount = reservations.Count });
+        });
+
+        group.MapPost("/reservations/{referenceId}/release", async (string referenceId, ReleaseReservationDto dto, InventoryDbContext db) =>
+        {
+            var reservations = await db.StockReservations
+                .Where(r => r.ReferenceId == referenceId && r.Status == ReservationStatus.Active)
+                .ToListAsync();
+
+            if (!reservations.Any())
+                return Results.NotFound(new { error = "No active reservations found" });
+
+            foreach (var reservation in reservations)
+            {
+                var item = await db.InventoryItems.FindAsync(reservation.InventoryItemId);
+                if (item != null)
+                {
+                    item.ReleaseReservedStock(reservation.Quantity);
+                    reservation.Release(dto.Reason);
+                }
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { success = true, releasedCount = reservations.Count });
         });
 
         // Purchase Orders
@@ -340,4 +417,6 @@ public static class InventoryEndpoints
 
 public record CreatePurchaseOrderDto(Guid SupplierId, List<CreatePOItemDto> Items);
 public record CreatePOItemDto(Guid ProductId, int Quantity, decimal UnitPrice);
+public record ReserveStockDto(int Quantity, string ReferenceId, string ReferenceType, int? ExpirationHours = 24, string? Notes = null);
+public record ReleaseReservationDto(string Reason);
 
