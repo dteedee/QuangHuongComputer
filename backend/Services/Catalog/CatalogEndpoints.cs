@@ -110,7 +110,7 @@ public static class CatalogEndpoints
         {
             var cacheKey = CacheKeys.ProductKey(id);
             var cachedProduct = await cache.GetAsync<dynamic>(cacheKey);
-            if (cachedProduct != null) return Results.Ok(cachedProduct);
+            if (cachedProduct is not null) return Results.Ok(cachedProduct);
 
             var product = await db.Products
                 .AsNoTracking()
