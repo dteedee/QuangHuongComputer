@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PolicyPage } from './pages/PolicyPage';
+import { PostDetailPage } from './pages/PostDetailPage';
 import { ContactPage } from './pages/ContactPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
@@ -97,6 +98,7 @@ function App() {
 
                   {/* Content Pages */}
                   <Route path="policy/:type" element={<PolicyPage />} />
+                  <Route path="post/:slug" element={<PostDetailPage />} />
                   <Route path="contact" element={<ContactPage />} />
                   <Route path="terms" element={<TermsPage />} />
                   <Route path="privacy" element={<PrivacyPage />} />

@@ -39,7 +39,7 @@ export const Footer = () => {
                     <div className="space-y-4 text-gray-600">
                         <div className="flex gap-3" data-testid="company-address">
                             <MapPin size={20} className="text-[#D70018] flex-shrink-0" />
-                            <p className="text-sm">Công ty: Số 179, Thôn 3/2 Xã Vĩnh Bảo Thành Phố Hải Phòng</p>
+                            <p className="text-sm">Công ty: Số 179 Thôn 3/2 Xã Vĩnh Bảo Thành phố Hải Phòng</p>
                         </div>
                         <div className="flex gap-3" data-testid="company-phone">
                             <Phone size={20} className="text-[#D70018] flex-shrink-0" />
@@ -104,7 +104,7 @@ export const Footer = () => {
             {/* Bottom Bar */}
             <div className="bg-gray-100 py-6 border-t border-gray-200">
                 <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                    <p>© 2026 Bản quyền thuộc về Công ty TNHH Máy tính Quang Hưởng.</p>
+                    <p>© {new Date().getFullYear()} Bản quyền thuộc về Công ty TNHH Máy tính Quang Hưởng.</p>
                     <div className="flex gap-6">
                         <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Hệ thống đang hoạt động</span>
                         <span>Thiết kế bởi Đỗ Tùng Dương</span>

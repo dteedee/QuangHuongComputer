@@ -2,7 +2,7 @@
 import {
     LayoutDashboard, Package, Receipt, Wrench, ShieldCheck, Box, BarChart3,
     Users, Settings, Shield, Lock, Archive, Store, Hammer, Megaphone,
-    Bell, Menu, Search, Power, X, ChevronDown, ChevronRight, UserCog
+    Bell, Menu, Search, Power, X, ChevronDown, ChevronRight, UserCog, FileText
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
@@ -54,6 +54,21 @@ export const BackofficeLayout = () => {
             items: [
                 { title: 'Sửa chữa', icon: <Hammer size={20} />, path: '/backoffice/tech', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite'] },
                 { title: 'Bảo hành', icon: <ShieldCheck size={20} />, path: '/backoffice/warranty', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop'] },
+            ]
+        },
+        {
+            id: 'finance_hr',
+            title: 'Tài chính & Nhân sự',
+            items: [
+                { title: 'Tài chính - Kế toán', icon: <Receipt size={20} />, path: '/backoffice/accounting', allowedRoles: ['Admin', 'Manager', 'Accountant'] },
+                { title: 'Nhân sự (HR)', icon: <Users size={20} />, path: '/backoffice/hr', allowedRoles: ['Admin', 'Manager', 'Accountant'] },
+            ]
+        },
+        {
+            id: 'content',
+            title: 'Nội dung & CMS',
+            items: [
+                { title: 'Quản lý Nội dung', icon: <FileText size={20} />, path: '/backoffice/cms', allowedRoles: ['Admin', 'Manager', 'Sale'] },
             ]
         },
         {
@@ -128,7 +143,11 @@ export const BackofficeLayout = () => {
             </div>
 
             {/* Bottom User Section */}
-            <div className="p-4 border-t border-gray-100 bg-white">
+            <div className="p-4 border-t border-gray-100 bg-white space-y-3">
+                <Link to="/" className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#D70018] transition-colors shadow-lg shadow-gray-200">
+                    <Store size={14} /> Quay về trang chủ
+                </Link>
+
                 <div className="flex items-center gap-4 p-3 rounded-2xl bg-gray-50/50">
                     <div className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center font-bold text-gray-600">
                         {user?.fullName?.charAt(0)}

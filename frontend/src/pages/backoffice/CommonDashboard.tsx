@@ -122,11 +122,11 @@ export const CommonDashboard = () => {
                     <div className="flex items-center justify-between mb-14 pb-8 border-b-2 border-gray-50">
                         <div>
                             <h3 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic">Hiệu suất <span className="text-[#D70018]">Doanh thu</span></h3>
-                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-2">Phân tích dòng tiền theo chu kỳ kinh doanh 2024</p>
+                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-2">Phân tích dòng tiền theo chu kỳ kinh doanh {new Date().getFullYear()}</p>
                         </div>
                         <select className="bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-xs font-black text-gray-950 outline-none focus:border-[#D70018] shadow-sm uppercase tracking-widest italic cursor-pointer">
-                            <option>Năm hiện tại: 2024</option>
-                            <option>Năm trước: 2023</option>
+                            <option>Năm hiện tại: {new Date().getFullYear()}</option>
+                            <option>Năm trước: {new Date().getFullYear() - 1}</option>
                         </select>
                     </div>
 

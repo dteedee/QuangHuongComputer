@@ -14,8 +14,9 @@ export const HRPortal = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const queryClient = useQueryClient();
 
-    const currentMonth = 12;
-    const currentYear = 2024;
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
 
     const { data: employeesResponse, isLoading: empLoading } = useQuery({
         queryKey: ['hr-employees'],

@@ -17,10 +17,16 @@ public static class ContentEndpoints
         // ==================== PUBLIC ENDPOINTS ====================
 
         // Public Posts
-        group.MapGet("/posts", async (ContentDbContext db) =>
+        group.MapGet("/posts", async (PostType? type, ContentDbContext db) =>
         {
-            return await db.Posts
-                .Where(p => p.Status == PostStatus.Published)
+            var query = db.Posts.Where(p => p.Status == PostStatus.Published);
+            
+            if (type.HasValue)
+            {
+                query = query.Where(p => p.Type == type.Value);
+            }
+
+            return await query
                 .OrderByDescending(p => p.PublishedAt)
                 .ToListAsync();
         });
@@ -58,7 +64,58 @@ public static class ContentEndpoints
 
         // ==================== ADMIN ENDPOINTS ====================
 
+        // ==================== PAGES ENDPOINTS ====================
+
+        group.MapGet("/pages/{slug}", async (string slug, ContentDbContext db) =>
+        {
+            var page = await db.Pages.FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished);
+            return page != null ? Results.Ok(page) : Results.NotFound();
+        });
+
+        // ==================== ADMIN ENDPOINTS ====================
+        
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+
+        adminGroup.MapPost("/seed", async (ContentDbContext db) =>
+        {
+            await Content.Infrastructure.Data.ContentDbSeeder.SeedAsync(db);
+            return Results.Ok(new { Message = "Content seeded successfully" });
+        });
+
+        // Page Management
+        adminGroup.MapGet("/pages", async (ContentDbContext db) =>
+        {
+            return await db.Pages.OrderBy(p => p.Title).ToListAsync();
+        });
+
+        adminGroup.MapGet("/pages/{id:guid}", async (Guid id, ContentDbContext db) =>
+        {
+            var page = await db.Pages.FindAsync(id);
+            return page != null ? Results.Ok(page) : Results.NotFound();
+        });
+
+        adminGroup.MapPost("/pages", async (CreatePageDto model, ContentDbContext db) =>
+        {
+            var page = new CMSPage(model.Title, model.Slug, model.Content, model.Type);
+            if (model.IsPublished) page.Publish();
+            
+            db.Pages.Add(page);
+            await db.SaveChangesAsync();
+            return Results.Created($"/api/content/pages/{page.Slug}", page);
+        });
+
+        adminGroup.MapPut("/pages/{id:guid}", async (Guid id, UpdatePageDto model, ContentDbContext db) =>
+        {
+            var page = await db.Pages.FindAsync(id);
+            if (page == null) return Results.NotFound();
+
+            page.Update(model.Title, model.Content);
+            if (model.IsPublished && !page.IsPublished) page.Publish();
+            else if (!model.IsPublished && page.IsPublished) page.Unpublish();
+
+            await db.SaveChangesAsync();
+            return Results.Ok(page);
+        });
 
         // Post Management
         adminGroup.MapGet("/posts", async (ContentDbContext db) =>
@@ -285,3 +342,6 @@ public record ValidateCouponDto(
     string Code,
     decimal OrderAmount
 );
+
+public record CreatePageDto(string Title, string Slug, string Content, PageType Type, bool IsPublished);
+public record UpdatePageDto(string Title, string Content, bool IsPublished);
