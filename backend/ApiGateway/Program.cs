@@ -27,6 +27,7 @@ using Content.Infrastructure;
 using Ai.Infrastructure;
 using HR.Infrastructure;
 using SystemConfig.Infrastructure;
+using SystemConfig.Infrastructure.Data;
 using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
 using BuildingBlocks.Email;
@@ -269,6 +270,17 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             logger.LogError(ex, "Catalog seeding failed (tables may not exist yet)");
+        }
+
+        // Add SystemConfig Seeding
+        try
+        {
+            await SystemConfigDbSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
+            logger.LogInformation("SystemConfig seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "SystemConfig seeding failed");
         }
 
         // Add Identity Seeding
