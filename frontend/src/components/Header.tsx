@@ -30,7 +30,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+            navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery(''); // Clear search after submit
         }
     };
 
