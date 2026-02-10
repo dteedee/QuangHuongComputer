@@ -395,7 +395,7 @@ public static class SalesEndpoints
         });
 
         // Cancel Order (Customer)
-        group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -409,15 +409,42 @@ public static class SalesEndpoints
                 return Results.NotFound(new { Error = "Order not found" });
 
             // Only allow cancellation for certain statuses
-            if (order.Status != OrderStatus.Draft && order.Status != OrderStatus.Confirmed)
+            if (order.Status != OrderStatus.Draft && order.Status != OrderStatus.Confirmed && order.Status != OrderStatus.Pending)
             {
                 return Results.BadRequest(new { Error = "Order cannot be cancelled in current status" });
             }
 
+            // 1. Restock items
+            var productIds = order.Items.Select(i => i.ProductId).ToList();
+            var products = await catalogDb.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+            var inventoryItems = await inventoryDb.InventoryItems.Where(i => productIds.Contains(i.ProductId)).ToListAsync();
+
+            foreach (var item in order.Items)
+            {
+                // Restock in Inventory
+                var invItem = inventoryItems.FirstOrDefault(i => i.ProductId == item.ProductId);
+                if (invItem != null)
+                {
+                    invItem.AdjustStock(item.Quantity);
+                }
+
+                // Restock in Catalog for display
+                var catProduct = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (catProduct != null)
+                {
+                    catProduct.UpdateStock(item.Quantity);
+                }
+            }
+
+            // 2. Cancel order
             order.Cancel(dto.Reason);
+
+            // 3. Save changes
+            await inventoryDb.SaveChangesAsync();
+            await catalogDb.SaveChangesAsync();
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { Message = "Order cancelled successfully", Status = order.Status.ToString() });
+            return Results.Ok(new { Message = "Order cancelled and items restocked successfully", Status = order.Status.ToString() });
         });
 
         // Get Order History

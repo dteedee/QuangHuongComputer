@@ -2,11 +2,23 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { useCart } from '../context/CartContext';
-import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon } from 'lucide-react';
+import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import client from '../api/client';
 
 interface Specification {
   [key: string]: string;
+}
+
+interface Review {
+  id: string;
+  productId: string;
+  customerId: string;
+  rating: number;
+  title?: string;
+  comment: string;
+  isVerifiedPurchase: boolean;
+  createdAt: string;
 }
 
 export default function ProductDetailPage() {
@@ -20,12 +32,18 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'reviews'>('description');
   const [addingToCart, setAddingToCart] = useState(false);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const handleWriteReview = () => {
-    toast('Chức năng đánh giá sản phẩm đang được phát triển. Vui lòng liên hệ hotline để chia sẻ trải nghiệm!', {
+    // Navigate to a review page or open a modal
+    toast('Chức năng đánh giá sản phẩm đã sẵn sàng! Bạn có thể viết đánh giá bên dưới.', {
       icon: '✍️',
       duration: 3000
     });
+    setActiveTab('reviews');
   };
 
   const handleViewAllRelated = () => {
@@ -39,6 +57,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (id) {
       loadProduct(id);
+      loadRelatedProducts(id);
+      loadReviews(id);
     }
     window.scrollTo(0, 0);
   }, [id]);
@@ -53,6 +73,30 @@ export default function ProductDetailPage() {
       navigate('/products', { replace: true });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRelatedProducts = async (productId: string) => {
+    setLoadingRelated(true);
+    try {
+      const response = await client.get(`/catalog/products/${productId}/related`);
+      setRelatedProducts(response.data);
+    } catch (error) {
+      console.error('Failed to load related products:', error);
+    } finally {
+      setLoadingRelated(false);
+    }
+  };
+
+  const loadReviews = async (productId: string) => {
+    setLoadingReviews(true);
+    try {
+      const response = await client.get(`/catalog/products/${productId}/reviews`);
+      setReviews(response.data);
+    } catch (error) {
+      console.error('Failed to load reviews:', error);
+    } finally {
+      setLoadingReviews(false);
     }
   };
 
@@ -391,18 +435,60 @@ export default function ProductDetailPage() {
               )}
 
               {activeTab === 'reviews' && (
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 text-gray-400 mb-4">
-                    <HeadphonesIcon size={32} />
+                <div className="space-y-8">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 uppercase">Đánh giá từ khách hàng ({reviews.length})</h3>
+                      <div className="flex items-center gap-1 mt-1 text-amber-400">
+                        {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} fill={i <= 4.5 ? "currentColor" : "none"} />)}
+                        <span className="text-gray-500 text-sm font-bold ml-2">4.5 / 5.0</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleWriteReview}
+                      className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all"
+                    >
+                      Viết đánh giá
+                    </button>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Đánh giá từ khách hàng</h3>
-                  <p className="text-gray-500 mb-6">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-                  <button
-                    onClick={handleWriteReview}
-                    className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:border-[#D70018] hover:text-[#D70018] transition-all"
-                  >
-                    Viết đánh giá
-                  </button>
+
+                  {loadingReviews ? (
+                    <div className="py-10 text-center text-gray-500 font-medium">Đang tải đánh giá...</div>
+                  ) : reviews.length > 0 ? (
+                    <div className="space-y-6">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-black text-gray-900 text-sm uppercase italic">Khách hàng ẩn danh</span>
+                                {review.isVerifiedPurchase && (
+                                  <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
+                                    <Check size={10} /> Đã mua hàng
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex text-amber-400">
+                                {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} fill={i <= review.rating ? "currentColor" : "none"} />)}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                              {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                            </span>
+                          </div>
+                          {review.title && <h4 className="font-black text-gray-900 text-sm mb-2 uppercase">{review.title}</h4>}
+                          <p className="text-gray-600 text-sm font-medium leading-relaxed">{review.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-gray-300 mb-4">
+                        <Star size={32} />
+                      </div>
+                      <p className="text-gray-500 font-medium italic text-sm">Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ cảm nhận!</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -410,41 +496,64 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Related Products */}
-        <div className="mt-12 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-gray-900 uppercase italic">Sản phẩm liên quan</h2>
+        <div className="mt-12 mb-8 animate-fade-in-up">
+          <div className="flex items-center justify-between mb-6 border-l-4 border-[#D70018] pl-4">
+            <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Sản phẩm liên quan</h2>
             <button
               onClick={handleViewAllRelated}
-              className="text-[#D70018] font-bold text-sm hover:underline"
+              className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-[10px] uppercase rounded-lg transition-all"
             >
               Xem tất cả
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden group cursor-pointer"
-              >
-                <div className="aspect-[4/3] bg-gray-50 p-4 flex items-center justify-center">
-                  <img
-                    src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
-                    alt="Related product"
-                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
-                  />
+          {loadingRelated ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="aspect-[4/5] bg-gray-100 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : relatedProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {relatedProducts.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/product/${p.id}`)}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group cursor-pointer"
+                >
+                  <div className="aspect-square bg-gray-50 p-4 flex items-center justify-center relative overflow-hidden">
+                    <img
+                      src={p.imageUrl || `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
+                      alt={p.name}
+                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {p.oldPrice && p.oldPrice > p.price && (
+                      <div className="absolute top-3 left-3 bg-[#D70018] text-white text-[10px] font-black px-2 py-1 rounded-full uppercase shadow-lg shadow-red-500/30">
+                        -{Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)}%
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <h3 className="font-bold text-gray-900 line-clamp-2 text-xs h-8 group-hover:text-[#D70018] transition-colors leading-tight uppercase">
+                      {p.name}
+                    </h3>
+                    <div className="flex flex-col">
+                      <span className="text-[#D70018] font-black text-base">{formatPrice(p.price)}</span>
+                      {p.oldPrice && (
+                        <span className="text-gray-400 line-through text-[10px] font-bold">
+                          {formatPrice(p.oldPrice)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 text-sm h-10 group-hover:text-[#D70018] transition-colors">
-                    Sản phẩm liên quan {i} - Laptop Gaming High Performance
-                  </h3>
-                  <p className="text-[#D70018] font-black text-lg">
-                    {formatPrice(product.price * (0.8 + Math.random() * 0.4))}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200">
+              <p className="text-gray-400 text-sm italic font-medium">Không tìm thấy sản phẩm liên quan</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

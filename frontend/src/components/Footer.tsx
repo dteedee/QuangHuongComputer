@@ -6,11 +6,14 @@ import {
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { systemConfigApi } from '../api/systemConfig';
+import client from '../api/client';
 
 export const Footer = () => {
     const [newsletterEmail, setNewsletterEmail] = useState('');
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
-    const handleNewsletterSubmit = (e: React.FormEvent) => {
+    const handleNewsletterSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newsletterEmail.trim()) {
             toast.error('Vui lòng nhập email');
@@ -21,9 +24,25 @@ export const Footer = () => {
             return;
         }
 
-        // TODO: Call API to subscribe newsletter
-        toast.success(`Đã đăng ký nhận tin khuyến mãi cho ${newsletterEmail}!`);
-        setNewsletterEmail('');
+        setIsSubscribing(true);
+        try {
+            const response = await client.post('/communication/newsletter/subscribe', {
+                email: newsletterEmail
+            });
+
+            if (response.data.success) {
+                toast.success(response.data.message || 'Đăng ký nhận tin thành công!');
+                setNewsletterEmail('');
+            } else if (response.data.alreadySubscribed) {
+                toast.error('Email này đã được đăng ký trước đó');
+            }
+        } catch (error: any) {
+            console.error('Newsletter subscription error:', error);
+            const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.';
+            toast.error(message);
+        } finally {
+            setIsSubscribing(false);
+        }
     };
 
     return (

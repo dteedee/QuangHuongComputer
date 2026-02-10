@@ -253,6 +253,14 @@ if (app.Environment.IsDevelopment())
         {
             try
             {
+                // Ensure Schema exists for contexts using EnsureCreated
+                var schema = ctx.Model.GetDefaultSchema();
+                if (!string.IsNullOrEmpty(schema))
+                {
+                    logger.LogInformation("Creating schema {Schema} for {Context} if not exists...", schema, ctx.GetType().Name);
+                    await ctx.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{schema}\";");
+                }
+
                 logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);
                 await ctx.Database.EnsureCreatedAsync();
             }
