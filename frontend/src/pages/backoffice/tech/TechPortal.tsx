@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 export const TechPortal = () => {
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['tech-work-orders'],
@@ -91,7 +92,10 @@ export const TechPortal = () => {
                         Quản lý phiếu sửa chữa, bảo hành và điều phối kỹ thuật viên
                     </p>
                 </div>
-                <button className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group">
+                <button
+                    onClick={() => toast.info('Chức năng tạo phiếu mới đang được phát triển. Vui lòng sử dụng trang Sửa chữa công khai để đăng ký dịch vụ.')}
+                    className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                >
                     <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                     Tạo phiếu mới
                 </button>

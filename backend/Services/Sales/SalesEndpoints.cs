@@ -636,6 +636,44 @@ public static class SalesEndpoints
             return Results.Ok(stats);
         });
 
+        adminGroup.MapGet("/stats/revenue-chart", async (SalesDbContext db, int year = 0) =>
+        {
+            var targetYear = year == 0 ? DateTime.UtcNow.Year : year;
+            var startDate = new DateTime(targetYear, 1, 1);
+            var endDate = new DateTime(targetYear, 12, 31, 23, 59, 59);
+
+            var monthlyRevenue = await db.Orders
+                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                .GroupBy(o => o.OrderDate.Month)
+                .Select(g => new
+                {
+                    Month = g.Key,
+                    Revenue = g.Sum(o => o.TotalAmount),
+                    OrderCount = g.Count()
+                })
+                .OrderBy(x => x.Month)
+                .ToListAsync();
+
+            // Fill missing months with 0
+            var allMonths = Enumerable.Range(1, 12)
+                .Select(month => {
+                    var data = monthlyRevenue.FirstOrDefault(m => m.Month == month);
+                    return new
+                    {
+                        Month = month,
+                        Revenue = data?.Revenue ?? 0,
+                        OrderCount = data?.OrderCount ?? 0
+                    };
+                })
+                .ToList();
+
+            return Results.Ok(new
+            {
+                Year = targetYear,
+                MonthlyData = allMonths
+            });
+        });
+
         // ==================== RETURN REQUESTS ADMIN ENDPOINTS ====================
 
         adminGroup.MapGet("/returns", async (SalesDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
@@ -677,7 +715,7 @@ public static class SalesEndpoints
             return Results.Ok(returnRequest);
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/approve", async (Guid id, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/approve", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -686,13 +724,16 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be approved" });
 
-            returnRequest.Approve("Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.Approve(userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request approved", Status = returnRequest.Status.ToString() });
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -701,13 +742,16 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Pending)
                 return Results.BadRequest(new { Error = "Only pending returns can be rejected" });
 
-            returnRequest.Reject(dto.Reason, "Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.Reject(dto.Reason, userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db) =>
+        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
             var returnRequest = await db.ReturnRequests.FindAsync(id);
             if (returnRequest == null)
@@ -716,7 +760,10 @@ public static class SalesEndpoints
             if (returnRequest.Status != ReturnStatus.Approved)
                 return Results.BadRequest(new { Error = "Only approved returns can be refunded" });
 
-            returnRequest.ProcessRefund("Admin"); // TODO: Get actual user ID from auth context
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+
+            returnRequest.ProcessRefund(userId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });

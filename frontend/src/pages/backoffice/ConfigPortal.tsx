@@ -36,19 +36,23 @@ export const ConfigPortal = () => {
         { name: 'AI Chatbot', label: 'Hỗ trợ AI', icon: <MessageCircle size={20} /> },
     ];
 
-    const handleSave = () => {
-        toast.promise(
-            new Promise((resolve) => setTimeout(resolve, 1500)),
-            {
-                loading: 'Đang lưu cấu hình...',
-                success: 'Cấu hình đã được cập nhật thành công!',
-                error: 'Có lỗi xảy ra khi lưu cấu hình.',
-            },
-            {
-                style: { borderRadius: '20px', fontWeight: '900', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em' },
-                success: { icon: '💾' }
-            }
-        );
+    const handleSave = async () => {
+        try {
+            await toast.promise(
+                systemConfigApi.updateConfigs(configs),
+                {
+                    loading: 'Đang lưu cấu hình...',
+                    success: 'Cấu hình đã được cập nhật thành công!',
+                    error: 'Có lỗi xảy ra khi lưu cấu hình.',
+                },
+                {
+                    style: { borderRadius: '20px', fontWeight: '900', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em' },
+                    success: { icon: '💾' }
+                }
+            );
+        } catch (error) {
+            console.error('Failed to save configs', error);
+        }
     };
 
     return (
