@@ -29,12 +29,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (email: string, password: string, recaptchaToken?: string) => {
         try {
             const data = await authApi.login({ email, password, recaptchaToken });
-            
+
             setToken(data.token);
             setUser(data.user);
             localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
             localStorage.setItem('user', JSON.stringify(data.user));
-            
+
             toast.success(`Chào mừng trở lại, ${data.user.fullName}!`, {
                 icon: '👋',
                 style: { borderRadius: '15px', fontWeight: 'bold' }
@@ -63,6 +64,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setToken(null);
             setUser(null);
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
             toast('Đã đăng xuất tài khoản', { icon: '🚪' });
         }
     };

@@ -54,7 +54,7 @@ public static class IdentityEndpoints
             return Results.BadRequest(result.Errors);
         });
 
-        group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IRateLimitService rateLimitService) =>
+        group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IRateLimitService rateLimitService, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
         {
             try
             {
@@ -80,13 +80,19 @@ public static class IdentityEndpoints
                             roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
                         }
                     }
-                    
-                    var token = GenerateJwtToken(user, roles, roleClaims, configuration);
+
+                    var jwtId = Guid.NewGuid().ToString();
+                    var token = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
                     var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+
+                    // Generate refresh token with IP tracking
+                    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    var refreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
 
                     var response = new LoginResponseDto
                     {
                         Token = token,
+                        RefreshToken = refreshToken.Token,
                         User = new UserInfoDto
                         {
                             Email = user.Email ?? string.Empty,
@@ -112,52 +118,37 @@ public static class IdentityEndpoints
             }
         });
 
-        // Refresh Token Endpoint
-        group.MapPost("/refresh-token", async (RefreshTokenRequestDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration) =>
+        // Refresh Token Endpoint - Secure implementation with database validation
+        group.MapPost("/refresh-token", async (RefreshTokenRequestDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
         {
             if (string.IsNullOrEmpty(model.RefreshToken))
             {
                 return Results.BadRequest(new { Error = "Refresh token is required" });
             }
 
-            // Get the principal from the expired token
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(configuration["Jwt:Key"] ?? "super_secret_key_1234567890123456");
-
             try
             {
-                var tokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = false, // Don't validate expiration for refresh
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"] ?? "QuangHuongComputer",
-                    ValidAudience = configuration["Jwt:Audience"] ?? "QuangHuongComputer",
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
-                };
-
-                var principal = tokenHandler.ValidateToken(model.RefreshToken, tokenValidationParameters, out var validatedToken);
-
-                if (validatedToken is not JwtSecurityToken jwtToken ||
-                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                // 1. Validate refresh token from database
+                var refreshToken = await refreshTokenService.GetRefreshTokenAsync(model.RefreshToken);
+                if (refreshToken == null)
                 {
                     return Results.BadRequest(new { Error = "Invalid refresh token" });
                 }
 
-                var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-                if (string.IsNullOrEmpty(userId))
+                // 2. Check if token is active (not revoked, not expired)
+                if (!refreshToken.IsActive)
                 {
-                    return Results.BadRequest(new { Error = "Invalid token payload" });
+                    return Results.BadRequest(new { Error = "Refresh token is revoked or expired" });
                 }
 
-                var user = await userManager.FindByIdAsync(userId);
+                // 3. Get user and verify they're still active
+                var user = refreshToken.User;
                 if (user == null || !user.IsActive)
                 {
                     return Results.BadRequest(new { Error = "User not found or inactive" });
                 }
 
-                // Get roles and claims
+                // 4. Get roles and claims for new JWT
                 var roles = await userManager.GetRolesAsync(user);
                 var roleClaims = new List<Claim>();
                 foreach (var roleName in roles)
@@ -169,18 +160,26 @@ public static class IdentityEndpoints
                     }
                 }
 
-                // Generate new JWT token
-                var newToken = GenerateJwtToken(user, roles, roleClaims, configuration);
+                // 5. Revoke old refresh token and generate new one (token rotation)
+                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var jwtId = Guid.NewGuid().ToString();
+                var newRefreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
+                await refreshTokenService.RevokeRefreshTokenAsync(model.RefreshToken, ipAddress, newRefreshToken.Token);
+
+                // 6. Generate new JWT token
+                var newJwtToken = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
+                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
                 return Results.Ok(new
                 {
-                    Token = newToken,
+                    Token = newJwtToken,
+                    RefreshToken = newRefreshToken.Token,
                     User = new UserInfoDto
                     {
                         Email = user.Email ?? string.Empty,
                         FullName = user.FullName,
                         Roles = roles.ToList(),
-                        Permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList()
+                        Permissions = permissions
                     }
                 });
             }
@@ -190,12 +189,44 @@ public static class IdentityEndpoints
             }
         });
 
-        // Logout (for blacklisting tokens if needed)
-        group.MapPost("/logout", async () =>
+        // Logout - Revoke refresh token
+        group.MapPost("/logout", async (RefreshTokenRequestDto model, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
         {
-            // In a stateless JWT setup, logout is handled client-side
-            // For future: implement token blacklisting with Redis
-            return Results.Ok(new { Message = "Logged out successfully" });
+            if (string.IsNullOrEmpty(model.RefreshToken))
+            {
+                return Results.BadRequest(new { Error = "Refresh token is required" });
+            }
+
+            try
+            {
+                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                await refreshTokenService.RevokeRefreshTokenAsync(model.RefreshToken, ipAddress);
+                return Results.Ok(new { Message = "Logged out successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = $"Logout failed: {ex.Message}" });
+            }
+        });
+
+        // Revoke All Tokens (Logout from all devices)
+        group.MapPost("/revoke-all-tokens", [Authorize] async (IRefreshTokenService refreshTokenService, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            try
+            {
+                await refreshTokenService.RevokeAllUserTokensAsync(userId);
+                return Results.Ok(new { Message = "All tokens revoked successfully. You have been logged out from all devices." });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = $"Failed to revoke tokens: {ex.Message}" });
+            }
         });
 
         group.MapGet("/users", async (UserManager<ApplicationUser> userManager, [AsParameters] UserQueryParams queryParams) =>
@@ -275,7 +306,7 @@ public static class IdentityEndpoints
             return Results.Ok(pagedResult);
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
 
-        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint) =>
+        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
         {
             try
             {
@@ -309,21 +340,21 @@ public static class IdentityEndpoints
 
                     payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(token, settings);
                 }
-                
+
                 var user = await userManager.FindByEmailAsync(payload.Email);
                 if (user == null)
                 {
-                    user = new ApplicationUser 
-                    { 
-                        UserName = payload.Email, 
-                        Email = payload.Email, 
-                        FullName = payload.Name 
+                    user = new ApplicationUser
+                    {
+                        UserName = payload.Email,
+                        Email = payload.Email,
+                        FullName = payload.Name
                     };
                     var result = await userManager.CreateAsync(user);
                     if (!result.Succeeded) return Results.BadRequest(result.Errors);
-                    
+
                     await userManager.AddToRoleAsync(user, "Customer");
-                    
+
                     await publishEndpoint.Publish(new UserRegisteredIntegrationEvent(Guid.Parse(user.Id), user.Email!, user.FullName));
                 }
 
@@ -338,12 +369,19 @@ public static class IdentityEndpoints
                     }
                 }
 
-                var jwtToken = GenerateJwtToken(user, roles, roleClaims, configuration);
+                // Generate JWT with refresh token
+                var jwtId = Guid.NewGuid().ToString();
+                var jwtToken = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
                 var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+
+                // Generate refresh token
+                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var refreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
 
                 var response = new LoginResponseDto
                 {
                     Token = jwtToken,
+                    RefreshToken = refreshToken.Token,
                     User = new UserInfoDto
                     {
                         Email = user.Email ?? string.Empty,
@@ -595,17 +633,17 @@ public static class IdentityEndpoints
         });
     }
 
-    private static string GenerateJwtToken(ApplicationUser user, IList<string> roles, IEnumerable<Claim> roleClaims, IConfiguration configuration)
+    private static string GenerateJwtToken(ApplicationUser user, IList<string> roles, IEnumerable<Claim> roleClaims, IConfiguration configuration, string jwtId)
     {
         var jwtSettings = configuration.GetSection("Jwt");
         var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "super_secret_key_1234567890123456"));
-        
+
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim("name", user.FullName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, jwtId)
         };
 
         foreach (var role in roles)
