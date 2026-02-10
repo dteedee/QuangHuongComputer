@@ -38,7 +38,7 @@ export const HomePage = () => {
     // Banner slides với hình ảnh thật
     const heroSlides = [
         {
-            title: 'CHÀO XUÂN ẤT TỴ 2025',
+            title: 'CHÀO XUÂN BÍNH NGỌ 2026',
             subtitle: 'DEALS TẾT KHỦNG - QUÀ TẶNG HOT',
             description: 'Giảm đến 50% + Tặng kèm quà tặng trị giá 5 triệu',
             image: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=1200&h=500&fit=crop',
@@ -143,7 +143,7 @@ export const HomePage = () => {
                 <div className="flex items-center justify-center gap-3 relative z-10">
                     <Sparkles className="text-yellow-300 animate-pulse" size={20} />
                     <p className="text-sm font-black uppercase tracking-widest">
-                        🧧 Tết Ất Tỵ 2025 - Ưu đãi lên đến 50% + Quà tặng hấp dẫn 🎁
+                        🧧 Tết Bính Ngọ 2026 - Ưu đãi lên đến 50% + Quà tặng hấp dẫn 🎁
                     </p>
                     <Sparkles className="text-yellow-300 animate-pulse" size={20} />
                 </div>
