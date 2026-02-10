@@ -165,7 +165,7 @@ export const HomePage = () => {
                                     </div>
                                 </SwiperSlide>
                                 <SwiperSlide>
-                                    <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white relative">
+                                    <div className="w-full h-full bg-gradient-to-br from-[#D70018] to-[#b50014] flex items-center justify-center text-white relative">
                                         <div className="p-12 z-10 w-full">
                                             <motion.span
                                                 initial={{ opacity: 0, y: 10 }}
@@ -190,7 +190,7 @@ export const HomePage = () => {
                                             >
                                                 Tối ưu cho thiết kế 3D và Render.
                                             </motion.p>
-                                            <Link to="/workstation" className="mt-8 inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all shadow-xl">Cấu hình ngay</Link>
+                                            <Link to="/workstation" className="mt-8 inline-block bg-white text-[#D70018] px-8 py-3 rounded-lg font-black text-sm uppercase hover:bg-gray-100 transition-all shadow-xl">Cấu hình ngay</Link>
                                         </div>
                                         <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none">
                                             <Server size={300} />
@@ -284,10 +284,10 @@ export const HomePage = () => {
                 transition={{ duration: 0.8 }}
                 className="max-w-[1400px] mx-auto px-4 mt-8 relative z-10"
             >
-                <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#facc15] py-2.5 px-6 flex items-center justify-between">
+                <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#D70018] py-2.5 px-6 flex items-center justify-between">
                     <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">LAPTOP - MÁY TÍNH XÁCH TAY</h2>
                     <div className="hidden md:flex gap-6">
-                        <Link to="/laptop" className="text-xs font-bold text-[#facc15] hover:underline flex items-center gap-1 uppercase tracking-widest">
+                        <Link to="/laptop" className="text-xs font-bold text-[#D70018] hover:underline flex items-center gap-1 uppercase tracking-widest">
                             Xem tất cả <ChevronRight size={14} />
                         </Link>
                     </div>
@@ -309,9 +309,9 @@ export const HomePage = () => {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                     >
-                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-blue-600 py-2.5 px-6 flex items-center justify-between">
+                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#D70018] py-2.5 px-6 flex items-center justify-between">
                             <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">LINH KIỆN MÁY TÍNH</h2>
-                            <Link to="/components" className="text-xs font-bold text-blue-600 hover:underline uppercase tracking-widest">Tất cả</Link>
+                            <Link to="/components" className="text-xs font-bold text-[#D70018] hover:underline uppercase tracking-widest">Tất cả</Link>
                         </div>
                         <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4 grid grid-cols-2 gap-4">
                             {products?.filter(p => !p.name.toLowerCase().includes('laptop') && !p.name.toLowerCase().includes('pc')).slice(0, 4).map((product) => (
@@ -324,9 +324,9 @@ export const HomePage = () => {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                     >
-                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-emerald-600 py-2.5 px-6 flex items-center justify-between">
+                        <div className="bg-white rounded-t-xl border border-gray-200 border-b-2 border-b-[#D70018] py-2.5 px-6 flex items-center justify-between">
                             <h2 className="text-lg font-black text-gray-800 uppercase italic tracking-tighter">MÀN HÌNH MÁY TÍNH</h2>
-                            <Link to="/screens" className="text-xs font-bold text-emerald-600 hover:underline uppercase tracking-widest">Tất cả</Link>
+                            <Link to="/screens" className="text-xs font-bold text-[#D70018] hover:underline uppercase tracking-widest">Tất cả</Link>
                         </div>
                         <div className="bg-white rounded-b-xl border border-gray-200 border-t-0 p-4 grid grid-cols-2 gap-4">
                             {products?.filter(p => p.name.toLowerCase().includes('màn hình')).slice(0, 4).map((product) => (

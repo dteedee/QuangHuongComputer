@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { useCart } from '../context/CartContext';
 import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Specification {
   [key: string]: string;
@@ -19,6 +20,21 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'reviews'>('description');
   const [addingToCart, setAddingToCart] = useState(false);
   const [showAddedNotification, setShowAddedNotification] = useState(false);
+
+  const handleWriteReview = () => {
+    toast('Chức năng đánh giá sản phẩm đang được phát triển. Vui lòng liên hệ hotline để chia sẻ trải nghiệm!', {
+      icon: '✍️',
+      duration: 3000
+    });
+  };
+
+  const handleViewAllRelated = () => {
+    if (product?.categoryId) {
+      navigate(`/products?category=${product.categoryId}`);
+    } else {
+      navigate('/products');
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -381,7 +397,10 @@ export default function ProductDetailPage() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Đánh giá từ khách hàng</h3>
                   <p className="text-gray-500 mb-6">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-                  <button className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:border-[#D70018] hover:text-[#D70018] transition-all">
+                  <button
+                    onClick={handleWriteReview}
+                    className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:border-[#D70018] hover:text-[#D70018] transition-all"
+                  >
                     Viết đánh giá
                   </button>
                 </div>
@@ -394,7 +413,12 @@ export default function ProductDetailPage() {
         <div className="mt-12 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-black text-gray-900 uppercase italic">Sản phẩm liên quan</h2>
-            <button className="text-[#D70018] font-bold text-sm hover:underline">Xem tất cả</button>
+            <button
+              onClick={handleViewAllRelated}
+              className="text-[#D70018] font-bold text-sm hover:underline"
+            >
+              Xem tất cả
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
