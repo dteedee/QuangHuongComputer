@@ -16,6 +16,7 @@ interface RegisterRequest {
 
 interface AuthResponse {
     token: string;
+    refreshToken: string;
     user: User;
 }
 
@@ -70,13 +71,33 @@ export const authApi = {
     },
 
     /**
-     * Logout user - NOTE: Backend doesn't have this endpoint
-     * Just clear local storage
+     * Logout user - revoke refresh token
      */
     logout: async (): Promise<void> => {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+            try {
+                await client.post('/auth/logout', { refreshToken });
+            } catch (error) {
+                console.error('Logout API error:', error);
+            }
+        }
         // Clear tokens locally
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+    },
+
+    /**
+     * Refresh access token using refresh token
+     */
+    refreshToken: async (): Promise<AuthResponse> => {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+            throw new Error('No refresh token available');
+        }
+        const response = await client.post<AuthResponse>('/auth/refresh-token', { refreshToken });
+        return response.data;
     },
 
     /**
@@ -222,7 +243,6 @@ const processQueue = (error: any, token: string | null = null) => {
 
 /**
  * Setup axios interceptors for automatic token refresh
- * NOTE: Backend doesn't have refresh-token endpoint, so this is simplified
  */
 export const setupTokenRefreshInterceptor = () => {
     client.interceptors.response.use(
@@ -253,14 +273,14 @@ export const setupTokenRefreshInterceptor = () => {
             originalRequest._retry = true;
             isRefreshing = true;
 
-            // Get stored user info
-            const userStr = localStorage.getItem('user');
+            const refreshToken = localStorage.getItem('refreshToken');
 
-            if (!userStr) {
-                // No user data available, redirect to login
+            if (!refreshToken) {
+                // No refresh token available, redirect to login
                 processQueue(error, null);
                 isRefreshing = false;
                 localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
 
                 if (window.location.pathname !== '/login') {
@@ -271,20 +291,21 @@ export const setupTokenRefreshInterceptor = () => {
             }
 
             try {
-                // Simply store token from login response - no refresh endpoint
-                const token = localStorage.getItem('token');
+                // Call refresh token endpoint
+                const response = await client.post<AuthResponse>('/auth/refresh-token', { refreshToken });
+                const { token: newToken, refreshToken: newRefreshToken, user } = response.data;
 
-                // Update stored token
-                if (token) {
-                    localStorage.setItem('token', token);
-                    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                }
+                // Update stored tokens
+                localStorage.setItem('token', newToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
+                localStorage.setItem('user', JSON.stringify(user));
+                client.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
                 // Process queued requests
-                processQueue(null, token);
+                processQueue(null, newToken);
 
                 // Retry original request
-                originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
                 return client(originalRequest);
 
             } catch (refreshError) {
@@ -292,6 +313,7 @@ export const setupTokenRefreshInterceptor = () => {
                 isRefreshing = false;
 
                 localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
 
                 if (window.location.pathname !== '/login') {
@@ -328,12 +350,14 @@ if (typeof window !== 'undefined') {
 // Helper to store auth data after login
 export const storeAuthData = (data: AuthResponse) => {
     localStorage.setItem('token', data.token);
+    localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
 };
 
 // Helper to clear auth data
 export const clearAuthData = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
 };
 
