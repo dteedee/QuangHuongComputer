@@ -298,7 +298,7 @@ export default function ProductDetailPage() {
                 <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
                   <Truck className="w-6 h-6 text-[#D70018] mb-2" />
                   <span className="text-xs font-bold uppercase">Miễn phí vẫn chuyển</span>
-                  <span className="text-[10px] text-gray-500 mt-1">Đơn hàng > 5tr</span>
+                  <span className="text-[10px] text-gray-500 mt-1">Đơn hàng &gt; 5tr</span>
                 </div>
                 <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
                   <Shield className="w-6 h-6 text-[#D70018] mb-2" />
