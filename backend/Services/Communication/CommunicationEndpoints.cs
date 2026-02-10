@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Communication;
@@ -14,6 +15,111 @@ public static class CommunicationEndpoints
     public static void MapCommunicationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/communication");
+
+        // Newsletter Subscription endpoints
+        group.MapPost("/newsletter/subscribe", async ([FromBody] NewsletterSubscribeDto dto, Communication.Infrastructure.CommunicationDbContext db, HttpContext context) =>
+        {
+            try
+            {
+                // Check if email already exists
+                var existing = await db.NewsletterSubscriptions
+                    .FirstOrDefaultAsync(n => n.Email == dto.Email);
+
+                if (existing != null)
+                {
+                    if (existing.IsActive)
+                    {
+                        return Results.Ok(new { message = "Email đã được đăng ký trước đó", alreadySubscribed = true });
+                    }
+                    else
+                    {
+                        // Reactivate subscription
+                        existing.IsActive = true;
+                        existing.SubscribedAt = DateTime.UtcNow;
+                        existing.UnsubscribedAt = null;
+                        existing.UnsubscribeReason = null;
+                        await db.SaveChangesAsync();
+                        return Results.Ok(new { message = "Đăng ký thành công! Cảm ơn bạn đã quay lại.", success = true });
+                    }
+                }
+
+                // Create new subscription
+                var subscription = new Communication.Domain.NewsletterSubscription
+                {
+                    Id = Guid.NewGuid(),
+                    Email = dto.Email,
+                    Name = dto.Name,
+                    SubscriptionSource = "Website",
+                    IpAddress = context.Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = context.Request.Headers.UserAgent.ToString(),
+                    IsActive = true,
+                    SubscribedAt = DateTime.UtcNow
+                };
+
+                db.NewsletterSubscriptions.Add(subscription);
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new { message = "Đăng ký nhận tin thành công!", success = true, id = subscription.Id });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem($"Có lỗi xảy ra: {ex.Message}");
+            }
+        });
+
+        group.MapPost("/newsletter/unsubscribe", async ([FromBody] NewsletterUnsubscribeDto dto, Communication.Infrastructure.CommunicationDbContext db) =>
+        {
+            var subscription = await db.NewsletterSubscriptions
+                .FirstOrDefaultAsync(n => n.Email == dto.Email && n.IsActive);
+
+            if (subscription == null)
+            {
+                return Results.NotFound(new { message = "Không tìm thấy email đã đăng ký" });
+            }
+
+            subscription.IsActive = false;
+            subscription.UnsubscribedAt = DateTime.UtcNow;
+            subscription.UnsubscribeReason = dto.Reason;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Đã hủy đăng ký thành công" });
+        });
+
+        // Admin endpoints
+        var newsletterAdmin = app.MapGroup("/api/communication/newsletter/admin")
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+
+        newsletterAdmin.MapGet("/", async (Communication.Infrastructure.CommunicationDbContext db, bool? isActive) =>
+        {
+            var query = db.NewsletterSubscriptions.AsQueryable();
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(n => n.IsActive == isActive.Value);
+            }
+
+            var subscriptions = await query
+                .OrderByDescending(n => n.SubscribedAt)
+                .ToListAsync();
+
+            return Results.Ok(subscriptions);
+        });
+
+        newsletterAdmin.MapGet("/stats", async (Communication.Infrastructure.CommunicationDbContext db) =>
+        {
+            var total = await db.NewsletterSubscriptions.CountAsync();
+            var active = await db.NewsletterSubscriptions.CountAsync(n => n.IsActive);
+            var thisMonth = await db.NewsletterSubscriptions.CountAsync(n =>
+                n.SubscribedAt >= DateTime.UtcNow.AddMonths(-1) && n.IsActive);
+
+            return Results.Ok(new
+            {
+                total,
+                active,
+                inactive = total - active,
+                newThisMonth = thisMonth
+            });
+        });
 
         group.MapPost("/send-email", async ([FromBody] SendEmailDto model, IEmailService emailService) =>
         {
@@ -135,3 +241,5 @@ public static class CommunicationEndpoints
 
 public record SendEmailDto(string To, string Subject, string Body);
 public record AiAskRequest(Guid ConversationId, string Question);
+public record NewsletterSubscribeDto(string Email, string? Name);
+public record NewsletterUnsubscribeDto(string Email, string? Reason);

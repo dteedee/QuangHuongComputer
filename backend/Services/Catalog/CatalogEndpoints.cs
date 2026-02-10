@@ -15,11 +15,14 @@ public static class CatalogEndpoints
     {
         var group = app.MapGroup("/api/catalog");
 
-        group.MapGet("/products", async (CatalogDbContext db, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null) =>
+        group.MapGet("/products", async (CatalogDbContext db, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null, string? q = null) =>
         {
             // Validate pagination parameters
             var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
-            
+
+            // Support both 'search' and 'q' parameters (q is an alias for search)
+            var searchTerm = search ?? q;
+
             var query = db.Products.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
@@ -31,11 +34,11 @@ public static class CatalogEndpoints
             if (brandId.HasValue)
                 query = query.Where(p => p.BrandId == brandId.Value);
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrEmpty(searchTerm))
             {
                 // Case-insensitive search using optimized LIKE
-                var searchPattern = $"%{search}%";
-                query = query.Where(p => 
+                var searchPattern = $"%{searchTerm}%";
+                query = query.Where(p =>
                     EF.Functions.Like(p.Name, searchPattern) ||
                     EF.Functions.Like(p.Description, searchPattern) ||
                     EF.Functions.Like(p.Sku, searchPattern));
@@ -739,12 +742,185 @@ public static class CatalogEndpoints
             db.Products.AddRange(products);
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { 
+            return Results.Ok(new {
                 Message = "Seed data created successfully",
                 Categories = categories.Count,
                 Brands = brands.Count,
                 Products = products.Count
             });
+        });
+
+        // ============================================
+        // Product Reviews Endpoints
+        // ============================================
+
+        // Get reviews for a product
+        group.MapGet("/products/{productId:guid}/reviews", async (Guid productId, CatalogDbContext db, bool? approvedOnly = true) =>
+        {
+            var query = db.ProductReviews
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId);
+
+            if (approvedOnly == true)
+            {
+                query = query.Where(r => r.IsApproved);
+            }
+
+            var reviews = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ProductId,
+                    r.CustomerId,
+                    r.Rating,
+                    r.Title,
+                    r.Comment,
+                    r.IsVerifiedPurchase,
+                    r.IsApproved,
+                    r.HelpfulCount,
+                    r.CreatedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(reviews);
+        });
+
+        // Create a new review (Public endpoint)
+        group.MapPost("/products/{productId:guid}/reviews", async (
+            Guid productId,
+            CreateProductReviewDto dto,
+            CatalogDbContext db,
+            HttpContext context) =>
+        {
+            // Get user ID from claims if authenticated, otherwise use anonymous
+            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? $"anonymous_{Guid.NewGuid()}";
+
+            // Check if product exists
+            var productExists = await db.Products.AnyAsync(p => p.Id == productId);
+            if (!productExists)
+            {
+                return Results.NotFound(new { message = "Sản phẩm không tồn tại" });
+            }
+
+            // Check if user already reviewed this product
+            var existingReview = await db.ProductReviews
+                .FirstOrDefaultAsync(r => r.ProductId == productId && r.CustomerId == userId);
+
+            if (existingReview != null)
+            {
+                return Results.BadRequest(new { message = "Bạn đã đánh giá sản phẩm này rồi" });
+            }
+
+            var review = new ProductReview(
+                productId: productId,
+                customerId: userId,
+                rating: dto.Rating,
+                comment: dto.Comment,
+                title: dto.Title,
+                isVerifiedPurchase: false // Can be updated later based on purchase history
+            );
+
+            db.ProductReviews.Add(review);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/catalog/products/{productId}/reviews/{review.Id}", new
+            {
+                review.Id,
+                message = "Đánh giá của bạn đang chờ duyệt"
+            });
+        });
+
+        // Admin: Approve a review
+        var reviewsAdmin = app.MapGroup("/api/catalog/reviews/admin")
+            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        reviewsAdmin.MapPost("/{reviewId:guid}/approve", async (
+            Guid reviewId,
+            CatalogDbContext db,
+            HttpContext context) =>
+        {
+            var review = await db.ProductReviews.FindAsync(reviewId);
+            if (review == null)
+            {
+                return Results.NotFound();
+            }
+
+            var approverUserId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "Admin";
+            review.Approve(approverUserId);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Đã duyệt đánh giá thành công" });
+        });
+
+        reviewsAdmin.MapGet("/pending", async (CatalogDbContext db) =>
+        {
+            var pendingReviews = await db.ProductReviews
+                .AsNoTracking()
+                .Where(r => !r.IsApproved)
+                .Join(db.Products,
+                    review => review.ProductId,
+                    product => product.Id,
+                    (review, product) => new
+                    {
+                        review.Id,
+                        review.ProductId,
+                        ProductName = product.Name,
+                        review.CustomerId,
+                        review.Rating,
+                        review.Title,
+                        review.Comment,
+                        review.IsVerifiedPurchase,
+                        review.CreatedAt
+                    })
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return Results.Ok(pendingReviews);
+        });
+
+        // ============================================
+        // Related Products Endpoint
+        // ============================================
+
+        group.MapGet("/products/{productId:guid}/related", async (Guid productId, CatalogDbContext db, int limit = 8) =>
+        {
+            // Get the current product to find related ones
+            var product = await db.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Results.NotFound();
+            }
+
+            // Find related products: same category or brand, excluding current product
+            var relatedProducts = await db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.IsActive && p.Id != productId)
+                .Where(p => p.CategoryId == product.CategoryId || p.BrandId == product.BrandId)
+                .OrderByDescending(p => p.CategoryId == product.CategoryId) // Prioritize same category
+                .ThenByDescending(p => p.CreatedAt)
+                .Take(limit)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Description,
+                    p.Price,
+                    p.OldPrice,
+                    p.ImageUrl,
+                    p.StockQuantity,
+                    Category = new { p.Category.Id, p.Category.Name },
+                    Brand = new { p.Brand.Id, p.Brand.Name }
+                })
+                .ToListAsync();
+
+            return Results.Ok(relatedProducts);
         });
     }
 }
@@ -777,6 +953,8 @@ public record UpdateProductDto(
     string? GalleryImages = null);
 
 public record CreateCategoryDto(string Name, string Description);
+
+public record CreateProductReviewDto(int Rating, string Comment, string? Title = null);
 public record UpdateCategoryDto(string Name, string Description);
 public record CreateBrandDto(string Name, string Description);
 public record UpdateBrandDto(string Name, string Description);
