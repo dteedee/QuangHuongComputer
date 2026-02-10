@@ -129,6 +129,7 @@ export interface CartItemDto {
     price: number;
     quantity: number;
     subtotal: number;
+    imageUrl?: string;
 }
 
 export interface SalesStats {
@@ -244,6 +245,7 @@ export const salesApi = {
                 orderItemId: string;
                 reason: string;
                 description?: string;
+                imageUrl?: string; // Added imageUrl here based on the instruction's intent
             }) => {
                 throw new Error('Return request endpoint not implemented in backend');
             },

@@ -25,7 +25,7 @@ public static class SalesEndpoints
 
         // ==================== CART ENDPOINTS ====================
 
-        group.MapGet("/cart", async (SalesDbContext db, ClaimsPrincipal user) =>
+        group.MapGet("/cart", async (SalesDbContext db, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -42,6 +42,13 @@ public static class SalesEndpoints
                 await db.SaveChangesAsync();
             }
 
+            // Fetch product images
+            var productIds = cart.Items.Select(i => i.ProductId).ToList();
+            var products = await catalogDb.Products
+                .Where(p => productIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.ImageUrl })
+                .ToDictionaryAsync(p => p.Id, p => p.ImageUrl);
+
             return Results.Ok(new CartDto(
                 cart.Id,
                 cart.CustomerId,
@@ -52,7 +59,14 @@ public static class SalesEndpoints
                 cart.TotalAmount,
                 cart.TaxRate,
                 cart.CouponCode,
-                cart.Items.Select(i => new CartItemDto(i.ProductId, i.ProductName, i.Price, i.Quantity, i.Subtotal)).ToList()
+                cart.Items.Select(i => new CartItemDto(
+                    i.ProductId, 
+                    i.ProductName, 
+                    i.Price, 
+                    i.Quantity, 
+                    i.Subtotal,
+                    products.TryGetValue(i.ProductId, out var img) ? img : null
+                )).ToList()
             ));
         });
 
@@ -244,6 +258,9 @@ public static class SalesEndpoints
             if (model.Items == null || !model.Items.Any())
                 return Results.BadRequest(new { Error = "Cart is empty" });
 
+            // POS Support: Allow overriding CustomerId (e.g., for walk-in customers)
+            var customerId = model.CustomerId ?? userId;
+
             // Validate Data & Check Stock (Transactional-like in Monolith)
 
             var orderItems = new List<OrderItem>();
@@ -281,8 +298,14 @@ public static class SalesEndpoints
             }
 
             // 3. Create Order
-            var order = new Order(userId, model.ShippingAddress ?? "", orderItems, 0.1m, model.Notes);
+            var order = new Order(customerId, model.ShippingAddress ?? "", orderItems, 0.1m, model.Notes);
             salesDb.Orders.Add(order);
+
+            // Apply Manual Discount if present (POS feature)
+            if (model.ManualDiscount.HasValue && model.ManualDiscount.Value > 0)
+            {
+                order.ApplyCoupon("POS-MANUAL", model.ManualDiscount.Value, "{}", "POS Manual Discount");
+            }
 
             // 4. Save Changes
             await inventoryDb.SaveChangesAsync();
@@ -701,9 +724,36 @@ public static class SalesEndpoints
     }
 }
 
-public record CheckoutDto(List<CheckoutItemDto> Items, string? ShippingAddress, string? Notes);
+public record CheckoutDto(List<CheckoutItemDto> Items, string? ShippingAddress, string? Notes, Guid? CustomerId = null, decimal? ManualDiscount = null);
 public record CheckoutItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
 public record UpdateOrderStatusDto(string Status);
 public record CancelOrderDto(string Reason);
 public record CreateReturnRequestDto(Guid OrderId, Guid OrderItemId, string Reason, string? Description);
 public record RejectReturnDto(string Reason);
+
+public record CartDto(
+    Guid Id,
+    Guid CustomerId,
+    decimal SubtotalAmount,
+    decimal DiscountAmount,
+    decimal TaxAmount,
+    decimal ShippingAmount,
+    decimal TotalAmount,
+    decimal TaxRate,
+    string? CouponCode,
+    List<CartItemDto> Items
+);
+
+public record CartItemDto(
+    Guid ProductId,
+    string ProductName,
+    decimal Price,
+    int Quantity,
+    decimal Subtotal,
+    string? ImageUrl = null
+);
+
+public record AddToCartDto(Guid ProductId, string ProductName, decimal Price, int Quantity);
+public record UpdateQuantityDto(int Quantity);
+public record ApplyCouponDto(string CouponCode);
+public record SetShippingDto(decimal ShippingAmount);

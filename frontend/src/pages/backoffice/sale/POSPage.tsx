@@ -31,6 +31,7 @@ export default function POSPage() {
   const { items, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, tax, total } = useCart();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -46,8 +47,21 @@ export default function POSPage() {
   const [processingOrder, setProcessingOrder] = useState(false);
 
   useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
     loadProducts();
   }, [selectedCategory]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await catalogApi.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -69,6 +83,12 @@ export default function POSPage() {
     await loadProducts();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const handleAddToCart = (product: Product) => {
     if (product.stockQuantity > 0) {
       addToCart(product);
@@ -78,36 +98,37 @@ export default function POSPage() {
   const handleProcessOrder = async (paymentMethod: 'cash' | 'card' | 'transfer') => {
     setProcessingOrder(true);
     try {
+      const discountAmount = discountType === 'percentage' ? (total * discount) / 100 : discount;
+
+      // Use a fixed GUID for walk-in if not selected, OR don't pass CustomerId to let backend use current user
+      // But we want to support "Khách lẻ" explicitly if selected
+      const customerId = selectedCustomer?.id === 'walk-in' ? '00000000-0000-0000-0000-000000000000' : selectedCustomer?.id;
+
       const orderData = {
-        customerId: selectedCustomer?.id,
+        customerId: customerId, // Can be null
         items: items.map((item) => ({
           productId: item.id,
+          productName: item.name,
+          unitPrice: item.price,
           quantity: item.quantity,
-          price: item.price,
         })),
-        discount,
-        discountType,
-        notes,
-        paymentMethod,
-        subtotal,
-        tax,
-        total: total - (discountType === 'percentage' ? (total * discount) / 100 : discount),
+        shippingAddress: 'Tại quầy', // POS default
+        notes: notes ? `${notes} - Thanh toán: ${paymentMethod}` : `Thanh toán: ${paymentMethod}`,
+        manualDiscount: discountAmount > 0 ? discountAmount : null
       };
 
-      const response = await fetch('/api/sales/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
+      // Using /checkout endpoint instead of /orders
+      const client = (await import('../../../api/client')).default;
+      const response = await client.post('/sales/checkout', orderData);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.data) {
+        const result = response.data;
         clearCart();
         setSelectedCustomer(null);
         setDiscount(0);
         setNotes('');
         // Show success and print receipt
-        alert(`Đơn hàng đã được tạo thành công! Mã đơn: ${result.orderId}`);
+        alert(`Đơn hàng đã được tạo thành công! Mã đơn: ${result.orderNumber}`);
       }
     } catch (error) {
       console.error('Failed to process order:', error);
@@ -161,9 +182,9 @@ export default function POSPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={handleKeyDown}
                   placeholder="Tìm kiếm sản phẩm... (Enter để tìm)"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
                 />
                 <button
                   onClick={() => {
@@ -178,13 +199,14 @@ export default function POSPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
               >
                 <option value="">Tất cả danh mục</option>
-                <option value="laptops">Laptop</option>
-                <option value="desktops">Máy tính để bàn</option>
-                <option value="components">Linh kiện</option>
-                <option value="accessories">Phụ kiện</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -213,27 +235,31 @@ export default function POSPage() {
                     key={product.id}
                     onClick={() => handleAddToCart(product)}
                     disabled={product.stockQuantity === 0}
-                    className={`bg-white rounded-lg p-4 text-left transition-all hover:shadow-lg ${product.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500'
-                      } border border-gray-200 group`}
+                    className={`bg-white rounded-lg p-3 text-left transition-all hover:shadow-lg ${product.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#D70018]'
+                      } border border-gray-200 group flex flex-col h-full`}
                   >
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                      <img
-                        src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200&h=200&fit=crop`}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                    <div className="aspect-square bg-white rounded-lg mb-3 overflow-hidden flex items-center justify-center p-2 border border-gray-100">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="text-gray-300 font-bold text-3xl">{product.name.charAt(0)}</div>
+                      )}
                     </div>
-                    <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-2">{product.name}</h3>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-lg font-bold text-blue-600">{formatCurrency(product.price)}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${product.stockQuantity > 10 ? 'bg-green-100 text-green-700' :
-                        product.stockQuantity > 0 ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                        {product.stockQuantity > 10 ? 'Còn hàng' :
-                          product.stockQuantity > 0 ? `Còn ${product.stockQuantity}` :
-                            'Hết hàng'}
-                      </span>
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-2 min-h-[40px]">{product.name}</h3>
+                      <div className="mt-auto flex items-baseline justify-between">
+                        <span className="text-lg font-bold text-[#D70018]">{formatCurrency(product.price)}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${product.stockQuantity > 10 ? 'bg-green-100 text-green-700' :
+                          product.stockQuantity > 0 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                          {product.stockQuantity > 0 ? `SL: ${product.stockQuantity}` : 'Hết hàng'}
+                        </span>
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -279,14 +305,14 @@ export default function POSPage() {
                   >
                     <div className="w-16 h-16 bg-white rounded overflow-hidden flex-shrink-0">
                       <img
-                        src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=100&h=100&fit=crop`}
+                        src={item.imageUrl || `https://ui-avatars.com/api/?name=${item.name}`}
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-1"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                      <p className="text-blue-600 font-semibold">{formatCurrency(item.price)}</p>
+                      <h4 className="font-medium text-gray-900 text-sm truncate" title={item.name}>{item.name}</h4>
+                      <p className="text-[#D70018] font-semibold">{formatCurrency(item.price)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button
@@ -345,7 +371,7 @@ export default function POSPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ghi chú..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#D70018] resize-none outline-none"
             />
           </div>
 
@@ -370,7 +396,7 @@ export default function POSPage() {
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">Tổng cộng</span>
-                <span className="text-xl font-bold text-blue-600">{formatCurrency(calculateFinalTotal())}</span>
+                <span className="text-xl font-bold text-[#D70018]">{formatCurrency(calculateFinalTotal())}</span>
               </div>
             </div>
 
@@ -394,7 +420,7 @@ export default function POSPage() {
               <button
                 onClick={() => handleProcessOrder('transfer')}
                 disabled={items.length === 0 || processingOrder}
-                className="flex flex-col items-center gap-1 p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="flex flex-col items-center gap-1 p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 <Scan className="w-5 h-5" />
                 <span className="text-xs font-medium">Chuyển khoản</span>

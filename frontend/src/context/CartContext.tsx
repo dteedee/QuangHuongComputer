@@ -5,7 +5,10 @@ import toast from 'react-hot-toast';
 import { salesApi, type CartDto } from '../api/sales';
 import { useAuth } from './AuthContext';
 
-interface CartItem extends Product {
+interface CartItem extends Partial<Product> {
+    id: string;
+    name: string;
+    price: number;
     quantity: number;
 }
 
@@ -67,10 +70,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 quantity: item.quantity,
                 // Add placeholder values for Product interface fields
                 description: '',
-                imageUrl: '',
+                imageUrl: item.imageUrl || '',
                 stock: 0,
                 categoryId: '',
-                category: { id: '', name: '' }
+                category: { id: '', name: '' },
+                sku: '',
+                status: 'InStock' as const,
+                stockQuantity: 99,
+                isActive: true,
+                createdAt: new Date().toISOString()
             }));
 
             setItems(cartItems);
@@ -171,7 +179,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await salesApi.cart.applyCoupon(code);
             setCouponCode(code.toUpperCase());
-            setDiscountAmount(result.discountAmount);
+            setDiscountAmount(result.discount);
             toast.success(result.message, {
                 icon: '🎉',
                 style: { borderRadius: '15px' }
@@ -209,7 +217,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             quantity: item.quantity
         }));
         try {
-            await salesApi.checkout({ items: checkoutItems });
+            await salesApi.orders.create({ items: checkoutItems });
             await clearCart();
             toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.', {
                 duration: 5000,

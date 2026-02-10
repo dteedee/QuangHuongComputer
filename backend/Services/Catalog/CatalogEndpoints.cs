@@ -137,7 +137,7 @@ public static class CatalogEndpoints
 
         group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.CategoriesKey;
+            var cacheKey = CacheKeys.CategoriesKey + "_v3";
             var cachedCategories = await cache.GetAsync<List<dynamic>>(cacheKey);
             
             if (cachedCategories != null)
@@ -149,14 +149,14 @@ public static class CatalogEndpoints
                 .OrderBy(c => c.Name)
                 .Select(c => new
                 {
-                    c.Id,
-                    c.Name,
-                    c.Description,
-                    c.IsActive,
-                    c.CreatedAt,
-                    c.UpdatedAt
+                    id = c.Id,
+                    name = c.Name,
+                    description = c.Description,
+                    isActive = c.IsActive,
+                    createdAt = c.CreatedAt,
+                    updatedAt = c.UpdatedAt
                 })
-                .ToListAsync();
+                .ToListAsync<object>(); // Cast to object list to allow dynamic serialization
 
             await cache.SetAsync(cacheKey, categories, TimeSpan.FromHours(1));
             return Results.Ok(categories);
@@ -164,7 +164,7 @@ public static class CatalogEndpoints
 
         group.MapGet("/brands", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.BrandsKey;
+            var cacheKey = CacheKeys.BrandsKey + "_v3";
             var cachedBrands = await cache.GetAsync<List<dynamic>>(cacheKey);
             
             if (cachedBrands != null)
@@ -176,14 +176,14 @@ public static class CatalogEndpoints
                 .OrderBy(b => b.Name)
                 .Select(b => new
                 {
-                    b.Id,
-                    b.Name,
-                    b.Description,
-                    b.IsActive,
-                    b.CreatedAt,
-                    b.UpdatedAt
+                    id = b.Id,
+                    name = b.Name,
+                    description = b.Description,
+                    isActive = b.IsActive,
+                    createdAt = b.CreatedAt,
+                    updatedAt = b.UpdatedAt
                 })
-                .ToListAsync();
+                .ToListAsync<object>();
 
             await cache.SetAsync(cacheKey, brands, TimeSpan.FromHours(1));
             return Results.Ok(brands);

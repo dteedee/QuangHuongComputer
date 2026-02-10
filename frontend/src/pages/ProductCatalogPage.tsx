@@ -134,14 +134,24 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-2">Cửa Hàng Máy Tính</h1>
-          <p className="text-blue-100 text-lg">
-            Khám phá hàng ngàn sản phẩm máy tính chất lượng cao
-          </p>
+      <div className="container mx-auto px-4 py-4">
+        {/* Breadcrumb / Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+              <span>Trang chủ</span>
+              <span>/</span>
+              <span className="text-gray-900 font-medium">Sản phẩm</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Tất cả sản phẩm</h1>
+          </div>
+
+          <div className="text-sm text-gray-500">
+            Hiển thị <span className="font-bold text-gray-900">{products.length}</span> / {total} sản phẩm
+          </div>
         </div>
       </div>
+
 
       <div className="container mx-auto px-4 py-8">
         {/* Search Bar */}
@@ -152,11 +162,11 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm sản phẩm..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
             />
             <button
               type="submit"
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-8 py-3 bg-[#D70018] text-white rounded-lg hover:bg-red-700 transition-colors font-bold shadow-sm"
             >
               Tìm kiếm
             </button>
@@ -182,7 +192,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                     setSearchQuery('');
                     setPage(1);
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-[#D70018] hover:text-red-700 font-medium"
                 >
                   Đặt lại
                 </button>
@@ -198,9 +208,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       name="category"
                       checked={selectedCategory === ''}
                       onChange={() => setSelectedCategory('')}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                     />
-                    <span className="text-gray-700 group-hover:text-blue-600">All Categories</span>
+                    <span className="text-gray-700 group-hover:text-[#D70018]">Tất cả</span>
                   </label>
                   {categories.map((category) => (
                     <label key={category.id} className="flex items-center gap-2 cursor-pointer group">
@@ -209,9 +219,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                         name="category"
                         checked={selectedCategory === category.id}
                         onChange={() => setSelectedCategory(category.id)}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                       />
-                      <span className="text-gray-700 group-hover:text-blue-600">{category.name || 'Unnamed Category'}</span>
+                      <span className="text-gray-700 group-hover:text-[#D70018]">{category.name || 'Đang cập nhật'}</span>
                     </label>
                   ))}
                 </div>
@@ -227,9 +237,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       name="brand"
                       checked={selectedBrand === ''}
                       onChange={() => setSelectedBrand('')}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                     />
-                    <span className="text-gray-700 group-hover:text-blue-600">All Brands</span>
+                    <span className="text-gray-700 group-hover:text-[#D70018]">Tất cả</span>
                   </label>
                   {brands.map((brand) => (
                     <label key={brand.id} className="flex items-center gap-2 cursor-pointer group">
@@ -238,9 +248,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                         name="brand"
                         checked={selectedBrand === brand.id}
                         onChange={() => setSelectedBrand(brand.id)}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300"
                       />
-                      <span className="text-gray-700 group-hover:text-blue-600">{brand.name || 'Unnamed Brand'}</span>
+                      <span className="text-gray-700 group-hover:text-[#D70018]">{brand.name || 'Đang cập nhật'}</span>
                     </label>
                   ))}
                 </div>
@@ -257,17 +267,17 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       value={priceRange.min || ''}
                       onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
                       placeholder="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Giá đến</label>
+                    <label className="text-sm text-gray-600 block mb-1">Giá đến</label>
                     <input
                       type="number"
                       value={priceRange.max < 100000000 ? priceRange.max : ''}
                       onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) || 100000000 })}
                       placeholder="100,000,000"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
                     />
                   </div>
                 </div>
@@ -280,9 +290,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                     type="checkbox"
                     checked={inStockOnly}
                     onChange={(e) => setInStockOnly(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-[#D70018] focus:ring-[#D70018] border-gray-300 rounded"
                   />
-                  <span className="font-medium">Chỉ hiển thị hàng còn sẵn</span>
+                  <span className="font-medium text-gray-700">Chỉ hiển thị hàng còn sẵn</span>
                 </label>
               </div>
             </div>
@@ -304,7 +314,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                     setSortBy(e.target.value);
                     setPage(1);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none bg-white font-medium text-gray-700"
                 >
                   <option value="newest">Mới nhất</option>
                   <option value="price_asc">Giá thấp đến cao</option>
@@ -316,13 +326,13 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                 <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}`}
+                    className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-[#D70018] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                   >
                     <Grid className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}`}
+                    className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-[#D70018] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                   >
                     <List className="w-5 h-5" />
                   </button>
@@ -352,7 +362,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                     setInStockOnly(false);
                     setSearchQuery('');
                   }}
-                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="mt-4 px-6 py-2 bg-[#D70018] text-white rounded-lg hover:bg-red-700 font-bold"
                 >
                   Xóa bộ lọc
                 </button>
@@ -395,7 +405,7 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                             <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
 
                             <div className="flex items-baseline gap-3 mb-3">
-                              <span className="text-3xl font-bold text-blue-600">
+                              <span className="text-3xl font-bold text-[#D70018]">
                                 {formatPrice(product.price)}
                               </span>
                               {product.oldPrice && (
@@ -422,13 +432,13 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
 
                           <div className="flex flex-col gap-2">
                             <button
-                              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                              onClick={() => (window.location.href = `/products/${product.id}`)}
+                              className="px-6 py-3 bg-[#D70018] text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+                              onClick={() => (window.location.href = `/product/${product.id}`)}
                             >
                               Xem chi tiết
                             </button>
                             <button
-                              className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+                              className="px-6 py-3 border-2 border-[#D70018] text-[#D70018] rounded-lg hover:bg-red-50 transition-colors font-bold"
                               disabled={product.stockQuantity === 0}
                             >
                               Thêm vào giỏ
@@ -476,9 +486,9 @@ export default function ProductCatalogPage({ categorySlug, brandSlug }: ProductC
                       <button
                         key={pageNum}
                         onClick={() => setPage(pageNum)}
-                        className={`px-4 py-2 rounded-lg ${page === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${page === pageNum
+                          ? 'bg-[#D70018] text-white shadow-md'
+                          : 'border border-gray-300 hover:bg-gray-100 bg-white text-gray-700'
                           }`}
                       >
                         {pageNum}

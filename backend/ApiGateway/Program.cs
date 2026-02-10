@@ -186,9 +186,16 @@ builder.Services.AddAuthorization(options =>
 });
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
@@ -209,7 +216,7 @@ if (app.Environment.IsDevelopment())
         var migrateContexts = new DbContext[]
         {
             services.GetRequiredService<CatalogDbContext>(),
-            services.GetRequiredService<SalesDbContext>(),
+            // services.GetRequiredService<SalesDbContext>(), // Hotfix: Schema mismatch (Carts vs carts), skipping migration to use existing DB
             services.GetRequiredService<RepairDbContext>(),
             services.GetRequiredService<WarrantyDbContext>(),
             services.GetRequiredService<ContentDbContext>(),

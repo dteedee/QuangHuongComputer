@@ -32,13 +32,14 @@ public class SalesDbContext : DbContext
         // Cart configuration
         modelBuilder.Entity<Cart>(entity =>
         {
-            entity.ToTable("carts");
+            entity.ToTable("Carts");
             entity.HasKey(c => c.Id);
             entity.Property(c => c.DiscountAmount).HasPrecision(18, 2);
             entity.Property(c => c.ShippingAmount).HasPrecision(18, 2);
             entity.Property(c => c.TaxRate).HasPrecision(5, 4); // e.g., 0.1000 for 10%
             entity.OwnsMany(c => c.Items, item =>
             {
+                item.ToTable("CartItem");
                 item.Property(i => i.Price).HasPrecision(18, 2);
             });
         });
@@ -46,7 +47,7 @@ public class SalesDbContext : DbContext
         // Order configuration
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.ToTable("orders");
+            entity.ToTable("Orders");
             entity.HasKey(o => o.Id);
             entity.HasIndex(o => o.OrderNumber).IsUnique();
             entity.Property(o => o.SubtotalAmount).HasPrecision(18, 2);
@@ -73,6 +74,7 @@ public class SalesDbContext : DbContext
             
             entity.OwnsMany(o => o.Items, item =>
             {
+                item.ToTable("OrderItem");
                 item.Property(i => i.UnitPrice).HasPrecision(18, 2);
                 item.Property(i => i.OriginalPrice).HasPrecision(18, 2);
                 item.Property(i => i.DiscountAmount).HasPrecision(18, 2);
@@ -83,7 +85,7 @@ public class SalesDbContext : DbContext
         // OrderHistory configuration
         modelBuilder.Entity<OrderHistory>(entity =>
         {
-            entity.ToTable("order_histories");
+            entity.ToTable("OrderHistories"); // Changed to match likely DB default
             entity.HasKey(oh => oh.Id);
             entity.Property(oh => oh.ChangedAt).IsRequired();
             
@@ -100,7 +102,7 @@ public class SalesDbContext : DbContext
         // ReturnRequest configuration
         modelBuilder.Entity<ReturnRequest>(entity =>
         {
-            entity.ToTable("return_requests");
+            entity.ToTable("ReturnRequests"); // Changed to match likely DB default
             entity.HasKey(rr => rr.Id);
             entity.Property(rr => rr.RefundAmount).HasPrecision(18, 2);
             
