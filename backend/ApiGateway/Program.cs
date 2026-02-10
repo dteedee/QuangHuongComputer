@@ -32,6 +32,7 @@ using BuildingBlocks.Messaging.Outbox;
 using BuildingBlocks.Security;
 using BuildingBlocks.Email;
 using BuildingBlocks.Caching;
+using BuildingBlocks.Caching.Redis;
 using BuildingBlocks.Endpoints;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -123,12 +124,7 @@ builder.Services.AddCors(options =>
 // ========================================
 // REDIS CACHING CONFIGURATION
 // ========================================
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
-    options.InstanceName = "quanghc:";
-});
-builder.Services.AddScoped<ICacheService, CacheService>();
+builder.Services.AddRedisCache(builder.Configuration);
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
@@ -158,6 +154,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumers(typeof(Sales.DependencyInjection).Assembly);
     x.AddConsumers(typeof(Accounting.DependencyInjection).Assembly);
     x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
+    x.AddConsumers(typeof(Identity.DependencyInjection).Assembly);
     
     x.UsingRabbitMq((context, cfg) =>
     {

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using BuildingBlocks.Security;
 
 namespace Content;
 
@@ -14,14 +16,11 @@ public static class MediaEndpoints
         // Upload single file
         group.MapPost("/upload", async (IFormFile file, IWebHostEnvironment env) =>
         {
-            if (file == null || file.Length == 0)
-                return Results.BadRequest("No file uploaded");
+            var (isValid, errorMessage) = FileValidator.ValidateImage(file);
+            if (!isValid)
+                return Results.BadRequest(new { Error = errorMessage });
 
-            // Validate file extension
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(extension))
-                return Results.BadRequest("Invalid file type. Only images are allowed.");
 
             // Create uploads directory
             var uploadsDir = Path.Combine(env.WebRootPath ?? "wwwroot", "uploads");
@@ -58,19 +57,23 @@ public static class MediaEndpoints
 
             foreach (var file in files)
             {
-                if (file.Length > 0)
+                var (isValid, errorMessage) = FileValidator.ValidateImage(file);
+                if (!isValid)
                 {
-                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{extension}";
-                    var filePath = Path.Combine(uploadsDir, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    results.Add(new { url = $"/uploads/{fileName}", originalName = file.FileName });
+                    results.Add(new { originalName = file.FileName, error = errorMessage });
+                    continue;
                 }
+
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsDir, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                results.Add(new { url = $"/uploads/{fileName}", originalName = file.FileName });
             }
 
             return Results.Ok(results);

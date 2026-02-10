@@ -2,6 +2,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { useCart } from '../context/CartContext';
+import SEO from '../components/SEO';
 import {
     ArrowLeft, ShoppingBag, Phone, Check, Star, Eye, ShieldCheck, Tag,
     Truck, Award, Cpu, Layers, MessageSquare, Share2, Heart,
@@ -99,6 +100,12 @@ export const ProductDetailsPage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans text-gray-800 pb-20">
+            <SEO
+                title={product.name}
+                description={`${product.name} - ${product.description?.substring(0, 150) || 'Linh kiện máy tính chính hãng giá tốt tại Quang Hưởng Computer.'}`}
+                image={product.imageUrl}
+                type="product"
+            />
             {/* Breadcrumbs */}
             <div className="bg-white py-3 border-b border-gray-100 sticky top-[72px] z-30 shadow-sm">
                 <div className="max-w-[1400px] mx-auto px-4 text-xs text-gray-500 flex items-center gap-2 uppercase font-bold tracking-wide">
