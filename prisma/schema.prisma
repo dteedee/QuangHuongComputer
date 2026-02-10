@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  TOWNHOUSE
+  VILLA
+  PENTHOUSE
+  OFFICE
+  RETAIL
+  WAREHOUSE
+}
+
+enum TransactionType {
+  RENT
+  SELL
+  AUCTION
+}
+
+enum FurnishingType {
+  FULLY_FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RENTED
+  SOLD
+  PENDING
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  nameEn      String   @unique
+  slug        String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  province     Province?     @relation(fields: [provinceId], references: [id])
+  provinceId   String?
+  district     District?     @relation(fields: [districtId], references: [id])
+  districtId   String?
+  ward         Ward?        @relation(fields: [wardId], references: [id])
+  wardId       String?
+  
+  // Coordinates
+  latitude     Float?
+  longitude    Float?
+  
+  // Nested structure for Vietnamese address
+  provinceCode String?
+  districtCode String?
+  wardCode     String?
+  
+  // SEO
+  metaTitle    String?
+  metaDesc     String?
+  
+  properties Property[]
+  
+  @@map("locations")
+}
+
+model Province {
+  id           String @id @default(cuid())
+  name         String @unique
+  nameEn       String @unique
+  code         String @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  locations Location[]
+  districts District[]
+  
+  @@map("provinces")
+}
+
+model District {
+  id           String @id @default(cuid())
+  name         String
+  nameEn       String
+  code         String
+  provinceId   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  province    Province       @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  locations   Location[]
+  wards       Ward[]
+  
+  @@unique([provinceId, code])
+  @@map("districts")
+}
+
+model Ward {
+  id         String @id @default(cuid())
+  name       String
+  nameEn     String
+  code       String
+  districtId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  district   District       @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  locations  Location[]
+  
+  @@unique([districtId, code])
+  @@map("wards")
+}
+
+model Neighborhood {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  slug        String   @unique
+  description String?
+  locationId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  location Location @relation(fields: [locationId], references: [id])
+  properties Property[]
+  
+  @@map("neighborhoods")
+}
+
+model PropertyTypeCategory {
+  id          String @id @default(cuid())
+  name        String @unique
+  nameEn      String @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  propertyTypes PropertyType[]
+  
+  @@map("property_type_categories")
+}
+
+model PropertyType {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  slug        String   @unique
+  description String?
+  categoryId  String
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  category    PropertyTypeCategory @relation(fields: [categoryId], references: [id])
+  properties Property[]
+  
+  @@unique([categoryId, name])
+  @@map("property_types")
+}
+
+model FacilityCategory {
+  id          String @id @default(cuid())
+  name        String @unique
+  nameEn      String @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  facilities Facility[]
+  
+  @@map("facility_categories")
+}
+
+model Facility {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  slug        String   @unique
+  description String?
+  icon        String?
+  categoryId  String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  category    FacilityCategory @relation(fields: [categoryId], references: [id])
+  propertyFacilities PropertyFacility[]
+  
+  @@unique([categoryId, name])
+  @@map("facilities")
+}
+
+model Property {
+  id              String        @id @default(cuid())
+  title           String
+  titleEn         String
+  slug            String        @unique
+  description     String
+  descriptionEn   String
+  address         String?
+  districtId      String?
+  wardId          String?
+  
+  // Basic info
+  type            PropertyType
+  typeId          String
+  transactionType TransactionType
+  area            Float         // Area in m²
+  price           Decimal       // Price in VND
+  currency        String        @default("VND")
+  
+  // Property details
+  bedrooms        Int?
+  bathrooms       Int?
+  floors          Int?
+  bedroomsCount   Int?
+  bathroomsCount  Int?
+  maxOccupancy    Int?
+  yearBuilt       Int?
+  
+  // Furnishing
+  furnishingType  FurnishingType?
+  
+  // Location
+  locationId      String
+  neighborhoodId  String?
+  latitude        Float?
+  longitude       Float?
+  
+  // Contact
+  contactName     String?
+  contactPhone    String?
+  contactEmail    String?
+  
+  // Status
+  status          PropertyStatus @default(AVAILABLE)
+  isActive        Boolean       @default(true)
+  
+  // SEO
+  metaTitle       String?
+  metaDesc        String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  publishedAt     DateTime?
+  
+  // Relations
+  location        Location          @relation(fields: [locationId], references: [id])
+  neighborhood    Neighborhood?     @relation(fields: [neighborhoodId], references: [id])
+  type            PropertyType      @relation(fields: [typeId], references: [id])
+  
+  // Media
+  propertyImages  PropertyImage[]
+  propertyFacilities PropertyFacility[]
+  
+  // Virtual fields for calculated data
+  totalPrice      Float            @virtual @db.Real(getter: true)
+  formattedPrice  String           @virtual
+  
+  @@map("properties")
+}
+
+model PropertyImage {
+  id          String   @id @default(cuid())
+  url         String
+  alt         String?
+  caption     String?
+  order       Int      @default(0)
+  isCover     Boolean  @default(false)
+  propertyId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  @@map("property_images")
+}
+
+model PropertyFacility {
+  id           String   @id @default(cuid())
+  propertyId   String
+  facilityId   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  facility     Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  
+  @@unique([propertyId, facilityId])
+  @@map("property_facilities")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  role      String   @default("USER")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  properties Property[]
+  
+  @@map("users")
+}
