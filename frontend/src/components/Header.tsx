@@ -1,5 +1,5 @@
-﻿
-import { Link, useNavigate } from 'react-router-dom';
+
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
@@ -8,7 +8,8 @@ import {
     LogOut, Settings, Laptop, Cpu, Zap,
     Briefcase, MessageCircle, User, Package, FileText
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
 
 interface HeaderProps {
     onCartClick: () => void;
@@ -21,6 +22,22 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
+
+    useEffect(() => {
+        const fetchConfigs = async () => {
+            try {
+                const data = await systemConfigApi.config.getPublic();
+                setConfigs(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error('Failed to load header configs', error);
+            }
+        };
+        fetchConfigs();
+    }, []);
+
+    const companyBrand1 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_1', 'QUANG HƯỞNG', (v) => v);
+    const companyBrand2 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_2', 'COMPUTER', (v) => v);
 
     const handleLogout = () => {
         logout();
@@ -35,6 +52,32 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
         }
     };
 
+    const location = useLocation();
+
+    const isActive = (path: string) => {
+        if (path === '/') return location.pathname === '/';
+        // Handle precise matching for products vs other potential sub-paths if needed
+        // For now, simpler check:
+        return location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+    };
+
+    const getLinkClass = (path: string, isButton = false) => {
+        const active = isActive(path);
+
+        if (isButton) {
+            // Special styling for the first button "Danh mục sản phẩm" if we keep it distinct
+            // But user wants the "bar" to move.
+            // If we want them all to look like tabs, we might need a unified style.
+            // Let's try to make the active one look like the current "Danh mục sản phẩm" button (Red bg, white text)
+        }
+
+        const baseClass = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all uppercase tracking-tight";
+        const activeClass = "bg-[#D70018] text-white shadow-lg shadow-red-500/20";
+        const inactiveClass = "text-gray-600 hover:bg-gray-100 hover:text-[#D70018]";
+
+        return `${baseClass} ${active ? activeClass : inactiveClass}`;
+    };
+
     return (
         <div className="flex flex-col w-full z-50 sticky top-0 bg-white shadow-sm font-sans">
             {/* 1. Top Bar (Red) */}
@@ -47,7 +90,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                     <div className="flex gap-6 items-center">
                         <Link to="/policy/promotions" className="hover:underline flex items-center gap-1.5"><Zap size={12} /> Tin khuyến mãi</Link>
                         <Link to="/policy/news" className="hover:underline flex items-center gap-1.5"><Monitor size={12} /> Tin công nghệ</Link>
-                        <Link to="/contact" className="hover:underline flex items-center gap-1.5"><Briefcase size={12} /> Tuyển dụng</Link>
+                        <Link to="/recruitment" className="hover:underline flex items-center gap-1.5"><Briefcase size={12} /> Tuyển dụng</Link>
+                        <Link to="/contact" className="hover:underline flex items-center gap-1.5"><Phone size={12} /> Liên hệ</Link>
 
                         <div className="h-4 w-[1px] bg-white/30" />
 
@@ -119,8 +163,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             </div>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xl font-black text-[#D70018] uppercase tracking-tighter leading-none group-hover:scale-105 transition-transform origin-left">QUANG HƯỞNG</span>
-                            <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">COMPUTER</span>
+                            <span className="text-xl font-black text-[#D70018] uppercase tracking-tighter leading-none group-hover:scale-105 transition-transform origin-left">{companyBrand1}</span>
+                            <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">{companyBrand2}</span>
                         </div>
                     </Link>
 
@@ -171,8 +215,6 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             <MessageCircle size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-bold text-[#D70018] hidden sm:block">Chat</span>
                         </button>
-
-                        {/* Account Menu Removed as per request to move to Top Bar */}
                     </div>
                 </div>
             </div>
@@ -180,28 +222,24 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
             {/* 3. Navigation (White) */}
             <div className="bg-white border-b border-gray-100 hidden lg:block shadow-sm">
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
-                    <div className="flex items-center gap-8 py-2">
-                        <Link to="/products" className="bg-[#D70018] text-white flex items-center gap-3 px-6 py-2.5 rounded-xl font-bold text-sm uppercase shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all hover:-translate-y-0.5">
-                            <Menu size={18} /> Danh mục sản phẩm
-                        </Link>
-
-                        <div className="flex items-center gap-8">
-                            {[
-                                { name: 'Sản phẩm', icon: <Laptop size={16} />, path: '/products' },
-                                { name: 'Dịch vụ sửa chữa', icon: <Wrench size={16} />, path: '/repairs' },
-                                { name: 'Bảo hành', icon: <Monitor size={16} />, path: '/warranty' },
-                                { name: 'Blog/Tin tức', icon: <FileText size={16} />, path: '/policy/news' },
-                                { name: 'Liên hệ', icon: <Phone size={16} />, path: '/contact' },
-                            ].map((item, idx) => (
-                                <Link
-                                    key={idx}
-                                    to={item.path}
-                                    className="flex items-center gap-2 text-[13px] font-bold text-gray-600 hover:text-[#D70018] transition-colors uppercase tracking-tight py-2"
-                                >
-                                    {item.icon} {item.name}
-                                </Link>
-                            ))}
-                        </div>
+                    <div className="flex items-center gap-2 py-2">
+                        {/* Unified Navigation Links */}
+                        {[
+                            { name: 'Danh mục sản phẩm', icon: <Menu size={18} />, path: '/products' }, // Changed to be just another tab but first
+                            // { name: 'Sản phẩm', icon: <Laptop size={16} />, path: '/products' }, // Removed redundant link if "Danh mục" is the main product link
+                            { name: 'Dịch vụ sửa chữa', icon: <Wrench size={16} />, path: '/repairs' },
+                            { name: 'Bảo hành', icon: <Monitor size={16} />, path: '/warranty' },
+                            { name: 'Blog/Tin tức', icon: <FileText size={16} />, path: '/policy/news' },
+                            { name: 'Liên hệ', icon: <Phone size={16} />, path: '/contact' },
+                        ].map((item, idx) => (
+                            <Link
+                                key={idx}
+                                to={item.path}
+                                className={getLinkClass(item.path)}
+                            >
+                                {item.icon} {item.name}
+                            </Link>
+                        ))}
                     </div>
 
                     <div className="flex items-center gap-4">

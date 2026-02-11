@@ -75,6 +75,7 @@ export interface CheckoutDto {
     sourceId?: string;
     customerIp?: string;
     customerUserAgent?: string;
+    paymentMethod?: string;
 }
 
 // Order History - NOTE: Backend doesn't have this endpoint

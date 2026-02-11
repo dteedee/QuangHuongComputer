@@ -23,6 +23,9 @@ const DEFAULT_CONFIGS: Record<string, ConfigurationEntry[]> = {
         { key: 'COMPANY_TAX_CODE', value: '0123456789', description: 'Mã số thuế', category: 'Company', lastUpdated: new Date().toISOString() },
         { key: 'COMPANY_WEBSITE', value: 'https://quanghuongcomputer.vn', description: 'Website chính thức', category: 'Company', lastUpdated: new Date().toISOString() },
         { key: 'COMPANY_SLOGAN', value: 'Uy Tín - Chất Lượng - Giá Tốt', description: 'Slogan công ty', category: 'Company', lastUpdated: new Date().toISOString() },
+        { key: 'COMPANY_WORKING_HOURS', value: '8:00 - 21:00 (Tất cả các ngày trong tuần)', description: 'Thời gian làm việc', category: 'Company', lastUpdated: new Date().toISOString() },
+        { key: 'COMPANY_BRAND_TEXT_1', value: 'QUANG HƯỞNG', description: 'Tên thương hiệu dòng 1 (Header)', category: 'Company', lastUpdated: new Date().toISOString() },
+        { key: 'COMPANY_BRAND_TEXT_2', value: 'COMPUTER', description: 'Tên thương hiệu dòng 2 (Header)', category: 'Company', lastUpdated: new Date().toISOString() },
     ],
     'Sales & Tax': [
         { key: 'TAX_RATE', value: '0.08', description: 'Thuế VAT (%) - Mặc định 8%', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },

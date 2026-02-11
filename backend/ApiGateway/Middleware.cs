@@ -139,10 +139,22 @@ public class SecurityHeadersMiddleware
         if (!context.Response.HasStarted)
         {
             context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+            context.Response.Headers.TryAdd("X-Frame-Options", "SAMEORIGIN");
             context.Response.Headers.TryAdd("X-XSS-Protection", "1; mode=block");
             context.Response.Headers.TryAdd("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-            context.Response.Headers.TryAdd("Content-Security-Policy", "default-src 'self'");
+            
+            // Required for Google Login popup to communicate back to the main window
+            context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+            
+            // Comprehensive CSP for Google OAuth and common assets
+            context.Response.Headers.TryAdd("Content-Security-Policy",
+                "default-src 'self'; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.google.com; " +
+                "frame-src 'self' https://accounts.google.com https://www.google.com; " +
+                "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com; " +
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; " +
+                "img-src 'self' data: https://lh3.googleusercontent.com https://www.google.com; " +
+                "font-src 'self' data: https://fonts.gstatic.com;");
         }
 
         await _next(context);

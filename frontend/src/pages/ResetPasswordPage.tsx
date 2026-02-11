@@ -7,37 +7,22 @@ import toast from 'react-hot-toast';
 export const ResetPasswordPage = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const token = searchParams.get('token');
+    const urlToken = searchParams.get('token');
 
+    const [token, setToken] = useState(urlToken || '');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    if (!token) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6 font-sans">
-                <div className="w-full max-w-[500px] bg-white rounded-3xl overflow-hidden shadow-2xl p-12">
-                    <div className="text-center">
-                        <ShieldCheck size={64} className="text-red-500 mx-auto mb-4" />
-                        <h1 className="text-2xl font-black text-gray-800 mb-2 uppercase">Link không hợp lệ</h1>
-                        <p className="text-gray-500 mb-6">Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.</p>
-                        <Link
-                            to="/forgot-password"
-                            className="inline-flex items-center gap-2 text-[#D70018] hover:underline font-black"
-                        >
-                            <ArrowLeft size={18} />
-                            Yêu cầu link mới
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        if (!token || token.length < 6) {
+            setError('Vui lòng nhập mã xác nhận (6 chữ số)');
+            return;
+        }
 
         if (newPassword.length < 6) {
             setError('Mật khẩu phải có ít nhất 6 ký tự');
@@ -59,7 +44,7 @@ export const ResetPasswordPage = () => {
             toast.success('Mật khẩu đã được đặt lại thành công!');
             navigate('/login');
         } catch (error: any) {
-            const errorMessage = error.response?.data?.Message || 'Token không hợp lệ hoặc đã hết hạn';
+            const errorMessage = error.response?.data?.message || error.response?.data?.Message || 'Mã xác nhận không hợp lệ hoặc đã hết hạn';
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -79,11 +64,29 @@ export const ResetPasswordPage = () => {
                     <div className="mb-10">
                         <h1 className="text-3xl font-black text-gray-800 mb-2 uppercase italic">Đặt lại mật khẩu</h1>
                         <p className="text-gray-500 font-medium italic">
-                            Nhập mật khẩu mới cho tài khoản của bạn.
+                            Nhập mã xác nhận từ email và mật khẩu mới của bạn.
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-1">
+                                Mã xác nhận (6 chữ số)
+                            </label>
+                            <div className="relative">
+                                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <input
+                                    type="text"
+                                    value={token}
+                                    onChange={(e) => setToken(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    placeholder="000000"
+                                    required
+                                    maxLength={20}
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-1">
                                 Mật khẩu mới

@@ -26,6 +26,7 @@ public class Order : Entity<Guid>
     
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
+    public string PaymentMethod { get; private set; } = "COD"; // Default to COD
     
     // Phase 1: Enhanced fields
     public string? CustomerIp { get; private set; }
@@ -58,7 +59,8 @@ public class Order : Entity<Guid>
         string? notes = null,
         string? customerIp = null,
         string? customerUserAgent = null,
-        Guid? sourceId = null)
+        Guid? sourceId = null,
+        string paymentMethod = "COD")
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Order must have at least one item");
@@ -75,6 +77,7 @@ public class Order : Entity<Guid>
         CustomerIp = customerIp;
         CustomerUserAgent = customerUserAgent;
         SourceId = sourceId;
+        PaymentMethod = paymentMethod;
         OrderDate = DateTime.UtcNow;
         TaxRate = taxRate; // Snapshot tax rate
         RetryCount = 0;

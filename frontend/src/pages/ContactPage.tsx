@@ -1,13 +1,38 @@
-﻿import { Link } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
+import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
 
 export const ContactPage = () => {
+    const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
+
+    useEffect(() => {
+        const fetchConfigs = async () => {
+            try {
+                // Try to get public configs first, or all configs if possible
+                // Using getConfigs which maps to getAll. In a real app, this might need to be getPublic for unauthenticated users.
+                // For now, assuming getConfigs is accessible or we rely on defaults.
+                const data = await systemConfigApi.getConfigs();
+                setConfigs(data || []);
+            } catch (error) {
+                console.error('Failed to load configs', error);
+            }
+        };
+        fetchConfigs();
+    }, []);
+
+    const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Hưởng Computer', (v) => v);
+    const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội', (v) => v);
+    const phone = getConfigValue(configs, 'COMPANY_PHONE', '1800.6321', (v) => v);
+    const email = getConfigValue(configs, 'COMPANY_EMAIL', 'contact@quanghuong.com', (v) => v);
+    const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '8:00 - 21:00 (Tất cả các ngày trong tuần)', (v) => v);
+
     return (
         <div className="bg-gray-50 min-h-screen pb-10">
             <SEO
                 title="Liên hệ"
-                description="Liên hệ với Quang Hưởng Computer - Hotline: 1800.6321. Địa chỉ: Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội. Hỗ trợ kỹ thuật và tư vấn mua hàng 24/7."
+                description={`Liên hệ với ${companyName} - Hotline: ${phone}. Địa chỉ: ${address}. Hỗ trợ kỹ thuật và tư vấn mua hàng 24/7.`}
             />
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
@@ -29,28 +54,28 @@ export const ContactPage = () => {
                                     <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><MapPin /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Trụ sở chính:</b>
-                                        <p className="text-gray-900 font-bold">Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội</p>
+                                        <p className="text-gray-900 font-bold">{address}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Phone /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Tổng đài hỗ trợ:</b>
-                                        <p className="text-[#D70018] font-black text-2xl tracking-tighter">1800.6321</p>
+                                        <p className="text-[#D70018] font-black text-2xl tracking-tighter">{phone}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Mail /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Email phản hồi:</b>
-                                        <p className="text-gray-900 font-bold">contact@quanghuong.com</p>
+                                        <p className="text-gray-900 font-bold">{email}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Clock /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Thời gian phục vụ:</b>
-                                        <p className="text-gray-900 font-bold">8:00 - 21:00 (Tất cả các ngày trong tuần)</p>
+                                        <p className="text-gray-900 font-bold">{workingHours}</p>
                                     </div>
                                 </div>
                             </div>

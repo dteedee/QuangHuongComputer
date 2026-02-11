@@ -4,11 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Catalog.Infrastructure.Data;
 
+/// <summary>
+/// Seeder dữ liệu cho module Catalog
+/// </summary>
 public static class CatalogDbSeeder
 {
+    /// <summary>
+    /// Seed dữ liệu cho database Catalog
+    /// </summary>
+    /// <param name="context">Context cơ sở dữ liệu Catalog</param>
     public static async Task SeedAsync(CatalogDbContext context)
     {
-        // Check if our specific Vietnamese categories exist, if not, we re-seed
+        // Kiểm tra các danh mục tiếng Việt đã tồn tại chưa, nếu chưa thì thực hiện lại seeding
         if (await context.Categories.AnyAsync(c => c.Name == "Laptop - Máy Tính Xách Tay"))
         {
             Console.WriteLine("DEBUG SEEDER: Categories exist.");

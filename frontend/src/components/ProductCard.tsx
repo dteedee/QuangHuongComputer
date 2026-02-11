@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, PackageCheck, MapPin, Cpu } from 'lucide-react';
+import { ShoppingCart, Star, PackageCheck, MapPin, Cpu, Minus, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../utils/format';
 
@@ -211,6 +211,7 @@ const ProductHoverPopup = ({
 
 export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
+    const [quantity, setQuantity] = useState(1);
     const [showPopup, setShowPopup] = useState(false);
     const [cardRect, setCardRect] = useState<DOMRect | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -318,7 +319,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
                     {/* Product Image Area */}
                     <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 flex items-center justify-center p-1">
                             {product.imageUrl ? (
                                 <img
                                     src={product.imageUrl}
@@ -364,13 +365,44 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                     {product.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'}
                                 </span>
 
-                                <button
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
-                                    className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-[#D70018] hover:text-white transition-all active:scale-95"
-                                    title="Thêm vào giỏ hàng"
-                                >
-                                    <ShoppingCart size={18} />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    {/* Quantity Selector */}
+                                    <div
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        className="flex items-center bg-gray-100 rounded-lg p-0.5 mr-1"
+                                    >
+                                        <button
+                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            disabled={quantity <= 1}
+                                        >
+                                            <Minus size={12} />
+                                        </button>
+                                        <span className="w-6 text-center text-xs font-bold text-gray-800">{quantity}</span>
+                                        <button
+                                            onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
+                                            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            disabled={quantity >= product.stockQuantity}
+                                        >
+                                            <Plus size={12} />
+                                        </button>
+                                    </div>
+
+                                    {/* Add to Cart Button */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            addToCart(product, quantity);
+                                            setQuantity(1); // Reset interaction
+                                        }}
+                                        className="w-8 h-8 flex items-center justify-center bg-[#D70018] text-white rounded-lg hover:bg-[#b5001a] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={product.stockQuantity === 0}
+                                        title="Thêm vào giỏ hàng"
+                                    >
+                                        <ShoppingCart size={16} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

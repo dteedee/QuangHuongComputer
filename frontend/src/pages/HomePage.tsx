@@ -18,22 +18,64 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
+import { catalogApi, type Category } from '../api/catalog';
+import { useState, useEffect } from 'react';
 
 export const HomePage = () => {
     const { data: products, isLoading, error } = useProducts();
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryIds, setCategoryIds] = useState<{
+        laptop?: string;
+        gaming?: string;
+        components?: string;
+    }>({});
 
-    const categories = [
-        { icon: <Laptop size={16} />, name: 'Laptop - Máy Tính Xách Tay', link: '/products?category=laptop' },
-        { icon: <Gamepad size={16} />, name: 'Máy Tính Chơi Game', link: '/products?category=pc-gaming' },
-        { icon: <Server size={16} />, name: 'Máy Tính Đồ Họa', link: '/products?category=workstation' },
-        { icon: <Monitor size={16} />, name: 'Màn Hình Máy Tính', link: '/products?category=monitor' },
-        { icon: <Cpu size={16} />, name: 'Linh Kiện Máy Tính', link: '/products?category=components' },
-        { icon: <MousePointer2 size={16} />, name: 'Phím, Chuột - Gaming Gear', link: '/products?category=gear' },
-        { icon: <Wifi size={16} />, name: 'Thiết Bị Mạng', link: '/products?category=network' },
-        { icon: <Camera size={16} />, name: 'Camera', link: '/products?category=camera' },
-        { icon: <Speaker size={16} />, name: 'Loa, Mic, Webcam, Stream', link: '/products?category=audio' },
-        { icon: <Headset size={16} />, name: 'Phụ Kiện Máy Tính', link: '/products?category=accessories' },
-    ];
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await catalogApi.getCategories();
+                // Filter only active categories
+                const activeCategories = data.filter(c => c.isActive);
+                setCategories(activeCategories);
+                
+                // Find category IDs for each section
+                const categoryMap = {
+                    laptop: activeCategories.find(c => 
+                        c.name.toLowerCase().includes('laptop') || 
+                        c.name.toLowerCase().includes('máy tính xách tay')
+                    )?.id,
+                    gaming: activeCategories.find(c => 
+                        c.name.toLowerCase().includes('gaming') || 
+                        c.name.toLowerCase().includes('game') ||
+                        c.name.toLowerCase().includes('pc gaming')
+                    )?.id,
+                    components: activeCategories.find(c => 
+                        c.name.toLowerCase().includes('linh kiện') || 
+                        c.name.toLowerCase().includes('component')
+                    )?.id
+                };
+                setCategoryIds(categoryMap);
+            } catch (err) {
+                console.error('Failed to fetch categories', err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    const getCategoryIcon = (name: string) => {
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('laptop')) return <Laptop size={16} />;
+        if (lowerName.includes('game') || lowerName.includes('gaming')) return <Gamepad size={16} />;
+        if (lowerName.includes('workstation') || lowerName.includes('đồ họa')) return <Server size={16} />;
+        if (lowerName.includes('màn') || lowerName.includes('monitor')) return <Monitor size={16} />;
+        if (lowerName.includes('linh kiện') || lowerName.includes('cpu') || lowerName.includes('ram')) return <Cpu size={16} />;
+        if (lowerName.includes('phím') || lowerName.includes('chuột') || lowerName.includes('gear')) return <MousePointer2 size={16} />;
+        if (lowerName.includes('mạng') || lowerName.includes('wifi')) return <Wifi size={16} />;
+        if (lowerName.includes('camera') || lowerName.includes('cam')) return <Camera size={16} />;
+        if (lowerName.includes('loa') || lowerName.includes('âm thanh') || lowerName.includes('mic')) return <Speaker size={16} />;
+        if (lowerName.includes('phụ kiện') || lowerName.includes('tai nghe')) return <Headset size={16} />;
+        return <Wrench size={16} />;
+    };
 
     // Banner slides với hình ảnh thật
     const heroSlides = [
@@ -153,29 +195,30 @@ export const HomePage = () => {
             <div className="max-w-[1400px] mx-auto px-4 pt-6 relative z-10">
                 <div className="grid lg:grid-cols-4 gap-6">
                     {/* Left Categories Sidebar */}
+                    {/* Left Categories Sidebar - Fixed Height matching Slider */}
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="hidden lg:block bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-red-200 overflow-hidden shadow-xl h-fit"
+                        className="hidden lg:flex flex-col bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-red-200 overflow-hidden shadow-xl h-[500px]"
                     >
-                        <div className="bg-gradient-to-r from-red-600 to-amber-600 text-white px-4 py-3">
+                        <div className="bg-gradient-to-r from-red-600 to-amber-600 text-white px-4 py-3 flex-shrink-0">
                             <h3 className="font-black uppercase text-sm tracking-wider flex items-center gap-2">
                                 <Gift size={18} />
                                 DANH MỤC SẢN PHẨM
                             </h3>
                         </div>
-                        <div className="py-2">
-                            {categories.map((cat, i) => (
+                        <div className="py-2 flex-1 overflow-y-auto custom-scrollbar">
+                            {categories.map((cat) => (
                                 <Link
-                                    key={i}
-                                    to={cat.link}
+                                    key={cat.id}
+                                    to={`/products?category=${cat.id}`}
                                     className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-amber-50 hover:text-[#D70018] transition-all group border-l-4 border-transparent hover:border-[#D70018]"
                                 >
                                     <span className="text-gray-400 group-hover:text-[#D70018] transition-colors">
-                                        {cat.icon}
+                                        {getCategoryIcon(cat.name)}
                                     </span>
-                                    <span className="flex-1">{cat.name}</span>
+                                    <span className="flex-1 line-clamp-1">{cat.name}</span>
                                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-[#D70018]" />
                                 </Link>
                             ))}
@@ -287,63 +330,68 @@ export const HomePage = () => {
                         </div>
 
                         {/* Promo Banners Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {[
-                                {
-                                    icon: <Gift size={32} />,
-                                    title: 'Quà Tặng Tết',
-                                    sub: 'Trị giá lên đến 5 triệu',
-                                    gradient: 'from-red-500 to-pink-600',
-                                    link: '/products'
-                                },
-                                {
-                                    icon: <Award size={32} />,
-                                    title: 'Trả Góp 0%',
-                                    sub: 'Duyệt nhanh 5 phút',
-                                    gradient: 'from-blue-500 to-cyan-600',
-                                    link: '/products'
-                                },
-                                {
-                                    icon: <Truck size={32} />,
-                                    title: 'Freeship Toàn Quốc',
-                                    sub: 'Đơn từ 500.000đ',
-                                    gradient: 'from-emerald-500 to-green-600',
-                                    link: '/products'
-                                }
-                            ].map((banner, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1 }}
-                                    whileHover={{ scale: 1.05, y: -5 }}
-                                >
-                                    <Link
-                                        to={banner.link}
-                                        className={`block bg-gradient-to-br ${banner.gradient} rounded-xl p-6 text-white shadow-lg hover:shadow-2xl transition-all group relative overflow-hidden`}
-                                    >
-                                        <motion.div
-                                            className="absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-opacity"
-                                            animate={{ rotate: [0, 10, 0] }}
-                                            transition={{ duration: 3, repeat: Infinity }}
-                                        >
-                                            {banner.icon}
-                                        </motion.div>
-                                        <div className="relative z-10">
-                                            <div className="mb-3">{banner.icon}</div>
-                                            <h4 className="text-xl font-black uppercase leading-tight">
-                                                {banner.title}
-                                            </h4>
-                                            <p className="text-sm font-semibold text-white/90 mt-1">
-                                                {banner.sub}
-                                            </p>
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            ))}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                            {/* Hidden logic required to ensure structure stays intact if referenced elsewhere, but effectively removed from here */}
                         </div>
                     </motion.div>
+                </div>
+
+                {/* Promo Banners Grid - Moved below Hero Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    {[
+                        {
+                            icon: <Gift size={32} />,
+                            title: 'Quà Tặng Tết',
+                            sub: 'Trị giá lên đến 5 triệu',
+                            gradient: 'from-red-500 to-pink-600',
+                            link: '/products'
+                        },
+                        {
+                            icon: <Award size={32} />,
+                            title: 'Trả Góp 0%',
+                            sub: 'Duyệt nhanh 5 phút',
+                            gradient: 'from-blue-500 to-cyan-600',
+                            link: '/products'
+                        },
+                        {
+                            icon: <Truck size={32} />,
+                            title: 'Freeship Toàn Quốc',
+                            sub: 'Đơn từ 500.000đ',
+                            gradient: 'from-emerald-500 to-green-600',
+                            link: '/products'
+                        }
+                    ].map((banner, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.1 }}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                        >
+                            <Link
+                                to={banner.link}
+                                className={`block bg-gradient-to-br ${banner.gradient} rounded-xl p-6 text-white shadow-lg hover:shadow-2xl transition-all group relative overflow-hidden`}
+                            >
+                                <motion.div
+                                    className="absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-opacity"
+                                    animate={{ rotate: [0, 10, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                >
+                                    {banner.icon}
+                                </motion.div>
+                                <div className="relative z-10">
+                                    <div className="mb-3">{banner.icon}</div>
+                                    <h4 className="text-xl font-black uppercase leading-tight">
+                                        {banner.title}
+                                    </h4>
+                                    <p className="text-sm font-semibold text-white/90 mt-1">
+                                        {banner.sub}
+                                    </p>
+                                </div>
+                            </Link>
+                        </motion.div>
+                    ))}
                 </div>
             </div>
 
@@ -394,10 +442,22 @@ export const HomePage = () => {
 
             {/* Product Categories Sections */}
             {[
-                { title: 'LAPTOP - MÁY TÍNH XÁCH TAY', filter: 'laptop', icon: <Laptop size={24} /> },
-                { title: 'PC GAMING - CHIẾN MỌI GAME', filter: 'gaming', icon: <Gamepad size={24} /> },
-                { title: 'LINH KIỆN MÁY TÍNH', filter: 'component', icon: <Cpu size={24} /> }
-            ].map((section, idx) => (
+                { title: 'LAPTOP - MÁY TÍNH XÁCH TAY', filter: 'laptop', icon: <Laptop size={24} />, categoryId: categoryIds.laptop },
+                { title: 'PC GAMING - CHIẾN MỌI GAME', filter: 'gaming', icon: <Gamepad size={24} />, categoryId: categoryIds.gaming },
+                { title: 'LINH KIỆN MÁY TÍNH', filter: 'linh kiện', icon: <Cpu size={24} />, categoryId: categoryIds.components }
+            ].filter(section => {
+                // For each section, check if there are products
+                if (section.categoryId) {
+                    // If we have a category ID, check products in that category
+                    return products?.some(p => p.categoryId === section.categoryId) ?? false;
+                } else {
+                    // For sections without specific category (should not happen with our current setup)
+                    // Fallback to filter keywords to ensure we don't break anything
+                    return products?.some(p => 
+                        p.name.toLowerCase().includes(section.filter)
+                    ) ?? false;
+                }
+            }).map((section, idx) => (
                 <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 50 }}
@@ -422,7 +482,20 @@ export const HomePage = () => {
                     <div className="bg-white rounded-b-2xl border-2 border-t-0 border-gray-200 p-6 shadow-lg">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                             {products
-                                ?.filter(p => p.name.toLowerCase().includes(section.filter))
+                                ?.filter(p => {
+                                    // Only show products from active categories
+                                    // Since we don't have isActive in product directly, we'll rely on category ID filtering
+                                    // and the fact that we only fetch active categories in useEffect
+            
+                                    if (section.categoryId) {
+                                        // Filter by category ID for sections that have it
+                                        return p.categoryId === section.categoryId;
+                                    } else {
+                                        // For fallback sections, filter by name but ensure it's not from inactive categories
+                                        // This is a limitation since we don't have category.isActive in product data
+                                        return p.name.toLowerCase().includes(section.filter);
+                                    }
+                                })
                                 .slice(0, 5)
                                 .map((product) => (
                                     <ProductCard key={product.id} product={product} />

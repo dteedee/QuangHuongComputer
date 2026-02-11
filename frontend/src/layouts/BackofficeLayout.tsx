@@ -45,7 +45,8 @@ export const BackofficeLayout = () => {
                 { title: 'Bán hàng (POS)', icon: <Store size={20} />, path: '/backoffice/pos', allowedRoles: ['Admin', 'Manager', 'Sale'] },
                 { title: 'Đơn hàng', icon: <Receipt size={20} />, path: '/backoffice/orders', allowedRoles: ['Admin', 'Manager', 'Sale'], badge: pendingCount > 0 ? pendingCount : 0 },
                 { title: 'Sản phẩm', icon: <Package size={20} />, path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'] },
-                { title: 'Kho hàng', icon: <Archive size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager'] },
+                { title: 'Danh mục & Hãng', icon: <Archive size={20} />, path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'] },
+                { title: 'Kho hàng', icon: <Box size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager'] },
             ]
         },
         {

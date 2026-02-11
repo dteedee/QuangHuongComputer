@@ -19,18 +19,21 @@ public static class InventoryEndpoints
     {
         var group = app.MapGroup("/api/inventory").RequireAuthorization();
 
-
         // Stock Management
         group.MapGet("/stock", async (InventoryDbContext db) =>
         {
             return await db.InventoryItems.ToListAsync();
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
 
         group.MapGet("/stock/{productId:guid}", async (Guid productId, InventoryDbContext db) =>
         {
             var item = await db.InventoryItems.FirstOrDefaultAsync(i => i.ProductId == productId);
             return item != null ? Results.Ok(item) : Results.NotFound();
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
 
         group.MapPut("/stock/{id:guid}/adjust", async (Guid id, int amount, string reason, InventoryDbContext db) =>
         {
@@ -38,10 +41,11 @@ public static class InventoryEndpoints
             if (item == null) return Results.NotFound();
 
             item.AdjustStock(amount, reason);
-            // In a real app, we'd log the reason to a StockMovement table
             await db.SaveChangesAsync();
             return Results.Ok(item);
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.AdjustStock));
 
         // Stock Reservations
         group.MapPost("/stock/{productId:guid}/reserve", async (Guid productId, ReserveStockDto dto, InventoryDbContext db) =>
@@ -72,7 +76,9 @@ public static class InventoryEndpoints
             {
                 return Results.BadRequest(new { error = ex.Message });
             }
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
 
         group.MapPost("/reservations/{referenceId}/fulfill", async (string referenceId, InventoryDbContext db) =>
         {
@@ -95,7 +101,9 @@ public static class InventoryEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, fulfilledCount = reservations.Count });
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
 
         group.MapPost("/reservations/{referenceId}/release", async (string referenceId, ReleaseReservationDto dto, InventoryDbContext db) =>
         {
@@ -118,13 +126,17 @@ public static class InventoryEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, releasedCount = reservations.Count });
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
 
         // Purchase Orders
         group.MapGet("/po", async (InventoryDbContext db) =>
         {
             return await db.PurchaseOrders.Include(p => p.Items).OrderByDescending(p => p.PONumber).ToListAsync();
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ViewPurchaseOrder));
 
         group.MapPost("/po", async (CreatePurchaseOrderDto dto, InventoryDbContext db) =>
         {
@@ -134,7 +146,9 @@ public static class InventoryEndpoints
             db.PurchaseOrders.Add(po);
             await db.SaveChangesAsync();
             return Results.Created($"/api/inventory/po/{po.Id}", po);
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
 
         group.MapPut("/po/{id:guid}/receive", async (Guid id, InventoryDbContext db) =>
         {
@@ -159,7 +173,9 @@ public static class InventoryEndpoints
             po.ReceiveAll();
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = "Items received and stock updated" });
-        });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType, 
+            BuildingBlocks.Security.Permissions.Inventory.ReceivePurchaseOrder));
 
         // Suppliers CRUD
         MapSupplierEndpoints(group);

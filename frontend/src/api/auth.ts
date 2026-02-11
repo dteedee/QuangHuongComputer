@@ -6,12 +6,14 @@ import client from './client';
 interface LoginRequest {
     email: string;
     password: string;
+    recaptchaToken?: string;
 }
 
 interface RegisterRequest {
     email: string;
     password: string;
     fullName: string;
+    recaptchaToken?: string;
 }
 
 interface AuthResponse {

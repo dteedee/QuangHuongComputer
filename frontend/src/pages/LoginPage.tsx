@@ -14,7 +14,7 @@ import { useRecaptcha } from '../hooks/useRecaptcha';
 import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 
 export const LoginPage = () => {
-    const { login } = useAuth();
+    const { login, loginWithGoogle } = useAuth();
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -24,15 +24,7 @@ export const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const { isLoaded, executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
-    const getRedirectPath = (roles: string[]) => {
-        if (roles.includes('Admin')) return '/backoffice/admin';
-        if (roles.includes('Manager')) return '/backoffice/manager';
-        if (roles.includes('Sale')) return '/backoffice/sale';
-        if (roles.includes('TechnicianInShop')) return '/backoffice/tech';
-        if (roles.includes('TechnicianOnSite')) return '/backoffice/tech';
-        if (roles.includes('Accountant')) return '/backoffice/accounting';
-        if (roles.includes('Supplier')) return '/backoffice/inventory';
-        if (roles.includes('Customer')) return '/profile';
+    const getRedirectPath = (_roles: string[]) => {
         return '/';
     };
 
@@ -44,12 +36,6 @@ export const LoginPage = () => {
             const recaptchaToken = await executeRecaptcha(RECAPTCHA_ACTIONS.LOGIN);
 
             await login(data.email, data.password, recaptchaToken);
-            // Login function updates AuthContext, but we might need to get the user data directly from the response 
-            // OR rely on the fact that 'user' in context will be updated. 
-            // However, context update might be async or not immediate enough for next line if we rely on 'user' from useAuth().
-            // Ideally, 'login' should return the user object or we fetch it.
-            // Looking at AuthContext, login throws if failed, but doesn't return data.
-            // Let's rely on reading localStorage which AuthContext sets synchronously before resolving.
 
             const savedUser = localStorage.getItem('user');
             const userObj = savedUser ? JSON.parse(savedUser) : null;
@@ -57,7 +43,7 @@ export const LoginPage = () => {
 
             navigate(getRedirectPath(roles));
         } catch (error: any) {
-            setLoginError('Tài khoản hoặc mật khẩu không chính xác');
+            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Tài khoản hoặc mật khẩu không chính xác');
         } finally {
             setIsLoading(false);
         }
@@ -68,15 +54,16 @@ export const LoginPage = () => {
         setIsLoading(true);
         try {
             const idToken = credentialResponse.credential;
-            const response = await client.post('/auth/google', { idToken });
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            await loginWithGoogle(idToken);
 
-            const roles = response.data.user.roles || [];
+            const savedUser = localStorage.getItem('user');
+            const userObj = savedUser ? JSON.parse(savedUser) : null;
+            const roles = userObj?.roles || [];
+
             navigate(getRedirectPath(roles));
         } catch (error) {
             console.error("Google Login Failed", error);
-            setLoginError('Đăng nhập Google thất bại');
+            setLoginError((error as any).response?.data?.error || (error as any).response?.data?.Error || 'Đăng nhập Google thất bại');
         } finally {
             setIsLoading(false);
         }

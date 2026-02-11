@@ -546,6 +546,8 @@ public static class CatalogEndpoints
                 return Results.NotFound(new { Error = "Category not found" });
 
             category.UpdateDetails(model.Name, model.Description);
+            if (model.IsActive.HasValue) { if (model.IsActive.Value) category.Activate(); else category.Deactivate(); }
+            
             await db.SaveChangesAsync();
 
             // Invalidate caches
@@ -565,15 +567,15 @@ public static class CatalogEndpoints
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
-        // Delete Category
-        group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache) =>
+        // Deactivate Category (Soft Delete)
+        group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var category = await db.Categories.FindAsync(id);
             if (category == null)
                 return Results.NotFound(new { Error = "Category not found" });
 
-            category.IsActive = false;
-            category.UpdatedAt = DateTime.UtcNow;
+            var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "Admin";
+            category.Deactivate(userId);
 
             // High-performance cascading deactivation
             await db.Products
@@ -583,11 +585,33 @@ public static class CatalogEndpoints
 
             await db.SaveChangesAsync();
 
+            // Log Audit
+            await httpContext.LogAuditAsync("Deactivate", "Category", id.ToString(), $"Name: {category.Name}");
+
             // Invalidate caches
             await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Category and associated products deactivated" });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        // Activate Category
+        group.MapPost("/categories/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache) =>
+        {
+            var category = await db.Categories.FindAsync(id);
+            if (category == null)
+                return Results.NotFound(new { Error = "Category not found" });
+
+            category.Activate();
+
+            // Note: Products remain deactivated until manually activated or recreated
+            await db.SaveChangesAsync();
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
+
+            return Results.Ok(new { Message = "Category activated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Brand
@@ -598,6 +622,8 @@ public static class CatalogEndpoints
                 return Results.NotFound(new { Error = "Brand not found" });
 
             brand.UpdateDetails(model.Name, model.Description);
+            if (model.IsActive.HasValue) { if (model.IsActive.Value) brand.Activate(); else brand.Deactivate(); }
+            
             await db.SaveChangesAsync();
 
             // Invalidate caches
@@ -617,15 +643,15 @@ public static class CatalogEndpoints
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
-        // Delete Brand
-        group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache) =>
+        // Deactivate Brand (Soft Delete)
+        group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var brand = await db.Brands.FindAsync(id);
             if (brand == null)
                 return Results.NotFound(new { Error = "Brand not found" });
 
-            brand.IsActive = false;
-            brand.UpdatedAt = DateTime.UtcNow;
+            var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "Admin";
+            brand.Deactivate(userId);
 
             // High-performance cascading deactivation for brands
             await db.Products
@@ -635,11 +661,33 @@ public static class CatalogEndpoints
 
             await db.SaveChangesAsync();
 
+            // Log Audit
+            await httpContext.LogAuditAsync("Deactivate", "Brand", id.ToString(), $"Name: {brand.Name}");
+
             // Invalidate caches
             await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Brand and associated products deactivated" });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        // Activate Brand
+        group.MapPost("/brands/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache) =>
+        {
+            var brand = await db.Brands.FindAsync(id);
+            if (brand == null)
+                return Results.NotFound(new { Error = "Brand not found" });
+
+            brand.Activate();
+
+            // Note: Products remain deactivated until manually activated or recreated
+            await db.SaveChangesAsync();
+
+            // Invalidate caches
+            await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
+
+            return Results.Ok(new { Message = "Brand activated" });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Seed Data Endpoint (Development only)
@@ -1082,6 +1130,6 @@ public record UpdateProductDto(
 public record CreateCategoryDto(string Name, string Description);
 
 public record CreateProductReviewDto(int Rating, string Comment, string? Title = null);
-public record UpdateCategoryDto(string Name, string Description);
+public record UpdateCategoryDto(string Name, string Description, bool? IsActive = null);
 public record CreateBrandDto(string Name, string Description);
-public record UpdateBrandDto(string Name, string Description);
+public record UpdateBrandDto(string Name, string Description, bool? IsActive = null);

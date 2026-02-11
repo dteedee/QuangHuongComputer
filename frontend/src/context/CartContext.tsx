@@ -123,8 +123,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             toast.success(`Đã thêm ${product.name} vào giỏ hàng`, {
                 style: { borderRadius: '15px' }
             });
-        } catch (error) {
-            toast.error('Không thể thêm sản phẩm vào giỏ hàng');
+        } catch (error: any) {
+            console.error('Add to cart failed:', error);
+            const errorMessage = error?.response?.data?.Error || error?.response?.data?.error || 'Không thể thêm sản phẩm vào giỏ hàng';
+            toast.error(errorMessage);
         }
     };
 

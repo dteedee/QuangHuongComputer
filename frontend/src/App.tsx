@@ -19,6 +19,8 @@ import { ChatSupport } from './components/ChatSupport';
 import { RootLayout } from './layouts/RootLayout';
 import { HomePage } from './pages/HomePage';
 import { ProfilePage } from './pages/ProfilePage';
+import { RecruitmentPage } from './pages/RecruitmentPage';
+import { JobDetailPage } from './pages/JobDetailPage';
 import { CategoryPage } from './pages/CategoryPage';
 import { BackofficeLayout } from './layouts/BackofficeLayout';
 import { CommonDashboard } from './pages/backoffice/CommonDashboard';
@@ -27,6 +29,7 @@ import { TechPortal } from './pages/backoffice/tech/TechPortal';
 import { AccountingPortal } from './pages/backoffice/accountant/AccountingPortal';
 import { InventoryPortal } from './pages/backoffice/inventory/InventoryPortal';
 import { HRPortal } from './pages/backoffice/hr/HRPortal';
+import { RecruitmentManagement } from './pages/backoffice/hr/RecruitmentManagement';
 import { ManagerPortal } from './pages/backoffice/manager/ManagerPortal';
 import { AdminPortal } from './pages/backoffice/admin/AdminPortal';
 import { WarrantyPortal } from './pages/backoffice/WarrantyPortal';
@@ -35,6 +38,7 @@ import { ReportsPortal } from './pages/backoffice/ReportsPortal';
 import { ConfigPortal } from './pages/backoffice/ConfigPortal';
 import { AdminProductsPage } from './pages/admin/ProductsPage';
 import { AdminOrdersPage } from './pages/admin/OrdersPage';
+import { CategoriesPage } from './pages/admin/CategoriesPage';
 import { PermissionsPage as RolesPage } from './pages/backoffice/admin/PermissionsPage';
 import { UsersPage as AdminUsersPage } from './pages/backoffice/admin/UsersPage';
 import { CartPage } from './pages/CartPage';
@@ -51,6 +55,7 @@ import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import POSPage from './pages/backoffice/sale/POSPage';
+import { ScrollToTop } from './components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -64,6 +69,7 @@ function App() {
         <Toaster position="top-right" reverseOrder={false} />
 
         <BrowserRouter>
+          <ScrollToTop />
           <AuthProvider>
             <CartProvider>
               <Routes>
@@ -83,6 +89,8 @@ function App() {
                   <Route path="products/:id" element={<ProductDetailPage />} />
                   <Route path="catalog" element={<ProductCatalogPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+                  <Route path="recruitment" element={<RecruitmentPage />} />
+                  <Route path="recruitment/:id" element={<JobDetailPage />} />
 
                   {/* Account Routes */}
                   <Route path="account/orders" element={<OrdersPage />} />
@@ -117,12 +125,14 @@ function App() {
                     <Route path="inventory" element={<InventoryPortal />} />
                     <Route path="accounting" element={<AccountingPortal />} />
                     <Route path="hr" element={<HRPortal />} />
+                    <Route path="hr/recruitment" element={<RecruitmentManagement />} />
                     <Route path="warranty" element={<WarrantyPortal />} />
                     <Route path="cms" element={<CMSPortal />} />
                     <Route path="reports" element={<ReportsPortal />} />
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="roles" element={<RolesPage />} />
                     <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="categories" element={<CategoriesPage />} />
                     <Route path="orders" element={<AdminOrdersPage />} />
                     <Route path="config" element={<ConfigPortal />} />
                     <Route path="admin" element={<AdminPortal />} />

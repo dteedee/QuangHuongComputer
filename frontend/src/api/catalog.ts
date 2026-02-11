@@ -78,6 +78,8 @@ export interface Category {
     isActive: boolean;
     createdAt: string;
     updatedAt?: string;
+    deactivatedAt?: string;
+    deactivatedBy?: string;
 }
 
 export interface Brand {
@@ -87,6 +89,8 @@ export interface Brand {
     isActive: boolean;
     createdAt: string;
     updatedAt?: string;
+    deactivatedAt?: string;
+    deactivatedBy?: string;
 }
 
 export interface ProductsResponse {
@@ -242,7 +246,7 @@ export const catalogApi = {
         return response.data;
     },
 
-    updateCategory: async (id: string, data: { name: string; description: string }) => {
+    updateCategory: async (id: string, data: { name: string; description: string; isActive?: boolean }) => {
         const response = await client.put<{ message: string; category: Category }>(
             `/catalog/categories/${id}`,
             data
@@ -251,7 +255,11 @@ export const catalogApi = {
     },
 
     deleteCategory: async (id: string) => {
-        const response = await client.delete<{ message: string }>(`/catalog/categories/${id}`);
+        // Instead of hard delete, just deactivate the category
+        const response = await client.put<{ message: string; category: Category }>(
+            `/catalog/categories/${id}`,
+            { isActive: false }
+        );
         return response.data;
     },
 
@@ -269,7 +277,7 @@ export const catalogApi = {
         return response.data;
     },
 
-    updateBrand: async (id: string, data: { name: string; description: string }) => {
+    updateBrand: async (id: string, data: { name: string; description: string; isActive?: boolean }) => {
         const response = await client.put<{ message: string; brand: Brand }>(
             `/catalog/brands/${id}`,
             data
@@ -278,7 +286,25 @@ export const catalogApi = {
     },
 
     deleteBrand: async (id: string) => {
-        const response = await client.delete<{ message: string }>(`/catalog/brands/${id}`);
+        // Instead of hard delete, just deactivate the brand
+        const response = await client.put<{ message: string; brand: Brand }>(
+            `/catalog/brands/${id}`,
+            { isActive: false }
+        );
+        return response.data;
+    },
+
+    activateCategory: async (id: string) => {
+        const response = await client.post<{ message: string; category: Category }>(
+            `/catalog/categories/${id}/activate`
+        );
+        return response.data;
+    },
+
+    activateBrand: async (id: string) => {
+        const response = await client.post<{ message: string; brand: Brand }>(
+            `/catalog/brands/${id}/activate`
+        );
         return response.data;
     },
 

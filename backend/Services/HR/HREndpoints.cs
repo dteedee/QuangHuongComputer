@@ -15,6 +15,21 @@ public static class HREndpoints
     {
         var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
 
+        // ==================== PUBLIC RECRUITMENT ====================
+        app.MapGet("/api/recruitment", async (HRDbContext db) =>
+        {
+            return await db.JobListings
+                .Where(j => j.Status == JobStatus.Active && j.ExpiryDate > DateTime.UtcNow)
+                .OrderByDescending(j => j.CreatedAt)
+                .ToListAsync();
+        });
+
+        app.MapGet("/api/recruitment/{id:guid}", async (Guid id, HRDbContext db) =>
+        {
+            var job = await db.JobListings.FindAsync(id);
+            return job != null ? Results.Ok(job) : Results.NotFound();
+        });
+
         // ==================== EMPLOYEE MANAGEMENT ====================
 
         group.MapGet("/employees", async (HRDbContext db) =>
@@ -297,7 +312,6 @@ public static class HREndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = $"Payroll for {dto.Month}/{dto.Year} generated for {count} employees" });
         });
-
         group.MapPut("/payroll/{id:guid}/pay", async (Guid id, HRDbContext db) =>
         {
             var payroll = await db.Payrolls.FindAsync(id);
@@ -315,6 +329,65 @@ public static class HREndpoints
             payroll.MarkAsPaid();
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = "Payroll marked as paid" });
+        });
+
+        // ==================== RECRUITMENT MANAGEMENT (ADMIN) ====================
+        group.MapGet("/recruitment", async (HRDbContext db) =>
+        {
+            return await db.JobListings.OrderByDescending(j => j.CreatedAt).ToListAsync();
+        });
+
+        group.MapPost("/recruitment", async (CreateJobListingDto dto, HRDbContext db) =>
+        {
+            var job = new JobListing(
+                dto.Title,
+                dto.Description,
+                dto.Requirements,
+                dto.Benefits,
+                dto.Department,
+                dto.Location,
+                dto.JobType,
+                dto.ExpiryDate,
+                dto.SalaryRangeMin,
+                dto.SalaryRangeMax
+            );
+
+            db.JobListings.Add(job);
+            await db.SaveChangesAsync();
+            return Results.Created($"/api/recruitment/{job.Id}", job);
+        });
+
+        group.MapPut("/recruitment/{id:guid}", async (Guid id, UpdateJobListingDto dto, HRDbContext db) =>
+        {
+            var job = await db.JobListings.FindAsync(id);
+            if (job == null) return Results.NotFound();
+
+            job.Update(
+                dto.Title,
+                dto.Description,
+                dto.Requirements,
+                dto.Benefits,
+                dto.Department,
+                dto.Location,
+                dto.JobType,
+                dto.ExpiryDate,
+                dto.SalaryRangeMin,
+                dto.SalaryRangeMax,
+                dto.Status
+            );
+
+            await db.SaveChangesAsync();
+            return Results.Ok(job);
+        });
+
+        group.MapDelete("/recruitment/{id:guid}", async (Guid id, HRDbContext db) =>
+        {
+            var job = await db.JobListings.FindAsync(id);
+            if (job == null) return Results.NotFound();
+
+            db.JobListings.Remove(job);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { Message = "Job listing deleted" });
         });
     }
 }
@@ -370,4 +443,31 @@ public record RejectTimesheetDto(
 public record GeneratePayrollDto(
     int Month,
     int Year
+);
+
+public record CreateJobListingDto(
+    string Title,
+    string Description,
+    string Requirements,
+    string Benefits,
+    string Department,
+    string Location,
+    string JobType,
+    DateTime ExpiryDate,
+    decimal? SalaryRangeMin,
+    decimal? SalaryRangeMax
+);
+
+public record UpdateJobListingDto(
+    string Title,
+    string Description,
+    string Requirements,
+    string Benefits,
+    string Department,
+    string Location,
+    string JobType,
+    DateTime ExpiryDate,
+    decimal? SalaryRangeMin,
+    decimal? SalaryRangeMax,
+    JobStatus Status
 );

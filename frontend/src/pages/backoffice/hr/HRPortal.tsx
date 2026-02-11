@@ -1,8 +1,9 @@
 ﻿import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Users2, CreditCard, Calendar, BarChart,
     UserPlus, CheckCircle,
-    UserCheck, Loader2, X, Check
+    UserCheck, Loader2, X, Check, Briefcase
 } from 'lucide-react';
 import { hrApi, type Employee, type Payroll } from '../../../api/hr';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -75,6 +76,13 @@ export const HRPortal = () => {
                     </p>
                 </div>
                 <div className="flex gap-4">
+                    <Link
+                        to="/backoffice/hr/recruitment"
+                        className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-gray-200 hover:bg-gray-800 transition-all active:scale-95 group"
+                    >
+                        <Briefcase size={18} className="group-hover:scale-110 transition-transform" />
+                        Quản lý tuyển dụng
+                    </Link>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 group"

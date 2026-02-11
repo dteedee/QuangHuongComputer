@@ -65,6 +65,23 @@ export interface PayrollsResponse {
     pageSize: number;
 }
 
+export interface JobListing {
+    id: string;
+    title: string;
+    description: string;
+    requirements: string;
+    benefits: string;
+    department: string;
+    location: string;
+    jobType: string;
+    salaryRangeMin?: number;
+    salaryRangeMax?: number;
+    expiryDate: string;
+    status: 'Draft' | 'Active' | 'Closed' | 'Archived';
+    createdAt: string;
+    updatedAt?: string;
+}
+
 export const hrApi = {
     // Employee APIs
     getEmployees: async (page: number = 1, pageSize: number = 15, params?: any) => {
@@ -145,6 +162,32 @@ export const hrApi = {
     },
     markPayrollPaid: async (id: string) => {
         const response = await client.put<any>(`/hr/payroll/${id}/pay`);
+        return response.data;
+    },
+
+    // Recruitment APIs
+    getPublicJobListings: async () => {
+        const response = await client.get<JobListing[]>('/recruitment');
+        return response.data;
+    },
+    getPublicJobDetail: async (id: string) => {
+        const response = await client.get<JobListing>(`/recruitment/${id}`);
+        return response.data;
+    },
+    getAdminJobListings: async () => {
+        const response = await client.get<JobListing[]>('/hr/recruitment');
+        return response.data;
+    },
+    createJobListing: async (data: Partial<JobListing>) => {
+        const response = await client.post<JobListing>('/hr/recruitment', data);
+        return response.data;
+    },
+    updateJobListing: async (id: string, data: Partial<JobListing>) => {
+        const response = await client.put<JobListing>(`/hr/recruitment/${id}`, data);
+        return response.data;
+    },
+    deleteJobListing: async (id: string) => {
+        const response = await client.delete(`/hr/recruitment/${id}`);
         return response.data;
     }
 };

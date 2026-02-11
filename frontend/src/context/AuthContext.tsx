@@ -6,6 +6,7 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (email: string, password: string, recaptchaToken?: string) => Promise<void>;
+    loginWithGoogle: (idToken: string) => Promise<void>;
     register: (email: string, password: string, fullName: string, recaptchaToken?: string) => Promise<void>;
     logout: () => Promise<void>;
     isAuthenticated: boolean;
@@ -46,6 +47,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const loginWithGoogle = async (idToken: string) => {
+        try {
+            const data = await authApi.googleLogin(idToken);
+
+            setToken(data.token);
+            setUser(data.user);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            toast.success(`Đăng nhập Google thành công! Chào ${data.user.fullName}`, {
+                icon: '🚀',
+                style: { borderRadius: '15px', fontWeight: 'bold' }
+            });
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Đăng nhập Google thất bại');
+            throw error;
+        }
+    };
+
     const register = async (email: string, password: string, fullName: string, recaptchaToken?: string) => {
         try {
             await authApi.register({ email, password, fullName, recaptchaToken });
@@ -78,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token, hasPermission }}>
+        <AuthContext.Provider value={{ user, token, login, loginWithGoogle, register, logout, isAuthenticated: !!token, hasPermission }}>
             {children}
         </AuthContext.Provider>
     );

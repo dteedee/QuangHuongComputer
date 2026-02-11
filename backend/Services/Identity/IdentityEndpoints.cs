@@ -66,49 +66,58 @@ public static class IdentityEndpoints
                 }
 
                 var user = await userManager.FindByEmailAsync(model.Email);
-                if (user != null && user.IsActive && await userManager.CheckPasswordAsync(user, model.Password))
+                if (user == null)
                 {
-                    // Reset rate limit on successful login
-                    await rateLimitService.ResetAsync(rateLimitKey);
-                    var roles = await userManager.GetRolesAsync(user);
-                    var roleClaims = new List<Claim>();
-                    foreach (var roleName in roles)
-                    {
-                        var role = await roleManager.FindByNameAsync(roleName);
-                        if (role != null)
-                        {
-                            roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
-                        }
-                    }
-
-                    var jwtId = Guid.NewGuid().ToString();
-                    var token = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
-                    var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
-
-                    // Generate refresh token with IP tracking
-                    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                    var refreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
-
-                    var response = new LoginResponseDto
-                    {
-                        Token = token,
-                        RefreshToken = refreshToken.Token,
-                        User = new UserInfoDto
-                        {
-                            Email = user.Email ?? string.Empty,
-                            FullName = user.FullName,
-                            Roles = roles.ToList(),
-                            Permissions = permissions
-                        }
-                    };
-
-                    return Results.Ok(response);
+                    return Results.BadRequest(new { Error = "User not found" });
                 }
 
-                // Increment failed login attempts
-                await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(10));
+                if (!user.IsActive)
+                {
+                    return Results.BadRequest(new { Error = "User account is inactive" });
+                }
 
-                return Results.Unauthorized();
+                if (!await userManager.CheckPasswordAsync(user, model.Password))
+                {
+                    // Log attempt for security auditing
+                    await rateLimitService.IncrementAsync(rateLimitKey, TimeSpan.FromMinutes(10));
+                    return Results.BadRequest(new { Error = "Invalid password" });
+                }
+
+                // Reset rate limit on successful login
+                await rateLimitService.ResetAsync(rateLimitKey);
+                var roles = await userManager.GetRolesAsync(user);
+                var roleClaims = new List<Claim>();
+                foreach (var roleName in roles)
+                {
+                    var role = await roleManager.FindByNameAsync(roleName);
+                    if (role != null)
+                    {
+                        roleClaims.AddRange(await roleManager.GetClaimsAsync(role));
+                    }
+                }
+
+                var jwtId = Guid.NewGuid().ToString();
+                var token = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
+                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+
+                // Generate refresh token with IP tracking
+                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var refreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
+
+                var response = new LoginResponseDto
+                {
+                    Token = token,
+                    RefreshToken = refreshToken.Token,
+                    User = new UserInfoDto
+                    {
+                        Email = user.Email ?? string.Empty,
+                        FullName = user.FullName,
+                        Roles = roles.ToList(),
+                        Permissions = permissions
+                    }
+                };
+
+                return Results.Ok(response);
             }
             catch (Exception ex)
             {
@@ -563,27 +572,33 @@ public static class IdentityEndpoints
                 return Results.Ok(new { Message = "If the email exists, a password reset link has been sent." });
             }
 
-            // Generate a unique token
-            var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            // Generate a 6-digit numeric OTP
+            var random = new Random();
+            var token = random.Next(100000, 999999).ToString();
+            
+            // For security, if there's an existing unused token for this user, invalidate it
+            await dbContext.PasswordResetTokens
+                .Where(rt => rt.UserId == user.Id && !rt.IsUsed)
+                .ExecuteUpdateAsync(s => s.SetProperty(rt => rt.IsUsed, true));
 
             var resetToken = new PasswordResetToken
             {
                 UserId = user.Id,
                 Token = token,
-                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15), // Shorter expiry for OTP
                 IsUsed = false
             };
 
             dbContext.PasswordResetTokens.Add(resetToken);
             await dbContext.SaveChangesAsync();
 
-            // Send email with reset link
+            // Send email with reset link and code
             var frontendUrl = configuration["Frontend:Url"] ?? "http://localhost:5173";
-            var resetLink = $"{frontendUrl}/reset-password?token={token}";
+            var resetLink = $"{frontendUrl}/reset-password"; // No token in URL for security
 
             try
             {
-                await emailService.SendPasswordResetEmailAsync(user.Email!, resetLink);
+                await emailService.SendPasswordResetEmailAsync(user.Email!, token);
             }
             catch (Exception ex)
             {

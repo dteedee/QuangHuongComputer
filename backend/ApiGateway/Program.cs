@@ -29,6 +29,7 @@ using HR.Infrastructure;
 using SystemConfig.Infrastructure;
 using SystemConfig.Infrastructure.Data;
 using BuildingBlocks.Messaging.Outbox;
+using System.Globalization;
 using BuildingBlocks.Security;
 using BuildingBlocks.Email;
 using BuildingBlocks.Caching;
@@ -41,6 +42,8 @@ using ApiGateway;
 using Content.Infrastructure.Data;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 using DotNetEnv;
 
 Env.TraversePath().Load();
@@ -48,6 +51,10 @@ Env.TraversePath().Load();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Vietnamese culture for the application
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("vi-VN");
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -125,6 +132,27 @@ builder.Services.AddCors(options =>
 // REDIS CACHING CONFIGURATION
 // ========================================
 builder.Services.AddRedisCache(builder.Configuration);
+
+// ========================================
+// LOCALIZATION CONFIGURATION
+// ========================================
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[]
+    {
+        new CultureInfo("vi-VN"),
+        new CultureInfo("en-US")
+    };
+
+    options.DefaultRequestCulture = new RequestCulture("vi-VN");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
@@ -234,6 +262,56 @@ if (app.Environment.IsDevelopment())
             }
         }
 
+        // Hotfix: Manually update Sales Schema content
+        try
+        {
+            using (var salesScope = app.Services.CreateScope())
+            {
+                var salesContext = salesScope.ServiceProvider.GetRequiredService<SalesDbContext>();
+                logger.LogInformation("Updating Sales Schema manually...");
+                
+                await salesContext.Database.ExecuteSqlRawAsync(@"
+                    DO $$
+                    BEGIN
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""CouponCode"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""TaxRate"" numeric(5,4) DEFAULT 0.1;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""ShippingAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""CreatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""Carts"" ADD COLUMN ""UpdatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                    END $$;
+                ");
+            }
+        }
+        catch (Exception ex)
+        {
+             logger.LogError(ex, "Sales Schema Update failed");
+        }
+
         // ── Contexts WITHOUT migrations – use EnsureCreated ──
         var ensureCreatedContexts = new DbContext[]
         {
@@ -298,10 +376,26 @@ if (app.Environment.IsDevelopment())
         {
             logger.LogError(ex, "Identity seeding failed");
         }
+
+        // Add HR Seeding
+        try
+        {
+            await HRDbSeeder.SeedAsync(services.GetRequiredService<HRDbContext>());
+            logger.LogInformation("HR seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "HR seeding failed");
+        }
     }
 }
 
 app.UseCors();
+
+// Configure localization
+var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
+app.UseRequestLocalization(localizationOptions);
+
 app.UseHttpsRedirection();
 
 // Ensure wwwroot/uploads exists

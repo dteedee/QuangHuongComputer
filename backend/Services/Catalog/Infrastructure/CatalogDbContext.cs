@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Catalog.Domain;
+using Catalog.Infrastructure.Data.Configurations;
 using BuildingBlocks.Database;
 
 namespace Catalog.Infrastructure;

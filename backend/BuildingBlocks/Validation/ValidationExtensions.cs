@@ -16,13 +16,13 @@ public static class ValidationExtensions
 
         if (page < 1)
         {
-            errorMessage = "Page must be greater than or equal to 1.";
+            errorMessage = "Số trang phải lớn hơn hoặc bằng 1.";
             return false;
         }
 
         if (pageSize < 1 || pageSize > 100)
         {
-            errorMessage = "PageSize must be between 1 and 100.";
+            errorMessage = "Kích thước trang phải nằm trong khoảng từ 1 đến 100.";
             return false;
         }
 
@@ -41,13 +41,13 @@ public static class ValidationExtensions
 
         if (searchTerm.Length < minLength)
         {
-            errorMessage = $"Search term must be at least {minLength} characters long.";
+            errorMessage = $"Tìm kiếm phải có ít nhất {minLength} ký tự.";
             return false;
         }
 
         if (searchTerm.Length > maxLength)
         {
-            errorMessage = $"Search term cannot exceed {maxLength} characters.";
+            errorMessage = $"Tìm kiếm không được vượt quá {maxLength} ký tự.";
             return false;
         }
 
@@ -63,19 +63,19 @@ public static class ValidationExtensions
 
         if (minPrice.HasValue && minPrice.Value < 0)
         {
-            errorMessage = "Minimum price cannot be negative.";
+            errorMessage = "Giá tối thiểu không được là số âm.";
             return false;
         }
 
         if (maxPrice.HasValue && maxPrice.Value < 0)
         {
-            errorMessage = "Maximum price cannot be negative.";
+            errorMessage = "Giá tối đa không được là số âm.";
             return false;
         }
 
         if (minPrice.HasValue && maxPrice.HasValue && minPrice.Value > maxPrice.Value)
         {
-            errorMessage = "Minimum price cannot exceed maximum price.";
+            errorMessage = "Giá tối thiểu không được vượt quá giá tối đa.";
             return false;
         }
 
@@ -91,7 +91,7 @@ public static class ValidationExtensions
 
         if (id == Guid.Empty)
         {
-            errorMessage = "ID cannot be empty.";
+            errorMessage = "ID không được để trống.";
             return false;
         }
 
@@ -112,19 +112,19 @@ public static class ValidationExtensions
 
         if (string.IsNullOrWhiteSpace(value))
         {
-            errorMessage = $"{fieldName} is required.";
+            errorMessage = $"{fieldName} là bắt buộc.";
             return false;
         }
 
         if (value.Length < minLength)
         {
-            errorMessage = $"{fieldName} must be at least {minLength} characters long.";
+            errorMessage = $"{fieldName} phải có ít nhất {minLength} ký tự.";
             return false;
         }
 
         if (value.Length > maxLength)
         {
-            errorMessage = $"{fieldName}cannot exceed {maxLength} characters.";
+            errorMessage = $"{fieldName} không được vượt quá {maxLength} ký tự.";
             return false;
         }
 
@@ -140,13 +140,13 @@ public static class ValidationExtensions
 
         if (quantity < minQuantity)
         {
-            errorMessage = $"Quantity must be at least {minQuantity}.";
+            errorMessage = $"Số lượng phải ít nhất là {minQuantity}.";
             return false;
         }
 
         if (quantity > maxQuantity)
         {
-            errorMessage = $"Quantity cannot exceed {maxQuantity}.";
+            errorMessage = $"Số lượng không được vượt quá {maxQuantity}.";
             return false;
         }
 

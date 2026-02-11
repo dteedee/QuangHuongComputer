@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, forwardRef, ReactNode, ComponentType } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode, type ComponentType } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -6,7 +6,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
-  icon?: ComponentType<{ className?: string; size?: number }>;
+  icon?: ComponentType<{ className?: string; size?: number | string }>;
   iconPosition?: 'left' | 'right';
   children?: ReactNode;
 }
