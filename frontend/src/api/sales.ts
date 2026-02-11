@@ -76,6 +76,11 @@ export interface CheckoutDto {
     customerIp?: string;
     customerUserAgent?: string;
     paymentMethod?: string;
+    isPickup?: boolean;
+    pickupStoreId?: string;
+    pickupStoreName?: string;
+    customerId?: string;
+    manualDiscount?: number;
 }
 
 // Order History - NOTE: Backend doesn't have this endpoint
@@ -222,14 +227,36 @@ export const salesApi = {
         },
 
         create: async (data: CheckoutDto) => {
-            // Backend uses /sales/checkout instead of /sales/orders
-            const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/checkout', {
-                items: data.items,
-                shippingAddress: data.shippingAddress,
-                notes: data.notes,
-                sourceId: data.sourceId
-            });
-            return response.data;
+            // Try fast checkout first for better performance
+            try {
+                const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/fast-checkout', {
+                    items: data.items,
+                    shippingAddress: data.shippingAddress,
+                    notes: data.notes,
+                    customerId: data.customerId,
+                    paymentMethod: data.paymentMethod,
+                    isPickup: data.isPickup,
+                    pickupStoreId: data.pickupStoreId,
+                    pickupStoreName: data.pickupStoreName,
+                    manualDiscount: data.manualDiscount
+                });
+                return response.data;
+            } catch (error: any) {
+                // Fall back to regular checkout if fast checkout fails
+                console.log('Fast checkout failed, trying regular checkout:', error.message);
+                const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/checkout', {
+                    items: data.items,
+                    shippingAddress: data.shippingAddress,
+                    notes: data.notes,
+                    sourceId: data.sourceId,
+                    paymentMethod: data.paymentMethod,
+                    couponCode: data.couponCode,
+                    isPickup: data.isPickup,
+                    pickupStoreId: data.pickupStoreId,
+                    pickupStoreName: data.pickupStoreName
+                });
+                return response.data;
+            }
         },
 
         updateStatus: async (id: string, status: OrderStatus, reason?: string) => {

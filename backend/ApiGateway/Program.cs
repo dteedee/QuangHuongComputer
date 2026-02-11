@@ -487,6 +487,9 @@ app.MapInventoryEndpoints();
 app.MapAccountingEndpoints();
 app.MapReportingEndpoints();
 
+// Add fast checkout endpoint
+app.MapFastCheckoutEndpoint();
+
 app.MapControllers();
 
 

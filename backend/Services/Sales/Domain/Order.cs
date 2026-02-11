@@ -28,6 +28,11 @@ public class Order : Entity<Guid>
     public string? Notes { get; private set; }
     public string PaymentMethod { get; private set; } = "COD"; // Default to COD
     
+    // Pickup fields
+    public bool IsPickup { get; private set; }
+    public string? PickupStoreId { get; private set; }
+    public string? PickupStoreName { get; private set; }
+    
     // Phase 1: Enhanced fields
     public string? CustomerIp { get; private set; }
     public string? CustomerUserAgent { get; private set; }
@@ -60,7 +65,10 @@ public class Order : Entity<Guid>
         string? customerIp = null,
         string? customerUserAgent = null,
         Guid? sourceId = null,
-        string paymentMethod = "COD")
+        string paymentMethod = "COD",
+        bool isPickup = false,
+        string? pickupStoreId = null,
+        string? pickupStoreName = null)
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Order must have at least one item");
@@ -78,6 +86,9 @@ public class Order : Entity<Guid>
         CustomerUserAgent = customerUserAgent;
         SourceId = sourceId;
         PaymentMethod = paymentMethod;
+        IsPickup = isPickup;
+        PickupStoreId = pickupStoreId;
+        PickupStoreName = pickupStoreName;
         OrderDate = DateTime.UtcNow;
         TaxRate = taxRate; // Snapshot tax rate
         RetryCount = 0;

@@ -24,13 +24,15 @@ public static class SystemConfigEndpoints
             var cachedConfigs = await cache.GetAsync<List<ConfigurationEntry>>(cacheKey);
             if (cachedConfigs != null) return Results.Ok(cachedConfigs);
 
-            // Filter out sensitive categories
-            var sensitiveCategories = new[] { "Security", "HR & Payroll", "Admin Only" };
+            var sensitiveCategoriesCount = new List<string> { "Security", "HR & Payroll", "Admin Only" };
 
-            var configs = await db.Configurations
+            var allConfigs = await db.Configurations
                 .AsNoTracking()
-                .Where(c => !sensitiveCategories.Contains(c.Category))
                 .ToListAsync();
+
+            var configs = allConfigs
+                .Where(c => !sensitiveCategoriesCount.Contains(c.Category))
+                .ToList();
 
             // Cache for 1 hour
             await cache.SetAsync(cacheKey, configs, TimeSpan.FromHours(1));

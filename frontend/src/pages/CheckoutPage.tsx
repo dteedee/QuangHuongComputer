@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
   ArrowLeft, ArrowRight, CreditCard, Truck, User,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import toast from 'react-hot-toast';
 import { salesApi } from '../api/sales';
 
 interface CheckoutForm {
@@ -31,10 +33,15 @@ interface CheckoutForm {
 
   // Notes
   notes?: string;
+
+  // Delivery Method
+  deliveryMethod: 'delivery' | 'pickup';
+  pickupStoreId: string;
 }
 
 export function CheckoutPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { items, subtotal, tax, total, discountAmount, couponCode, clearCart } = useCart();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
@@ -51,6 +58,8 @@ export function CheckoutPage() {
     postalCode: '',
     paymentMethod: 'cod',
     notes: '',
+    deliveryMethod: 'delivery',
+    pickupStoreId: 'headquarters',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutForm, string>>>({});
@@ -129,6 +138,8 @@ export function CheckoutPage() {
     await processOrder();
   };
 
+
+
   const processOrder = async () => {
     setLoading(true);
     try {
@@ -139,10 +150,17 @@ export function CheckoutPage() {
           unitPrice: item.price,
           quantity: item.quantity
         })),
-        shippingAddress: `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`,
+        shippingAddress: formData.deliveryMethod === 'pickup'
+          ? 'Nhận tại cửa hàng'
+          : `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`,
         notes: formData.notes,
         couponCode: couponCode || undefined,
-        paymentMethod: formData.paymentMethod
+        paymentMethod: formData.paymentMethod,
+        isPickup: formData.deliveryMethod === 'pickup',
+        pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
+        pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
+        // Send user ID if logged in
+        customerId: user?.id
       };
 
       const response = await salesApi.orders.create(checkoutData);
@@ -151,9 +169,12 @@ export function CheckoutPage() {
         setOrderId(response.orderId);
         setStep(3);
         clearCart();
+        toast.success('Đặt hàng thành công!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to process order:', error);
+      const errorMessage = error.response?.data?.error || 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -242,129 +263,204 @@ export function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Delivery Method Toggle */}
+                  <div className="flex p-1 bg-slate-100 rounded-2xl mb-8 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('deliveryMethod', 'delivery')}
+                      className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${formData.deliveryMethod === 'delivery'
+                        ? 'bg-white text-[#D70018] shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      <Truck className="w-4 h-4" />
+                      Giao hàng tận nơi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('deliveryMethod', 'pickup')}
+                      className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${formData.deliveryMethod === 'pickup'
+                        ? 'bg-white text-[#D70018] shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Nhận tại cửa hàng
+                    </button>
+                  </div>
+
                   <form className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                          Họ và tên <span className="text-[#D70018]">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            required
-                            value={formData.fullName}
-                            onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            className={`w-full pl-4 pr-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.fullName ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
-                              }`}
-                            placeholder="Nguyễn Văn A"
-                          />
-                          {errors.fullName && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.fullName}</p>}
+                    {formData.deliveryMethod === 'pickup' ? (
+                      <div className="space-y-6">
+                        <div className="bg-red-50/50 border-2 border-red-100 rounded-2xl p-6">
+                          <h4 className="font-black text-slate-900 mb-2 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-[#D70018]" />
+                            TRỤ SỞ CHÍNH - QUANG HƯỞNG COMPUTER
+                          </h4>
+                          <p className="text-sm text-slate-600 font-medium">Số 123, Đường ABC, Quận XYZ, TP. Hà Nội</p>
+                          <div className="mt-4 flex items-center gap-4">
+                            <div className="text-xs bg-white px-3 py-1 rounded-full font-bold text-slate-500 border border-slate-100">
+                              Mở cửa: 08:00 - 21:00
+                            </div>
+                            <div className="text-xs bg-green-100 px-3 py-1 rounded-full font-bold text-green-700">
+                              Đang mở cửa
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Họ và tên <span className="text-[#D70018]">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.fullName}
+                              onChange={(e) => handleInputChange('fullName', e.target.value)}
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.fullName ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'}`}
+                              placeholder="Nguyễn Văn A"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Số điện thoại <span className="text-[#D70018]">*</span>
+                            </label>
+                            <input
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.phone ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'}`}
+                              placeholder="09xx xxx xxx"
+                            />
+                          </div>
                         </div>
                       </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Họ và tên <span className="text-[#D70018]">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                required
+                                value={formData.fullName}
+                                onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                className={`w-full pl-4 pr-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.fullName ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
+                                  }`}
+                                placeholder="Nguyễn Văn A"
+                              />
+                              {errors.fullName && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.fullName}</p>}
+                            </div>
+                          </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                          Số điện thoại <span className="text-[#D70018]">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="tel"
-                            required
-                            value={formData.phone}
-                            onChange={(e) => handleInputChange('phone', e.target.value)}
-                            className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.phone ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
-                              }`}
-                            placeholder="09xx xxx xxx"
-                          />
-                          {errors.phone && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.phone}</p>}
-                        </div>
-                      </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Số điện thoại <span className="text-[#D70018]">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="tel"
+                                required
+                                value={formData.phone}
+                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.phone ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
+                                  }`}
+                                placeholder="09xx xxx xxx"
+                              />
+                              {errors.phone && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.phone}</p>}
+                            </div>
+                          </div>
 
-                      <div className="md:col-span-2 space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                          Email <span className="text-[#D70018]">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.email ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
-                              }`}
-                            placeholder="email@example.com"
-                          />
-                          {errors.email && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.email}</p>}
+                          <div className="md:col-span-2 space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Email <span className="text-[#D70018]">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => handleInputChange('email', e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.email ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-[#D70018] focus:ring-red-50'
+                                  }`}
+                                placeholder="email@example.com"
+                              />
+                              {errors.email && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.email}</p>}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="h-px bg-slate-100 w-full" />
+                        <div className="h-px bg-slate-100 w-full" />
 
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                            Tỉnh / Thành <span className="text-[#D70018]">*</span>
-                          </label>
-                          <select
-                            required
-                            value={formData.province}
-                            onChange={(e) => handleInputChange('province', e.target.value)}
-                            className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.province ? 'border-red-500' : 'border-transparent focus:border-[#D70018] focus:bg-white'
-                              }`}
-                          >
-                            <option value="">Chọn tỉnh/thành</option>
-                            {provinces.map((p) => (
-                              <option key={p} value={p}>{p}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                            Quận / Huyện <span className="text-[#D70018]">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.district}
-                            onChange={(e) => handleInputChange('district', e.target.value)}
-                            className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.district ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
-                              }`}
-                            placeholder="Nhập quận/huyện"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                            Phường / Xã <span className="text-[#D70018]">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.ward}
-                            onChange={(e) => handleInputChange('ward', e.target.value)}
-                            className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.ward ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
-                              }`}
-                            placeholder="Nhập phường/xã"
-                          />
-                        </div>
-                      </div>
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                Tỉnh / Thành <span className="text-[#D70018]">*</span>
+                              </label>
+                              <select
+                                required
+                                value={formData.province}
+                                onChange={(e) => handleInputChange('province', e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.province ? 'border-red-500' : 'border-transparent focus:border-[#D70018] focus:bg-white'
+                                  }`}
+                              >
+                                <option value="">Chọn tỉnh/thành</option>
+                                {provinces.map((p) => (
+                                  <option key={p} value={p}>{p}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                Quận / Huyện <span className="text-[#D70018]">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={formData.district}
+                                onChange={(e) => handleInputChange('district', e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.district ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
+                                  }`}
+                                placeholder="Nhập quận/huyện"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                Phường / Xã <span className="text-[#D70018]">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={formData.ward}
+                                onChange={(e) => handleInputChange('ward', e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.ward ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
+                                  }`}
+                                placeholder="Nhập phường/xã"
+                              />
+                            </div>
+                          </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
-                          Địa chỉ chi tiết <span className="text-[#D70018]">*</span>
-                        </label>
-                        <textarea
-                          required
-                          value={formData.address}
-                          onChange={(e) => handleInputChange('address', e.target.value)}
-                          rows={2}
-                          className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none resize-none text-slate-900 font-bold ${errors.address ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
-                            }`}
-                          placeholder="Số nhà, tên đường..."
-                        />
-                      </div>
-                    </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              Địa chỉ chi tiết <span className="text-[#D70018]">*</span>
+                            </label>
+                            <textarea
+                              required
+                              value={formData.address}
+                              onChange={(e) => handleInputChange('address', e.target.value)}
+                              rows={2}
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none resize-none text-slate-900 font-bold ${errors.address ? 'border-red-500' : 'border-transparent focus:border-[#D70018]'
+                                }`}
+                              placeholder="Số nhà, tên đường..."
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     <button
                       type="button"
