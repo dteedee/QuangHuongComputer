@@ -208,7 +208,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const tax = (subtotal - discountAmount) * taxRate;
     const total = subtotal - discountAmount + tax + shippingAmount;
-    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    const itemCount = items.length;
 
     const checkout = async () => {
         if (items.length === 0) return;
