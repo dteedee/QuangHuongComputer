@@ -1,0 +1,63 @@
+# ===========================================
+# Prometheus Configuration - UAT Environment
+# ===========================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'uat'
+    project: 'quanghuong-computer'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+
+  # Backend API metrics
+  - job_name: 'backend-api'
+    static_configs:
+      - targets: ['backend-uat:8080']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # PostgreSQL metrics (if exporter is added)
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres-uat:5432']
+    metrics_path: /metrics
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-uat:6379']
+
+  # RabbitMQ metrics
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq-uat:15672']
+    metrics_path: /api/metrics
+
+  # Docker containers (using cadvisor if added)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: /metrics
+
+  # Node metrics (if node-exporter is added)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']

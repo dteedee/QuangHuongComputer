@@ -1,4 +1,5 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import DOMPurify from 'dompurify';
 import {
   Bold,
   Italic,
@@ -12,6 +13,28 @@ import {
   Heading2,
   Quote
 } from 'lucide-react';
+
+// Configure DOMPurify to allow safe HTML elements for rich text editing
+const sanitizeConfig: DOMPurify.Config = {
+  ALLOWED_TAGS: [
+    'p', 'br', 'b', 'i', 'u', 'strong', 'em', 'strike', 's',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li',
+    'blockquote', 'pre', 'code',
+    'a', 'img',
+    'div', 'span'
+  ],
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'target', 'rel', 'class', 'style'],
+  ALLOW_DATA_ATTR: false,
+  ADD_ATTR: ['target'],
+  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+};
+
+// Sanitize HTML content to prevent XSS attacks
+const sanitizeHtml = (dirty: string): string => {
+  return DOMPurify.sanitize(dirty, sanitizeConfig);
+};
 
 export interface RichTextEditorProps {
   value: string;
@@ -42,14 +65,20 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
   }));
 
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+    if (editorRef.current) {
+      // Sanitize incoming HTML to prevent XSS attacks
+      const sanitizedValue = sanitizeHtml(value);
+      if (editorRef.current.innerHTML !== sanitizedValue) {
+        editorRef.current.innerHTML = sanitizedValue;
+      }
     }
   }, [value]);
 
   const handleInput = () => {
     if (!isComposingRef.current && editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      // Sanitize output HTML before passing to parent
+      const sanitizedContent = sanitizeHtml(editorRef.current.innerHTML);
+      onChange(sanitizedContent);
     }
   };
 

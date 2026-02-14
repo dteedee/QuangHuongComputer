@@ -1,26 +1,35 @@
 version: '3.8'
 
+# ===========================================
+# Quang Huong Computer - Development Infrastructure
+# ===========================================
+# Usage:
+#   1. Copy .env.docker.example to .env.docker
+#   2. Fill in your credentials in .env.docker
+#   3. Run: docker-compose --env-file .env.docker up -d
+# ===========================================
+
 services:
   # ============================================
-  # DATABASE - PostgreSQL với tất cả schemas
+  # DATABASE - PostgreSQL
   # ============================================
   postgres:
     image: postgres:16-alpine
     container_name: quanghuong-postgres
     environment:
-      POSTGRES_DB: quanghuongdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: ${POSTGRES_DB:-quanghuongdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
     networks:
       - quanghuong-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,15 +41,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: quanghuong-redis
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
       - quanghuong-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,11 +62,11 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: quanghuong-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -76,7 +85,7 @@ services:
     image: adminer:latest
     container_name: quanghuong-adminer
     ports:
-      - "8081:8080"
+      - "${ADMINER_PORT:-8081}:8080"
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     depends_on:

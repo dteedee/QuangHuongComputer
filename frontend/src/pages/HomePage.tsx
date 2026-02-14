@@ -28,6 +28,8 @@ export const HomePage = () => {
         laptop?: string;
         gaming?: string;
         components?: string;
+        gear?: string;
+        screens?: string;
     }>({});
 
     useEffect(() => {
@@ -37,22 +39,15 @@ export const HomePage = () => {
                 // Filter only active categories
                 const activeCategories = data.filter(c => c.isActive);
                 setCategories(activeCategories);
-                
+
                 // Find category IDs for each section
+                // Use description field to match categories - matches seeder exactly
                 const categoryMap = {
-                    laptop: activeCategories.find(c => 
-                        c.name.toLowerCase().includes('laptop') || 
-                        c.name.toLowerCase().includes('máy tính xách tay')
-                    )?.id,
-                    gaming: activeCategories.find(c => 
-                        c.name.toLowerCase().includes('gaming') || 
-                        c.name.toLowerCase().includes('game') ||
-                        c.name.toLowerCase().includes('pc gaming')
-                    )?.id,
-                    components: activeCategories.find(c => 
-                        c.name.toLowerCase().includes('linh kiện') || 
-                        c.name.toLowerCase().includes('component')
-                    )?.id
+                    laptop: activeCategories.find(c => c.description === 'laptop')?.id,
+                    gaming: activeCategories.find(c => c.description === 'pc-gaming')?.id,
+                    components: activeCategories.find(c => c.description === 'components')?.id,
+                    gear: activeCategories.find(c => c.description === 'gear')?.id,
+                    screens: activeCategories.find(c => c.description === 'screens')?.id,
                 };
                 setCategoryIds(categoryMap);
             } catch (err) {
@@ -444,7 +439,9 @@ export const HomePage = () => {
             {[
                 { title: 'LAPTOP - MÁY TÍNH XÁCH TAY', filter: 'laptop', icon: <Laptop size={24} />, categoryId: categoryIds.laptop },
                 { title: 'PC GAMING - CHIẾN MỌI GAME', filter: 'gaming', icon: <Gamepad size={24} />, categoryId: categoryIds.gaming },
-                { title: 'LINH KIỆN MÁY TÍNH', filter: 'linh kiện', icon: <Cpu size={24} />, categoryId: categoryIds.components }
+                { title: 'LINH KIỆN MÁY TÍNH', filter: 'linh kiện', icon: <Cpu size={24} />, categoryId: categoryIds.components },
+                { title: 'PHÍM, CHUỘT - GAMING GEAR', filter: 'gear', icon: <MousePointer2 size={24} />, categoryId: categoryIds.gear },
+                { title: 'MÀN HÌNH MÁY TÍNH', filter: 'màn hình', icon: <Monitor size={24} />, categoryId: categoryIds.screens }
             ].filter(section => {
                 // For each section, check if there are products
                 if (section.categoryId) {
@@ -453,7 +450,7 @@ export const HomePage = () => {
                 } else {
                     // For sections without specific category (should not happen with our current setup)
                     // Fallback to filter keywords to ensure we don't break anything
-                    return products?.some(p => 
+                    return products?.some(p =>
                         p.name.toLowerCase().includes(section.filter)
                     ) ?? false;
                 }
@@ -472,7 +469,7 @@ export const HomePage = () => {
                             {section.title}
                         </h2>
                         <Link
-                            to="/products"
+                            to={section.categoryId ? `/products?category=${section.categoryId}` : "/products"}
                             className="text-sm font-bold text-[#D70018] hover:underline flex items-center gap-1 uppercase tracking-wider"
                         >
                             Tất cả
@@ -486,7 +483,7 @@ export const HomePage = () => {
                                     // Only show products from active categories
                                     // Since we don't have isActive in product directly, we'll rely on category ID filtering
                                     // and the fact that we only fetch active categories in useEffect
-            
+
                                     if (section.categoryId) {
                                         // Filter by category ID for sections that have it
                                         return p.categoryId === section.categoryId;

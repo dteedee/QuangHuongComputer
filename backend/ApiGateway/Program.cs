@@ -332,8 +332,17 @@ if (app.Environment.IsDevelopment())
                 var schema = ctx.Model.GetDefaultSchema();
                 if (!string.IsNullOrEmpty(schema))
                 {
+                    // Validate schema name to prevent SQL injection (only allow alphanumeric and underscore)
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(schema, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+                    {
+                        logger.LogWarning("Invalid schema name: {Schema}", schema);
+                        continue;
+                    }
                     logger.LogInformation("Creating schema {Schema} for {Context} if not exists...", schema, ctx.GetType().Name);
+                    // Schema name is validated above, safe to use in SQL
+                    #pragma warning disable EF1002 // Schema name validated via regex
                     await ctx.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{schema}\";");
+                    #pragma warning restore EF1002
                 }
 
                 logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);

@@ -70,9 +70,10 @@ public static class CatalogDbSeeder
         }
 
         // Clear existing products to re-seed with better data
-        var oldProducts = await context.Products.ToListAsync();
-        context.Products.RemoveRange(oldProducts);
-        await context.SaveChangesAsync();
+        // DISABLED: Keep existing products to preserve manually added data
+        // var oldProducts = await context.Products.ToListAsync();
+        // context.Products.RemoveRange(oldProducts);
+        // await context.SaveChangesAsync();
 
         var catLaptop = categories.First(c => c.Description == "laptop").Id;
         var catGaming = categories.First(c => c.Description == "pc-gaming").Id;

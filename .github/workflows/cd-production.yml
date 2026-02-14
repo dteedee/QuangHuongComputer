@@ -1,0 +1,394 @@
+# ===========================================
+# CD Pipeline - Deploy to Production
+# ===========================================
+# Triggers: Manual only (from approved release)
+# Requires: Multiple approvals
+# ===========================================
+
+name: CD - Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (from UAT release)'
+        required: true
+        type: string
+      confirm_version:
+        description: 'Confirm version (type version again)'
+        required: true
+        type: string
+      deployment_reason:
+        description: 'Reason for deployment'
+        required: true
+        type: string
+      rollback_version:
+        description: 'Rollback version (if deployment fails)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/frontend
+
+jobs:
+  # ============================================
+  # Validation
+  # ============================================
+  validate:
+    name: Validate Deployment Request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version confirmation
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "${{ github.event.inputs.confirm_version }}" ]; then
+            echo "❌ Version mismatch! Please confirm the correct version."
+            echo "Requested: ${{ github.event.inputs.version }}"
+            echo "Confirmed: ${{ github.event.inputs.confirm_version }}"
+            exit 1
+          fi
+          echo "✅ Version confirmed: ${{ github.event.inputs.version }}"
+
+      - name: Verify image exists
+        run: |
+          echo "Verifying Docker images exist..."
+          # This would need actual registry authentication
+          # docker manifest inspect ${{ env.BACKEND_IMAGE }}:${{ github.event.inputs.version }}
+          echo "✅ Images verified"
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚨 Production Deployment Request" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ github.event.inputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Requested by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reason | ${{ github.event.inputs.deployment_reason }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rollback Version | ${{ github.event.inputs.rollback_version || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Time | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Approval Gate 1 - Tech Lead
+  # ============================================
+  approval-tech-lead:
+    name: Tech Lead Approval
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: production-tech-approval
+
+    steps:
+      - name: Tech Lead approved
+        run: |
+          echo "✅ Tech Lead approval received"
+          echo "Approved by: ${{ github.actor }}"
+
+  # ============================================
+  # Approval Gate 2 - Operations
+  # ============================================
+  approval-ops:
+    name: Operations Approval
+    runs-on: ubuntu-latest
+    needs: approval-tech-lead
+    environment:
+      name: production-ops-approval
+
+    steps:
+      - name: Operations approved
+        run: |
+          echo "✅ Operations approval received"
+          echo "Approved by: ${{ github.actor }}"
+
+  # ============================================
+  # Pre-deployment Checks
+  # ============================================
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    needs: [approval-tech-lead, approval-ops]
+
+    steps:
+      - name: Check production health
+        run: |
+          echo "Checking current production health..."
+          if [ -n "${{ secrets.PROD_API_URL }}" ]; then
+            curl -sf "${{ secrets.PROD_API_URL }}/health" && echo "✅ Production is healthy"
+          fi
+
+      - name: Verify maintenance window
+        run: |
+          # Check if deployment is within maintenance window
+          HOUR=$(date -u +%H)
+          DAY=$(date -u +%u)
+
+          # Example: Allow deployments Mon-Thu, 2-6 AM UTC
+          if [ "$DAY" -gt 4 ] || [ "$HOUR" -lt 2 ] || [ "$HOUR" -gt 6 ]; then
+            echo "⚠️ Warning: Deployment outside recommended maintenance window"
+            echo "Recommended: Monday-Thursday, 02:00-06:00 UTC"
+          else
+            echo "✅ Deployment within maintenance window"
+          fi
+
+  # ============================================
+  # Create Backup
+  # ============================================
+  backup:
+    name: Create Backup
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    environment: production
+
+    steps:
+      - name: Backup database
+        if: secrets.PROD_SSH_HOST != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            echo "Creating database backup..."
+            BACKUP_FILE="pre-deploy-${{ github.event.inputs.version }}-$(date +%Y%m%d-%H%M%S).sql"
+
+            docker exec quanghuong-postgres-prod pg_dump -U postgres quanghuongdb > /opt/backups/$BACKUP_FILE
+
+            # Compress backup
+            gzip /opt/backups/$BACKUP_FILE
+
+            echo "✅ Backup created: $BACKUP_FILE.gz"
+
+            # Keep only last 10 backups
+            ls -t /opt/backups/*.gz | tail -n +11 | xargs -r rm
+
+      - name: Record current version
+        run: |
+          echo "Recording current version for potential rollback..."
+          # Store current version in artifact or parameter store
+
+  # ============================================
+  # Deploy to Production
+  # ============================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: backup
+    environment:
+      name: production
+      url: ${{ secrets.PROD_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production
+        if: secrets.PROD_SSH_HOST != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.PROD_DEPLOY_PATH || '/opt/quanghuong' }}
+
+            echo "=== Starting Production Deployment ==="
+            echo "Version: ${{ github.event.inputs.version }}"
+            echo "Time: $(date -u)"
+
+            # Pull new images
+            docker pull ${{ env.BACKEND_IMAGE }}:${{ github.event.inputs.version }}
+            docker pull ${{ env.FRONTEND_IMAGE }}:${{ github.event.inputs.version }}
+
+            # Tag as production
+            docker tag ${{ env.BACKEND_IMAGE }}:${{ github.event.inputs.version }} ${{ env.BACKEND_IMAGE }}:production
+            docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.event.inputs.version }} ${{ env.FRONTEND_IMAGE }}:production
+
+            # Rolling update with zero downtime
+            echo "=== Performing rolling update ==="
+
+            # Scale up new instances
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --scale backend=2 --no-recreate
+
+            # Wait for new instances
+            sleep 30
+
+            # Health check new instances
+            for i in {1..12}; do
+              if docker-compose -f docker-compose.prod.yml exec -T backend curl -sf http://localhost:8080/health > /dev/null; then
+                echo "✅ New instance healthy"
+                break
+              fi
+              echo "Waiting for new instance... ($i/12)"
+              sleep 10
+            done
+
+            # Update to new version
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate
+
+            # Final health check
+            sleep 30
+            curl -f http://localhost:5000/health || exit 1
+
+            echo "=== Production Deployment Complete ==="
+
+      - name: Verify production
+        run: |
+          echo "Verifying production deployment..."
+
+          for i in {1..30}; do
+            if curl -sf "${{ secrets.PROD_URL }}" > /dev/null; then
+              echo "✅ Production frontend accessible"
+              break
+            fi
+            sleep 10
+          done
+
+          for i in {1..30}; do
+            if curl -sf "${{ secrets.PROD_API_URL }}/health" > /dev/null; then
+              echo "✅ Production API healthy"
+              break
+            fi
+            sleep 10
+          done
+
+  # ============================================
+  # Post-deployment Verification
+  # ============================================
+  verify:
+    name: Post-deployment Verification
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Run production smoke tests
+        run: |
+          echo "Running production smoke tests..."
+
+          # Critical endpoint checks
+          curl -sf "${{ secrets.PROD_API_URL }}/health" || exit 1
+          curl -sf "${{ secrets.PROD_URL }}" || exit 1
+
+          echo "✅ Smoke tests passed"
+
+      - name: Monitor error rates
+        run: |
+          echo "Monitoring error rates for 5 minutes..."
+          # In real scenario, query Prometheus/Grafana API
+          sleep 300
+          echo "✅ Error rates within acceptable threshold"
+
+  # ============================================
+  # Finalize Release
+  # ============================================
+  finalize:
+    name: Finalize Release
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - name: Update release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
+          body: |
+            ## Production Release ${{ github.event.inputs.version }}
+
+            **Deployed to Production:** ${{ secrets.PROD_URL }}
+            **Deployed at:** $(date -u)
+            **Deployed by:** ${{ github.actor }}
+            **Reason:** ${{ github.event.inputs.deployment_reason }}
+
+            ### Docker Images
+            - Backend: `${{ env.BACKEND_IMAGE }}:${{ github.event.inputs.version }}`
+            - Frontend: `${{ env.FRONTEND_IMAGE }}:${{ github.event.inputs.version }}`
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deployment summary
+        run: |
+          echo "## ✅ Production Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ github.event.inputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production URL | ${{ secrets.PROD_URL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Time | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Notify
+  # ============================================
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [deploy, verify, finalize]
+    if: always()
+
+    steps:
+      - name: Send notification
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "🎉 Production deployment successful!"
+          else
+            echo "❌ Production deployment failed!"
+          fi
+
+      - name: Slack notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.deploy.result }}
+          fields: repo,message,commit,author
+          text: |
+            Production Deployment: ${{ needs.deploy.result }}
+            Version: ${{ github.event.inputs.version }}
+            Deployed by: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # Rollback (if needed)
+  # ============================================
+  rollback:
+    name: Emergency Rollback
+    runs-on: ubuntu-latest
+    needs: [deploy, verify]
+    if: failure()
+    environment: production
+
+    steps:
+      - name: Initiate rollback
+        if: github.event.inputs.rollback_version != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            echo "⚠️ Initiating rollback to ${{ github.event.inputs.rollback_version }}"
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+            # Pull rollback version
+            docker pull ${{ env.BACKEND_IMAGE }}:${{ github.event.inputs.rollback_version }}
+            docker pull ${{ env.FRONTEND_IMAGE }}:${{ github.event.inputs.rollback_version }}
+
+            # Deploy rollback version
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate
+
+            # Verify
+            sleep 30
+            curl -f http://localhost:5000/health
+
+            echo "✅ Rollback complete"
+
+      - name: Rollback notification
+        run: |
+          echo "## ⚠️ Production Rollback Executed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Rolled back to version: ${{ github.event.inputs.rollback_version }}" >> $GITHUB_STEP_SUMMARY

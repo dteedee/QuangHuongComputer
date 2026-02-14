@@ -145,16 +145,43 @@ public class SecurityHeadersMiddleware
             
             // Required for Google Login popup to communicate back to the main window
             context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+
+            // Referrer Policy - Limit information sent in Referer header
+            context.Response.Headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+
+            // Permissions Policy - Restrict browser features
+            context.Response.Headers.TryAdd("Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(self), payment=(self)");
             
             // Comprehensive CSP for Google OAuth and common assets
-            context.Response.Headers.TryAdd("Content-Security-Policy",
-                "default-src 'self'; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.google.com; " +
-                "frame-src 'self' https://accounts.google.com https://www.google.com; " +
-                "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com; " +
-                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; " +
-                "img-src 'self' data: https://lh3.googleusercontent.com https://www.google.com; " +
-                "font-src 'self' data: https://fonts.gstatic.com;");
+            // Note: 'unsafe-inline' is required for Google OAuth popup communication
+            // Consider implementing nonce-based CSP for stricter security in production
+            var cspDirectives = new[]
+            {
+                "default-src 'self'",
+                // Scripts: Allow Google OAuth scripts. 'unsafe-inline' needed for OAuth popup
+                "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.google.com https://connect.facebook.net",
+                // Frames: Allow OAuth popups
+                "frame-src 'self' https://accounts.google.com https://www.google.com https://www.facebook.com",
+                // API connections
+                "connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://graph.facebook.com wss: ws:",
+                // Styles: 'unsafe-inline' for dynamic styles
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
+                // Images: Allow OAuth provider avatars and data URIs
+                "img-src 'self' data: blob: https://lh3.googleusercontent.com https://www.google.com https://platform-lookaside.fbsbx.com https://res.cloudinary.com https://*.cloudinary.com",
+                // Fonts
+                "font-src 'self' data: https://fonts.gstatic.com",
+                // Object/embed: Block all
+                "object-src 'none'",
+                // Base URI restriction
+                "base-uri 'self'",
+                // Form action restriction
+                "form-action 'self' https://accounts.google.com https://www.facebook.com",
+                // Upgrade insecure requests in production
+                "upgrade-insecure-requests"
+            };
+
+            context.Response.Headers.TryAdd("Content-Security-Policy", string.Join("; ", cspDirectives));
         }
 
         await _next(context);

@@ -1,0 +1,460 @@
+version: '3.8'
+
+# ===========================================
+# Quang Huong Computer - UAT/STAGING Environment
+# ===========================================
+# Purpose: User Acceptance Testing / Pre-Production
+# Features:
+#   - Production-like configuration
+#   - Full monitoring stack (Prometheus, Grafana, Loki)
+#   - Persistent data with backups
+#   - Resource limits
+#   - Health checks
+#   - Log aggregation
+#
+# Usage:
+#   docker-compose -f docker-compose.uat.yml --env-file .env.uat up -d
+# ===========================================
+
+services:
+  # ============================================
+  # DATABASE - PostgreSQL (UAT)
+  # ============================================
+  postgres-uat:
+    image: postgres:16-alpine
+    container_name: quanghuong-postgres-uat
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quanghuongdb_uat}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Performance tuning
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_uat_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./backups/postgres:/backups
+    networks:
+      - quanghuong-uat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quanghuongdb_uat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=768MB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c log_statement=mod
+      -c log_duration=on
+      -c log_min_duration_statement=1000
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================
+  # CACHE - Redis (UAT)
+  # ============================================
+  redis-uat:
+    image: redis:7-alpine
+    container_name: quanghuong-redis-uat
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      --tcp-keepalive 300
+      --timeout 0
+    ports:
+      - "${REDIS_PORT:-6381}:6379"
+    volumes:
+      - redis_uat_data:/data
+    networks:
+      - quanghuong-uat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ============================================
+  # MESSAGE QUEUE - RabbitMQ (UAT)
+  # ============================================
+  rabbitmq-uat:
+    image: rabbitmq:3-management-alpine
+    container_name: quanghuong-rabbitmq-uat
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: quanghuong_uat
+    ports:
+      - "${RABBITMQ_PORT:-5674}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15674}:15672"
+    volumes:
+      - rabbitmq_uat_data:/var/lib/rabbitmq
+    networks:
+      - quanghuong-uat-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ============================================
+  # BACKEND API (UAT)
+  # ============================================
+  backend-uat:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: quanghuong-backend-uat
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_URLS: http://+:8080
+      # Database
+      ConnectionStrings__DefaultConnection: "Host=postgres-uat;Port=5432;Database=${POSTGRES_DB:-quanghuongdb_uat};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Timeout=30;Pooling=true;MinPoolSize=5;MaxPoolSize=100"
+      ConnectionStrings__Redis: "redis-uat:6379,password=${REDIS_PASSWORD}"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD}@rabbitmq-uat:5672/quanghuong_uat"
+      # Redis
+      Redis__ConnectionString: "redis-uat:6379,password=${REDIS_PASSWORD}"
+      Redis__InstanceName: "quanghc-uat:"
+      # JWT
+      Jwt__Key: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      Jwt__Issuer: "QuangHuongComputer-UAT"
+      Jwt__Audience: "QuangHuongComputer-UAT"
+      # OAuth
+      OAuth__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      OAuth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      OAuth__Facebook__AppId: ${FACEBOOK_APP_ID:-}
+      OAuth__Facebook__AppSecret: ${FACEBOOK_APP_SECRET:-}
+      # Payment (Sandbox)
+      Payment__VNPay__TmnCode: ${VNPAY_TMN_CODE:-}
+      Payment__VNPay__HashSecret: ${VNPAY_HASH_SECRET:-}
+      Payment__VNPay__PaymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+      Payment__VNPay__ReturnUrl: ${VNPAY_RETURN_URL:-http://localhost:3002/payment/vnpay-return}
+      Payment__Momo__PartnerCode: ${MOMO_PARTNER_CODE:-}
+      Payment__Momo__AccessKey: ${MOMO_ACCESS_KEY:-}
+      Payment__Momo__SecretKey: ${MOMO_SECRET_KEY:-}
+      Payment__Momo__Endpoint: "https://test-payment.momo.vn/v2/gateway/api/create"
+      # Email
+      Email__Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Email__Smtp__Port: ${SMTP_PORT:-587}
+      Email__Smtp__EnableSsl: "true"
+      Email__Smtp__Username: ${SMTP_USERNAME:-}
+      Email__Smtp__Password: ${SMTP_PASSWORD:-}
+      Email__Smtp__FromName: "Quang Huong Computer (UAT)"
+      Email__Smtp__FromEmail: ${SMTP_FROM_EMAIL:-}
+      # Storage
+      Storage__CloudinaryUrl: ${CLOUDINARY_URL:-}
+      # AI
+      AI__Gemini__ApiKey: ${GEMINI_API_KEY:-}
+      # Features
+      Features__UseRealPayment: "true"
+      Features__UseRealEmail: "true"
+      Features__SandboxMode: "true"
+      Features__EnableDetailedErrors: "false"
+      # Monitoring
+      Monitoring__EnableDetailedMetrics: "true"
+      Monitoring__EnableTracing: "true"
+      Monitoring__TracingSampleRate: "0.5"
+      # CORS
+      Cors__AllowedOrigins__0: "http://localhost:${FRONTEND_PORT:-3002}"
+      Cors__AllowedOrigins__1: "${UAT_DOMAIN:-http://uat.quanghuongcomputer.local}"
+    ports:
+      - "${BACKEND_PORT:-5002}:8080"
+    depends_on:
+      postgres-uat:
+        condition: service_healthy
+      redis-uat:
+        condition: service_healthy
+      rabbitmq-uat:
+        condition: service_healthy
+    networks:
+      - quanghuong-uat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    labels:
+      - "prometheus.scrape=true"
+      - "prometheus.port=8080"
+      - "prometheus.path=/metrics"
+
+  # ============================================
+  # FRONTEND (UAT)
+  # ============================================
+  frontend-uat:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5002}
+        VITE_NODE_ENV: staging
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        VITE_FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+        VITE_CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+    container_name: quanghuong-frontend-uat
+    ports:
+      - "${FRONTEND_PORT:-3002}:80"
+    depends_on:
+      - backend-uat
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ============================================
+  # MONITORING - Prometheus
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: quanghuong-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_uat_data:/prometheus
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================
+  # MONITORING - Grafana
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: quanghuong-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3003}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "${GRAFANA_PORT:-3003}:3000"
+    volumes:
+      - grafana_uat_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================
+  # LOGGING - Loki
+  # ============================================
+  loki:
+    image: grafana/loki:latest
+    container_name: quanghuong-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_uat_data:/loki
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================
+  # LOGGING - Promtail (Log collector)
+  # ============================================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: quanghuong-promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./monitoring/promtail/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+  # ============================================
+  # DATABASE UI - PgAdmin
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: quanghuong-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@quanghuongcomputer.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_uat_data:/var/lib/pgadmin
+    depends_on:
+      - postgres-uat
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    profiles:
+      - tools  # Optional: docker-compose --profile tools up
+
+  # ============================================
+  # REVERSE PROXY - Nginx (Optional)
+  # ============================================
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: quanghuong-nginx-uat
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.uat.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend-uat
+      - backend-uat
+      - grafana
+    networks:
+      - quanghuong-uat-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    profiles:
+      - proxy  # Optional: docker-compose --profile proxy up
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  quanghuong-uat-network:
+    driver: bridge
+    name: quanghuong-uat-network
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  postgres_uat_data:
+    name: quanghuong-postgres-uat-data
+  redis_uat_data:
+    name: quanghuong-redis-uat-data
+  rabbitmq_uat_data:
+    name: quanghuong-rabbitmq-uat-data
+  prometheus_uat_data:
+    name: quanghuong-prometheus-uat-data
+  grafana_uat_data:
+    name: quanghuong-grafana-uat-data
+  loki_uat_data:
+    name: quanghuong-loki-uat-data
+  pgadmin_uat_data:
+    name: quanghuong-pgadmin-uat-data

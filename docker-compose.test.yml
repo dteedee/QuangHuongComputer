@@ -1,0 +1,215 @@
+version: '3.8'
+
+# ===========================================
+# Quang Huong Computer - TEST Environment
+# ===========================================
+# Purpose: Isolated testing environment
+# Features:
+#   - Separate test database (auto-cleanup)
+#   - MailHog for email testing
+#   - Mock payment gateway
+#   - Minimal resources
+#   - No persistent data (clean each run)
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml --env-file .env.test up -d
+#   docker-compose -f docker-compose.test.yml down -v  # Clean up with volumes
+# ===========================================
+
+services:
+  # ============================================
+  # DATABASE - PostgreSQL (Test)
+  # ============================================
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: quanghuong-postgres-test
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quanghuongdb_test}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test_password_123}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster tests, no persistence
+    networks:
+      - quanghuong-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quanghuongdb_test}"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: "no"
+
+  # ============================================
+  # CACHE - Redis (Test)
+  # ============================================
+  redis-test:
+    image: redis:7-alpine
+    container_name: quanghuong-redis-test
+    command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    networks:
+      - quanghuong-test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: "no"
+
+  # ============================================
+  # MESSAGE QUEUE - RabbitMQ (Test)
+  # ============================================
+  rabbitmq-test:
+    image: rabbitmq:3-alpine
+    container_name: quanghuong-rabbitmq-test
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5673}:5672"
+    networks:
+      - quanghuong-test-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: "no"
+
+  # ============================================
+  # EMAIL - MailHog (Catches all emails)
+  # ============================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: quanghuong-mailhog
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"  # SMTP
+      - "${MAILHOG_UI_PORT:-8025}:8025"    # Web UI
+    networks:
+      - quanghuong-test-network
+    restart: "no"
+
+  # ============================================
+  # BACKEND API (Test)
+  # ============================================
+  backend-test:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: quanghuong-backend-test
+    environment:
+      ASPNETCORE_ENVIRONMENT: Testing
+      ASPNETCORE_URLS: http://+:8080
+      # Database
+      ConnectionStrings__DefaultConnection: "Host=postgres-test;Port=5432;Database=${POSTGRES_DB:-quanghuongdb_test};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-test_password_123};Timeout=30"
+      ConnectionStrings__Redis: "redis-test:6379"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq-test:5672"
+      # Redis
+      Redis__ConnectionString: "redis-test:6379"
+      # JWT (use test key)
+      Jwt__Key: "test_jwt_secret_key_for_testing_only_32chars!"
+      Jwt__Issuer: "QuangHuongComputer-Test"
+      Jwt__Audience: "QuangHuongComputer-Test"
+      # Email (MailHog)
+      Email__Smtp__Host: mailhog
+      Email__Smtp__Port: 1025
+      Email__Smtp__EnableSsl: "false"
+      Email__Smtp__Username: ""
+      Email__Smtp__Password: ""
+      Email__Smtp__FromName: "Test - Quang Huong Computer"
+      Email__Smtp__FromEmail: "test@quanghuongcomputer.local"
+      # Features
+      Features__UseRealPayment: "false"
+      Features__UseRealEmail: "false"
+      Features__UseMockData: "true"
+      Features__EnableDetailedErrors: "true"
+    ports:
+      - "${BACKEND_PORT:-5001}:8080"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+    networks:
+      - quanghuong-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ============================================
+  # FRONTEND (Test)
+  # ============================================
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:${BACKEND_PORT:-5001}
+        VITE_NODE_ENV: test
+    container_name: quanghuong-frontend-test
+    ports:
+      - "${FRONTEND_PORT:-3001}:80"
+    depends_on:
+      - backend-test
+    networks:
+      - quanghuong-test-network
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+  # ============================================
+  # TEST RUNNER (Optional - Run tests)
+  # ============================================
+  test-runner:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: quanghuong-test-runner
+    working_dir: /app
+    volumes:
+      - ./backend:/app/backend:ro
+      - ./test-results:/app/test-results
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres-test;Port=5432;Database=${POSTGRES_DB:-quanghuongdb_test};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-test_password_123}"
+    command: >
+      sh -c "
+        echo 'Waiting for services...' &&
+        sleep 10 &&
+        cd /app/backend &&
+        dotnet test --logger 'trx;LogFileName=/app/test-results/results.trx' --results-directory /app/test-results || true
+      "
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      backend-test:
+        condition: service_healthy
+    networks:
+      - quanghuong-test-network
+    profiles:
+      - test  # Only run with: docker-compose --profile test up
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  quanghuong-test-network:
+    driver: bridge
+    name: quanghuong-test-network

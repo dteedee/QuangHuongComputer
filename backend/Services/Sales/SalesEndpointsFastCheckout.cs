@@ -118,9 +118,9 @@ public static class SalesEndpointsFastCheckout
                 foreach (var item in orderItems)
                 {
                     var product = products.First(p => p.Id == item.ProductId);
-                    // Simple stock update - in real app, this should be more sophisticated
-                    await catalogDb.Database.ExecuteSqlRawAsync(
-                        $"UPDATE \"Products\" SET \"StockQuantity\" = \"StockQuantity\" - {item.Quantity} WHERE \"Id\" = '{item.ProductId}'", cts.Token);
+                    // Use parameterized query to prevent SQL injection
+                    await catalogDb.Database.ExecuteSqlAsync(
+                        $"UPDATE \"Products\" SET \"StockQuantity\" = \"StockQuantity\" - {item.Quantity} WHERE \"Id\" = {item.ProductId}", cts.Token);
                 }
 
                 await catalogDb.SaveChangesAsync(cts.Token);
