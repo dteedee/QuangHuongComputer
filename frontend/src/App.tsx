@@ -45,6 +45,7 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
+import { PaymentCallbackPage } from './pages/PaymentCallbackPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -82,6 +83,7 @@ function App() {
                   <Route path="cart" element={<CartPage />} />
                   <Route path="checkout" element={<CheckoutPage />} />
                   <Route path="payment/:orderId" element={<PaymentPage />} />
+                  <Route path="payment/callback" element={<PaymentCallbackPage />} />
                   <Route path="payment/success" element={<PaymentResultPage />} />
                   <Route path="payment/failed" element={<PaymentResultPage />} />
                   <Route path="product/:id" element={<ProductDetailsPage />} />

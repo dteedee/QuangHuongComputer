@@ -180,13 +180,23 @@ export const LoginPage = () => {
                             </div>
                         </div>
 
-                        <div className="w-full flex justify-center">
+                        <div className="w-full flex flex-col items-center gap-4">
                             <div className="scale-110">
                                 <GoogleLogin
                                     onSuccess={handleGoogleSuccess}
                                     onError={() => setLoginError('Đăng nhập Google thất bại')}
                                 />
                             </div>
+
+                            {import.meta.env.DEV && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleGoogleSuccess({ credential: 'simulation_google_token' })}
+                                    className="text-[10px] font-bold text-gray-400 hover:text-[#D70018] uppercase tracking-tighter transition-colors border border-dashed border-gray-200 px-3 py-1 rounded-full"
+                                >
+                                    ⚡ Run Google Login Simulator (Dev Only)
+                                </button>
+                            )}
                         </div>
                     </form>
 

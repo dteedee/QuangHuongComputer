@@ -97,10 +97,37 @@ public static class SalesEndpointsFastCheckout
                     order.SetShippingAmount(30000); // Default shipping
                 }
 
-                // Apply discount if any
+                // Apply manual discount if any
                 if (model.ManualDiscount.HasValue && model.ManualDiscount.Value > 0)
                 {
                     order.ApplyCoupon("POS-MANUAL", model.ManualDiscount.Value, "{}", "POS Manual Discount");
+                }
+
+                // Apply coupon code if provided
+                var couponToApply = !string.IsNullOrEmpty(model.CouponCode) ? model.CouponCode : cart?.CouponCode;
+                if (!string.IsNullOrEmpty(couponToApply) && order.DiscountAmount == 0)
+                {
+                    var discountAmount = cart?.DiscountAmount ?? 0;
+
+                    // Calculate discount if not from cart
+                    if (discountAmount == 0)
+                    {
+                        var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+                        discountAmount = couponToApply.ToUpper() switch
+                        {
+                            "SAVE10" => subtotal * 0.1m,
+                            "SAVE20" => subtotal * 0.2m,
+                            "SAVE15" => subtotal * 0.15m,
+                            "FREESHIP" => order.ShippingAmount,
+                            _ => subtotal * 0.05m
+                        };
+                    }
+
+                    if (discountAmount > 0)
+                    {
+                        order.ApplyCoupon(couponToApply.ToUpper(), discountAmount,
+                            $"{{\"code\":\"{couponToApply}\",\"discount\":{discountAmount}}}", "Checkout Coupon");
+                    }
                 }
 
                 // Clear cart

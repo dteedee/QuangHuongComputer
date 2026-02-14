@@ -238,12 +238,14 @@ export const salesApi = {
                     isPickup: data.isPickup,
                     pickupStoreId: data.pickupStoreId,
                     pickupStoreName: data.pickupStoreName,
-                    manualDiscount: data.manualDiscount
+                    manualDiscount: data.manualDiscount,
+                    couponCode: data.couponCode // Added couponCode
                 });
                 return response.data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 // Fall back to regular checkout if fast checkout fails
-                console.log('Fast checkout failed, trying regular checkout:', error.message);
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                console.log('Fast checkout failed, trying regular checkout:', errorMessage);
                 const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/checkout', {
                     items: data.items,
                     shippingAddress: data.shippingAddress,

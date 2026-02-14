@@ -5,12 +5,14 @@ import { useCart } from '../context/CartContext';
 import {
   ArrowLeft, ArrowRight, CreditCard, Truck, User,
   MapPin, Phone, Mail, Lock, Check, ChevronRight,
-  ShieldCheck, Package, ShoppingBag, CreditCard as CardIcon
+  ShieldCheck, Package, ShoppingBag, CreditCard as CardIcon,
+  Building2, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { salesApi } from '../api/sales';
+import { paymentApi } from '../api/payment';
 
 interface CheckoutForm {
   // Customer Info
@@ -159,25 +161,74 @@ export function CheckoutPage() {
         isPickup: formData.deliveryMethod === 'pickup',
         pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
         pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
-        // Send user ID if logged in
         customerId: user?.id
       };
 
+      // Step 1: Create the order
       const response = await salesApi.orders.create(checkoutData);
 
       if (response && response.orderId) {
         setOrderId(response.orderId);
-        setStep(3);
-        clearCart();
-        toast.success('Đặt hàng thành công!');
+
+        // Step 2: Handle payment based on payment method
+        if (formData.paymentMethod === 'cod') {
+          // COD - No payment processing needed
+          setStep(3);
+          clearCart();
+          toast.success('Đặt hàng thành công!');
+          triggerConfetti();
+        } else if (formData.paymentMethod === 'credit_card') {
+          // Credit card - Initiate VNPay payment
+          try {
+            const paymentResponse = await paymentApi.initiate({
+              orderId: response.orderId,
+              amount: response.totalAmount,
+              provider: 0 // VNPay
+            });
+
+            if (paymentResponse.paymentUrl) {
+              // Save order info before redirect
+              clearCart();
+              toast.success('Đang chuyển đến trang thanh toán...');
+              // Redirect to VNPay
+              window.location.href = paymentResponse.paymentUrl;
+            } else {
+              // Fallback to payment page
+              clearCart();
+              navigate(`/payment/${response.orderId}`);
+            }
+          } catch (paymentError) {
+            console.error('Payment initiation failed:', paymentError);
+            // Order is created, redirect to payment page
+            clearCart();
+            navigate(`/payment/${response.orderId}`, {
+              state: { error: 'Không thể kết nối cổng thanh toán. Vui lòng thanh toán thủ công.' }
+            });
+          }
+        } else if (formData.paymentMethod === 'bank_transfer') {
+          // Bank transfer - Show bank details on success page
+          setStep(3);
+          clearCart();
+          toast.success('Đặt hàng thành công! Vui lòng chuyển khoản theo hướng dẫn.');
+          triggerConfetti();
+        }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to process order:', error);
-      const errorMessage = error.response?.data?.error || 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      const errorMessage = axiosError.response?.data?.error || 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   const formatPrice = (price: number) => {
@@ -667,6 +718,50 @@ export function CheckoutPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Bank Transfer Details */}
+                  {formData.paymentMethod === 'bank_transfer' && (
+                    <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Building2 className="w-5 h-5 text-amber-600" />
+                        <h4 className="font-black text-amber-800 uppercase text-sm tracking-wider">Thông tin chuyển khoản</h4>
+                      </div>
+
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
+                          <span className="text-amber-700 font-medium">Ngân hàng</span>
+                          <span className="font-bold text-slate-800">Vietcombank (VCB)</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
+                          <span className="text-amber-700 font-medium">Số tài khoản</span>
+                          <span className="font-bold text-slate-800 font-mono tracking-wider">1234567890123</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
+                          <span className="text-amber-700 font-medium">Chủ tài khoản</span>
+                          <span className="font-bold text-slate-800">CONG TY QUANG HUONG COMPUTER</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
+                          <span className="text-amber-700 font-medium">Số tiền</span>
+                          <span className="font-black text-[#D70018] text-lg">{formatPrice(total)}</span>
+                        </div>
+                        <div className="flex justify-between items-start py-2">
+                          <span className="text-amber-700 font-medium">Nội dung CK</span>
+                          <div className="text-right">
+                            <span className="font-bold text-slate-800 font-mono bg-white px-3 py-1 rounded-lg border border-amber-200">
+                              QH {orderId?.slice(-8).toUpperCase() || 'XXXXXXXX'}
+                            </span>
+                            <p className="text-[10px] text-amber-600 mt-1 italic">Vui lòng ghi đúng nội dung để xác nhận nhanh hơn</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 p-3 bg-amber-100 rounded-xl">
+                        <p className="text-xs text-amber-800 font-medium text-center">
+                          ⏰ Đơn hàng sẽ được xác nhận trong <span className="font-black">30 phút</span> sau khi chúng tôi nhận được tiền
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button

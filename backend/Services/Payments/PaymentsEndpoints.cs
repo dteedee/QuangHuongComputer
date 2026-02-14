@@ -41,12 +41,15 @@ public static class PaymentsEndpoints
             string paymentUrl = "";
             if (model.Provider == PaymentProvider.VnPay)
             {
+                // Get base URL for callback - backend handles VNPay callback
+                var baseUrl = config["BaseUrl"] ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
                 var vnpayConfig = new VNPayConfig
                 {
-                    TmnCode = config["VNPay:TmnCode"] ?? "DEMO",
-                    HashSecret = config["VNPay:HashSecret"] ?? "DEMOSECRET",
-                    PaymentUrl = config["VNPay:PaymentUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-                    ReturnUrl = config["VNPay:ReturnUrl"] ?? "http://localhost:3000/payment/callback"
+                    TmnCode = config["Payment:VNPay:TmnCode"] ?? config["VNPay:TmnCode"] ?? "DEMO",
+                    HashSecret = config["Payment:VNPay:HashSecret"] ?? config["VNPay:HashSecret"] ?? "DEMOSECRET",
+                    PaymentUrl = config["Payment:VNPay:PaymentUrl"] ?? config["VNPay:PaymentUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+                    ReturnUrl = config["Payment:VNPay:ReturnUrl"] ?? config["VNPay:ReturnUrl"] ?? $"{baseUrl}/api/payments/vnpay/callback"
                 };
 
                 var vnpayService = new VNPayService(vnpayConfig);
@@ -91,11 +94,11 @@ public static class PaymentsEndpoints
             IConfiguration config) =>
         {
             var queryParams = httpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
-            
+
             var vnpayConfig = new VNPayConfig
             {
-                TmnCode = config["VNPay:TmnCode"] ?? "DEMO",
-                HashSecret = config["VNPay:HashSecret"] ?? "DEMOSECRET"
+                TmnCode = config["Payment:VNPay:TmnCode"] ?? config["VNPay:TmnCode"] ?? "DEMO",
+                HashSecret = config["Payment:VNPay:HashSecret"] ?? config["VNPay:HashSecret"] ?? "DEMOSECRET"
             };
 
             var vnpayService = new VNPayService(vnpayConfig);
@@ -138,7 +141,7 @@ public static class PaymentsEndpoints
             await db.SaveChangesAsync();
 
             // Redirect to frontend with result
-            var frontendUrl = config["Frontend:Url"] ?? "http://localhost:3000";
+            var frontendUrl = config["Frontend:Url"] ?? config["Cors:AllowedOrigins:0"] ?? "http://localhost:3000";
             var redirectUrl = response.Success 
                 ? $"{frontendUrl}/payment/success?orderId={payment.OrderId}"
                 : $"{frontendUrl}/payment/failed?orderId={payment.OrderId}&error={response.ResponseCode}";

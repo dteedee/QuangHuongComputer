@@ -648,16 +648,37 @@ public static class SalesEndpoints
                     order.ApplyCoupon("POS-MANUAL", model.ManualDiscount.Value, "{}", "POS Manual Discount");
                 }
                 
-                // Apply coupon from cart if exists (simplified)
-                if (!string.IsNullOrEmpty(cart?.CouponCode) && order.DiscountAmount == 0)
+                // Apply coupon: from request or from cart
+                var couponToApply = !string.IsNullOrEmpty(model.CouponCode) ? model.CouponCode : cart?.CouponCode;
+                if (!string.IsNullOrEmpty(couponToApply) && order.DiscountAmount == 0)
                 {
-                    // Simple coupon handling - just use the discount from cart
-                    order.ApplyCoupon(
-                        cart.CouponCode.ToUpper(),
-                        cart.DiscountAmount,
-                        $"{{\"code\":\"{cart.CouponCode}\",\"discount\":{cart.DiscountAmount}}}",
-                        "Cart Coupon"
-                    );
+                    // Calculate discount based on coupon code
+                    var discountAmount = cart?.DiscountAmount ?? 0;
+
+                    // If no cart discount, calculate a default discount (10% for common codes)
+                    if (discountAmount == 0 && !string.IsNullOrEmpty(model.CouponCode))
+                    {
+                        // Simple discount calculation for direct checkout
+                        var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+                        discountAmount = couponToApply.ToUpper() switch
+                        {
+                            "SAVE10" => subtotal * 0.1m,
+                            "SAVE20" => subtotal * 0.2m,
+                            "SAVE15" => subtotal * 0.15m,
+                            "FREESHIP" => order.ShippingAmount,
+                            _ => subtotal * 0.05m // Default 5% for unknown codes
+                        };
+                    }
+
+                    if (discountAmount > 0)
+                    {
+                        order.ApplyCoupon(
+                            couponToApply.ToUpper(),
+                            discountAmount,
+                            $"{{\"code\":\"{couponToApply}\",\"discount\":{discountAmount}}}",
+                            "Checkout Coupon"
+                        );
+                    }
                 }
 
                 // 4. Clear cart after successful checkout
@@ -1213,15 +1234,16 @@ public static class SalesEndpoints
 }
 
 public record CheckoutDto(
-    List<CheckoutItemDto> Items, 
-    string? ShippingAddress, 
-    string? Notes, 
-    Guid? CustomerId = null, 
-    decimal? ManualDiscount = null, 
+    List<CheckoutItemDto> Items,
+    string? ShippingAddress,
+    string? Notes,
+    Guid? CustomerId = null,
+    decimal? ManualDiscount = null,
     string? PaymentMethod = "COD",
     bool IsPickup = false,
     string? PickupStoreId = null,
-    string? PickupStoreName = null
+    string? PickupStoreName = null,
+    string? CouponCode = null
 );
 public record CheckoutItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
 public record UpdateOrderStatusDto(string Status);
