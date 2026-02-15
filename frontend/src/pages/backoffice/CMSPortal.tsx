@@ -230,11 +230,11 @@ export const CMSPortal = () => {
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="col-span-2 space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Tiêu đề bài viết / trang</label>
-                                        <input name="title" defaultValue={editingItem?.title} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-base font-bold text-gray-950 focus:outline-none focus:border-[#D70018] shadow-sm transition-all" placeholder="Nhập tiêu đề hấp dẫn..." />
+                                        <input name="title" defaultValue={editingItem?.title} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-base font-bold text-gray-950 focus:outline-none focus:border-[#D70018] shadow-sm transition-all placeholder:text-gray-400" placeholder="Nhập tiêu đề hấp dẫn..." />
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Đường dẫn tĩnh (Slug)</label>
-                                        <input name="slug" defaultValue={editingItem?.slug} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-black text-[#D70018] focus:outline-none focus:border-[#D70018] shadow-sm font-mono" placeholder="my-awesome-post" />
+                                        <input name="slug" defaultValue={editingItem?.slug} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-black text-[#D70018] focus:outline-none focus:border-[#D70018] shadow-sm font-mono placeholder:text-gray-400" placeholder="my-awesome-post" />
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Phân loại</label>

@@ -71,7 +71,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 'relative w-full px-4 py-3.5 rounded-xl border-2 bg-white',
                 'transition-all duration-300 ease-out',
                 'focus:outline-none',
-                'placeholder:text-gray-300 placeholder:transition-opacity placeholder:duration-200',
+                'text-gray-900 placeholder:text-gray-400 placeholder:transition-opacity placeholder:duration-200',
                 'focus:placeholder:opacity-50',
                 hasError
                   ? 'border-red-400 focus:border-red-500 bg-red-50/50'

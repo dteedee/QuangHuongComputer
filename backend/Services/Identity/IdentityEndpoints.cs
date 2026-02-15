@@ -374,6 +374,21 @@ public static class IdentityEndpoints
                     payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(token, settings);
                 }
 
+                // Extract name from Google payload - try multiple fields
+                var fullName = payload.Name;
+                if (string.IsNullOrEmpty(fullName))
+                {
+                    // Fallback: combine GivenName and FamilyName
+                    var givenName = payload.GivenName ?? "";
+                    var familyName = payload.FamilyName ?? "";
+                    fullName = $"{givenName} {familyName}".Trim();
+                }
+                if (string.IsNullOrEmpty(fullName))
+                {
+                    // Last fallback: use email prefix
+                    fullName = payload.Email?.Split('@')[0] ?? "Google User";
+                }
+
                 var user = await userManager.FindByEmailAsync(payload.Email);
                 if (user == null)
                 {
@@ -381,7 +396,8 @@ public static class IdentityEndpoints
                     {
                         UserName = payload.Email,
                         Email = payload.Email,
-                        FullName = payload.Name
+                        FullName = fullName,
+                        EmailConfirmed = true // Google already verified the email
                     };
                     var result = await userManager.CreateAsync(user);
                     if (!result.Succeeded) return Results.BadRequest(result.Errors);
@@ -389,6 +405,28 @@ public static class IdentityEndpoints
                     await userManager.AddToRoleAsync(user, "Customer");
 
                     await publishEndpoint.Publish(new UserRegisteredIntegrationEvent(Guid.Parse(user.Id), user.Email!, user.FullName));
+                }
+                else
+                {
+                    // Update existing user info if missing
+                    var needsUpdate = false;
+
+                    if (string.IsNullOrEmpty(user.FullName) || user.FullName == "Google User")
+                    {
+                        user.FullName = fullName;
+                        needsUpdate = true;
+                    }
+
+                    if (!user.EmailConfirmed)
+                    {
+                        user.EmailConfirmed = true;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate)
+                    {
+                        await userManager.UpdateAsync(user);
+                    }
                 }
 
                 var roles = await userManager.GetRolesAsync(user);

@@ -184,21 +184,21 @@ export const HRPortal = () => {
                             <form onSubmit={handleAddEmployee} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Họ và tên</label>
-                                    <input name="fullName" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                    <input name="fullName" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vị trí</label>
-                                        <input name="position" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                        <input name="position" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lương cơ bản</label>
-                                        <input name="baseSalary" type="number" required defaultValue={10000000} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                        <input name="baseSalary" type="number" required defaultValue={10000000} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email liên hệ</label>
-                                    <input name="email" type="email" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold" />
+                                    <input name="email" type="email" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
                                 </div>
                                 <div className="flex gap-4 pt-4">
                                     <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-400 font-black uppercase text-[10px] rounded-2xl">Hủy</button>

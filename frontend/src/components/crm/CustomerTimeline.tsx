@@ -40,7 +40,7 @@ export default function CustomerTimeline({ interactions, maxItems = 10 }: Custom
     return (
       <div className="text-center py-8 text-gray-500">
         <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>Chua co tuong tac nao</p>
+        <p>Chưa có tương tác nào</p>
       </div>
     );
   }
@@ -92,17 +92,17 @@ export default function CustomerTimeline({ interactions, maxItems = 10 }: Custom
                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
                   {interaction.durationMinutes && (
                     <span className="bg-gray-50 px-2 py-1 rounded">
-                      {interaction.durationMinutes} phut
+                      {interaction.durationMinutes} phút
                     </span>
                   )}
                   {interaction.callOutcome && (
                     <span className="bg-gray-50 px-2 py-1 rounded">
-                      Ket qua: {interaction.callOutcome}
+                      Kết quả: {interaction.callOutcome}
                     </span>
                   )}
                   {interaction.meetingLocation && (
                     <span className="bg-gray-50 px-2 py-1 rounded">
-                      Dia diem: {interaction.meetingLocation}
+                      Địa điểm: {interaction.meetingLocation}
                     </span>
                   )}
                   {interaction.sentiment && (
@@ -134,7 +134,7 @@ export default function CustomerTimeline({ interactions, maxItems = 10 }: Custom
 
       {interactions.length > maxItems && (
         <div className="text-center mt-4 text-sm text-gray-500">
-          ... va {interactions.length - maxItems} tuong tac khac
+          ... và {interactions.length - maxItems} tương tác khác
         </div>
       )}
     </div>

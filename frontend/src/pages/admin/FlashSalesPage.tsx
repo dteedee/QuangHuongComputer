@@ -482,7 +482,7 @@ export default function FlashSalesPage() {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
                                     placeholder="VD: Flash Sale Tết 2026"
-                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                 />
                             </div>
 
@@ -496,7 +496,7 @@ export default function FlashSalesPage() {
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={2}
                                     placeholder="Mô tả ngắn về chương trình khuyến mãi"
-                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none resize-none"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none resize-none placeholder:text-gray-400"
                                 />
                             </div>
 
@@ -514,7 +514,7 @@ export default function FlashSalesPage() {
                                                 discountType: e.target.value as 'Percentage' | 'FixedAmount',
                                             })
                                         }
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     >
                                         <option value="Percentage">Phần trăm (%)</option>
                                         <option value="FixedAmount">Số tiền cố định (đ)</option>
@@ -533,7 +533,7 @@ export default function FlashSalesPage() {
                                         required
                                         min={1}
                                         max={formData.discountType === 'Percentage' ? 100 : undefined}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -549,7 +549,7 @@ export default function FlashSalesPage() {
                                         value={formData.startTime}
                                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                                         required
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>
@@ -561,7 +561,7 @@ export default function FlashSalesPage() {
                                         value={formData.endTime}
                                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                                         required
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -583,7 +583,7 @@ export default function FlashSalesPage() {
                                         }
                                         placeholder="Không giới hạn"
                                         min={1}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>
@@ -601,7 +601,7 @@ export default function FlashSalesPage() {
                                         }
                                         placeholder="Không giới hạn"
                                         min={1}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -618,7 +618,7 @@ export default function FlashSalesPage() {
                                         onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
                                         placeholder="VD: HOT, SALE, -50%"
                                         maxLength={20}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>

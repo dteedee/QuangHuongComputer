@@ -7,8 +7,7 @@ using Catalog.Domain;
 using BuildingBlocks.Database;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
-// Note: Sales reference removed to avoid circular dependency
-// Verified purchase check should be done via a separate API call
+// Note: Purchase verification is done at ApiGateway level to avoid circular dependency
 
 namespace Catalog;
 
@@ -1020,6 +1019,7 @@ public static class CatalogEndpoints
         });
 
         // Create a new review (Requires authentication)
+        // Note: Purchase verification is done at ApiGateway level (see ReviewValidationEndpoints.cs)
         group.MapPost("/products/{productId:guid}/reviews", async (
             Guid productId,
             CreateProductReviewDto dto,
@@ -1061,9 +1061,8 @@ public static class CatalogEndpoints
                 return Results.BadRequest(new { message = "Bạn đã đánh giá sản phẩm này rồi" });
             }
 
-            // Note: Verified purchase check moved to Sales module to avoid circular dependency
-            // Reviews will be verified asynchronously via background job
-            var isVerifiedPurchase = false;
+            // Get verified purchase status from header (set by ApiGateway middleware)
+            var isVerifiedPurchase = context.Request.Headers["X-Verified-Purchase"].FirstOrDefault() == "true";
 
             var review = new ProductReview(
                 productId: productId,

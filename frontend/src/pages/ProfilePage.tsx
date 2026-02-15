@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { salesApi } from '../api/sales';
 import type { Order } from '../api/sales';
-import { Package, Clock, Hash, MapPin, DollarSign, AlertCircle, Gift, Heart, Coins } from 'lucide-react';
+import { Package, Clock, Hash, MapPin, DollarSign, AlertCircle, Gift, Coins } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { LoyaltyCard } from '../components/loyalty';
 
@@ -69,9 +69,6 @@ export const ProfilePage = () => {
                             </Link>
                             <Link to="/account/loyalty" className="w-full text-left px-4 py-3 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition text-[10px] font-black flex items-center gap-3 uppercase tracking-widest">
                                 <Coins size={16} /> Điểm thưởng
-                            </Link>
-                            <Link to="/account/wishlist" className="w-full text-left px-4 py-3 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition text-[10px] font-black flex items-center gap-3 uppercase tracking-widest">
-                                <Heart size={16} /> Yêu thích
                             </Link>
                             <button className="w-full text-left px-4 py-3 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition text-[10px] font-black flex items-center gap-3 uppercase tracking-widest">
                                 <MapPin size={16} /> Thông tin địa chỉ

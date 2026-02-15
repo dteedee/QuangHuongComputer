@@ -54,6 +54,25 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Map environment variables to configuration (for OAuth and other services)
+// DotNetEnv loads .env file, but we need to explicitly map to configuration paths
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")))
+{
+    builder.Configuration["OAuth:Google:ClientId"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")))
+{
+    builder.Configuration["OAuth:Google:ClientSecret"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_ID")))
+{
+    builder.Configuration["OAuth:Facebook:AppId"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_ID");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET")))
+{
+    builder.Configuration["OAuth:Facebook:AppSecret"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET");
+}
+
 // Configure Vietnamese culture for the application
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");
 CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("vi-VN");
@@ -118,12 +137,22 @@ builder.Services.AddHealthChecks()
     .AddRabbitMQ(rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672", name: "rabbitmq")
     .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379", name: "redis");
 
-// CORS
+// CORS - Read from configuration with localhost fallbacks for development
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
+
+// In development, ensure localhost is always allowed
+if (builder.Environment.IsDevelopment())
+{
+    var devOrigins = new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
+    corsOrigins = corsOrigins.Union(devOrigins).Distinct().ToArray();
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:5174") // Allow Frontend
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -306,6 +335,94 @@ if (app.Environment.IsDevelopment())
                         EXCEPTION
                             WHEN duplicate_column THEN NULL;
                         END;
+                        
+                        -- Fix for OrderItem schema mismatch
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""CreatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL; -- Ignore if column already exists
+                            WHEN undefined_table THEN NULL; -- Ignore if table OrderItem doesn't exist (maybe OrderItems?)
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""UpdatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+
+                        -- Try plural ""OrderItems"" just in case
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""CreatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""UpdatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
                     END $$;
                 ");
             }
@@ -464,6 +581,9 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Review validation: Ensure users have purchased a product before reviewing
+app.UseReviewValidation();
 
 // Chatbot Endpoint
 app.MapPost("/api/ai/chat", async (GatewayChatRequest request, IAiService ai) =>

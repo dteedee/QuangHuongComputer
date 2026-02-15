@@ -79,7 +79,7 @@ export const ResetPasswordPage = () => {
                                     type="text"
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-bold tracking-[0.5em] focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
                                     placeholder="000000"
                                     required
                                     maxLength={20}
@@ -97,7 +97,7 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
                                     placeholder="Tối thiểu 6 ký tự"
                                     required
                                     minLength={6}
@@ -115,7 +115,7 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
                                     placeholder="Nhập lại mật khẩu"
                                     required
                                     minLength={6}

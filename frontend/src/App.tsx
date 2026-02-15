@@ -9,7 +9,6 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { AboutPage } from './pages/AboutPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import { WishlistProvider } from './context/WishlistContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LoginPage } from './pages/LoginPage';
@@ -74,7 +73,6 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import { OrdersPage } from './pages/account/OrdersPage';
 import { OrderDetailPage } from './pages/account/OrderDetailPage';
 import { NewReturnRequestPage } from './pages/account/NewReturnRequestPage';
-import { WishlistPage } from './pages/account/WishlistPage';
 import { LoyaltyPage } from './pages/account/LoyaltyPage';
 import { ComparePage } from './pages/ComparePage';
 import { ComparisonBar } from './components/comparison';
@@ -107,7 +105,6 @@ function App() {
           <AuthProvider>
             <ThemeProvider>
               <CartProvider>
-                <WishlistProvider>
                   <ComparisonProvider>
                     <ComparisonBar />
                     <Routes>
@@ -139,7 +136,6 @@ function App() {
                         <Route path="account/orders" element={<OrdersPage />} />
                         <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
                         <Route path="account/returns/new" element={<NewReturnRequestPage />} />
-                        <Route path="account/wishlist" element={<WishlistPage />} />
                         <Route path="account/loyalty" element={<LoyaltyPage />} />
 
                         {/* Category Routes */}
@@ -222,7 +218,6 @@ function App() {
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                     </Routes>
                   </ComparisonProvider>
-                </WishlistProvider>
               </CartProvider>
             </ThemeProvider>
           </AuthProvider>

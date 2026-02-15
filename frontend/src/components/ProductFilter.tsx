@@ -156,7 +156,7 @@ export const ProductFilter = ({
                             value={localMinPrice || ''}
                             onChange={(e) => setLocalMinPrice(Number(e.target.value))}
                             placeholder="0"
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] outline-none transition-all"
+                            className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] outline-none transition-all placeholder:text-gray-400"
                         />
                         <span className="text-gray-400">-</span>
                         <input
@@ -164,7 +164,7 @@ export const ProductFilter = ({
                             value={localMaxPrice >= 100000000 ? '' : localMaxPrice}
                             onChange={(e) => setLocalMaxPrice(Number(e.target.value))}
                             placeholder="Tối đa"
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] outline-none transition-all"
+                            className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] outline-none transition-all placeholder:text-gray-400"
                         />
                     </div>
                     <button

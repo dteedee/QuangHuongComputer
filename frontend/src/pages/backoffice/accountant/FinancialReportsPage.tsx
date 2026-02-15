@@ -40,16 +40,19 @@ export function FinancialReportsPage() {
     const { data: cashFlow, isLoading: loadingCashFlow } = useQuery({
         queryKey: ['cash-flow', dateRange],
         queryFn: () => financialApi.getCashFlow(dateRange.startDate, dateRange.endDate),
+        staleTime: 60000, // Cache for 1 minute
     });
 
     const { data: revenueExpense, isLoading: loadingRevExp } = useQuery({
         queryKey: ['revenue-expense', dateRange],
         queryFn: () => financialApi.getRevenueExpense(dateRange.startDate, dateRange.endDate),
+        staleTime: 60000, // Cache for 1 minute
     });
 
     const { data: balance, isLoading: loadingBalance } = useQuery({
         queryKey: ['balance-overview'],
         queryFn: () => financialApi.getBalanceOverview(),
+        staleTime: 60000, // Cache for 1 minute
     });
 
     const handleExport = async () => {

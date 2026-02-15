@@ -63,7 +63,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                                     type="text"
                                     value={formData.fullName}
                                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-300"
+                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
                                     placeholder="Nguyễn Văn A"
                                 />
                             </div>
@@ -78,7 +78,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-300"
+                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
                                     placeholder="example@gmail.com"
                                 />
                             </div>

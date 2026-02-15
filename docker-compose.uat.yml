@@ -208,6 +208,8 @@ services:
       # CORS
       Cors__AllowedOrigins__0: "http://localhost:${FRONTEND_PORT:-3002}"
       Cors__AllowedOrigins__1: "${UAT_DOMAIN:-http://uat.quanghuongcomputer.local}"
+      # Frontend URL (for email links)
+      Frontend__Url: "${FRONTEND_URL:-${UAT_DOMAIN:-http://uat.quanghuongcomputer.local}}"
     ports:
       - "${BACKEND_PORT:-5002}:8080"
     depends_on:
@@ -257,6 +259,11 @@ services:
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
         VITE_FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
         VITE_CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+        VITE_VNPAY_RETURN_URL: ${VITE_VNPAY_RETURN_URL:-http://localhost:3002/payment/vnpay-return}
+        VITE_MOMO_RETURN_URL: ${VITE_MOMO_RETURN_URL:-http://localhost:3002/payment/momo-return}
+        VITE_ZALOPAY_RETURN_URL: ${VITE_ZALOPAY_RETURN_URL:-http://localhost:3002/payment/zalopay-return}
+        VITE_SIGNALR_HUB_URL: ${VITE_SIGNALR_HUB_URL:-http://localhost:5002/hubs/chat}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:5002}
     container_name: quanghuong-frontend-uat
     ports:
       - "${FRONTEND_PORT:-3002}:80"

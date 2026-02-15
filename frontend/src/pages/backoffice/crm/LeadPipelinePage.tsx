@@ -36,7 +36,7 @@ export default function LeadPipelinePage() {
   };
 
   const handleConvert = async (lead: Lead) => {
-    if (!confirm('Chuyen doi lead nay thanh khach hang?')) return;
+    if (!confirm('Chuyển đổi lead này thành khách hàng?')) return;
     try {
       await crmApi.leads.convert(lead.id);
       loadPipeline();
@@ -79,14 +79,14 @@ export default function LeadPipelinePage() {
             onClick={() => navigate('/backoffice/crm/leads')}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
           >
-            <span>Xem danh sach</span>
+            <span>Xem danh sách</span>
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/leads?new=true')}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
           >
             <Plus size={18} />
-            <span>Them Lead</span>
+            <span>Thêm Lead</span>
           </button>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function LeadPipelinePage() {
               <div className="flex-1 overflow-y-auto space-y-3">
                 {column.leads.length === 0 ? (
                   <div className="text-center py-8 text-gray-400 text-sm">
-                    Khong co lead nao
+                    Không có lead nào
                   </div>
                 ) : (
                   column.leads.map((lead) => (
@@ -150,7 +150,7 @@ export default function LeadPipelinePage() {
                   className="mt-3 flex items-center justify-center gap-2 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
                 >
                   <Plus size={16} />
-                  <span>Them lead</span>
+                  <span>Thêm lead</span>
                 </button>
               )}
             </motion.div>
@@ -161,12 +161,12 @@ export default function LeadPipelinePage() {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <Target size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500">Chua co pipeline stage nao</p>
+                <p className="text-gray-500">Chưa có pipeline stage nào</p>
                 <button
                   onClick={() => navigate('/backoffice/crm/settings/pipeline')}
                   className="mt-4 text-red-600 hover:underline"
                 >
-                  Cau hinh Pipeline
+                  Cấu hình Pipeline
                 </button>
               </div>
             </div>

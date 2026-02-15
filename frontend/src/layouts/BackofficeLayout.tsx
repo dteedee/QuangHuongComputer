@@ -7,7 +7,7 @@ import {
     Calendar, Clock, TrendingUp, Activity, Sparkles, Gift, Star, Building2,
     Truck, CreditCard, MessageSquare, Headphones, Globe, Languages, Eye,
     Volume2, VolumeX, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
-    UserCheck, Briefcase, ClipboardList
+    UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, accentColors, type AccentColor, type ThemeMode } from '../context/ThemeContext';
@@ -15,6 +15,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '../api/sales';
+import { useNotifications, type Notification } from '../hooks/useNotifications';
 
 // Keyboard shortcut hook
 const useKeyboardShortcut = (key: string, callback: () => void, ctrl = false, shift = false) => {
@@ -197,11 +198,31 @@ export const BackofficeLayout = () => {
     };
 
     // Check if a menu item is active (exact match or parent route)
+    // Priority: exact match > prefix match (only if no more specific match exists)
     const isActive = (path: string) => {
+        const currentPath = location.pathname;
+
+        // Exact match for root backoffice
         if (path === '/backoffice') {
-            return location.pathname === '/backoffice';
+            return currentPath === '/backoffice';
         }
-        return location.pathname === path || location.pathname.startsWith(path + '/');
+
+        // Exact match
+        if (currentPath === path) return true;
+
+        // Prefix match - only if there's no more specific menu item that matches
+        if (currentPath.startsWith(path + '/')) {
+            // Check if there's a more specific menu item that also matches
+            const allMenuPaths = filteredGroups.flatMap(g => g.items.map(i => i.path));
+            const hasMoreSpecificMatch = allMenuPaths.some(menuPath =>
+                menuPath !== path &&
+                menuPath.startsWith(path + '/') &&
+                (currentPath === menuPath || currentPath.startsWith(menuPath + '/'))
+            );
+            return !hasMoreSpecificMatch;
+        }
+
+        return false;
     };
 
     // Check if a group contains the active route
@@ -211,14 +232,39 @@ export const BackofficeLayout = () => {
         return group.items.some(item => isActive(item.path));
     };
 
-    // Notifications (mock data)
-    const notifications = [
-        { id: 1, type: 'order', title: 'Đơn hàng mới', message: 'Đơn #ORD-2024-001 vừa được tạo', time: '2 phút trước', read: false },
-        { id: 2, type: 'stock', title: 'Cảnh báo tồn kho', message: 'MacBook Pro 14 sắp hết hàng', time: '15 phút trước', read: false },
-        { id: 3, type: 'system', title: 'Cập nhật hệ thống', message: 'Phiên bản mới đã sẵn sàng', time: '1 giờ trước', read: true },
-    ];
+    // Notifications using hook based on user roles
+    const {
+        notifications,
+        loading: notificationsLoading,
+        unreadCount,
+        markAsRead,
+        markAllAsRead,
+        refresh: refreshNotifications
+    } = useNotifications({
+        roles: user?.roles || [],
+        refreshInterval: 120000 // 2 minutes
+    });
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // Get icon for notification type
+    const getNotificationIcon = (type: Notification['type']) => {
+        switch (type) {
+            case 'order': return <Receipt size={16} className="text-blue-500" />;
+            case 'repair': return <Wrench size={16} className="text-orange-500" />;
+            case 'warranty': return <ShieldCheck size={16} className="text-green-500" />;
+            case 'inventory': return <Box size={16} className="text-purple-500" />;
+            case 'crm': return <Users size={16} className="text-pink-500" />;
+            default: return <Bell size={16} className="text-gray-500" />;
+        }
+    };
+
+    // Get priority color
+    const getPriorityColor = (priority?: Notification['priority']) => {
+        switch (priority) {
+            case 'high': return 'border-l-red-500';
+            case 'medium': return 'border-l-orange-500';
+            default: return 'border-l-gray-300';
+        }
+    };
 
     // Quick Actions
     const quickActions = [
@@ -578,46 +624,122 @@ export const BackofficeLayout = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className={`absolute right-0 mt-2 w-80 rounded-xl shadow-xl border z-50 overflow-hidden ${isDark
+                                        className={`absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden ${isDark
                                             ? 'bg-gray-900 border-gray-800'
                                             : 'bg-white border-gray-200'
                                             }`}
                                     >
+                                        {/* Header */}
                                         <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                                            <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Thông báo</h3>
-                                            <button className="text-xs font-medium" style={{ color: colors.primary }}>
-                                                Đánh dấu đã đọc
-                                            </button>
-                                        </div>
-                                        <div className="max-h-80 overflow-y-auto">
-                                            {notifications.map((notif) => (
-                                                <div
-                                                    key={notif.id}
-                                                    className={`p-4 border-b last:border-0 transition-colors cursor-pointer ${isDark
-                                                        ? `border-gray-800 ${notif.read ? 'bg-gray-900' : 'bg-gray-800/50'} hover:bg-gray-800`
-                                                        : `border-gray-100 ${notif.read ? 'bg-white' : 'bg-blue-50/50'} hover:bg-gray-50`
-                                                        }`}
+                                            <div className="flex items-center gap-2">
+                                                <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Thông báo</h3>
+                                                {unreadCount > 0 && (
+                                                    <span className="px-2 py-0.5 text-xs font-medium rounded-full text-white" style={{ backgroundColor: colors.primary }}>
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={refreshNotifications}
+                                                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                                                    title="Làm mới"
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        <div
-                                                            className={`w-2 h-2 rounded-full mt-2 ${notif.read ? 'bg-gray-400' : ''}`}
-                                                            style={!notif.read ? { backgroundColor: colors.primary } : {}}
-                                                        />
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                                {notif.title}
-                                                            </p>
-                                                            <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                {notif.message}
-                                                            </p>
-                                                            <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                                {notif.time}
-                                                            </p>
+                                                    <RefreshCw size={14} className={notificationsLoading ? 'animate-spin' : ''} />
+                                                </button>
+                                                {unreadCount > 0 && (
+                                                    <button
+                                                        onClick={markAllAsRead}
+                                                        className="text-xs font-medium hover:underline"
+                                                        style={{ color: colors.primary }}
+                                                    >
+                                                        Đánh dấu đã đọc
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Notifications List */}
+                                        <div className="max-h-[400px] overflow-y-auto">
+                                            {notificationsLoading && notifications.length === 0 ? (
+                                                <div className="flex items-center justify-center py-12">
+                                                    <Loader2 size={24} className="animate-spin text-gray-400" />
+                                                </div>
+                                            ) : notifications.length === 0 ? (
+                                                <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    <Bell size={32} className="mx-auto mb-3 opacity-50" />
+                                                    <p className="text-sm">Không có thông báo mới</p>
+                                                    <p className="text-xs mt-1">Các thông báo sẽ xuất hiện ở đây</p>
+                                                </div>
+                                            ) : (
+                                                notifications.map((notif) => (
+                                                    <div
+                                                        key={notif.id}
+                                                        onClick={() => {
+                                                            markAsRead(notif.id);
+                                                            if (notif.link) {
+                                                                navigate(notif.link);
+                                                                setShowNotifications(false);
+                                                            }
+                                                        }}
+                                                        className={`p-4 border-l-4 border-b last:border-b-0 transition-colors cursor-pointer ${getPriorityColor(notif.priority)} ${isDark
+                                                            ? `border-b-gray-800 ${notif.read ? 'bg-gray-900' : 'bg-gray-800/50'} hover:bg-gray-800`
+                                                            : `border-b-gray-100 ${notif.read ? 'bg-white' : 'bg-blue-50/30'} hover:bg-gray-50`
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            {/* Icon */}
+                                                            <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                                                                {getNotificationIcon(notif.type)}
+                                                            </div>
+
+                                                            {/* Content */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                                        {notif.title}
+                                                                    </p>
+                                                                    {!notif.read && (
+                                                                        <span
+                                                                            className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
+                                                                            style={{ backgroundColor: colors.primary }}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                                <p className={`text-xs mt-0.5 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                                    {notif.message}
+                                                                </p>
+                                                                <div className="flex items-center gap-2 mt-1.5">
+                                                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                        {notif.time}
+                                                                    </p>
+                                                                    {notif.priority === 'high' && (
+                                                                        <span className="flex items-center gap-1 text-xs text-red-500">
+                                                                            <AlertCircle size={10} />
+                                                                            Quan trọng
+                                                                        </span>
+                                                                    )}
+                                                                    {notif.link && (
+                                                                        <span className="text-xs" style={{ color: colors.primary }}>
+                                                                            Xem chi tiết →
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))
+                                            )}
                                         </div>
+
+                                        {/* Footer */}
+                                        {notifications.length > 0 && (
+                                            <div className={`p-3 border-t text-center ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    Hiển thị {notifications.length} thông báo mới nhất
+                                                </p>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -647,6 +769,7 @@ export const BackofficeLayout = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        onClick={(e) => e.stopPropagation()}
                                         className={`absolute right-0 mt-2 w-72 rounded-xl shadow-xl border z-50 overflow-hidden ${isDark
                                             ? 'bg-gray-900 border-gray-800'
                                             : 'bg-white border-gray-200'
@@ -666,7 +789,10 @@ export const BackofficeLayout = () => {
                                                     {themeModes.map((tm) => (
                                                         <button
                                                             key={tm.value}
-                                                            onClick={() => setMode(tm.value)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setMode(tm.value);
+                                                            }}
                                                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${mode === tm.value
                                                                 ? 'text-white'
                                                                 : isDark
@@ -691,9 +817,11 @@ export const BackofficeLayout = () => {
                                                     {accentColorOptions.map((ac) => (
                                                         <button
                                                             key={ac.value}
-                                                            onClick={() => setAccent(ac.value)}
-                                                            className={`w-full aspect-square rounded-xl ${ac.color} flex items-center justify-center transition-transform hover:scale-110 ${accent === ac.value ? 'ring-2 ring-offset-2' : ''}`}
-                                                            style={accent === ac.value ? { ringColor: accentColors[ac.value].primary } : {}}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setAccent(ac.value);
+                                                            }}
+                                                            className={`w-full aspect-square rounded-xl ${ac.color} flex items-center justify-center transition-transform hover:scale-110 ${accent === ac.value ? 'ring-2 ring-offset-2 ring-white' : ''}`}
                                                             title={ac.label}
                                                         >
                                                             {accent === ac.value && <Check size={16} className="text-white" />}

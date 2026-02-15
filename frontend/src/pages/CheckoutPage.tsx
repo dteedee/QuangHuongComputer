@@ -87,18 +87,24 @@ export function CheckoutPage() {
     const newErrors: Partial<Record<keyof CheckoutForm, string>> = {};
 
     if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Vui lòng nhập email';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
+
+    // Chỉ validate email khi giao hàng tận nơi
+    if (formData.deliveryMethod === 'delivery') {
+      if (!formData.email.trim()) {
+        newErrors.email = 'Vui lòng nhập email';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Email không hợp lệ';
+      }
     }
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Vui lòng nhập số điện thoại';
     } else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Số điện thoại không hợp lệ';
     }
 
-    if (step === 1) {
+    // Chỉ validate địa chỉ khi giao hàng tận nơi
+    if (step === 1 && formData.deliveryMethod === 'delivery') {
       if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ';
       if (!formData.ward.trim()) newErrors.ward = 'Vui lòng chọn phường/xã';
       if (!formData.district.trim()) newErrors.district = 'Vui lòng chọn quận/huyện';
@@ -236,10 +242,15 @@ export function CheckoutPage() {
           triggerConfetti();
         }
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Failed to process order:', error);
-      const axiosError = error as { response?: { data?: { error?: string } } };
-      const errorMessage = axiosError.response?.data?.error || 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
+      // Try to get error message from various sources
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.Error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);

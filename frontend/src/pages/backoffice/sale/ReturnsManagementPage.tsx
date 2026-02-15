@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { salesApi, ReturnRequest, ReturnStatus } from '../../../api/sales';
+import { salesApi } from '../../../api/sales';
+import type { ReturnRequest, ReturnStatus } from '../../../api/sales';
 import {
   RotateCcw,
   Search,
@@ -55,6 +56,7 @@ const ReturnDetailModal = ({
       Rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle, label: 'Từ chối' },
       Refunded: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: DollarSign, label: 'Đã hoàn tiền' },
       Completed: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle, label: 'Hoàn thành' },
+      Cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', icon: XCircle, label: 'Đã hủy' },
     };
     const badge = badges[status] || badges.Pending;
     const Icon = badge.icon;
@@ -402,6 +404,7 @@ export const ReturnsManagementPage = () => {
       Rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Từ chối' },
       Refunded: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Đã hoàn tiền' },
       Completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'Hoàn thành' },
+      Cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Đã hủy' },
     };
     const badge = badges[status] || badges.Pending;
     return (
@@ -413,7 +416,7 @@ export const ReturnsManagementPage = () => {
 
   const filteredReturns = returns.filter(r => {
     if (searchQuery && !r.orderId.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !r.reason.toLowerCase().includes(searchQuery.toLowerCase())) {
+      !r.reason.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     return true;

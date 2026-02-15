@@ -8,8 +8,9 @@ import {
     LogOut, Settings, Laptop, Cpu, Zap,
     Briefcase, MessageCircle, User, Package, FileText
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
+import { catalogApi, type Category } from '../api/catalog';
 
 interface HeaderProps {
     onCartClick: () => void;
@@ -22,7 +23,10 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showCategoryMenu, setShowCategoryMenu] = useState(false);
     const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const categoryMenuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchConfigs = async () => {
@@ -34,6 +38,29 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
             }
         };
         fetchConfigs();
+    }, []);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await catalogApi.getCategories();
+                setCategories(data.filter(c => c.isActive));
+            } catch (error) {
+                console.error('Failed to load categories', error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+                setShowCategoryMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const companyBrand1 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_1', 'QUANG HƯỞNG', (v) => v);
@@ -112,7 +139,19 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-sm truncate max-w-[140px]">{user?.fullName}</span>
-                                                <span className="text-[10px] text-gray-400">Thành viên</span>
+                                                <span className="text-[10px] text-gray-400">
+                                                    {(() => {
+                                                        const roles = user?.roles || [];
+                                                        if (roles.includes('Admin')) return 'Quản trị viên';
+                                                        if (roles.includes('Manager')) return 'Quản lý';
+                                                        if (roles.includes('Sale')) return 'Nhân viên bán hàng';
+                                                        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Kỹ thuật viên';
+                                                        if (roles.includes('Accountant')) return 'Kế toán';
+                                                        if (roles.includes('Supplier')) return 'Nhà cung cấp';
+                                                        if (roles.includes('Marketing')) return 'Marketing';
+                                                        return 'Khách hàng';
+                                                    })()}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -120,12 +159,27 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                             <Link to="/account" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
                                                 <User size={16} /> Tài khoản của tôi
                                             </Link>
-                                            <Link to="/account?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
-                                                <Package size={16} /> Đơn hàng
-                                            </Link>
-                                            {user?.roles.some(role => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier'].includes(role)) && (
+                                            {/* Chỉ hiển thị Đơn hàng cho khách hàng (không phải nhân viên) */}
+                                            {!user?.roles.some(role => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier', 'Marketing'].includes(role)) && (
+                                                <Link to="/account?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
+                                                    <Package size={16} /> Đơn hàng
+                                                </Link>
+                                            )}
+                                            {/* Hiển thị link dashboard với tên phù hợp theo role */}
+                                            {user?.roles.some(role => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier', 'Marketing'].includes(role)) && (
                                                 <Link to="/backoffice" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
-                                                    <Settings size={16} /> Quản trị website
+                                                    <Settings size={16} />
+                                                    {(() => {
+                                                        const roles = user?.roles || [];
+                                                        if (roles.includes('Admin')) return 'Quản trị hệ thống';
+                                                        if (roles.includes('Manager')) return 'Bảng điều khiển quản lý';
+                                                        if (roles.includes('Sale')) return 'Quản lý bán hàng';
+                                                        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Bảng điều khiển kỹ thuật';
+                                                        if (roles.includes('Accountant')) return 'Quản lý tài chính';
+                                                        if (roles.includes('Supplier')) return 'Quản lý kho hàng';
+                                                        if (roles.includes('Marketing')) return 'Quản lý marketing';
+                                                        return 'Quản trị';
+                                                    })()}
                                                 </Link>
                                             )}
                                         </div>
@@ -169,13 +223,51 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                     {/* Search Bar */}
                     <div className="flex-1 max-w-2xl relative">
                         <form onSubmit={handleSearch} className="flex h-11">
-                            <div className="relative flex-shrink-0 bg-gray-100 px-4 flex items-center gap-1 rounded-l-xl border-r border-gray-200 cursor-pointer text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors">
-                                Tất cả danh mục <ChevronDown size={14} />
+                            <div className="relative" ref={categoryMenuRef}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                                    className="h-full flex-shrink-0 bg-gray-100 px-4 flex items-center gap-1 rounded-l-xl border-r border-gray-200 cursor-pointer text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                                >
+                                    Tất cả danh mục <ChevronDown size={14} className={`transition-transform ${showCategoryMenu ? 'rotate-180' : ''}`} />
+                                </button>
+                                {showCategoryMenu && (
+                                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-[100] max-h-80 overflow-y-auto">
+                                        <Link
+                                            to="/products"
+                                            onClick={() => setShowCategoryMenu(false)}
+                                            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-700 font-medium border-b border-gray-100"
+                                        >
+                                            <Menu size={16} className="text-[#D70018]" />
+                                            Tất cả sản phẩm
+                                        </Link>
+                                        {categories.map((category) => (
+                                            <Link
+                                                key={category.id}
+                                                to={`/products?categoryId=${category.id}`}
+                                                onClick={() => setShowCategoryMenu(false)}
+                                                className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-600 hover:text-[#D70018] transition-colors"
+                                            >
+                                                <span>{category.name}</span>
+                                                {category.productCount !== undefined && category.productCount > 0 && (
+                                                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                        {category.productCount}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        ))}
+                                        {categories.length === 0 && (
+                                            <div className="px-4 py-3 text-sm text-gray-400 text-center">
+                                                Đang tải danh mục...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <input
                                 type="text"
                                 placeholder="Nhập tên sản phẩm, mã sản phẩm, từ khoá..."
-                                className="flex-1 px-4 bg-gray-100 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#D70018]/20 transition-all border-y border-gray-100"
+                                className="flex-1 px-4 bg-gray-100 text-gray-900 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#D70018]/20 transition-all border-y border-gray-100 placeholder:text-gray-400"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />

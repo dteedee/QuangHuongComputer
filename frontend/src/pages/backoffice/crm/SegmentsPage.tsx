@@ -29,7 +29,7 @@ export default function SegmentsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Ban co chac muon xoa segment nay?')) return;
+    if (!confirm('Bạn có chắc muốn xóa segment này?')) return;
     try {
       await crmApi.segments.delete(id);
       loadSegments();
@@ -42,7 +42,7 @@ export default function SegmentsPage() {
     try {
       setRunningAutoAssign(true);
       const result = await crmApi.segments.runAutoAssignment();
-      alert(`Da phan cong ${result.assignedCount} khach hang vao segments`);
+      alert(`Đã phân công ${result.assignedCount} khách hàng vào segments`);
       loadSegments();
     } catch (error) {
       console.error('Failed to run auto-assignment:', error);
@@ -64,8 +64,8 @@ export default function SegmentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Phan nhom Khach hang</h1>
-          <p className="text-gray-500">{segments.length} segments</p>
+          <h1 className="text-2xl font-bold text-gray-900">Phân nhóm Khách hàng</h1>
+          <p className="text-gray-500">{segments.length} phân nhóm</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -74,7 +74,7 @@ export default function SegmentsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50"
           >
             <Play size={18} className={runningAutoAssign ? 'animate-spin' : ''} />
-            <span>Chay Auto-Assign</span>
+            <span>Chạy Auto-Assign</span>
           </button>
           <button
             onClick={() => {
@@ -84,7 +84,7 @@ export default function SegmentsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
           >
             <Plus size={18} />
-            <span>Them Segment</span>
+            <span>Thêm Phân nhóm</span>
           </button>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function SegmentsPage() {
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div className="flex items-center gap-2 text-gray-500">
                 <Users size={16} />
-                <span className="text-sm">{segment.customerCount} khach hang</span>
+                <span className="text-sm">{segment.customerCount} khách hàng</span>
               </div>
 
               {segment.isAutoAssign && (
@@ -155,12 +155,12 @@ export default function SegmentsPage() {
         {segments.length === 0 && (
           <div className="col-span-full text-center py-12">
             <Target size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Chua co segment nao</p>
+            <p className="text-gray-500">Chưa có phân nhóm nào</p>
             <button
               onClick={() => setShowModal(true)}
               className="mt-4 text-red-600 hover:underline"
             >
-              Tao segment dau tien
+              Tạo phân nhóm đầu tiên
             </button>
           </div>
         )}
@@ -238,7 +238,7 @@ function SegmentModal({
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">
-            {segment ? 'Sua Segment' : 'Tao Segment Moi'}
+            {segment ? 'Sửa Phân nhóm' : 'Tạo Phân nhóm Mới'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={20} />
@@ -248,7 +248,7 @@ function SegmentModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ten Segment *
+              Tên phân nhóm *
             </label>
             <input
               type="text"
@@ -261,7 +261,7 @@ function SegmentModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ma Segment *
+              Mã phân nhóm *
             </label>
             <input
               type="text"
@@ -275,7 +275,7 @@ function SegmentModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mo ta
+              Mô tả
             </label>
             <textarea
               rows={3}
@@ -288,7 +288,7 @@ function SegmentModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mau sac
+                Màu sắc
               </label>
               <input
                 type="color"
@@ -300,7 +300,7 @@ function SegmentModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Thu tu
+                Thứ tự
               </label>
               <input
                 type="number"
@@ -317,14 +317,14 @@ function SegmentModal({
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50"
             >
-              Huy
+              Hủy
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50"
             >
-              {loading ? 'Dang luu...' : 'Luu'}
+              {loading ? 'Đang lưu...' : 'Lưu'}
             </button>
           </div>
         </form>

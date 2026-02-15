@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    User, Package, MapPin, Shield, CreditCard, Heart,
+    User, Package, MapPin, Shield, CreditCard,
     ChevronRight, Edit2, Save, X, Plus, Trash2,
     TrendingUp, ShoppingBag, Award, Clock, CheckCircle,
     Eye, XCircle, RotateCcw, Truck, Ban, Loader2
@@ -44,6 +44,7 @@ export const AccountPage = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
     const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [editForm, setEditForm] = useState({ fullName: '', phoneNumber: '', address: '' });
 
     // Stats state
@@ -162,13 +163,23 @@ export const AccountPage = () => {
     };
 
     const handleSaveProfile = async () => {
+        if (!editForm.fullName.trim()) {
+            toast.error('Vui lòng nhập họ và tên');
+            return;
+        }
+
         try {
+            setIsSavingProfile(true);
             await authApi.updateMyProfile(editForm);
             toast.success('Cập nhật thông tin thành công');
             setIsEditingProfile(false);
-            loadProfile();
-        } catch (error) {
-            toast.error('Không thể cập nhật thông tin');
+            await loadProfile();
+        } catch (error: any) {
+            console.error('Failed to save profile:', error);
+            const errorMessage = error.response?.data?.message || error.response?.data?.Message || 'Không thể cập nhật thông tin';
+            toast.error(errorMessage);
+        } finally {
+            setIsSavingProfile(false);
         }
     };
 
@@ -335,18 +346,6 @@ export const AccountPage = () => {
                                     </button>
                                 ))}
 
-                                <div className="pt-4 border-t border-gray-100 mt-4">
-                                    <Link
-                                        to="/account/wishlist"
-                                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
-                                    >
-                                        <span className="flex items-center gap-3">
-                                            <Heart size={18} />
-                                            Yêu thích
-                                        </span>
-                                        <ChevronRight size={16} className="text-gray-300" />
-                                    </Link>
-                                </div>
                             </nav>
                         </div>
                     </div>
@@ -423,13 +422,17 @@ export const AccountPage = () => {
                                             {isEditingProfile ? (
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <label className="block text-sm font-bold text-gray-700 mb-1">Họ và tên</label>
+                                                        <label className="block text-sm font-bold text-gray-700 mb-1">Họ và tên <span className="text-red-500">*</span></label>
                                                         <input
                                                             type="text"
                                                             value={editForm.fullName}
                                                             onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                            placeholder="Nhập họ và tên"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
+                                                        {!editForm.fullName.trim() && (
+                                                            <p className="text-red-500 text-xs mt-1">Vui lòng nhập họ và tên</p>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-bold text-gray-700 mb-1">Số điện thoại</label>
@@ -437,7 +440,8 @@ export const AccountPage = () => {
                                                             type="tel"
                                                             value={editForm.phoneNumber}
                                                             onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                            placeholder="Nhập số điện thoại"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
                                                     </div>
                                                     <div>
@@ -446,16 +450,22 @@ export const AccountPage = () => {
                                                             type="text"
                                                             value={editForm.address}
                                                             onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                            placeholder="Nhập địa chỉ"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
                                                     </div>
                                                     <div className="flex gap-3 pt-2">
                                                         <button
                                                             onClick={handleSaveProfile}
-                                                            className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014]"
+                                                            disabled={!editForm.fullName.trim() || isSavingProfile}
+                                                            className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014] disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            <Save size={16} />
-                                                            Lưu thay đổi
+                                                            {isSavingProfile ? (
+                                                                <Loader2 size={16} className="animate-spin" />
+                                                            ) : (
+                                                                <Save size={16} />
+                                                            )}
+                                                            {isSavingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
                                                         </button>
                                                         <button
                                                             onClick={() => setIsEditingProfile(false)}
@@ -712,7 +722,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.recipientName}
                                                         onChange={(e) => setAddressForm({ ...addressForm, recipientName: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -721,7 +731,7 @@ export const AccountPage = () => {
                                                         type="tel"
                                                         value={addressForm.phoneNumber}
                                                         onChange={(e) => setAddressForm({ ...addressForm, phoneNumber: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
@@ -731,7 +741,7 @@ export const AccountPage = () => {
                                                         value={addressForm.addressLine}
                                                         onChange={(e) => setAddressForm({ ...addressForm, addressLine: e.target.value })}
                                                         placeholder="Số nhà, tên đường..."
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -740,7 +750,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.city}
                                                         onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -749,7 +759,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.district}
                                                         onChange={(e) => setAddressForm({ ...addressForm, district: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -758,7 +768,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.ward}
                                                         onChange={(e) => setAddressForm({ ...addressForm, ward: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -767,7 +777,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.addressLabel || ''}
                                                         onChange={(e) => setAddressForm({ ...addressForm, addressLabel: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
@@ -892,7 +902,7 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.currentPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div>
@@ -901,7 +911,7 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.newPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div>
@@ -910,7 +920,7 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.confirmPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div className="pt-2">

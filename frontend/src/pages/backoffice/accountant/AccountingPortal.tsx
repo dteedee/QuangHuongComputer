@@ -1,7 +1,7 @@
-﻿import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { DollarSign, FileText, TrendingUp, Clock, Download, Eye, Calendar, Filter, ArrowRight, CreditCard, Receipt, BarChart3, Wallet } from 'lucide-react';
+﻿import { Link, useLocation } from 'react-router-dom';
+import { DollarSign, FileText, TrendingUp, Clock, Eye, Calendar, Filter, ArrowRight, CreditCard, Receipt, BarChart3, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import client from '../../../api/client';
 import { formatCurrency } from '../../../utils/format';
 
@@ -45,28 +45,28 @@ const tabs: TabItem[] = [
 
 export const AccountingPortal = () => {
     const location = useLocation();
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [stats, setStats] = useState<AccountingStats | null>(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    // Use react-query for caching and better performance
+    const { data: invoicesData, isLoading: loadingInvoices } = useQuery({
+        queryKey: ['accounting-invoices'],
+        queryFn: async () => {
+            const res = await client.get('/accounting/invoices?page=1&pageSize=20');
+            return res.data;
+        },
+        staleTime: 30000, // Cache for 30 seconds
+    });
 
-    const fetchData = async () => {
-        try {
-            const [invoicesRes, statsRes] = await Promise.all([
-                client.get('/accounting/invoices?page=1&pageSize=20'),
-                client.get('/accounting/stats')
-            ]);
-            setInvoices(invoicesRes.data.invoices || []);
-            setStats(statsRes.data);
-        } catch (error) {
-            console.error('Failed to fetch accounting data', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data: stats, isLoading: loadingStats } = useQuery({
+        queryKey: ['accounting-stats'],
+        queryFn: async () => {
+            const res = await client.get('/accounting/stats');
+            return res.data as AccountingStats;
+        },
+        staleTime: 30000, // Cache for 30 seconds
+    });
+
+    const invoices = invoicesData?.invoices || [];
+    const loading = loadingInvoices || loadingStats;
 
     const getStatusBadge = (status: number) => {
         switch (status) {

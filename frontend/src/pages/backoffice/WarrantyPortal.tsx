@@ -4,7 +4,8 @@ import {
     FileText, Check, X, Wrench, RefreshCw, Eye, ChevronRight, Filter,
     MessageSquare, User, ArrowRight
 } from 'lucide-react';
-import { warrantyApi, ClaimStatus } from '../../api/warranty';
+import { warrantyApi } from '../../api/warranty';
+import type { ClaimStatus } from '../../api/warranty';
 import toast from 'react-hot-toast';
 
 type TabType = 'warranties' | 'claims';
@@ -355,9 +356,8 @@ export const WarrantyPortal = () => {
             <div className="flex bg-gray-100 rounded-2xl p-1.5 gap-1">
                 <button
                     onClick={() => setActiveTab('claims')}
-                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                        activeTab === 'claims' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'claims' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     <FileText className="w-5 h-5" />
                     Yêu cầu bảo hành
@@ -367,9 +367,8 @@ export const WarrantyPortal = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab('warranties')}
-                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                        activeTab === 'warranties' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'warranties' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     <Shield className="w-5 h-5" />
                     Danh sách bảo hành
@@ -384,9 +383,8 @@ export const WarrantyPortal = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div
                                 onClick={() => setStatusFilter('Pending')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${
-                                    statusFilter === 'Pending' ? 'border-amber-400 bg-amber-50' : 'border-gray-100'
-                                }`}
+                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Pending' ? 'border-amber-400 bg-amber-50' : 'border-gray-100'
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
@@ -398,9 +396,8 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Approved')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${
-                                    statusFilter === 'Approved' ? 'border-blue-400 bg-blue-50' : 'border-gray-100'
-                                }`}
+                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Approved' ? 'border-blue-400 bg-blue-50' : 'border-gray-100'
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
@@ -412,9 +409,8 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Resolved')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${
-                                    statusFilter === 'Resolved' ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100'
-                                }`}
+                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Resolved' ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100'
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
@@ -426,9 +422,8 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${
-                                    statusFilter === '' ? 'border-gray-400 bg-gray-50' : 'border-gray-100'
-                                }`}
+                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === '' ? 'border-gray-400 bg-gray-50' : 'border-gray-100'
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="p-3 bg-gray-900 text-white rounded-xl">

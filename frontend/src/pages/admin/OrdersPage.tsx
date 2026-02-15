@@ -418,7 +418,7 @@ export const AdminOrdersPage = () => {
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="col-span-2 space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Chọn sản phẩm</label>
-                                                <select name="productId" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-100 appearance-none">
+                                                <select name="productId" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 appearance-none">
                                                     {productsData?.products.map(p => (
                                                         <option key={p.id} value={p.id}>{p.name} - {formatCurrency(p.price)}</option>
                                                     ))}
@@ -426,7 +426,7 @@ export const AdminOrdersPage = () => {
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Số lượng</label>
-                                                <input name="quantity" type="number" defaultValue={1} min={1} required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-100" />
+                                                <input name="quantity" type="number" defaultValue={1} min={1} required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400" />
                                             </div>
                                         </div>
                                     </div>
@@ -439,11 +439,11 @@ export const AdminOrdersPage = () => {
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Địa chỉ giao hàng</label>
-                                                <input name="address" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-100" placeholder="Số nhà, tên đường, phường/xã..." />
+                                                <input name="address" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400" placeholder="Số nhà, tên đường, phường/xã..." />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Ghi chú đơn hàng</label>
-                                                <textarea name="notes" rows={3} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-100 resize-none" placeholder="Lưu ý cho đơn vị vận chuyển..." />
+                                                <textarea name="notes" rows={3} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 resize-none placeholder:text-gray-400" placeholder="Lưu ý cho đơn vị vận chuyển..." />
                                             </div>
                                         </div>
                                     </div>

@@ -1,16 +1,18 @@
 using MediatR;
 using Sales.Domain;
 using Sales.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sales.Application.Orders.Commands.CreateOrder;
 
 public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>
 {
-    private readonly SalesDbContext _context;
+    private readonly IConfiguration _configuration;
 
-    public CreateOrderCommandHandler(SalesDbContext context)
+    public CreateOrderCommandHandler(IConfiguration configuration)
     {
-        _context = context;
+        _configuration = configuration;
     }
 
     public async Task<Guid> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -27,8 +29,15 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Gui
             request.Notes
         );
 
-        _context.Orders.Add(order);
-        await _context.SaveChangesAsync(cancellationToken);
+        // Manually create context to guarantee isolation and avoid concurrency issues
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+        var optionsBuilder = new DbContextOptionsBuilder<SalesDbContext>();
+        optionsBuilder.UseNpgsql(connectionString);
+
+        using var context = new SalesDbContext(optionsBuilder.Options);
+        
+        context.Orders.Add(order);
+        await context.SaveChangesAsync(cancellationToken);
 
         return order.Id;
     }

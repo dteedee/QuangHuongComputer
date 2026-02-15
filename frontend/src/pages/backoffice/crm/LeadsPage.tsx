@@ -67,7 +67,7 @@ export default function LeadsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Ban co chac muon xoa lead nay?')) return;
+    if (!confirm('Bạn có chắc muốn xóa lead này?')) return;
     try {
       await crmApi.leads.delete(id);
       loadData();
@@ -77,7 +77,7 @@ export default function LeadsPage() {
   };
 
   const handleConvert = async (lead: Lead) => {
-    if (!confirm('Chuyen doi lead nay thanh khach hang?')) return;
+    if (!confirm('Chuyển đổi lead này thành khách hàng?')) return;
     try {
       await crmApi.leads.convert(lead.id);
       loadData();
@@ -108,7 +108,7 @@ export default function LeadsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
           >
             <Plus size={18} />
-            <span>Them Lead</span>
+            <span>Thêm Lead</span>
           </button>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function LeadsPage() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Tim kiem leads..."
+              placeholder="Tìm kiếm leads..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -135,14 +135,14 @@ export default function LeadsPage() {
             }}
             className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Tat ca Status</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Qualified">Qualified</option>
-            <option value="Proposal">Proposal</option>
-            <option value="Negotiation">Negotiation</option>
-            <option value="Won">Won</option>
-            <option value="Lost">Lost</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="New">Mới</option>
+            <option value="Contacted">Đã liên hệ</option>
+            <option value="Qualified">Đủ điều kiện</option>
+            <option value="Proposal">Đề xuất</option>
+            <option value="Negotiation">Đàm phán</option>
+            <option value="Won">Thành công</option>
+            <option value="Lost">Thất bại</option>
           </select>
 
           <select
@@ -153,12 +153,12 @@ export default function LeadsPage() {
             }}
             className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Tat ca Nguon</option>
+            <option value="">Tất cả nguồn</option>
             <option value="Website">Website</option>
-            <option value="Referral">Gioi thieu</option>
-            <option value="Advertisement">Quang cao</option>
-            <option value="SocialMedia">Social Media</option>
-            <option value="Event">Su kien</option>
+            <option value="Referral">Giới thiệu</option>
+            <option value="Advertisement">Quảng cáo</option>
+            <option value="SocialMedia">Mạng xã hội</option>
+            <option value="Event">Sự kiện</option>
             <option value="ColdCall">Cold Call</option>
             <option value="Email">Email</option>
           </select>
@@ -168,7 +168,7 @@ export default function LeadsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800"
           >
             <Filter size={18} />
-            <span>Loc</span>
+            <span>Lọc</span>
           </button>
         </form>
       </div>
@@ -182,12 +182,12 @@ export default function LeadsPage() {
         ) : leads.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <UserPlus size={48} className="mx-auto mb-4 opacity-50" />
-            <p>Khong tim thay lead nao</p>
+            <p>Không tìm thấy lead nào</p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="mt-4 text-red-600 hover:underline"
             >
-              Them lead moi
+              Thêm lead mới
             </button>
           </div>
         ) : (
@@ -196,12 +196,12 @@ export default function LeadsPage() {
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Lead</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Cong ty</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Nguon</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Status</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-500">Gia tri</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Công ty</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Nguồn</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Trạng thái</th>
+                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-500">Giá trị</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Follow-up</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Phan cong</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Phân công</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500"></th>
                 </tr>
               </thead>
@@ -276,7 +276,7 @@ export default function LeadsPage() {
                         <button
                           onClick={() => navigate(`/backoffice/crm/leads/${lead.id}`)}
                           className="p-2 hover:bg-gray-100 rounded-lg"
-                          title="Chi tiet"
+                          title="Chi tiết"
                         >
                           <Edit size={16} className="text-gray-400" />
                         </button>
@@ -284,7 +284,7 @@ export default function LeadsPage() {
                           <button
                             onClick={() => handleConvert(lead)}
                             className="p-2 hover:bg-green-100 rounded-lg"
-                            title="Chuyen doi"
+                            title="Chuyển đổi"
                           >
                             <ArrowRight size={16} className="text-green-600" />
                           </button>
@@ -292,7 +292,7 @@ export default function LeadsPage() {
                         <button
                           onClick={() => handleDelete(lead.id)}
                           className="p-2 hover:bg-red-100 rounded-lg"
-                          title="Xoa"
+                          title="Xóa"
                         >
                           <Trash2 size={16} className="text-red-400" />
                         </button>
@@ -309,7 +309,7 @@ export default function LeadsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
             <p className="text-sm text-gray-500">
-              Hien thi {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
+              Hiển thị {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -392,7 +392,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
         className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Them Lead Moi</h2>
+          <h2 className="text-xl font-bold">Thêm Lead Mới</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X size={20} />
           </button>
@@ -401,7 +401,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ho ten *
+              Họ tên *
             </label>
             <input
               type="text"
@@ -427,7 +427,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              So dien thoai
+              Số điện thoại
             </label>
             <input
               type="tel"
@@ -439,7 +439,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cong ty
+              Công ty
             </label>
             <input
               type="text"
@@ -451,7 +451,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nguon
+              Nguồn
             </label>
             <select
               value={form.source}
@@ -459,10 +459,10 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
             >
               <option value="Website">Website</option>
-              <option value="Referral">Gioi thieu</option>
-              <option value="Advertisement">Quang cao</option>
-              <option value="SocialMedia">Social Media</option>
-              <option value="Event">Su kien</option>
+              <option value="Referral">Giới thiệu</option>
+              <option value="Advertisement">Quảng cáo</option>
+              <option value="SocialMedia">Mạng xã hội</option>
+              <option value="Event">Sự kiện</option>
               <option value="ColdCall">Cold Call</option>
               <option value="Email">Email</option>
             </select>
@@ -470,7 +470,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gia tri uoc tinh (VND)
+              Giá trị ước tính (VND)
             </label>
             <input
               type="number"
@@ -482,7 +482,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ghi chu
+              Ghi chú
             </label>
             <textarea
               rows={3}
@@ -498,14 +498,14 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50"
             >
-              Huy
+              Hủy
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50"
             >
-              {loading ? 'Dang tao...' : 'Tao Lead'}
+              {loading ? 'Đang tạo...' : 'Tạo Lead'}
             </button>
           </div>
         </form>

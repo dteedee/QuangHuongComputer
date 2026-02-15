@@ -36,7 +36,13 @@ export const LoginPage = () => {
         });
     };
 
-    const getRedirectPath = (_roles: string[]) => {
+    const getRedirectPath = (roles: string[]) => {
+        // Staff roles redirect to backoffice dashboard
+        const staffRoles = ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier', 'Marketing'];
+        if (roles.some(role => staffRoles.includes(role))) {
+            return '/backoffice';
+        }
+        // Customer redirect to homepage
         return '/';
     };
 
@@ -380,15 +386,6 @@ export const LoginPage = () => {
                                             </div>
                                         )}
 
-                                        {import.meta.env.DEV && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleGoogleSuccess({ credential: 'simulation_google_token' })}
-                                                className="text-[10px] font-bold text-gray-400 hover:text-[#D70018] uppercase tracking-tighter transition-colors border border-dashed border-gray-200 px-3 py-1 rounded-full hover:border-[#D70018]"
-                                            >
-                                                ⚡ Test Login (Dev Only)
-                                            </button>
-                                        )}
                                     </motion.div>
                                 </form>
 

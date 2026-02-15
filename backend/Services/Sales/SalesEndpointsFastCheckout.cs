@@ -22,39 +22,90 @@ public static class SalesEndpointsFastCheckout
     {
         var group = app.MapGroup("/api/sales/fast-checkout").RequireAuthorization();
 
-        group.MapPost("/", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
+        group.MapPost("/", async (HttpContext httpContext, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15)); // 15 second timeout for fast checkout
             try
             {
-                // Optimize performance
+                // Read and parse request body manually for better error handling
+                httpContext.Request.EnableBuffering();
+                using var reader = new StreamReader(httpContext.Request.Body);
+                var body = await reader.ReadToEndAsync();
+                httpContext.Request.Body.Position = 0;
+
+                Console.WriteLine($"[FastCheckout] Raw request body: {body}");
+
+                CheckoutDto? model;
+                try
+                {
+                    model = JsonSerializer.Deserialize<CheckoutDto>(body, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+                catch (JsonException jsonEx)
+                {
+                    Console.WriteLine($"[FastCheckout] JSON Parse Error: {jsonEx.Message}");
+                    return Results.BadRequest(new { Error = $"Dữ liệu không hợp lệ: {jsonEx.Message}" });
+                }
+
+                if (model == null)
+                {
+                    Console.WriteLine("[FastCheckout] Model is null after parsing");
+                    return Results.BadRequest(new { Error = "Dữ liệu đơn hàng không hợp lệ" });
+                }
+
+                // Log incoming request for debugging
+                Console.WriteLine($"[FastCheckout] Received request with {model.Items?.Count ?? 0} items");
+
+                // Optimize performance - only set NoTracking for read-only contexts
+                // salesDb needs tracking for saving Order and clearing Cart
                 catalogDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
                 inventoryDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
-                salesDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
 
                 var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                Console.WriteLine($"[FastCheckout] User ID: {userIdStr}");
+
                 if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                {
+                    Console.WriteLine("[FastCheckout] Unauthorized - Invalid user ID");
                     return Results.Unauthorized();
+                }
 
                 var email = user.FindFirstValue(ClaimTypes.Email) ?? "customer@api.com";
                 var customerId = model.CustomerId ?? userId;
+                Console.WriteLine($"[FastCheckout] Customer ID: {customerId}, Email: {email}");
 
                 // Quick validation
                 if (model.Items == null || !model.Items.Any())
+                {
+                    Console.WriteLine("[FastCheckout] Error: Cart is empty");
                     return Results.BadRequest(new { Error = "Giỏ hàng trống" });
+                }
+
+                // Log items for debugging
+                foreach (var item in model.Items)
+                {
+                    Console.WriteLine($"[FastCheckout] Item: ProductId={item.ProductId}, Name={item.ProductName}, Qty={item.Quantity}, Price={item.UnitPrice}");
+                }
 
                 // Fetch minimal data needed
                 var productIds = model.Items.Select(i => i.ProductId).Distinct().ToList();
-                
+                Console.WriteLine($"[FastCheckout] Looking for {productIds.Count} products: {string.Join(", ", productIds)}");
+
                 var products = await catalogDb.Products
                     .Where(p => productIds.Contains(p.Id))
                     .Select(p => new { p.Id, p.Name, p.Price })
                     .ToListAsync(cts.Token);
 
+                Console.WriteLine($"[FastCheckout] Found {products.Count} products in catalog");
+
                 var inventoryItems = await inventoryDb.InventoryItems
                     .Where(i => productIds.Contains(i.ProductId))
                     .Select(i => new { i.Id, i.ProductId, i.AvailableQuantity, i.ReservedQuantity })
                     .ToListAsync(cts.Token);
+
+                Console.WriteLine($"[FastCheckout] Found {inventoryItems.Count} inventory items");
 
                 // Get cart
                 var cart = await salesDb.Carts
@@ -141,16 +192,13 @@ public static class SalesEndpointsFastCheckout
                 await salesDb.Orders.AddAsync(order, cts.Token);
                 await salesDb.SaveChangesAsync(cts.Token);
 
-                // Update product stock (simple update)
+                // Update product stock (simple update using raw SQL - no SaveChanges needed)
                 foreach (var item in orderItems)
                 {
-                    var product = products.First(p => p.Id == item.ProductId);
                     // Use parameterized query to prevent SQL injection
                     await catalogDb.Database.ExecuteSqlAsync(
                         $"UPDATE \"Products\" SET \"StockQuantity\" = \"StockQuantity\" - {item.Quantity} WHERE \"Id\" = {item.ProductId}", cts.Token);
                 }
-
-                await catalogDb.SaveChangesAsync(cts.Token);
 
                 // Publish event (fire and forget)
                 _ = Task.Run(async () => {
@@ -173,10 +221,19 @@ public static class SalesEndpointsFastCheckout
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[FastCheckout Error] {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($"[FastCheckout Stack] {ex.StackTrace}");
+
                 if (ex is OperationCanceledException)
                     return Results.BadRequest(new { Error = "Timeout khi đặt hàng" });
-                    
-                return Results.BadRequest(new { Error = $"Lỗi: {ex.Message}" });
+
+                // Return more specific error for debugging
+                var innerMessage = ex.InnerException?.Message;
+                var errorMessage = !string.IsNullOrEmpty(innerMessage)
+                    ? $"Lỗi: {ex.Message} - {innerMessage}"
+                    : $"Lỗi: {ex.Message}";
+
+                return Results.BadRequest(new { Error = errorMessage });
             }
             finally
             {

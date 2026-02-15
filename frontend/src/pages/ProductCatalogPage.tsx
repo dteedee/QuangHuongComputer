@@ -307,7 +307,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                       setPage(1);
                       updateURL({ sortBy: e.target.value });
                     }}
-                    className="bg-transparent border-none text-sm font-medium text-gray-800 focus:ring-0 cursor-pointer py-0 pl-1 pr-6"
+                    className="bg-transparent border-none text-sm font-medium text-gray-900 focus:ring-0 cursor-pointer py-0 pl-1 pr-6"
                   >
                     <option value="newest">Mới nhất</option>
                     <option value="price_asc">Giá tăng dần</option>

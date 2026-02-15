@@ -1,28 +1,29 @@
-﻿import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Wrench, Clock, CheckCircle2, AlertCircle,
     Play, CheckSquare, Search, Filter,
-    Loader2, Calendar, Smartphone, Plus, MoreVertical, Eye
+    Loader2, Calendar, Smartphone, MoreVertical, Eye,
+    ArrowUpDown, ChevronDown, X
 } from 'lucide-react';
 import { repairApi, type WorkOrder, type WorkOrderStatus } from '../../../api/repair';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
+type FilterStatus = 'all' | WorkOrderStatus;
+
 export const TechPortal = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
-    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['tech-work-orders'],
         queryFn: () => repairApi.technician.getMyWorkOrders(),
-    });
-
-    const { data: stats } = useQuery({
-        queryKey: ['tech-stats'],
-        queryFn: repairApi.admin.getStats,
     });
 
     const startRepairMutation = useMutation({
@@ -49,11 +50,58 @@ export const TechPortal = () => {
         { id: '3', ticketNumber: 'TK-8854', customerId: 'CUST-003', deviceModel: 'Asus ROG Strix', serialNumber: 'ROG9988', description: 'Vệ sinh máy, tra keo tản nhiệt', status: 'Completed', createdAt: new Date().toISOString(), estimatedCost: 0, actualCost: 0, partsCost: 0, laborCost: 0, serviceFee: 0, totalCost: 0 },
     ];
 
-    const workOrders = (response?.workOrders && response.workOrders.length > 0) ? response.workOrders : mockOrders;
+    const rawWorkOrders = (response?.workOrders && response.workOrders.length > 0) ? response.workOrders : mockOrders;
+
+    // Filter and sort
+    const workOrders = useMemo(() => {
+        let filtered = rawWorkOrders;
+
+        // Search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(o =>
+                o.ticketNumber?.toLowerCase().includes(term) ||
+                o.serialNumber?.toLowerCase().includes(term) ||
+                o.deviceModel?.toLowerCase().includes(term) ||
+                o.description?.toLowerCase().includes(term)
+            );
+        }
+
+        // Status filter
+        if (filterStatus !== 'all') {
+            filtered = filtered.filter(o => o.status === filterStatus);
+        }
+
+        // Sort
+        filtered = [...filtered].sort((a, b) => {
+            if (sortBy === 'date') {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            } else {
+                const statusOrder = ['Requested', 'Assigned', 'InProgress', 'Completed', 'Cancelled'];
+                const orderA = statusOrder.indexOf(a.status);
+                const orderB = statusOrder.indexOf(b.status);
+                return sortOrder === 'asc' ? orderA - orderB : orderB - orderA;
+            }
+        });
+
+        return filtered;
+    }, [rawWorkOrders, searchTerm, filterStatus, sortBy, sortOrder]);
+
+    // Calculate stats from my work orders only
+    const stats = useMemo(() => {
+        return {
+            pending: rawWorkOrders.filter(o => o.status === 'Requested' || o.status === 'Assigned').length,
+            inProgress: rawWorkOrders.filter(o => o.status === 'InProgress').length,
+            completed: rawWorkOrders.filter(o => o.status === 'Completed').length,
+        };
+    }, [rawWorkOrders]);
 
     const getStatusIcon = (status: WorkOrderStatus) => {
         switch (status) {
             case 'Requested': return <Clock size={16} />;
+            case 'Assigned': return <Clock size={16} />;
             case 'InProgress': return <Play size={16} />;
             case 'Completed': return <CheckCircle2 size={16} />;
             case 'Cancelled': return <AlertCircle size={16} />;
@@ -64,6 +112,7 @@ export const TechPortal = () => {
     const getStatusColor = (status: WorkOrderStatus) => {
         switch (status) {
             case 'Requested': return 'bg-amber-50 text-amber-700 border-amber-200';
+            case 'Assigned': return 'bg-orange-50 text-orange-700 border-orange-200';
             case 'InProgress': return 'bg-blue-50 text-blue-700 border-blue-200';
             case 'Completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
             case 'Cancelled': return 'bg-gray-50 text-gray-700 border-gray-200';
@@ -74,6 +123,7 @@ export const TechPortal = () => {
     const translateStatus = (status: WorkOrderStatus) => {
         switch (status) {
             case 'Requested': return 'Chờ tiếp nhận';
+            case 'Assigned': return 'Được giao';
             case 'InProgress': return 'Đang xử lý';
             case 'Completed': return 'Đã hoàn thành';
             case 'Cancelled': return 'Đã hủy';
@@ -81,89 +131,160 @@ export const TechPortal = () => {
         }
     };
 
+    const statusOptions: { value: FilterStatus; label: string; count?: number }[] = [
+        { value: 'all', label: 'Tất cả', count: rawWorkOrders.length },
+        { value: 'Requested', label: 'Chờ tiếp nhận', count: rawWorkOrders.filter(o => o.status === 'Requested').length },
+        { value: 'Assigned', label: 'Được giao', count: rawWorkOrders.filter(o => o.status === 'Assigned').length },
+        { value: 'InProgress', label: 'Đang xử lý', count: rawWorkOrders.filter(o => o.status === 'InProgress').length },
+        { value: 'Completed', label: 'Hoàn thành', count: rawWorkOrders.filter(o => o.status === 'Completed').length },
+        { value: 'Cancelled', label: 'Đã hủy', count: rawWorkOrders.filter(o => o.status === 'Cancelled').length },
+    ];
+
     return (
-        <div className="space-y-10 pb-20 animate-fade-in admin-area">
+        <div className="space-y-8 pb-20 animate-fade-in admin-area">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
-                        Kỹ thuật & <span className="text-[#D70018]">Dịch vụ</span>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">
+                        Phiếu sửa chữa <span className="text-[#D70018]">của tôi</span>
                     </h1>
-                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
-                        Quản lý phiếu sửa chữa, bảo hành và điều phối kỹ thuật viên
+                    <p className="text-gray-600 font-medium">
+                        Quản lý các phiếu sửa chữa được giao cho bạn
                     </p>
                 </div>
-                <button
-                    onClick={() => toast.info('Chức năng tạo phiếu mới đang được phát triển. Vui lòng sử dụng trang Sửa chữa công khai để đăng ký dịch vụ.')}
-                    className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
-                >
-                    <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                    Tạo phiếu mới
-                </button>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-amber-500/20">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-lg">
-                            <Clock size={28} />
+            {/* Quick Stats - Only my work orders */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <button
+                    onClick={() => setFilterStatus(filterStatus === 'Requested' ? 'all' : 'Requested')}
+                    className={`premium-card p-5 border-2 transition-all hover:shadow-md text-left ${
+                        filterStatus === 'Requested' ? 'border-amber-400 ring-2 ring-amber-100' : 'border-gray-100 hover:border-amber-200'
+                    }`}
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow">
+                            <Clock size={24} />
                         </div>
                         <div>
-                            <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Yêu cầu chờ</p>
-                            <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">{stats?.pendingWorkOrders || 2}</h3>
+                            <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Chờ xử lý</p>
+                            <h3 className="text-3xl font-black text-gray-900">{stats.pending}</h3>
                         </div>
                     </div>
-                </div>
+                </button>
 
-                <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-blue-500/20">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg">
-                            <Wrench size={28} />
+                <button
+                    onClick={() => setFilterStatus(filterStatus === 'InProgress' ? 'all' : 'InProgress')}
+                    className={`premium-card p-5 border-2 transition-all hover:shadow-md text-left ${
+                        filterStatus === 'InProgress' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-100 hover:border-blue-200'
+                    }`}
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow">
+                            <Wrench size={24} />
                         </div>
                         <div>
-                            <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Đang thực hiện</p>
-                            <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">{stats?.inProgressWorkOrders || 5}</h3>
+                            <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Đang thực hiện</p>
+                            <h3 className="text-3xl font-black text-gray-900">{stats.inProgress}</h3>
                         </div>
                     </div>
-                </div>
+                </button>
 
-                <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-emerald-500/20">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-lg">
-                            <CheckCircle2 size={28} />
+                <button
+                    onClick={() => setFilterStatus(filterStatus === 'Completed' ? 'all' : 'Completed')}
+                    className={`premium-card p-5 border-2 transition-all hover:shadow-md text-left ${
+                        filterStatus === 'Completed' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-gray-100 hover:border-emerald-200'
+                    }`}
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow">
+                            <CheckCircle2 size={24} />
                         </div>
                         <div>
-                            <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Hoàn tất hôm nay</p>
-                            <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">{stats?.completedWorkOrders || 12}</h3>
+                            <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Đã hoàn thành</p>
+                            <h3 className="text-3xl font-black text-gray-900">{stats.completed}</h3>
                         </div>
                     </div>
-                </div>
+                </button>
             </div>
 
             {/* Main Content */}
             <div className="premium-card overflow-hidden border-2">
                 {/* Toolbar */}
-                <div className="p-8 border-b-2 border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-black text-gray-950 tracking-tight uppercase italic">Danh sách phiếu</h2>
-                        <span className="px-3 py-1 bg-gray-900 text-white text-[10px] font-black uppercase rounded-full">{workOrders.length}</span>
+                        <h2 className="text-xl font-bold text-gray-900">Danh sách phiếu</h2>
+                        <span className="px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded-full">{workOrders.length}</span>
+                        {filterStatus !== 'all' && (
+                            <button
+                                onClick={() => setFilterStatus('all')}
+                                className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full hover:bg-gray-200 transition-all"
+                            >
+                                {translateStatus(filterStatus as WorkOrderStatus)}
+                                <X size={14} />
+                            </button>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {/* Search */}
                         <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
                                 type="text"
                                 placeholder="Tìm theo mã phiếu, S/N..."
-                                className="pl-12 pr-6 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm font-bold focus:outline-none focus:border-[#D70018] w-72 transition-all placeholder:text-gray-400"
+                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#D70018] focus:border-transparent w-64 transition-all placeholder:text-gray-400"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <button className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-gray-100 rounded-xl text-gray-950 hover:bg-gray-50 transition-all text-xs font-black uppercase tracking-widest shadow-sm">
-                            <Filter size={16} />
-                            <span>Lọc</span>
+
+                        {/* Filter Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all text-sm font-semibold"
+                            >
+                                <Filter size={16} />
+                                <span>Lọc</span>
+                                <ChevronDown size={16} className={`transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {showFilterDropdown && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowFilterDropdown(false)} />
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2">
+                                        {statusOptions.map(option => (
+                                            <button
+                                                key={option.value}
+                                                onClick={() => {
+                                                    setFilterStatus(option.value);
+                                                    setShowFilterDropdown(false);
+                                                }}
+                                                className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center justify-between hover:bg-gray-50 transition-all ${
+                                                    filterStatus === option.value ? 'text-[#D70018] bg-red-50' : 'text-gray-700'
+                                                }`}
+                                            >
+                                                <span>{option.label}</span>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                                    filterStatus === option.value ? 'bg-[#D70018] text-white' : 'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {option.count}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Sort */}
+                        <button
+                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all text-sm font-semibold"
+                        >
+                            <ArrowUpDown size={16} />
+                            <span>{sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất'}</span>
                         </button>
                     </div>
                 </div>
@@ -171,21 +292,41 @@ export const TechPortal = () => {
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-900 text-white text-xs font-black uppercase tracking-widest">
+                        <thead className="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
                             <tr>
-                                <th className="px-8 py-5">Thông tin phiếu</th>
-                                <th className="px-8 py-5">Thiết bị</th>
-                                <th className="px-8 py-5">Tình trạng</th>
-                                <th className="px-8 py-5">Kỹ thuật viên</th>
-                                <th className="px-8 py-5 text-right">Thao tác</th>
+                                <th className="px-6 py-4">Thông tin phiếu</th>
+                                <th className="px-6 py-4">Thiết bị</th>
+                                <th className="px-6 py-4">Mô tả</th>
+                                <th className="px-6 py-4">Trạng thái</th>
+                                <th className="px-6 py-4 text-right">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-50">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="py-24 text-center">
-                                        <Loader2 className="animate-spin mx-auto text-[#D70018] mb-4" size={48} />
-                                        <p className="text-gray-900 font-black uppercase tracking-widest text-sm">Đang tải dữ liệu...</p>
+                                    <td colSpan={5} className="py-20 text-center">
+                                        <Loader2 className="animate-spin mx-auto text-[#D70018] mb-3" size={40} />
+                                        <p className="text-gray-500 font-semibold text-sm">Đang tải dữ liệu...</p>
+                                    </td>
+                                </tr>
+                            ) : workOrders.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center">
+                                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                                            <Wrench size={32} className="text-gray-300" />
+                                        </div>
+                                        <p className="text-gray-500 font-semibold">Không tìm thấy phiếu sửa chữa nào</p>
+                                        {(searchTerm || filterStatus !== 'all') && (
+                                            <button
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setFilterStatus('all');
+                                                }}
+                                                className="mt-3 text-sm text-[#D70018] font-semibold hover:underline"
+                                            >
+                                                Xóa bộ lọc
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ) : workOrders.map((order) => (
@@ -194,67 +335,64 @@ export const TechPortal = () => {
                                     className="hover:bg-gray-50/80 transition-all group cursor-pointer"
                                     onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
                                 >
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black text-xs shadow-lg">
-                                                #{order.ticketNumber.split('-')[1]}
+                                    <td className="px-6 py-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-11 h-11 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold text-xs shadow">
+                                                #{order.ticketNumber?.split('-')[1] || '??'}
                                             </div>
                                             <div>
-                                                <p className="text-base font-black text-gray-950 tracking-tight">{order.ticketNumber}</p>
-                                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                                                    <Calendar size={12} className="text-[#D70018]" />
+                                                <p className="text-sm font-bold text-gray-900">{order.ticketNumber}</p>
+                                                <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+                                                    <Calendar size={12} />
                                                     {new Date(order.createdAt).toLocaleDateString('vi-VN')}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-6 py-5">
                                         <div>
-                                            <p className="text-sm font-black text-gray-800 flex items-center gap-2">
-                                                <Smartphone size={16} className="text-[#D70018]" />
+                                            <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                                <Smartphone size={14} className="text-gray-400" />
                                                 {order.deviceModel}
                                             </p>
-                                            <p className="text-[11px] text-gray-500 mt-1 font-mono font-black bg-gray-100 px-2 py-0.5 rounded-md w-fit uppercase">
+                                            <p className="text-xs text-gray-400 mt-1 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit">
                                                 SN: {order.serialNumber}
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6">
-                                        <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest italic border shadow-sm ${getStatusColor(order.status)}`}>
+                                    <td className="px-6 py-5">
+                                        <p className="text-sm text-gray-600 max-w-xs truncate" title={order.description}>
+                                            {order.description}
+                                        </p>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${getStatusColor(order.status)}`}>
                                             {getStatusIcon(order.status)}
                                             {translateStatus(order.status)}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-950 text-white flex items-center justify-center text-[10px] font-black ring-4 ring-indigo-50">
-                                                T
-                                            </div>
-                                            <span className="text-sm font-black text-gray-700 uppercase tracking-tight">Trần Văn A</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 translate-x-4">
+                                    <td className="px-6 py-5 text-right">
+                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     navigate(`/backoffice/tech/work-orders/${order.id}`);
                                                 }}
-                                                className="p-3 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm active:scale-95"
+                                                className="p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-900 hover:text-white transition-all"
                                                 title="Xem chi tiết"
                                             >
-                                                <Eye size={18} />
+                                                <Eye size={16} />
                                             </button>
-                                            {order.status === 'Requested' && (
+                                            {(order.status === 'Requested' || order.status === 'Assigned') && (
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         startRepairMutation.mutate(order.id);
                                                     }}
-                                                    className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
+                                                    className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
                                                     title="Bắt đầu sửa chữa"
                                                 >
-                                                    <Play size={18} className="fill-current" />
+                                                    <Play size={16} className="fill-current" />
                                                 </button>
                                             )}
                                             {order.status === 'InProgress' && (
@@ -262,12 +400,12 @@ export const TechPortal = () => {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const notes = window.prompt('Ghi chú hoàn thành:');
-                                                        if (notes) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes });
+                                                        if (notes !== null) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes: notes || undefined });
                                                     }}
-                                                    className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95"
+                                                    className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
                                                     title="Hoàn tất"
                                                 >
-                                                    <CheckSquare size={18} />
+                                                    <CheckSquare size={16} />
                                                 </button>
                                             )}
                                         </div>
@@ -278,14 +416,14 @@ export const TechPortal = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="p-6 bg-gray-50 border-t-2 border-gray-100 flex items-center justify-between font-black uppercase tracking-widest text-[10px]">
-                    <p className="text-gray-500">Hiển thị <span className="text-gray-950">1-10</span> trên tổng số <span className="text-gray-950">{workOrders.length}</span> phiếu</p>
-                    <div className="flex gap-3">
-                        <button className="px-5 py-2 bg-white border-2 border-gray-100 rounded-xl text-gray-400 cursor-not-allowed">Trước</button>
-                        <button className="px-5 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-950 hover:bg-gray-950 hover:text-white transition-all shadow-sm">Sau</button>
+                {/* Footer */}
+                {workOrders.length > 0 && (
+                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
+                        <p className="text-gray-500">
+                            Hiển thị <span className="font-semibold text-gray-900">{workOrders.length}</span> phiếu
+                        </p>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

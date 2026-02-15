@@ -89,7 +89,7 @@ export const Footer = () => {
                         <input
                             type="email"
                             placeholder="Nhập email của bạn..."
-                            className="px-6 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-800 text-sm w-full lg:w-96 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 transition-all"
+                            className="px-6 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm w-full lg:w-96 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 transition-all placeholder:text-gray-400"
                             value={newsletterEmail}
                             onChange={(e) => setNewsletterEmail(e.target.value)}
                         />

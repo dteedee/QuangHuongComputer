@@ -141,6 +141,7 @@ export const Input: React.FC<InputProps> = ({
     w-full rounded-lg transition-all duration-200
     focus:outline-none focus:ring-2
     disabled:opacity-50 disabled:cursor-not-allowed
+    text-gray-900 placeholder:text-gray-400
   `;
 
   const variantStyles = {

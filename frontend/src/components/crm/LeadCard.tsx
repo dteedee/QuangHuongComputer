@@ -101,7 +101,7 @@ export default function LeadCard({
               <span className="truncate max-w-[80px]">{lead.assignedToUserName}</span>
             </div>
           ) : (
-            <span className="text-xs text-gray-400">Chua phan cong</span>
+            <span className="text-xs text-gray-400">Chưa phân công</span>
           )}
         </div>
 
@@ -117,7 +117,7 @@ export default function LeadCard({
                 onConvert?.(lead);
               }}
               className="p-1 hover:bg-green-100 rounded text-green-600"
-              title="Chuyen doi"
+              title="Chuyển đổi"
             >
               <ArrowRight size={14} />
             </button>

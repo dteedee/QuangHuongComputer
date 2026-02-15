@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { catalogApi, type Product, type ProductReview } from '../api/catalog';
+import { salesApi } from '../api/sales';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter } from 'lucide-react';
+import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../api/client';
 import { WriteReviewModal, RatingBreakdown, ReviewItem } from '../components/reviews';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
-import { WishlistButton } from '../components/WishlistButton';
 
 interface Specification {
   [key: string]: string;
@@ -35,6 +35,8 @@ export default function ProductDetailPage() {
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSort, setReviewSort] = useState<ReviewSortOption>('newest');
+  const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
+  const [checkingPurchase, setCheckingPurchase] = useState(false);
   const { addToRecentlyViewed } = useRecentlyViewed();
 
   // Calculate rating breakdown from reviews
@@ -74,6 +76,25 @@ export default function ProductDetailPage() {
     }
   }, [reviews, reviewSort]);
 
+  // Check if user has purchased this product
+  const checkPurchaseStatus = async (productId: string) => {
+    if (!isAuthenticated) {
+      setHasPurchased(false);
+      return;
+    }
+
+    setCheckingPurchase(true);
+    try {
+      const result = await salesApi.verifyPurchase(productId);
+      setHasPurchased(result.hasPurchased);
+    } catch (error) {
+      console.error('Failed to check purchase status:', error);
+      setHasPurchased(false);
+    } finally {
+      setCheckingPurchase(false);
+    }
+  };
+
   const handleWriteReview = () => {
     if (!isAuthenticated) {
       toast('Vui lòng đăng nhập để viết đánh giá!', {
@@ -83,6 +104,15 @@ export default function ProductDetailPage() {
       navigate('/login', { state: { from: `/product/${id}` } });
       return;
     }
+
+    if (!hasPurchased) {
+      toast('Bạn cần mua sản phẩm này trước khi đánh giá!', {
+        icon: '🛒',
+        duration: 3000
+      });
+      return;
+    }
+
     setShowReviewModal(true);
   };
 
@@ -114,9 +144,10 @@ export default function ProductDetailPage() {
       loadProduct(id);
       loadRelatedProducts(id);
       loadReviews(id);
+      checkPurchaseStatus(id);
     }
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   // Track recently viewed products
   useEffect(() => {
@@ -417,7 +448,6 @@ export default function ProductDetailPage() {
                     {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
                   </button>
                 </div>
-                <WishlistButton productId={product.id} size="lg" />
               </div>
 
               {/* Features */}
@@ -510,12 +540,41 @@ export default function ProductDetailPage() {
                         Đánh giá từ khách hàng ({reviews.length})
                       </h3>
                     </div>
-                    <button
-                      onClick={handleWriteReview}
-                      className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
-                    >
-                      Viết đánh giá
-                    </button>
+                    <div className="flex flex-col items-end gap-2">
+                      {/* Show different UI based on purchase status */}
+                      {checkingPurchase ? (
+                        <div className="px-4 py-2 text-gray-500 text-sm">
+                          Đang kiểm tra...
+                        </div>
+                      ) : hasPurchased ? (
+                        <button
+                          onClick={handleWriteReview}
+                          className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                        >
+                          Viết đánh giá
+                        </button>
+                      ) : isAuthenticated ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <button
+                            disabled
+                            className="px-6 py-2.5 bg-gray-200 text-gray-500 rounded-xl text-xs font-black uppercase cursor-not-allowed"
+                          >
+                            Viết đánh giá
+                          </button>
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <ShoppingBag size={12} />
+                            Mua sản phẩm để đánh giá
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleWriteReview}
+                          className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                        >
+                          Đăng nhập để đánh giá
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Rating Breakdown */}
@@ -578,13 +637,31 @@ export default function ProductDetailPage() {
                         <Star size={32} />
                       </div>
                       <h4 className="text-gray-900 font-bold mb-2">Chưa có đánh giá nào</h4>
-                      <p className="text-gray-500 text-sm mb-4">Hãy là người đầu tiên chia sẻ cảm nhận về sản phẩm này!</p>
-                      <button
-                        onClick={handleWriteReview}
-                        className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
-                      >
-                        Viết đánh giá đầu tiên
-                      </button>
+                      {hasPurchased ? (
+                        <>
+                          <p className="text-gray-500 text-sm mb-4">Hãy là người đầu tiên chia sẻ cảm nhận về sản phẩm này!</p>
+                          <button
+                            onClick={handleWriteReview}
+                            className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                          >
+                            Viết đánh giá đầu tiên
+                          </button>
+                        </>
+                      ) : isAuthenticated ? (
+                        <p className="text-gray-500 text-sm">
+                          Mua sản phẩm này để trở thành người đầu tiên đánh giá!
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-gray-500 text-sm mb-4">Đăng nhập và mua sản phẩm để đánh giá!</p>
+                          <button
+                            onClick={handleWriteReview}
+                            className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                          >
+                            Đăng nhập ngay
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

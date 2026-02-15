@@ -74,14 +74,14 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Khach hang</h1>
-          <p className="text-gray-500">{total} khach hang</p>
+          <h1 className="text-2xl font-bold text-gray-900">Khách hàng</h1>
+          <p className="text-gray-500">{total} khách hàng</p>
         </div>
         <button
           className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
         >
           <Download size={18} />
-          <span>Xuat Excel</span>
+          <span>Xuất Excel</span>
         </button>
       </div>
 
@@ -92,7 +92,7 @@ export default function CustomersPage() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Tim kiem khach hang..."
+              placeholder="Tìm kiếm khách hàng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -107,13 +107,13 @@ export default function CustomersPage() {
             }}
             className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Tat ca Lifecycle</option>
-            <option value="New">New</option>
-            <option value="Active">Active</option>
+            <option value="">Tất cả Lifecycle</option>
+            <option value="New">Mới</option>
+            <option value="Active">Hoạt động</option>
             <option value="VIP">VIP</option>
             <option value="Champion">Champion</option>
-            <option value="AtRisk">At Risk</option>
-            <option value="Churned">Churned</option>
+            <option value="AtRisk">Cần chăm sóc</option>
+            <option value="Churned">Đã rời bỏ</option>
           </select>
 
           <select
@@ -124,7 +124,7 @@ export default function CustomersPage() {
             }}
             className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Tat ca Segment</option>
+            <option value="">Tất cả phân nhóm</option>
             {segments.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -135,7 +135,7 @@ export default function CustomersPage() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800"
           >
             <Filter size={18} />
-            <span>Loc</span>
+            <span>Lọc</span>
           </button>
         </form>
       </div>
@@ -149,20 +149,20 @@ export default function CustomersPage() {
         ) : customers.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <Users size={48} className="mx-auto mb-4 opacity-50" />
-            <p>Khong tim thay khach hang nao</p>
+            <p>Không tìm thấy khách hàng nào</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Khach hang</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Khách hàng</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">RFM</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Lifecycle</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-500">Tong chi tieu</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Don hang</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Mua gan nhat</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Segments</th>
+                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-500">Tổng chi tiêu</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Đơn hàng</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Mua gần nhất</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Phân nhóm</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500"></th>
                 </tr>
               </thead>
@@ -235,7 +235,7 @@ export default function CustomersPage() {
                             navigate(`/backoffice/crm/customers/${customer.id}`);
                           }}
                           className="p-2 hover:bg-gray-100 rounded-lg"
-                          title="Xem chi tiet"
+                          title="Xem chi tiết"
                         >
                           <Eye size={16} className="text-gray-400" />
                         </button>
@@ -252,7 +252,7 @@ export default function CustomersPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
             <p className="text-sm text-gray-500">
-              Hien thi {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
+              Hiển thị {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
             </p>
             <div className="flex items-center gap-2">
               <button

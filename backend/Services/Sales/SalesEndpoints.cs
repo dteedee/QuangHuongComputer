@@ -589,10 +589,11 @@ public static class SalesEndpoints
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // 30 second timeout
             try
             {
-                // Optimize performance by disabling change tracking for read-only operations
-                catalogDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
-                inventoryDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
-                salesDb.ChangeTracker.QueryTrackingBehavior = Microsoft.EntityFrameworkCore.QueryTrackingBehavior.NoTracking;
+                // Note: All contexts need tracking because we modify entities in all of them
+                // - salesDb: save Order, clear Cart
+                // - inventoryDb: update inventory
+                // - catalogDb: update product stock
+
                 var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
@@ -759,10 +760,10 @@ public static class SalesEndpoints
             // Execute all stock updates
             stockUpdates.ForEach(update => update());
             
-            // Execute reservation updates in parallel if possible
-            if (reservationUpdates.Any())
+            // Execute reservation updates sequentially to avoid DbContext concurrency issues
+            foreach (var update in reservationUpdates)
             {
-                await Task.WhenAll(reservationUpdates.Select(update => update()));
+                await update();
             }
 
                 // 3. Create Order
@@ -838,14 +839,12 @@ public static class SalesEndpoints
                     cart.RemoveCoupon();
                 }
 
-                // 5. Save Changes - batch save for better performance
+                // 5. Save Changes - execute sequentially to avoid connection conflicts
                 try 
                 {
-                    await Task.WhenAll(
-                        inventoryDb.SaveChangesAsync(cts.Token),
-                        catalogDb.SaveChangesAsync(cts.Token),
-                        salesDb.SaveChangesAsync(cts.Token)
-                    );
+                    await inventoryDb.SaveChangesAsync(cts.Token);
+                    await catalogDb.SaveChangesAsync(cts.Token);
+                    await salesDb.SaveChangesAsync(cts.Token);
                 }
                 catch (Exception ex)
                 {

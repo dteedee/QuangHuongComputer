@@ -221,10 +221,11 @@ export const ExpensesPage = () => {
     const [page, setPage] = useState(1);
     const pageSize = 20;
 
-    // Queries
+    // Queries with caching for better performance
     const { data: categoriesData } = useQuery({
         queryKey: ['expense-categories'],
         queryFn: () => expenseApi.categories.getAll(),
+        staleTime: 300000, // Cache categories for 5 minutes (rarely change)
     });
 
     const { data: expensesData, isLoading } = useQuery({
@@ -235,11 +236,13 @@ export const ExpensesPage = () => {
             status: statusFilter === 'all' ? undefined : statusFilter,
             categoryId: categoryFilter === 'all' ? undefined : categoryFilter,
         }),
+        staleTime: 15000, // Cache for 15 seconds
     });
 
     const { data: summary } = useQuery({
         queryKey: ['expenses-summary'],
         queryFn: () => expenseApi.getSummary(),
+        staleTime: 30000, // Cache for 30 seconds
     });
 
     // Mutations

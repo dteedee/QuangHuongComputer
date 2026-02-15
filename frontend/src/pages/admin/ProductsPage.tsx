@@ -460,17 +460,17 @@ export const AdminProductsPage = () => {
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-500">Giá niêm yết (nếu có)</label>
                                             <div className="relative">
-                                                <input name="oldPrice" type="number" defaultValue={editingProduct?.oldPrice} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl text-lg font-bold text-gray-400 line-through outline-none" />
+                                                <input name="oldPrice" type="number" defaultValue={editingProduct?.oldPrice} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl text-lg font-bold text-gray-600 line-through outline-none placeholder:text-gray-400" />
                                                 <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
                                             </div>
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Mã SKU</label>
-                                            <input name="sku" defaultValue={editingProduct?.sku} placeholder="QH-PRO-001" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none uppercase" />
+                                            <input name="sku" defaultValue={editingProduct?.sku} placeholder="QH-PRO-001" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold outline-none uppercase text-gray-900 placeholder:text-gray-400" />
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Số lượng tồn kho *</label>
-                                            <input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-lg font-bold outline-none text-center" />
+                                            <input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-lg font-bold outline-none text-center text-gray-900 placeholder:text-gray-400" />
                                         </div>
                                     </motion.div>
                                 ) : (

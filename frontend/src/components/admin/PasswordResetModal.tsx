@@ -70,7 +70,7 @@ export function PasswordResetModal({ user, onClose, onSubmit, isLoading }: Passw
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-300"
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
                                     placeholder="Nhập mật khẩu mới..."
                                 />
                                 <button
@@ -90,7 +90,7 @@ export function PasswordResetModal({ user, onClose, onSubmit, isLoading }: Passw
                                 type={showPassword ? 'text' : 'password'}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-300"
+                                className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
                                 placeholder="Nhập lại mật khẩu..."
                             />
                         </div>

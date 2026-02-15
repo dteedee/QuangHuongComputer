@@ -52,7 +52,7 @@ export default function CampaignsPage() {
   };
 
   const handleSend = async (id: string) => {
-    if (!confirm('Gui campaign nay ngay bay gio?')) return;
+    if (!confirm('Gửi campaign này ngay bây giờ?')) return;
     try {
       await crmApi.campaigns.send(id);
       loadData();
@@ -80,7 +80,7 @@ export default function CampaignsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Ban co chac muon xoa campaign nay?')) return;
+    if (!confirm('Bạn có chắc muốn xóa campaign này?')) return;
     try {
       await crmApi.campaigns.delete(id);
       loadData();
@@ -96,15 +96,15 @@ export default function CampaignsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Email Campaigns</h1>
-          <p className="text-gray-500">{total} campaigns</p>
+          <h1 className="text-2xl font-bold text-gray-900">Chiến dịch Email</h1>
+          <p className="text-gray-500">{total} chiến dịch</p>
         </div>
         <button
           onClick={() => navigate('/backoffice/crm/campaigns/new')}
           className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
         >
           <Plus size={18} />
-          <span>Tao Campaign</span>
+          <span>Tạo Chiến dịch</span>
         </button>
       </div>
 
@@ -115,7 +115,7 @@ export default function CampaignsPage() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Tim kiem campaign..."
+              placeholder="Tìm kiếm chiến dịch..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -130,12 +130,12 @@ export default function CampaignsPage() {
             }}
             className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
           >
-            <option value="">Tat ca Status</option>
-            <option value="Draft">Draft</option>
-            <option value="Scheduled">Scheduled</option>
-            <option value="Sending">Sending</option>
-            <option value="Sent">Sent</option>
-            <option value="Paused">Paused</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="Draft">Bản nháp</option>
+            <option value="Scheduled">Đã lên lịch</option>
+            <option value="Sending">Đang gửi</option>
+            <option value="Sent">Đã gửi</option>
+            <option value="Paused">Tạm dừng</option>
           </select>
 
           <button
@@ -143,7 +143,7 @@ export default function CampaignsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800"
           >
             <Filter size={18} />
-            <span>Loc</span>
+            <span>Lọc</span>
           </button>
         </form>
       </div>
@@ -157,12 +157,12 @@ export default function CampaignsPage() {
         ) : campaigns.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
             <Mail size={48} className="mx-auto mb-4 opacity-50" />
-            <p>Chua co campaign nao</p>
+            <p>Chưa có chiến dịch nào</p>
             <button
               onClick={() => navigate('/backoffice/crm/campaigns/new')}
               className="mt-4 text-red-600 hover:underline"
             >
-              Tao campaign dau tien
+              Tạo chiến dịch đầu tiên
             </button>
           </div>
         ) : (
@@ -170,13 +170,13 @@ export default function CampaignsPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Campaign</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Status</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Segment</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Nguoi nhan</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Open Rate</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Click Rate</th>
-                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Ngay gui</th>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">Chiến dịch</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Trạng thái</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Phân nhóm</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Người nhận</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Tỷ lệ mở</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Tỷ lệ click</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-gray-500">Ngày gửi</th>
                   <th className="text-center px-6 py-4 text-sm font-medium text-gray-500"></th>
                 </tr>
               </thead>
@@ -243,14 +243,14 @@ export default function CampaignsPage() {
                             <button
                               onClick={() => navigate(`/backoffice/crm/campaigns/${campaign.id}/edit`)}
                               className="p-2 hover:bg-gray-100 rounded-lg"
-                              title="Sua"
+                              title="Sửa"
                             >
                               <Edit size={16} className="text-gray-400" />
                             </button>
                             <button
                               onClick={() => handleSend(campaign.id)}
                               className="p-2 hover:bg-green-100 rounded-lg"
-                              title="Gui ngay"
+                              title="Gửi ngay"
                             >
                               <Send size={16} className="text-green-600" />
                             </button>
@@ -261,7 +261,7 @@ export default function CampaignsPage() {
                           <button
                             onClick={() => handlePause(campaign.id)}
                             className="p-2 hover:bg-orange-100 rounded-lg"
-                            title="Tam dung"
+                            title="Tạm dừng"
                           >
                             <Pause size={16} className="text-orange-600" />
                           </button>
@@ -271,7 +271,7 @@ export default function CampaignsPage() {
                           <button
                             onClick={() => handleResume(campaign.id)}
                             className="p-2 hover:bg-green-100 rounded-lg"
-                            title="Tiep tuc"
+                            title="Tiếp tục"
                           >
                             <Play size={16} className="text-green-600" />
                           </button>
@@ -281,7 +281,7 @@ export default function CampaignsPage() {
                           <button
                             onClick={() => handleDelete(campaign.id)}
                             className="p-2 hover:bg-red-100 rounded-lg"
-                            title="Xoa"
+                            title="Xóa"
                           >
                             <Trash2 size={16} className="text-red-400" />
                           </button>
@@ -299,7 +299,7 @@ export default function CampaignsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
             <p className="text-sm text-gray-500">
-              Hien thi {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
+              Hiển thị {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} / {total}
             </p>
             <div className="flex items-center gap-2">
               <button

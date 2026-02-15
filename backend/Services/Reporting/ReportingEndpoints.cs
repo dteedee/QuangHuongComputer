@@ -135,8 +135,10 @@ public static class ReportingEndpoints
 
         group.MapGet("/inventory-value", async (InventoryDbContext invDb, CatalogDbContext catalogDb) =>
         {
-            var items = await invDb.InventoryItems.ToListAsync();
-            var totalValue = items.Sum(i => i.QuantityOnHand * i.AverageCost);
+            // Optimized: Calculate aggregations directly in database
+            var totalValueTask = invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost);
+            var itemCountTask = invDb.InventoryItems.CountAsync();
+            var totalQuantityTask = invDb.InventoryItems.SumAsync(i => (int?)i.QuantityOnHand);
 
             // Get low stock items
             var lowStockItems = await invDb.InventoryItems
@@ -144,6 +146,9 @@ public static class ReportingEndpoints
                 .OrderBy(i => i.QuantityOnHand)
                 .Take(10)
                 .ToListAsync();
+
+            // Run aggregation tasks in parallel
+            await Task.WhenAll(totalValueTask, itemCountTask, totalQuantityTask);
 
             // Get product names
             var productIds = lowStockItems.Select(i => i.ProductId).ToList();
@@ -163,9 +168,9 @@ public static class ReportingEndpoints
 
             return Results.Ok(new
             {
-                TotalValue = totalValue,
-                ItemCount = items.Count,
-                TotalQuantity = items.Sum(i => i.QuantityOnHand),
+                TotalValue = await totalValueTask ?? 0,
+                ItemCount = await itemCountTask,
+                TotalQuantity = await totalQuantityTask ?? 0,
                 LowStockItems = lowStock
             });
         });
@@ -248,33 +253,39 @@ public static class ReportingEndpoints
             var thisMonth = new DateTime(today.Year, today.Month, 1);
             var lastMonth = thisMonth.AddMonths(-1);
 
-            // Sales metrics
-            var thisMonthRevenue = await salesDb.Orders
+            // Run all queries in parallel for better performance
+            var thisMonthRevenueTask = salesDb.Orders
                 .Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                .SumAsync(o => (decimal?)o.TotalAmount);
 
-            var lastMonthRevenue = await salesDb.Orders
+            var lastMonthRevenueTask = salesDb.Orders
                 .Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+                .SumAsync(o => (decimal?)o.TotalAmount);
 
+            var pendingOrdersTask = salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
+
+            var inventoryValueTask = invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost);
+            var lowStockCountTask = invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
+
+            var pendingRepairsTask = repairDb.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Pending || w.Status == WorkOrderStatus.InProgress);
+            var thisMonthRepairRevenueTask = repairDb.WorkOrders
+                .Where(w => w.FinishedAt >= thisMonth && w.Status == WorkOrderStatus.Completed)
+                .SumAsync(w => (decimal?)w.TotalCost);
+
+            var totalARTask = accDb.Accounts.SumAsync(a => (decimal?)a.Balance);
+
+            // Await all tasks
+            await Task.WhenAll(
+                thisMonthRevenueTask, lastMonthRevenueTask, pendingOrdersTask,
+                inventoryValueTask, lowStockCountTask,
+                pendingRepairsTask, thisMonthRepairRevenueTask,
+                totalARTask);
+
+            var thisMonthRevenue = await thisMonthRevenueTask ?? 0;
+            var lastMonthRevenue = await lastMonthRevenueTask ?? 0;
             var revenueGrowth = lastMonthRevenue > 0
                 ? Math.Round((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100, 1)
                 : 100;
-
-            var pendingOrders = await salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
-
-            // Inventory
-            var inventoryValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
-            var lowStockCount = await invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
-
-            // Repairs
-            var pendingRepairs = await repairDb.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Pending || w.Status == WorkOrderStatus.InProgress);
-            var thisMonthRepairRevenue = await repairDb.WorkOrders
-                .Where(w => w.FinishedAt >= thisMonth && w.Status == WorkOrderStatus.Completed)
-                .SumAsync(w => (decimal?)w.TotalCost) ?? 0;
-
-            // AR
-            var totalAR = await accDb.Accounts.SumAsync(a => (decimal?)a.Balance) ?? 0;
 
             return Results.Ok(new
             {
@@ -283,21 +294,21 @@ public static class ReportingEndpoints
                     ThisMonthRevenue = thisMonthRevenue,
                     LastMonthRevenue = lastMonthRevenue,
                     GrowthPercent = revenueGrowth,
-                    PendingOrders = pendingOrders
+                    PendingOrders = await pendingOrdersTask
                 },
                 Inventory = new
                 {
-                    TotalValue = inventoryValue,
-                    LowStockCount = lowStockCount
+                    TotalValue = await inventoryValueTask ?? 0,
+                    LowStockCount = await lowStockCountTask
                 },
                 Repairs = new
                 {
-                    PendingCount = pendingRepairs,
-                    ThisMonthRevenue = thisMonthRepairRevenue
+                    PendingCount = await pendingRepairsTask,
+                    ThisMonthRevenue = await thisMonthRepairRevenueTask ?? 0
                 },
                 Accounting = new
                 {
-                    TotalReceivables = totalAR
+                    TotalReceivables = await totalARTask ?? 0
                 }
             });
         });

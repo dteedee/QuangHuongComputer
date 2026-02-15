@@ -16,10 +16,10 @@ const stageConfig: Record<LifecycleStage, {
 }> = {
   Champion: { label: 'Champion', bgColor: 'bg-purple-100', textColor: 'text-purple-800', icon: Crown },
   VIP: { label: 'VIP', bgColor: 'bg-blue-100', textColor: 'text-blue-800', icon: Star },
-  Active: { label: 'Active', bgColor: 'bg-green-100', textColor: 'text-green-800', icon: User },
-  AtRisk: { label: 'At Risk', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', icon: AlertTriangle },
-  Churned: { label: 'Churned', bgColor: 'bg-red-100', textColor: 'text-red-800', icon: UserX },
-  New: { label: 'New', bgColor: 'bg-gray-100', textColor: 'text-gray-800', icon: UserPlus },
+  Active: { label: 'Hoạt động', bgColor: 'bg-green-100', textColor: 'text-green-800', icon: User },
+  AtRisk: { label: 'Cần chăm sóc', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', icon: AlertTriangle },
+  Churned: { label: 'Đã rời bỏ', bgColor: 'bg-red-100', textColor: 'text-red-800', icon: UserX },
+  New: { label: 'Mới', bgColor: 'bg-gray-100', textColor: 'text-gray-800', icon: UserPlus },
 };
 
 export default function LifecycleStageBadge({

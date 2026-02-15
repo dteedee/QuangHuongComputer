@@ -47,8 +47,8 @@ export default function CrmPortal() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">CRM Dashboard</h1>
-          <p className="text-gray-500">Quan ly khach hang va Leads</p>
+          <h1 className="text-2xl font-bold text-gray-900">Tổng quan CRM</h1>
+          <p className="text-gray-500">Quản lý khách hàng và Leads</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -56,32 +56,32 @@ export default function CrmPortal() {
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
           >
             <UserPlus size={18} />
-            <span>Them Lead</span>
+            <span>Thêm Lead</span>
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/campaigns/new')}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
           >
             <Mail size={18} />
-            <span>Tao Campaign</span>
+            <span>Tạo Campaign</span>
           </button>
         </div>
       </div>
 
       {/* Customer Stats */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Khach hang</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Khách hàng</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <CustomerStatsCard
-            title="Tong khach hang"
+            title="Tổng khách hàng"
             value={dashboard?.totalCustomers || 0}
-            subtitle={`+${dashboard?.newCustomersThisMonth || 0} thang nay`}
+            subtitle={`+${dashboard?.newCustomersThisMonth || 0} tháng này`}
             icon={Users}
             color="blue"
             onClick={() => navigate('/backoffice/crm/customers')}
           />
           <CustomerStatsCard
-            title="Khach VIP"
+            title="Khách VIP"
             value={dashboard?.vipCustomers || 0}
             icon={Star}
             color="purple"
@@ -95,9 +95,9 @@ export default function CrmPortal() {
             onClick={() => navigate('/backoffice/crm/customers?stage=Champion')}
           />
           <CustomerStatsCard
-            title="Can cham soc"
+            title="Cần chăm sóc"
             value={dashboard?.atRiskCustomers || 0}
-            subtitle={`${dashboard?.churnedCustomers || 0} da roi bo`}
+            subtitle={`${dashboard?.churnedCustomers || 0} đã rời bỏ`}
             icon={AlertTriangle}
             color="orange"
             onClick={() => navigate('/backoffice/crm/customers?stage=AtRisk')}
@@ -114,14 +114,14 @@ export default function CrmPortal() {
           className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold opacity-90">Tong doanh thu</h3>
+            <h3 className="text-lg font-semibold opacity-90">Tổng doanh thu</h3>
             <TrendingUp size={24} className="opacity-80" />
           </div>
           <p className="text-3xl font-bold mb-2">
             {formatCurrency(dashboard?.totalRevenue || 0)}
           </p>
           <p className="text-sm opacity-80">
-            Trung binh {formatCurrency(dashboard?.averageOrderValue || 0)} / don
+            Trung bình {formatCurrency(dashboard?.averageOrderValue || 0)} / đơn
           </p>
         </motion.div>
 
@@ -133,14 +133,14 @@ export default function CrmPortal() {
           className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold opacity-90">Gia tri Pipeline</h3>
+            <h3 className="text-lg font-semibold opacity-90">Giá trị Pipeline</h3>
             <Target size={24} className="opacity-80" />
           </div>
           <p className="text-3xl font-bold mb-2">
             {formatCurrency(dashboard?.totalPipelineValue || 0)}
           </p>
           <p className="text-sm opacity-80">
-            {dashboard?.totalLeads || 0} leads dang theo doi
+            {dashboard?.totalLeads || 0} leads đang theo dõi
           </p>
         </motion.div>
       </div>
@@ -150,30 +150,30 @@ export default function CrmPortal() {
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Leads</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <CustomerStatsCard
-            title="Tong Leads"
+            title="Tổng Leads"
             value={dashboard?.totalLeads || 0}
-            subtitle={`+${dashboard?.newLeadsThisMonth || 0} thang nay`}
+            subtitle={`+${dashboard?.newLeadsThisMonth || 0} tháng này`}
             icon={UserPlus}
             color="blue"
             onClick={() => navigate('/backoffice/crm/leads')}
           />
           <CustomerStatsCard
-            title="Qualified"
+            title="Đủ điều kiện"
             value={dashboard?.qualifiedLeads || 0}
             icon={Target}
             color="green"
             onClick={() => navigate('/backoffice/crm/leads?status=Qualified')}
           />
           <CustomerStatsCard
-            title="Chuyen doi"
+            title="Chuyển đổi"
             value={dashboard?.convertedLeadsThisMonth || 0}
-            subtitle={`${(dashboard?.leadConversionRate || 0).toFixed(1)}% ty le`}
+            subtitle={`${(dashboard?.leadConversionRate || 0).toFixed(1)}% tỷ lệ`}
             icon={ArrowRight}
             color="purple"
           />
           <CustomerStatsCard
             title="Pipeline"
-            value="View"
+            value="Xem"
             icon={TrendingUp}
             color="orange"
             onClick={() => navigate('/backoffice/crm/leads/pipeline')}
@@ -189,7 +189,7 @@ export default function CrmPortal() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-6 border border-gray-100"
         >
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Phan bo Lifecycle</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Phân bổ Lifecycle</h3>
           <div className="space-y-3">
             {rfmData?.lifecycleDistribution.map((item) => (
               <div key={item.stage} className="flex items-center gap-3">
@@ -225,12 +225,12 @@ export default function CrmPortal() {
           className="bg-white rounded-2xl p-6 border border-gray-100"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Tasks</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Công việc</h3>
             <button
               onClick={() => navigate('/backoffice/crm/tasks')}
               className="text-sm text-blue-600 hover:underline"
             >
-              Xem tat ca
+              Xem tất cả
             </button>
           </div>
 
@@ -238,7 +238,7 @@ export default function CrmPortal() {
             <div className="bg-orange-50 rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Calendar className="text-orange-500" size={20} />
-                <span className="text-sm text-gray-600">Can lam</span>
+                <span className="text-sm text-gray-600">Cần làm</span>
               </div>
               <p className="text-2xl font-bold text-orange-700">
                 {dashboard?.pendingTasks || 0}
@@ -248,7 +248,7 @@ export default function CrmPortal() {
             <div className="bg-red-50 rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <AlertTriangle className="text-red-500" size={20} />
-                <span className="text-sm text-gray-600">Qua han</span>
+                <span className="text-sm text-gray-600">Quá hạn</span>
               </div>
               <p className="text-2xl font-bold text-red-700">
                 {dashboard?.overdueTasks || 0}
@@ -262,7 +262,7 @@ export default function CrmPortal() {
               className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
             >
               <CheckSquare size={16} />
-              <span>Xem follow-ups sap toi</span>
+              <span>Xem follow-ups sắp tới</span>
             </button>
           </div>
         </motion.div>
@@ -271,11 +271,11 @@ export default function CrmPortal() {
       {/* Quick Links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Khach hang', icon: Users, path: '/backoffice/crm/customers' },
+          { label: 'Khách hàng', icon: Users, path: '/backoffice/crm/customers' },
           { label: 'Leads', icon: UserPlus, path: '/backoffice/crm/leads' },
           { label: 'Pipeline', icon: Target, path: '/backoffice/crm/leads/pipeline' },
-          { label: 'Phan nhom', icon: Target, path: '/backoffice/crm/segments' },
-          { label: 'Campaigns', icon: Mail, path: '/backoffice/crm/campaigns' },
+          { label: 'Phân nhóm', icon: Target, path: '/backoffice/crm/segments' },
+          { label: 'Chiến dịch', icon: Mail, path: '/backoffice/crm/campaigns' },
         ].map((item) => (
           <motion.button
             key={item.path}

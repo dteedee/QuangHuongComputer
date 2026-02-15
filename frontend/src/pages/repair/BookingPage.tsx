@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { repairApi, ServiceType, TimeSlot, ServiceLocation, getTimeSlotLabel } from '../../api/repair';
+import { repairApi, getTimeSlotLabel } from '../../api/repair';
+import type { ServiceType, TimeSlot, ServiceLocation } from '../../api/repair';
 import { useAuth } from '../../context/AuthContext';
 
 export const BookingPage: React.FC = () => {
@@ -152,11 +153,10 @@ export const BookingPage: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setServiceType('InShop')}
-                            className={`p-4 border-2 rounded-lg transition ${
-                                serviceType === 'InShop'
+                            className={`p-4 border-2 rounded-lg transition ${serviceType === 'InShop'
                                     ? 'border-blue-500 bg-blue-50'
                                     : 'border-gray-300 hover:border-blue-300'
-                            }`}
+                                }`}
                         >
                             <div className="text-lg font-medium">At Store</div>
                             <div className="text-sm text-gray-600">Bring device to our shop</div>
@@ -165,11 +165,10 @@ export const BookingPage: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setServiceType('OnSite')}
-                            className={`p-4 border-2 rounded-lg transition ${
-                                serviceType === 'OnSite'
+                            className={`p-4 border-2 rounded-lg transition ${serviceType === 'OnSite'
                                     ? 'border-blue-500 bg-blue-50'
                                     : 'border-gray-300 hover:border-blue-300'
-                            }`}
+                                }`}
                         >
                             <div className="text-lg font-medium">On-Site Service</div>
                             <div className="text-sm text-gray-600">We come to you</div>
@@ -191,7 +190,7 @@ export const BookingPage: React.FC = () => {
                                 onChange={handleInputChange}
                                 required
                                 placeholder="e.g., iPhone 14 Pro, Dell XPS 15"
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                         <div>
@@ -202,7 +201,7 @@ export const BookingPage: React.FC = () => {
                                 value={formData.serialNumber}
                                 onChange={handleInputChange}
                                 placeholder="Device serial number if available"
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                         <div>
@@ -214,7 +213,7 @@ export const BookingPage: React.FC = () => {
                                 required
                                 rows={4}
                                 placeholder="Please describe the issue in detail..."
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                     </div>
@@ -231,7 +230,7 @@ export const BookingPage: React.FC = () => {
                                 accept="image/*"
                                 multiple
                                 onChange={handleImageUpload}
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                             {imageFiles.length > 0 && (
                                 <div className="mt-2 text-sm text-gray-600">
@@ -246,7 +245,7 @@ export const BookingPage: React.FC = () => {
                                 accept="video/*"
                                 multiple
                                 onChange={handleVideoUpload}
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                             {videoFiles.length > 0 && (
                                 <div className="mt-2 text-sm text-gray-600">
@@ -270,7 +269,7 @@ export const BookingPage: React.FC = () => {
                                 onChange={handleInputChange}
                                 required
                                 min={minDate}
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                         <div>
@@ -280,7 +279,7 @@ export const BookingPage: React.FC = () => {
                                 value={formData.timeSlot}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             >
                                 <option value="Morning">{getTimeSlotLabel('Morning')}</option>
                                 <option value="Afternoon">{getTimeSlotLabel('Afternoon')}</option>
@@ -304,7 +303,7 @@ export const BookingPage: React.FC = () => {
                                     onChange={handleInputChange}
                                     required={serviceType === 'OnSite'}
                                     placeholder="Full address"
-                                    className="w-full border rounded-lg px-3 py-2"
+                                    className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                                 />
                             </div>
                             <div>
@@ -314,7 +313,7 @@ export const BookingPage: React.FC = () => {
                                     value={formData.locationType}
                                     onChange={handleInputChange}
                                     required={serviceType === 'OnSite'}
-                                    className="w-full border rounded-lg px-3 py-2"
+                                    className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                                 >
                                     <option value="CustomerHome">Home</option>
                                     <option value="CustomerOffice">Office</option>
@@ -331,7 +330,7 @@ export const BookingPage: React.FC = () => {
                                     onChange={handleInputChange}
                                     rows={2}
                                     placeholder="Special instructions, landmarks, etc."
-                                    className="w-full border rounded-lg px-3 py-2"
+                                    className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                                 />
                             </div>
                         </div>
@@ -350,7 +349,7 @@ export const BookingPage: React.FC = () => {
                                 value={formData.customerName}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                         <div>
@@ -362,7 +361,7 @@ export const BookingPage: React.FC = () => {
                                 onChange={handleInputChange}
                                 required
                                 placeholder="0123456789"
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -373,7 +372,7 @@ export const BookingPage: React.FC = () => {
                                 value={formData.customerEmail}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full border rounded-lg px-3 py-2"
+                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
                             />
                         </div>
                     </div>

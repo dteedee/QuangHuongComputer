@@ -25,6 +25,16 @@ a, button, input, select, textarea {
   transition: all 0.2s ease-in-out;
 }
 
+/* Input text color - đen cho giá trị nhập, xám cho placeholder */
+input, select, textarea {
+  color: #111827; /* gray-900 */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9CA3AF; /* gray-400 */
+}
+
 /* Smooth hover effects */
 .button-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;

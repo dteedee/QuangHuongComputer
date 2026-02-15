@@ -102,7 +102,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   <input
                     type="number"
                     {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-2xl tracking-tighter italic text-[#D70018] placeholder-gray-300 transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-2xl tracking-tighter italic text-[#D70018] placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
@@ -123,7 +123,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   </label>
                   <textarea
                     {...register('notes')}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-medium text-sm placeholder-gray-300 transition-all min-h-[100px]"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
                     placeholder="Nhập ghi chú thanh toán..."
                     disabled={isSubmitting}
                   />
@@ -370,7 +370,7 @@ export const ARPage = () => {
               placeholder="Tìm kiếm theo mã hóa đơn, khách hàng..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-300 transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
             />
           </div>
         </div>

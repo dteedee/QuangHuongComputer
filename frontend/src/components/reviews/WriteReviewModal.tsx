@@ -76,8 +76,16 @@ export default function WriteReviewModal({
       onReviewSubmitted();
       onClose();
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.';
-      toast.error(message);
+      const status = error.response?.status;
+      let message = error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.';
+
+      if (status === 403) {
+        message = 'Bạn cần mua sản phẩm này trước khi đánh giá';
+        toast.error(message, { icon: '🛒', duration: 4000 });
+        onClose(); // Close modal since user can't review
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -175,7 +183,7 @@ export default function WriteReviewModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="VD: Sản phẩm tuyệt vời!"
               maxLength={100}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#D70018] focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#D70018] focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -190,7 +198,7 @@ export default function WriteReviewModal({
               placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
               rows={4}
               maxLength={1000}
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium resize-none ${
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium resize-none text-gray-900 placeholder:text-gray-400 ${
                 errors.comment ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'
               }`}
             />

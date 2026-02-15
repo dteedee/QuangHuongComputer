@@ -167,20 +167,29 @@ public static class AccountingEndpoints
              return Results.Content(html, "text/html");
         });
 
-        // Summary Stats
+        // Summary Stats - Optimized with parallel queries
         group.MapGet("/stats", async (AccountingDbContext db) =>
         {
             var today = DateTime.UtcNow.Date;
+
+            // Run all queries in parallel for better performance
+            var receivablesTask = db.Invoices
+                .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
+                .SumAsync(i => i.TotalAmount - i.PaidAmount);
+            var revenueTodayTask = db.Invoices
+                .Where(i => i.IssueDate >= today && i.Status != InvoiceStatus.Cancelled)
+                .SumAsync(i => i.TotalAmount);
+            var totalInvoicesTask = db.Invoices.CountAsync();
+            var activeAccountsTask = db.Accounts.CountAsync();
+
+            await Task.WhenAll(receivablesTask, revenueTodayTask, totalInvoicesTask, activeAccountsTask);
+
             var stats = new
             {
-                TotalReceivables = await db.Invoices
-                    .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
-                    .SumAsync(i => i.TotalAmount - i.PaidAmount),
-                RevenueToday = await db.Invoices
-                    .Where(i => i.IssueDate >= today && i.Status != InvoiceStatus.Cancelled)
-                    .SumAsync(i => i.TotalAmount),
-                TotalInvoices = await db.Invoices.CountAsync(),
-                ActiveAccounts = await db.Accounts.CountAsync()
+                TotalReceivables = await receivablesTask,
+                RevenueToday = await revenueTodayTask,
+                TotalInvoices = await totalInvoicesTask,
+                ActiveAccounts = await activeAccountsTask
             };
             return Results.Ok(stats);
         });
@@ -276,19 +285,19 @@ public static class AccountingEndpoints
 
         group.MapGet("/ar/aging-summary", async (AccountingDbContext db) =>
         {
-            var receivables = await db.Invoices
+            // Optimized: Calculate directly in database instead of loading all records
+            var baseQuery = db.Invoices
                 .Where(i => i.Type == InvoiceType.Receivable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled)
-                .ToListAsync();
+                           i.Status != InvoiceStatus.Cancelled);
 
             var summary = new ARAgingSummaryDto(
-                Current: receivables.Where(i => i.AgingBucket == AgingBucket.Current).Sum(i => i.OutstandingAmount),
-                Days1To30: receivables.Where(i => i.AgingBucket == AgingBucket.Days1To30).Sum(i => i.OutstandingAmount),
-                Days31To60: receivables.Where(i => i.AgingBucket == AgingBucket.Days31To60).Sum(i => i.OutstandingAmount),
-                Days61To90: receivables.Where(i => i.AgingBucket == AgingBucket.Days61To90).Sum(i => i.OutstandingAmount),
-                Over90Days: receivables.Where(i => i.AgingBucket == AgingBucket.Over90Days).Sum(i => i.OutstandingAmount),
-                TotalOutstanding: receivables.Sum(i => i.OutstandingAmount));
+                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
+                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
+                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
+                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
+                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
+                TotalOutstanding: await baseQuery.SumAsync(i => i.OutstandingAmount));
 
             return Results.Ok(summary);
         }).WithName("GetARAgingSummary");
@@ -387,19 +396,19 @@ public static class AccountingEndpoints
 
         group.MapGet("/ap/aging-summary", async (AccountingDbContext db) =>
         {
-            var payables = await db.Invoices
+            // Optimized: Calculate directly in database instead of loading all records
+            var baseQuery = db.Invoices
                 .Where(i => i.Type == InvoiceType.Payable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled)
-                .ToListAsync();
+                           i.Status != InvoiceStatus.Cancelled);
 
             var summary = new APAgingSummaryDto(
-                Current: payables.Where(i => i.AgingBucket == AgingBucket.Current).Sum(i => i.OutstandingAmount),
-                Days1To30: payables.Where(i => i.AgingBucket == AgingBucket.Days1To30).Sum(i => i.OutstandingAmount),
-                Days31To60: payables.Where(i => i.AgingBucket == AgingBucket.Days31To60).Sum(i => i.OutstandingAmount),
-                Days61To90: payables.Where(i => i.AgingBucket == AgingBucket.Days61To90).Sum(i => i.OutstandingAmount),
-                Over90Days: payables.Where(i => i.AgingBucket == AgingBucket.Over90Days).Sum(i => i.OutstandingAmount),
-                TotalPayable: payables.Sum(i => i.OutstandingAmount));
+                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
+                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
+                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
+                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
+                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
+                TotalPayable: await baseQuery.SumAsync(i => i.OutstandingAmount));
 
             return Results.Ok(summary);
         }).WithName("GetAPAgingSummary");
@@ -794,23 +803,33 @@ public static class AccountingEndpoints
             if (endDate.HasValue)
                 query = query.Where(e => e.ExpenseDate <= endDate.Value);
 
-            var expenses = await query.Include(e => e.Category).ToListAsync();
+            // Optimized: Calculate aggregations directly in database
+            var totalExpenses = await query.SumAsync(e => e.TotalAmount);
+            var pendingAmount = await query.Where(e => e.Status == ExpenseStatus.Pending).SumAsync(e => e.TotalAmount);
+            var approvedAmount = await query.Where(e => e.Status == ExpenseStatus.Approved).SumAsync(e => e.TotalAmount);
+            var paidAmount = await query.Where(e => e.Status == ExpenseStatus.Paid).SumAsync(e => e.TotalAmount);
+            var pendingCount = await query.CountAsync(e => e.Status == ExpenseStatus.Pending);
+            var approvedCount = await query.CountAsync(e => e.Status == ExpenseStatus.Approved);
+            var paidCount = await query.CountAsync(e => e.Status == ExpenseStatus.Paid);
+
+            // Group by category in database
+            var byCategory = await query
+                .GroupBy(e => new { e.CategoryId, e.Category!.Name, e.Category.Code })
+                .Select(g => new CategoryExpenseSummary(
+                    g.Key.CategoryId, g.Key.Name, g.Key.Code,
+                    g.Sum(e => e.TotalAmount), g.Count()))
+                .OrderByDescending(c => c.TotalAmount)
+                .ToListAsync();
 
             var summary = new ExpenseSummaryDto(
-                TotalExpenses: expenses.Sum(e => e.TotalAmount),
-                PendingAmount: expenses.Where(e => e.Status == ExpenseStatus.Pending).Sum(e => e.TotalAmount),
-                ApprovedAmount: expenses.Where(e => e.Status == ExpenseStatus.Approved).Sum(e => e.TotalAmount),
-                PaidAmount: expenses.Where(e => e.Status == ExpenseStatus.Paid).Sum(e => e.TotalAmount),
-                PendingCount: expenses.Count(e => e.Status == ExpenseStatus.Pending),
-                ApprovedCount: expenses.Count(e => e.Status == ExpenseStatus.Approved),
-                PaidCount: expenses.Count(e => e.Status == ExpenseStatus.Paid),
-                ByCategory: expenses
-                    .GroupBy(e => new { e.CategoryId, e.Category!.Name, e.Category.Code })
-                    .Select(g => new CategoryExpenseSummary(
-                        g.Key.CategoryId, g.Key.Name, g.Key.Code,
-                        g.Sum(e => e.TotalAmount), g.Count()))
-                    .OrderByDescending(c => c.TotalAmount)
-                    .ToList());
+                TotalExpenses: totalExpenses,
+                PendingAmount: pendingAmount,
+                ApprovedAmount: approvedAmount,
+                PaidAmount: paidAmount,
+                PendingCount: pendingCount,
+                ApprovedCount: approvedCount,
+                PaidCount: paidCount,
+                ByCategory: byCategory);
 
             return Results.Ok(summary);
         }).WithName("GetExpenseSummary");

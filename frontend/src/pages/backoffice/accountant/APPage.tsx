@@ -605,7 +605,7 @@ export const APPage = () => {
                             placeholder="Tìm kiếm theo mã hóa đơn, nhà cung cấp..."
                             value={search}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-300 transition-all"
+                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
                         />
                     </div>
                 </div>
