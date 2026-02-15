@@ -14,6 +14,8 @@ public class ContentDbContext : DbContext
     public DbSet<Banner> Banners { get; set; }
     public DbSet<CMSPage> Pages { get; set; }
     public DbSet<Menu> Menus { get; set; }
+    public DbSet<FlashSale> FlashSales { get; set; }
+    public DbSet<ContactMessage> ContactMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,9 +82,46 @@ public class ContentDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            
+
             entity.HasIndex(e => new { e.Location, e.IsActive, e.DisplayOrder })
                 .HasDatabaseName("IX_Menu_Location_Active_Order");
+        });
+
+        modelBuilder.Entity<FlashSale>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.DiscountValue).HasPrecision(18, 2);
+            entity.Property(e => e.MaxDiscount).HasPrecision(18, 2);
+            entity.Property(e => e.ProductIds).HasColumnType("text");
+            entity.Property(e => e.CategoryIds).HasColumnType("text");
+            entity.Property(e => e.BadgeText).HasMaxLength(50);
+            entity.Property(e => e.BadgeColor).HasMaxLength(20);
+
+            entity.HasIndex(e => new { e.IsActive, e.Status, e.StartTime, e.EndTime })
+                .HasDatabaseName("IX_FlashSale_Active_Status_DateRange");
+
+            entity.HasIndex(e => new { e.Status, e.DisplayOrder })
+                .HasDatabaseName("IX_FlashSale_Status_Order");
+        });
+
+        modelBuilder.Entity<ContactMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasColumnType("text");
+            entity.Property(e => e.AdminNotes).HasColumnType("text");
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+
+            entity.HasIndex(e => e.Status)
+                .HasDatabaseName("IX_ContactMessage_Status");
+
+            entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("IX_ContactMessage_CreatedAt");
         });
     }
 }

@@ -23,6 +23,156 @@ public static class SalesEndpoints
     {
         var group = app.MapGroup("/api/sales").RequireAuthorization();
 
+        // ==================== GUEST CHECKOUT (PUBLIC) ====================
+        var publicGroup = app.MapGroup("/api/sales/public");
+
+        publicGroup.MapPost("/guest-checkout", async (
+            GuestCheckoutDto model,
+            SalesDbContext salesDb,
+            CatalogDbContext catalogDb,
+            InventoryDbContext inventoryDb,
+            ContentDbContext contentDb,
+            IPublishEndpoint publishEndpoint) =>
+        {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            try
+            {
+                // Validate required fields
+                if (string.IsNullOrEmpty(model.CustomerEmail))
+                    return Results.BadRequest(new { Error = "Email là bắt buộc" });
+
+                if (string.IsNullOrEmpty(model.CustomerPhone))
+                    return Results.BadRequest(new { Error = "Số điện thoại là bắt buộc" });
+
+                if (string.IsNullOrEmpty(model.CustomerName))
+                    return Results.BadRequest(new { Error = "Họ tên là bắt buộc" });
+
+                if (model.Items == null || !model.Items.Any())
+                    return Results.BadRequest(new { Error = "Giỏ hàng trống" });
+
+                // Generate anonymous customer ID
+                var guestCustomerId = Guid.NewGuid();
+
+                var orderItems = new List<OrderItem>();
+                var productIds = model.Items.Select(i => i.ProductId).Distinct().ToList();
+
+                // Fetch products
+                var products = await catalogDb.Products
+                    .AsNoTracking()
+                    .Where(p => productIds.Contains(p.Id) && p.IsActive)
+                    .ToListAsync(cts.Token);
+
+                // Fetch inventory
+                var inventoryItems = await inventoryDb.InventoryItems
+                    .Where(i => productIds.Contains(i.ProductId))
+                    .ToListAsync(cts.Token);
+
+                foreach (var cartItem in model.Items)
+                {
+                    var product = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
+                    if (product == null)
+                        return Results.BadRequest(new { Error = $"Sản phẩm không tồn tại: {cartItem.ProductId}" });
+
+                    var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
+                    var availableStock = inventoryItem?.AvailableQuantity ?? product.StockQuantity;
+
+                    if (availableStock < cartItem.Quantity)
+                        return Results.BadRequest(new { Error = $"Không đủ hàng: {product.Name}" });
+
+                    // Reserve stock
+                    if (inventoryItem != null)
+                    {
+                        inventoryItem.ReserveStock(cartItem.Quantity);
+                    }
+
+                    var orderItem = new OrderItem(
+                        cartItem.ProductId,
+                        product.Name,
+                        product.Price,
+                        cartItem.Quantity,
+                        product.Sku,
+                        product.OldPrice ?? product.Price
+                    );
+
+                    orderItems.Add(orderItem);
+                }
+
+                var subtotal = orderItems.Sum(i => i.LineTotal);
+                var taxRate = 0.1m;
+                var taxAmount = subtotal * taxRate;
+
+                // Apply coupon if provided
+                decimal discountAmount = 0;
+                if (!string.IsNullOrEmpty(model.CouponCode))
+                {
+                    var coupon = await contentDb.Coupons
+                        .FirstOrDefaultAsync(c => c.Code == model.CouponCode.ToUpper() && c.IsActive, cts.Token);
+
+                    if (coupon != null && coupon.IsValid(subtotal))
+                    {
+                        discountAmount = coupon.CalculateDiscount(subtotal);
+                        coupon.Apply();
+                    }
+                }
+
+                var shippingAmount = subtotal >= 5000000 ? 0 : 50000; // Free shipping over 5M
+
+                // Build shipping address with guest info
+                var shippingInfo = new
+                {
+                    name = model.CustomerName,
+                    phone = model.CustomerPhone,
+                    email = model.CustomerEmail,
+                    address = model.ShippingAddress
+                };
+
+                var order = new Order(
+                    guestCustomerId,
+                    model.ShippingAddress ?? "Guest Checkout",
+                    orderItems,
+                    taxRate,
+                    model.Notes
+                );
+
+                if (discountAmount > 0)
+                {
+                    order.ApplyCoupon(model.CouponCode ?? "GUEST", discountAmount, "{}", "Guest Checkout Discount");
+                }
+
+                if (shippingAmount > 0)
+                {
+                    order.SetShippingAmount(shippingAmount);
+                }
+
+                salesDb.Orders.Add(order);
+                await inventoryDb.SaveChangesAsync(cts.Token);
+                await salesDb.SaveChangesAsync(cts.Token);
+
+                // Publish order created event
+                await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(
+                    order.Id,
+                    guestCustomerId,
+                    model.CustomerEmail,
+                    order.TotalAmount,
+                    order.OrderNumber
+                ), cts.Token);
+
+                return Results.Ok(new
+                {
+                    orderId = order.Id,
+                    orderNumber = order.OrderNumber,
+                    totalAmount = order.TotalAmount,
+                    status = order.Status.ToString(),
+                    message = "Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận đơn hàng."
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Guest checkout error: {ex.Message}");
+                return Results.Problem("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.");
+            }
+        });
+
         // ==================== CART ENDPOINTS ====================
 
         group.MapGet("/cart", async (SalesDbContext db, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
@@ -813,6 +963,53 @@ public static class SalesEndpoints
             });
         });
 
+        // GET /api/sales/my-stats - Customer's purchase statistics
+        group.MapGet("/my-stats", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var orders = await db.Orders
+                .Where(o => o.CustomerId == userId)
+                .ToListAsync();
+
+            var completedOrders = orders.Where(o => o.Status == OrderStatus.Completed || o.Status == OrderStatus.Delivered).ToList();
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+            var thisYearStart = new DateTime(DateTime.UtcNow.Year, 1, 1);
+
+            var stats = new
+            {
+                totalOrders = orders.Count,
+                completedOrders = completedOrders.Count,
+                pendingOrders = orders.Count(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed),
+                cancelledOrders = orders.Count(o => o.Status == OrderStatus.Cancelled),
+
+                totalSpent = completedOrders.Sum(o => o.TotalAmount),
+                monthlySpent = completedOrders.Where(o => o.OrderDate >= thirtyDaysAgo).Sum(o => o.TotalAmount),
+                yearlySpent = completedOrders.Where(o => o.OrderDate >= thisYearStart).Sum(o => o.TotalAmount),
+                averageOrderValue = completedOrders.Any() ? completedOrders.Average(o => o.TotalAmount) : 0,
+
+                lastOrderDate = orders.OrderByDescending(o => o.OrderDate).FirstOrDefault()?.OrderDate,
+                firstOrderDate = orders.OrderBy(o => o.OrderDate).FirstOrDefault()?.OrderDate,
+
+                // Customer tier calculation based on total spent
+                customerTier = completedOrders.Sum(o => o.TotalAmount) switch
+                {
+                    >= 50000000 => "VIP",      // >= 50M VND
+                    >= 20000000 => "Gold",     // >= 20M VND
+                    >= 10000000 => "Silver",   // >= 10M VND
+                    >= 5000000 => "Bronze",    // >= 5M VND
+                    _ => "Member"
+                },
+
+                // Loyalty points estimation (1000 VND = 1 point)
+                loyaltyPoints = (int)(completedOrders.Sum(o => o.TotalAmount) / 1000)
+            };
+
+            return Results.Ok(stats);
+        });
+
         // Cancel Order (Customer)
         group.MapPost("/orders/{id:guid}/cancel", async (Guid id, CancelOrderDto dto, SalesDbContext db, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
         {
@@ -908,6 +1105,29 @@ public static class SalesEndpoints
                 .ToListAsync();
 
             return Results.Ok(history);
+        });
+
+        // ==================== VERIFIED PURCHASE CHECK ====================
+
+        // Check if user has purchased a specific product
+        group.MapGet("/verify-purchase/{productId:guid}", async (Guid productId, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            // Check if user has any completed/delivered order containing this product
+            var hasPurchased = await db.Orders
+                .Include(o => o.Items)
+                .AnyAsync(o => o.CustomerId == userId
+                    && (o.Status == OrderStatus.Completed || o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Fulfilled)
+                    && o.Items.Any(i => i.ProductId == productId));
+
+            return Results.Ok(new {
+                productId,
+                hasPurchased,
+                message = hasPurchased ? "Bạn đã mua sản phẩm này" : "Bạn chưa mua sản phẩm này"
+            });
         });
 
         // ==================== RETURN REQUESTS ENDPOINTS ====================
@@ -1015,8 +1235,8 @@ public static class SalesEndpoints
             });
         });
 
-        // Admin Endpoints
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin"));
+        // Admin Endpoints - Allow Admin, Manager, and Sale roles for order management
+        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
 
         adminGroup.MapGet("/orders", async (SalesDbContext db, int page = 1, int pageSize = 20) =>
         {
@@ -1075,6 +1295,173 @@ public static class SalesEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Order status updated", Status = order.Status.ToString() });
+        });
+
+        // Confirm Order - Sale confirms the order after verifying details
+        adminGroup.MapPost("/orders/{id:guid}/confirm", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Đơn hàng không tồn tại" });
+
+            if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Draft)
+                return Results.BadRequest(new { Error = $"Không thể xác nhận đơn hàng ở trạng thái {order.Status}" });
+
+            try
+            {
+                // Set status to Draft first if Pending (to allow Confirm transition)
+                if (order.Status == OrderStatus.Pending)
+                {
+                    order.SetStatus(OrderStatus.Draft);
+                }
+                order.Confirm();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+
+            // Log history
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "System";
+            db.OrderHistories.Add(new OrderHistory(
+                order.Id,
+                OrderStatus.Pending,
+                OrderStatus.Confirmed,
+                userId,
+                $"Đơn hàng được xác nhận bởi {userName}"
+            ));
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                Message = "Đơn hàng đã được xác nhận",
+                Status = order.Status.ToString(),
+                OrderNumber = order.OrderNumber
+            });
+        });
+
+        // Fulfill Order - Prepare for shipping
+        adminGroup.MapPost("/orders/{id:guid}/fulfill", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Đơn hàng không tồn tại" });
+
+            if (order.Status != OrderStatus.Confirmed && order.Status != OrderStatus.Paid)
+                return Results.BadRequest(new { Error = $"Không thể xuất kho đơn hàng ở trạng thái {order.Status}" });
+
+            var previousStatus = order.Status;
+            order.MarkAsFulfilled();
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "System";
+            db.OrderHistories.Add(new OrderHistory(
+                order.Id,
+                previousStatus,
+                order.Status,
+                userId,
+                $"Đơn hàng đã xuất kho bởi {userName}"
+            ));
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                Message = "Đơn hàng đã xuất kho",
+                Status = order.Status.ToString()
+            });
+        });
+
+        // Ship Order
+        adminGroup.MapPost("/orders/{id:guid}/ship", async (Guid id, ShipOrderDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Đơn hàng không tồn tại" });
+
+            if (order.Status != OrderStatus.Fulfilled && order.Status != OrderStatus.Confirmed && order.Status != OrderStatus.Paid)
+                return Results.BadRequest(new { Error = $"Không thể giao hàng đơn ở trạng thái {order.Status}" });
+
+            var previousStatus = order.Status;
+            order.MarkAsShipped(dto.TrackingNumber ?? "", dto.Carrier ?? "");
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "System";
+            db.OrderHistories.Add(new OrderHistory(
+                order.Id,
+                previousStatus,
+                OrderStatus.Shipped,
+                userId,
+                $"Đơn hàng đang giao bởi {userName}. Mã vận đơn: {dto.TrackingNumber ?? "N/A"}"
+            ));
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                Message = "Đơn hàng đang được giao",
+                Status = order.Status.ToString(),
+                TrackingNumber = dto.TrackingNumber
+            });
+        });
+
+        // Mark as Delivered
+        adminGroup.MapPost("/orders/{id:guid}/deliver", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Đơn hàng không tồn tại" });
+
+            if (order.Status != OrderStatus.Shipped)
+                return Results.BadRequest(new { Error = $"Không thể xác nhận giao hàng ở trạng thái {order.Status}" });
+
+            order.MarkAsDelivered();
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "System";
+            db.OrderHistories.Add(new OrderHistory(
+                order.Id,
+                OrderStatus.Shipped,
+                OrderStatus.Delivered,
+                userId,
+                $"Đơn hàng đã giao thành công. Xác nhận bởi {userName}"
+            ));
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                Message = "Đơn hàng đã giao thành công",
+                Status = order.Status.ToString()
+            });
+        });
+
+        // Complete Order - Final step (manual complete for orders that need explicit completion)
+        adminGroup.MapPost("/orders/{id:guid}/complete", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Đơn hàng không tồn tại" });
+
+            if (order.Status != OrderStatus.Delivered)
+                return Results.BadRequest(new { Error = $"Chỉ có thể hoàn thành đơn hàng đã giao thành công" });
+
+            order.SetStatus(OrderStatus.Completed);
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "System";
+            db.OrderHistories.Add(new OrderHistory(
+                order.Id,
+                OrderStatus.Delivered,
+                OrderStatus.Completed,
+                userId,
+                $"Đơn hàng hoàn thành bởi {userName}"
+            ));
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                Message = "Đơn hàng đã hoàn thành",
+                Status = order.Status.ToString()
+            });
         });
 
         adminGroup.MapGet("/stats", async (SalesDbContext db) =>
@@ -1230,6 +1617,383 @@ public static class SalesEndpoints
 
             return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });
         });
+
+        // ==================== WISHLIST ENDPOINTS ====================
+
+        group.MapGet("/wishlist", async (SalesDbContext db, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var wishlistItems = await db.WishlistItems
+                .Where(w => w.UserId == userId)
+                .OrderByDescending(w => w.AddedAt)
+                .ToListAsync();
+
+            if (wishlistItems.Count == 0)
+                return Results.Ok(new { items = new List<object>() });
+
+            var productIds = wishlistItems.Select(w => w.ProductId).ToList();
+            var products = await catalogDb.Products
+                .Where(p => productIds.Contains(p.Id) && p.IsActive)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.OldPrice,
+                    p.ImageUrl,
+                    p.StockQuantity,
+                    p.Sku
+                })
+                .ToDictionaryAsync(p => p.Id);
+
+            var result = wishlistItems
+                .Where(w => products.ContainsKey(w.ProductId))
+                .Select(w => new
+                {
+                    id = w.Id,
+                    productId = w.ProductId,
+                    addedAt = w.AddedAt,
+                    product = products.TryGetValue(w.ProductId, out var p) ? p : null
+                })
+                .ToList();
+
+            return Results.Ok(new { items = result });
+        });
+
+        group.MapPost("/wishlist/{productId:guid}", async (Guid productId, SalesDbContext db, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            // Check if product exists
+            var productExists = await catalogDb.Products.AnyAsync(p => p.Id == productId && p.IsActive);
+            if (!productExists)
+                return Results.NotFound(new { message = "Sản phẩm không tồn tại" });
+
+            // Check if already in wishlist
+            var existing = await db.WishlistItems
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId);
+
+            if (existing != null)
+                return Results.Ok(new { message = "Sản phẩm đã có trong danh sách yêu thích", id = existing.Id });
+
+            var wishlistItem = new WishlistItem(userId, productId);
+            db.WishlistItems.Add(wishlistItem);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/sales/wishlist/{wishlistItem.Id}", new
+            {
+                message = "Đã thêm vào danh sách yêu thích",
+                id = wishlistItem.Id
+            });
+        });
+
+        group.MapDelete("/wishlist/{productId:guid}", async (Guid productId, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var wishlistItem = await db.WishlistItems
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId);
+
+            if (wishlistItem == null)
+                return Results.NotFound(new { message = "Sản phẩm không có trong danh sách yêu thích" });
+
+            db.WishlistItems.Remove(wishlistItem);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Đã xóa khỏi danh sách yêu thích" });
+        });
+
+        group.MapGet("/wishlist/check/{productId:guid}", async (Guid productId, SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Ok(new { inWishlist = false });
+
+            var exists = await db.WishlistItems
+                .AnyAsync(w => w.UserId == userId && w.ProductId == productId);
+
+            return Results.Ok(new { inWishlist = exists });
+        });
+
+        // ==================== LOYALTY POINTS ENDPOINTS ====================
+
+        // Get user's loyalty account
+        group.MapGet("/loyalty", async (SalesDbContext db, ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var account = await db.LoyaltyAccounts
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
+            if (account == null)
+            {
+                // Auto-create account for new users
+                account = new LoyaltyAccount(userId);
+                db.LoyaltyAccounts.Add(account);
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new
+            {
+                account.Id,
+                account.UserId,
+                account.TotalPoints,
+                account.AvailablePoints,
+                account.LifetimePoints,
+                Tier = account.Tier.ToString(),
+                TierLevel = (int)account.Tier,
+                PointsMultiplier = account.GetPointsMultiplier(),
+                account.LastActivityAt,
+                account.TierExpiresAt,
+                NextTierPoints = GetNextTierPoints(account.Tier, account.LifetimePoints),
+                RedemptionValue = LoyaltyAccount.CalculateRedemptionValue(account.AvailablePoints)
+            });
+        });
+
+        // Get loyalty transactions history
+        group.MapGet("/loyalty/transactions", async (
+            SalesDbContext db,
+            ClaimsPrincipal user,
+            int page = 1,
+            int pageSize = 20,
+            string? type = null) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var account = await db.LoyaltyAccounts
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
+            if (account == null)
+                return Results.Ok(new { Total = 0, Transactions = new List<object>() });
+
+            var query = db.LoyaltyTransactions
+                .Where(t => t.AccountId == account.Id);
+
+            if (!string.IsNullOrEmpty(type) && Enum.TryParse<LoyaltyTransactionType>(type, true, out var transType))
+            {
+                query = query.Where(t => t.Type == transType);
+            }
+
+            var total = await query.CountAsync();
+            var transactions = await query
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new
+                {
+                    t.Id,
+                    Type = t.Type.ToString(),
+                    t.Points,
+                    t.Description,
+                    t.OrderId,
+                    t.ReferenceCode,
+                    t.BalanceAfter,
+                    t.CreatedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(new { Total = total, Transactions = transactions });
+        });
+
+        // Redeem points
+        group.MapPost("/loyalty/redeem", async (
+            RedeemPointsDto dto,
+            SalesDbContext db,
+            ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var account = await db.LoyaltyAccounts
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
+            if (account == null)
+                return Results.NotFound(new { message = "Tài khoản loyalty không tồn tại" });
+
+            if (dto.Points <= 0)
+                return Results.BadRequest(new { message = "Số điểm phải lớn hơn 0" });
+
+            if (dto.Points > account.AvailablePoints)
+                return Results.BadRequest(new { message = $"Không đủ điểm. Hiện có: {account.AvailablePoints} điểm" });
+
+            try
+            {
+                var redemptionValue = LoyaltyAccount.CalculateRedemptionValue(dto.Points);
+                account.RedeemPoints(dto.Points, dto.Description ?? "Đổi điểm lấy giảm giá", dto.OrderId);
+
+                // Create transaction record
+                var transaction = new LoyaltyTransaction(
+                    account.Id,
+                    LoyaltyTransactionType.Redeem,
+                    -dto.Points,
+                    dto.Description ?? "Đổi điểm lấy giảm giá",
+                    dto.OrderId
+                );
+                transaction.SetBalanceAfter(account.AvailablePoints);
+                db.LoyaltyTransactions.Add(transaction);
+
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new
+                {
+                    message = "Đổi điểm thành công",
+                    pointsRedeemed = dto.Points,
+                    redemptionValue,
+                    remainingPoints = account.AvailablePoints
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        });
+
+        // Calculate points for order (preview)
+        group.MapGet("/loyalty/calculate/{orderAmount:decimal}", async (
+            decimal orderAmount,
+            SalesDbContext db,
+            ClaimsPrincipal user) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var multiplier = 1.0m;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var account = await db.LoyaltyAccounts
+                    .FirstOrDefaultAsync(l => l.UserId == userId);
+
+                if (account != null)
+                {
+                    multiplier = account.GetPointsMultiplier();
+                }
+            }
+
+            var points = LoyaltyAccount.CalculatePointsForOrder(orderAmount, multiplier);
+
+            return Results.Ok(new
+            {
+                orderAmount,
+                multiplier,
+                pointsToEarn = points,
+                message = $"Bạn sẽ nhận được {points} điểm cho đơn hàng này"
+            });
+        });
+
+        // Admin: Adjust points
+        adminGroup.MapPost("/loyalty/{userId}/adjust", async (
+            string userId,
+            AdjustPointsDto dto,
+            SalesDbContext db,
+            ClaimsPrincipal user) =>
+        {
+            var account = await db.LoyaltyAccounts
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
+            if (account == null)
+                return Results.NotFound(new { message = "Tài khoản loyalty không tồn tại" });
+
+            var adminId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "System";
+
+            account.AdjustPoints(dto.Points, dto.Reason, adminId);
+
+            var transaction = new LoyaltyTransaction(
+                account.Id,
+                LoyaltyTransactionType.Adjustment,
+                dto.Points,
+                $"{dto.Reason} (by {adminId})"
+            );
+            transaction.SetBalanceAfter(account.AvailablePoints);
+            db.LoyaltyTransactions.Add(transaction);
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                message = "Điều chỉnh điểm thành công",
+                newBalance = account.AvailablePoints,
+                totalPoints = account.TotalPoints
+            });
+        });
+
+        // Admin: Get all loyalty accounts
+        adminGroup.MapGet("/loyalty", async (
+            SalesDbContext db,
+            int page = 1,
+            int pageSize = 20,
+            string? tier = null) =>
+        {
+            var query = db.LoyaltyAccounts.AsQueryable();
+
+            if (!string.IsNullOrEmpty(tier) && Enum.TryParse<LoyaltyTier>(tier, true, out var tierValue))
+            {
+                query = query.Where(l => l.Tier == tierValue);
+            }
+
+            var total = await query.CountAsync();
+            var accounts = await query
+                .OrderByDescending(l => l.LifetimePoints)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.UserId,
+                    l.TotalPoints,
+                    l.AvailablePoints,
+                    l.LifetimePoints,
+                    Tier = l.Tier.ToString(),
+                    l.LastActivityAt,
+                    l.CreatedAt
+                })
+                .ToListAsync();
+
+            return Results.Ok(new { Total = total, Accounts = accounts });
+        });
+
+        // Admin: Loyalty stats
+        adminGroup.MapGet("/loyalty/stats", async (SalesDbContext db) =>
+        {
+            var stats = new
+            {
+                TotalAccounts = await db.LoyaltyAccounts.CountAsync(),
+                TotalPointsIssued = await db.LoyaltyAccounts.SumAsync(l => l.LifetimePoints),
+                TotalPointsAvailable = await db.LoyaltyAccounts.SumAsync(l => l.AvailablePoints),
+                TierBreakdown = new
+                {
+                    Bronze = await db.LoyaltyAccounts.CountAsync(l => l.Tier == LoyaltyTier.Bronze),
+                    Silver = await db.LoyaltyAccounts.CountAsync(l => l.Tier == LoyaltyTier.Silver),
+                    Gold = await db.LoyaltyAccounts.CountAsync(l => l.Tier == LoyaltyTier.Gold),
+                    Platinum = await db.LoyaltyAccounts.CountAsync(l => l.Tier == LoyaltyTier.Platinum),
+                    Diamond = await db.LoyaltyAccounts.CountAsync(l => l.Tier == LoyaltyTier.Diamond)
+                }
+            };
+
+            return Results.Ok(stats);
+        });
+    }
+
+    private static object? GetNextTierPoints(LoyaltyTier currentTier, int lifetimePoints)
+    {
+        return currentTier switch
+        {
+            LoyaltyTier.Bronze => new { nextTier = "Silver", pointsNeeded = 5000 - lifetimePoints },
+            LoyaltyTier.Silver => new { nextTier = "Gold", pointsNeeded = 20000 - lifetimePoints },
+            LoyaltyTier.Gold => new { nextTier = "Platinum", pointsNeeded = 50000 - lifetimePoints },
+            LoyaltyTier.Platinum => new { nextTier = "Diamond", pointsNeeded = 100000 - lifetimePoints },
+            _ => null // Diamond is max
+        };
     }
 }
 
@@ -1250,6 +2014,7 @@ public record UpdateOrderStatusDto(string Status);
 public record CancelOrderDto(string Reason);
 public record CreateReturnRequestDto(Guid OrderId, Guid OrderItemId, string Reason, string? Description);
 public record RejectReturnDto(string Reason);
+public record ShipOrderDto(string? TrackingNumber, string? Carrier);
 
 public record CartDto(
     Guid Id,
@@ -1277,3 +2042,25 @@ public record AddToCartDto(Guid ProductId, string ProductName, decimal Price, in
 public record UpdateQuantityDto(int Quantity);
 public record ApplyCouponDto(string CouponCode);
 public record SetShippingDto(decimal ShippingAmount);
+
+public record GuestCheckoutDto(
+    string CustomerName,
+    string CustomerEmail,
+    string CustomerPhone,
+    string ShippingAddress,
+    List<GuestCheckoutItemDto> Items,
+    string? CouponCode = null,
+    string? Notes = null,
+    string? PaymentMethod = null
+);
+
+public record GuestCheckoutItemDto(
+    Guid ProductId,
+    string ProductName,
+    decimal Price,
+    int Quantity
+);
+
+// Loyalty Points DTOs
+public record RedeemPointsDto(int Points, Guid? OrderId = null, string? Description = null);
+public record AdjustPointsDto(int Points, string Reason);

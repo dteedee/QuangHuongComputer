@@ -13,6 +13,7 @@ using Communication;
 using HR;
 using SystemConfig;
 using Reporting;
+using CRM;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Data;
 using Sales.Infrastructure;
@@ -25,6 +26,7 @@ using InventoryModule.Infrastructure;
 using Payments.Infrastructure;
 using Content.Infrastructure;
 using Ai.Infrastructure;
+using CRM.Infrastructure;
 using HR.Infrastructure;
 using SystemConfig.Infrastructure;
 using SystemConfig.Infrastructure.Data;
@@ -170,6 +172,7 @@ builder.Services.AddCommunicationModule(builder.Configuration);  // Added Commun
 builder.Services.AddHRModule(builder.Configuration);
 builder.Services.AddSystemConfigModule(builder.Configuration);
 builder.Services.AddReportingModule();
+builder.Services.AddCrmModule(builder.Configuration);
 
 // Email Service
 builder.Services.AddSingleton<IEmailService, EmailService>();
@@ -322,6 +325,7 @@ if (app.Environment.IsDevelopment())
             services.GetRequiredService<Communication.Infrastructure.CommunicationDbContext>(),
             services.GetRequiredService<HRDbContext>(),
             services.GetRequiredService<SystemConfigDbContext>(),
+            services.GetRequiredService<CrmDbContext>(),
         };
 
         foreach (var ctx in ensureCreatedContexts)
@@ -495,6 +499,7 @@ app.MapSystemConfigEndpoints();
 app.MapInventoryEndpoints();
 app.MapAccountingEndpoints();
 app.MapReportingEndpoints();
+app.MapCrmEndpoints();
 
 // Add fast checkout endpoint
 app.MapFastCheckoutEndpoint();

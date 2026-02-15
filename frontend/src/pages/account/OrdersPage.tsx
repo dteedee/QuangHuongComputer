@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { salesApi, type Order, type OrderStatus } from '../../api/sales';
-import { Package, Search, Filter, Eye, XCircle, RotateCcw, Clock, CheckCircle, Truck, Ban, ArrowLeft, MapPin, CreditCard, FileText, Wrench } from 'lucide-react';
+import { Package, Search, Filter, Eye, XCircle, RotateCcw, Clock, CheckCircle, Truck, Ban, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
+import client from '../../api/client';
 
 const statusConfig: Record<OrderStatus, { label: string; icon: JSX.Element; color: string; bgColor: string }> = {
     'Draft': { label: 'Bản nháp', icon: <FileText className="w-4 h-4" />, color: 'text-gray-700', bgColor: 'bg-gray-100' },
@@ -50,6 +51,21 @@ export const OrdersPage = () => {
 
     const canReturn = (order: Order) => {
         return order.status === 'Delivered';
+    };
+
+    const handleCancelOrder = async (orderId: string) => {
+        if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+
+        try {
+            await client.post(`/sales/orders/${orderId}/cancel`, {
+                reason: 'Khách hàng yêu cầu hủy'
+            });
+            toast.success('Đã hủy đơn hàng thành công');
+            loadOrders(); // Refresh orders
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.Error || 'Không thể hủy đơn hàng';
+            toast.error(errorMessage);
+        }
     };
 
     if (isLoading) {
@@ -192,7 +208,7 @@ export const OrdersPage = () => {
 
                                         {canCancel(order) && (
                                             <button
-                                                onClick={() => toast('Chức năng đang phát triển')}
+                                                onClick={() => handleCancelOrder(order.id)}
                                                 className="flex-1 lg:flex-none px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                             >
                                                 <XCircle className="w-4 h-4" />

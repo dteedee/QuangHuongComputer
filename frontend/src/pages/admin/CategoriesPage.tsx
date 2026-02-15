@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2, MoreVertical,
     Layout, Settings, Tag, Bookmark, Info, ChevronRight, ChevronLeft,
-    PlusCircle, AlertCircle, ChevronDown, ChevronUp, RotateCcw, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon
+    PlusCircle, AlertCircle, ChevronDown, ChevronUp, RotateCcw, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
+    ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -61,7 +62,7 @@ export const CategoriesPage = () => {
         onError: () => toast.error('Cập nhật thất bại!')
     });
 
-    const deleteMutation = useMutation({
+    const deactivateMutation = useMutation({
         mutationFn: (id: string) =>
             activeType === 'categories'
                 ? catalogApi.deleteCategory(id) as Promise<any>
@@ -71,6 +72,18 @@ export const CategoriesPage = () => {
             toast.success('Đã vô hiệu hóa thành công!');
         },
         onError: () => toast.error('Vô hiệu hóa thất bại!')
+    });
+
+    const activateMutation = useMutation({
+        mutationFn: (id: string) =>
+            activeType === 'categories'
+                ? catalogApi.activateCategory(id) as Promise<any>
+                : catalogApi.activateBrand(id) as Promise<any>,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [activeType === 'categories' ? 'admin-categories' : 'admin-brands'] });
+            toast.success('Đã kích hoạt thành công!');
+        },
+        onError: () => toast.error('Kích hoạt thất bại!')
     });
 
     const items = activeType === 'categories' ? categories : brands;
@@ -133,12 +146,25 @@ export const CategoriesPage = () => {
 
     const handleBulkDelete = () => {
         if (selectedIds.length === 0) return;
-        
+
         const confirmMessage = `Bạn có chắc muốn vô hiệu hóa ${selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.`;
         if (confirm(confirmMessage)) {
-            selectedIds.forEach(id => deleteMutation.mutate(id));
+            selectedIds.forEach(id => deactivateMutation.mutate(id));
             setSelectedIds([]);
             setSelectAllChecked(false);
+        }
+    };
+
+    const handleToggleStatus = (item: Category | Brand) => {
+        const action = item.isActive ? 'vô hiệu hóa' : 'kích hoạt';
+        const warning = item.isActive ? ' Các sản phẩm liên quan cũng sẽ không hiển thị.' : '';
+
+        if (confirm(`Bạn có chắc muốn ${action} mục này?${warning}`)) {
+            if (item.isActive) {
+                deactivateMutation.mutate(item.id);
+            } else {
+                activateMutation.mutate(item.id);
+            }
         }
     };
 
@@ -373,19 +399,14 @@ export const CategoriesPage = () => {
                                                 </Tooltip>
                                                 <Tooltip content={item.isActive ? "Vô hiệu hóa" : "Kích hoạt"} place="top" delayShow={300}>
                                                     <button
-                                                        onClick={() => { 
-                                                            if (confirm(item.isActive 
-                                                                ? 'Bạn có chắc muốn vô hiệu hóa mục này? Các sản phẩm liên quan cũng sẽ không hiển thị.' 
-                                                                : 'Bạn có chắc muốn kích hoạt mục này?')) 
-                                                                deleteMutation.mutate(item.id) 
-                                                        }}
+                                                        onClick={() => handleToggleStatus(item)}
                                                         className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
-                                                            item.isActive 
-                                                                ? 'bg-gray-100 text-gray-400 hover:bg-black hover:text-white' 
+                                                            item.isActive
+                                                                ? 'bg-gray-100 text-gray-400 hover:bg-amber-100 hover:text-amber-600'
                                                                 : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 hover:text-emerald-800'
                                                         }`}
                                                     >
-                                                        <Trash2 size={14} />
+                                                        {item.isActive ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                                                     </button>
                                                 </Tooltip>
                                             </div>

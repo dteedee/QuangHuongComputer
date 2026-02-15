@@ -33,6 +33,57 @@ export interface User {
     lastLogin?: string;
 }
 
+export interface UserProfile {
+    id: string;
+    email: string;
+    fullName: string;
+    phoneNumber?: string;
+    avatarUrl?: string;
+    roles: string[];
+    lastLoginAt?: string;
+    emailVerified?: boolean;
+    profile?: {
+        gender?: string;
+        dateOfBirth?: string;
+        address?: string;
+        city?: string;
+        district?: string;
+        ward?: string;
+        customerType?: string;
+        companyName?: string;
+        taxCode?: string;
+    };
+    defaultAddress?: CustomerAddress;
+}
+
+export interface CustomerAddress {
+    id: string;
+    recipientName: string;
+    phoneNumber: string;
+    addressLine: string;
+    city: string;
+    district: string;
+    ward: string;
+    postalCode?: string;
+    isDefault?: boolean;
+    addressLabel?: string;
+}
+
+export interface CustomerStats {
+    totalOrders: number;
+    completedOrders: number;
+    pendingOrders: number;
+    cancelledOrders: number;
+    totalSpent: number;
+    monthlySpent: number;
+    yearlySpent: number;
+    averageOrderValue: number;
+    lastOrderDate?: string;
+    firstOrderDate?: string;
+    customerTier: string;
+    loyaltyPoints: number;
+}
+
 export interface Role {
     id: string;
     name: string;
@@ -103,8 +154,7 @@ export const authApi = {
     },
 
     /**
-     * Get current user profile - NOTE: Backend doesn't have /auth/me
-     * User info is returned from login response
+     * Get current user profile from backend
      */
     getCurrentUser: async (): Promise<User | null> => {
         const userStr = localStorage.getItem('user');
@@ -112,6 +162,69 @@ export const authApi = {
             return JSON.parse(userStr);
         }
         return null;
+    },
+
+    /**
+     * Get current user full profile with addresses
+     */
+    getMyProfile: async (): Promise<UserProfile> => {
+        const response = await client.get<UserProfile>('/auth/me');
+        return response.data;
+    },
+
+    /**
+     * Update current user profile
+     */
+    updateMyProfile: async (data: { fullName: string; phoneNumber?: string; address?: string }): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>('/auth/me', data);
+        // Update local storage
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            user.fullName = data.fullName;
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+        return response.data;
+    },
+
+    /**
+     * Change password
+     */
+    changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+        const response = await client.post<{ message: string }>('/auth/me/change-password', { currentPassword, newPassword });
+        return response.data;
+    },
+
+    /**
+     * Get my addresses
+     */
+    getMyAddresses: async (): Promise<CustomerAddress[]> => {
+        const response = await client.get<CustomerAddress[]>('/auth/me/addresses');
+        return response.data;
+    },
+
+    /**
+     * Add new address
+     */
+    addAddress: async (address: Omit<CustomerAddress, 'id'>): Promise<{ message: string; id: string }> => {
+        const response = await client.post<{ message: string; id: string }>('/auth/me/addresses', address);
+        return response.data;
+    },
+
+    /**
+     * Update address
+     */
+    updateAddress: async (id: string, address: Omit<CustomerAddress, 'id'>): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/auth/me/addresses/${id}`, address);
+        return response.data;
+    },
+
+    /**
+     * Delete address
+     */
+    deleteAddress: async (id: string): Promise<{ message: string }> => {
+        const response = await client.delete<{ message: string }>(`/auth/me/addresses/${id}`);
+        return response.data;
     },
 
     /**
@@ -164,10 +277,26 @@ export const authApi = {
     },
 
     /**
-     * Delete/deactivate user
+     * Deactivate user (Soft Delete)
      */
-    deleteUser: async (userId: string): Promise<{ message: string }> => {
-        const response = await client.delete<{ message: string }>(`/auth/users/${userId}`);
+    deleteUser: async (userId: string): Promise<{ message: string; isActive: boolean }> => {
+        const response = await client.delete<{ message: string; isActive: boolean }>(`/auth/users/${userId}`);
+        return response.data;
+    },
+
+    /**
+     * Activate user
+     */
+    activateUser: async (userId: string): Promise<{ message: string; isActive: boolean }> => {
+        const response = await client.post<{ message: string; isActive: boolean }>(`/auth/users/${userId}/activate`);
+        return response.data;
+    },
+
+    /**
+     * Toggle user active status
+     */
+    toggleUserStatus: async (userId: string): Promise<{ message: string; isActive: boolean }> => {
+        const response = await client.post<{ message: string; isActive: boolean }>(`/auth/users/${userId}/toggle-status`);
         return response.data;
     },
 
@@ -201,6 +330,14 @@ export const authApi = {
      * Get all permissions
      */
     getPermissions: async (): Promise<string[]> => {
+        const response = await client.get<string[]>('/auth/permissions');
+        return response.data;
+    },
+
+    /**
+     * Alias for getPermissions
+     */
+    getAllPermissions: async (): Promise<string[]> => {
         const response = await client.get<string[]>('/auth/permissions');
         return response.data;
     },

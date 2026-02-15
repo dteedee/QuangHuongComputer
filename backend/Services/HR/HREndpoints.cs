@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
 using System.Security.Claims;
+using MassTransit;
+using BuildingBlocks.Messaging.IntegrationEvents;
 
 namespace HR;
 
@@ -312,9 +314,9 @@ public static class HREndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new { Message = $"Payroll for {dto.Month}/{dto.Year} generated for {count} employees" });
         });
-        group.MapPut("/payroll/{id:guid}/pay", async (Guid id, HRDbContext db) =>
+        group.MapPut("/payroll/{id:guid}/pay", async (Guid id, HRDbContext db, IPublishEndpoint publishEndpoint) =>
         {
-            var payroll = await db.Payrolls.FindAsync(id);
+            var payroll = await db.Payrolls.Include(p => p.Employee).FirstOrDefaultAsync(p => p.Id == id);
             if (payroll == null) return Results.NotFound();
 
             // Typically process then mark as paid
@@ -328,7 +330,21 @@ public static class HREndpoints
 
             payroll.MarkAsPaid();
             await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Payroll marked as paid" });
+
+            // Publish event to Accounting module to record salary expense
+            var employeeName = payroll.Employee?.FullName ?? "Unknown";
+            await publishEndpoint.Publish(new PayrollPaidIntegrationEvent(
+                payroll.Id,
+                payroll.EmployeeId,
+                employeeName,
+                payroll.Month,
+                payroll.Year,
+                payroll.BaseSalary + payroll.Bonuses,
+                payroll.NetPay,
+                DateTime.UtcNow
+            ));
+
+            return Results.Ok(new { Message = "Payroll marked as paid", PayrollId = payroll.Id });
         });
 
         // ==================== RECRUITMENT MANAGEMENT (ADMIN) ====================

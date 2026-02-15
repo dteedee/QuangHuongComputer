@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.104.1" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,6 +35,7 @@
     <ProjectReference Include="..\Services\HR\HR.csproj" />
     <ProjectReference Include="..\Services\SystemConfig\SystemConfig.csproj" />
     <ProjectReference Include="..\Services\Reporting\Reporting.csproj" />
+    <ProjectReference Include="..\Services\CRM\CRM.csproj" />
   </ItemGroup>
 
 </Project>

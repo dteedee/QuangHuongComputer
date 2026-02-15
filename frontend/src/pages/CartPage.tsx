@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, X } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 
 export const CartPage = () => {
     const {
@@ -47,6 +48,11 @@ export const CartPage = () => {
                         Bắt đầu mua sắm
                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
+                </div>
+
+                {/* Recently Viewed Products */}
+                <div className="mt-12">
+                    <RecentlyViewedProducts title="Bạn đã xem gần đây" showClearButton />
                 </div>
             </div>
         );
@@ -245,6 +251,11 @@ export const CartPage = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Recently Viewed Products */}
+                <div className="mt-8">
+                    <RecentlyViewedProducts title="Có thể bạn cũng thích" showClearButton />
                 </div>
             </div>
         </div>

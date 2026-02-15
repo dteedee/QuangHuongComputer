@@ -14,6 +14,7 @@ public enum PayrollStatus
 public class Payroll : Entity<Guid>
 {
     public Guid EmployeeId { get; private set; }
+    public Employee? Employee { get; private set; } // Navigation property
     public int Month { get; private set; }
     public int Year { get; private set; }
     public decimal BaseSalary { get; private set; }

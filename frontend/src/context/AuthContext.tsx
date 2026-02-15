@@ -62,7 +62,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 style: { borderRadius: '15px', fontWeight: 'bold' }
             });
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Đăng nhập Google thất bại');
+            const errorData = error.response?.data;
+            let errorMessage = 'Đăng nhập Google thất bại';
+
+            if (errorData?.Error === 'Configuration Error') {
+                errorMessage = 'Tính năng đăng nhập Google chưa được cấu hình. Vui lòng liên hệ quản trị viên.';
+            } else if (errorData?.Error === 'Invalid Google Token') {
+                errorMessage = 'Token Google không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.';
+            } else if (errorData?.error) {
+                errorMessage = errorData.error;
+            } else if (errorData?.Error) {
+                errorMessage = errorData.Error;
+            }
+
+            toast.error(errorMessage, {
+                duration: 5000,
+                style: { borderRadius: '15px', fontWeight: 'bold' }
+            });
             throw error;
         }
     };
@@ -70,9 +86,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = async (email: string, password: string, fullName: string, recaptchaToken?: string) => {
         try {
             await authApi.register({ email, password, fullName, recaptchaToken });
-            toast.success('Đăng ký tài khoản thành công!');
+            toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Đăng ký thất bại');
+            // ASP.NET Identity returns errors array
+            const errors = error.response?.data;
+            if (Array.isArray(errors) && errors.length > 0) {
+                const errorMessage = errors.map((e: { description?: string }) => e.description).filter(Boolean).join('. ');
+                toast.error(errorMessage || 'Đăng ký thất bại');
+            } else {
+                toast.error(error.response?.data?.message || 'Đăng ký thất bại');
+            }
             throw error;
         }
     };

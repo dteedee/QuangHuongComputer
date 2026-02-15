@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserPlus, Mail, Phone, Search, Filter, Edit2, Trash2, Loader2, X, Check, Users2, Briefcase, Calendar } from 'lucide-react';
+import { UserPlus, Mail, Phone, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hrApi, type Employee } from '../../../api/hr';
@@ -47,13 +47,14 @@ export const EmployeesPage = () => {
         onError: () => toast.error('Lỗi khi cập nhật nhân viên!')
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => hrApi.deleteEmployee(id),
-        onSuccess: () => {
+    const toggleStatusMutation = useMutation({
+        mutationFn: ({ id, newStatus }: { id: string; newStatus: 'Active' | 'Inactive' }) =>
+            hrApi.updateEmployee(id, { status: newStatus }),
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['employees'] });
-            toast.success('Xóa nhân viên thành công!');
+            toast.success(variables.newStatus === 'Active' ? 'Đã kích hoạt nhân viên!' : 'Đã vô hiệu hóa nhân viên!');
         },
-        onError: () => toast.error('Lỗi khi xóa nhân viên!')
+        onError: () => toast.error('Lỗi khi cập nhật trạng thái!')
     });
 
     const employees = response?.items || [];
@@ -97,9 +98,11 @@ export const EmployeesPage = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (window.confirm('Bạn có chắc muốn xóa nhân viên này?')) {
-            deleteMutation.mutate(id);
+    const handleToggleStatus = (employee: Employee) => {
+        const newStatus = employee.status === 'Active' ? 'Inactive' : 'Active';
+        const action = newStatus === 'Active' ? 'kích hoạt' : 'vô hiệu hóa';
+        if (window.confirm(`Bạn có chắc muốn ${action} nhân viên "${employee.fullName}"?`)) {
+            toggleStatusMutation.mutate({ id: employee.id, newStatus });
         }
     };
 
@@ -295,10 +298,15 @@ export const EmployeesPage = () => {
                                                 <Edit2 size={14} /> Sửa
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(employee.id)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-600 transition-all shadow-sm"
+                                                onClick={() => handleToggleStatus(employee)}
+                                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-100 transition-all shadow-sm ${
+                                                    employee.status === 'Active'
+                                                        ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'
+                                                        : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
+                                                }`}
+                                                title={employee.status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
                                             >
-                                                <Trash2 size={16} />
+                                                {employee.status === 'Active' ? <PowerOff size={16} /> : <Power size={16} />}
                                             </button>
                                         </div>
                                     </td>

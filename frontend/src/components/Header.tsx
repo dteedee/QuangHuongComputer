@@ -117,14 +117,12 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                         </div>
 
                                         <div className="p-1">
-                                            <Link to="/profile" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
+                                            <Link to="/account" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
                                                 <User size={16} /> Tài khoản của tôi
                                             </Link>
-                                            {user?.roles.includes('Customer') && (
-                                                <Link to="/profile?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
-                                                    <Package size={16} /> Đơn hàng
-                                                </Link>
-                                            )}
+                                            <Link to="/account?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
+                                                <Package size={16} /> Đơn hàng
+                                            </Link>
                                             {user?.roles.some(role => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier'].includes(role)) && (
                                                 <Link to="/backoffice" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors text-gray-600">
                                                     <Settings size={16} /> Quản trị website

@@ -1,8 +1,16 @@
 ﻿import { useState, useEffect } from 'react';
-import { DollarSign, FileText, TrendingUp, Clock, Download, Eye, Calendar, Filter } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { DollarSign, FileText, TrendingUp, Clock, Download, Eye, Calendar, Filter, ArrowRight, CreditCard, Receipt, BarChart3, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import client from '../../../api/client';
 import { formatCurrency } from '../../../utils/format';
+
+interface TabItem {
+    label: string;
+    path: string;
+    icon: React.ReactNode;
+    description: string;
+}
 
 interface Invoice {
     id: string;
@@ -26,7 +34,17 @@ interface AccountingStats {
     activeAccounts: number;
 }
 
+const tabs: TabItem[] = [
+    { label: 'Tổng quan', path: '/backoffice/accounting', icon: <BarChart3 size={18} />, description: 'Dashboard kế toán' },
+    { label: 'Công nợ thu', path: '/backoffice/accounting/ar', icon: <TrendingUp size={18} />, description: 'Accounts Receivable' },
+    { label: 'Công nợ trả', path: '/backoffice/accounting/ap', icon: <CreditCard size={18} />, description: 'Accounts Payable' },
+    { label: 'Quản lý ca', path: '/backoffice/accounting/shifts', icon: <Clock size={18} />, description: 'Shift Management' },
+    { label: 'Chi phí', path: '/backoffice/accounting/expenses', icon: <Wallet size={18} />, description: 'Expense Tracking' },
+    { label: 'Báo cáo', path: '/backoffice/accounting/reports', icon: <Receipt size={18} />, description: 'Financial Reports' },
+];
+
 export const AccountingPortal = () => {
+    const location = useLocation();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [stats, setStats] = useState<AccountingStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -76,6 +94,37 @@ export const AccountingPortal = () => {
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
                         Quản lý hóa đơn, công nợ và báo cáo tài chính
                     </p>
+                </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="premium-card p-2 border-2 bg-white/80 backdrop-blur-sm">
+                <div className="flex flex-wrap gap-2">
+                    {tabs.map((tab) => {
+                        const isActive = location.pathname === tab.path;
+                        return (
+                            <Link
+                                key={tab.path}
+                                to={tab.path}
+                                className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all group ${
+                                    isActive
+                                        ? 'bg-gray-950 text-white shadow-xl shadow-gray-950/20'
+                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950'
+                                }`}
+                            >
+                                <span className={`${isActive ? 'text-[#D70018]' : 'text-gray-400 group-hover:text-[#D70018]'} transition-colors`}>
+                                    {tab.icon}
+                                </span>
+                                <div>
+                                    <span className="text-xs font-black uppercase tracking-widest">{tab.label}</span>
+                                    {isActive && (
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{tab.description}</p>
+                                    )}
+                                </div>
+                                {isActive && <ArrowRight size={14} className="text-[#D70018] ml-2" />}
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
 

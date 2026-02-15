@@ -6,6 +6,7 @@ using Accounting.Infrastructure;
 using Accounting.Domain;
 using Accounting.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Accounting;
 
@@ -403,6 +404,34 @@ public static class AccountingEndpoints
             return Results.Ok(summary);
         }).WithName("GetAPAgingSummary");
 
+        group.MapPost("/ap/{id:guid}/apply-payment", async (Guid id, ApplyAPPaymentRequest request, AccountingDbContext db) =>
+        {
+            var invoice = await db.Invoices.FindAsync(id);
+            if (invoice == null)
+                return Results.NotFound();
+
+            if (invoice.Type != InvoiceType.Payable)
+                return Results.BadRequest(new { Error = "Only payable invoices can have AP payments applied" });
+
+            try
+            {
+                var method = Enum.TryParse<PaymentMethod>(request.PaymentMethod, out var pm) ? pm : PaymentMethod.BankTransfer;
+                invoice.RecordPayment(request.Amount, request.Reference ?? $"AP-PAY-{DateTime.UtcNow:yyyyMMddHHmmss}", method);
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new
+                {
+                    Message = "Payment applied successfully",
+                    OutstandingAmount = invoice.OutstandingAmount,
+                    Status = invoice.Status.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("ApplyAPPayment");
+
         // ===== Shift Management Endpoints =====
         group.MapPost("/shifts/open", async (OpenShiftRequest request, AccountingDbContext db) =>
         {
@@ -553,9 +582,242 @@ public static class AccountingEndpoints
                 return Results.BadRequest(new { Error = ex.Message });
             }
         }).WithName("RecordShiftTransaction");
+
+        // ===== Expense Category Endpoints =====
+        group.MapGet("/expense-categories", async (AccountingDbContext db) =>
+        {
+            var categories = await db.ExpenseCategories
+                .OrderBy(c => c.Name)
+                .Select(c => new ExpenseCategoryDto(c.Id, c.Name, c.Code, c.Description, c.IsActive))
+                .ToListAsync();
+            return Results.Ok(categories);
+        }).WithName("GetExpenseCategories");
+
+        group.MapPost("/expense-categories", async (CreateExpenseCategoryRequest request, AccountingDbContext db) =>
+        {
+            var existing = await db.ExpenseCategories.AnyAsync(c => c.Code == request.Code.ToUpperInvariant());
+            if (existing)
+                return Results.BadRequest(new { Error = "Category code already exists" });
+
+            var category = ExpenseCategory.Create(request.Name, request.Code, request.Description);
+            db.ExpenseCategories.Add(category);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/accounting/expense-categories/{category.Id}",
+                new ExpenseCategoryDto(category.Id, category.Name, category.Code, category.Description, category.IsActive));
+        }).WithName("CreateExpenseCategory");
+
+        group.MapPut("/expense-categories/{id:guid}", async (Guid id, UpdateExpenseCategoryRequest request, AccountingDbContext db) =>
+        {
+            var category = await db.ExpenseCategories.FindAsync(id);
+            if (category == null)
+                return Results.NotFound();
+
+            category.Update(request.Name, request.Description);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new ExpenseCategoryDto(category.Id, category.Name, category.Code, category.Description, category.IsActive));
+        }).WithName("UpdateExpenseCategory");
+
+        // ===== Expense Endpoints =====
+        group.MapGet("/expenses", async (AccountingDbContext db, int page = 1, int pageSize = 20,
+            ExpenseStatus? status = null, Guid? categoryId = null, DateTime? startDate = null, DateTime? endDate = null) =>
+        {
+            var query = db.Expenses.Include(e => e.Category).AsQueryable();
+
+            if (status.HasValue)
+                query = query.Where(e => e.Status == status.Value);
+
+            if (categoryId.HasValue)
+                query = query.Where(e => e.CategoryId == categoryId.Value);
+
+            if (startDate.HasValue)
+                query = query.Where(e => e.ExpenseDate >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(e => e.ExpenseDate <= endDate.Value);
+
+            var total = await query.CountAsync();
+            var expenses = await query
+                .OrderByDescending(e => e.ExpenseDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new ExpenseListDto(
+                    e.Id, e.ExpenseNumber, e.CategoryId, e.Category!.Name, e.Description,
+                    e.Amount, e.VatAmount, e.TotalAmount, e.Currency, e.ExpenseDate,
+                    e.Status, e.SupplierId, e.EmployeeId, e.CreatedAt))
+                .ToListAsync();
+
+            return Results.Ok(new { Total = total, Page = page, PageSize = pageSize, Expenses = expenses });
+        }).WithName("GetExpenses");
+
+        group.MapGet("/expenses/{id:guid}", async (Guid id, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.Include(e => e.Category).FirstOrDefaultAsync(e => e.Id == id);
+            if (expense == null)
+                return Results.NotFound();
+
+            var dto = new ExpenseDetailDto(
+                expense.Id, expense.ExpenseNumber, expense.CategoryId, expense.Category!.Name,
+                expense.Description, expense.Amount, expense.VatAmount, expense.TotalAmount,
+                expense.Currency, expense.ExpenseDate, expense.Status, expense.PaymentMethod,
+                expense.SupplierId, expense.EmployeeId, expense.CreatedBy, expense.ApprovedBy,
+                expense.ApprovedAt, expense.PaidAt, expense.RejectionReason, expense.Notes,
+                expense.ReceiptUrl, expense.CreatedAt);
+
+            return Results.Ok(dto);
+        }).WithName("GetExpenseDetail");
+
+        group.MapPost("/expenses", async (CreateExpenseRequest request, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var category = await db.ExpenseCategories.FindAsync(request.CategoryId);
+            if (category == null)
+                return Results.BadRequest(new { Error = "Invalid category" });
+
+            var currency = Enum.TryParse<Currency>(request.Currency, out var cur) ? cur : Currency.VND;
+
+            var expense = Expense.Create(
+                request.CategoryId,
+                request.Description,
+                request.Amount,
+                request.VatRate,
+                currency,
+                request.ExpenseDate,
+                userId,
+                request.SupplierId,
+                request.EmployeeId,
+                request.Notes,
+                request.ReceiptUrl);
+
+            db.Expenses.Add(expense);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/accounting/expenses/{expense.Id}",
+                new { Id = expense.Id, ExpenseNumber = expense.ExpenseNumber });
+        }).WithName("CreateExpense");
+
+        group.MapPut("/expenses/{id:guid}", async (Guid id, UpdateExpenseRequest request, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Update(
+                    request.CategoryId, request.Description, request.Amount, request.VatRate,
+                    request.ExpenseDate, request.SupplierId, request.EmployeeId,
+                    request.Notes, request.ReceiptUrl);
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("UpdateExpense");
+
+        group.MapPost("/expenses/{id:guid}/approve", async (Guid id, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Approve(userId);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense approved", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("ApproveExpense");
+
+        group.MapPost("/expenses/{id:guid}/reject", async (Guid id, RejectExpenseRequest request, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Reject(userId, request.Reason);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense rejected", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("RejectExpense");
+
+        group.MapPost("/expenses/{id:guid}/pay", async (Guid id, PayExpenseRequest request, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                var method = Enum.TryParse<PaymentMethod>(request.PaymentMethod, out var pm) ? pm : PaymentMethod.Cash;
+                expense.MarkAsPaid(method);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense marked as paid", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("PayExpense");
+
+        group.MapGet("/expenses/summary", async (AccountingDbContext db, DateTime? startDate = null, DateTime? endDate = null) =>
+        {
+            var query = db.Expenses.AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(e => e.ExpenseDate >= startDate.Value);
+            if (endDate.HasValue)
+                query = query.Where(e => e.ExpenseDate <= endDate.Value);
+
+            var expenses = await query.Include(e => e.Category).ToListAsync();
+
+            var summary = new ExpenseSummaryDto(
+                TotalExpenses: expenses.Sum(e => e.TotalAmount),
+                PendingAmount: expenses.Where(e => e.Status == ExpenseStatus.Pending).Sum(e => e.TotalAmount),
+                ApprovedAmount: expenses.Where(e => e.Status == ExpenseStatus.Approved).Sum(e => e.TotalAmount),
+                PaidAmount: expenses.Where(e => e.Status == ExpenseStatus.Paid).Sum(e => e.TotalAmount),
+                PendingCount: expenses.Count(e => e.Status == ExpenseStatus.Pending),
+                ApprovedCount: expenses.Count(e => e.Status == ExpenseStatus.Approved),
+                PaidCount: expenses.Count(e => e.Status == ExpenseStatus.Paid),
+                ByCategory: expenses
+                    .GroupBy(e => new { e.CategoryId, e.Category!.Name, e.Category.Code })
+                    .Select(g => new CategoryExpenseSummary(
+                        g.Key.CategoryId, g.Key.Name, g.Key.Code,
+                        g.Sum(e => e.TotalAmount), g.Count()))
+                    .OrderByDescending(c => c.TotalAmount)
+                    .ToList());
+
+            return Results.Ok(summary);
+        }).WithName("GetExpenseSummary");
     }
 }
 
 public record CreateInvoiceDto(Guid? CustomerId, List<CreateInvoiceItemDto> Items, string Notes);
 public record CreateInvoiceItemDto(string Description, int Quantity, decimal UnitPrice);
 public record CreateAccountDto(string Name, decimal CreditLimit);
+public record ApplyAPPaymentRequest(decimal Amount, string PaymentMethod, string? Reference);

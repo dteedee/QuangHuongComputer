@@ -36,19 +36,27 @@ export const useRecaptcha = (siteKey: string) => {
         };
     }, [siteKey]);
 
-    const executeRecaptcha = async (action: string): Promise<string> => {
+    const executeRecaptcha = async (action: string): Promise<string | undefined> => {
+        // If reCAPTCHA is not loaded (blocked by ad blocker, etc.), return undefined
+        // Backend should handle missing token gracefully in development
         if (!isLoaded || !window.grecaptcha) {
-            throw new Error('reCAPTCHA not loaded');
+            console.warn('reCAPTCHA not loaded - proceeding without token');
+            return undefined;
         }
 
-        return new Promise((resolve, reject) => {
-            window.grecaptcha.ready(() => {
-                window.grecaptcha
-                    .execute(siteKey, { action })
-                    .then((token: string) => resolve(token))
-                    .catch((error: any) => reject(error));
+        try {
+            return await new Promise((resolve, reject) => {
+                window.grecaptcha.ready(() => {
+                    window.grecaptcha
+                        .execute(siteKey, { action })
+                        .then((token: string) => resolve(token))
+                        .catch((error: any) => reject(error));
+                });
             });
-        });
+        } catch (error) {
+            console.warn('reCAPTCHA execution failed:', error);
+            return undefined;
+        }
     };
 
     return { isLoaded, executeRecaptcha };

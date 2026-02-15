@@ -1,22 +1,23 @@
 ﻿import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Wrench, Clock, CheckCircle2, AlertCircle,
     Play, CheckSquare, Search, Filter,
-    Loader2, Calendar, Smartphone, Plus, MoreVertical
+    Loader2, Calendar, Smartphone, Plus, MoreVertical, Eye
 } from 'lucide-react';
 import { repairApi, type WorkOrder, type WorkOrderStatus } from '../../../api/repair';
-import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 export const TechPortal = () => {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['tech-work-orders'],
-        queryFn: () => repairApi.admin.getWorkOrders(),
+        queryFn: () => repairApi.technician.getMyWorkOrders(),
     });
 
     const { data: stats } = useQuery({
@@ -188,7 +189,11 @@ export const TechPortal = () => {
                                     </td>
                                 </tr>
                             ) : workOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50/80 transition-all group">
+                                <tr
+                                    key={order.id}
+                                    className="hover:bg-gray-50/80 transition-all group cursor-pointer"
+                                    onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
+                                >
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black text-xs shadow-lg">
@@ -230,9 +235,22 @@ export const TechPortal = () => {
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 translate-x-4">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/backoffice/tech/work-orders/${order.id}`);
+                                                }}
+                                                className="p-3 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm active:scale-95"
+                                                title="Xem chi tiết"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
                                             {order.status === 'Requested' && (
                                                 <button
-                                                    onClick={() => startRepairMutation.mutate(order.id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        startRepairMutation.mutate(order.id);
+                                                    }}
                                                     className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
                                                     title="Bắt đầu sửa chữa"
                                                 >
@@ -241,7 +259,8 @@ export const TechPortal = () => {
                                             )}
                                             {order.status === 'InProgress' && (
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         const notes = window.prompt('Ghi chú hoàn thành:');
                                                         if (notes) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes });
                                                     }}
@@ -251,9 +270,6 @@ export const TechPortal = () => {
                                                     <CheckSquare size={18} />
                                                 </button>
                                             )}
-                                            <button className="p-3 bg-gray-50 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all shadow-sm active:scale-95">
-                                                <MoreVertical size={18} />
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>

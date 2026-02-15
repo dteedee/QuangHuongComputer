@@ -198,6 +198,190 @@ public static class WarrantyEndpoints
             var warranties = await db.ProductWarranties.OrderByDescending(w => w.PurchaseDate).ToListAsync();
             return Results.Ok(warranties);
         }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "TechnicianInShop"));
+
+        // ==================== ADMIN CLAIM MANAGEMENT ====================
+        var adminGroup = app.MapGroup("/api/warranty/admin")
+            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "TechnicianInShop", "TechnicianOnSite"));
+
+        // Get all claims with optional filters
+        adminGroup.MapGet("/claims", async (
+            WarrantyDbContext db,
+            [FromQuery] string? status = null,
+            [FromQuery] string? serialNumber = null) =>
+        {
+            var query = db.Claims.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<ClaimStatus>(status, true, out var claimStatus))
+            {
+                query = query.Where(c => c.Status == claimStatus);
+            }
+
+            if (!string.IsNullOrEmpty(serialNumber))
+            {
+                query = query.Where(c => c.SerialNumber.Contains(serialNumber));
+            }
+
+            var claims = await query
+                .OrderByDescending(c => c.FiledDate)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.CustomerId,
+                    c.SerialNumber,
+                    c.IssueDescription,
+                    Status = c.Status.ToString(),
+                    c.FiledDate,
+                    c.ResolvedDate,
+                    c.ResolutionNotes,
+                    PreferredResolution = c.PreferredResolution.ToString(),
+                    c.AttachmentUrls,
+                    c.IsManagerOverride
+                })
+                .ToListAsync();
+
+            return Results.Ok(claims);
+        });
+
+        // Get claim by ID with warranty info
+        adminGroup.MapGet("/claims/{id:guid}", async (Guid id, WarrantyDbContext db) =>
+        {
+            var claim = await db.Claims.FirstOrDefaultAsync(c => c.Id == id);
+            if (claim == null)
+                return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
+
+            // Get warranty info
+            var warranty = await db.ProductWarranties.FirstOrDefaultAsync(w => w.SerialNumber == claim.SerialNumber);
+
+            return Results.Ok(new
+            {
+                claim.Id,
+                claim.CustomerId,
+                claim.SerialNumber,
+                claim.IssueDescription,
+                Status = claim.Status.ToString(),
+                claim.FiledDate,
+                claim.ResolvedDate,
+                claim.ResolutionNotes,
+                PreferredResolution = claim.PreferredResolution.ToString(),
+                claim.AttachmentUrls,
+                claim.IsManagerOverride,
+                Warranty = warranty != null ? new
+                {
+                    warranty.ProductId,
+                    warranty.OrderNumber,
+                    warranty.PurchaseDate,
+                    warranty.ExpirationDate,
+                    warranty.WarrantyPeriodMonths,
+                    WarrantyStatus = warranty.Status.ToString(),
+                    IsValid = warranty.IsValid()
+                } : null
+            });
+        });
+
+        // Approve claim
+        adminGroup.MapPost("/claims/{id:guid}/approve", async (Guid id, WarrantyDbContext db, ClaimsPrincipal user) =>
+        {
+            var claim = await db.Claims.FirstOrDefaultAsync(c => c.Id == id);
+            if (claim == null)
+                return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
+
+            if (claim.Status != ClaimStatus.Pending)
+                return Results.BadRequest(new { Message = "Chỉ có thể duyệt yêu cầu đang chờ xử lý" });
+
+            claim.Approve();
+            await db.SaveChangesAsync();
+
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Admin";
+            return Results.Ok(new
+            {
+                Message = "Đã duyệt yêu cầu bảo hành",
+                claim.Id,
+                Status = claim.Status.ToString(),
+                ApprovedBy = userName
+            });
+        });
+
+        // Reject claim
+        adminGroup.MapPost("/claims/{id:guid}/reject", async (
+            Guid id,
+            [FromBody] RejectClaimDto dto,
+            WarrantyDbContext db,
+            ClaimsPrincipal user) =>
+        {
+            var claim = await db.Claims.FirstOrDefaultAsync(c => c.Id == id);
+            if (claim == null)
+                return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
+
+            if (claim.Status == ClaimStatus.Resolved || claim.Status == ClaimStatus.Rejected)
+                return Results.BadRequest(new { Message = "Yêu cầu đã được xử lý" });
+
+            claim.Reject(dto.Reason);
+            await db.SaveChangesAsync();
+
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Admin";
+            return Results.Ok(new
+            {
+                Message = "Đã từ chối yêu cầu bảo hành",
+                claim.Id,
+                Status = claim.Status.ToString(),
+                claim.ResolutionNotes,
+                RejectedBy = userName
+            });
+        });
+
+        // Resolve claim (complete the repair/replacement/refund)
+        adminGroup.MapPost("/claims/{id:guid}/resolve", async (
+            Guid id,
+            [FromBody] ResolveClaimDto dto,
+            WarrantyDbContext db,
+            ClaimsPrincipal user) =>
+        {
+            var claim = await db.Claims.FirstOrDefaultAsync(c => c.Id == id);
+            if (claim == null)
+                return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
+
+            if (claim.Status != ClaimStatus.Approved)
+                return Results.BadRequest(new { Message = "Chỉ có thể hoàn thành yêu cầu đã được duyệt" });
+
+            claim.Resolve(dto.Notes);
+            await db.SaveChangesAsync();
+
+            var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Admin";
+            return Results.Ok(new
+            {
+                Message = "Đã hoàn thành xử lý yêu cầu bảo hành",
+                claim.Id,
+                Status = claim.Status.ToString(),
+                claim.ResolutionNotes,
+                claim.ResolvedDate,
+                ResolvedBy = userName
+            });
+        });
+
+        // Get claim statistics
+        adminGroup.MapGet("/claims/stats", async (WarrantyDbContext db) =>
+        {
+            var total = await db.Claims.CountAsync();
+            var pending = await db.Claims.CountAsync(c => c.Status == ClaimStatus.Pending);
+            var approved = await db.Claims.CountAsync(c => c.Status == ClaimStatus.Approved);
+            var resolved = await db.Claims.CountAsync(c => c.Status == ClaimStatus.Resolved);
+            var rejected = await db.Claims.CountAsync(c => c.Status == ClaimStatus.Rejected);
+
+            var todayStart = DateTime.UtcNow.Date;
+            var newToday = await db.Claims.CountAsync(c => c.FiledDate >= todayStart);
+            var resolvedToday = await db.Claims.CountAsync(c => c.ResolvedDate >= todayStart);
+
+            return Results.Ok(new
+            {
+                Total = total,
+                Pending = pending,
+                Approved = approved,
+                Resolved = resolved,
+                Rejected = rejected,
+                NewToday = newToday,
+                ResolvedToday = resolvedToday
+            });
+        });
     }
 }
 
@@ -216,3 +400,6 @@ public record RegisterWarrantyDto(
     int WarrantyPeriodMonths,
     string? OrderNumber = null
 );
+
+public record RejectClaimDto(string Reason);
+public record ResolveClaimDto(string Notes);

@@ -1,23 +1,29 @@
-﻿import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Product } from '../api/catalog';
 import toast from 'react-hot-toast';
-
-import { salesApi, type CartDto } from '../api/sales';
+import { salesApi } from '../api/sales';
 import { useAuth } from './AuthContext';
+import type { AxiosError } from 'axios';
 
-interface CartItem extends Partial<Product> {
+interface ApiErrorResponse {
+    Error?: string;
+    error?: string;
+}
+
+interface CartItem {
     id: string;
     name: string;
     price: number;
     quantity: number;
+    imageUrl?: string;
 }
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: Product, quantity?: number) => void;
-    removeFromCart: (productId: string) => void;
-    updateQuantity: (productId: string, quantity: number) => void;
-    clearCart: () => void;
+    addToCart: (product: Product, quantity?: number) => Promise<void>;
+    removeFromCart: (productId: string) => Promise<void>;
+    updateQuantity: (productId: string, quantity: number) => Promise<void>;
+    clearCart: () => Promise<void>;
     checkout: () => Promise<void>;
 
     // Coupon functionality
@@ -32,9 +38,11 @@ interface CartContextType {
     shippingAmount: number;
     total: number;
     itemCount: number;
+    totalQuantity: number;
 
-    // Loading state
+    // Loading states
     isLoading: boolean;
+    isUpdating: boolean;
     refreshCart: () => Promise<void>;
 }
 
@@ -46,39 +54,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const [couponCode, setCouponCode] = useState<string | null>(null);
     const [discountAmount, setDiscountAmount] = useState<number>(0);
     const [shippingAmount, setShippingAmount] = useState<number>(0);
-    const [taxRate, setTaxRate] = useState<number>(0.1); // 10% default
+    const [taxRate, setTaxRate] = useState<number>(0.1);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
-    // Load cart from backend when user is authenticated
+    // Reset cart when user logs out
     useEffect(() => {
-        if (isAuthenticated) {
-            refreshCart();
+        if (!isAuthenticated) {
+            setItems([]);
+            setCouponCode(null);
+            setDiscountAmount(0);
+            setShippingAmount(0);
         }
     }, [isAuthenticated]);
 
-    const refreshCart = async () => {
+    const refreshCart = useCallback(async () => {
         if (!isAuthenticated) return;
+
         try {
             setIsLoading(true);
             const cart = await salesApi.cart.get();
 
-            // Convert backend cart items to frontend format
             const cartItems: CartItem[] = cart.items.map(item => ({
                 id: item.productId,
                 name: item.productName,
                 price: item.price,
                 quantity: item.quantity,
-                // Add placeholder values for Product interface fields
-                description: '',
-                imageUrl: item.imageUrl || '',
-                stock: 0,
-                categoryId: '',
-                category: { id: '', name: '' },
-                sku: '',
-                status: 'InStock' as const,
-                stockQuantity: 99,
-                isActive: true,
-                createdAt: new Date().toISOString()
+                imageUrl: item.imageUrl || ''
             }));
 
             setItems(cartItems);
@@ -91,93 +93,123 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [isAuthenticated]);
 
-    const addToCart = async (product: Product, quantity: number = 1) => {
+    // Load cart when user authenticates
+    useEffect(() => {
+        if (isAuthenticated) {
+            refreshCart();
+        }
+    }, [isAuthenticated, refreshCart]);
+
+    const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
         if (!isAuthenticated) {
             toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
             return;
         }
 
+        setIsUpdating(true);
         try {
             await salesApi.cart.addItem({
                 productId: product.id,
                 productName: product.name,
                 price: product.price,
-                quantity: quantity
+                quantity
             });
 
-            // Optimistically update UI
-            setItems(prev => {
-                const existing = prev.find(item => item.id === product.id);
-                if (existing) {
-                    return prev.map(item =>
-                        item.id === product.id
-                            ? { ...item, quantity: item.quantity + quantity }
-                            : item
-                    );
-                }
-                return [...prev, { ...product, quantity: quantity }];
-            });
+            await refreshCart();
 
             toast.success(`Đã thêm ${product.name} vào giỏ hàng`, {
                 style: { borderRadius: '15px' }
             });
-        } catch (error: any) {
-            console.error('Add to cart failed:', error);
+        } catch (err) {
+            const error = err as AxiosError<ApiErrorResponse>;
             const errorMessage = error?.response?.data?.Error || error?.response?.data?.error || 'Không thể thêm sản phẩm vào giỏ hàng';
             toast.error(errorMessage);
+        } finally {
+            setIsUpdating(false);
         }
-    };
+    }, [isAuthenticated, refreshCart]);
 
-    const removeFromCart = async (productId: string) => {
-        if (!isAuthenticated) return;
+    const removeFromCart = useCallback(async (productId: string) => {
+        if (!isAuthenticated) {
+            toast.error('Vui lòng đăng nhập để xóa sản phẩm');
+            return;
+        }
+
+        // Optimistic update
+        const previousItems = items;
+        setItems(prev => prev.filter(item => item.id !== productId));
 
         try {
             await salesApi.cart.removeItem(productId);
-            setItems(prev => prev.filter(item => item.id !== productId));
             toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
-        } catch (error) {
-            toast.error('Không thể xóa sản phẩm');
+        } catch (err) {
+            // Rollback on error
+            setItems(previousItems);
+            const error = err as AxiosError<ApiErrorResponse>;
+            const errorMessage = error?.response?.data?.Error || error?.response?.data?.error || 'Không thể xóa sản phẩm';
+            toast.error(errorMessage);
         }
-    };
+    }, [isAuthenticated, items]);
 
-    const updateQuantity = async (productId: string, quantity: number) => {
-        if (!isAuthenticated) return;
+    const updateQuantity = useCallback(async (productId: string, quantity: number) => {
+        if (!isAuthenticated) {
+            toast.error('Vui lòng đăng nhập để cập nhật số lượng');
+            return;
+        }
 
         if (quantity <= 0) {
             await removeFromCart(productId);
             return;
         }
 
+        // Optimistic update
+        const previousItems = items;
+        setItems(prev =>
+            prev.map(item =>
+                item.id === productId ? { ...item, quantity } : item
+            )
+        );
+
         try {
             await salesApi.cart.updateQuantity(productId, quantity);
-            setItems(prev =>
-                prev.map(item =>
-                    item.id === productId ? { ...item, quantity } : item
-                )
-            );
-        } catch (error) {
-            toast.error('Không thể cập nhật số lượng');
+        } catch (err) {
+            // Rollback on error
+            setItems(previousItems);
+            const error = err as AxiosError<ApiErrorResponse>;
+            const errorMessage = error?.response?.data?.Error || error?.response?.data?.error || 'Không thể cập nhật số lượng';
+            toast.error(errorMessage);
         }
-    };
+    }, [isAuthenticated, items, removeFromCart]);
 
-    const clearCart = async () => {
+    const clearCart = useCallback(async () => {
         if (!isAuthenticated) return;
+
+        const previousItems = items;
+        const previousCoupon = couponCode;
+        const previousDiscount = discountAmount;
+
+        // Optimistic update
+        setItems([]);
+        setCouponCode(null);
+        setDiscountAmount(0);
 
         try {
             await salesApi.cart.clear();
-            setItems([]);
-            setCouponCode(null);
-            setDiscountAmount(0);
-        } catch (error) {
+        } catch {
+            // Rollback on error
+            setItems(previousItems);
+            setCouponCode(previousCoupon);
+            setDiscountAmount(previousDiscount);
             toast.error('Không thể xóa giỏ hàng');
         }
-    };
+    }, [isAuthenticated, items, couponCode, discountAmount]);
 
-    const applyCoupon = async (code: string) => {
+    const applyCoupon = useCallback(async (code: string) => {
         if (!isAuthenticated) return;
 
+        setIsUpdating(true);
         try {
             const result = await salesApi.cart.applyCoupon(code);
             setCouponCode(code.toUpperCase());
@@ -186,71 +218,115 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 icon: '🎉',
                 style: { borderRadius: '15px' }
             });
-        } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Mã giảm giá không hợp lệ');
+        } catch (err) {
+            const error = err as AxiosError<ApiErrorResponse>;
+            const errorMessage = error?.response?.data?.Error || error?.response?.data?.error || 'Mã giảm giá không hợp lệ';
+            toast.error(errorMessage);
+        } finally {
+            setIsUpdating(false);
         }
-    };
+    }, [isAuthenticated]);
 
-    const removeCoupon = async () => {
+    const removeCoupon = useCallback(async () => {
         if (!isAuthenticated) return;
+
+        const previousCoupon = couponCode;
+        const previousDiscount = discountAmount;
+
+        // Optimistic update
+        setCouponCode(null);
+        setDiscountAmount(0);
 
         try {
             await salesApi.cart.removeCoupon();
-            setCouponCode(null);
-            setDiscountAmount(0);
             toast.success('Đã xóa mã giảm giá');
-        } catch (error) {
+        } catch {
+            // Rollback on error
+            setCouponCode(previousCoupon);
+            setDiscountAmount(previousDiscount);
             toast.error('Không thể xóa mã giảm giá');
         }
-    };
+    }, [isAuthenticated, couponCode, discountAmount]);
 
-    // Calculate pricing
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = (subtotal - discountAmount) * taxRate;
-    const total = subtotal - discountAmount + tax + shippingAmount;
-    const itemCount = items.length;
-
-    const checkout = async () => {
+    const checkout = useCallback(async () => {
         if (items.length === 0) return;
-        const checkoutItems = items.map(item => ({
-            productId: item.id,
-            productName: item.name,
-            unitPrice: item.price,
-            quantity: item.quantity
-        }));
+
+        setIsUpdating(true);
         try {
+            const checkoutItems = items.map(item => ({
+                productId: item.id,
+                productName: item.name,
+                unitPrice: item.price,
+                quantity: item.quantity
+            }));
+
             await salesApi.orders.create({ items: checkoutItems });
             await clearCart();
+
             toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.', {
                 duration: 5000,
                 icon: '🎉',
                 style: { borderRadius: '15px', fontWeight: 'bold' }
             });
-        } catch (error) {
+        } catch {
             toast.error('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
+        } finally {
+            setIsUpdating(false);
         }
-    };
+    }, [items, clearCart]);
+
+    // Memoized calculations
+    const subtotal = useMemo(() =>
+        items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        [items]
+    );
+
+    const tax = useMemo(() =>
+        Math.max(0, (subtotal - discountAmount) * taxRate),
+        [subtotal, discountAmount, taxRate]
+    );
+
+    const total = useMemo(() =>
+        Math.max(0, subtotal - discountAmount + tax + shippingAmount),
+        [subtotal, discountAmount, tax, shippingAmount]
+    );
+
+    const itemCount = items.length;
+
+    const totalQuantity = useMemo(() =>
+        items.reduce((sum, item) => sum + item.quantity, 0),
+        [items]
+    );
+
+    const contextValue = useMemo(() => ({
+        items,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        checkout,
+        couponCode,
+        discountAmount,
+        applyCoupon,
+        removeCoupon,
+        subtotal,
+        tax,
+        shippingAmount,
+        total,
+        itemCount,
+        totalQuantity,
+        isLoading,
+        isUpdating,
+        refreshCart
+    }), [
+        items, addToCart, removeFromCart, updateQuantity, clearCart, checkout,
+        couponCode, discountAmount, applyCoupon, removeCoupon,
+        subtotal, tax, shippingAmount, total, itemCount, totalQuantity,
+        isLoading, isUpdating, refreshCart
+    ]);
 
     return (
-        <CartContext.Provider value={{
-            items,
-            addToCart,
-            removeFromCart,
-            updateQuantity,
-            clearCart,
-            checkout,
-            couponCode,
-            discountAmount,
-            applyCoupon,
-            removeCoupon,
-            subtotal,
-            tax,
-            shippingAmount,
-            total,
-            itemCount,
-            isLoading,
-            refreshCart
-        }}>
+        <CartContext.Provider value={contextValue}>
             {children}
         </CartContext.Provider>
     );
@@ -261,4 +337,3 @@ export const useCart = () => {
     if (!context) throw new Error('useCart must be used within a CartProvider');
     return context;
 };
-

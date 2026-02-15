@@ -3,8 +3,6 @@ import {
     Plus,
     Search,
     Edit2,
-    Trash2,
-    MoreHorizontal,
     Eye,
     X,
     Check,
@@ -14,7 +12,9 @@ import {
     Save,
     MapPin,
     DollarSign,
-    Clock
+    Clock,
+    Power,
+    PowerOff
 } from 'lucide-react';
 import { hrApi, type JobListing } from '../../../api/hr';
 import { toast } from 'react-hot-toast';
@@ -87,15 +87,17 @@ export const RecruitmentManagement = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa tin tuyển dụng này?')) return;
+    const handleToggleStatus = async (job: JobListing) => {
+        const newStatus = job.status === 'Active' ? 'Closed' : 'Active';
+        const action = newStatus === 'Active' ? 'kích hoạt' : 'đóng';
+        if (!confirm(`Bạn có chắc chắn muốn ${action} tin tuyển dụng "${job.title}"?`)) return;
 
         try {
-            await hrApi.deleteJobListing(id);
-            toast.success('Đã xóa tin tuyển dụng');
+            await hrApi.updateJobListing(job.id, { ...job, status: newStatus });
+            toast.success(newStatus === 'Active' ? 'Đã kích hoạt tin tuyển dụng!' : 'Đã đóng tin tuyển dụng!');
             fetchJobs();
         } catch (error) {
-            toast.error('Lỗi khi xóa');
+            toast.error('Lỗi khi cập nhật trạng thái');
         }
     };
 
@@ -181,14 +183,20 @@ export const RecruitmentManagement = () => {
                                                 <button
                                                     onClick={() => handleOpenModal(job)}
                                                     className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-all"
+                                                    title="Chỉnh sửa"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(job.id)}
-                                                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-all"
+                                                    onClick={() => handleToggleStatus(job)}
+                                                    className={`p-2 rounded-lg transition-all ${
+                                                        job.status === 'Active'
+                                                            ? 'hover:bg-amber-50 text-amber-600'
+                                                            : 'hover:bg-emerald-50 text-emerald-600'
+                                                    }`}
+                                                    title={job.status === 'Active' ? 'Đóng tin' : 'Kích hoạt'}
                                                 >
-                                                    <Trash2 size={16} />
+                                                    {job.status === 'Active' ? <PowerOff size={16} /> : <Power size={16} />}
                                                 </button>
                                             </div>
                                         </td>

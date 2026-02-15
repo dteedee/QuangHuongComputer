@@ -3,7 +3,7 @@ import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2,
     Image as ImageIcon, Layout, Settings, Share2, DollarSign, Package,
     Shield, Info, ChevronRight, ChevronLeft, PlusCircle, MinusCircle,
-    Upload, Star, Eye, Layers
+    Upload, Star, Eye, Layers, Power, PowerOff, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogApi, type Product, type CreateProductDto, type UpdateProductDto } from '../../api/catalog';
@@ -23,6 +23,7 @@ export const AdminProductsPage = () => {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<FormTab>('general');
     const [page, setPage] = useState(1);
+    const [showInactive, setShowInactive] = useState(false);
     const pageSize = 12;
     const queryClient = useQueryClient();
 
@@ -31,8 +32,8 @@ export const AdminProductsPage = () => {
     const [gallery, setGallery] = useState<string[]>([]);
 
     const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-products', page],
-        queryFn: () => catalogApi.getProducts({ page, pageSize }),
+        queryKey: ['admin-products', page, showInactive],
+        queryFn: () => catalogApi.getProducts({ page, pageSize, includeInactive: showInactive || undefined }),
     });
 
     const { data: categories } = useQuery({
@@ -114,9 +115,18 @@ export const AdminProductsPage = () => {
         mutationFn: (id: string) => catalogApi.deleteProduct(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            toast.success('Xóa sản phẩm thành công!');
+            toast.success('Đã ẩn sản phẩm!');
         },
-        onError: () => toast.error('Xóa thất bại!')
+        onError: () => toast.error('Thao tác thất bại!')
+    });
+
+    const toggleStatusMutation = useMutation({
+        mutationFn: (id: string) => catalogApi.toggleProductStatus(id),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            toast.success(data.isActive ? 'Đã kích hoạt sản phẩm!' : 'Đã ẩn sản phẩm!');
+        },
+        onError: () => toast.error('Thao tác thất bại!')
     });
 
     const products = response?.products || [];
@@ -230,8 +240,16 @@ export const AdminProductsPage = () => {
                             <option>Tất cả danh mục</option>
                             {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <button className="flex items-center justify-center gap-2 px-6 py-4 bg-white border border-gray-100 text-gray-700 rounded-2xl hover:bg-gray-50 transition-all text-sm font-semibold">
-                            <Filter size={18} /> Lọc
+                        <button
+                            onClick={() => setShowInactive(!showInactive)}
+                            className={`flex items-center justify-center gap-2 px-6 py-4 border rounded-2xl transition-all text-sm font-semibold ${
+                                showInactive
+                                    ? 'bg-amber-50 border-amber-200 text-amber-700'
+                                    : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            {showInactive ? <Eye size={18} /> : <PowerOff size={18} />}
+                            {showInactive ? 'Đang xem tất cả' : 'Xem cả ẩn'}
                         </button>
                     </div>
                 </div>
@@ -269,10 +287,26 @@ export const AdminProductsPage = () => {
                                         <button onClick={() => handleOpenModal(product)} className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-700 hover:text-blue-600 transition-colors">
                                             <Edit size={18} />
                                         </button>
-                                        <button onClick={() => { if (confirm('Xóa sản phẩm này?')) deleteMutation.mutate(product.id) }} className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-700 hover:text-red-600 transition-colors">
-                                            <Trash2 size={18} />
+                                        <button
+                                            onClick={() => toggleStatusMutation.mutate(product.id)}
+                                            className={`w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center transition-colors ${
+                                                product.isActive
+                                                    ? 'text-gray-700 hover:text-amber-600'
+                                                    : 'text-emerald-600 hover:text-emerald-700'
+                                            }`}
+                                            title={product.isActive ? 'Ẩn sản phẩm' : 'Kích hoạt sản phẩm'}
+                                        >
+                                            {product.isActive ? <PowerOff size={18} /> : <Power size={18} />}
                                         </button>
                                     </div>
+                                    {/* Inactive overlay */}
+                                    {!product.isActive && (
+                                        <div className="absolute inset-0 bg-gray-900/60 rounded-[2rem] flex items-center justify-center">
+                                            <span className="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                                                Đã ẩn
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-4">
                                     <div className="space-y-1">

@@ -43,7 +43,7 @@ interface CheckoutForm {
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { items, subtotal, tax, total, discountAmount, couponCode, clearCart } = useCart();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
@@ -145,27 +145,50 @@ export function CheckoutPage() {
   const processOrder = async () => {
     setLoading(true);
     try {
-      const checkoutData = {
-        items: items.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          unitPrice: item.price,
-          quantity: item.quantity
-        })),
-        shippingAddress: formData.deliveryMethod === 'pickup'
-          ? 'Nhận tại cửa hàng'
-          : `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`,
-        notes: formData.notes,
-        couponCode: couponCode || undefined,
-        paymentMethod: formData.paymentMethod,
-        isPickup: formData.deliveryMethod === 'pickup',
-        pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
-        pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
-        customerId: user?.id
-      };
+      const shippingAddress = formData.deliveryMethod === 'pickup'
+        ? 'Nhận tại cửa hàng'
+        : `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`;
 
-      // Step 1: Create the order
-      const response = await salesApi.orders.create(checkoutData);
+      let response;
+
+      if (isAuthenticated && user) {
+        // Authenticated user checkout
+        const checkoutData = {
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            unitPrice: item.price,
+            quantity: item.quantity
+          })),
+          shippingAddress,
+          notes: formData.notes,
+          couponCode: couponCode || undefined,
+          paymentMethod: formData.paymentMethod,
+          isPickup: formData.deliveryMethod === 'pickup',
+          pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
+          pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
+          customerId: user.id
+        };
+        response = await salesApi.orders.create(checkoutData);
+      } else {
+        // Guest checkout
+        const guestCheckoutData = {
+          customerName: formData.fullName,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          shippingAddress,
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          couponCode: couponCode || undefined,
+          notes: formData.notes,
+          paymentMethod: formData.paymentMethod,
+        };
+        response = await salesApi.orders.guestCheckout(guestCheckoutData);
+      }
 
       if (response && response.orderId) {
         setOrderId(response.orderId);
@@ -313,6 +336,30 @@ export function CheckoutPage() {
                       <p className="text-slate-500 text-sm">Vui lòng nhập chính xác thông tin để chúng tôi phục vụ bạn tốt nhất</p>
                     </div>
                   </div>
+
+                  {/* Guest Checkout Notice */}
+                  {!isAuthenticated && (
+                    <div className="mb-8 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-100 rounded-xl">
+                          <User className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-amber-800 text-sm">Mua hàng không cần tài khoản</p>
+                          <p className="text-amber-700 text-xs mt-1">
+                            Bạn đang thanh toán với tư cách khách.{' '}
+                            <button
+                              onClick={() => navigate('/login', { state: { from: '/checkout' } })}
+                              className="font-bold underline hover:text-amber-900"
+                            >
+                              Đăng nhập
+                            </button>
+                            {' '}để theo dõi đơn hàng và tích điểm.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Delivery Method Toggle */}
                   <div className="flex p-1 bg-slate-100 rounded-2xl mb-8 gap-1">

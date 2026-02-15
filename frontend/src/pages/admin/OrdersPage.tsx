@@ -10,6 +10,7 @@ import { formatCurrency } from '../../utils/format';
 export const AdminOrdersPage = () => {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [page, setPage] = useState(1);
     const queryClient = useQueryClient();
 
@@ -213,8 +214,11 @@ export const AdminOrdersPage = () => {
                                                     {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                                                 </td>
                                                 <td className="px-8 py-6 text-right">
-                                                    <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-[#D70018] hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100">
-                                                        <ArrowRight size={18} />
+                                                    <button
+                                                        onClick={() => setSelectedOrder(order)}
+                                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-[#D70018] hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100"
+                                                    >
+                                                        <Eye size={18} />
                                                     </button>
                                                 </td>
                                             </tr>
@@ -248,6 +252,131 @@ export const AdminOrdersPage = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Order Detail Modal */}
+            <AnimatePresence>
+                {selectedOrder && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setSelectedOrder(null)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="flex items-center justify-between p-8 border-b border-gray-50 sticky top-0 bg-white z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500">
+                                        <FileText size={24} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">
+                                            Đơn hàng <span className="text-[#D70018]">#{selectedOrder.orderNumber}</span>
+                                        </h2>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
+                                            Ngày tạo: {new Date(selectedOrder.orderDate).toLocaleString('vi-VN')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#D70018] transition-all">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-8 space-y-6">
+                                {/* Status Update */}
+                                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl">
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Trạng thái đơn hàng</p>
+                                        <select
+                                            value={selectedOrder.status}
+                                            onChange={(e) => {
+                                                updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value });
+                                                setSelectedOrder({ ...selectedOrder, status: e.target.value as OrderStatus });
+                                            }}
+                                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#D70018]/20"
+                                        >
+                                            <option value="Draft">Bản nháp</option>
+                                            <option value="Pending">Chờ xác nhận</option>
+                                            <option value="Confirmed">Đã xác nhận</option>
+                                            <option value="Paid">Đã thanh toán</option>
+                                            <option value="Shipped">Đang giao</option>
+                                            <option value="Delivered">Đã giao</option>
+                                            <option value="Completed">Hoàn tất</option>
+                                            <option value="Cancelled">Đã hủy</option>
+                                        </select>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tổng giá trị</p>
+                                        <p className="text-2xl font-black text-[#D70018] italic">{formatCurrency(selectedOrder.totalAmount)}</p>
+                                    </div>
+                                </div>
+
+                                {/* Order Items */}
+                                <div className="space-y-4">
+                                    <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                        <Package size={14} className="text-[#D70018]" />
+                                        Sản phẩm ({selectedOrder.items?.length || 0})
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {selectedOrder.items?.map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900">{item.productName}</p>
+                                                    <p className="text-xs text-gray-500">x{item.quantity} @ {formatCurrency(item.unitPrice)}</p>
+                                                </div>
+                                                <p className="text-sm font-black text-gray-900">{formatCurrency(item.lineTotal)}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Summary */}
+                                <div className="space-y-3 p-6 bg-gray-50 rounded-2xl">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Tạm tính</span>
+                                        <span className="font-bold">{formatCurrency(selectedOrder.subtotalAmount)}</span>
+                                    </div>
+                                    {selectedOrder.discountAmount > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Giảm giá</span>
+                                            <span className="font-bold text-emerald-600">-{formatCurrency(selectedOrder.discountAmount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Phí vận chuyển</span>
+                                        <span className="font-bold">{formatCurrency(selectedOrder.shippingAmount)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Thuế</span>
+                                        <span className="font-bold">{formatCurrency(selectedOrder.taxAmount)}</span>
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-3 flex justify-between">
+                                        <span className="text-sm font-bold text-gray-900">Tổng cộng</span>
+                                        <span className="text-lg font-black text-[#D70018]">{formatCurrency(selectedOrder.totalAmount)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Shipping Info */}
+                                <div className="space-y-4">
+                                    <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                        <MapPin size={14} className="text-[#D70018]" />
+                                        Thông tin giao hàng
+                                    </h3>
+                                    <div className="p-4 bg-gray-50 rounded-xl">
+                                        <p className="text-sm text-gray-700">{selectedOrder.shippingAddress || 'Chưa có địa chỉ'}</p>
+                                        {selectedOrder.notes && (
+                                            <p className="text-xs text-gray-500 mt-2 italic">Ghi chú: {selectedOrder.notes}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Create Order Modal */}
             <AnimatePresence>

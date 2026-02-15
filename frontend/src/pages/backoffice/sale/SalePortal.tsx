@@ -1,78 +1,90 @@
 ﻿import { useState, useEffect } from 'react';
 import {
     Plus, CreditCard, ArrowRight,
-    Tag, Star, TrendingUp, Clock, DollarSign, Package, ExternalLink
+    Tag, Star, TrendingUp, Clock, DollarSign, Package, ExternalLink,
+    ShoppingCart, Percent, ShoppingBag, RefreshCw, AlertCircle, Calendar, RotateCcw
 } from 'lucide-react';
 import { salesApi } from '../../../api/sales';
 import type { Order, SalesStats } from '../../../api/sales';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { formatCurrency, formatDate } from '../../../utils/format';
+import toast from 'react-hot-toast';
 
 export const SalePortal = () => {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [stats, setStats] = useState<SalesStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            // Mock data for demo if API fails
+            const mockStats: SalesStats = {
+                totalOrders: 156,
+                todayOrders: 12,
+                monthOrders: 45,
+                monthRevenue: 45200000,
+                totalRevenue: 500000000,
+                pendingOrders: 8,
+                completedOrders: 142,
+                averageOrderValue: 3200000,
+                todayRevenue: 12500000
+            };
+
+            const mockOrders: Order[] = [
+                {
+                    id: '1', orderNumber: 'ORD-2024001', customerId: 'CUST-001', status: 'Confirmed',
+                    paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
+                    subtotalAmount: 12000000, discountAmount: 0, taxAmount: 1200000, shippingAmount: 0,
+                    totalAmount: 13200000, taxRate: 0.1, shippingAddress: 'Hanoi', retryCount: 0,
+                    orderDate: new Date().toISOString(), items: [{ productName: 'Laptop Gaming ASUS ROG', quantity: 1, unitPrice: 12000000 }]
+                },
+                {
+                    id: '2', orderNumber: 'ORD-2024002', customerId: 'CUST-002', status: 'Paid',
+                    paymentStatus: 'Paid', fulfillmentStatus: 'Pending',
+                    subtotalAmount: 25000000, discountAmount: 500000, taxAmount: 2450000, shippingAmount: 0,
+                    totalAmount: 26950000, taxRate: 0.1, shippingAddress: 'HCM', retryCount: 0,
+                    orderDate: new Date(Date.now() - 3600000).toISOString(), items: [{ productName: 'PC Gaming Custom Build', quantity: 1, unitPrice: 25000000 }]
+                },
+                {
+                    id: '3', orderNumber: 'ORD-2024003', customerId: 'CUST-003', status: 'Shipped',
+                    paymentStatus: 'Paid', fulfillmentStatus: 'Shipped',
+                    subtotalAmount: 8500000, discountAmount: 0, taxAmount: 850000, shippingAmount: 50000,
+                    totalAmount: 9400000, taxRate: 0.1, shippingAddress: 'Da Nang', retryCount: 0,
+                    orderDate: new Date(Date.now() - 7200000).toISOString(), items: [{ productName: 'Monitor LG 27"', quantity: 2, unitPrice: 4250000 }]
+                },
+            ] as Order[];
+
+            try {
+                const [ordersData, statsData] = await Promise.all([
+                    salesApi.admin.getOrders({ page: 1, pageSize: 10 }),
+                    salesApi.admin.getStats()
+                ]);
+                setOrders(ordersData.orders?.length > 0 ? ordersData.orders : mockOrders);
+                setStats(statsData || mockStats);
+            } catch (apiError) {
+                console.warn('API error, using mock data:', apiError);
+                setStats(mockStats);
+                setOrders(mockOrders);
+            }
+        } catch (error) {
+            console.error('Failed to fetch data', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Mock data for demo if API fails
-                const mockStats: SalesStats = {
-                    totalOrders: 156,
-                    todayOrders: 12,
-                    monthOrders: 45,
-                    monthRevenue: 45200000,
-                    totalRevenue: 500000000,
-                    pendingOrders: 8,
-                    completedOrders: 142
-                };
-
-                const mockOrders: Order[] = [
-                    {
-                        id: '1', orderNumber: 'ORD-001', customerId: 'CUST-001', status: 'Confirmed',
-                        paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
-                        subtotalAmount: 12000000, discountAmount: 0, taxAmount: 500000, shippingAmount: 0,
-                        totalAmount: 12500000, taxRate: 0.1, shippingAddress: 'Hanoi', retryCount: 0,
-                        orderDate: new Date().toISOString(), items: []
-                    },
-                    {
-                        id: '2', orderNumber: 'ORD-002', customerId: 'CUST-002', status: 'Completed',
-                        paymentStatus: 'Paid', fulfillmentStatus: 'Delivered',
-                        subtotalAmount: 2000000, discountAmount: 0, taxAmount: 500000, shippingAmount: 0,
-                        totalAmount: 2500000, taxRate: 0.1, shippingAddress: 'Hanoi', retryCount: 0,
-                        orderDate: new Date().toISOString(), items: []
-                    },
-                    {
-                        id: '3', orderNumber: 'ORD-003', customerId: 'CUST-003', status: 'Shipped',
-                        paymentStatus: 'Paid', fulfillmentStatus: 'Shipped',
-                        subtotalAmount: 8500000, discountAmount: 0, taxAmount: 400000, shippingAmount: 0,
-                        totalAmount: 8900000, taxRate: 0.1, shippingAddress: 'HCM', retryCount: 0,
-                        orderDate: new Date().toISOString(), items: []
-                    },
-                ];
-
-                try {
-                    const [ordersData, statsData] = await Promise.all([
-                        salesApi.admin.getOrders(1, 10),
-                        salesApi.admin.getStats()
-                    ]);
-                    setOrders(ordersData.orders.length > 0 ? ordersData.orders : mockOrders);
-                    setStats(statsData || mockStats);
-                } catch (apiError) {
-                    console.warn('API error, using mock data:', apiError);
-                    setStats(mockStats);
-                    setOrders(mockOrders);
-                }
-            } catch (error) {
-                console.error('Failed to fetch data', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchData();
     }, []);
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchData();
+        setRefreshing(false);
+        toast.success('Đã cập nhật dữ liệu');
+    };
 
     const getStatusInfo = (status: string) => {
         switch (status) {
@@ -104,6 +116,14 @@ export const SalePortal = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="p-3 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50"
+                        title="Làm mới dữ liệu"
+                    >
+                        <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+                    </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
                         className="flex items-center gap-3 px-6 py-4 bg-gray-950 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-900/20 active:scale-95 group"
@@ -247,25 +267,95 @@ export const SalePortal = () => {
                     <div className="premium-card p-8 border-2">
                         <h3 className="text-lg font-black text-gray-950 mb-6 uppercase italic tracking-widest border-b-2 border-red-50 pb-2">Thao tác nhanh</h3>
                         <div className="space-y-4">
-                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 hover:bg-blue-50 transition-all border-2 border-transparent hover:border-blue-100 group">
+                            <Link to="/backoffice/orders" className="w-full flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 hover:bg-blue-50 transition-all border-2 border-transparent hover:border-blue-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-blue-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <Package size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Nhập kho</span>
+                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Đơn hàng</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
-                            </button>
-                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-amber-50/50 hover:bg-amber-50 transition-all border-2 border-transparent hover:border-amber-100 group">
+                            </Link>
+                            <Link to="/backoffice/coupons" className="w-full flex items-center justify-between p-4 rounded-2xl bg-amber-50/50 hover:bg-amber-50 transition-all border-2 border-transparent hover:border-amber-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-amber-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
-                                        <Tag size={20} />
+                                        <Percent size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Phiếu giảm giá</span>
+                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Mã giảm giá</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
-                            </button>
+                            </Link>
+                            <Link to="/backoffice/products" className="w-full flex items-center justify-between p-4 rounded-2xl bg-purple-50/50 hover:bg-purple-50 transition-all border-2 border-transparent hover:border-purple-100 group">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-white text-purple-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+                                        <ShoppingBag size={20} />
+                                    </div>
+                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Sản phẩm</span>
+                                </div>
+                                <ArrowRight size={20} className="text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
+                            <Link to="/backoffice/returns" className="w-full flex items-center justify-between p-4 rounded-2xl bg-rose-50/50 hover:bg-rose-50 transition-all border-2 border-transparent hover:border-rose-100 group">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-white text-rose-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+                                        <RotateCcw size={20} />
+                                    </div>
+                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Đổi trả</span>
+                                </div>
+                                <ArrowRight size={20} className="text-gray-300 group-hover:text-rose-600 group-hover:translate-x-1 transition-all" />
+                            </Link>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Pending Orders Alert */}
+            {(stats?.pendingOrders || 0) > 0 && (
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <AlertCircle size={24} className="text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="font-black text-amber-800 mb-1 text-lg">
+                                Có {stats?.pendingOrders} đơn hàng cần xử lý
+                            </h3>
+                            <p className="text-sm text-amber-700 mb-3">
+                                Vui lòng kiểm tra và cập nhật trạng thái các đơn hàng đang chờ.
+                            </p>
+                            <Link
+                                to="/backoffice/orders?status=Pending"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700 transition-colors"
+                            >
+                                Xử lý ngay <ArrowRight size={16} />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Today's Summary */}
+            <div className="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                    <Calendar size={20} className="text-gray-500" />
+                    <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">Tổng kết hôm nay</h2>
+                    <span className="text-sm text-gray-500">
+                        {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </span>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                        <p className="text-3xl font-black text-blue-600">{stats?.todayOrders || 0}</p>
+                        <p className="text-sm text-gray-500 font-medium">Đơn hàng</p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                        <p className="text-2xl font-black text-emerald-600">{formatCurrency(stats?.todayRevenue || stats?.monthRevenue || 0)}</p>
+                        <p className="text-sm text-gray-500 font-medium">Doanh thu</p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                        <p className="text-2xl font-black text-purple-600">
+                            {formatCurrency(stats?.averageOrderValue || (stats?.totalRevenue || 0) / (stats?.totalOrders || 1))}
+                        </p>
+                        <p className="text-sm text-gray-500 font-medium">Giá trị TB/đơn</p>
                     </div>
                 </div>
             </div>

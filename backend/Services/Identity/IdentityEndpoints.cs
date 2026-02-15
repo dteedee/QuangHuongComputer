@@ -4,10 +4,12 @@ using System.Text;
 using Identity.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using MassTransit;
@@ -110,6 +112,7 @@ public static class IdentityEndpoints
                     RefreshToken = refreshToken.Token,
                     User = new UserInfoDto
                     {
+                        Id = user.Id,
                         Email = user.Email ?? string.Empty,
                         FullName = user.FullName,
                         Roles = roles.ToList(),
@@ -185,6 +188,7 @@ public static class IdentityEndpoints
                     RefreshToken = newRefreshToken.Token,
                     User = new UserInfoDto
                     {
+                        Id = user.Id,
                         Email = user.Email ?? string.Empty,
                         FullName = user.FullName,
                         Roles = roles.ToList(),
@@ -315,7 +319,7 @@ public static class IdentityEndpoints
             return Results.Ok(pagedResult);
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
 
-        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
+        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, IRefreshTokenService refreshTokenService, HttpContext httpContext, IWebHostEnvironment env) =>
         {
             try
             {
@@ -327,20 +331,40 @@ public static class IdentityEndpoints
                 }
 
                 Google.Apis.Auth.GoogleJsonWebSignature.Payload payload;
+
+                // Simulation mode for development testing
                 if (token.Contains("simulation_google_token"))
                 {
+                    if (!env.IsDevelopment())
+                    {
+                        return Results.BadRequest(new { Error = "Invalid Request", Details = "Simulation mode is only available in development environment" });
+                    }
+
+                    // Generate unique email for simulation to avoid conflicts
+                    var timestamp = DateTime.UtcNow.Ticks;
                     payload = new Google.Apis.Auth.GoogleJsonWebSignature.Payload
                     {
-                        Email = "simulator@google.com",
-                        Name = "Google Simulator",
-                        Subject = "simulation_subject_id"
+                        Email = $"simulator_{timestamp}@google.com",
+                        Name = "Google Test User",
+                        Subject = $"simulation_subject_{timestamp}"
                     };
+
+                    // Check if test user already exists, use existing one
+                    var existingTestUser = await userManager.FindByEmailAsync("simulator@google.com");
+                    if (existingTestUser != null)
+                    {
+                        payload.Email = "simulator@google.com";
+                        payload.Name = existingTestUser.FullName;
+                    }
                 }
                 else
                 {
-                    // Real Validation
+                    // Real Validation - Check configuration
                     var clientId = configuration["OAuth:Google:ClientId"];
-                    if (string.IsNullOrEmpty(clientId)) return Results.BadRequest(new { Error = "Configuration Error", Details = "OAuth:Google:ClientId is missing in appsettings.json" });
+                    if (string.IsNullOrEmpty(clientId))
+                    {
+                        return Results.BadRequest(new { Error = "Configuration Error", Details = "Google OAuth chưa được cấu hình. Vui lòng liên hệ quản trị viên." });
+                    }
 
                     var settings = new Google.Apis.Auth.GoogleJsonWebSignature.ValidationSettings()
                     {
@@ -393,6 +417,7 @@ public static class IdentityEndpoints
                     RefreshToken = refreshToken.Token,
                     User = new UserInfoDto
                     {
+                        Id = user.Id,
                         Email = user.Email ?? string.Empty,
                         FullName = user.FullName,
                         Roles = roles.ToList(),
@@ -443,6 +468,7 @@ public static class IdentityEndpoints
             return Results.Ok(new { Message = "User updated successfully", User = user });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
 
+        // Deactivate User (Soft Delete)
         group.MapDelete("/users/{id}", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
             var user = await userManager.FindByIdAsync(id);
@@ -455,8 +481,40 @@ public static class IdentityEndpoints
             var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
             await auditService.LogAsync(performedBy, "DeactivateUser", "ApplicationUser", user.Id, "Deactivated user (Soft Delete)");
 
-            return Results.Ok(new { Message = "User deactivated successfully" });
+            return Results.Ok(new { Message = "User deactivated successfully", IsActive = false });
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Delete));
+
+        // Activate User
+        group.MapPost("/users/{id}/activate", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+
+            user.IsActive = true;
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+            await auditService.LogAsync(performedBy, "ActivateUser", "ApplicationUser", user.Id, "Activated user");
+
+            return Results.Ok(new { Message = "User activated successfully", IsActive = true });
+        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
+
+        // Toggle User Status
+        group.MapPost("/users/{id}/toggle-status", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return Results.NotFound("User not found");
+
+            user.IsActive = !user.IsActive;
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+            await auditService.LogAsync(performedBy, user.IsActive ? "ActivateUser" : "DeactivateUser", "ApplicationUser", user.Id, user.IsActive ? "Activated user" : "Deactivated user");
+
+            return Results.Ok(new { Message = user.IsActive ? "User activated" : "User deactivated", IsActive = user.IsActive });
+        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
 
         group.MapPost("/users/{id}/roles", async (string id, AssignRolesDto model, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -645,6 +703,271 @@ public static class IdentityEndpoints
             await dbContext.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Password has been reset successfully." });
+        });
+
+        // ==================== CURRENT USER PROFILE ENDPOINTS ====================
+
+        // GET /api/auth/me - Get current user profile
+        group.MapGet("/me", [Authorize] async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var appUser = await userManager.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (appUser == null)
+                return Results.NotFound(new { Message = "User not found" });
+
+            var roles = await userManager.GetRolesAsync(appUser);
+
+            // Get user profile if exists
+            var profile = await dbContext.UserProfiles
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            // Get default address
+            var defaultAddress = await dbContext.CustomerAddresses
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault && a.IsActive);
+
+            return Results.Ok(new
+            {
+                id = appUser.Id,
+                email = appUser.Email,
+                fullName = appUser.FullName,
+                phoneNumber = appUser.PhoneNumber,
+                avatarUrl = appUser.AvatarUrl,
+                roles = roles.ToList(),
+                lastLoginAt = appUser.LastLoginAt,
+                emailVerified = appUser.EmailConfirmed,
+                profile = profile != null ? new
+                {
+                    gender = profile.Gender,
+                    dateOfBirth = profile.DateOfBirth,
+                    address = profile.Address,
+                    city = profile.City,
+                    district = profile.District,
+                    ward = profile.Ward,
+                    customerType = profile.CustomerType.ToString(),
+                    companyName = profile.CompanyName,
+                    taxCode = profile.TaxCode
+                } : null,
+                defaultAddress = defaultAddress != null ? new
+                {
+                    id = defaultAddress.Id,
+                    recipientName = defaultAddress.RecipientName,
+                    phoneNumber = defaultAddress.PhoneNumber,
+                    addressLine = defaultAddress.AddressLine,
+                    city = defaultAddress.City,
+                    district = defaultAddress.District,
+                    ward = defaultAddress.Ward
+                } : null
+            });
+        });
+
+        // PUT /api/auth/me - Update current user profile
+        group.MapPut("/me", [Authorize] async (UpdateProfileDto model, ClaimsPrincipal user, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var appUser = await userManager.Users
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (appUser == null)
+                return Results.NotFound(new { Message = "User not found" });
+
+            // Update basic user info
+            appUser.FullName = model.FullName;
+            if (!string.IsNullOrEmpty(model.PhoneNumber))
+            {
+                appUser.PhoneNumber = model.PhoneNumber;
+            }
+
+            var result = await userManager.UpdateAsync(appUser);
+            if (!result.Succeeded)
+                return Results.BadRequest(result.Errors);
+
+            // Update or create profile
+            var profile = await dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    Address = model.Address,
+                    CreatedAt = DateTime.UtcNow
+                };
+                dbContext.UserProfiles.Add(profile);
+            }
+            else
+            {
+                profile.Address = model.Address;
+                profile.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Profile updated successfully" });
+        });
+
+        // POST /api/auth/me/change-password - Change password
+        group.MapPost("/me/change-password", [Authorize] async (ChangePasswordDto model, ClaimsPrincipal user, UserManager<ApplicationUser> userManager) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var appUser = await userManager.FindByIdAsync(userId);
+            if (appUser == null)
+                return Results.NotFound(new { Message = "User not found" });
+
+            var result = await userManager.ChangePasswordAsync(appUser, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return Results.BadRequest(new { Message = "Failed to change password", Errors = errors });
+            }
+
+            appUser.PasswordChangedAt = DateTime.UtcNow;
+            await userManager.UpdateAsync(appUser);
+
+            return Results.Ok(new { Message = "Password changed successfully" });
+        });
+
+        // GET /api/auth/me/addresses - Get user's addresses
+        group.MapGet("/me/addresses", [Authorize] async (ClaimsPrincipal user, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var addresses = await dbContext.CustomerAddresses
+                .Where(a => a.UserId == userId && a.IsActive)
+                .OrderByDescending(a => a.IsDefault)
+                .ThenByDescending(a => a.CreatedAt)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.RecipientName,
+                    a.PhoneNumber,
+                    a.AddressLine,
+                    a.City,
+                    a.District,
+                    a.Ward,
+                    a.PostalCode,
+                    a.IsDefault,
+                    a.AddressLabel
+                })
+                .ToListAsync();
+
+            return Results.Ok(addresses);
+        });
+
+        // POST /api/auth/me/addresses - Add new address
+        group.MapPost("/me/addresses", [Authorize] async (CustomerAddress model, ClaimsPrincipal user, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            // If this is default, unset other defaults
+            if (model.IsDefault)
+            {
+                var existingDefaults = await dbContext.CustomerAddresses
+                    .Where(a => a.UserId == userId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var addr in existingDefaults)
+                {
+                    addr.IsDefault = false;
+                }
+            }
+
+            var address = new CustomerAddress
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                RecipientName = model.RecipientName,
+                PhoneNumber = model.PhoneNumber,
+                AddressLine = model.AddressLine,
+                City = model.City,
+                District = model.District,
+                Ward = model.Ward,
+                PostalCode = model.PostalCode,
+                IsDefault = model.IsDefault,
+                AddressLabel = model.AddressLabel,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            dbContext.CustomerAddresses.Add(address);
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Address added successfully", Id = address.Id });
+        });
+
+        // PUT /api/auth/me/addresses/{id} - Update address
+        group.MapPut("/me/addresses/{id:guid}", [Authorize] async (Guid id, CustomerAddress model, ClaimsPrincipal user, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var address = await dbContext.CustomerAddresses
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (address == null)
+                return Results.NotFound(new { Message = "Address not found" });
+
+            // If setting as default, unset others
+            if (model.IsDefault && !address.IsDefault)
+            {
+                var existingDefaults = await dbContext.CustomerAddresses
+                    .Where(a => a.UserId == userId && a.IsDefault && a.Id != id)
+                    .ToListAsync();
+                foreach (var addr in existingDefaults)
+                {
+                    addr.IsDefault = false;
+                }
+            }
+
+            address.RecipientName = model.RecipientName;
+            address.PhoneNumber = model.PhoneNumber;
+            address.AddressLine = model.AddressLine;
+            address.City = model.City;
+            address.District = model.District;
+            address.Ward = model.Ward;
+            address.PostalCode = model.PostalCode;
+            address.IsDefault = model.IsDefault;
+            address.AddressLabel = model.AddressLabel;
+            address.UpdatedAt = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Address updated successfully" });
+        });
+
+        // DELETE /api/auth/me/addresses/{id} - Delete address
+        group.MapDelete("/me/addresses/{id:guid}", [Authorize] async (Guid id, ClaimsPrincipal user, IdentityDbContext dbContext) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Results.Unauthorized();
+
+            var address = await dbContext.CustomerAddresses
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (address == null)
+                return Results.NotFound(new { Message = "Address not found" });
+
+            address.IsActive = false;
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Address deleted successfully" });
         });
     }
 

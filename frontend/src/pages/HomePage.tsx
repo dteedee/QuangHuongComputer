@@ -9,6 +9,7 @@ import {
     Speaker, Camera, Headset, Gift, Sparkles, Star
 } from 'lucide-react';
 import { PromotionSection } from '../components/PromotionSection';
+import FlashSaleBanner from '../components/FlashSaleBanner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -204,7 +205,9 @@ export const HomePage = () => {
                             </h3>
                         </div>
                         <div className="py-2 flex-1 overflow-y-auto custom-scrollbar">
-                            {categories.map((cat) => (
+                            {categories
+                                .filter(cat => (cat.productCount ?? 0) > 0)
+                                .map((cat) => (
                                 <Link
                                     key={cat.id}
                                     to={`/products?category=${cat.id}`}
@@ -214,6 +217,7 @@ export const HomePage = () => {
                                         {getCategoryIcon(cat.name)}
                                     </span>
                                     <span className="flex-1 line-clamp-1">{cat.name}</span>
+                                    <span className="text-xs text-gray-400 group-hover:text-[#D70018]">({cat.productCount})</span>
                                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-[#D70018]" />
                                 </Link>
                             ))}
@@ -388,6 +392,17 @@ export const HomePage = () => {
                         </motion.div>
                     ))}
                 </div>
+
+                {/* Flash Sale Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="mt-8"
+                >
+                    <FlashSaleBanner variant="hero" />
+                </motion.div>
             </div>
 
             {/* Hot Deals Section */}

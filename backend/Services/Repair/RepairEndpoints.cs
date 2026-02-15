@@ -144,8 +144,8 @@ public static class RepairEndpoints
             return Results.Ok(repairs);
         });
 
-        // Admin Endpoints
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin"));
+        // Admin Endpoints (Admin and Manager can access)
+        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
 
         adminGroup.MapGet("/work-orders", async (RepairDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
         {

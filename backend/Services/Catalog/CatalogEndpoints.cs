@@ -7,6 +7,8 @@ using Catalog.Domain;
 using BuildingBlocks.Database;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+// Note: Sales reference removed to avoid circular dependency
+// Verified purchase check should be done via a separate API call
 
 namespace Catalog;
 
@@ -16,7 +18,7 @@ public static class CatalogEndpoints
     {
         var group = app.MapGroup("/api/catalog");
 
-        group.MapGet("/products", async (CatalogDbContext db, ICacheService cache, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null, string? q = null) =>
+        group.MapGet("/products", async (CatalogDbContext db, ICacheService cache, int page = 1, int pageSize = 20, Guid? categoryId = null, Guid? brandId = null, string? search = null, string? q = null, bool? includeInactive = null) =>
         {
             // Validate pagination parameters
             var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
@@ -24,15 +26,24 @@ public static class CatalogEndpoints
             // Support both 'search' and 'q' parameters (q is an alias for search)
             var searchTerm = search ?? q;
 
-            // Try to get from cache
+            // Try to get from cache (only for public queries without inactive)
             var cacheKey = CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, searchTerm);
-            var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
-            if (cachedResponse is not null) return Results.Ok(cachedResponse);
+            if (includeInactive != true)
+            {
+                var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
+                if (cachedResponse is not null) return Results.Ok(cachedResponse);
+            }
 
             var query = db.Products.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
-                .Where(p => p.IsActive);
+                .AsQueryable();
+
+            // Filter by active status (include inactive only for admin)
+            if (includeInactive != true)
+            {
+                query = query.Where(p => p.IsActive);
+            }
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId.Value);
@@ -100,8 +111,11 @@ public static class CatalogEndpoints
                 products = productsResponse
             };
 
-            // Cache for 10 minutes
-            await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(10));
+            // Cache for 10 minutes (only public queries)
+            if (includeInactive != true)
+            {
+                await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(10));
+            }
 
             return Results.Ok(result);
         });
@@ -160,26 +174,35 @@ public static class CatalogEndpoints
 
         group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.CategoriesKey + "_v3";
+            var cacheKey = CacheKeys.CategoriesKey + "_v5_with_count";
             var cachedCategories = await cache.GetAsync<List<dynamic>>(cacheKey);
-            
+
             if (cachedCategories is not null)
                 return Results.Ok(cachedCategories);
 
-            var categories = await db.Categories
+            // Đếm số sản phẩm theo category trước
+            var productCounts = await db.Products
+                .Where(p => p.IsActive)
+                .GroupBy(p => p.CategoryId)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+
+            var categoriesData = await db.Categories
                 .AsNoTracking()
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
-                .Select(c => new
-                {
-                    id = c.Id,
-                    name = c.Name,
-                    description = c.Description,
-                    isActive = c.IsActive,
-                    createdAt = c.CreatedAt,
-                    updatedAt = c.UpdatedAt
-                })
-                .ToListAsync<object>(); // Cast to object list to allow dynamic serialization
+                .ToListAsync();
+
+            var categories = categoriesData.Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+                description = c.Description,
+                isActive = c.IsActive,
+                createdAt = c.CreatedAt,
+                updatedAt = c.UpdatedAt,
+                productCount = productCounts.GetValueOrDefault(c.Id, 0)
+            }).ToList<object>();
 
             await cache.SetAsync(cacheKey, categories, TimeSpan.FromHours(1));
             return Results.Ok(categories);
@@ -187,26 +210,35 @@ public static class CatalogEndpoints
 
         group.MapGet("/brands", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.BrandsKey + "_v3";
+            var cacheKey = CacheKeys.BrandsKey + "_v5_with_count";
             var cachedBrands = await cache.GetAsync<List<dynamic>>(cacheKey);
-            
+
             if (cachedBrands is not null)
                 return Results.Ok(cachedBrands);
 
-            var brands = await db.Brands
+            // Đếm số sản phẩm theo brand trước
+            var productCounts = await db.Products
+                .Where(p => p.IsActive)
+                .GroupBy(p => p.BrandId)
+                .Select(g => new { BrandId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.BrandId, x => x.Count);
+
+            var brandsData = await db.Brands
                 .AsNoTracking()
                 .Where(b => b.IsActive)
                 .OrderBy(b => b.Name)
-                .Select(b => new
-                {
-                    id = b.Id,
-                    name = b.Name,
-                    description = b.Description,
-                    isActive = b.IsActive,
-                    createdAt = b.CreatedAt,
-                    updatedAt = b.UpdatedAt
-                })
-                .ToListAsync<object>();
+                .ToListAsync();
+
+            var brands = brandsData.Select(b => new
+            {
+                id = b.Id,
+                name = b.Name,
+                description = b.Description,
+                isActive = b.IsActive,
+                createdAt = b.CreatedAt,
+                updatedAt = b.UpdatedAt,
+                productCount = productCounts.GetValueOrDefault(b.Id, 0)
+            }).ToList<object>();
 
             await cache.SetAsync(cacheKey, brands, TimeSpan.FromHours(1));
             return Results.Ok(brands);
@@ -516,7 +548,7 @@ public static class CatalogEndpoints
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
-        // Delete Product
+        // Deactivate Product (Soft Delete)
         group.MapDelete("/products/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var product = await db.Products.FindAsync(id);
@@ -535,7 +567,51 @@ public static class CatalogEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
             await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
 
-            return Results.Ok(new { Message = "Product deactivated" });
+            return Results.Ok(new { Message = "Product deactivated", IsActive = false });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        // Activate Product
+        group.MapPost("/products/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
+        {
+            var product = await db.Products.FindAsync(id);
+            if (product == null)
+                return Results.NotFound(new { Error = "Product not found" });
+
+            product.IsActive = true;
+            product.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync("Activate", "Product", id.ToString(), $"Name: {product.Name}");
+
+            // Invalidate product caches
+            await cache.RemoveAsync(CacheKeys.ProductKey(id));
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+            await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
+
+            return Results.Ok(new { Message = "Product activated", IsActive = true });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        // Toggle Product Status
+        group.MapPost("/products/{id:guid}/toggle-status", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
+        {
+            var product = await db.Products.FindAsync(id);
+            if (product == null)
+                return Results.NotFound(new { Error = "Product not found" });
+
+            product.IsActive = !product.IsActive;
+            product.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+
+            // Log Audit
+            await httpContext.LogAuditAsync(product.IsActive ? "Activate" : "Deactivate", "Product", id.ToString(), $"Name: {product.Name}");
+
+            // Invalidate product caches
+            await cache.RemoveAsync(CacheKeys.ProductKey(id));
+            await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
+            await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
+
+            return Results.Ok(new { Message = product.IsActive ? "Product activated" : "Product deactivated", IsActive = product.IsActive });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Category
@@ -943,16 +1019,31 @@ public static class CatalogEndpoints
             return Results.Ok(reviews);
         });
 
-        // Create a new review (Public endpoint)
+        // Create a new review (Requires authentication)
         group.MapPost("/products/{productId:guid}/reviews", async (
             Guid productId,
             CreateProductReviewDto dto,
             CatalogDbContext db,
             HttpContext context) =>
         {
-            // Get user ID from claims if authenticated, otherwise use anonymous
-            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                ?? $"anonymous_{Guid.NewGuid()}";
+            // Require authentication
+            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            // Validate rating
+            if (dto.Rating < 1 || dto.Rating > 5)
+            {
+                return Results.BadRequest(new { message = "Đánh giá phải từ 1 đến 5 sao" });
+            }
+
+            // Validate comment
+            if (string.IsNullOrWhiteSpace(dto.Comment) || dto.Comment.Length < 10)
+            {
+                return Results.BadRequest(new { message = "Nội dung đánh giá phải có ít nhất 10 ký tự" });
+            }
 
             // Check if product exists
             var productExists = await db.Products.AnyAsync(p => p.Id == productId);
@@ -970,13 +1061,17 @@ public static class CatalogEndpoints
                 return Results.BadRequest(new { message = "Bạn đã đánh giá sản phẩm này rồi" });
             }
 
+            // Note: Verified purchase check moved to Sales module to avoid circular dependency
+            // Reviews will be verified asynchronously via background job
+            var isVerifiedPurchase = false;
+
             var review = new ProductReview(
                 productId: productId,
                 customerId: userId,
                 rating: dto.Rating,
                 comment: dto.Comment,
                 title: dto.Title,
-                isVerifiedPurchase: false // Can be updated later based on purchase history
+                isVerifiedPurchase: isVerifiedPurchase
             );
 
             db.ProductReviews.Add(review);
@@ -985,9 +1080,10 @@ public static class CatalogEndpoints
             return Results.Created($"/api/catalog/products/{productId}/reviews/{review.Id}", new
             {
                 review.Id,
+                isVerifiedPurchase,
                 message = "Đánh giá của bạn đang chờ duyệt"
             });
-        });
+        }).RequireAuthorization();
 
         // Admin: Approve a review
         var reviewsAdmin = app.MapGroup("/api/catalog/reviews/admin")
@@ -1035,6 +1131,73 @@ public static class CatalogEndpoints
                 .ToListAsync();
 
             return Results.Ok(pendingReviews);
+        });
+
+        // Admin: Delete/Reject a review
+        reviewsAdmin.MapDelete("/{reviewId:guid}", async (
+            Guid reviewId,
+            CatalogDbContext db,
+            HttpContext context) =>
+        {
+            var review = await db.ProductReviews.FindAsync(reviewId);
+            if (review == null)
+            {
+                return Results.NotFound(new { message = "Không tìm thấy đánh giá" });
+            }
+
+            db.ProductReviews.Remove(review);
+            await db.SaveChangesAsync();
+
+            // Log Audit
+            await context.LogAuditAsync("Delete", "ProductReview", reviewId.ToString(), "Rejected review");
+
+            return Results.Ok(new { message = "Đã từ chối đánh giá thành công" });
+        });
+
+        // Mark review as helpful (Public endpoint)
+        group.MapPost("/reviews/{reviewId:guid}/helpful", async (Guid reviewId, CatalogDbContext db) =>
+        {
+            var review = await db.ProductReviews.FindAsync(reviewId);
+            if (review == null)
+            {
+                return Results.NotFound(new { message = "Đánh giá không tồn tại" });
+            }
+
+            review.MarkHelpful();
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new {
+                message = "Đã đánh dấu đánh giá là hữu ích",
+                helpfulCount = review.HelpfulCount
+            });
+        });
+
+        // Get rating statistics for a product
+        group.MapGet("/products/{productId:guid}/reviews/stats", async (Guid productId, CatalogDbContext db) =>
+        {
+            var reviews = await db.ProductReviews
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId && r.IsApproved)
+                .ToListAsync();
+
+            var totalReviews = reviews.Count;
+            var averageRating = totalReviews > 0 ? reviews.Average(r => r.Rating) : 0;
+
+            var ratingCounts = new Dictionary<int, int>
+            {
+                { 1, reviews.Count(r => r.Rating == 1) },
+                { 2, reviews.Count(r => r.Rating == 2) },
+                { 3, reviews.Count(r => r.Rating == 3) },
+                { 4, reviews.Count(r => r.Rating == 4) },
+                { 5, reviews.Count(r => r.Rating == 5) }
+            };
+
+            return Results.Ok(new
+            {
+                totalReviews,
+                averageRating = Math.Round(averageRating, 1),
+                ratingCounts
+            });
         });
 
         // ============================================

@@ -220,8 +220,8 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
           {/* Desktop Sidebar */}
           <div className="hidden lg:block sticky top-24 h-fit">
             <ProductFilter
-              categories={categories}
-              brands={brands}
+              categories={categories.filter(c => (c.productCount ?? 0) > 0)}
+              brands={brands.filter(b => (b.productCount ?? 0) > 0)}
               selectedCategory={selectedCategory}
               selectedBrand={selectedBrand}
               priceRange={priceRange}
@@ -255,8 +255,8 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                 </div>
                 <div className="p-4 flex-1">
                   <ProductFilter
-                    categories={categories}
-                    brands={brands}
+                    categories={categories.filter(c => (c.productCount ?? 0) > 0)}
+                    brands={brands.filter(b => (b.productCount ?? 0) > 0)}
                     selectedCategory={selectedCategory}
                     selectedBrand={selectedBrand}
                     priceRange={priceRange}
