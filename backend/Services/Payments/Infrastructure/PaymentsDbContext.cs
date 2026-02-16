@@ -10,6 +10,8 @@ public class PaymentsDbContext : DbContext
     }
 
     public DbSet<PaymentIntent> PaymentIntents { get; set; }
+    public DbSet<SePayTransaction> SePayTransactions { get; set; }
+    public DbSet<PaymentConfig> PaymentConfigs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

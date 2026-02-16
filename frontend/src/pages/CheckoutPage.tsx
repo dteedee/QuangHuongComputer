@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowRight, CreditCard, Truck, User,
   MapPin, Phone, Mail, Lock, Check, ChevronRight,
   ShieldCheck, Package, ShoppingBag, CreditCard as CardIcon,
-  Building2, Loader2
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -235,11 +235,31 @@ export function CheckoutPage() {
             });
           }
         } else if (formData.paymentMethod === 'bank_transfer') {
-          // Bank transfer - Show bank details on success page
-          setStep(3);
-          clearCart();
-          toast.success('Đặt hàng thành công! Vui lòng chuyển khoản theo hướng dẫn.');
-          triggerConfetti();
+          // SePay (Bank Transfer)
+          try {
+            const paymentResponse = await paymentApi.initiate({
+              orderId: response.orderId,
+              amount: response.totalAmount,
+              provider: 4 // SePay
+            });
+
+            if (paymentResponse.paymentUrl) {
+              // Store payment info for success page
+              localStorage.setItem('lastPaymentUrl', paymentResponse.paymentUrl);
+              localStorage.setItem('lastOrderId', response.orderId);
+              localStorage.setItem('lastOrderAmount', response.totalAmount.toString());
+
+              setStep(3);
+              clearCart();
+              toast.success('Đặt hàng thành công! Vui lòng quét mã QR để thanh toán.');
+              triggerConfetti();
+            } else {
+              toast.error('Không thể tạo mã QR. Vui lòng thử lại.');
+            }
+          } catch (e) {
+            console.error('SePay initiation failed', e);
+            toast.error('Lỗi khởi tạo thanh toán SePay');
+          }
         }
       }
     } catch (error: any) {
@@ -411,9 +431,20 @@ export function CheckoutPage() {
                             <div className="text-xs bg-white px-3 py-1 rounded-full font-bold text-slate-500 border border-slate-100">
                               Mở cửa: 08:00 - 21:00
                             </div>
-                            <div className="text-xs bg-green-100 px-3 py-1 rounded-full font-bold text-green-700">
-                              Đang mở cửa
-                            </div>
+                            {(() => {
+                              const now = new Date();
+                              const currentHour = now.getHours();
+                              const isOpen = currentHour >= 8 && currentHour < 21;
+                              return isOpen ? (
+                                <div className="text-xs bg-green-100 px-3 py-1 rounded-full font-bold text-green-700">
+                                  Đang mở cửa
+                                </div>
+                              ) : (
+                                <div className="text-xs bg-red-100 px-3 py-1 rounded-full font-bold text-red-700">
+                                  Đã đóng cửa
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 
@@ -604,7 +635,7 @@ export function CheckoutPage() {
                   <div className="grid grid-cols-1 gap-4 mb-8">
                     {[
                       { id: 'cod', title: 'Thanh toán khi nhận hàng', desc: 'Sử dụng tiền mặt khi shipper giao tới', icon: Truck },
-                      { id: 'bank_transfer', title: 'Chuyển khoản ngân hàng', desc: 'Quét mã QR hoặc chuyển qua Internet Banking', icon: CardIcon },
+                      { id: 'bank_transfer', title: 'Chuyển khoản (VietQR)', desc: 'Thanh toán tự động 24/7 với SePay', icon: CardIcon },
                       { id: 'credit_card', title: 'Thẻ tín dụng / Ghi nợ', desc: 'Hỗ trợ Visa, Master, JCB, Napas', icon: Lock },
                     ].map((method) => (
                       <label
@@ -740,15 +771,17 @@ export function CheckoutPage() {
                   </p>
 
                   <div className="bg-slate-50 rounded-2xl p-6 text-left max-w-md mx-auto mb-10 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
-                        <Mail className="w-4 h-4" />
+                    {formData.email && (
+                      <div className="flex items-start gap-4">
+                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Email xác nhận</p>
+                          <p className="text-sm font-bold text-slate-700">Đã được gửi tới {formData.email}</p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Email xác nhận</p>
-                        <p className="text-sm font-bold text-slate-700">Đã được gửi tới {formData.email}</p>
-                      </div>
-                    </div>
+                    )}
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
                         <Phone className="w-4 h-4" />
@@ -777,51 +810,53 @@ export function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Bank Transfer Details */}
+                  {/* SePay QR Code Display */}
                   {formData.paymentMethod === 'bank_transfer' && (
-                    <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Building2 className="w-5 h-5 text-amber-600" />
-                        <h4 className="font-black text-amber-800 uppercase text-sm tracking-wider">Thông tin chuyển khoản</h4>
+                    <div className="bg-white border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-black text-green-700 mb-2">QUÉT MÃ VIETQR ĐỂ THANH TOÁN</h3>
+                        <p className="text-sm text-slate-500">Đơn hàng sẽ được xác nhận tự động sau vài giây</p>
                       </div>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
-                          <span className="text-amber-700 font-medium">Ngân hàng</span>
-                          <span className="font-bold text-slate-800">Vietcombank (VCB)</span>
+                      {localStorage.getItem('lastPaymentUrl') && (
+                        <div className="flex justify-center mb-6">
+                          <img
+                            src={localStorage.getItem('lastPaymentUrl') || ''}
+                            alt="SePay QR Code"
+                            className="w-64 h-64 object-contain border-4 border-slate-100 rounded-xl"
+                          />
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
-                          <span className="text-amber-700 font-medium">Số tài khoản</span>
-                          <span className="font-bold text-slate-800 font-mono tracking-wider">1234567890123</span>
+                      )}
+
+                      <div className="bg-slate-50 p-4 rounded-xl text-sm space-y-2 border border-slate-100">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Số tiền:</span>
+                          <span className="font-bold text-[#D70018] text-lg">{formatPrice(Number(localStorage.getItem('lastOrderAmount') || 0))}</span>
                         </div>
-                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
-                          <span className="text-amber-700 font-medium">Chủ tài khoản</span>
-                          <span className="font-bold text-slate-800">CONG TY QUANG HUONG COMPUTER</span>
-                        </div>
-                        <div className="flex justify-between items-center py-2 border-b border-amber-200/50">
-                          <span className="text-amber-700 font-medium">Số tiền</span>
-                          <span className="font-black text-[#D70018] text-lg">{formatPrice(total)}</span>
-                        </div>
-                        <div className="flex justify-between items-start py-2">
-                          <span className="text-amber-700 font-medium">Nội dung CK</span>
-                          <div className="text-right">
-                            <span className="font-bold text-slate-800 font-mono bg-white px-3 py-1 rounded-lg border border-amber-200">
-                              QH {orderId?.slice(-8).toUpperCase() || 'XXXXXXXX'}
-                            </span>
-                            <p className="text-[10px] text-amber-600 mt-1 italic">Vui lòng ghi đúng nội dung để xác nhận nhanh hơn</p>
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Nội dung:</span>
+                          <span className="font-bold text-slate-900 bg-yellow-100 px-2 rounded">Thanh toan {orderId?.substring(0, 8).toUpperCase()}</span>
                         </div>
                       </div>
 
-                      <div className="mt-4 p-3 bg-amber-100 rounded-xl">
-                        <p className="text-xs text-amber-800 font-medium text-center">
-                          ⏰ Đơn hàng sẽ được xác nhận trong <span className="font-black">30 phút</span> sau khi chúng tôi nhận được tiền
-                        </p>
+                      <div className="mt-6 text-center">
+                        <div className="inline-flex items-center gap-2 text-green-600 font-bold bg-green-50 px-4 py-2 rounded-full text-sm animate-pulse">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang chờ thanh toán...
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  {formData.paymentMethod !== 'cod' && (
+                    <div className="mt-4 p-3 bg-amber-100 rounded-xl">
+                      <p className="text-xs text-amber-800 font-medium text-center">
+                        Đơn hàng sẽ được xác nhận trong <span className="font-black">30 phút</span> sau khi chúng tôi nhận được tiền
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                     <button
                       onClick={() => navigate('/')}
                       className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
@@ -927,8 +962,8 @@ export function CheckoutPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -946,6 +981,6 @@ export function CheckoutPage() {
           background: #94a3b8;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

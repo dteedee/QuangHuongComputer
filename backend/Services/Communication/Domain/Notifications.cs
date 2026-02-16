@@ -66,6 +66,11 @@ public class NotificationLog : Entity<Guid>
     public int RetryCount { get; private set; }
     public string? ReferenceId { get; private set; } // Order ID, etc.
     public string? TemplateCode { get; private set; }
+    public bool IsRead { get; private set; }
+    public DateTime? ReadAt { get; private set; }
+    public string? Link { get; private set; }
+    public string Priority { get; private set; } = "medium"; // low, medium, high
+    public string? TargetRoles { get; private set; } // Comma-separated roles for role-based notifications
 
     public NotificationLog(
         Guid userId,
@@ -74,7 +79,10 @@ public class NotificationLog : Entity<Guid>
         string? channel = null,
         string? subject = null,
         string? referenceId = null,
-        string? templateCode = null)
+        string? templateCode = null,
+        string? link = null,
+        string priority = "medium",
+        string? targetRoles = null)
     {
         Id = Guid.NewGuid();
         UserId = userId;
@@ -84,7 +92,11 @@ public class NotificationLog : Entity<Guid>
         Subject = subject;
         ReferenceId = referenceId;
         TemplateCode = templateCode;
+        Link = link;
+        Priority = priority;
+        TargetRoles = targetRoles;
         IsSent = false;
+        IsRead = false;
         RetryCount = 0;
     }
 
@@ -94,6 +106,12 @@ public class NotificationLog : Entity<Guid>
     {
         IsSent = true;
         SentAt = DateTime.UtcNow;
+    }
+
+    public void MarkAsRead()
+    {
+        IsRead = true;
+        ReadAt = DateTime.UtcNow;
     }
 
     public void MarkAsFailed(string error)

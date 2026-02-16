@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Wrench, Clock, CheckCircle2, AlertCircle,
     Play, CheckSquare, Search, Filter,
@@ -14,12 +14,38 @@ type FilterStatus = 'all' | WorkOrderStatus;
 
 export const TechPortal = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlWorkOrderId = searchParams.get('workOrderId');
+
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [highlightedWorkOrderId, setHighlightedWorkOrderId] = useState<string | null>(urlWorkOrderId);
+    const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+
+    // Handle workOrderId from URL - highlight the work order
+    useEffect(() => {
+        if (urlWorkOrderId) {
+            setHighlightedWorkOrderId(urlWorkOrderId);
+            // Clear the workOrderId from URL after 5 seconds
+            const timer = setTimeout(() => {
+                searchParams.delete('workOrderId');
+                setSearchParams(searchParams, { replace: true });
+                setHighlightedWorkOrderId(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [urlWorkOrderId]);
+
+    // Scroll to highlighted work order
+    useEffect(() => {
+        if (highlightedWorkOrderId && highlightedRowRef.current) {
+            highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [highlightedWorkOrderId, highlightedRowRef.current]);
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['tech-work-orders'],
@@ -329,10 +355,15 @@ export const TechPortal = () => {
                                         )}
                                     </td>
                                 </tr>
-                            ) : workOrders.map((order) => (
+                            ) : workOrders.map((order) => {
+                                const isHighlighted = order.id === highlightedWorkOrderId;
+                                return (
                                 <tr
                                     key={order.id}
-                                    className="hover:bg-gray-50/80 transition-all group cursor-pointer"
+                                    ref={isHighlighted ? highlightedRowRef : undefined}
+                                    className={`hover:bg-gray-50/80 transition-all group cursor-pointer ${
+                                        isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 animate-pulse' : ''
+                                    }`}
                                     onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
                                 >
                                     <td className="px-6 py-5">
@@ -411,7 +442,8 @@ export const TechPortal = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

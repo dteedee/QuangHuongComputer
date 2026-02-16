@@ -404,10 +404,16 @@ export const salesApi = {
 
     // Admin Endpoints alias for compatibility
     admin: {
-        getOrders: async (page: number, pageSize: number) => {
-            const response = await client.get<Order[]>('/sales/orders', { params: { page, pageSize } });
-            // Wrap in expected structure if needed, or update SalePortal to expect just array
-            return { orders: response.data, total: response.data.length };
+        getOrders: async (page: number, pageSize: number, search?: string, status?: string) => {
+            const params: Record<string, any> = { page, pageSize };
+            if (search) params.search = search;
+            if (status && status !== 'all') params.status = status;
+
+            const response = await client.get<{ Total: number; Page: number; PageSize: number; Orders: Order[] }>(
+                '/sales/admin/orders',
+                { params }
+            );
+            return { orders: response.data.Orders, total: response.data.Total };
         },
         getStats: async () => {
             const response = await client.get<SalesStats>('/sales/admin/stats');

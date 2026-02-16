@@ -173,7 +173,7 @@ public static class CatalogEndpoints
 
         group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.CategoriesKey + "_v5_with_count";
+            var cacheKey = CacheKeys.CategoriesKey + "_v6_deduplicated";
             var cachedCategories = await cache.GetAsync<List<dynamic>>(cacheKey);
 
             if (cachedCategories is not null)
@@ -192,7 +192,11 @@ public static class CatalogEndpoints
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            var categories = categoriesData.Select(c => new
+            // Deduplicate categories by name (in case of duplicates in database)
+            var categories = categoriesData
+                .GroupBy(c => c.Name.ToLower())
+                .Select(g => g.First())
+                .Select(c => new
             {
                 id = c.Id,
                 name = c.Name,
@@ -209,7 +213,7 @@ public static class CatalogEndpoints
 
         group.MapGet("/brands", async (CatalogDbContext db, ICacheService cache) =>
         {
-            var cacheKey = CacheKeys.BrandsKey + "_v5_with_count";
+            var cacheKey = CacheKeys.BrandsKey + "_v6_deduplicated";
             var cachedBrands = await cache.GetAsync<List<dynamic>>(cacheKey);
 
             if (cachedBrands is not null)
@@ -228,7 +232,11 @@ public static class CatalogEndpoints
                 .OrderBy(b => b.Name)
                 .ToListAsync();
 
-            var brands = brandsData.Select(b => new
+            // Deduplicate brands by name (in case of duplicates in database)
+            var brands = brandsData
+                .GroupBy(b => b.Name.ToLower())
+                .Select(g => g.First())
+                .Select(b => new
             {
                 id = b.Id,
                 name = b.Name,

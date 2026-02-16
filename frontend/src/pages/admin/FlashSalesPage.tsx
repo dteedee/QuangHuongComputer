@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { contentApi, type FlashSale, type CreateFlashSaleDto } from '../../api/content';
 import {
     Zap, Plus, Edit2, Trash2, Play, Pause, Clock,
-    Calendar, TrendingUp, Package, AlertCircle, X, Check
+    Calendar, TrendingUp, Package, AlertCircle, X, Check, Search, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FlashSaleCountdown from '../../components/FlashSaleCountdown';
@@ -56,6 +56,23 @@ export default function FlashSalesPage() {
         totalSold: number;
     } | null>(null);
     const [filter, setFilter] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const hasActiveFilters = searchTerm || filter;
+
+    const resetFilters = () => {
+        setSearchTerm('');
+        setFilter('');
+    };
 
     useEffect(() => {
         loadFlashSales();
@@ -322,51 +339,108 @@ export default function FlashSalesPage() {
                 </div>
             )}
 
-            {/* Filter Tabs */}
-            <div className="flex gap-2 mb-6">
-                {[
-                    { value: '', label: 'Tất cả' },
-                    { value: 'Active', label: 'Đang diễn ra' },
-                    { value: 'Scheduled', label: 'Sắp diễn ra' },
-                    { value: 'Ended', label: 'Đã kết thúc' },
-                ].map((tab) => (
-                    <button
-                        key={tab.value}
-                        onClick={() => setFilter(tab.value)}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                            filter === tab.value
-                                ? 'bg-[#D70018] text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+            {/* Search & Filter Bar */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-6">
+                <div className="flex flex-col lg:flex-row items-stretch gap-4">
+                    {/* Search */}
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm tên chương trình Flash Sale..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Status Filter Tabs */}
+                    <div className="flex items-center gap-2">
+                        {[
+                            { value: '', label: 'Tất cả' },
+                            { value: 'Active', label: 'Đang diễn ra' },
+                            { value: 'Scheduled', label: 'Sắp diễn ra' },
+                            { value: 'Ended', label: 'Đã kết thúc' },
+                        ].map((tab) => (
+                            <button
+                                key={tab.value}
+                                onClick={() => setFilter(tab.value)}
+                                className={`px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                                    filter === tab.value
+                                        ? 'bg-[#D70018] text-white shadow-lg shadow-red-500/20'
+                                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+
+                        {/* Reset Button */}
+                        {hasActiveFilters && (
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-1.5 px-4 py-3 text-sm font-bold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-xl transition-all"
+                            >
+                                <RefreshCw size={14} />
+                                Đặt lại
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Flash Sales List */}
-            {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="w-10 h-10 border-4 border-gray-200 border-t-[#D70018] rounded-full animate-spin" />
-                </div>
-            ) : flashSales.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Zap className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có Flash Sale nào</h3>
-                    <p className="text-gray-500 mb-6">Tạo Flash Sale đầu tiên để bắt đầu</p>
-                    <button
-                        onClick={openCreateModal}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Tạo Flash Sale
-                    </button>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {flashSales.map((sale) => (
+            {(() => {
+                // Apply client-side search filter
+                const filteredSales = flashSales.filter(sale =>
+                    !debouncedSearch || sale.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                    (sale.description && sale.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
+                );
+
+                if (loading) {
+                    return (
+                        <div className="flex justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#D70018] rounded-full animate-spin" />
+                        </div>
+                    );
+                }
+
+                if (filteredSales.length === 0) {
+                    return (
+                        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                {debouncedSearch ? 'Không tìm thấy Flash Sale' : 'Chưa có Flash Sale nào'}
+                            </h3>
+                            <p className="text-gray-500 mb-6">
+                                {debouncedSearch ? 'Thử tìm kiếm với từ khóa khác' : 'Tạo Flash Sale đầu tiên để bắt đầu'}
+                            </p>
+                            {!debouncedSearch && (
+                                <button
+                                    onClick={openCreateModal}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Tạo Flash Sale
+                                </button>
+                            )}
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="space-y-4">
+                        {filteredSales.map((sale) => (
                         <div
                             key={sale.id}
                             className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
@@ -445,8 +519,9 @@ export default function FlashSalesPage() {
                             </div>
                         </div>
                     ))}
-                </div>
-            )}
+                    </div>
+                );
+            })()}
 
             {/* Create/Edit Modal */}
             {modalMode && (

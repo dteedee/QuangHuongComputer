@@ -1,21 +1,59 @@
-﻿import { useState } from 'react';
-import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Power, PowerOff, ToggleLeft, ToggleRight } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Power, PowerOff, ToggleLeft, ToggleRight, RefreshCw, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi, type User } from '../../api/auth';
 import toast from 'react-hot-toast';
 
+// Filter state interface
+interface UserFilters {
+    search: string;
+    role: string;
+    status: string;
+}
+
+const initialFilters: UserFilters = {
+    search: '',
+    role: 'all',
+    status: 'all'
+};
+
 export const AdminUsersPage = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState<UserFilters>(initialFilters);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [page, setPage] = useState(1);
     const pageSize = 15;
     const queryClient = useQueryClient();
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(filters.search);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [filters.search]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters.role, filters.status]);
+
+    const handleFilterChange = (key: string, value: any) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setFilters(initialFilters);
+    };
+
+    const hasActiveFilters = filters.search || filters.role !== 'all' || filters.status !== 'all';
+
     const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-users', page],
-        queryFn: () => authApi.getUsers(page, pageSize),
+        queryKey: ['admin-users', page, debouncedSearch],
+        queryFn: () => authApi.getUsers(page, pageSize, debouncedSearch || undefined),
     });
 
     const { data: allRoles = [] } = useQuery({
@@ -51,13 +89,20 @@ export const AdminUsersPage = () => {
         }
     };
 
-    const users = response?.items || [];
+    const rawUsers = response?.items || [];
     const total = response?.total || 0;
 
-    const filteredUsers = users.filter((u: User) =>
-        u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Apply client-side filters for role and status
+    const users = rawUsers.filter(user => {
+        // Role filter
+        if (filters.role !== 'all' && !user.roles?.includes(filters.role)) return false;
+
+        // Status filter
+        if (filters.status === 'active' && user.isActive === false) return false;
+        if (filters.status === 'inactive' && user.isActive !== false) return false;
+
+        return true;
+    });
 
     const handleToggleRole = (role: string) => {
         if (!selectedUser) return;
@@ -85,22 +130,70 @@ export const AdminUsersPage = () => {
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="relative flex-1 group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên hoặc email người dùng..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-14 pr-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-[#D70018] transition-all shadow-sm placeholder:text-gray-400"
-                    />
+            {/* Search & Filter Bar */}
+            <div className="bg-white rounded-2xl border-2 border-gray-100 p-4 shadow-sm">
+                <div className="flex flex-col lg:flex-row items-stretch gap-4">
+                    {/* Search */}
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo tên hoặc email người dùng..."
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                        />
+                        {filters.search && (
+                            <button
+                                onClick={() => handleFilterChange('search', '')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filters */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Role Filter */}
+                        <select
+                            value={filters.role}
+                            onChange={(e) => handleFilterChange('role', e.target.value)}
+                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
+                                filters.role !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                            }`}
+                        >
+                            <option value="all">Tất cả vai trò</option>
+                            {allRoles.map(role => (
+                                <option key={role.id} value={role.name}>{role.name}</option>
+                            ))}
+                        </select>
+
+                        {/* Status Filter */}
+                        <select
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
+                                filters.status !== 'all' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-transparent text-gray-700'
+                            }`}
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="active">Đang hoạt động</option>
+                            <option value="inactive">Đã khóa</option>
+                        </select>
+
+                        {/* Reset Button */}
+                        {hasActiveFilters && (
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-2 px-5 py-4 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-2xl transition-all"
+                            >
+                                <RefreshCw size={14} />
+                                Đặt lại
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <button className="flex items-center gap-3 px-8 py-5 bg-white border-2 border-gray-100 text-gray-950 rounded-2xl hover:border-[#D70018] transition-all shadow-sm font-black uppercase text-xs tracking-widest">
-                    <Filter size={18} />
-                    Lọc vai trò
-                </button>
             </div>
 
             {/* Users Table */}
@@ -124,7 +217,7 @@ export const AdminUsersPage = () => {
                                         <p className="text-sm text-gray-900 font-black uppercase tracking-widest mt-4">Đang tải danh sách thành viên...</p>
                                     </td>
                                 </tr>
-                            ) : filteredUsers.map((user: User) => (
+                            ) : users.map((user: User) => (
                                 <tr key={user.id} className="hover:bg-gray-50/80 transition-all group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">

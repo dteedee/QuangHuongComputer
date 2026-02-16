@@ -1237,14 +1237,33 @@ public static class SalesEndpoints
         // Admin Endpoints - Allow Admin, Manager, and Sale roles for order management
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
 
-        adminGroup.MapGet("/orders", async (SalesDbContext db, int page = 1, int pageSize = 20) =>
+        adminGroup.MapGet("/orders", async (SalesDbContext db, int page = 1, int pageSize = 20, string? search = null, string? status = null) =>
         {
             var query = db.Orders
                 .Include(o => o.Items)
-                .OrderByDescending(o => o.OrderDate);
+                .AsQueryable();
+
+            // Search by order number or shipping address
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(o =>
+                    o.OrderNumber.ToLower().Contains(searchLower) ||
+                    (o.ShippingAddress != null && o.ShippingAddress.ToLower().Contains(searchLower)));
+            }
+
+            // Filter by status
+            if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            {
+                if (Enum.TryParse<OrderStatus>(status, true, out var orderStatus))
+                {
+                    query = query.Where(o => o.Status == orderStatus);
+                }
+            }
 
             var total = await query.CountAsync();
             var orders = await query
+                .OrderByDescending(o => o.OrderDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(o => new

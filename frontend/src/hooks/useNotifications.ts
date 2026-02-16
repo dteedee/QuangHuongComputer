@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { salesApi } from '../api/sales';
 import { repairApi } from '../api/repair';
 import { warrantyApi } from '../api/warranty';
 import { catalogApi } from '../api/catalog';
+import { notificationApi, NotificationDto } from '../api/notification';
+import { useRealtimeNotifications } from './useRealtimeNotifications';
+import toast from 'react-hot-toast';
 
 export interface Notification {
     id: string;
@@ -19,6 +22,8 @@ export interface Notification {
 interface UseNotificationsOptions {
     roles: string[];
     refreshInterval?: number; // in milliseconds
+    enableRealtime?: boolean;
+    showToastOnNewNotification?: boolean;
 }
 
 // Helper to format time ago
@@ -36,19 +41,118 @@ const formatTimeAgo = (date: Date): string => {
     return date.toLocaleDateString('vi-VN');
 };
 
-export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotificationsOptions) => {
+// Convert backend notification type to frontend type
+const mapNotificationType = (type: string): Notification['type'] => {
+    const typeMap: Record<string, Notification['type']> = {
+        'OrderCreated': 'order',
+        'OrderConfirmed': 'order',
+        'OrderShipped': 'order',
+        'OrderDelivered': 'order',
+        'OrderCancelled': 'order',
+        'PaymentReceived': 'order',
+        'PaymentFailed': 'order',
+        'RepairCompleted': 'repair',
+        'RepairInProgress': 'repair',
+        'WarrantyExpiring': 'warranty',
+        'WarrantyExpired': 'warranty',
+        'Promotion': 'crm',
+        'SystemAlert': 'system',
+    };
+    return typeMap[type] || 'system';
+};
+
+// Convert API notification to local notification format
+const convertApiNotification = (apiNotif: NotificationDto): Notification => ({
+    id: apiNotif.id,
+    type: mapNotificationType(apiNotif.type),
+    title: apiNotif.title,
+    message: apiNotif.message,
+    time: formatTimeAgo(new Date(apiNotif.createdAt)),
+    read: apiNotif.isRead,
+    link: apiNotif.link,
+    priority: apiNotif.priority,
+    metadata: apiNotif.referenceId ? { referenceId: apiNotif.referenceId } : undefined
+});
+
+export const useNotifications = ({
+    roles,
+    refreshInterval = 60000,
+    enableRealtime = true,
+    showToastOnNewNotification = true
+}: UseNotificationsOptions) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const lastFetchRef = useRef<Date | null>(null);
 
     const hasRole = useCallback((allowedRoles: string[]) => {
         return allowedRoles.some(r => roles.includes(r));
     }, [roles]);
 
+    // Handle new realtime notification
+    const handleRealtimeNotification = useCallback((apiNotif: NotificationDto) => {
+        const newNotification = convertApiNotification(apiNotif);
+
+        // Add to beginning of list
+        setNotifications(prev => {
+            // Check if notification already exists
+            if (prev.some(n => n.id === newNotification.id)) {
+                return prev;
+            }
+            return [newNotification, ...prev];
+        });
+
+        // Show toast notification
+        if (showToastOnNewNotification) {
+            const icon = newNotification.priority === 'high' ? '🔴' : '🔔';
+            toast(newNotification.title, {
+                icon,
+                duration: 5000,
+                position: 'top-right',
+            });
+        }
+    }, [showToastOnNewNotification]);
+
+    // Handle notification read via realtime
+    const handleRealtimeNotificationRead = useCallback((notificationId: string) => {
+        setNotifications(prev =>
+            prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        );
+    }, []);
+
+    // Handle all notifications read via realtime
+    const handleRealtimeAllNotificationsRead = useCallback(() => {
+        setNotifications(prev =>
+            prev.map(n => ({ ...n, read: true }))
+        );
+    }, []);
+
+    // Setup realtime notifications
+    const {
+        isConnected,
+        markAsRead: markAsReadRealtime,
+        markAllAsRead: markAllAsReadRealtime
+    } = useRealtimeNotifications(enableRealtime ? {
+        onNotification: handleRealtimeNotification,
+        onNotificationRead: handleRealtimeNotificationRead,
+        onAllNotificationsRead: handleRealtimeAllNotificationsRead
+    } : {});
+
+    // Fetch notifications from API (persistent) and combine with polling
     const fetchNotifications = useCallback(async () => {
         const newNotifications: Notification[] = [];
 
         try {
+            // First, fetch persistent notifications from API
+            try {
+                const apiNotifications = await notificationApi.getNotifications(1, 20);
+                apiNotifications.forEach(apiNotif => {
+                    newNotifications.push(convertApiNotification(apiNotif));
+                });
+            } catch (e) {
+                console.error('Failed to fetch API notifications:', e);
+            }
+
             // === SALE / MANAGER / ADMIN: Fetch order notifications ===
             if (hasRole(['Admin', 'Manager', 'Sale'])) {
                 try {
@@ -58,49 +162,58 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
                     // Pending orders - need attention
                     const pendingOrders = recentOrders.filter(o => o.status === 'Pending');
                     pendingOrders.slice(0, 5).forEach(order => {
-                        newNotifications.push({
-                            id: `order-pending-${order.id}`,
-                            type: 'order',
-                            title: 'Đơn hàng mới chờ xử lý',
-                            message: `Đơn ${order.orderNumber} - ${order.totalAmount.toLocaleString('vi-VN')}đ`,
-                            time: formatTimeAgo(new Date(order.orderDate)),
-                            read: false,
-                            link: `/backoffice/orders?search=${order.orderNumber}`,
-                            priority: 'high',
-                            metadata: { orderId: order.id, orderNumber: order.orderNumber }
-                        });
+                        const notifId = `order-pending-${order.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'order',
+                                title: 'Đơn hàng mới chờ xử lý',
+                                message: `Đơn ${order.orderNumber} - ${order.totalAmount.toLocaleString('vi-VN')}đ`,
+                                time: formatTimeAgo(new Date(order.orderDate)),
+                                read: false,
+                                link: `/backoffice/orders?search=${order.orderNumber}`,
+                                priority: 'high',
+                                metadata: { orderId: order.id, orderNumber: order.orderNumber }
+                            });
+                        }
                     });
 
                     // Confirmed orders - ready to process
                     const confirmedOrders = recentOrders.filter(o => o.status === 'Confirmed');
                     confirmedOrders.slice(0, 3).forEach(order => {
-                        newNotifications.push({
-                            id: `order-confirmed-${order.id}`,
-                            type: 'order',
-                            title: 'Đơn hàng đã xác nhận',
-                            message: `Đơn ${order.orderNumber} sẵn sàng xử lý`,
-                            time: formatTimeAgo(new Date(order.confirmedAt || order.orderDate)),
-                            read: false,
-                            link: `/backoffice/orders?search=${order.orderNumber}`,
-                            priority: 'medium',
-                            metadata: { orderId: order.id, orderNumber: order.orderNumber }
-                        });
+                        const notifId = `order-confirmed-${order.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'order',
+                                title: 'Đơn hàng đã xác nhận',
+                                message: `Đơn ${order.orderNumber} sẵn sàng xử lý`,
+                                time: formatTimeAgo(new Date(order.confirmedAt || order.orderDate)),
+                                read: false,
+                                link: `/backoffice/orders?search=${order.orderNumber}`,
+                                priority: 'medium',
+                                metadata: { orderId: order.id, orderNumber: order.orderNumber }
+                            });
+                        }
                     });
 
                     // Payment pending
                     const paymentPending = recentOrders.filter(o => o.paymentStatus === 'Pending' && o.status !== 'Cancelled');
                     paymentPending.slice(0, 3).forEach(order => {
-                        newNotifications.push({
-                            id: `order-payment-${order.id}`,
-                            type: 'order',
-                            title: 'Chờ thanh toán',
-                            message: `Đơn ${order.orderNumber} chưa thanh toán`,
-                            time: formatTimeAgo(new Date(order.orderDate)),
-                            read: false,
-                            link: `/backoffice/orders?search=${order.orderNumber}`,
-                            priority: 'medium',
-                            metadata: { orderId: order.id, orderNumber: order.orderNumber }
-                        });
+                        const notifId = `order-payment-${order.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'order',
+                                title: 'Chờ thanh toán',
+                                message: `Đơn ${order.orderNumber} chưa thanh toán`,
+                                time: formatTimeAgo(new Date(order.orderDate)),
+                                read: false,
+                                link: `/backoffice/orders?search=${order.orderNumber}`,
+                                priority: 'medium',
+                                metadata: { orderId: order.id, orderNumber: order.orderNumber }
+                            });
+                        }
                     });
                 } catch (e) {
                     console.error('Failed to fetch order notifications:', e);
@@ -116,65 +229,77 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
                     // Newly requested - need assignment
                     const requested = orders.filter(wo => wo.status === 'Requested');
                     requested.slice(0, 5).forEach(wo => {
-                        newNotifications.push({
-                            id: `repair-requested-${wo.id}`,
-                            type: 'repair',
-                            title: 'Yêu cầu sửa chữa mới',
-                            message: `${wo.deviceType} - ${wo.issueDescription?.slice(0, 50)}...`,
-                            time: formatTimeAgo(new Date(wo.createdAt)),
-                            read: false,
-                            link: `/backoffice/tech?workOrderId=${wo.id}`,
-                            priority: 'high',
-                            metadata: { workOrderId: wo.id }
-                        });
+                        const notifId = `repair-requested-${wo.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'repair',
+                                title: 'Yêu cầu sửa chữa mới',
+                                message: `${wo.deviceType} - ${wo.issueDescription?.slice(0, 50)}...`,
+                                time: formatTimeAgo(new Date(wo.createdAt)),
+                                read: false,
+                                link: `/backoffice/tech?workOrderId=${wo.id}`,
+                                priority: 'high',
+                                metadata: { workOrderId: wo.id }
+                            });
+                        }
                     });
 
                     // Assigned to technician - need to start
                     const assigned = orders.filter(wo => wo.status === 'Assigned');
                     assigned.slice(0, 3).forEach(wo => {
-                        newNotifications.push({
-                            id: `repair-assigned-${wo.id}`,
-                            type: 'repair',
-                            title: 'Đơn được giao cho bạn',
-                            message: `${wo.deviceType} - Cần bắt đầu chẩn đoán`,
-                            time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                            read: false,
-                            link: `/backoffice/tech?workOrderId=${wo.id}`,
-                            priority: 'high',
-                            metadata: { workOrderId: wo.id }
-                        });
+                        const notifId = `repair-assigned-${wo.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'repair',
+                                title: 'Đơn được giao cho bạn',
+                                message: `${wo.deviceType} - Cần bắt đầu chẩn đoán`,
+                                time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
+                                read: false,
+                                link: `/backoffice/tech?workOrderId=${wo.id}`,
+                                priority: 'high',
+                                metadata: { workOrderId: wo.id }
+                            });
+                        }
                     });
 
                     // Awaiting approval - customer response needed
                     const awaitingApproval = orders.filter(wo => wo.status === 'AwaitingApproval');
                     awaitingApproval.slice(0, 3).forEach(wo => {
-                        newNotifications.push({
-                            id: `repair-awaiting-${wo.id}`,
-                            type: 'repair',
-                            title: 'Chờ khách hàng duyệt',
-                            message: `${wo.deviceType} - Báo giá đã gửi`,
-                            time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                            read: false,
-                            link: `/backoffice/tech?workOrderId=${wo.id}`,
-                            priority: 'medium',
-                            metadata: { workOrderId: wo.id }
-                        });
+                        const notifId = `repair-awaiting-${wo.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'repair',
+                                title: 'Chờ khách hàng duyệt',
+                                message: `${wo.deviceType} - Báo giá đã gửi`,
+                                time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
+                                read: false,
+                                link: `/backoffice/tech?workOrderId=${wo.id}`,
+                                priority: 'medium',
+                                metadata: { workOrderId: wo.id }
+                            });
+                        }
                     });
 
                     // Approved - ready to start repair
                     const approved = orders.filter(wo => wo.status === 'Approved');
                     approved.slice(0, 3).forEach(wo => {
-                        newNotifications.push({
-                            id: `repair-approved-${wo.id}`,
-                            type: 'repair',
-                            title: 'Khách hàng đã duyệt',
-                            message: `${wo.deviceType} - Bắt đầu sửa chữa`,
-                            time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                            read: false,
-                            link: `/backoffice/tech?workOrderId=${wo.id}`,
-                            priority: 'high',
-                            metadata: { workOrderId: wo.id }
-                        });
+                        const notifId = `repair-approved-${wo.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'repair',
+                                title: 'Khách hàng đã duyệt',
+                                message: `${wo.deviceType} - Bắt đầu sửa chữa`,
+                                time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
+                                read: false,
+                                link: `/backoffice/tech?workOrderId=${wo.id}`,
+                                priority: 'high',
+                                metadata: { workOrderId: wo.id }
+                            });
+                        }
                     });
                 } catch (e) {
                     console.error('Failed to fetch repair notifications:', e);
@@ -188,33 +313,39 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
 
                     // Pending claims - need review
                     claims.slice(0, 5).forEach(claim => {
-                        newNotifications.push({
-                            id: `warranty-pending-${claim.id}`,
-                            type: 'warranty',
-                            title: 'Yêu cầu bảo hành mới',
-                            message: `SN: ${claim.serialNumber} - ${claim.issueDescription?.slice(0, 40)}...`,
-                            time: formatTimeAgo(new Date(claim.filedDate)),
-                            read: false,
-                            link: `/backoffice/warranty?claimId=${claim.id}`,
-                            priority: 'high',
-                            metadata: { claimId: claim.id }
-                        });
+                        const notifId = `warranty-pending-${claim.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'warranty',
+                                title: 'Yêu cầu bảo hành mới',
+                                message: `SN: ${claim.serialNumber} - ${claim.issueDescription?.slice(0, 40)}...`,
+                                time: formatTimeAgo(new Date(claim.filedDate)),
+                                read: false,
+                                link: `/backoffice/warranty?claimId=${claim.id}`,
+                                priority: 'high',
+                                metadata: { claimId: claim.id }
+                            });
+                        }
                     });
 
                     // Also get approved claims that need resolution
                     const approvedClaims = await warrantyApi.admin.getAllClaims('Approved');
                     approvedClaims.slice(0, 3).forEach(claim => {
-                        newNotifications.push({
-                            id: `warranty-approved-${claim.id}`,
-                            type: 'warranty',
-                            title: 'Bảo hành đã duyệt',
-                            message: `SN: ${claim.serialNumber} - Cần xử lý`,
-                            time: formatTimeAgo(new Date(claim.filedDate)),
-                            read: false,
-                            link: `/backoffice/warranty?claimId=${claim.id}`,
-                            priority: 'medium',
-                            metadata: { claimId: claim.id }
-                        });
+                        const notifId = `warranty-approved-${claim.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'warranty',
+                                title: 'Bảo hành đã duyệt',
+                                message: `SN: ${claim.serialNumber} - Cần xử lý`,
+                                time: formatTimeAgo(new Date(claim.filedDate)),
+                                read: false,
+                                link: `/backoffice/warranty?claimId=${claim.id}`,
+                                priority: 'medium',
+                                metadata: { claimId: claim.id }
+                            });
+                        }
                     });
                 } catch (e) {
                     console.error('Failed to fetch warranty notifications:', e);
@@ -235,33 +366,39 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
 
                     // Low stock warnings
                     lowStockItems.slice(0, 5).forEach(item => {
-                        newNotifications.push({
-                            id: `inventory-low-${item.id}`,
-                            type: 'inventory',
-                            title: 'Cảnh báo tồn kho thấp',
-                            message: `${item.name} - Còn ${item.stockQuantity} sản phẩm`,
-                            time: 'Cập nhật',
-                            read: false,
-                            link: `/backoffice/inventory?productId=${item.id}`,
-                            priority: item.stockQuantity <= 5 ? 'high' : 'medium',
-                            metadata: { productId: item.id }
-                        });
+                        const notifId = `inventory-low-${item.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'inventory',
+                                title: 'Cảnh báo tồn kho thấp',
+                                message: `${item.name} - Còn ${item.stockQuantity} sản phẩm`,
+                                time: 'Cập nhật',
+                                read: false,
+                                link: `/backoffice/inventory?productId=${item.id}`,
+                                priority: item.stockQuantity <= 5 ? 'high' : 'medium',
+                                metadata: { productId: item.id }
+                            });
+                        }
                     });
 
                     // Out of stock products
                     const outOfStockItems = products.filter(p => p.stockQuantity === 0);
                     outOfStockItems.slice(0, 3).forEach(item => {
-                        newNotifications.push({
-                            id: `inventory-out-${item.id}`,
-                            type: 'inventory',
-                            title: 'Hết hàng',
-                            message: `${item.name} - Cần nhập thêm`,
-                            time: 'Cập nhật',
-                            read: false,
-                            link: `/backoffice/inventory?productId=${item.id}`,
-                            priority: 'high',
-                            metadata: { productId: item.id }
-                        });
+                        const notifId = `inventory-out-${item.id}`;
+                        if (!newNotifications.some(n => n.id === notifId)) {
+                            newNotifications.push({
+                                id: notifId,
+                                type: 'inventory',
+                                title: 'Hết hàng',
+                                message: `${item.name} - Cần nhập thêm`,
+                                time: 'Cập nhật',
+                                read: false,
+                                link: `/backoffice/inventory?productId=${item.id}`,
+                                priority: 'high',
+                                metadata: { productId: item.id }
+                            });
+                        }
                     });
                 } catch (e) {
                     console.error('Failed to fetch inventory notifications:', e);
@@ -278,6 +415,7 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
 
             setNotifications(newNotifications);
             setError(null);
+            lastFetchRef.current = new Date();
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
             setError('Không thể tải thông báo');
@@ -291,25 +429,53 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
         fetchNotifications();
     }, [fetchNotifications]);
 
-    // Auto refresh
+    // Auto refresh - use longer interval if realtime is connected
     useEffect(() => {
-        if (refreshInterval > 0) {
-            const interval = setInterval(fetchNotifications, refreshInterval);
+        const actualInterval = isConnected ? refreshInterval * 2 : refreshInterval;
+        if (actualInterval > 0) {
+            const interval = setInterval(fetchNotifications, actualInterval);
             return () => clearInterval(interval);
         }
-    }, [fetchNotifications, refreshInterval]);
+    }, [fetchNotifications, refreshInterval, isConnected]);
 
-    const markAsRead = useCallback((id: string) => {
+    const markAsRead = useCallback(async (id: string) => {
+        // Update local state immediately
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
         );
-    }, []);
 
-    const markAllAsRead = useCallback(() => {
+        // If it's a persistent notification (UUID format), also call API
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(id)) {
+            try {
+                await notificationApi.markAsRead(id);
+                // Also notify via SignalR if connected
+                if (isConnected) {
+                    markAsReadRealtime(id);
+                }
+            } catch (e) {
+                console.error('Failed to mark notification as read:', e);
+            }
+        }
+    }, [isConnected, markAsReadRealtime]);
+
+    const markAllAsRead = useCallback(async () => {
+        // Update local state immediately
         setNotifications(prev =>
             prev.map(n => ({ ...n, read: true }))
         );
-    }, []);
+
+        // Call API to mark all as read
+        try {
+            await notificationApi.markAllAsRead();
+            // Also notify via SignalR if connected
+            if (isConnected) {
+                markAllAsReadRealtime();
+            }
+        } catch (e) {
+            console.error('Failed to mark all notifications as read:', e);
+        }
+    }, [isConnected, markAllAsReadRealtime]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -320,6 +486,7 @@ export const useNotifications = ({ roles, refreshInterval = 60000 }: UseNotifica
         unreadCount,
         markAsRead,
         markAllAsRead,
-        refresh: fetchNotifications
+        refresh: fetchNotifications,
+        isRealtimeConnected: isConnected
     };
 };

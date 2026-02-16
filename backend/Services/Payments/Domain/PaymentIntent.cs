@@ -65,7 +65,8 @@ public enum PaymentProvider
     Stripe,
     VnPay,
     Momo,
-    COD
+    COD,
+    SePay
 }
 
 public enum PaymentStatus

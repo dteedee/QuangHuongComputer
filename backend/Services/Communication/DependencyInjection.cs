@@ -1,6 +1,7 @@
 using Communication.Application;
 using Communication.Infrastructure;
 using Communication.Repositories;
+using Communication.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,9 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped<IConversationRepository, ConversationRepository>();
+
+        // Notification Service
+        services.AddScoped<INotificationService, NotificationService>();
 
         // AI Chat Service
         services.AddScoped<IAiChatService, AiChatService>();

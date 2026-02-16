@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2,
     Image as ImageIcon, Layout, Settings, Share2, DollarSign, Package,
@@ -17,13 +17,32 @@ interface SpecItem {
     value: string;
 }
 
+// Filter state interface
+interface ProductFilters {
+    search: string;
+    categoryId: string;
+    brandId: string;
+    priceRange: { min: string; max: string };
+    stockFilter: string;
+    status: string;
+}
+
+const initialFilters: ProductFilters = {
+    search: '',
+    categoryId: '',
+    brandId: '',
+    priceRange: { min: '', max: '' },
+    stockFilter: 'all',
+    status: 'active'
+};
+
 export const AdminProductsPage = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState<ProductFilters>(initialFilters);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<FormTab>('general');
     const [page, setPage] = useState(1);
-    const [showInactive, setShowInactive] = useState(false);
     const pageSize = 12;
     const queryClient = useQueryClient();
 
@@ -31,9 +50,38 @@ export const AdminProductsPage = () => {
     const [specs, setSpecs] = useState<SpecItem[]>([]);
     const [gallery, setGallery] = useState<string[]>([]);
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(filters.search);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [filters.search]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters.categoryId, filters.brandId, filters.priceRange, filters.stockFilter, filters.status]);
+
+    const handleFilterChange = (key: string, value: any) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setFilters(initialFilters);
+    };
+
     const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-products', page, showInactive],
-        queryFn: () => catalogApi.getProducts({ page, pageSize, includeInactive: showInactive || undefined }),
+        queryKey: ['admin-products', page, filters.status, debouncedSearch, filters.categoryId, filters.brandId],
+        queryFn: () => catalogApi.getProducts({
+            page,
+            pageSize,
+            includeInactive: filters.status === 'all' || filters.status === 'inactive' || undefined,
+            search: debouncedSearch || undefined,
+            categoryId: filters.categoryId || undefined,
+            brandId: filters.brandId || undefined
+        }),
     });
 
     const { data: categories } = useQuery({
@@ -41,10 +89,31 @@ export const AdminProductsPage = () => {
         queryFn: () => catalogApi.getCategories(),
     });
 
-    const { data: brands } = useQuery({
+    const { data: brandsData } = useQuery({
         queryKey: ['brands'],
         queryFn: () => catalogApi.getBrands(),
     });
+
+    // Deduplicate brands and categories to avoid duplicate options
+    const brands = useMemo(() => {
+        if (!brandsData) return [];
+        const seen = new Set<string>();
+        return brandsData.filter(b => {
+            if (seen.has(b.id)) return false;
+            seen.add(b.id);
+            return true;
+        });
+    }, [brandsData]);
+
+    const uniqueCategories = useMemo(() => {
+        if (!categories) return [];
+        const seen = new Set<string>();
+        return categories.filter(c => {
+            if (seen.has(c.id)) return false;
+            seen.add(c.id);
+            return true;
+        });
+    }, [categories]);
 
     useEffect(() => {
         if (editingProduct?.specifications) {
@@ -130,7 +199,24 @@ export const AdminProductsPage = () => {
     });
 
     const products = response?.products || [];
-    const filteredProducts = products; // Filtering should ideally be server-side but for now...
+
+    // Apply client-side filters for price and stock
+    const filteredProducts = products.filter(product => {
+        // Status filter (active/inactive)
+        if (filters.status === 'active' && !product.isActive) return false;
+        if (filters.status === 'inactive' && product.isActive) return false;
+
+        // Price range filter
+        if (filters.priceRange.min && product.price < Number(filters.priceRange.min)) return false;
+        if (filters.priceRange.max && product.price > Number(filters.priceRange.max)) return false;
+
+        // Stock filter
+        if (filters.stockFilter === 'in_stock' && product.stockQuantity <= 5) return false;
+        if (filters.stockFilter === 'low_stock' && (product.stockQuantity < 1 || product.stockQuantity > 5)) return false;
+        if (filters.stockFilter === 'out_of_stock' && product.stockQuantity > 0) return false;
+
+        return true;
+    });
 
     const handleOpenModal = (product: Product | null = null) => {
         setEditingProduct(product);
@@ -224,33 +310,92 @@ export const AdminProductsPage = () => {
                 </div>
 
                 {/* Filter Bar */}
-                <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex flex-col lg:flex-row items-center gap-4">
-                    <div className="relative flex-1 w-full group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm sản phẩm..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <select className="flex-1 lg:w-48 px-5 py-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold text-gray-700 outline-none">
-                            <option>Tất cả danh mục</option>
-                            {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <button
-                            onClick={() => setShowInactive(!showInactive)}
-                            className={`flex items-center justify-center gap-2 px-6 py-4 border rounded-2xl transition-all text-sm font-semibold ${
-                                showInactive
-                                    ? 'bg-amber-50 border-amber-200 text-amber-700'
-                                    : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                            {showInactive ? <Eye size={18} /> : <PowerOff size={18} />}
-                            {showInactive ? 'Đang xem tất cả' : 'Xem cả ẩn'}
-                        </button>
+                <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100">
+                    <div className="flex flex-col lg:flex-row items-stretch gap-4">
+                        {/* Search */}
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm sản phẩm..."
+                                value={filters.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
+                            />
+                            {filters.search && (
+                                <button
+                                    onClick={() => handleFilterChange('search', '')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Filters Row */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Category Filter */}
+                            <select
+                                value={filters.categoryId}
+                                onChange={(e) => handleFilterChange('categoryId', e.target.value)}
+                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
+                                    filters.categoryId ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                }`}
+                            >
+                                <option value="">Tất cả danh mục</option>
+                                {uniqueCategories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+
+                            {/* Brand Filter */}
+                            <select
+                                value={filters.brandId}
+                                onChange={(e) => handleFilterChange('brandId', e.target.value)}
+                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
+                                    filters.brandId ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                }`}
+                            >
+                                <option value="">Tất cả thương hiệu</option>
+                                {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </select>
+
+                            {/* Stock Filter */}
+                            <select
+                                value={filters.stockFilter}
+                                onChange={(e) => handleFilterChange('stockFilter', e.target.value)}
+                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
+                                    filters.stockFilter !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                }`}
+                            >
+                                <option value="all">Tất cả tồn kho</option>
+                                <option value="in_stock">Còn hàng (&gt;5)</option>
+                                <option value="low_stock">Sắp hết (1-5)</option>
+                                <option value="out_of_stock">Hết hàng (0)</option>
+                            </select>
+
+                            {/* Status Filter */}
+                            <select
+                                value={filters.status}
+                                onChange={(e) => handleFilterChange('status', e.target.value)}
+                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
+                                    filters.status !== 'active' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-transparent text-gray-700'
+                                }`}
+                            >
+                                <option value="active">Đang hiển thị</option>
+                                <option value="inactive">Đã ẩn</option>
+                                <option value="all">Tất cả trạng thái</option>
+                            </select>
+
+                            {/* Reset Button */}
+                            {(filters.search || filters.categoryId || filters.brandId || filters.stockFilter !== 'all' || filters.status !== 'active') && (
+                                <button
+                                    onClick={resetFilters}
+                                    className="flex items-center gap-2 px-5 py-4 text-sm font-semibold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-2xl transition-all"
+                                >
+                                    <RefreshCw size={16} />
+                                    Đặt lại
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -311,9 +456,18 @@ export const AdminProductsPage = () => {
                                 <div className="space-y-4">
                                     <div className="space-y-1">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{categories?.find(c => c.id === product.categoryId)?.name || 'Danh mục'}</span>
-                                            <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${product.stockQuantity > 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                                <Layers size={10} /> {product.stockQuantity} kho
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{uniqueCategories?.find(c => c.id === product.categoryId)?.name || 'Danh mục'}</span>
+                                            <span className={`flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full ${
+                                                product.stockQuantity === 0
+                                                    ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
+                                                    : product.stockQuantity <= 5
+                                                        ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+                                                        : 'bg-emerald-100 text-emerald-700'
+                                            }`}>
+                                                <Layers size={12} />
+                                                <span className="tabular-nums">{product.stockQuantity}</span>
+                                                {product.stockQuantity === 0 && <span className="ml-0.5">HẾT</span>}
+                                                {product.stockQuantity > 0 && product.stockQuantity <= 5 && <span className="ml-0.5">SẮP HẾT</span>}
                                             </span>
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 line-clamp-1 leading-tight">{product.name}</h3>
@@ -425,7 +579,7 @@ export const AdminProductsPage = () => {
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Danh mục</label>
                                             <select name="categoryId" defaultValue={editingProduct?.categoryId} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold outline-none appearance-none cursor-pointer">
-                                                {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                {uniqueCategories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                             </select>
                                         </div>
                                         <div className="space-y-3">

@@ -5,7 +5,11 @@ import './index.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import App from './App'
 
-createRoot(document.getElementById('root')!).render(
+console.log('Main.tsx executing...');
+const container = document.getElementById('root');
+console.log('Root container found:', !!container);
+
+createRoot(container!).render(
   <StrictMode>
     <HelmetProvider>
       <ErrorBoundary>
@@ -14,4 +18,5 @@ createRoot(document.getElementById('root')!).render(
     </HelmetProvider>
   </StrictMode>,
 )
+console.log('Render called');
 

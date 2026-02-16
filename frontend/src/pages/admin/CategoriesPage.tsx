@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 export const CategoriesPage = () => {
     const [activeType, setActiveType] = useState<'categories' | 'brands'>('categories');
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Category | Brand | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -24,6 +25,16 @@ export const CategoriesPage = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [selectAllChecked, setSelectAllChecked] = useState(false);
     const queryClient = useQueryClient();
+
+    const hasActiveFilters = searchTerm || statusFilter !== 'all';
+
+    const resetFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setSelectedIds([]);
+        setSelectAllChecked(false);
+        setCurrentPage(1);
+    };
 
     const { data: categories, isLoading: categoriesLoading } = useQuery({
         queryKey: ['admin-categories'],
@@ -89,11 +100,19 @@ export const CategoriesPage = () => {
     const items = activeType === 'categories' ? categories : brands;
     const isLoading = activeType === 'categories' ? categoriesLoading : brandsLoading;
 
-    // Filter items based on search term
-    const filteredItems = items?.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) || [];
+    // Filter items based on search term and status
+    const filteredItems = items?.filter(item => {
+        // Search filter
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        // Status filter
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'active' && item.isActive) ||
+            (statusFilter === 'inactive' && !item.isActive);
+
+        return matchesSearch && matchesStatus;
+    }) || [];
 
     // Handle pagination
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -182,13 +201,6 @@ export const CategoriesPage = () => {
         }
     };
 
-    const resetFilters = () => {
-        setSearchTerm('');
-        setSelectedIds([]);
-        setSelectAllChecked(false);
-        setCurrentPage(1);
-    };
-
     const handleOpenModal = (item: Category | Brand | null = null) => {
         setEditingItem(item);
         setIsModalOpen(true);
@@ -234,32 +246,81 @@ export const CategoriesPage = () => {
                     </motion.button>
                 </div>
 
-                {/* Type Switcher & Search */}
-                <div className="flex flex-col lg:flex-row items-center gap-6">
-                    <div className="bg-white p-2 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-2 w-full lg:w-auto">
-                        <button
-                            onClick={() => setActiveType('categories')}
-                            className={`flex-1 lg:w-40 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold transition-all ${activeType === 'categories' ? 'bg-gray-950 text-white shadow-xl translate-y-[-2px]' : 'text-gray-400 hover:bg-gray-50'}`}
-                        >
-                            <Tag size={18} /> Danh mục
-                        </button>
-                        <button
-                            onClick={() => setActiveType('brands')}
-                            className={`flex-1 lg:w-40 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl text-sm font-bold transition-all ${activeType === 'brands' ? 'bg-gray-950 text-white shadow-xl translate-y-[-2px]' : 'text-gray-400 hover:bg-gray-50'}`}
-                        >
-                            <Bookmark size={18} /> Thương hiệu
-                        </button>
-                    </div>
+                {/* Type Switcher & Search & Filters */}
+                <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100">
+                    <div className="flex flex-col lg:flex-row items-stretch gap-4">
+                        {/* Type Switcher */}
+                        <div className="bg-gray-50 p-1.5 rounded-2xl flex items-center gap-1.5 shrink-0">
+                            <button
+                                onClick={() => { setActiveType('categories'); setCurrentPage(1); }}
+                                className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${
+                                    activeType === 'categories'
+                                        ? 'bg-gray-950 text-white shadow-lg'
+                                        : 'text-gray-400 hover:text-gray-700'
+                                }`}
+                            >
+                                <Tag size={16} /> Danh mục
+                            </button>
+                            <button
+                                onClick={() => { setActiveType('brands'); setCurrentPage(1); }}
+                                className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${
+                                    activeType === 'brands'
+                                        ? 'bg-gray-950 text-white shadow-lg'
+                                        : 'text-gray-400 hover:text-gray-700'
+                                }`}
+                            >
+                                <Bookmark size={16} /> Thương hiệu
+                            </button>
+                        </div>
 
-                    <div className="relative flex-1 w-full group">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
-                        <input
-                            type="text"
-                            placeholder={`Tìm kiếm ${activeType === 'categories' ? 'danh mục' : 'thương hiệu'}...`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-16 pr-6 py-5 bg-white border-none rounded-[2rem] text-sm font-semibold text-gray-900 shadow-sm focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
-                        />
+                        {/* Search */}
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder={`Tìm kiếm ${activeType === 'categories' ? 'danh mục' : 'thương hiệu'}...`}
+                                value={searchTerm}
+                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                className="w-full pl-12 pr-10 py-4 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
+                            />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Filters */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            {/* Status Filter */}
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
+                                className={`px-4 py-4 border rounded-xl text-sm font-semibold outline-none cursor-pointer transition-all ${
+                                    statusFilter !== 'all'
+                                        ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]'
+                                        : 'bg-gray-50 border-transparent text-gray-700'
+                                }`}
+                            >
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Đang hoạt động</option>
+                                <option value="inactive">Tạm dừng</option>
+                            </select>
+
+                            {/* Reset Button */}
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={resetFilters}
+                                    className="flex items-center gap-2 px-4 py-4 text-sm font-semibold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-xl transition-all"
+                                >
+                                    <RotateCcw size={14} />
+                                    Đặt lại
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

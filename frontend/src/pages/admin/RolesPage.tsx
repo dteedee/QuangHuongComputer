@@ -4,7 +4,7 @@ import {
     Shield, Plus, Save, Check, Users, Settings,
     ShoppingCart, Wrench, Package, FileText, TrendingUp,
     Megaphone, BarChart3, Cog, ChevronRight, Loader2,
-    AlertCircle, CheckCircle2, X
+    AlertCircle, CheckCircle2, X, Search
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,6 +51,12 @@ export const RolesPage = () => {
     const [newRoleName, setNewRoleName] = useState('');
     const [isCreatingRole, setIsCreatingRole] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Filter roles based on search term
+    const filteredRoles = roles.filter(role =>
+        role.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     useEffect(() => {
         loadData();
@@ -224,8 +230,35 @@ export const RolesPage = () => {
                             <p className="text-xs text-gray-500 mt-1">{roles.length} vai trò trong hệ thống</p>
                         </div>
 
-                        <div className="p-4 space-y-2 max-h-[600px] overflow-y-auto">
-                            {roles.map(role => {
+                        {/* Search Input */}
+                        <div className="p-4 border-b border-gray-50">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                    type="text"
+                                    placeholder="Tìm vai trò..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-4 space-y-2 max-h-[500px] overflow-y-auto">
+                            {filteredRoles.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400">
+                                    <Search size={24} className="mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm font-medium">Không tìm thấy vai trò</p>
+                                </div>
+                            ) : filteredRoles.map(role => {
                                 const isSelected = selectedRole?.id === role.id;
                                 const isAdmin = role.name === 'Admin';
 

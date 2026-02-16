@@ -139,7 +139,7 @@ builder.Services.AddHealthChecks()
 
 // CORS - Read from configuration with localhost fallbacks for development
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
+    ?? new[] { "http://localhost:5173", "http://localhost:4173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
 
 // In development, ensure localhost is always allowed
 if (builder.Environment.IsDevelopment())
@@ -152,10 +152,20 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(corsOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(origin => true)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -279,6 +289,7 @@ if (app.Environment.IsDevelopment())
             services.GetRequiredService<WarrantyDbContext>(),
             services.GetRequiredService<ContentDbContext>(),
             services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>(),
+            services.GetRequiredService<PaymentsDbContext>(),
         };
 
         foreach (var ctx in migrateContexts)
@@ -437,7 +448,7 @@ if (app.Environment.IsDevelopment())
         {
             services.GetRequiredService<InventoryModule.Infrastructure.InventoryDbContext>(),
             services.GetRequiredService<AccountingDbContext>(),
-            services.GetRequiredService<PaymentsDbContext>(),
+            // services.GetRequiredService<PaymentsDbContext>(), // Moved to Migrations
             services.GetRequiredService<AiDbContext>(),
             services.GetRequiredService<Communication.Infrastructure.CommunicationDbContext>(),
             services.GetRequiredService<HRDbContext>(),
@@ -593,6 +604,7 @@ app.MapPost("/api/ai/chat", async (GatewayChatRequest request, IAiService ai) =>
 }).WithName("ChatWithAi");
 
 app.MapHub<Communication.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<Communication.Hubs.NotificationHub>("/hubs/notification");
 
 // Health Checks Endpoints
 app.MapHealthChecks("/health");

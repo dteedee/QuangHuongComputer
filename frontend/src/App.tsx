@@ -83,6 +83,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import POSPage from './pages/backoffice/sale/POSPage';
 import { ReturnsManagementPage } from './pages/backoffice/sale/ReturnsManagementPage';
 import { ScrollToTop } from './components/ScrollToTop';
+// import SePayAdminPage from './pages/admin/PaymentSettingsPage';
 
 const queryClient = new QueryClient();
 
@@ -105,119 +106,121 @@ function App() {
           <AuthProvider>
             <ThemeProvider>
               <CartProvider>
-                  <ComparisonProvider>
-                    <ComparisonBar />
-                    <Routes>
-                      {/* Main Store Layout */}
-                      <Route path="/" element={<RootLayout />}>
-                        <Route index element={<HomePage />} />
-                        <Route path="repairs" element={<RepairPage />} />
-                        <Route path="repair" element={<RepairPage />} />
-                        <Route path="repair/:id" element={<RepairDetailPage />} />
-                        <Route path="warranty" element={<WarrantyPage />} />
-                        <Route path="support" element={<ChatSupport />} />
-                        <Route path="cart" element={<CartPage />} />
-                        <Route path="checkout" element={<CheckoutPage />} />
-                        <Route path="payment/:orderId" element={<PaymentPage />} />
-                        <Route path="payment/callback" element={<PaymentCallbackPage />} />
-                        <Route path="payment/success" element={<PaymentResultPage />} />
-                        <Route path="payment/failed" element={<PaymentResultPage />} />
-                        <Route path="product/:id" element={<ProductDetailsPage />} />
-                        <Route path="products" element={<ProductCatalogPage />} />
-                        <Route path="products/:id" element={<ProductDetailPage />} />
-                        <Route path="catalog" element={<ProductCatalogPage />} />
-                        <Route path="compare" element={<ComparePage />} />
-                        <Route path="profile" element={<AccountPage />} />
-                        <Route path="account" element={<AccountPage />} />
-                        <Route path="recruitment" element={<RecruitmentPage />} />
-                        <Route path="recruitment/:id" element={<JobDetailPage />} />
+                <ComparisonProvider>
+                  <ComparisonBar />
+                  <Routes>
+                    {/* Main Store Layout */}
+                    <Route path="/" element={<RootLayout />}>
+                      <Route index element={<HomePage />} />
+                      <Route path="repairs" element={<RepairPage />} />
+                      <Route path="repair" element={<RepairPage />} />
+                      <Route path="repair/:id" element={<RepairDetailPage />} />
+                      <Route path="warranty" element={<WarrantyPage />} />
+                      <Route path="support" element={<ChatSupport />} />
+                      <Route path="cart" element={<CartPage />} />
+                      <Route path="checkout" element={<CheckoutPage />} />
+                      <Route path="payment/:orderId" element={<PaymentPage />} />
+                      <Route path="payment/callback" element={<PaymentCallbackPage />} />
+                      <Route path="payment/success" element={<PaymentResultPage />} />
+                      <Route path="payment/failed" element={<PaymentResultPage />} />
+                      <Route path="product/:id" element={<ProductDetailsPage />} />
+                      <Route path="products" element={<ProductCatalogPage />} />
+                      <Route path="products/:id" element={<ProductDetailPage />} />
+                      <Route path="catalog" element={<ProductCatalogPage />} />
+                      <Route path="compare" element={<ComparePage />} />
+                      <Route path="profile" element={<AccountPage />} />
+                      <Route path="account" element={<AccountPage />} />
+                      <Route path="recruitment" element={<RecruitmentPage />} />
+                      <Route path="recruitment/:id" element={<JobDetailPage />} />
 
-                        {/* Account Routes */}
-                        <Route path="account/orders" element={<OrdersPage />} />
-                        <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
-                        <Route path="account/returns/new" element={<NewReturnRequestPage />} />
-                        <Route path="account/loyalty" element={<LoyaltyPage />} />
+                      {/* Account Routes */}
+                      <Route path="account/orders" element={<OrdersPage />} />
+                      <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
+                      <Route path="account/returns/new" element={<NewReturnRequestPage />} />
+                      <Route path="account/loyalty" element={<LoyaltyPage />} />
 
-                        {/* Category Routes */}
-                        <Route path="laptop" element={<CategoryPage />} />
-                        <Route path="pc-gaming" element={<CategoryPage />} />
-                        <Route path="workstation" element={<CategoryPage />} />
-                        <Route path="office" element={<CategoryPage />} />
-                        <Route path="components" element={<CategoryPage />} />
-                        <Route path="screens" element={<CategoryPage />} />
-                        <Route path="search" element={<CategoryPage />} />
-                        <Route path="category/:slug" element={<CategoryPage />} />
+                      {/* Category Routes */}
+                      <Route path="laptop" element={<CategoryPage />} />
+                      <Route path="pc-gaming" element={<CategoryPage />} />
+                      <Route path="workstation" element={<CategoryPage />} />
+                      <Route path="office" element={<CategoryPage />} />
+                      <Route path="components" element={<CategoryPage />} />
+                      <Route path="screens" element={<CategoryPage />} />
+                      <Route path="search" element={<CategoryPage />} />
+                      <Route path="category/:slug" element={<CategoryPage />} />
 
-                        {/* Content Pages */}
-                        <Route path="policy/:type" element={<PolicyPage />} />
-                        <Route path="post/:slug" element={<PostDetailPage />} />
-                        <Route path="contact" element={<ContactPage />} />
-                        <Route path="terms" element={<TermsPage />} />
-                        <Route path="privacy" element={<PrivacyPage />} />
-                        <Route path="about" element={<AboutPage />} />
+                      {/* Content Pages */}
+                      <Route path="policy/:type" element={<PolicyPage />} />
+                      <Route path="post/:slug" element={<PostDetailPage />} />
+                      <Route path="contact" element={<ContactPage />} />
+                      <Route path="terms" element={<TermsPage />} />
+                      <Route path="privacy" element={<PrivacyPage />} />
+                      <Route path="about" element={<AboutPage />} />
+                    </Route>
+
+                    {/* Backoffice Routes */}
+                    <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
+                      <Route path="/backoffice" element={<BackofficeLayout />}>
+                        <Route index element={<CommonDashboard />} />
+                        <Route path="pos" element={<POSPage />} />
+                        <Route path="sale" element={<SalePortal />} />
+                        <Route path="returns" element={<ReturnsManagementPage />} />
+                        <Route path="tech" element={<TechPortal />} />
+                        <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
+                        <Route path="inventory" element={<InventoryPortal />} />
+                        <Route path="accounting" element={<AccountingPortal />} />
+                        <Route path="accounting/ar" element={<ARPage />} />
+                        <Route path="accounting/ap" element={<APPage />} />
+                        <Route path="accounting/shifts" element={<ShiftsPage />} />
+                        <Route path="accounting/expenses" element={<ExpensesPage />} />
+                        <Route path="accounting/reports" element={<FinancialReportsPage />} />
+                        <Route path="hr" element={<HRPortal />} />
+                        <Route path="hr/recruitment" element={<RecruitmentManagement />} />
+                        <Route path="warranty" element={<WarrantyPortal />} />
+                        <Route path="cms" element={<CMSPortal />} />
+                        <Route path="reports" element={<ReportsPortal />} />
+                        <Route path="users" element={<AdminUsersPage />} />
+                        <Route path="roles" element={<RolesPage />} />
+                        <Route path="products" element={<AdminProductsPage />} />
+                        <Route path="categories" element={<CategoriesPage />} />
+                        <Route path="orders" element={<AdminOrdersPage />} />
+                        <Route path="reviews" element={<ReviewsManagementPage />} />
+                        <Route path="coupons" element={<CouponsPage />} />
+                        <Route path="config" element={<ConfigPortal />} />
+                        <Route path="admin" element={<AdminPortal />} />
+                        <Route path="manager" element={<ManagerPortal />} />
+
+                        {/* CRM Routes */}
+                        <Route path="crm" element={<CrmPortal />} />
+                        <Route path="crm/customers" element={<CrmCustomersPage />} />
+                        <Route path="crm/leads" element={<CrmLeadsPage />} />
+                        <Route path="crm/leads/pipeline" element={<LeadPipelinePage />} />
+                        <Route path="crm/segments" element={<CrmSegmentsPage />} />
+                        <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
+                        {/* <Route path="payments/sepay" element={<SePayAdminPage />} /> */}
                       </Route>
+                    </Route>
 
-                      {/* Backoffice Routes */}
-                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
-                        <Route path="/backoffice" element={<BackofficeLayout />}>
-                          <Route index element={<CommonDashboard />} />
-                          <Route path="pos" element={<POSPage />} />
-                          <Route path="sale" element={<SalePortal />} />
-                          <Route path="returns" element={<ReturnsManagementPage />} />
-                          <Route path="tech" element={<TechPortal />} />
-                          <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
-                          <Route path="inventory" element={<InventoryPortal />} />
-                          <Route path="accounting" element={<AccountingPortal />} />
-                          <Route path="accounting/ar" element={<ARPage />} />
-                          <Route path="accounting/ap" element={<APPage />} />
-                          <Route path="accounting/shifts" element={<ShiftsPage />} />
-                          <Route path="accounting/expenses" element={<ExpensesPage />} />
-                          <Route path="accounting/reports" element={<FinancialReportsPage />} />
-                          <Route path="hr" element={<HRPortal />} />
-                          <Route path="hr/recruitment" element={<RecruitmentManagement />} />
-                          <Route path="warranty" element={<WarrantyPortal />} />
-                          <Route path="cms" element={<CMSPortal />} />
-                          <Route path="reports" element={<ReportsPortal />} />
-                          <Route path="users" element={<AdminUsersPage />} />
-                          <Route path="roles" element={<RolesPage />} />
-                          <Route path="products" element={<AdminProductsPage />} />
-                          <Route path="categories" element={<CategoriesPage />} />
-                          <Route path="orders" element={<AdminOrdersPage />} />
-                          <Route path="reviews" element={<ReviewsManagementPage />} />
-                          <Route path="coupons" element={<CouponsPage />} />
-                          <Route path="config" element={<ConfigPortal />} />
-                          <Route path="admin" element={<AdminPortal />} />
-                          <Route path="manager" element={<ManagerPortal />} />
+                    {/* Admin Routes */}
+                    <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                      <Route path="/admin" element={<AdminPortal />} />
+                      <Route path="/admin/products" element={<AdminProductsPage />} />
+                      <Route path="/admin/products/new" element={<AdminProductsPage />} />
+                      <Route path="/admin/orders" element={<AdminOrdersPage />} />
+                      <Route path="/admin/orders/:orderId" element={<AdminOrdersPage />} />
+                      <Route path="/admin/users" element={<AdminUsersPage />} />
+                      <Route path="/admin/roles" element={<RolesPage />} />
+                      <Route path="/admin/flash-sales" element={<FlashSalesPage />} />
+                      {/* <Route path="/admin/payments/sepay" element={<SePayAdminPage />} /> */}
+                    </Route>
 
-                          {/* CRM Routes */}
-                          <Route path="crm" element={<CrmPortal />} />
-                          <Route path="crm/customers" element={<CrmCustomersPage />} />
-                          <Route path="crm/leads" element={<CrmLeadsPage />} />
-                          <Route path="crm/leads/pipeline" element={<LeadPipelinePage />} />
-                          <Route path="crm/segments" element={<CrmSegmentsPage />} />
-                          <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
-                        </Route>
-                      </Route>
-
-                      {/* Admin Routes */}
-                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
-                        <Route path="/admin" element={<AdminPortal />} />
-                        <Route path="/admin/products" element={<AdminProductsPage />} />
-                        <Route path="/admin/products/new" element={<AdminProductsPage />} />
-                        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-                        <Route path="/admin/orders/:orderId" element={<AdminOrdersPage />} />
-                        <Route path="/admin/users" element={<AdminUsersPage />} />
-                        <Route path="/admin/roles" element={<RolesPage />} />
-                        <Route path="/admin/flash-sales" element={<FlashSalesPage />} />
-                      </Route>
-
-                      {/* Auth Pages (Standalone) */}
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    </Routes>
-                  </ComparisonProvider>
+                    {/* Auth Pages (Standalone) */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  </Routes>
+                </ComparisonProvider>
               </CartProvider>
             </ThemeProvider>
           </AuthProvider>

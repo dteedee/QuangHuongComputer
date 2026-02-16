@@ -1,6 +1,7 @@
 using BuildingBlocks.Email;
 using BuildingBlocks.Security;
 using Communication.Repositories;
+using Communication.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,11 @@ public static class CommunicationEndpoints
     public static void MapCommunicationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/communication");
+
+        // ========================================
+        // NOTIFICATION ENDPOINTS
+        // ========================================
+        app.MapNotificationEndpoints();
 
         // Newsletter Subscription endpoints
         group.MapPost("/newsletter/subscribe", async ([FromBody] NewsletterSubscribeDto dto, Communication.Infrastructure.CommunicationDbContext db, HttpContext context) =>
@@ -243,3 +249,67 @@ public record SendEmailDto(string To, string Subject, string Body);
 public record AiAskRequest(Guid ConversationId, string Question);
 public record NewsletterSubscribeDto(string Email, string? Name);
 public record NewsletterUnsubscribeDto(string Email, string? Reason);
+
+public static class NotificationEndpointsExtensions
+{
+    public static void MapNotificationEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/notifications").RequireAuthorization();
+
+        // GET /api/notifications - Get notifications for current user
+        group.MapGet("/", async (
+            HttpContext context,
+            INotificationService notificationService,
+            int page = 1,
+            int pageSize = 50) =>
+        {
+            var userId = GetUserId(context);
+            var notifications = await notificationService.GetUserNotificationsAsync(userId, page, pageSize);
+            return Results.Ok(notifications);
+        });
+
+        // GET /api/notifications/unread-count - Get unread count
+        group.MapGet("/unread-count", async (
+            HttpContext context,
+            INotificationService notificationService) =>
+        {
+            var userId = GetUserId(context);
+            var count = await notificationService.GetUnreadCountAsync(userId);
+            return Results.Ok(new { count });
+        });
+
+        // POST /api/notifications/{id}/read - Mark notification as read
+        group.MapPost("/{id}/read", async (
+            Guid id,
+            HttpContext context,
+            INotificationService notificationService) =>
+        {
+            var userId = GetUserId(context);
+            var result = await notificationService.MarkAsReadAsync(id, userId);
+
+            if (!result)
+            {
+                return Results.NotFound(new { message = "Notification not found" });
+            }
+
+            return Results.Ok(new { message = "Notification marked as read" });
+        });
+
+        // POST /api/notifications/read-all - Mark all as read
+        group.MapPost("/read-all", async (
+            HttpContext context,
+            INotificationService notificationService) =>
+        {
+            var userId = GetUserId(context);
+            await notificationService.MarkAllAsReadAsync(userId);
+            return Results.Ok(new { message = "All notifications marked as read" });
+        });
+    }
+
+    private static string GetUserId(HttpContext context)
+    {
+        return context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? context.User.FindFirst("sub")?.Value
+            ?? "";
+    }
+}

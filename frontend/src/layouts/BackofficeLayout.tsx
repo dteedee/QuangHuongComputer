@@ -3,10 +3,9 @@ import {
     LayoutDashboard, Package, Receipt, Wrench, ShieldCheck, Box, BarChart3,
     Users, Settings, Lock, Archive, Store, Hammer, Bell, Menu, Search,
     Power, ChevronDown, ChevronRight, FileText, Target, UserPlus, Mail,
-    Zap, Ticket, Sun, Moon, Monitor, Palette, ChevronLeft, X, Command,
-    Calendar, Clock, TrendingUp, Activity, Sparkles, Gift, Star, Building2,
-    Truck, CreditCard, MessageSquare, Headphones, Globe, Languages, Eye,
-    Volume2, VolumeX, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
+    Zap, Ticket, Sun, Moon, Monitor, Palette, Command,
+    Clock, TrendingUp, Sparkles, Star,
+    CreditCard, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
     UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -142,6 +141,7 @@ export const BackofficeLayout = () => {
                 { title: 'Người dùng', icon: <Users size={20} />, path: '/backoffice/users', allowedRoles: ['Admin'], description: 'Quản lý tài khoản' },
                 { title: 'Vai trò & Quyền', icon: <Lock size={20} />, path: '/backoffice/roles', allowedRoles: ['Admin'], description: 'Phân quyền' },
                 { title: 'Cấu hình', icon: <Settings size={20} />, path: '/backoffice/config', allowedRoles: ['Admin'], description: 'Cài đặt hệ thống' },
+                { title: 'Thanh toán SePay', icon: <CreditCard size={20} />, path: '/backoffice/payments/sepay', allowedRoles: ['Admin'], description: 'Cấu hình & Giao dịch' },
                 { title: 'Báo cáo', icon: <BarChart3 size={20} />, path: '/backoffice/reports', allowedRoles: ['Admin', 'Manager'], description: 'Thống kê & báo cáo' },
             ]
         }
@@ -232,17 +232,20 @@ export const BackofficeLayout = () => {
         return group.items.some(item => isActive(item.path));
     };
 
-    // Notifications using hook based on user roles
+    // Notifications using hook based on user roles with realtime support
     const {
         notifications,
         loading: notificationsLoading,
         unreadCount,
         markAsRead,
         markAllAsRead,
-        refresh: refreshNotifications
+        refresh: refreshNotifications,
+        isRealtimeConnected
     } = useNotifications({
         roles: user?.roles || [],
-        refreshInterval: 120000 // 2 minutes
+        refreshInterval: 120000, // 2 minutes
+        enableRealtime: true,
+        showToastOnNewNotification: true
     });
 
     // Get icon for notification type
@@ -343,87 +346,86 @@ export const BackofficeLayout = () => {
                     const isExpanded = expandedGroups.includes(group.id);
 
                     return (
-                    <div key={group.id} className="space-y-1">
-                        <button
-                            onClick={() => toggleGroup(group.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${
-                                groupActive
+                        <div key={group.id} className="space-y-1">
+                            <button
+                                onClick={() => toggleGroup(group.id)}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${groupActive
                                     ? isDark
                                         ? 'text-white bg-gray-800/50'
                                         : 'text-gray-900 bg-gray-100/50'
                                     : isDark
                                         ? 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
                                         : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <span className={groupActive ? '' : group.color} style={groupActive ? { color: colors.primary } : {}}>
-                                    {group.icon}
+                                    }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className={groupActive ? '' : group.color} style={groupActive ? { color: colors.primary } : {}}>
+                                        {group.icon}
+                                    </span>
+                                    {!sidebarCollapsed && group.title}
                                 </span>
-                                {!sidebarCollapsed && group.title}
-                            </span>
-                            {!sidebarCollapsed && (
-                                <ChevronDown
-                                    size={14}
-                                    className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                                />
-                            )}
-                        </button>
+                                {!sidebarCollapsed && (
+                                    <ChevronDown
+                                        size={14}
+                                        className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    />
+                                )}
+                            </button>
 
-                        <AnimatePresence initial={false}>
-                            {(isExpanded || sidebarCollapsed) && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                                    className="overflow-hidden space-y-1"
-                                >
-                                    {group.items.map(item => {
-                                        const active = isActive(item.path);
-                                        return (
-                                            <Link
-                                                key={item.path}
-                                                to={item.path}
-                                                title={sidebarCollapsed ? item.title : undefined}
-                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${active
-                                                    ? isDark
-                                                        ? 'bg-gray-800 text-white'
-                                                        : 'bg-gray-100 text-gray-900'
-                                                    : isDark
-                                                        ? 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                                    }`}
-                                                style={active ? { borderLeft: `3px solid ${colors.primary}` } : {}}
-                                            >
-                                                <span
-                                                    className={`flex-shrink-0 ${active ? '' : isDark ? 'text-gray-500' : 'text-gray-400'}`}
-                                                    style={active ? { color: colors.primary } : {}}
+                            <AnimatePresence initial={false}>
+                                {(isExpanded || sidebarCollapsed) && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                        className="overflow-hidden space-y-1"
+                                    >
+                                        {group.items.map(item => {
+                                            const active = isActive(item.path);
+                                            return (
+                                                <Link
+                                                    key={item.path}
+                                                    to={item.path}
+                                                    title={sidebarCollapsed ? item.title : undefined}
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${active
+                                                        ? isDark
+                                                            ? 'bg-gray-800 text-white'
+                                                            : 'bg-gray-100 text-gray-900'
+                                                        : isDark
+                                                            ? 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                        }`}
+                                                    style={active ? { borderLeft: `3px solid ${colors.primary}` } : {}}
                                                 >
-                                                    {item.icon}
-                                                </span>
-                                                {!sidebarCollapsed && (
-                                                    <>
-                                                        <span className="text-sm font-medium flex-1">{item.title}</span>
-                                                        {item.badge ? (
-                                                            <span
-                                                                className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                                style={{ backgroundColor: colors.primary }}
-                                                            >
-                                                                {item.badge}
-                                                            </span>
-                                                        ) : active ? (
-                                                            <ChevronRight size={14} className="text-gray-400" />
-                                                        ) : null}
-                                                    </>
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                                    <span
+                                                        className={`flex-shrink-0 ${active ? '' : isDark ? 'text-gray-500' : 'text-gray-400'}`}
+                                                        style={active ? { color: colors.primary } : {}}
+                                                    >
+                                                        {item.icon}
+                                                    </span>
+                                                    {!sidebarCollapsed && (
+                                                        <>
+                                                            <span className="text-sm font-medium flex-1">{item.title}</span>
+                                                            {item.badge ? (
+                                                                <span
+                                                                    className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                                                    style={{ backgroundColor: colors.primary }}
+                                                                >
+                                                                    {item.badge}
+                                                                </span>
+                                                            ) : active ? (
+                                                                <ChevronRight size={14} className="text-gray-400" />
+                                                            ) : null}
+                                                        </>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     );
                 })}
             </div>
@@ -638,6 +640,11 @@ export const BackofficeLayout = () => {
                                                         {unreadCount}
                                                     </span>
                                                 )}
+                                                {/* Realtime indicator */}
+                                                <span
+                                                    className={`w-2 h-2 rounded-full ${isRealtimeConnected ? 'bg-green-500' : 'bg-gray-400'}`}
+                                                    title={isRealtimeConnected ? 'Realtime connected' : 'Realtime disconnected'}
+                                                />
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button

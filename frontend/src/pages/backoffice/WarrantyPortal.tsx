@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
     Shield, Search, CheckCircle, XCircle, Clock, AlertCircle, Package, Calendar,
     FileText, Check, X, Wrench, RefreshCw, Eye, ChevronRight, Filter,
@@ -222,6 +223,9 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 };
 
 export const WarrantyPortal = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlClaimId = searchParams.get('claimId');
+
     const [activeTab, setActiveTab] = useState<TabType>('claims');
     const [warranties, setWarranties] = useState<any[]>([]);
     const [claims, setClaims] = useState<any[]>([]);
@@ -231,6 +235,30 @@ export const WarrantyPortal = () => {
     const [loading, setLoading] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [selectedClaim, setSelectedClaim] = useState<any>(null);
+    const [highlightedClaimId, setHighlightedClaimId] = useState<string | null>(urlClaimId);
+    const highlightedClaimRef = useRef<HTMLDivElement>(null);
+
+    // Handle claimId from URL - switch to claims tab and highlight
+    useEffect(() => {
+        if (urlClaimId) {
+            setActiveTab('claims'); // Switch to claims tab
+            setHighlightedClaimId(urlClaimId);
+            // Clear the claimId from URL after 5 seconds
+            const timer = setTimeout(() => {
+                searchParams.delete('claimId');
+                setSearchParams(searchParams, { replace: true });
+                setHighlightedClaimId(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [urlClaimId]);
+
+    // Scroll to highlighted claim
+    useEffect(() => {
+        if (highlightedClaimId && highlightedClaimRef.current) {
+            highlightedClaimRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [highlightedClaimId, highlightedClaimRef.current, claims]);
 
     useEffect(() => {
         fetchData();
@@ -462,10 +490,15 @@ export const WarrantyPortal = () => {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-100">
-                                {claims.map((claim) => (
+                                {claims.map((claim) => {
+                                    const isHighlighted = claim.id === highlightedClaimId;
+                                    return (
                                     <div
                                         key={claim.id}
-                                        className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                                        ref={isHighlighted ? highlightedClaimRef : undefined}
+                                        className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                            isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 animate-pulse' : ''
+                                        }`}
                                         onClick={() => viewClaimDetail(claim)}
                                     >
                                         <div className="flex items-start justify-between gap-4">
@@ -509,7 +542,8 @@ export const WarrantyPortal = () => {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
