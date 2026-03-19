@@ -172,28 +172,28 @@ public static class ContentDbSeeder
         // 3. Menus Upsert
         if (!await context.Menus.AnyAsync())
         {
-            var headerMenu = new Menu("Header Main Navigation", "HeaderMain");
-            headerMenu.AddItem(new MenuItem("Trang chủ", "/", 1, "Home"));
-            headerMenu.AddItem(new MenuItem("Sản phẩm", "/products", 2, "Laptop"));
-            headerMenu.AddItem(new MenuItem("Tin tức", "/policy/news", 3, "FileText"));
-            headerMenu.AddItem(new MenuItem("Khuyến mãi", "/policy/promotions", 4, "Tag"));
-            headerMenu.AddItem(new MenuItem("Liên hệ", "/lien-he", 5, "Phone"));
+            var headerMenu = new Menu("Header Main Navigation", "HeaderMain", MenuLocation.HeaderMain);
+            headerMenu.AddItem(new MenuItem(headerMenu.Id, "Trang chủ", url: "/", icon: "Home", displayOrder: 1));
+            headerMenu.AddItem(new MenuItem(headerMenu.Id, "Sản phẩm", url: "/products", icon: "Laptop", displayOrder: 2));
+            headerMenu.AddItem(new MenuItem(headerMenu.Id, "Tin tức", url: "/policy/news", icon: "FileText", displayOrder: 3));
+            headerMenu.AddItem(new MenuItem(headerMenu.Id, "Khuyến mãi", url: "/policy/promotions", icon: "Tag", displayOrder: 4));
+            headerMenu.AddItem(new MenuItem(headerMenu.Id, "Liên hệ", url: "/lien-he", icon: "Phone", displayOrder: 5));
             context.Menus.Add(headerMenu);
 
-            var footerMain = new Menu("Product Categories", "FooterMain");
-            footerMain.AddItem(new MenuItem("Laptop Gaming", "/products?category=gaming", 1));
-            footerMain.AddItem(new MenuItem("Laptop Văn Phòng", "/products?category=office", 2));
-            footerMain.AddItem(new MenuItem("Linh Kiện PC", "/products?category=components", 3));
-            footerMain.AddItem(new MenuItem("Màn Hình", "/products?category=monitor", 4));
-            footerMain.AddItem(new MenuItem("Bàn Phím & Chuột", "/products?category=gear", 5));
+            var footerMain = new Menu("Product Categories", "FooterMain", MenuLocation.FooterMain);
+            footerMain.AddItem(new MenuItem(footerMain.Id, "Laptop Gaming", url: "/products?category=gaming", displayOrder: 1));
+            footerMain.AddItem(new MenuItem(footerMain.Id, "Laptop Văn Phòng", url: "/products?category=office", displayOrder: 2));
+            footerMain.AddItem(new MenuItem(footerMain.Id, "Linh Kiện PC", url: "/products?category=components", displayOrder: 3));
+            footerMain.AddItem(new MenuItem(footerMain.Id, "Màn Hình", url: "/products?category=monitor", displayOrder: 4));
+            footerMain.AddItem(new MenuItem(footerMain.Id, "Bàn Phím & Chuột", url: "/products?category=gear", displayOrder: 5));
             context.Menus.Add(footerMain);
 
-            var footerBottom = new Menu("Support & Policy", "FooterBottom");
-            footerBottom.AddItem(new MenuItem("Chính sách bảo hành", "/policy/bao-hanh", 1));
-            footerBottom.AddItem(new MenuItem("Chính sách đổi trả", "/policy/doi-tra", 2));
-            footerBottom.AddItem(new MenuItem("Chính sách vận chuyển", "/policy/van-chuyen", 3));
-            footerBottom.AddItem(new MenuItem("Hướng dẫn thanh toán", "/policy/huong-dan-thanh-toan", 4));
-            footerBottom.AddItem(new MenuItem("Giới thiệu", "/policy/gioi-thieu", 5));
+            var footerBottom = new Menu("Support & Policy", "FooterBottom", MenuLocation.FooterBottom);
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách bảo hành", url: "/policy/bao-hanh", displayOrder: 1));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách đổi trả", url: "/policy/doi-tra", displayOrder: 2));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách vận chuyển", url: "/policy/van-chuyen", displayOrder: 3));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Hướng dẫn thanh toán", url: "/policy/huong-dan-thanh-toan", displayOrder: 4));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Giới thiệu", url: "/policy/gioi-thieu", displayOrder: 5));
             context.Menus.Add(footerBottom);
         }
 
@@ -201,8 +201,7 @@ public static class ContentDbSeeder
         if (!await context.HomepageSections.AnyAsync())
         {
             // Hero Slider
-            var heroSlider = new HomepageSection("Hero Slider", "hero_slider", 1);
-            heroSlider.Configuration = @"{
+            var heroSliderConfig = @"{
                 ""slides"": [
                     {
                         ""title"": ""CHÀO XUÂN BÍNH NGỌ 2026"",
@@ -225,11 +224,11 @@ public static class ContentDbSeeder
                 ],
                 ""showSidebar"": true
             }";
+            var heroSlider = new HomepageSection("hero_slider", "Hero Slider", 1, heroSliderConfig);
             context.HomepageSections.Add(heroSlider);
 
             // Banner Grid
-            var bannerGrid = new HomepageSection("Promo Banners", "banner_grid", 2);
-            bannerGrid.Configuration = @"{
+            var bannerGridConfig = @"{
                 ""banners"": [
                     { ""title"": ""Quà Tặng Tết"", ""subtitle"": ""Trị giá lên đến 5 triệu"", ""icon"": ""Gift"", ""gradient"": ""from-red-500 to-pink-600"", ""link"": ""/products"" },
                     { ""title"": ""Trả Góp 0%"", ""subtitle"": ""Duyệt nhanh 5 phút"", ""icon"": ""Award"", ""gradient"": ""from-blue-500 to-cyan-600"", ""link"": ""/products"" },
@@ -237,45 +236,45 @@ public static class ContentDbSeeder
                 ],
                 ""columns"": 3
             }";
+            var bannerGrid = new HomepageSection("banner_grid", "Promo Banners", 2, bannerGridConfig);
             context.HomepageSections.Add(bannerGrid);
 
             // Flash Deal
-            var flashDeal = new HomepageSection("Flash Sale", "flash_deal", 3);
-            flashDeal.Configuration = @"{
+            var flashDealConfig = @"{
                 ""tag"": ""sale"",
                 ""limit"": 5,
                 ""showViewAll"": true
             }";
+            var flashDeal = new HomepageSection("flash_deal", "Flash Sale", 3, flashDealConfig);
             context.HomepageSections.Add(flashDeal);
 
             // Category Grid
-            var catGrid = new HomepageSection("Shop by Category", "category_grid", 4);
-            catGrid.Configuration = @"{
+            var catGridConfig = @"{
                 ""limit"": 8,
                 ""columns"": 4
             }";
+            var catGrid = new HomepageSection("category_grid", "Shop by Category", 4, catGridConfig);
             context.HomepageSections.Add(catGrid);
 
             // Product Grid - Laptop
-            var laptopGrid = new HomepageSection("LAPTOP - MÁY TÍNH XÁCH TAY", "product_grid", 5);
-            laptopGrid.Configuration = @"{
+            var laptopGridConfig = @"{
                 ""icon"": ""Laptop"",
                 ""limit"": 5
             }";
+            var laptopGrid = new HomepageSection("product_grid", "LAPTOP - MÁY TÍNH XÁCH TAY", 5, laptopGridConfig);
             context.HomepageSections.Add(laptopGrid);
 
             // Post Grid
-            var newsGrid = new HomepageSection("Latest News", "post_grid", 6);
-            newsGrid.Configuration = @"{
+            var newsGridConfig = @"{
                 ""postType"": ""News"",
                 ""limit"": 4,
                 ""columns"": 4
             }";
+            var newsGrid = new HomepageSection("post_grid", "Latest News", 6, newsGridConfig);
             context.HomepageSections.Add(newsGrid);
 
             // Service Grid
-            var serviceGrid = new HomepageSection("Our Services", "service_grid", 7);
-            serviceGrid.Configuration = @"{
+            var serviceGridConfig = @"{
                 ""services"": [
                     { ""icon"": ""ShieldCheck"", ""title"": ""BẢO HÀNH 36 THÁNG"", ""desc"": ""Chính hãng toàn quốc"" },
                     { ""icon"": ""Award"", ""title"": ""GIÁ TỐT NHẤT"", ""desc"": ""Cam kết hoàn tiền 200%"" },
@@ -284,6 +283,7 @@ public static class ContentDbSeeder
                 ],
                 ""columns"": 4
             }";
+            var serviceGrid = new HomepageSection("service_grid", "Our Services", 7, serviceGridConfig);
             context.HomepageSections.Add(serviceGrid);
         }
 
