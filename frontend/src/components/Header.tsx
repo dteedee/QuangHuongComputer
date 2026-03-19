@@ -3,18 +3,36 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
-    Search, ShoppingCart, Menu, Phone,
+    Search, ShoppingCart, Menu as MenuIcon, Phone,
     Wrench, Monitor, ChevronDown,
     LogOut, Settings, Laptop, Cpu, Zap,
     Briefcase, MessageCircle, User, Package, FileText
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
+import { contentApi, type Menu, type MenuItem } from '../api/content';
 
 interface HeaderProps {
     onCartClick: () => void;
     onChatClick?: () => void;
 }
+
+const IconMap: Record<string, any> = {
+    'Search': Search,
+    'ShoppingCart': ShoppingCart,
+    'Menu': MenuIcon,
+    'Phone': Phone,
+    'Wrench': Wrench,
+    'Monitor': Monitor,
+    'Laptop': Laptop,
+    'Cpu': Cpu,
+    'Zap': Zap,
+    'Briefcase': Briefcase,
+    'MessageCircle': MessageCircle,
+    'User': User,
+    'Package': Package,
+    'FileText': FileText,
+};
 
 export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const { isAuthenticated, user, logout } = useAuth();
@@ -23,17 +41,24 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
+    const [headerMenu, setHeaderMenu] = useState<Menu | null>(null);
 
     useEffect(() => {
-        const fetchConfigs = async () => {
+        const fetchData = async () => {
             try {
-                const data = await systemConfigApi.config.getPublic();
-                setConfigs(Array.isArray(data) ? data : []);
+                const [configData, menuData] = await Promise.all([
+                    systemConfigApi.config.getPublic(),
+                    contentApi.getMenus('HeaderMain')
+                ]);
+                setConfigs(Array.isArray(configData) ? configData : []);
+                if (Array.isArray(menuData) && menuData.length > 0) {
+                    setHeaderMenu(menuData[0]);
+                }
             } catch (error) {
-                console.error('Failed to load header configs', error);
+                console.error('Failed to load header data', error);
             }
         };
-        fetchConfigs();
+        fetchData();
     }, []);
 
     const companyBrand1 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_1', 'QUANG HƯỞNG', (v) => v);
@@ -48,7 +73,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
-            setSearchQuery(''); // Clear search after submit
+            setSearchQuery('');
         }
     };
 
@@ -56,26 +81,22 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
 
     const isActive = (path: string) => {
         if (path === '/') return location.pathname === '/';
-        // Handle precise matching for products vs other potential sub-paths if needed
-        // For now, simpler check:
         return location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
     };
 
-    const getLinkClass = (path: string, isButton = false) => {
+    const getLinkClass = (path: string) => {
         const active = isActive(path);
-
-        if (isButton) {
-            // Special styling for the first button "Danh mục sản phẩm" if we keep it distinct
-            // But user wants the "bar" to move.
-            // If we want them all to look like tabs, we might need a unified style.
-            // Let's try to make the active one look like the current "Danh mục sản phẩm" button (Red bg, white text)
-        }
-
         const baseClass = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all uppercase tracking-tight";
         const activeClass = "bg-[#D70018] text-white shadow-lg shadow-red-500/20";
         const inactiveClass = "text-gray-600 hover:bg-gray-100 hover:text-[#D70018]";
 
         return `${baseClass} ${active ? activeClass : inactiveClass}`;
+    };
+
+    const renderIcon = (iconName?: string) => {
+        if (!iconName) return null;
+        const IconComponent = IconMap[iconName];
+        return IconComponent ? <IconComponent size={16} /> : null;
     };
 
     return (
@@ -103,7 +124,6 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                 >
                                     Chào, {user?.fullName} <ChevronDown size={12} />
                                 </button>
-                                {/* Dropdown menu - redesign */}
                                 {showUserMenu && (
                                     <div className="absolute top-full right-0 mt-2 w-56 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 py-2 z-[100]">
                                         <div className="px-4 py-2 border-b border-gray-50 flex items-center gap-3">
@@ -155,8 +175,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
             {/* 2. Main Header (White) */}
             <div className="bg-white py-4 border-b border-gray-100">
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-4 lg:gap-8 justify-between">
-                    {/* Logo Section */}
-                    <Link to="/" className="flex-shrink-0 flex items-center gap-3 group" data-testid="logo-link">
+                    <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
                         <div className="relative">
                             <div className="w-12 h-12 bg-[#D70018] rounded-lg flex items-center justify-center text-white font-black text-2xl transform shadow-lg shadow-red-500/20 group-hover:rotate-3 transition-transform">
                                 QH
@@ -168,7 +187,6 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                         </div>
                     </Link>
 
-                    {/* Search Bar */}
                     <div className="flex-1 max-w-2xl relative">
                         <form onSubmit={handleSearch} className="flex h-11">
                             <div className="relative flex-shrink-0 bg-gray-100 px-4 flex items-center gap-1 rounded-l-xl border-r border-gray-200 cursor-pointer text-xs font-bold text-gray-600 hover:bg-gray-200 transition-colors">
@@ -187,13 +205,10 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                         </form>
                     </div>
 
-                    {/* Quick Actions */}
                     <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
-                        {/* Cart */}
                         <button
                             onClick={onCartClick}
                             className="flex items-center gap-3 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all relative border border-red-200 group"
-                            data-testid="cart-button"
                         >
                             <div className="relative">
                                 <ShoppingCart size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
@@ -206,11 +221,9 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             <span className="text-sm font-bold text-[#D70018] hidden sm:block">Giỏ hàng</span>
                         </button>
 
-                        {/* Chat */}
                         <button
                             onClick={onChatClick}
                             className="flex items-center gap-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all border border-red-200 group"
-                            data-testid="chat-button"
                         >
                             <MessageCircle size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-bold text-[#D70018] hidden sm:block">Chat</span>
@@ -223,23 +236,25 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
             <div className="bg-white border-b border-gray-100 hidden lg:block shadow-sm">
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
                     <div className="flex items-center gap-2 py-2">
-                        {/* Unified Navigation Links */}
-                        {[
-                            { name: 'Danh mục sản phẩm', icon: <Menu size={18} />, path: '/products' }, // Changed to be just another tab but first
-                            // { name: 'Sản phẩm', icon: <Laptop size={16} />, path: '/products' }, // Removed redundant link if "Danh mục" is the main product link
-                            { name: 'Dịch vụ sửa chữa', icon: <Wrench size={16} />, path: '/repairs' },
-                            { name: 'Bảo hành', icon: <Monitor size={16} />, path: '/warranty' },
-                            { name: 'Blog/Tin tức', icon: <FileText size={16} />, path: '/policy/news' },
-                            { name: 'Liên hệ', icon: <Phone size={16} />, path: '/contact' },
-                        ].map((item, idx) => (
-                            <Link
-                                key={idx}
-                                to={item.path}
-                                className={getLinkClass(item.path)}
-                            >
-                                {item.icon} {item.name}
-                            </Link>
-                        ))}
+                        {headerMenu?.items ? (
+                            headerMenu.items.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    to={item.url || '/'}
+                                    className={`${getLinkClass(item.url || '/')} ${item.cssClass || ''}`}
+                                    target={item.openInNewTab ? "_blank" : undefined}
+                                >
+                                    {renderIcon(item.icon)} {item.label}
+                                </Link>
+                            ))
+                        ) : (
+                            // Fallback links if no menu loaded yet or empty
+                            <>
+                                <Link to="/products" className={getLinkClass('/products')}><MenuIcon size={18} /> Danh mục sản phẩm</Link>
+                                <Link to="/repairs" className={getLinkClass('/repairs')}><Wrench size={16} /> Dịch vụ sửa chữa</Link>
+                                <Link to="/warranty" className={getLinkClass('/warranty')}><Monitor size={16} /> Bảo hành</Link>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-4">

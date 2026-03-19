@@ -1,5 +1,5 @@
-﻿import { Outlet, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Users, LogOut } from 'lucide-react';
+import { Outlet, Link } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, Menu as MenuIcon, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const AdminLayout = () => {
@@ -43,6 +43,23 @@ export const AdminLayout = () => {
                         <Users size={20} />
                         <span>Users</span>
                     </Link>
+                    <div className="pt-4 mt-4 border-t border-white/10">
+                        <p className="px-4 text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Content CMS</p>
+                        <Link
+                            to="/admin/menus"
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition"
+                        >
+                            <MenuIcon size={20} />
+                            <span>Menu Manager</span>
+                        </Link>
+                        <Link
+                            to="/admin/homepage-builder"
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition"
+                        >
+                            <LayoutGrid size={20} />
+                            <span>Homepage Builder</span>
+                        </Link>
+                    </div>
                 </nav>
 
                 <button

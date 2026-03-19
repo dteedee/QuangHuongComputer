@@ -92,6 +92,126 @@ public static class ContentDbSeeder
         }
         
         await context.SaveChangesAsync();
+
+        // 3. Menus Upsert
+        if (!await context.Menus.AnyAsync())
+        {
+            var headerMenu = new Menu("Header Main Navigation", "HeaderMain");
+            headerMenu.AddItem(new MenuItem("Trang chủ", "/", 1, "Home"));
+            headerMenu.AddItem(new MenuItem("Sản phẩm", "/products", 2, "Laptop"));
+            headerMenu.AddItem(new MenuItem("Tin tức", "/policy/news", 3, "FileText"));
+            headerMenu.AddItem(new MenuItem("Khuyến mãi", "/policy/promotions", 4, "Tag"));
+            headerMenu.AddItem(new MenuItem("Liên hệ", "/lien-he", 5, "Phone"));
+            context.Menus.Add(headerMenu);
+
+            var footerMain = new Menu("Product Categories", "FooterMain");
+            footerMain.AddItem(new MenuItem("Laptop Gaming", "/products?category=gaming", 1));
+            footerMain.AddItem(new MenuItem("Laptop Văn Phòng", "/products?category=office", 2));
+            footerMain.AddItem(new MenuItem("Linh Kiện PC", "/products?category=components", 3));
+            footerMain.AddItem(new MenuItem("Màn Hình", "/products?category=monitor", 4));
+            footerMain.AddItem(new MenuItem("Bàn Phím & Chuột", "/products?category=gear", 5));
+            context.Menus.Add(footerMain);
+
+            var footerBottom = new Menu("Support & Policy", "FooterBottom");
+            footerBottom.AddItem(new MenuItem("Chính sách bảo hành", "/policy/bao-hanh", 1));
+            footerBottom.AddItem(new MenuItem("Chính sách đổi trả", "/policy/doi-tra", 2));
+            footerBottom.AddItem(new MenuItem("Chính sách vận chuyển", "/policy/van-chuyen", 3));
+            footerBottom.AddItem(new MenuItem("Hướng dẫn thanh toán", "/policy/huong-dan-thanh-toan", 4));
+            footerBottom.AddItem(new MenuItem("Giới thiệu", "/policy/gioi-thieu", 5));
+            context.Menus.Add(footerBottom);
+        }
+
+        // 4. Homepage Sections Upsert
+        if (!await context.HomepageSections.AnyAsync())
+        {
+            // Hero Slider
+            var heroSlider = new HomepageSection("Hero Slider", "hero_slider", 1);
+            heroSlider.Configuration = @"{
+                ""slides"": [
+                    {
+                        ""title"": ""CHÀO XUÂN BÍNH NGỌ 2026"",
+                        ""subtitle"": ""DEALS TẾT KHỦNG - QUÀ TẶNG HOT"",
+                        ""description"": ""Giảm đến 50% + Tặng kèm quà tặng trị giá 5 triệu"",
+                        ""image"": ""https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=1200&h=500&fit=crop"",
+                        ""gradient"": ""from-red-600 via-red-700 to-amber-600"",
+                        ""link"": ""/products"",
+                        ""badge"": ""HOT TẾT""
+                    },
+                    {
+                        ""title"": ""PC GAMING CHIẾN MỌI GAME"",
+                        ""subtitle"": ""RTX 40 SERIES - SIÊU MẠNH"",
+                        ""description"": ""Build PC Gaming từ 15 triệu - Trả góp 0%"",
+                        ""image"": ""https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=1200&h=500&fit=crop"",
+                        ""gradient"": ""from-blue-600 via-purple-600 to-pink-600"",
+                        ""link"": ""/products?category=pc-gaming"",
+                        ""badge"": ""GAMING""
+                    }
+                ],
+                ""showSidebar"": true
+            }";
+            context.HomepageSections.Add(heroSlider);
+
+            // Banner Grid
+            var bannerGrid = new HomepageSection("Promo Banners", "banner_grid", 2);
+            bannerGrid.Configuration = @"{
+                ""banners"": [
+                    { ""title"": ""Quà Tặng Tết"", ""subtitle"": ""Trị giá lên đến 5 triệu"", ""icon"": ""Gift"", ""gradient"": ""from-red-500 to-pink-600"", ""link"": ""/products"" },
+                    { ""title"": ""Trả Góp 0%"", ""subtitle"": ""Duyệt nhanh 5 phút"", ""icon"": ""Award"", ""gradient"": ""from-blue-500 to-cyan-600"", ""link"": ""/products"" },
+                    { ""title"": ""Freeship Toàn Quốc"", ""subtitle"": ""Đơn từ 500.000đ"", ""icon"": ""Truck"", ""gradient"": ""from-emerald-500 to-green-600"", ""link"": ""/products"" }
+                ],
+                ""columns"": 3
+            }";
+            context.HomepageSections.Add(bannerGrid);
+
+            // Flash Deal
+            var flashDeal = new HomepageSection("Flash Sale", "flash_deal", 3);
+            flashDeal.Configuration = @"{
+                ""tag"": ""sale"",
+                ""limit"": 5,
+                ""showViewAll"": true
+            }";
+            context.HomepageSections.Add(flashDeal);
+
+            // Category Grid
+            var catGrid = new HomepageSection("Shop by Category", "category_grid", 4);
+            catGrid.Configuration = @"{
+                ""limit"": 8,
+                ""columns"": 4
+            }";
+            context.HomepageSections.Add(catGrid);
+
+            // Product Grid - Laptop
+            var laptopGrid = new HomepageSection("LAPTOP - MÁY TÍNH XÁCH TAY", "product_grid", 5);
+            laptopGrid.Configuration = @"{
+                ""icon"": ""Laptop"",
+                ""limit"": 5
+            }";
+            context.HomepageSections.Add(laptopGrid);
+
+            // Post Grid
+            var newsGrid = new HomepageSection("Latest News", "post_grid", 6);
+            newsGrid.Configuration = @"{
+                ""postType"": ""News"",
+                ""limit"": 4,
+                ""columns"": 4
+            }";
+            context.HomepageSections.Add(newsGrid);
+
+            // Service Grid
+            var serviceGrid = new HomepageSection("Our Services", "service_grid", 7);
+            serviceGrid.Configuration = @"{
+                ""services"": [
+                    { ""icon"": ""ShieldCheck"", ""title"": ""BẢO HÀNH 36 THÁNG"", ""desc"": ""Chính hãng toàn quốc"" },
+                    { ""icon"": ""Award"", ""title"": ""GIÁ TỐT NHẤT"", ""desc"": ""Cam kết hoàn tiền 200%"" },
+                    { ""icon"": ""Truck"", ""title"": ""GIAO HÀNG NHANH"", ""desc"": ""Freeship toàn quốc"" },
+                    { ""icon"": ""Wrench"", ""title"": ""HỖ TRỢ 24/7"", ""desc"": ""Tư vấn miễn phí"" }
+                ],
+                ""columns"": 4
+            }";
+            context.HomepageSections.Add(serviceGrid);
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private const string DefaultWarrantyContent = @"

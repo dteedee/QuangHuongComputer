@@ -130,9 +130,15 @@ public static class ContentEndpoints
             await cache.RemoveByPatternAsync("cache:banners*");
             await cache.RemoveByPatternAsync("cache:page*");
             await cache.RemoveByPatternAsync("cache:posts*");
+            await cache.RemoveByPatternAsync("cache:menus*");
+            await cache.RemoveByPatternAsync("cache:homepage*");
 
             return Results.Ok(new { Message = "Content seeded successfully" });
         });
+
+        // Register Dynamic System Endpoints
+        MapMenuEndpoints(adminGroup, group);
+        MapHomepageEndpoints(adminGroup, group);
 
         // Page Management
         adminGroup.MapGet("/pages", async (ContentDbContext db) =>
@@ -442,6 +448,239 @@ public static class ContentEndpoints
             return Results.Ok(new { Message = "Banner deleted successfully" });
         });
     }
+
+    // ==================== MENU MANAGEMENT (Admin) ====================
+
+    private static void MapMenuEndpoints(RouteGroupBuilder adminGroup, RouteGroupBuilder publicGroup)
+    {
+        adminGroup.MapGet("/menus", async (ContentDbContext db) =>
+        {
+            var menus = await db.Menus
+                .Include(m => m.Items)
+                .OrderBy(m => m.Location)
+                .ThenBy(m => m.DisplayOrder)
+                .ToListAsync();
+            return Results.Ok(menus);
+        });
+
+        adminGroup.MapPost("/menus", async (CreateMenuDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = new Menu(dto.Name, dto.Code, dto.Location, dto.DisplayOrder, dto.CssClass);
+            db.Menus.Add(menu);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Created($"/api/content/admin/menus/{menu.Id}", menu);
+        });
+
+        adminGroup.MapPut("/menus/{id:guid}", async (Guid id, UpdateMenuDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.FindAsync(id);
+            if (menu == null) return Results.NotFound();
+
+            if (dto.IsActive.HasValue) menu.SetActive(dto.IsActive.Value);
+            
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Ok(menu);
+        });
+
+        adminGroup.MapDelete("/menus/{id:guid}", async (Guid id, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.Include(m => m.Items).FirstOrDefaultAsync(m => m.Id == id);
+            if (menu == null) return Results.NotFound();
+            
+            db.Menus.Remove(menu);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Ok(new { Message = "Menu deleted" });
+        });
+
+        // Menu Items
+        adminGroup.MapPost("/menus/{menuId:guid}/items", async (Guid menuId, CreateMenuItemDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.Include(m => m.Items).FirstOrDefaultAsync(m => m.Id == menuId);
+            if (menu == null) return Results.NotFound();
+
+            var item = new MenuItem(menuId, dto.Label, dto.Type, dto.Url, dto.Icon, dto.ParentId, dto.DisplayOrder, dto.OpenInNewTab, dto.PageId, dto.CategoryId);
+            menu.AddItem(item);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Created($"/api/content/admin/menus/{menuId}/items/{item.Id}", item);
+        });
+
+        adminGroup.MapPut("/menus/{menuId:guid}/items/{itemId:guid}", async (Guid menuId, Guid itemId, UpdateMenuItemDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.Include(m => m.Items).FirstOrDefaultAsync(m => m.Id == menuId);
+            if (menu == null) return Results.NotFound();
+
+            var item = menu.Items.FirstOrDefault(i => i.Id == itemId);
+            if (item == null) return Results.NotFound();
+
+            item.Update(dto.Label, dto.Url, dto.Icon);
+            if (dto.DisplayOrder.HasValue) item.SetDisplayOrder(dto.DisplayOrder.Value);
+            if (dto.IsActive.HasValue) item.SetActive(dto.IsActive.Value);
+
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Ok(item);
+        });
+
+        adminGroup.MapPut("/menus/{menuId:guid}/items/reorder", async (Guid menuId, ReorderItemsDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.Include(m => m.Items).FirstOrDefaultAsync(m => m.Id == menuId);
+            if (menu == null) return Results.NotFound();
+
+            foreach (var orderItem in dto.Items)
+            {
+                var item = menu.Items.FirstOrDefault(i => i.Id == orderItem.Id);
+                if (item != null) item.SetDisplayOrder(orderItem.DisplayOrder);
+            }
+
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Ok(new { Message = "Menu items reordered" });
+        });
+
+        adminGroup.MapDelete("/menus/{menuId:guid}/items/{itemId:guid}", async (Guid menuId, Guid itemId, ContentDbContext db, ICacheService cache) =>
+        {
+            var menu = await db.Menus.Include(m => m.Items).FirstOrDefaultAsync(m => m.Id == menuId);
+            if (menu == null) return Results.NotFound();
+            
+            menu.RemoveItem(itemId);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:menus*");
+            return Results.Ok(new { Message = "Menu item deleted" });
+        });
+
+        // Public Menu Endpoint
+        publicGroup.MapGet("/menus", async (MenuLocation? location, ContentDbContext db, ICacheService cache) =>
+        {
+            var cacheKey = $"cache:menus:{location?.ToString() ?? "all"}";
+            var cached = await cache.GetAsync<List<dynamic>>(cacheKey);
+            if (cached != null) return Results.Ok(cached);
+
+            var query = db.Menus
+                .Include(m => m.Items)
+                .Where(m => m.IsActive);
+
+            if (location.HasValue)
+                query = query.Where(m => m.Location == location.Value);
+
+            var menus = await query
+                .OrderBy(m => m.DisplayOrder)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.Code,
+                    m.Location,
+                    m.DisplayOrder,
+                    m.CssClass,
+                    Items = m.Items.Where(i => i.IsActive).OrderBy(i => i.DisplayOrder).Select(i => new
+                    {
+                        i.Id,
+                        i.Label,
+                        i.Url,
+                        i.Icon,
+                        i.ParentId,
+                        i.DisplayOrder,
+                        i.OpenInNewTab,
+                        i.Type,
+                        i.CssClass,
+                        i.PageId,
+                        i.CategoryId
+                    })
+                })
+                .ToListAsync<object>();
+
+            await cache.SetAsync(cacheKey, menus, TimeSpan.FromHours(1));
+            return Results.Ok(menus);
+        });
+    }
+
+    // ==================== HOMEPAGE SECTIONS (Admin) ====================
+
+    private static void MapHomepageEndpoints(RouteGroupBuilder adminGroup, RouteGroupBuilder publicGroup)
+    {
+        adminGroup.MapGet("/homepage/sections", async (ContentDbContext db) =>
+        {
+            var sections = await db.HomepageSections
+                .OrderBy(s => s.DisplayOrder)
+                .ToListAsync();
+            return Results.Ok(sections);
+        });
+
+        adminGroup.MapPost("/homepage/sections", async (CreateHomepageSectionDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var section = new HomepageSection(dto.SectionType, dto.Title, dto.DisplayOrder, dto.Configuration, dto.IsVisible, dto.CssClass);
+            db.HomepageSections.Add(section);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:homepage*");
+            return Results.Created($"/api/content/admin/homepage/sections/{section.Id}", section);
+        });
+
+        adminGroup.MapPut("/homepage/sections/{id:guid}", async (Guid id, UpdateHomepageSectionDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            var section = await db.HomepageSections.FindAsync(id);
+            if (section == null) return Results.NotFound();
+
+            section.Update(dto.Title ?? section.Title, dto.SectionType ?? section.SectionType, dto.Configuration, dto.CssClass);
+            if (dto.IsVisible.HasValue) section.SetVisibility(dto.IsVisible.Value);
+
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:homepage*");
+            return Results.Ok(section);
+        });
+
+        adminGroup.MapPut("/homepage/sections/reorder", async (ReorderSectionsDto dto, ContentDbContext db, ICacheService cache) =>
+        {
+            foreach (var item in dto.Sections)
+            {
+                var section = await db.HomepageSections.FindAsync(item.Id);
+                if (section != null) section.SetDisplayOrder(item.DisplayOrder);
+            }
+
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:homepage*");
+            return Results.Ok(new { Message = "Sections reordered" });
+        });
+
+        adminGroup.MapDelete("/homepage/sections/{id:guid}", async (Guid id, ContentDbContext db, ICacheService cache) =>
+        {
+            var section = await db.HomepageSections.FindAsync(id);
+            if (section == null) return Results.NotFound();
+
+            db.HomepageSections.Remove(section);
+            await db.SaveChangesAsync();
+            await cache.RemoveByPatternAsync("cache:homepage*");
+            return Results.Ok(new { Message = "Section deleted" });
+        });
+
+        // Public Homepage Sections
+        publicGroup.MapGet("/homepage/sections", async (ContentDbContext db, ICacheService cache) =>
+        {
+            var cacheKey = "cache:homepage:sections";
+            var cached = await cache.GetAsync<List<dynamic>>(cacheKey);
+            if (cached != null) return Results.Ok(cached);
+
+            var sections = await db.HomepageSections
+                .Where(s => s.IsVisible && s.IsActive)
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.SectionType,
+                    s.Title,
+                    s.DisplayOrder,
+                    s.Configuration,
+                    s.CssClass
+                })
+                .ToListAsync<object>();
+
+            await cache.SetAsync(cacheKey, sections, TimeSpan.FromMinutes(30));
+            return Results.Ok(sections);
+        });
+    }
 }
 
 // ==================== DTOs ====================
@@ -502,3 +741,40 @@ public record UpdateBannerDto(
     DateTime? EndDate = null,
     bool? IsActive = null
 );
+
+// Menu DTOs
+public record CreateMenuDto(string Name, string Code, MenuLocation Location, int DisplayOrder = 0, string? CssClass = null);
+public record UpdateMenuDto(bool? IsActive);
+public record CreateMenuItemDto(
+    string Label,
+    MenuItemType Type = MenuItemType.Custom,
+    string? Url = null,
+    string? Icon = null,
+    Guid? ParentId = null,
+    int DisplayOrder = 0,
+    bool OpenInNewTab = false,
+    Guid? PageId = null,
+    Guid? CategoryId = null
+);
+public record UpdateMenuItemDto(string Label, string? Url = null, string? Icon = null, int? DisplayOrder = null, bool? IsActive = null);
+public record ReorderItemsDto(List<OrderItemDto> Items);
+public record OrderItemDto(Guid Id, int DisplayOrder);
+
+// Homepage Section DTOs
+public record CreateHomepageSectionDto(
+    string SectionType,
+    string Title,
+    int DisplayOrder = 0,
+    string? Configuration = null,
+    bool IsVisible = true,
+    string? CssClass = null
+);
+public record UpdateHomepageSectionDto(
+    string? Title,
+    string? SectionType,
+    string? Configuration = null,
+    string? CssClass = null,
+    bool? IsVisible = null
+);
+public record ReorderSectionsDto(List<OrderItemDto> Sections);
+public record VisibilityDto(bool IsVisible);

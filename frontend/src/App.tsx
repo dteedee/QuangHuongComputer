@@ -56,6 +56,9 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import POSPage from './pages/backoffice/sale/POSPage';
 import { ScrollToTop } from './components/ScrollToTop';
+import { MenuManager } from './pages/admin/MenuManager';
+import { HomepageBuilder } from './pages/admin/HomepageBuilder';
+import { AdminLayout } from './layouts/AdminLayout';
 
 const queryClient = new QueryClient();
 
@@ -140,8 +143,14 @@ function App() {
                   </Route>
                 </Route>
 
-                {/* Admin Routes */}
+                {/* Admin CMS Routes */}
                 <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin/menus" element={<MenuManager />} />
+                    <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
+                  </Route>
+
+                  {/* Other standalone admin routes */}
                   <Route path="/admin" element={<AdminPortal />} />
                   <Route path="/admin/products" element={<AdminProductsPage />} />
                   <Route path="/admin/products/new" element={<AdminProductsPage />} />

@@ -44,6 +44,44 @@ export interface Coupon {
     updatedAt?: string;
 }
 
+export type MenuLocation = 'HeaderMain' | 'HeaderTop' | 'FooterMain' | 'FooterBottom' | 'Sidebar' | 'Mobile';
+export type MenuItemType = 'Custom' | 'Page' | 'Category' | 'Product' | 'Homepage' | 'Contact';
+
+export interface MenuItem {
+    id: string;
+    label: string;
+    url: string;
+    icon?: string;
+    parentId?: string;
+    order: number;
+    openInNewTab: boolean;
+    type?: MenuItemType;
+    cssClass?: string;
+    pageId?: string;
+    categoryId?: string;
+    menuId: string;
+}
+
+export interface Menu {
+    id: string;
+    name: string;
+    code: string;
+    location: MenuLocation;
+    order: number;
+    cssClass?: string;
+    items: MenuItem[];
+}
+
+export interface HomepageSection {
+    id: string;
+    sectionType: string;
+    title: string;
+    order: number;
+    configuration?: string;
+    isActive: boolean;
+    cssClass?: string;
+}
+
 export const contentApi = {
     // Public
     getPosts: async (type?: 'News' | 'Promotion' | 'Article' | 'Banner' | 'Ad') => {
@@ -56,6 +94,18 @@ export const contentApi = {
     },
     getCoupon: async (code: string, orderAmount?: number) => {
         const response = await client.get<Coupon>(`/content/coupons/${code}`, { params: { orderAmount } });
+        return response.data;
+    },
+    getMenus: async () => {
+        const response = await client.get<Menu[]>('/content/menus');
+        return response.data;
+    },
+    getMenu: async (location: MenuLocation) => {
+        const response = await client.get<Menu>(`/content/menus/${location}`);
+        return response.data;
+    },
+    getHomepageSections: async () => {
+        const response = await client.get<HomepageSection[]>('/content/homepage/sections');
         return response.data;
     },
 
@@ -90,7 +140,6 @@ export const contentApi = {
             const response = await client.get<Post[]>('/content/admin/posts', { params });
             return response.data;
         },
-        // NOTE: Backend doesn't have GET by id endpoint
         getPost: async (id: string) => {
             const response = await client.get<Post>(`/content/admin/posts/${id}`);
             return response.data;
@@ -107,7 +156,6 @@ export const contentApi = {
             const response = await client.delete(`/content/admin/posts/${id}`);
             return response.data;
         },
-        // NOTE: Backend doesn't have publish endpoint
         publishPost: async (_id: string, _isPublished: boolean) => {
             throw new Error('Publish post endpoint not implemented in backend');
         },
@@ -135,6 +183,64 @@ export const contentApi = {
         },
         validateCoupon: async (code: string, orderAmount: number) => {
             const response = await client.post('/content/coupons/validate', { code, orderAmount });
+            return response.data;
+        },
+
+        // Menus
+        getMenus: async () => {
+            const response = await client.get<Menu[]>('/content/admin/menus');
+            return response.data;
+        },
+        createMenu: async (data: any) => {
+            const response = await client.post<Menu>('/content/admin/menus', data);
+            return response.data;
+        },
+        updateMenu: async (id: string, data: any) => {
+            const response = await client.put<Menu>(`/content/admin/menus/${id}`, data);
+            return response.data;
+        },
+        deleteMenu: async (id: string) => {
+            const response = await client.delete(`/content/admin/menus/${id}`);
+            return response.data;
+        },
+
+        // Menu Items
+        createMenuItem: async (menuId: string, data: any) => {
+            const response = await client.post<MenuItem>(`/content/admin/menus/${menuId}/items`, data);
+            return response.data;
+        },
+        updateMenuItem: async (menuId: string, itemId: string, data: any) => {
+            const response = await client.put<MenuItem>(`/content/admin/menus/${menuId}/items/${itemId}`, data);
+            return response.data;
+        },
+        reorderMenuItems: async (menuId: string, items: { id: string; displayOrder: number }[]) => {
+            const response = await client.put(`/content/admin/menus/${menuId}/items/reorder`, { items });
+            return response.data;
+        },
+        deleteMenuItem: async (menuId: string, itemId: string) => {
+            const response = await client.delete(`/content/admin/menus/${menuId}/items/${itemId}`);
+            return response.data;
+        },
+
+        // Homepage Sections
+        getHomepageSections: async () => {
+            const response = await client.get<HomepageSection[]>('/content/admin/homepage/sections');
+            return response.data;
+        },
+        createHomepageSection: async (data: any) => {
+            const response = await client.post<HomepageSection>('/content/admin/homepage/sections', data);
+            return response.data;
+        },
+        updateHomepageSection: async (id: string, data: any) => {
+            const response = await client.put<HomepageSection>(`/content/admin/homepage/sections/${id}`, data);
+            return response.data;
+        },
+        reorderHomepageSections: async (sections: { id: string; displayOrder: number }[]) => {
+            const response = await client.put('/content/admin/homepage/sections/reorder', { sections });
+            return response.data;
+        },
+        deleteHomepageSection: async (id: string) => {
+            const response = await client.delete(`/content/admin/homepage/sections/${id}`);
             return response.data;
         }
     },
