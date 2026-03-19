@@ -11,6 +11,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
 import { catalogApi, type Category } from '../api/catalog';
+import { contentApi, type Menu } from '../api/content';
 
 interface HeaderProps {
     onCartClick: () => void;
@@ -42,26 +43,23 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showCategoryMenu, setShowCategoryMenu] = useState(false);
     const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
-<<<<<<< HEAD
     const [headerMenu, setHeaderMenu] = useState<Menu | null>(null);
-=======
     const [categories, setCategories] = useState<Category[]>([]);
     const categoryMenuRef = useRef<HTMLDivElement>(null);
->>>>>>> bf48e5ee90719c89aab02df3203b7dbb9b1bb077
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [configData, menuData] = await Promise.all([
-                    systemConfigApi.config.getPublic(),
-                    contentApi.getMenus('HeaderMain')
-                ]);
+                const configData = await systemConfigApi.config.getPublic();
                 setConfigs(Array.isArray(configData) ? configData : []);
-                if (Array.isArray(menuData) && menuData.length > 0) {
-                    setHeaderMenu(menuData[0]);
-                }
             } catch (error) {
-                console.error('Failed to load header data', error);
+                console.error('Failed to load config', error);
+            }
+            try {
+                const menuData = await contentApi.getMenu('HeaderMain');
+                setHeaderMenu(menuData);
+            } catch (error) {
+                console.error('Failed to load header menu', error);
             }
         };
         fetchData();
@@ -258,7 +256,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                             onClick={() => setShowCategoryMenu(false)}
                                             className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-700 font-medium border-b border-gray-100"
                                         >
-                                            <Menu size={16} className="text-[#D70018]" />
+                                            <MenuIcon size={16} className="text-[#D70018]" />
                                             Tất cả sản phẩm
                                         </Link>
                                         {categories.map((category) => (

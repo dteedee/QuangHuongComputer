@@ -75,15 +75,10 @@ public class ContentDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-<<<<<<< HEAD
-=======
-
->>>>>>> bf48e5ee90719c89aab02df3203b7dbb9b1bb077
             entity.HasIndex(e => new { e.Location, e.IsActive, e.DisplayOrder })
                 .HasDatabaseName("IX_Menu_Location_Active_Order");
         });
 
-<<<<<<< HEAD
         modelBuilder.Entity<HomepageSection>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -93,7 +88,8 @@ public class ContentDbContext : DbContext
             entity.Property(e => e.CssClass).HasMaxLength(200);
             entity.HasIndex(e => new { e.IsVisible, e.DisplayOrder })
                 .HasDatabaseName("IX_HomepageSection_Visible_Order");
-=======
+        });
+
         modelBuilder.Entity<FlashSale>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -129,7 +125,6 @@ public class ContentDbContext : DbContext
 
             entity.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("IX_ContactMessage_CreatedAt");
->>>>>>> bf48e5ee90719c89aab02df3203b7dbb9b1bb077
         });
     }
 }
