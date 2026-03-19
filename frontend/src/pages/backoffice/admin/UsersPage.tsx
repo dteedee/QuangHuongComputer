@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Edit, Trash2, UserCheck, UserX, Key, Shield, Search, Filter,
-  Plus, MoreHorizontal, User as UserIcon, Mail, Calendar,
-  ChevronRight, ChevronLeft, RefreshCw
+  Edit, UserCheck, UserX, Key, Shield, Search,
+  Plus, User as UserIcon, Mail,
+  ChevronRight, ChevronLeft, RefreshCw, Power, PowerOff
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { adminApi, type User } from '@api/admin';
 import { usePermissions } from '@hooks/usePermissions';
 import { UserFormModal } from '@components/admin/UserFormModal';
@@ -31,7 +32,6 @@ export function UsersPage() {
   // Permissions
   const canCreate = hasPermission('admin.users.create');
   const canEdit = hasPermission('admin.users.update');
-  const canDelete = hasPermission('admin.users.delete');
   const canManageRoles = hasPermission('admin.users.manage_roles');
 
   // Fetch roles
@@ -70,20 +70,13 @@ export function UsersPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminApi.users.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-    },
-  });
-
   const toggleStatusMutation = useMutation({
-    mutationFn: (user: User) => user.isActive
-      ? adminApi.users.deactivate(user.id)
-      : adminApi.users.update(user.id, { isActive: true } as any), // Fallback since toggle might not exist
-    onSuccess: () => {
+    mutationFn: (user: User) => adminApi.users.toggleStatus(user.id),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      toast.success(data.isActive ? 'Đã kích hoạt người dùng!' : 'Đã vô hiệu hóa người dùng!');
     },
+    onError: () => toast.error('Thao tác thất bại!')
   });
 
   const resetPasswordMutation = useMutation({
@@ -106,14 +99,11 @@ export function UsersPage() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (user: User) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.fullName}"?`)) {
-      deleteMutation.mutate(user.id);
-    }
-  };
-
   const handleToggleStatus = (user: User) => {
-    toggleStatusMutation.mutate(user);
+    const action = user.isActive ? 'vô hiệu hóa' : 'kích hoạt';
+    if (window.confirm(`Bạn có chắc muốn ${action} người dùng "${user.fullName}"?`)) {
+      toggleStatusMutation.mutate(user);
+    }
   };
 
   const handleManageRoles = (user: User) => {
@@ -291,10 +281,10 @@ export function UsersPage() {
                             </button>
                             <button
                               onClick={() => handleToggleStatus(user)}
-                              className={`p-2 rounded-lg transition-colors ${user.isActive ? 'text-red-600 hover:bg-red-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
-                              title={user.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
+                              className={`p-2 rounded-lg transition-colors ${user.isActive ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                              title={user.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
                             >
-                              {user.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                              {user.isActive ? <PowerOff size={18} /> : <Power size={18} />}
                             </button>
                             <button
                               onClick={() => handleEdit(user)}
@@ -304,15 +294,6 @@ export function UsersPage() {
                               <Edit size={18} />
                             </button>
                           </>
-                        )}
-                        {canDelete && (
-                          <button
-                            onClick={() => handleDelete(user)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Xóa"
-                          >
-                            <Trash2 size={18} />
-                          </button>
                         )}
                       </div>
                     </td>

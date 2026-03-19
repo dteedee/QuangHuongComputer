@@ -14,6 +14,9 @@ public class SalesDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderHistory> OrderHistories { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
+    public DbSet<WishlistItem> WishlistItems { get; set; }
+    public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
+    public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +31,7 @@ public class SalesDbContext : DbContext
         modelBuilder.Entity<Cart>().HasQueryFilter(c => c.IsActive);
         modelBuilder.Entity<OrderHistory>().HasQueryFilter(oh => oh.IsActive);
         modelBuilder.Entity<ReturnRequest>().HasQueryFilter(rr => rr.IsActive);
+        modelBuilder.Entity<WishlistItem>().HasQueryFilter(w => w.IsActive);
 
         // Cart configuration
         modelBuilder.Entity<Cart>(entity =>
@@ -117,6 +121,42 @@ public class SalesDbContext : DbContext
                 
             entity.HasIndex(rr => rr.Status)
                 .HasDatabaseName("ix_return_requests_status");
+        });
+
+        // WishlistItem configuration
+        modelBuilder.Entity<WishlistItem>(entity =>
+        {
+            entity.ToTable("WishlistItems");
+            entity.HasKey(w => w.Id);
+            entity.HasIndex(w => new { w.UserId, w.ProductId }).IsUnique()
+                .HasDatabaseName("ix_wishlist_items_user_product");
+            entity.HasIndex(w => w.UserId)
+                .HasDatabaseName("ix_wishlist_items_user_id");
+        });
+
+        // LoyaltyAccount configuration
+        modelBuilder.Entity<LoyaltyAccount>(entity =>
+        {
+            entity.ToTable("LoyaltyAccounts");
+            entity.HasKey(l => l.Id);
+            entity.HasIndex(l => l.UserId).IsUnique()
+                .HasDatabaseName("ix_loyalty_accounts_user_id");
+            entity.HasIndex(l => l.Tier)
+                .HasDatabaseName("ix_loyalty_accounts_tier");
+            entity.Ignore(l => l.Transactions);
+        });
+
+        // LoyaltyTransaction configuration
+        modelBuilder.Entity<LoyaltyTransaction>(entity =>
+        {
+            entity.ToTable("LoyaltyTransactions");
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => new { t.AccountId, t.CreatedAt })
+                .HasDatabaseName("ix_loyalty_transactions_account_created");
+            entity.HasIndex(t => t.OrderId)
+                .HasDatabaseName("ix_loyalty_transactions_order_id");
+            entity.HasIndex(t => t.Type)
+                .HasDatabaseName("ix_loyalty_transactions_type");
         });
     }
 }

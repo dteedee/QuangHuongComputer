@@ -129,6 +129,21 @@ public static class Permissions
         public const string ManagePayroll = "Permissions.HR.ManagePayroll";
     }
 
+    public static class CRM
+    {
+        public const string ViewCustomers = "Permissions.CRM.ViewCustomers";
+        public const string ManageCustomers = "Permissions.CRM.ManageCustomers";
+        public const string ViewLeads = "Permissions.CRM.ViewLeads";
+        public const string ManageLeads = "Permissions.CRM.ManageLeads";
+        public const string ViewSegments = "Permissions.CRM.ViewSegments";
+        public const string ManageSegments = "Permissions.CRM.ManageSegments";
+        public const string ViewAnalytics = "Permissions.CRM.ViewAnalytics";
+        public const string ManageTasks = "Permissions.CRM.ManageTasks";
+        public const string ViewCampaigns = "Permissions.CRM.ViewCampaigns";
+        public const string ManageCampaigns = "Permissions.CRM.ManageCampaigns";
+        public const string SendCampaigns = "Permissions.CRM.SendCampaigns";
+    }
+
     public static List<string> GetAllPermissions()
     {
         var permissions = new List<string>();

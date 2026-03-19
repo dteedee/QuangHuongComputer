@@ -41,6 +41,22 @@ public partial class AddAccountingPerformanceIndexes : Migration
             table: "Invoices",
             columns: new[] { "Status", "CreatedAt" });
 
+        // Optimized indexes for AR/AP queries
+        migrationBuilder.CreateIndex(
+            name: "IX_Invoices_Type_Status",
+            table: "Invoices",
+            columns: new[] { "Type", "Status" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Invoices_Type_AgingBucket",
+            table: "Invoices",
+            columns: new[] { "Type", "AgingBucket" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Invoices_IssueDate",
+            table: "Invoices",
+            column: "IssueDate");
+
         // Payment Indexes
         migrationBuilder.CreateIndex(
             name: "IX_Payments_InvoiceId",
@@ -83,6 +99,17 @@ public partial class AddAccountingPerformanceIndexes : Migration
             name: "IX_Expenses_Status",
             table: "Expenses",
             column: "Status");
+
+        // Optimized index for expense queries
+        migrationBuilder.CreateIndex(
+            name: "IX_Expenses_Status_ExpenseDate",
+            table: "Expenses",
+            columns: new[] { "Status", "ExpenseDate" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Expenses_ExpenseDate",
+            table: "Expenses",
+            column: "ExpenseDate");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
@@ -101,5 +128,10 @@ public partial class AddAccountingPerformanceIndexes : Migration
         migrationBuilder.DropIndex(name: "IX_Expenses_ExpenseCategoryId", table: "Expenses");
         migrationBuilder.DropIndex(name: "IX_Expenses_CreatedAt", table: "Expenses");
         migrationBuilder.DropIndex(name: "IX_Expenses_Status", table: "Expenses");
+        migrationBuilder.DropIndex(name: "IX_Invoices_Type_Status", table: "Invoices");
+        migrationBuilder.DropIndex(name: "IX_Invoices_Type_AgingBucket", table: "Invoices");
+        migrationBuilder.DropIndex(name: "IX_Invoices_IssueDate", table: "Invoices");
+        migrationBuilder.DropIndex(name: "IX_Expenses_Status_ExpenseDate", table: "Expenses");
+        migrationBuilder.DropIndex(name: "IX_Expenses_ExpenseDate", table: "Expenses");
     }
 }

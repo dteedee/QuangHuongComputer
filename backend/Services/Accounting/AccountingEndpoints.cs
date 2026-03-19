@@ -6,6 +6,7 @@ using Accounting.Infrastructure;
 using Accounting.Domain;
 using Accounting.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Accounting;
 
@@ -166,20 +167,29 @@ public static class AccountingEndpoints
              return Results.Content(html, "text/html");
         });
 
-        // Summary Stats
+        // Summary Stats - Optimized with parallel queries
         group.MapGet("/stats", async (AccountingDbContext db) =>
         {
             var today = DateTime.UtcNow.Date;
+
+            // Run all queries in parallel for better performance
+            var receivablesTask = db.Invoices
+                .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
+                .SumAsync(i => i.TotalAmount - i.PaidAmount);
+            var revenueTodayTask = db.Invoices
+                .Where(i => i.IssueDate >= today && i.Status != InvoiceStatus.Cancelled)
+                .SumAsync(i => i.TotalAmount);
+            var totalInvoicesTask = db.Invoices.CountAsync();
+            var activeAccountsTask = db.Accounts.CountAsync();
+
+            await Task.WhenAll(receivablesTask, revenueTodayTask, totalInvoicesTask, activeAccountsTask);
+
             var stats = new
             {
-                TotalReceivables = await db.Invoices
-                    .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
-                    .SumAsync(i => i.TotalAmount - i.PaidAmount),
-                RevenueToday = await db.Invoices
-                    .Where(i => i.IssueDate >= today && i.Status != InvoiceStatus.Cancelled)
-                    .SumAsync(i => i.TotalAmount),
-                TotalInvoices = await db.Invoices.CountAsync(),
-                ActiveAccounts = await db.Accounts.CountAsync()
+                TotalReceivables = await receivablesTask,
+                RevenueToday = await revenueTodayTask,
+                TotalInvoices = await totalInvoicesTask,
+                ActiveAccounts = await activeAccountsTask
             };
             return Results.Ok(stats);
         });
@@ -275,19 +285,19 @@ public static class AccountingEndpoints
 
         group.MapGet("/ar/aging-summary", async (AccountingDbContext db) =>
         {
-            var receivables = await db.Invoices
+            // Optimized: Calculate directly in database instead of loading all records
+            var baseQuery = db.Invoices
                 .Where(i => i.Type == InvoiceType.Receivable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled)
-                .ToListAsync();
+                           i.Status != InvoiceStatus.Cancelled);
 
             var summary = new ARAgingSummaryDto(
-                Current: receivables.Where(i => i.AgingBucket == AgingBucket.Current).Sum(i => i.OutstandingAmount),
-                Days1To30: receivables.Where(i => i.AgingBucket == AgingBucket.Days1To30).Sum(i => i.OutstandingAmount),
-                Days31To60: receivables.Where(i => i.AgingBucket == AgingBucket.Days31To60).Sum(i => i.OutstandingAmount),
-                Days61To90: receivables.Where(i => i.AgingBucket == AgingBucket.Days61To90).Sum(i => i.OutstandingAmount),
-                Over90Days: receivables.Where(i => i.AgingBucket == AgingBucket.Over90Days).Sum(i => i.OutstandingAmount),
-                TotalOutstanding: receivables.Sum(i => i.OutstandingAmount));
+                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
+                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
+                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
+                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
+                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
+                TotalOutstanding: await baseQuery.SumAsync(i => i.OutstandingAmount));
 
             return Results.Ok(summary);
         }).WithName("GetARAgingSummary");
@@ -386,22 +396,50 @@ public static class AccountingEndpoints
 
         group.MapGet("/ap/aging-summary", async (AccountingDbContext db) =>
         {
-            var payables = await db.Invoices
+            // Optimized: Calculate directly in database instead of loading all records
+            var baseQuery = db.Invoices
                 .Where(i => i.Type == InvoiceType.Payable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled)
-                .ToListAsync();
+                           i.Status != InvoiceStatus.Cancelled);
 
             var summary = new APAgingSummaryDto(
-                Current: payables.Where(i => i.AgingBucket == AgingBucket.Current).Sum(i => i.OutstandingAmount),
-                Days1To30: payables.Where(i => i.AgingBucket == AgingBucket.Days1To30).Sum(i => i.OutstandingAmount),
-                Days31To60: payables.Where(i => i.AgingBucket == AgingBucket.Days31To60).Sum(i => i.OutstandingAmount),
-                Days61To90: payables.Where(i => i.AgingBucket == AgingBucket.Days61To90).Sum(i => i.OutstandingAmount),
-                Over90Days: payables.Where(i => i.AgingBucket == AgingBucket.Over90Days).Sum(i => i.OutstandingAmount),
-                TotalPayable: payables.Sum(i => i.OutstandingAmount));
+                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
+                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
+                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
+                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
+                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
+                TotalPayable: await baseQuery.SumAsync(i => i.OutstandingAmount));
 
             return Results.Ok(summary);
         }).WithName("GetAPAgingSummary");
+
+        group.MapPost("/ap/{id:guid}/apply-payment", async (Guid id, ApplyAPPaymentRequest request, AccountingDbContext db) =>
+        {
+            var invoice = await db.Invoices.FindAsync(id);
+            if (invoice == null)
+                return Results.NotFound();
+
+            if (invoice.Type != InvoiceType.Payable)
+                return Results.BadRequest(new { Error = "Only payable invoices can have AP payments applied" });
+
+            try
+            {
+                var method = Enum.TryParse<PaymentMethod>(request.PaymentMethod, out var pm) ? pm : PaymentMethod.BankTransfer;
+                invoice.RecordPayment(request.Amount, request.Reference ?? $"AP-PAY-{DateTime.UtcNow:yyyyMMddHHmmss}", method);
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new
+                {
+                    Message = "Payment applied successfully",
+                    OutstandingAmount = invoice.OutstandingAmount,
+                    Status = invoice.Status.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("ApplyAPPayment");
 
         // ===== Shift Management Endpoints =====
         group.MapPost("/shifts/open", async (OpenShiftRequest request, AccountingDbContext db) =>
@@ -553,9 +591,252 @@ public static class AccountingEndpoints
                 return Results.BadRequest(new { Error = ex.Message });
             }
         }).WithName("RecordShiftTransaction");
+
+        // ===== Expense Category Endpoints =====
+        group.MapGet("/expense-categories", async (AccountingDbContext db) =>
+        {
+            var categories = await db.ExpenseCategories
+                .OrderBy(c => c.Name)
+                .Select(c => new ExpenseCategoryDto(c.Id, c.Name, c.Code, c.Description, c.IsActive))
+                .ToListAsync();
+            return Results.Ok(categories);
+        }).WithName("GetExpenseCategories");
+
+        group.MapPost("/expense-categories", async (CreateExpenseCategoryRequest request, AccountingDbContext db) =>
+        {
+            var existing = await db.ExpenseCategories.AnyAsync(c => c.Code == request.Code.ToUpperInvariant());
+            if (existing)
+                return Results.BadRequest(new { Error = "Category code already exists" });
+
+            var category = ExpenseCategory.Create(request.Name, request.Code, request.Description);
+            db.ExpenseCategories.Add(category);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/accounting/expense-categories/{category.Id}",
+                new ExpenseCategoryDto(category.Id, category.Name, category.Code, category.Description, category.IsActive));
+        }).WithName("CreateExpenseCategory");
+
+        group.MapPut("/expense-categories/{id:guid}", async (Guid id, UpdateExpenseCategoryRequest request, AccountingDbContext db) =>
+        {
+            var category = await db.ExpenseCategories.FindAsync(id);
+            if (category == null)
+                return Results.NotFound();
+
+            category.Update(request.Name, request.Description);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new ExpenseCategoryDto(category.Id, category.Name, category.Code, category.Description, category.IsActive));
+        }).WithName("UpdateExpenseCategory");
+
+        // ===== Expense Endpoints =====
+        group.MapGet("/expenses", async (AccountingDbContext db, int page = 1, int pageSize = 20,
+            ExpenseStatus? status = null, Guid? categoryId = null, DateTime? startDate = null, DateTime? endDate = null) =>
+        {
+            var query = db.Expenses.Include(e => e.Category).AsQueryable();
+
+            if (status.HasValue)
+                query = query.Where(e => e.Status == status.Value);
+
+            if (categoryId.HasValue)
+                query = query.Where(e => e.CategoryId == categoryId.Value);
+
+            if (startDate.HasValue)
+                query = query.Where(e => e.ExpenseDate >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(e => e.ExpenseDate <= endDate.Value);
+
+            var total = await query.CountAsync();
+            var expenses = await query
+                .OrderByDescending(e => e.ExpenseDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new ExpenseListDto(
+                    e.Id, e.ExpenseNumber, e.CategoryId, e.Category!.Name, e.Description,
+                    e.Amount, e.VatAmount, e.TotalAmount, e.Currency, e.ExpenseDate,
+                    e.Status, e.SupplierId, e.EmployeeId, e.CreatedAt))
+                .ToListAsync();
+
+            return Results.Ok(new { Total = total, Page = page, PageSize = pageSize, Expenses = expenses });
+        }).WithName("GetExpenses");
+
+        group.MapGet("/expenses/{id:guid}", async (Guid id, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.Include(e => e.Category).FirstOrDefaultAsync(e => e.Id == id);
+            if (expense == null)
+                return Results.NotFound();
+
+            var dto = new ExpenseDetailDto(
+                expense.Id, expense.ExpenseNumber, expense.CategoryId, expense.Category!.Name,
+                expense.Description, expense.Amount, expense.VatAmount, expense.TotalAmount,
+                expense.Currency, expense.ExpenseDate, expense.Status, expense.PaymentMethod,
+                expense.SupplierId, expense.EmployeeId, expense.CreatedBy, expense.ApprovedBy,
+                expense.ApprovedAt, expense.PaidAt, expense.RejectionReason, expense.Notes,
+                expense.ReceiptUrl, expense.CreatedAt);
+
+            return Results.Ok(dto);
+        }).WithName("GetExpenseDetail");
+
+        group.MapPost("/expenses", async (CreateExpenseRequest request, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var category = await db.ExpenseCategories.FindAsync(request.CategoryId);
+            if (category == null)
+                return Results.BadRequest(new { Error = "Invalid category" });
+
+            var currency = Enum.TryParse<Currency>(request.Currency, out var cur) ? cur : Currency.VND;
+
+            var expense = Expense.Create(
+                request.CategoryId,
+                request.Description,
+                request.Amount,
+                request.VatRate,
+                currency,
+                request.ExpenseDate,
+                userId,
+                request.SupplierId,
+                request.EmployeeId,
+                request.Notes,
+                request.ReceiptUrl);
+
+            db.Expenses.Add(expense);
+            await db.SaveChangesAsync();
+
+            return Results.Created($"/api/accounting/expenses/{expense.Id}",
+                new { Id = expense.Id, ExpenseNumber = expense.ExpenseNumber });
+        }).WithName("CreateExpense");
+
+        group.MapPut("/expenses/{id:guid}", async (Guid id, UpdateExpenseRequest request, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Update(
+                    request.CategoryId, request.Description, request.Amount, request.VatRate,
+                    request.ExpenseDate, request.SupplierId, request.EmployeeId,
+                    request.Notes, request.ReceiptUrl);
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("UpdateExpense");
+
+        group.MapPost("/expenses/{id:guid}/approve", async (Guid id, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Approve(userId);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense approved", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("ApproveExpense");
+
+        group.MapPost("/expenses/{id:guid}/reject", async (Guid id, RejectExpenseRequest request, AccountingDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                expense.Reject(userId, request.Reason);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense rejected", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("RejectExpense");
+
+        group.MapPost("/expenses/{id:guid}/pay", async (Guid id, PayExpenseRequest request, AccountingDbContext db) =>
+        {
+            var expense = await db.Expenses.FindAsync(id);
+            if (expense == null)
+                return Results.NotFound();
+
+            try
+            {
+                var method = Enum.TryParse<PaymentMethod>(request.PaymentMethod, out var pm) ? pm : PaymentMethod.Cash;
+                expense.MarkAsPaid(method);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Expense marked as paid", Status = expense.Status.ToString() });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        }).WithName("PayExpense");
+
+        group.MapGet("/expenses/summary", async (AccountingDbContext db, DateTime? startDate = null, DateTime? endDate = null) =>
+        {
+            var query = db.Expenses.AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(e => e.ExpenseDate >= startDate.Value);
+            if (endDate.HasValue)
+                query = query.Where(e => e.ExpenseDate <= endDate.Value);
+
+            // Optimized: Calculate aggregations directly in database
+            var totalExpenses = await query.SumAsync(e => e.TotalAmount);
+            var pendingAmount = await query.Where(e => e.Status == ExpenseStatus.Pending).SumAsync(e => e.TotalAmount);
+            var approvedAmount = await query.Where(e => e.Status == ExpenseStatus.Approved).SumAsync(e => e.TotalAmount);
+            var paidAmount = await query.Where(e => e.Status == ExpenseStatus.Paid).SumAsync(e => e.TotalAmount);
+            var pendingCount = await query.CountAsync(e => e.Status == ExpenseStatus.Pending);
+            var approvedCount = await query.CountAsync(e => e.Status == ExpenseStatus.Approved);
+            var paidCount = await query.CountAsync(e => e.Status == ExpenseStatus.Paid);
+
+            // Group by category in database
+            var byCategory = await query
+                .GroupBy(e => new { e.CategoryId, e.Category!.Name, e.Category.Code })
+                .Select(g => new CategoryExpenseSummary(
+                    g.Key.CategoryId, g.Key.Name, g.Key.Code,
+                    g.Sum(e => e.TotalAmount), g.Count()))
+                .OrderByDescending(c => c.TotalAmount)
+                .ToListAsync();
+
+            var summary = new ExpenseSummaryDto(
+                TotalExpenses: totalExpenses,
+                PendingAmount: pendingAmount,
+                ApprovedAmount: approvedAmount,
+                PaidAmount: paidAmount,
+                PendingCount: pendingCount,
+                ApprovedCount: approvedCount,
+                PaidCount: paidCount,
+                ByCategory: byCategory);
+
+            return Results.Ok(summary);
+        }).WithName("GetExpenseSummary");
     }
 }
 
 public record CreateInvoiceDto(Guid? CustomerId, List<CreateInvoiceItemDto> Items, string Notes);
 public record CreateInvoiceItemDto(string Description, int Quantity, decimal UnitPrice);
 public record CreateAccountDto(string Name, decimal CreditLimit);
+public record ApplyAPPaymentRequest(decimal Amount, string PaymentMethod, string? Reference);

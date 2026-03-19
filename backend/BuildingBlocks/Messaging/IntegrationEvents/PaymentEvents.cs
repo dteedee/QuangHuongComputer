@@ -10,3 +10,31 @@ public record InvoiceItemDto(Guid ProductId, string ProductName, int Quantity, d
 
 public record OrderFulfilledEvent(Guid OrderId, Guid CustomerId, List<FulfilledItemDto> Items);
 public record FulfilledItemDto(Guid ProductId, int Quantity, List<string> SerialNumbers);
+
+// Purchasing/Inventory Events
+public record POReceivedEvent(
+    Guid POId,
+    string PONumber,
+    Guid SupplierId,
+    Guid? GoodsReceiptId,
+    List<POItemDto> Items,
+    decimal TotalAmount,
+    DateTime ReceivedAt);
+
+public record POItemDto(
+    Guid ProductId,
+    string ProductName,
+    int Quantity,
+    decimal UnitPrice,
+    decimal VatRate);
+
+// Payroll Events
+public record PayrollPaidIntegrationEvent(
+    Guid PayrollId,
+    Guid EmployeeId,
+    string EmployeeName,
+    int Month,
+    int Year,
+    decimal GrossPay,
+    decimal NetPay,
+    DateTime PaidAt);

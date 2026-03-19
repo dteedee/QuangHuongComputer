@@ -8,6 +8,22 @@ public record GoogleLoginDto(string? IdToken);
 
 public record UpdateUserDto(string Email, string FullName);
 
+public record UpdateProfileDto(string FullName, string? PhoneNumber, string? Address);
+
+public record ChangePasswordDto(string CurrentPassword, string NewPassword);
+
+public record UserProfileDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? Address { get; set; }
+    public List<string> Roles { get; set; } = new();
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+}
+
 public record AssignRolesDto(string[] Roles);
 
 public record UserDto
@@ -45,6 +61,7 @@ public record LoginResponseDto
 
 public record UserInfoDto
 {
+    public string Id { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public List<string> Roles { get; set; } = new();

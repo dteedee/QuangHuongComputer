@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Payments.Domain;
 using Payments.Infrastructure;
 using Payments.Infrastructure.VNPay;
+using Payments.Infrastructure.SePay;
 using System.Security.Claims;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
+using BuildingBlocks.Security;
 using Microsoft.Extensions.Configuration;
 
 namespace Payments;
@@ -26,6 +28,20 @@ public static class PaymentsEndpoints
             IConfiguration config,
             HttpContext httpContext) =>
         {
+            // Helper to get SePay Config
+            async Task<SePayConfig> GetSePayConfig()
+            {
+                var apiKey = await db.PaymentConfigs.FindAsync("SePay:ApiKey");
+                var accNum = await db.PaymentConfigs.FindAsync("SePay:AccountNumber");
+                var bank = await db.PaymentConfigs.FindAsync("SePay:BankCode");
+
+                return new SePayConfig
+                {
+                    ApiKey = apiKey?.Value ?? config["Payment:SePay:ApiKey"] ?? config["SePay:ApiKey"] ?? "",
+                    AccountNumber = accNum?.Value ?? config["Payment:SePay:AccountNumber"] ?? config["SePay:AccountNumber"] ?? "0000000000",
+                    BankCode = bank?.Value ?? config["Payment:SePay:BankCode"] ?? config["SePay:BankCode"] ?? "MB"
+                };
+            }
             var payment = PaymentIntent.Create(
                 model.OrderId,
                 model.Amount,
@@ -41,12 +57,15 @@ public static class PaymentsEndpoints
             string paymentUrl = "";
             if (model.Provider == PaymentProvider.VnPay)
             {
+                // Get base URL for callback - backend handles VNPay callback
+                var baseUrl = config["BaseUrl"] ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
                 var vnpayConfig = new VNPayConfig
                 {
-                    TmnCode = config["VNPay:TmnCode"] ?? "DEMO",
-                    HashSecret = config["VNPay:HashSecret"] ?? "DEMOSECRET",
-                    PaymentUrl = config["VNPay:PaymentUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-                    ReturnUrl = config["VNPay:ReturnUrl"] ?? "http://localhost:3000/payment/callback"
+                    TmnCode = config["Payment:VNPay:TmnCode"] ?? config["VNPay:TmnCode"] ?? "DEMO",
+                    HashSecret = config["Payment:VNPay:HashSecret"] ?? config["VNPay:HashSecret"] ?? "DEMOSECRET",
+                    PaymentUrl = config["Payment:VNPay:PaymentUrl"] ?? config["VNPay:PaymentUrl"] ?? "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+                    ReturnUrl = config["Payment:VNPay:ReturnUrl"] ?? config["VNPay:ReturnUrl"] ?? $"{baseUrl}/api/payments/vnpay/callback"
                 };
 
                 var vnpayService = new VNPayService(vnpayConfig);
@@ -64,6 +83,18 @@ public static class PaymentsEndpoints
 
                 paymentUrl = vnpayService.CreatePaymentUrl(vnpayRequest);
                 payment.SetExternalId($"VNPAY-{payment.Id}", "");
+                await db.SaveChangesAsync();
+            }
+            else if (model.Provider == PaymentProvider.SePay)
+            {
+                var sepayConfig = await GetSePayConfig();
+                
+                var sepayService = new SePayService(sepayConfig);
+                // Use Short Order ID for description: "Thanh toan {ShortOrderId}"
+                string description = $"Thanh toan {model.OrderId.ToString().Substring(0, 8).ToUpper()}";
+                
+                paymentUrl = sepayService.CreatePaymentUrl(null, null, model.Amount, description);
+                payment.SetExternalId($"SEPAY-{payment.Id}", description); // Use payment.Description for content
                 await db.SaveChangesAsync();
             }
             else
@@ -91,11 +122,11 @@ public static class PaymentsEndpoints
             IConfiguration config) =>
         {
             var queryParams = httpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
-            
+
             var vnpayConfig = new VNPayConfig
             {
-                TmnCode = config["VNPay:TmnCode"] ?? "DEMO",
-                HashSecret = config["VNPay:HashSecret"] ?? "DEMOSECRET"
+                TmnCode = config["Payment:VNPay:TmnCode"] ?? config["VNPay:TmnCode"] ?? "DEMO",
+                HashSecret = config["Payment:VNPay:HashSecret"] ?? config["VNPay:HashSecret"] ?? "DEMOSECRET"
             };
 
             var vnpayService = new VNPayService(vnpayConfig);
@@ -138,13 +169,161 @@ public static class PaymentsEndpoints
             await db.SaveChangesAsync();
 
             // Redirect to frontend with result
-            var frontendUrl = config["Frontend:Url"] ?? "http://localhost:3000";
+            var frontendUrl = config["Frontend:Url"] ?? config["Cors:AllowedOrigins:0"] ?? "http://localhost:3000";
             var redirectUrl = response.Success 
                 ? $"{frontendUrl}/payment/success?orderId={payment.OrderId}"
                 : $"{frontendUrl}/payment/failed?orderId={payment.OrderId}&error={response.ResponseCode}";
 
             return Results.Redirect(redirectUrl);
         }).AllowAnonymous();
+
+        // SePay Webhook Endpoint
+        app.MapPost("/api/payments/sepay/webhook", async (
+            SePayWebhookPayload payload,
+            PaymentsDbContext db,
+            IPublishEndpoint publishEndpoint,
+            IConfiguration config,
+            HttpRequest request) =>
+        {
+            var apiKey = await db.PaymentConfigs.FindAsync("SePay:ApiKey");
+            var sepayConfig = new SePayConfig
+            {
+                ApiKey = apiKey?.Value ?? config["Payment:SePay:ApiKey"] ?? config["SePay:ApiKey"] ?? ""
+            };
+            var sepayService = new SePayService(sepayConfig);
+
+            // Verify authentication
+            string authHeader = request.Headers["Authorization"].ToString();
+            if (!sepayService.VerifyWebhook(authHeader))
+            {
+                return Results.Unauthorized(); 
+            }
+
+            // 1. Log the incoming transaction (Audit Trail)
+            var transaction = new SePayTransaction
+            {
+                Gateway = payload.Gateway,
+                TransactionDate = DateTime.TryParse(payload.TransactionDate, out var d) ? d : DateTime.UtcNow,
+                AccountNumber = payload.AccountNumber,
+                SubAccount = payload.SubAccount,
+                Content = payload.Content,
+                TransferType = payload.TransferType,
+                TransferAmount = payload.TransferAmount,
+                Accumulated = payload.Accumulated,
+                Code = payload.Code,
+                ReferenceCode = payload.ReferenceCode,
+                Description = payload.Description,
+                IsProcessed = false,
+                IsActive = true
+            };
+            db.SePayTransactions.Add(transaction);
+            await db.SaveChangesAsync(); // Save immediately
+
+            // 2. Logic to match payment
+            // Parse content to find OrderId
+            // Expected format: "Thanh toan {ShortOrderId}" or similar
+            // Best strategy: Search for Pending payments with SePay provider
+            var pendingPayments = await db.PaymentIntents
+                .Where(p => p.Status == PaymentStatus.Pending && p.Provider == PaymentProvider.SePay)
+                .ToListAsync();
+
+            // Find the payment where the payload content contains the tracking code we generated
+            // We generated: "Thanh toan {OrderId_substring}" and stored it in ExternalId suffix or ClientSecret
+            
+            // NOTE: SePay content is user-entered, might be cleaner. 
+            // We use the short OrderId to match.
+            var matchedPayment = pendingPayments.FirstOrDefault(p => 
+                payload.Content.Contains(p.OrderId.ToString().Substring(0, 8).ToUpper(), StringComparison.OrdinalIgnoreCase)
+                && p.Amount <= payload.TransferAmount); // Check amount too (allowing overpayment)
+
+            if (matchedPayment == null)
+            {
+                transaction.ProcessingError = "No matching pending payment found for content: " + payload.Content;
+                await db.SaveChangesAsync();
+                return Results.Ok(new { success = false, message = "No matching pending payment found" });
+            }
+
+            // Success!
+            matchedPayment.Succeed();
+            matchedPayment.SetExternalId($"SEPAY-{payload.Id}", payload.ReferenceCode); // Update with real SePay ID
+            
+            // Update transaction log
+            transaction.IsProcessed = true;
+            transaction.RelatedOrderId = matchedPayment.OrderId;
+            
+            await publishEndpoint.Publish(new PaymentSucceededEvent(
+                matchedPayment.Id, 
+                matchedPayment.OrderId, 
+                matchedPayment.Amount, 
+                DateTime.UtcNow));
+            
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { success = true });
+        }).AllowAnonymous();
+
+        // ==================== ADMIN ENDPOINTS ====================
+        var adminGroup = group.MapGroup("/admin").RequireAuthorization(Permissions.System.ManageConfig);
+
+        // Get SePay Transactions
+        adminGroup.MapGet("/sepay-transactions", async (PaymentsDbContext db) =>
+        {
+            var transactions = await db.SePayTransactions
+                .OrderByDescending(t => t.TransactionDate)
+                .Take(100)
+                .ToListAsync();
+            return Results.Ok(transactions);
+        });
+        
+        // Get SePay Stats
+        adminGroup.MapGet("/sepay-stats", async (PaymentsDbContext db) =>
+        {
+            var totalRevenue = await db.SePayTransactions
+                .Where(t => t.TransferType == "in" && t.IsProcessed)
+                .SumAsync(t => t.TransferAmount);
+                
+            var todayRevenue = await db.SePayTransactions
+                .Where(t => t.TransferType == "in" && t.IsProcessed && t.TransactionDate.Date == DateTime.Today)
+                .SumAsync(t => t.TransferAmount);
+
+            var totalTransactions = await db.SePayTransactions.CountAsync();
+            var successTransactions = await db.SePayTransactions.CountAsync(t => t.IsProcessed);
+            
+            return Results.Ok(new 
+            {
+                TotalRevenue = totalRevenue,
+                TodayRevenue = todayRevenue,
+                TotalTransactions = totalTransactions,
+                SuccessRate = totalTransactions > 0 ? (successTransactions * 100.0 / totalTransactions) : 0
+            });
+        });
+
+        // Get Payment Configs
+        adminGroup.MapGet("/config", async (PaymentsDbContext db) =>
+        {
+            var configs = await db.PaymentConfigs.ToListAsync();
+            // Mask secrets if needed? For now return as is for admin editing
+            return Results.Ok(configs);
+        });
+
+        // Update Payment Config
+        adminGroup.MapPost("/config", async (PaymentConfigDto model, PaymentsDbContext db) =>
+        {
+            var config = await db.PaymentConfigs.FindAsync(model.Key);
+            if (config == null)
+            {
+                config = new PaymentConfig(model.Key);
+                db.PaymentConfigs.Add(config);
+            }
+            
+            config.Value = model.Value;
+            config.Description = model.Description ?? "";
+            config.IsSecret = model.IsSecret;
+            config.UpdatedAt = DateTime.UtcNow;
+            
+            await db.SaveChangesAsync();
+            return Results.Ok(config);
+        });
 
         // Mock Webhook (for testing without VNPay)
         app.MapPost("/api/payments/webhook/mock", async (
@@ -221,3 +400,4 @@ public static class PaymentsEndpoints
 
 public record InitiatePaymentDto(Guid OrderId, decimal Amount, PaymentProvider Provider, string? BankCode = null);
 public record WebhookDto(Guid PaymentId, bool Success);
+public record PaymentConfigDto(string Key, string Value, string? Description, bool IsSecret);

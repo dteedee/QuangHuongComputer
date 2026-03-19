@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
-import { createSupplierSchema, updateSupplierSchema, CreateSupplierInput, UpdateSupplierInput } from '../../schemas/supplierSchema';
-import { Supplier } from '../../api/inventory';
+import { createSupplierSchema, updateSupplierSchema } from '../../schemas/supplierSchema';
+import type { CreateSupplierInput, UpdateSupplierInput } from '../../schemas/supplierSchema';
+import type { Supplier } from '../../api/inventory';
 
 export interface SupplierFormProps {
   initialData?: Supplier;
@@ -19,19 +20,19 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
   } = useForm<CreateSupplierInput | UpdateSupplierInput>({
     defaultValues: initialData
       ? {
-          name: initialData.name,
-          contactPerson: initialData.contactPerson,
-          email: initialData.email,
-          phone: initialData.phone,
-          address: initialData.address || '',
-        }
+        name: initialData.name,
+        contactPerson: initialData.contactPerson,
+        email: initialData.email,
+        phone: initialData.phone,
+        address: initialData.address || '',
+      }
       : {
-          name: '',
-          contactPerson: '',
-          email: '',
-          phone: '',
-          address: '',
-        },
+        name: '',
+        contactPerson: '',
+        email: '',
+        phone: '',
+        address: '',
+      },
   });
 
   const handleFormSubmit = async (data: CreateSupplierInput | UpdateSupplierInput) => {
@@ -65,9 +66,8 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
           type="text"
           id="name"
           {...register('name')}
-          className={`mt-1 block w-full border ${
-            errors.name ? 'border-red-300' : 'border-gray-300'
-          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+          className={`mt-1 block w-full border ${errors.name ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
           placeholder="Enter supplier name"
           disabled={isSubmitting}
         />
@@ -86,9 +86,8 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
           type="text"
           id="contactPerson"
           {...register('contactPerson')}
-          className={`mt-1 block w-full border ${
-            errors.contactPerson ? 'border-red-300' : 'border-gray-300'
-          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+          className={`mt-1 block w-full border ${errors.contactPerson ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
           placeholder="Enter contact person name"
           disabled={isSubmitting}
         />
@@ -107,9 +106,8 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
           type="email"
           id="email"
           {...register('email')}
-          className={`mt-1 block w-full border ${
-            errors.email ? 'border-red-300' : 'border-gray-300'
-          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+          className={`mt-1 block w-full border ${errors.email ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
           placeholder="supplier@example.com"
           disabled={isSubmitting}
         />
@@ -128,9 +126,8 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
           type="tel"
           id="phone"
           {...register('phone')}
-          className={`mt-1 block w-full border ${
-            errors.phone ? 'border-red-300' : 'border-gray-300'
-          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+          className={`mt-1 block w-full border ${errors.phone ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
           placeholder="0XXXXXXXXX or +84XXXXXXXXX"
           disabled={isSubmitting}
         />
@@ -148,9 +145,8 @@ export function SupplierForm({ initialData, onSubmit, isSubmitting = false }: Su
           id="address"
           {...register('address')}
           rows={3}
-          className={`mt-1 block w-full border ${
-            errors.address ? 'border-red-300' : 'border-gray-300'
-          } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+          className={`mt-1 block w-full border ${errors.address ? 'border-red-300' : 'border-gray-300'
+            } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
           placeholder="Enter supplier address (optional)"
           disabled={isSubmitting}
         />

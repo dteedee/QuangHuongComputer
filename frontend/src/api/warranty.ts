@@ -125,6 +125,48 @@ export const warrantyApi = {
         getAllWarranties: async () => {
             const response = await client.get<any[]>('/warranty/admin/warranties');
             return response.data;
+        },
+
+        // Claim Management
+        getAllClaims: async (status?: string, serialNumber?: string) => {
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            if (serialNumber) params.append('serialNumber', serialNumber);
+            const response = await client.get<WarrantyClaim[]>(`/warranty/admin/claims?${params.toString()}`);
+            return response.data;
+        },
+
+        getClaimById: async (id: string) => {
+            const response = await client.get<WarrantyClaim & { warranty?: any }>(`/warranty/admin/claims/${id}`);
+            return response.data;
+        },
+
+        approveClaim: async (id: string) => {
+            const response = await client.post<{ message: string; id: string; status: string }>(`/warranty/admin/claims/${id}/approve`);
+            return response.data;
+        },
+
+        rejectClaim: async (id: string, reason: string) => {
+            const response = await client.post<{ message: string; id: string; status: string }>(`/warranty/admin/claims/${id}/reject`, { reason });
+            return response.data;
+        },
+
+        resolveClaim: async (id: string, notes: string) => {
+            const response = await client.post<{ message: string; id: string; status: string }>(`/warranty/admin/claims/${id}/resolve`, { notes });
+            return response.data;
+        },
+
+        getClaimStats: async () => {
+            const response = await client.get<{
+                total: number;
+                pending: number;
+                approved: number;
+                resolved: number;
+                rejected: number;
+                newToday: number;
+                resolvedToday: number;
+            }>('/warranty/admin/claims/stats');
+            return response.data;
         }
     }
 };

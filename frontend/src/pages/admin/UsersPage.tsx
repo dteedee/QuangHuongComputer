@@ -1,21 +1,59 @@
-﻿import { useState } from 'react';
-import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Trash2 } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Power, PowerOff, ToggleLeft, ToggleRight, RefreshCw, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi, type User } from '../../api/auth';
 import toast from 'react-hot-toast';
 
+// Filter state interface
+interface UserFilters {
+    search: string;
+    role: string;
+    status: string;
+}
+
+const initialFilters: UserFilters = {
+    search: '',
+    role: 'all',
+    status: 'all'
+};
+
 export const AdminUsersPage = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState<UserFilters>(initialFilters);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [page, setPage] = useState(1);
     const pageSize = 15;
     const queryClient = useQueryClient();
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(filters.search);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [filters.search]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters.role, filters.status]);
+
+    const handleFilterChange = (key: string, value: any) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const resetFilters = () => {
+        setFilters(initialFilters);
+    };
+
+    const hasActiveFilters = filters.search || filters.role !== 'all' || filters.status !== 'all';
+
     const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-users', page],
-        queryFn: () => authApi.getUsers(page, pageSize),
+        queryKey: ['admin-users', page, debouncedSearch],
+        queryFn: () => authApi.getUsers(page, pageSize, debouncedSearch || undefined),
     });
 
     const { data: allRoles = [] } = useQuery({
@@ -32,12 +70,13 @@ export const AdminUsersPage = () => {
         }
     });
 
-    const deleteUserMutation = useMutation({
-        mutationFn: (id: string) => authApi.deleteUser(id),
-        onSuccess: () => {
+    const toggleStatusMutation = useMutation({
+        mutationFn: (id: string) => authApi.toggleUserStatus(id),
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-            toast.success('Đã xóa người dùng!');
-        }
+            toast.success(data.isActive ? 'Đã kích hoạt người dùng!' : 'Đã vô hiệu hóa người dùng!');
+        },
+        onError: () => toast.error('Thao tác thất bại!')
     });
 
     const getRoleInfo = (role: string) => {
@@ -50,13 +89,20 @@ export const AdminUsersPage = () => {
         }
     };
 
-    const users = response?.items || [];
+    const rawUsers = response?.items || [];
     const total = response?.total || 0;
 
-    const filteredUsers = users.filter((u: User) =>
-        u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Apply client-side filters for role and status
+    const users = rawUsers.filter(user => {
+        // Role filter
+        if (filters.role !== 'all' && !user.roles?.includes(filters.role)) return false;
+
+        // Status filter
+        if (filters.status === 'active' && user.isActive === false) return false;
+        if (filters.status === 'inactive' && user.isActive !== false) return false;
+
+        return true;
+    });
 
     const handleToggleRole = (role: string) => {
         if (!selectedUser) return;
@@ -84,22 +130,70 @@ export const AdminUsersPage = () => {
                 </button>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="relative flex-1 group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên hoặc email người dùng..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-14 pr-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-[#D70018] transition-all shadow-sm placeholder:text-gray-400"
-                    />
+            {/* Search & Filter Bar */}
+            <div className="bg-white rounded-2xl border-2 border-gray-100 p-4 shadow-sm">
+                <div className="flex flex-col lg:flex-row items-stretch gap-4">
+                    {/* Search */}
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo tên hoặc email người dùng..."
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                        />
+                        {filters.search && (
+                            <button
+                                onClick={() => handleFilterChange('search', '')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filters */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Role Filter */}
+                        <select
+                            value={filters.role}
+                            onChange={(e) => handleFilterChange('role', e.target.value)}
+                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
+                                filters.role !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                            }`}
+                        >
+                            <option value="all">Tất cả vai trò</option>
+                            {allRoles.map(role => (
+                                <option key={role.id} value={role.name}>{role.name}</option>
+                            ))}
+                        </select>
+
+                        {/* Status Filter */}
+                        <select
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
+                                filters.status !== 'all' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-transparent text-gray-700'
+                            }`}
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="active">Đang hoạt động</option>
+                            <option value="inactive">Đã khóa</option>
+                        </select>
+
+                        {/* Reset Button */}
+                        {hasActiveFilters && (
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-2 px-5 py-4 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-2xl transition-all"
+                            >
+                                <RefreshCw size={14} />
+                                Đặt lại
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <button className="flex items-center gap-3 px-8 py-5 bg-white border-2 border-gray-100 text-gray-950 rounded-2xl hover:border-[#D70018] transition-all shadow-sm font-black uppercase text-xs tracking-widest">
-                    <Filter size={18} />
-                    Lọc vai trò
-                </button>
             </div>
 
             {/* Users Table */}
@@ -111,18 +205,19 @@ export const AdminUsersPage = () => {
                                 <th className="px-8 py-5">Thành viên</th>
                                 <th className="px-8 py-5">Email liên hệ</th>
                                 <th className="px-8 py-5">Vai trò</th>
+                                <th className="px-8 py-5">Trạng thái</th>
                                 <th className="px-8 py-5 text-right">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-8 py-24 text-center">
+                                    <td colSpan={5} className="px-8 py-24 text-center">
                                         <Loader2 className="mx-auto animate-spin text-[#D70018]" size={48} />
                                         <p className="text-sm text-gray-900 font-black uppercase tracking-widest mt-4">Đang tải danh sách thành viên...</p>
                                     </td>
                                 </tr>
-                            ) : filteredUsers.map((user: User) => (
+                            ) : users.map((user: User) => (
                                 <tr key={user.id} className="hover:bg-gray-50/80 transition-all group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -150,6 +245,16 @@ export const AdminUsersPage = () => {
                                             })}
                                         </div>
                                     </td>
+                                    <td className="px-8 py-6">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                                            user.isActive !== false
+                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                : 'bg-red-50 text-red-600 border border-red-200'
+                                        }`}>
+                                            {user.isActive !== false ? <Power size={12} /> : <PowerOff size={12} />}
+                                            {user.isActive !== false ? 'Hoạt động' : 'Đã khóa'}
+                                        </span>
+                                    </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                                             <button
@@ -159,10 +264,19 @@ export const AdminUsersPage = () => {
                                                 <Shield size={14} /> Cấp quyền
                                             </button>
                                             <button
-                                                onClick={() => { if (window.confirm('Xác nhận xóa người dùng?')) deleteUserMutation.mutate(user.id); }}
-                                                className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border-2 border-gray-100 text-gray-400 hover:text-red-600 hover:border-red-100 transition-all shadow-sm active:scale-95"
+                                                onClick={() => {
+                                                    const action = user.isActive ? 'vô hiệu hóa' : 'kích hoạt';
+                                                    if (window.confirm(`Xác nhận ${action} người dùng ${user.fullName}?`))
+                                                        toggleStatusMutation.mutate(user.id);
+                                                }}
+                                                className={`w-11 h-11 flex items-center justify-center rounded-xl bg-white border-2 transition-all shadow-sm active:scale-95 ${
+                                                    user.isActive
+                                                        ? 'border-gray-100 text-gray-400 hover:text-amber-600 hover:border-amber-200 hover:bg-amber-50'
+                                                        : 'border-emerald-100 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50'
+                                                }`}
+                                                title={user.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
                                             >
-                                                <Trash2 size={18} />
+                                                {user.isActive ? <PowerOff size={18} /> : <Power size={18} />}
                                             </button>
                                         </div>
                                     </td>

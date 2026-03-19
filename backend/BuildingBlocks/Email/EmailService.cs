@@ -17,6 +17,7 @@ public class EmailService : IEmailService
 {
     private readonly EmailConfig _config;
     private readonly ILogger<EmailService> _logger;
+    private readonly string _frontendUrl;
 
     public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
@@ -30,6 +31,10 @@ public class EmailService : IEmailService
             FromName = configuration["Email:FromName"] ?? "Quang Huong Computer"
         };
         _logger = logger;
+        // Get frontend URL from configuration (Cors allowed origins or explicit setting)
+        _frontendUrl = configuration["Frontend:Url"]
+            ?? configuration["Cors:AllowedOrigins:0"]
+            ?? "http://localhost:3000";
     }
 
     public async Task SendEmailAsync(EmailMessage message)
@@ -99,7 +104,7 @@ public class EmailService : IEmailService
             <p>Bạn sẽ nhận được email xác nhận thanh toán sau khi hoàn tất giao dịch.</p>
 
             <center>
-                <a href=""http://localhost:3000/profile"" class=""button"">Xem đơn hàng</a>
+                <a href=""{_frontendUrl}/account/orders"" class=""button"">Xem đơn hàng</a>
             </center>
 
             <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.</p>
@@ -160,7 +165,7 @@ public class EmailService : IEmailService
             <p>Sản phẩm của bạn đã được tự động đăng ký bảo hành.</p>
 
             <center>
-                <a href=""http://localhost:3000/profile"" class=""button"">Xem hóa đơn</a>
+                <a href=""{_frontendUrl}/account/orders"" class=""button"">Xem hóa đơn</a>
             </center>
 
             <p>Cảm ơn bạn đã tin tưởng và mua sắm tại Quang Huong Computer!</p>

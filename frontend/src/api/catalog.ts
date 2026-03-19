@@ -80,6 +80,7 @@ export interface Category {
     updatedAt?: string;
     deactivatedAt?: string;
     deactivatedBy?: string;
+    productCount?: number;
 }
 
 export interface Brand {
@@ -91,6 +92,7 @@ export interface Brand {
     updatedAt?: string;
     deactivatedAt?: string;
     deactivatedBy?: string;
+    productCount?: number;
 }
 
 export interface ProductsResponse {
@@ -157,6 +159,7 @@ export const catalogApi = {
         inStock?: boolean;
         sortBy?: string;
         isActive?: boolean;
+        includeInactive?: boolean;
     }) => {
         const response = await client.get<ProductsResponse>('/catalog/products', { params });
         return response.data;
@@ -199,7 +202,18 @@ export const catalogApi = {
     },
 
     deleteProduct: async (id: string) => {
-        const response = await client.delete<{ message: string }>(`/catalog/products/${id}`);
+        // Soft delete - deactivates the product
+        const response = await client.delete<{ message: string; isActive: boolean }>(`/catalog/products/${id}`);
+        return response.data;
+    },
+
+    activateProduct: async (id: string) => {
+        const response = await client.post<{ message: string; isActive: boolean }>(`/catalog/products/${id}/activate`);
+        return response.data;
+    },
+
+    toggleProductStatus: async (id: string) => {
+        const response = await client.post<{ message: string; isActive: boolean }>(`/catalog/products/${id}/toggle-status`);
         return response.data;
     },
 
@@ -217,10 +231,26 @@ export const catalogApi = {
         title?: string;
         comment: string;
     }) => {
-        const response = await client.post<{ message: string; review: ProductReview }>(
+        const response = await client.post<{ message: string; id: string; isVerifiedPurchase: boolean }>(
             `/catalog/products/${productId}/reviews`,
             data
         );
+        return response.data;
+    },
+
+    markReviewHelpful: async (reviewId: string) => {
+        const response = await client.post<{ message: string; helpfulCount: number }>(
+            `/catalog/reviews/${reviewId}/helpful`
+        );
+        return response.data;
+    },
+
+    getProductReviewStats: async (productId: string) => {
+        const response = await client.get<{
+            totalReviews: number;
+            averageRating: number;
+            ratingCounts: { 1: number; 2: number; 3: number; 4: number; 5: number };
+        }>(`/catalog/products/${productId}/reviews/stats`);
         return response.data;
     },
 

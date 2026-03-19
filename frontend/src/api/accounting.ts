@@ -247,6 +247,14 @@ export const accountingApi = {
             const response = await client.get('/accounting/ap/aging-summary');
             return response.data;
         },
+        applyPayment: async (id: string, data: {
+            amount: number;
+            paymentMethod: string;
+            reference?: string;
+        }): Promise<{ message: string; outstandingAmount: number; status: string }> => {
+            const response = await client.post(`/accounting/ap/${id}/apply-payment`, data);
+            return response.data;
+        },
     },
 
     // ============ Shift Management ============
@@ -329,4 +337,151 @@ export const formatCurrency = (amount: number, currency: string = 'VND'): string
         style: 'currency',
         currency: currency,
     }).format(amount);
+};
+
+// ============================================
+// Expense Management Types
+// ============================================
+
+export interface ExpenseCategory {
+    id: string;
+    name: string;
+    code: string;
+    description?: string;
+    isActive: boolean;
+}
+
+export type ExpenseStatus = 'Pending' | 'Approved' | 'Rejected' | 'Paid';
+
+export interface Expense {
+    id: string;
+    expenseNumber: string;
+    categoryId: string;
+    categoryName: string;
+    description: string;
+    amount: number;
+    vatAmount: number;
+    totalAmount: number;
+    currency: string;
+    expenseDate: string;
+    status: ExpenseStatus;
+    supplierId?: string;
+    employeeId?: string;
+    createdAt: string;
+}
+
+export interface ExpenseDetail extends Expense {
+    paymentMethod?: string;
+    createdBy: string;
+    approvedBy?: string;
+    approvedAt?: string;
+    paidAt?: string;
+    rejectionReason?: string;
+    notes?: string;
+    receiptUrl?: string;
+}
+
+export interface CreateExpenseRequest {
+    categoryId: string;
+    description: string;
+    amount: number;
+    vatRate: number;
+    currency: string;
+    expenseDate: string;
+    supplierId?: string;
+    employeeId?: string;
+    notes?: string;
+    receiptUrl?: string;
+}
+
+export interface ExpenseSummary {
+    totalExpenses: number;
+    pendingAmount: number;
+    approvedAmount: number;
+    paidAmount: number;
+    pendingCount: number;
+    approvedCount: number;
+    paidCount: number;
+    byCategory: CategoryExpenseSummary[];
+}
+
+export interface CategoryExpenseSummary {
+    categoryId: string;
+    categoryName: string;
+    categoryCode: string;
+    totalAmount: number;
+    expenseCount: number;
+}
+
+// ============================================
+// Expense API Functions
+// ============================================
+
+export const expenseApi = {
+    // Categories
+    categories: {
+        getAll: async (): Promise<ExpenseCategory[]> => {
+            const response = await client.get('/accounting/expense-categories');
+            return response.data;
+        },
+        create: async (data: { name: string; code: string; description?: string }): Promise<ExpenseCategory> => {
+            const response = await client.post('/accounting/expense-categories', data);
+            return response.data;
+        },
+        update: async (id: string, data: { name: string; description?: string }): Promise<ExpenseCategory> => {
+            const response = await client.put(`/accounting/expense-categories/${id}`, data);
+            return response.data;
+        },
+    },
+
+    // Expenses
+    getList: async (params: {
+        page?: number;
+        pageSize?: number;
+        status?: ExpenseStatus;
+        categoryId?: string;
+        startDate?: string;
+        endDate?: string;
+    } = {}): Promise<{ total: number; page: number; pageSize: number; expenses: Expense[] }> => {
+        const response = await client.get('/accounting/expenses', { params });
+        return response.data;
+    },
+
+    getById: async (id: string): Promise<ExpenseDetail> => {
+        const response = await client.get(`/accounting/expenses/${id}`);
+        return response.data;
+    },
+
+    create: async (data: CreateExpenseRequest): Promise<{ id: string; expenseNumber: string }> => {
+        const response = await client.post('/accounting/expenses', data);
+        return response.data;
+    },
+
+    update: async (id: string, data: Partial<CreateExpenseRequest>): Promise<{ message: string }> => {
+        const response = await client.put(`/accounting/expenses/${id}`, data);
+        return response.data;
+    },
+
+    approve: async (id: string): Promise<{ message: string; status: string }> => {
+        const response = await client.post(`/accounting/expenses/${id}/approve`);
+        return response.data;
+    },
+
+    reject: async (id: string, reason: string): Promise<{ message: string; status: string }> => {
+        const response = await client.post(`/accounting/expenses/${id}/reject`, { reason });
+        return response.data;
+    },
+
+    pay: async (id: string, paymentMethod: string): Promise<{ message: string; status: string }> => {
+        const response = await client.post(`/accounting/expenses/${id}/pay`, { paymentMethod });
+        return response.data;
+    },
+
+    getSummary: async (startDate?: string, endDate?: string): Promise<ExpenseSummary> => {
+        const params: Record<string, string> = {};
+        if (startDate) params.startDate = startDate;
+        if (endDate) params.endDate = endDate;
+        const response = await client.get('/accounting/expenses/summary', { params });
+        return response.data;
+    },
 };

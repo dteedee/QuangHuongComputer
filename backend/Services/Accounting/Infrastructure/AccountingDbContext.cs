@@ -13,6 +13,8 @@ public class AccountingDbContext : DbContext
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<ShiftSession> ShiftSessions { get; set; }
     public DbSet<PaymentApplication> PaymentApplications { get; set; }
+    public DbSet<Expense> Expenses { get; set; }
+    public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,6 +91,32 @@ public class AccountingDbContext : DbContext
             entity.Property(e => e.Amount).HasPrecision(18, 2);
             entity.HasIndex(e => e.PaymentIntentId);
             entity.HasIndex(e => e.InvoiceId);
+        });
+
+        modelBuilder.Entity<ExpenseCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
+            entity.HasIndex(e => e.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<Expense>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ExpenseNumber).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.VatAmount).HasPrecision(18, 2);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.ExpenseNumber).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExpenseDate);
+
+            entity.HasOne(e => e.Category)
+                .WithMany()
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

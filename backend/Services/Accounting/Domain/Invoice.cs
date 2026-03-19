@@ -18,6 +18,10 @@ public class Invoice : AggregateRoot<Guid>
     
     // For AP: Supplier reference
     public Guid? SupplierId { get; private set; }
+
+    // For AP: PO and Goods Receipt linking
+    public Guid? PurchaseOrderId { get; private set; }
+    public Guid? GoodsReceiptId { get; private set; }
     
     public DateTime IssueDate { get; private set; }
     public DateTime DueDate { get; private set; }
@@ -76,7 +80,9 @@ public class Invoice : AggregateRoot<Guid>
         DateTime dueDate,
         decimal vatRate,
         Currency currency,
-        string? notes = null)
+        string? notes = null,
+        Guid? purchaseOrderId = null,
+        Guid? goodsReceiptId = null)
     {
         return new Invoice
         {
@@ -89,8 +95,22 @@ public class Invoice : AggregateRoot<Guid>
             DueDate = dueDate,
             VatRate = vatRate,
             Currency = currency,
-            Notes = notes
+            Notes = notes,
+            PurchaseOrderId = purchaseOrderId,
+            GoodsReceiptId = goodsReceiptId
         };
+    }
+
+    /// <summary>
+    /// Links this payable invoice to a purchase order and goods receipt
+    /// </summary>
+    public void LinkToPurchaseOrder(Guid purchaseOrderId, Guid? goodsReceiptId = null)
+    {
+        if (Type != InvoiceType.Payable)
+            throw new InvalidOperationException("Only payable invoices can be linked to purchase orders");
+
+        PurchaseOrderId = purchaseOrderId;
+        GoodsReceiptId = goodsReceiptId;
     }
 
     public void AddLine(string description, decimal quantity, decimal unitPrice, decimal vatRate = 0)

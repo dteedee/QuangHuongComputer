@@ -84,7 +84,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <input
                     type="text"
                     {...register('cashierId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-300 transition-all"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="ENTER ID"
                     disabled={isSubmitting}
                   />
@@ -94,7 +94,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <input
                     type="text"
                     {...register('warehouseId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-300 transition-all font-mono"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all font-mono"
                     placeholder="MAIN"
                     disabled={isSubmitting}
                   />

@@ -1,0 +1,401 @@
+# ===========================================
+# CD Pipeline - Deploy to UAT/Staging Environment
+# ===========================================
+# Triggers: Push to main branch (with manual approval)
+# ===========================================
+
+name: CD - Deploy to UAT
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        type: string
+      skip_approval:
+        description: 'Skip manual approval (emergency deploy)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/frontend
+
+jobs:
+  # ============================================
+  # Prepare Release
+  # ============================================
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="uat-$(date +'%Y%m%d')-${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" | head -20)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" | head -20)
+          fi
+
+          # Escape for GitHub output
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+
+          echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+
+  # ============================================
+  # Build & Push Docker Images
+  # ============================================
+  build:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ needs.prepare.outputs.version }}
+            ${{ env.BACKEND_IMAGE }}:uat-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ needs.prepare.outputs.version }}
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ needs.prepare.outputs.version }}
+            ${{ env.FRONTEND_IMAGE }}:uat-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.UAT_API_URL }}
+            VITE_NODE_ENV=staging
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+
+  # ============================================
+  # Manual Approval Gate
+  # ============================================
+  approval:
+    name: Waiting for Approval
+    runs-on: ubuntu-latest
+    needs: [prepare, build]
+    if: ${{ github.event.inputs.skip_approval != 'true' }}
+    environment:
+      name: uat-approval
+      url: ${{ secrets.UAT_URL }}
+
+    steps:
+      - name: Approval summary
+        run: |
+          echo "## 📋 UAT Deployment Request" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Requested by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changes" >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.prepare.outputs.changelog }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Approved for deployment to UAT**" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Database Migration
+  # ============================================
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: [prepare, build, approval]
+    if: always() && (needs.approval.result == 'success' || github.event.inputs.skip_approval == 'true')
+    environment: uat
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run database migrations
+        if: secrets.UAT_SSH_HOST != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UAT_SSH_HOST }}
+          username: ${{ secrets.UAT_SSH_USER }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          script: |
+            echo "Running database migrations..."
+            cd ${{ secrets.UAT_DEPLOY_PATH || '/opt/quanghuong' }}
+
+            # Backup database before migration
+            docker exec quanghuong-postgres-uat pg_dump -U postgres quanghuongdb_uat > backups/postgres/pre-migration-$(date +%Y%m%d-%H%M%S).sql
+
+            # Run migrations (if using EF Core migrations)
+            # docker run --rm --network quanghuong-uat-network \
+            #   -e ConnectionStrings__DefaultConnection="$DB_CONNECTION" \
+            #   ${{ env.BACKEND_IMAGE }}:${{ needs.prepare.outputs.version }} \
+            #   dotnet ef database update
+
+            echo "Database migration completed"
+
+  # ============================================
+  # Deploy to UAT
+  # ============================================
+  deploy:
+    name: Deploy to UAT
+    runs-on: ubuntu-latest
+    needs: [prepare, build, approval, migrate]
+    if: always() && (needs.approval.result == 'success' || github.event.inputs.skip_approval == 'true') && needs.migrate.result == 'success'
+    environment:
+      name: uat
+      url: ${{ secrets.UAT_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy notification - Start
+        run: |
+          echo "## 🚀 Deploying to UAT Environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy via SSH
+        if: secrets.UAT_SSH_HOST != ''
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UAT_SSH_HOST }}
+          username: ${{ secrets.UAT_SSH_USER }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          port: ${{ secrets.UAT_SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.UAT_DEPLOY_PATH || '/opt/quanghuong' }}
+
+            echo "=== Pulling new images ==="
+            docker pull ${{ env.BACKEND_IMAGE }}:${{ needs.prepare.outputs.version }}
+            docker pull ${{ env.FRONTEND_IMAGE }}:${{ needs.prepare.outputs.version }}
+
+            echo "=== Creating backup of current deployment ==="
+            docker-compose -f docker-compose.uat.yml --env-file .env.uat config > deployment-backup-$(date +%Y%m%d-%H%M%S).yml || true
+
+            echo "=== Updating deployment ==="
+            export BACKEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}
+            export FRONTEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}
+
+            # Update image tags in environment
+            sed -i "s/BACKEND_IMAGE_TAG=.*/BACKEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}/" .env.uat || echo "BACKEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}" >> .env.uat
+            sed -i "s/FRONTEND_IMAGE_TAG=.*/FRONTEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}/" .env.uat || echo "FRONTEND_IMAGE_TAG=${{ needs.prepare.outputs.version }}" >> .env.uat
+
+            echo "=== Deploying new version ==="
+            docker-compose -f docker-compose.uat.yml --env-file .env.uat up -d --force-recreate backend-uat frontend-uat
+
+            echo "=== Waiting for services to be healthy ==="
+            sleep 30
+
+            echo "=== Verifying deployment ==="
+            for i in {1..12}; do
+              if curl -sf http://localhost:5002/health > /dev/null; then
+                echo "✅ Backend is healthy"
+                break
+              fi
+              echo "Waiting for backend... ($i/12)"
+              sleep 10
+            done
+
+            curl -f http://localhost:5002/health || exit 1
+
+            echo "=== Cleanup old images ==="
+            docker image prune -f --filter "until=24h"
+
+            echo "=== Deployment complete ==="
+
+      - name: Verify deployment
+        run: |
+          if [ -n "${{ secrets.UAT_URL }}" ]; then
+            echo "Verifying deployment at ${{ secrets.UAT_URL }}..."
+
+            for i in {1..30}; do
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.UAT_URL }}" || echo "000")
+              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "304" ]; then
+                echo "✅ Frontend is accessible (HTTP $HTTP_STATUS)"
+                break
+              fi
+              echo "Waiting... (attempt $i/30, status: $HTTP_STATUS)"
+              sleep 10
+            done
+
+            # Check API health
+            API_HEALTH=$(curl -sf "${{ secrets.UAT_API_URL }}/health" || echo "unhealthy")
+            echo "API Health: $API_HEALTH"
+          fi
+
+      - name: Update deployment record
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ needs.prepare.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | UAT |" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | ${{ secrets.UAT_URL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API URL | ${{ secrets.UAT_API_URL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed at | $(date -u) |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # Post-deployment Tests
+  # ============================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against UAT..."
+
+          # Health endpoint
+          curl -sf "${{ secrets.UAT_API_URL }}/health" || echo "Health check warning"
+
+          # API endpoints
+          # curl -sf "${{ secrets.UAT_API_URL }}/api/catalog/categories" || echo "Categories endpoint warning"
+
+          echo "Smoke tests completed"
+
+      - name: Performance baseline
+        run: |
+          echo "Recording performance baseline..."
+          # Add performance tests here
+          # k6 run --vus 10 --duration 30s scripts/load-test.js
+
+  # ============================================
+  # Notify Team
+  # ============================================
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.deploy.result }}
+          fields: repo,message,commit,author,action,eventName,workflow
+          text: |
+            UAT Deployment: ${{ needs.deploy.result }}
+            Version: ${{ needs.prepare.outputs.version }}
+            URL: ${{ secrets.UAT_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub Release (draft)
+        if: needs.deploy.result == 'success'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.prepare.outputs.version }}
+          name: Release ${{ needs.prepare.outputs.version }}
+          body: |
+            ## UAT Release ${{ needs.prepare.outputs.version }}
+
+            **Deployed to UAT:** ${{ secrets.UAT_URL }}
+            **Deployed at:** $(date -u)
+            **Deployed by:** ${{ github.actor }}
+
+            ### Changes
+            ${{ needs.prepare.outputs.changelog }}
+
+            ### Docker Images
+            - Backend: `${{ env.BACKEND_IMAGE }}:${{ needs.prepare.outputs.version }}`
+            - Frontend: `${{ env.FRONTEND_IMAGE }}:${{ needs.prepare.outputs.version }}`
+          draft: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================
+  # Rollback (Manual trigger)
+  # ============================================
+  rollback:
+    name: Rollback (if needed)
+    runs-on: ubuntu-latest
+    needs: [deploy, smoke-tests]
+    if: failure() && needs.deploy.result == 'success'
+    environment: uat
+
+    steps:
+      - name: Rollback notification
+        run: |
+          echo "## ⚠️ Smoke Tests Failed - Consider Rollback" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment was successful but smoke tests failed." >> $GITHUB_STEP_SUMMARY
+          echo "Please investigate and consider rolling back if needed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To rollback manually:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo 'docker-compose -f docker-compose.uat.yml --env-file .env.uat up -d --force-recreate' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

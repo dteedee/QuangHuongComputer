@@ -103,6 +103,16 @@ export const adminApi = {
       const response = await client.post<{ message: string }>(`/auth/users/${id}/reset-password`, { password });
       return response.data;
     },
+
+    toggleStatus: async (id: string): Promise<{ message: string; isActive: boolean }> => {
+      const response = await client.post<{ message: string; isActive: boolean }>(`/auth/users/${id}/toggle-status`);
+      return response.data;
+    },
+
+    activate: async (id: string): Promise<{ message: string; isActive: boolean }> => {
+      const response = await client.post<{ message: string; isActive: boolean }>(`/auth/users/${id}/activate`);
+      return response.data;
+    },
   },
 
   // ============ Roles Management ============

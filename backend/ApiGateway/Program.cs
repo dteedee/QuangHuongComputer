@@ -13,6 +13,7 @@ using Communication;
 using HR;
 using SystemConfig;
 using Reporting;
+using CRM;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Data;
 using Sales.Infrastructure;
@@ -25,6 +26,7 @@ using InventoryModule.Infrastructure;
 using Payments.Infrastructure;
 using Content.Infrastructure;
 using Ai.Infrastructure;
+using CRM.Infrastructure;
 using HR.Infrastructure;
 using SystemConfig.Infrastructure;
 using SystemConfig.Infrastructure.Data;
@@ -51,6 +53,25 @@ Env.TraversePath().Load();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Map environment variables to configuration (for OAuth and other services)
+// DotNetEnv loads .env file, but we need to explicitly map to configuration paths
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")))
+{
+    builder.Configuration["OAuth:Google:ClientId"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")))
+{
+    builder.Configuration["OAuth:Google:ClientSecret"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_ID")))
+{
+    builder.Configuration["OAuth:Facebook:AppId"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_ID");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET")))
+{
+    builder.Configuration["OAuth:Facebook:AppSecret"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET");
+}
 
 // Configure Vietnamese culture for the application
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");
@@ -116,15 +137,35 @@ builder.Services.AddHealthChecks()
     .AddRabbitMQ(rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672", name: "rabbitmq")
     .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379", name: "redis");
 
-// CORS
+// CORS - Read from configuration with localhost fallbacks for development
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:5173", "http://localhost:4173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
+
+// In development, ensure localhost is always allowed
+if (builder.Environment.IsDevelopment())
+{
+    var devOrigins = new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
+    corsOrigins = corsOrigins.Union(devOrigins).Distinct().ToArray();
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:5174") // Allow Frontend
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(origin => true)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -170,6 +211,7 @@ builder.Services.AddCommunicationModule(builder.Configuration);  // Added Commun
 builder.Services.AddHRModule(builder.Configuration);
 builder.Services.AddSystemConfigModule(builder.Configuration);
 builder.Services.AddReportingModule();
+builder.Services.AddCrmModule(builder.Configuration);
 
 // Email Service
 builder.Services.AddSingleton<IEmailService, EmailService>();
@@ -247,6 +289,7 @@ if (app.Environment.IsDevelopment())
             services.GetRequiredService<WarrantyDbContext>(),
             services.GetRequiredService<ContentDbContext>(),
             services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>(),
+            services.GetRequiredService<PaymentsDbContext>(),
         };
 
         foreach (var ctx in migrateContexts)
@@ -303,6 +346,94 @@ if (app.Environment.IsDevelopment())
                         EXCEPTION
                             WHEN duplicate_column THEN NULL;
                         END;
+                        
+                        -- Fix for OrderItem schema mismatch
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""CreatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL; -- Ignore if column already exists
+                            WHEN undefined_table THEN NULL; -- Ignore if table OrderItem doesn't exist (maybe OrderItems?)
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""UpdatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItem"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+
+                        -- Try plural ""OrderItems"" just in case
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""CreatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""UpdatedBy"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""OrderItems"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
                     END $$;
                 ");
             }
@@ -317,11 +448,12 @@ if (app.Environment.IsDevelopment())
         {
             services.GetRequiredService<InventoryModule.Infrastructure.InventoryDbContext>(),
             services.GetRequiredService<AccountingDbContext>(),
-            services.GetRequiredService<PaymentsDbContext>(),
+            // services.GetRequiredService<PaymentsDbContext>(), // Moved to Migrations
             services.GetRequiredService<AiDbContext>(),
             services.GetRequiredService<Communication.Infrastructure.CommunicationDbContext>(),
             services.GetRequiredService<HRDbContext>(),
             services.GetRequiredService<SystemConfigDbContext>(),
+            services.GetRequiredService<CrmDbContext>(),
         };
 
         foreach (var ctx in ensureCreatedContexts)
@@ -332,8 +464,17 @@ if (app.Environment.IsDevelopment())
                 var schema = ctx.Model.GetDefaultSchema();
                 if (!string.IsNullOrEmpty(schema))
                 {
+                    // Validate schema name to prevent SQL injection (only allow alphanumeric and underscore)
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(schema, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+                    {
+                        logger.LogWarning("Invalid schema name: {Schema}", schema);
+                        continue;
+                    }
                     logger.LogInformation("Creating schema {Schema} for {Context} if not exists...", schema, ctx.GetType().Name);
+                    // Schema name is validated above, safe to use in SQL
+                    #pragma warning disable EF1002 // Schema name validated via regex
                     await ctx.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{schema}\";");
+                    #pragma warning restore EF1002
                 }
 
                 logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);
@@ -452,6 +593,9 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Review validation: Ensure users have purchased a product before reviewing
+app.UseReviewValidation();
+
 // Chatbot Endpoint
 app.MapPost("/api/ai/chat", async (GatewayChatRequest request, IAiService ai) =>
 {
@@ -460,6 +604,7 @@ app.MapPost("/api/ai/chat", async (GatewayChatRequest request, IAiService ai) =>
 }).WithName("ChatWithAi");
 
 app.MapHub<Communication.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<Communication.Hubs.NotificationHub>("/hubs/notification");
 
 // Health Checks Endpoints
 app.MapHealthChecks("/health");
@@ -486,6 +631,7 @@ app.MapSystemConfigEndpoints();
 app.MapInventoryEndpoints();
 app.MapAccountingEndpoints();
 app.MapReportingEndpoints();
+app.MapCrmEndpoints();
 
 // Add fast checkout endpoint
 app.MapFastCheckoutEndpoint();

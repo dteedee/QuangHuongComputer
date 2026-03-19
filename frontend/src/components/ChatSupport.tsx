@@ -40,8 +40,9 @@ export const ChatSupport = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    const signalRUrl = import.meta.env.VITE_SIGNALR_HUB_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hubs/chat`;
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:5000/hubs/chat', {
+      .withUrl(signalRUrl, {
         accessTokenFactory: () => localStorage.getItem('token') || ''
       })
       .withAutomaticReconnect({

@@ -3,8 +3,6 @@ import {
     Plus,
     Search,
     Edit2,
-    Trash2,
-    MoreHorizontal,
     Eye,
     X,
     Check,
@@ -14,7 +12,9 @@ import {
     Save,
     MapPin,
     DollarSign,
-    Clock
+    Clock,
+    Power,
+    PowerOff
 } from 'lucide-react';
 import { hrApi, type JobListing } from '../../../api/hr';
 import { toast } from 'react-hot-toast';
@@ -87,15 +87,17 @@ export const RecruitmentManagement = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa tin tuyển dụng này?')) return;
+    const handleToggleStatus = async (job: JobListing) => {
+        const newStatus = job.status === 'Active' ? 'Closed' : 'Active';
+        const action = newStatus === 'Active' ? 'kích hoạt' : 'đóng';
+        if (!confirm(`Bạn có chắc chắn muốn ${action} tin tuyển dụng "${job.title}"?`)) return;
 
         try {
-            await hrApi.deleteJobListing(id);
-            toast.success('Đã xóa tin tuyển dụng');
+            await hrApi.updateJobListing(job.id, { ...job, status: newStatus });
+            toast.success(newStatus === 'Active' ? 'Đã kích hoạt tin tuyển dụng!' : 'Đã đóng tin tuyển dụng!');
             fetchJobs();
         } catch (error) {
-            toast.error('Lỗi khi xóa');
+            toast.error('Lỗi khi cập nhật trạng thái');
         }
     };
 
@@ -122,7 +124,7 @@ export const RecruitmentManagement = () => {
                         <input
                             type="text"
                             placeholder="Tìm kiếm tin tuyển dụng..."
-                            className="bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2 w-full text-sm focus:ring-2 focus:ring-red-500/20"
+                            className="bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2 w-full text-sm text-gray-900 focus:ring-2 focus:ring-red-500/20 placeholder:text-gray-400"
                         />
                     </div>
                 </div>
@@ -181,14 +183,20 @@ export const RecruitmentManagement = () => {
                                                 <button
                                                     onClick={() => handleOpenModal(job)}
                                                     className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-all"
+                                                    title="Chỉnh sửa"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(job.id)}
-                                                    className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-all"
+                                                    onClick={() => handleToggleStatus(job)}
+                                                    className={`p-2 rounded-lg transition-all ${
+                                                        job.status === 'Active'
+                                                            ? 'hover:bg-amber-50 text-amber-600'
+                                                            : 'hover:bg-emerald-50 text-emerald-600'
+                                                    }`}
+                                                    title={job.status === 'Active' ? 'Đóng tin' : 'Kích hoạt'}
                                                 >
-                                                    <Trash2 size={16} />
+                                                    {job.status === 'Active' ? <PowerOff size={16} /> : <Power size={16} />}
                                                 </button>
                                             </div>
                                         </td>
@@ -241,7 +249,7 @@ export const RecruitmentManagement = () => {
                                         <input
                                             required
                                             type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.title}
                                             onChange={e => setEditingJob({ ...editingJob!, title: e.target.value })}
                                             placeholder="VD: Kỹ thuật viên phần cứng..."
@@ -253,7 +261,7 @@ export const RecruitmentManagement = () => {
                                         <input
                                             required
                                             type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.department}
                                             onChange={e => setEditingJob({ ...editingJob!, department: e.target.value })}
                                             placeholder="VD: Kỹ thuật, Kinh doanh..."
@@ -265,7 +273,7 @@ export const RecruitmentManagement = () => {
                                         <input
                                             required
                                             type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.location}
                                             onChange={e => setEditingJob({ ...editingJob!, location: e.target.value })}
                                         />
@@ -274,7 +282,7 @@ export const RecruitmentManagement = () => {
                                     <div>
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Loại hình</label>
                                         <select
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold appearance-none"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400 appearance-none"
                                             value={editingJob?.jobType}
                                             onChange={e => setEditingJob({ ...editingJob!, jobType: e.target.value })}
                                         >
@@ -290,7 +298,7 @@ export const RecruitmentManagement = () => {
                                         <input
                                             required
                                             type="date"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.expiryDate?.split('T')[0]}
                                             onChange={e => setEditingJob({ ...editingJob!, expiryDate: e.target.value })}
                                         />
@@ -300,7 +308,7 @@ export const RecruitmentManagement = () => {
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Lương tối thiểu (VNĐ)</label>
                                         <input
                                             type="number"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.salaryRangeMin}
                                             onChange={e => setEditingJob({ ...editingJob!, salaryRangeMin: Number(e.target.value) })}
                                         />
@@ -310,7 +318,7 @@ export const RecruitmentManagement = () => {
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Lương tối đa (VNĐ)</label>
                                         <input
                                             type="number"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.salaryRangeMax}
                                             onChange={e => setEditingJob({ ...editingJob!, salaryRangeMax: Number(e.target.value) })}
                                         />
@@ -320,7 +328,7 @@ export const RecruitmentManagement = () => {
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Mô tả công việc</label>
                                         <textarea
                                             rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.description}
                                             onChange={e => setEditingJob({ ...editingJob!, description: e.target.value })}
                                         ></textarea>
@@ -330,7 +338,7 @@ export const RecruitmentManagement = () => {
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Yêu cầu ứng viên</label>
                                         <textarea
                                             rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.requirements}
                                             onChange={e => setEditingJob({ ...editingJob!, requirements: e.target.value })}
                                         ></textarea>
@@ -340,7 +348,7 @@ export const RecruitmentManagement = () => {
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Quyền lợi</label>
                                         <textarea
                                             rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400"
                                             value={editingJob?.benefits}
                                             onChange={e => setEditingJob({ ...editingJob!, benefits: e.target.value })}
                                         ></textarea>
@@ -349,7 +357,7 @@ export const RecruitmentManagement = () => {
                                     <div>
                                         <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Trạng thái</label>
                                         <select
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 focus:ring-2 focus:ring-red-500/20 font-bold appearance-none"
+                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-red-500/20 font-bold placeholder:text-gray-400 appearance-none"
                                             value={editingJob?.status}
                                             onChange={e => setEditingJob({ ...editingJob!, status: e.target.value as any })}
                                         >

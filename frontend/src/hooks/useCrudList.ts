@@ -24,12 +24,14 @@ export interface UseCrudListOptions<T> {
   queryKey: string[];
   fetchFn: (params: QueryParams) => Promise<PagedResult<T>>;
   initialPageSize?: number;
+  staleTime?: number; // Cache duration in ms
 }
 
 export function useCrudList<T>({
   queryKey,
   fetchFn,
   initialPageSize = 20,
+  staleTime = 15000, // Default 15 seconds cache
 }: UseCrudListOptions<T>) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
@@ -50,6 +52,7 @@ export function useCrudList<T>({
   const query = useQuery({
     queryKey: [...queryKey, queryParams],
     queryFn: () => fetchFn(queryParams),
+    staleTime, // Cache for better performance
   });
 
   const handlePageChange = useCallback((newPage: number) => {

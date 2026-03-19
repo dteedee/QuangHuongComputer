@@ -27,7 +27,7 @@ export function FormField({
 }: FormFieldProps) {
   const baseClassName = `mt-1 block w-full border ${
     error ? 'border-red-300' : 'border-gray-300'
-  } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${className}`;
+  } rounded-md shadow-sm py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${className}`;
 
   return (
     <div>

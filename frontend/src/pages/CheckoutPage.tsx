@@ -5,12 +5,14 @@ import { useCart } from '../context/CartContext';
 import {
   ArrowLeft, ArrowRight, CreditCard, Truck, User,
   MapPin, Phone, Mail, Lock, Check, ChevronRight,
-  ShieldCheck, Package, ShoppingBag, CreditCard as CardIcon
+  ShieldCheck, Package, ShoppingBag, CreditCard as CardIcon,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { salesApi } from '../api/sales';
+import { paymentApi } from '../api/payment';
 
 interface CheckoutForm {
   // Customer Info
@@ -41,7 +43,7 @@ interface CheckoutForm {
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { items, subtotal, tax, total, discountAmount, couponCode, clearCart } = useCart();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
@@ -85,18 +87,24 @@ export function CheckoutPage() {
     const newErrors: Partial<Record<keyof CheckoutForm, string>> = {};
 
     if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Vui lòng nhập email';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
+
+    // Chỉ validate email khi giao hàng tận nơi
+    if (formData.deliveryMethod === 'delivery') {
+      if (!formData.email.trim()) {
+        newErrors.email = 'Vui lòng nhập email';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Email không hợp lệ';
+      }
     }
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Vui lòng nhập số điện thoại';
     } else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Số điện thoại không hợp lệ';
     }
 
-    if (step === 1) {
+    // Chỉ validate địa chỉ khi giao hàng tận nơi
+    if (step === 1 && formData.deliveryMethod === 'delivery') {
       if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ';
       if (!formData.ward.trim()) newErrors.ward = 'Vui lòng chọn phường/xã';
       if (!formData.district.trim()) newErrors.district = 'Vui lòng chọn quận/huyện';
@@ -143,41 +151,138 @@ export function CheckoutPage() {
   const processOrder = async () => {
     setLoading(true);
     try {
-      const checkoutData = {
-        items: items.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          unitPrice: item.price,
-          quantity: item.quantity
-        })),
-        shippingAddress: formData.deliveryMethod === 'pickup'
-          ? 'Nhận tại cửa hàng'
-          : `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`,
-        notes: formData.notes,
-        couponCode: couponCode || undefined,
-        paymentMethod: formData.paymentMethod,
-        isPickup: formData.deliveryMethod === 'pickup',
-        pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
-        pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
-        // Send user ID if logged in
-        customerId: user?.id
-      };
+      const shippingAddress = formData.deliveryMethod === 'pickup'
+        ? 'Nhận tại cửa hàng'
+        : `${formData.address}, ${formData.ward}, ${formData.district}, ${formData.province}`;
 
-      const response = await salesApi.orders.create(checkoutData);
+      let response;
+
+      if (isAuthenticated && user) {
+        // Authenticated user checkout
+        const checkoutData = {
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            unitPrice: item.price,
+            quantity: item.quantity
+          })),
+          shippingAddress,
+          notes: formData.notes,
+          couponCode: couponCode || undefined,
+          paymentMethod: formData.paymentMethod,
+          isPickup: formData.deliveryMethod === 'pickup',
+          pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
+          pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
+          customerId: user.id
+        };
+        response = await salesApi.orders.create(checkoutData);
+      } else {
+        // Guest checkout
+        const guestCheckoutData = {
+          customerName: formData.fullName,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          shippingAddress,
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          couponCode: couponCode || undefined,
+          notes: formData.notes,
+          paymentMethod: formData.paymentMethod,
+        };
+        response = await salesApi.orders.guestCheckout(guestCheckoutData);
+      }
 
       if (response && response.orderId) {
         setOrderId(response.orderId);
-        setStep(3);
-        clearCart();
-        toast.success('Đặt hàng thành công!');
+
+        // Step 2: Handle payment based on payment method
+        if (formData.paymentMethod === 'cod') {
+          // COD - No payment processing needed
+          setStep(3);
+          clearCart();
+          toast.success('Đặt hàng thành công!');
+          triggerConfetti();
+        } else if (formData.paymentMethod === 'credit_card') {
+          // Credit card - Initiate VNPay payment
+          try {
+            const paymentResponse = await paymentApi.initiate({
+              orderId: response.orderId,
+              amount: response.totalAmount,
+              provider: 0 // VNPay
+            });
+
+            if (paymentResponse.paymentUrl) {
+              // Save order info before redirect
+              clearCart();
+              toast.success('Đang chuyển đến trang thanh toán...');
+              // Redirect to VNPay
+              window.location.href = paymentResponse.paymentUrl;
+            } else {
+              // Fallback to payment page
+              clearCart();
+              navigate(`/payment/${response.orderId}`);
+            }
+          } catch (paymentError) {
+            console.error('Payment initiation failed:', paymentError);
+            // Order is created, redirect to payment page
+            clearCart();
+            navigate(`/payment/${response.orderId}`, {
+              state: { error: 'Không thể kết nối cổng thanh toán. Vui lòng thanh toán thủ công.' }
+            });
+          }
+        } else if (formData.paymentMethod === 'bank_transfer') {
+          // SePay (Bank Transfer)
+          try {
+            const paymentResponse = await paymentApi.initiate({
+              orderId: response.orderId,
+              amount: response.totalAmount,
+              provider: 4 // SePay
+            });
+
+            if (paymentResponse.paymentUrl) {
+              // Store payment info for success page
+              localStorage.setItem('lastPaymentUrl', paymentResponse.paymentUrl);
+              localStorage.setItem('lastOrderId', response.orderId);
+              localStorage.setItem('lastOrderAmount', response.totalAmount.toString());
+
+              setStep(3);
+              clearCart();
+              toast.success('Đặt hàng thành công! Vui lòng quét mã QR để thanh toán.');
+              triggerConfetti();
+            } else {
+              toast.error('Không thể tạo mã QR. Vui lòng thử lại.');
+            }
+          } catch (e) {
+            console.error('SePay initiation failed', e);
+            toast.error('Lỗi khởi tạo thanh toán SePay');
+          }
+        }
       }
     } catch (error: any) {
       console.error('Failed to process order:', error);
-      const errorMessage = error.response?.data?.error || 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
+      // Try to get error message from various sources
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.Error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   const formatPrice = (price: number) => {
@@ -263,6 +368,30 @@ export function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Guest Checkout Notice */}
+                  {!isAuthenticated && (
+                    <div className="mb-8 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-100 rounded-xl">
+                          <User className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-amber-800 text-sm">Mua hàng không cần tài khoản</p>
+                          <p className="text-amber-700 text-xs mt-1">
+                            Bạn đang thanh toán với tư cách khách.{' '}
+                            <button
+                              onClick={() => navigate('/login', { state: { from: '/checkout' } })}
+                              className="font-bold underline hover:text-amber-900"
+                            >
+                              Đăng nhập
+                            </button>
+                            {' '}để theo dõi đơn hàng và tích điểm.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Delivery Method Toggle */}
                   <div className="flex p-1 bg-slate-100 rounded-2xl mb-8 gap-1">
                     <button
@@ -302,9 +431,20 @@ export function CheckoutPage() {
                             <div className="text-xs bg-white px-3 py-1 rounded-full font-bold text-slate-500 border border-slate-100">
                               Mở cửa: 08:00 - 21:00
                             </div>
-                            <div className="text-xs bg-green-100 px-3 py-1 rounded-full font-bold text-green-700">
-                              Đang mở cửa
-                            </div>
+                            {(() => {
+                              const now = new Date();
+                              const currentHour = now.getHours();
+                              const isOpen = currentHour >= 8 && currentHour < 21;
+                              return isOpen ? (
+                                <div className="text-xs bg-green-100 px-3 py-1 rounded-full font-bold text-green-700">
+                                  Đang mở cửa
+                                </div>
+                              ) : (
+                                <div className="text-xs bg-red-100 px-3 py-1 rounded-full font-bold text-red-700">
+                                  Đã đóng cửa
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 
@@ -495,7 +635,7 @@ export function CheckoutPage() {
                   <div className="grid grid-cols-1 gap-4 mb-8">
                     {[
                       { id: 'cod', title: 'Thanh toán khi nhận hàng', desc: 'Sử dụng tiền mặt khi shipper giao tới', icon: Truck },
-                      { id: 'bank_transfer', title: 'Chuyển khoản ngân hàng', desc: 'Quét mã QR hoặc chuyển qua Internet Banking', icon: CardIcon },
+                      { id: 'bank_transfer', title: 'Chuyển khoản (VietQR)', desc: 'Thanh toán tự động 24/7 với SePay', icon: CardIcon },
                       { id: 'credit_card', title: 'Thẻ tín dụng / Ghi nợ', desc: 'Hỗ trợ Visa, Master, JCB, Napas', icon: Lock },
                     ].map((method) => (
                       <label
@@ -631,15 +771,17 @@ export function CheckoutPage() {
                   </p>
 
                   <div className="bg-slate-50 rounded-2xl p-6 text-left max-w-md mx-auto mb-10 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
-                        <Mail className="w-4 h-4" />
+                    {formData.email && (
+                      <div className="flex items-start gap-4">
+                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Email xác nhận</p>
+                          <p className="text-sm font-bold text-slate-700">Đã được gửi tới {formData.email}</p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Email xác nhận</p>
-                        <p className="text-sm font-bold text-slate-700">Đã được gửi tới {formData.email}</p>
-                      </div>
-                    </div>
+                    )}
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-slate-400">
                         <Phone className="w-4 h-4" />
@@ -668,7 +810,53 @@ export function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  {/* SePay QR Code Display */}
+                  {formData.paymentMethod === 'bank_transfer' && (
+                    <div className="bg-white border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-black text-green-700 mb-2">QUÉT MÃ VIETQR ĐỂ THANH TOÁN</h3>
+                        <p className="text-sm text-slate-500">Đơn hàng sẽ được xác nhận tự động sau vài giây</p>
+                      </div>
+
+                      {localStorage.getItem('lastPaymentUrl') && (
+                        <div className="flex justify-center mb-6">
+                          <img
+                            src={localStorage.getItem('lastPaymentUrl') || ''}
+                            alt="SePay QR Code"
+                            className="w-64 h-64 object-contain border-4 border-slate-100 rounded-xl"
+                          />
+                        </div>
+                      )}
+
+                      <div className="bg-slate-50 p-4 rounded-xl text-sm space-y-2 border border-slate-100">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Số tiền:</span>
+                          <span className="font-bold text-[#D70018] text-lg">{formatPrice(Number(localStorage.getItem('lastOrderAmount') || 0))}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Nội dung:</span>
+                          <span className="font-bold text-slate-900 bg-yellow-100 px-2 rounded">Thanh toan {orderId?.substring(0, 8).toUpperCase()}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 text-center">
+                        <div className="inline-flex items-center gap-2 text-green-600 font-bold bg-green-50 px-4 py-2 rounded-full text-sm animate-pulse">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang chờ thanh toán...
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.paymentMethod !== 'cod' && (
+                    <div className="mt-4 p-3 bg-amber-100 rounded-xl">
+                      <p className="text-xs text-amber-800 font-medium text-center">
+                        Đơn hàng sẽ được xác nhận trong <span className="font-black">30 phút</span> sau khi chúng tôi nhận được tiền
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                     <button
                       onClick={() => navigate('/')}
                       className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
@@ -774,8 +962,8 @@ export function CheckoutPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -793,6 +981,6 @@ export function CheckoutPage() {
           background: #94a3b8;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

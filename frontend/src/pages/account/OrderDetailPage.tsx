@@ -4,6 +4,7 @@ import { salesApi, type Order } from '../../api/sales';
 import { ArrowLeft, Package, MapPin, CreditCard, FileText, Clock, CheckCircle, Truck, Ban, XCircle, RotateCcw, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
+import client from '../../api/client';
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -80,6 +81,25 @@ export const OrderDetailPage = () => {
 
     const canCancel = order.status === 'Pending' || order.status === 'Confirmed';
     const canReturn = order.status === 'Delivered';
+
+    const handleCancelOrder = async () => {
+        if (!order || !confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+
+        try {
+            await client.post(`/sales/orders/${order.id}/cancel`, {
+                reason: 'Khách hàng yêu cầu hủy'
+            });
+            toast.success('Đã hủy đơn hàng thành công');
+            if (orderId) loadOrder(orderId); // Refresh order
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.Error || 'Không thể hủy đơn hàng';
+            toast.error(errorMessage);
+        }
+    };
+
+    const handleReturnRequest = () => {
+        navigate(`/account/returns/new?orderId=${order.id}`);
+    };
 
     return (
         <div className="bg-gray-50 min-h-screen py-10 font-sans">
@@ -256,7 +276,7 @@ export const OrderDetailPage = () => {
                         <div className="space-y-3">
                             {canCancel && (
                                 <button
-                                    onClick={() => toast('Chức năng đang phát triển')}
+                                    onClick={handleCancelOrder}
                                     className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                 >
                                     <XCircle className="w-4 h-4" />
@@ -267,19 +287,19 @@ export const OrderDetailPage = () => {
                             {canReturn && (
                                 <>
                                     <button
-                                        onClick={() => toast('Chức năng đang phát triển')}
+                                        onClick={handleReturnRequest}
                                         className="w-full px-6 py-3 bg-amber-100 hover:bg-amber-200 text-amber-700 font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                     >
                                         <RotateCcw className="w-4 h-4" />
                                         Yêu cầu đổi trả
                                     </button>
-                                    <button
-                                        onClick={() => toast('Chức năng đang phát triển')}
+                                    <Link
+                                        to={`/account/warranty/new?orderId=${order.id}`}
                                         className="w-full px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                     >
                                         <Wrench className="w-4 h-4" />
                                         Yêu cầu bảo hành
-                                    </button>
+                                    </Link>
                                 </>
                             )}
                         </div>
