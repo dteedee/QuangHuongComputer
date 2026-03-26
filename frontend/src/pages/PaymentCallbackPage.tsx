@@ -52,7 +52,7 @@ export const PaymentCallbackPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fbff] flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-12 text-center max-w-md w-full mx-4">
                 {status === 'processing' && (
                     <>

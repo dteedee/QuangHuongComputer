@@ -51,14 +51,14 @@ export const ProductCard = memo(({ product, onClick }: ProductCardProps) => {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-[#D70018] transition-colors">
+            <h4 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-accent transition-colors">
               {product.name}
             </h4>
-            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-[#D70018] transition-colors flex-shrink-0" />
+            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors flex-shrink-0" />
           </div>
 
           {product.price && (
-            <p className="text-xs font-bold text-[#D70018] mt-1">
+            <p className="text-xs font-bold text-accent mt-1">
               {formatPrice(product.price)}
             </p>
           )}

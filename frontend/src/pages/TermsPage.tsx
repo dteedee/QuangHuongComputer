@@ -7,7 +7,7 @@ export const TermsPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <ChevronRight size={14} />
                     <span className="text-gray-900 font-medium">Điều khoản sử dụng</span>
                 </div>
@@ -16,7 +16,7 @@ export const TermsPage = () => {
             <div className="container mx-auto px-4 mt-8">
                 <div className="bg-white p-10 md:p-16 rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
                     <div className="flex items-center gap-5 mb-10 border-b border-gray-100 pb-8">
-                        <div className="p-5 bg-red-50 text-[#D70018] rounded-2xl shadow-inner">
+                        <div className="p-5 bg-red-50 text-accent rounded-2xl shadow-inner">
                             <FileText size={40} />
                         </div>
                         <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">
@@ -100,7 +100,7 @@ export const TermsPage = () => {
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-8">
                             <p className="text-sm">
                                 <strong>Thông tin liên hệ:</strong> Nếu bạn có bất kỳ thắc mắc nào về điều khoản sử dụng,
-                                vui lòng <Link to="/contact" className="text-[#D70018] font-bold">liên hệ với chúng tôi</Link>.
+                                vui lòng <Link to="/contact" className="text-accent font-bold">liên hệ với chúng tôi</Link>.
                             </p>
                         </div>
                     </div>

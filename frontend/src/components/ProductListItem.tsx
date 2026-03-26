@@ -34,7 +34,7 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
                 </Link>
 
                 {discount && (
-                    <div className="absolute top-2 left-2 bg-[#D70018] text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                    <div className="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
                         -{discount}%
                     </div>
                 )}
@@ -57,7 +57,7 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
                         </div>
 
                         <Link to={`/product/${product.id}`} className="block">
-                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#D70018] transition-colors leading-tight">
+                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-accent transition-colors leading-tight">
                                 {product.name}
                             </h3>
                         </Link>
@@ -78,7 +78,7 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                        <div className="text-2xl font-bold text-[#D70018] leading-none">
+                        <div className="text-2xl font-bold text-accent leading-none">
                             {formatCurrency(product.price)}
                         </div>
                         {product.oldPrice && (
@@ -105,7 +105,7 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
                         <button
                             onClick={() => addToCart(product)}
                             disabled={product.stockQuantity === 0}
-                            className="px-4 py-2 bg-[#D70018] text-white rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ShoppingCart size={16} />
                             Thêm vào giỏ

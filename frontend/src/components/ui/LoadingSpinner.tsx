@@ -59,7 +59,7 @@ export const LoadingOverlay: React.FC<{
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
             <div className="text-center">
-                <LoadingSpinner size="lg" color="#D70018" />
+                <LoadingSpinner size="lg" color="var(--accent-primary)" />
                 <p className="mt-4 text-gray-700 font-medium">{text}</p>
             </div>
         </div>

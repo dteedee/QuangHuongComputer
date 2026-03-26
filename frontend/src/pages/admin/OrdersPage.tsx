@@ -184,7 +184,7 @@ export const AdminOrdersPage = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
-                        Quản lý <span className="text-[#D70018]">Đơn hàng</span>
+                        Quản lý <span className="text-accent">Đơn hàng</span>
                     </h1>
                     <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
                         Hệ thống xử lý đơn hàng và vận chuyển toàn quốc
@@ -192,7 +192,7 @@ export const AdminOrdersPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-3 px-8 py-4 bg-[#D70018] hover:bg-[#b50014] text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                    className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
                 >
                     <Plus size={18} className="group-hover:rotate-90 transition-transform" />
                     Tạo đơn hàng
@@ -204,13 +204,13 @@ export const AdminOrdersPage = () => {
                 <div className="flex flex-col lg:flex-row items-stretch gap-4">
                     {/* Search */}
                     <div className="relative flex-1 group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={20} />
                         <input
                             type="text"
                             placeholder="Tìm kiếm theo mã đơn hàng, địa chỉ..."
                             value={filters.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
-                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
                         />
                         {filters.search && (
                             <button
@@ -229,7 +229,7 @@ export const AdminOrdersPage = () => {
                             value={filters.status}
                             onChange={(e) => handleFilterChange('status', e.target.value)}
                             className={`px-4 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.status !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                filters.status !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                             }`}
                         >
                             <option value="all">Tất cả trạng thái</option>
@@ -247,7 +247,7 @@ export const AdminOrdersPage = () => {
                             value={filters.paymentStatus}
                             onChange={(e) => handleFilterChange('paymentStatus', e.target.value)}
                             className={`px-4 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.paymentStatus !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                filters.paymentStatus !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                             }`}
                         >
                             <option value="all">Thanh toán</option>
@@ -266,7 +266,7 @@ export const AdminOrdersPage = () => {
                                     value={filters.dateRange.from}
                                     onChange={(e) => handleFilterChange('dateRange', { ...filters.dateRange, from: e.target.value })}
                                     className={`pl-9 pr-3 py-4 border rounded-2xl text-xs font-bold outline-none cursor-pointer transition-all ${
-                                        filters.dateRange.from ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                        filters.dateRange.from ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                                     }`}
                                     placeholder="Từ ngày"
                                 />
@@ -277,7 +277,7 @@ export const AdminOrdersPage = () => {
                                 value={filters.dateRange.to}
                                 onChange={(e) => handleFilterChange('dateRange', { ...filters.dateRange, to: e.target.value })}
                                 className={`px-3 py-4 border rounded-2xl text-xs font-bold outline-none cursor-pointer transition-all ${
-                                    filters.dateRange.to ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                    filters.dateRange.to ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                                 }`}
                                 placeholder="Đến ngày"
                             />
@@ -287,7 +287,7 @@ export const AdminOrdersPage = () => {
                         {hasActiveFilters && (
                             <button
                                 onClick={resetFilters}
-                                className="flex items-center gap-2 px-4 py-4 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-2xl transition-all"
+                                className="flex items-center gap-2 px-4 py-4 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-accent hover:bg-red-50 rounded-2xl transition-all"
                             >
                                 <RefreshCw size={14} />
                                 Đặt lại
@@ -319,7 +319,7 @@ export const AdminOrdersPage = () => {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={6} className="px-8 py-20 text-center">
-                                        <Loader2 className="mx-auto text-[#D70018] animate-spin mb-4" size={40} />
+                                        <Loader2 className="mx-auto text-accent animate-spin mb-4" size={40} />
                                         <p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">Đang tải dữ liệu đơn hàng...</p>
                                     </td>
                                 </tr>
@@ -343,13 +343,13 @@ export const AdminOrdersPage = () => {
                                                 }`}
                                             >
                                                 <td className="px-8 py-6">
-                                                    <span className="text-base font-black text-gray-950 group-hover:text-[#D70018] transition-colors tracking-tight">#{order.orderNumber}</span>
+                                                    <span className="text-base font-black text-gray-950 group-hover:text-accent transition-colors tracking-tight">#{order.orderNumber}</span>
                                                 </td>
                                                 <td className="px-8 py-6">
                                                     <div className="flex flex-col gap-1">
                                                         <span className="text-sm font-bold text-gray-800 tabular-nums">{order.items?.[0]?.productName || 'N/A'}</span>
                                                         {order.items?.length > 1 && (
-                                                            <span className="text-[11px] font-black text-[#D70018] uppercase tracking-widest leading-none bg-red-50 w-fit px-2 py-1 rounded-md">+{order.items.length - 1} sản phẩm khác</span>
+                                                            <span className="text-[11px] font-black text-accent uppercase tracking-widest leading-none bg-red-50 w-fit px-2 py-1 rounded-md">+{order.items.length - 1} sản phẩm khác</span>
                                                         )}
                                                     </div>
                                                 </td>
@@ -377,7 +377,7 @@ export const AdminOrdersPage = () => {
                                                 <td className="px-8 py-6 text-right">
                                                     <button
                                                         onClick={() => setSelectedOrder(order)}
-                                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-[#D70018] hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100"
+                                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100"
                                                     >
                                                         <Eye size={18} />
                                                     </button>
@@ -400,14 +400,14 @@ export const AdminOrdersPage = () => {
                     <button
                         disabled={page === 1}
                         onClick={() => setPage(p => p - 1)}
-                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
                     >
                         Trang trước
                     </button>
                     <button
                         disabled={orders.length < 20}
                         onClick={() => setPage(p => p + 1)}
-                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
+                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
                     >
                         Trang kế &gt;
                     </button>
@@ -434,14 +434,14 @@ export const AdminOrdersPage = () => {
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">
-                                            Đơn hàng <span className="text-[#D70018]">#{selectedOrder.orderNumber}</span>
+                                            Đơn hàng <span className="text-accent">#{selectedOrder.orderNumber}</span>
                                         </h2>
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
                                             Ngày tạo: {new Date(selectedOrder.orderDate).toLocaleString('vi-VN')}
                                         </p>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#D70018] transition-all">
+                                <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-accent transition-all">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -457,7 +457,7 @@ export const AdminOrdersPage = () => {
                                                 updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value });
                                                 setSelectedOrder({ ...selectedOrder, status: e.target.value as OrderStatus });
                                             }}
-                                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#D70018]/20"
+                                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         >
                                             <option value="Draft">Bản nháp</option>
                                             <option value="Pending">Chờ xác nhận</option>
@@ -471,14 +471,14 @@ export const AdminOrdersPage = () => {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tổng giá trị</p>
-                                        <p className="text-2xl font-black text-[#D70018] italic">{formatCurrency(selectedOrder.totalAmount)}</p>
+                                        <p className="text-2xl font-black text-accent italic">{formatCurrency(selectedOrder.totalAmount)}</p>
                                     </div>
                                 </div>
 
                                 {/* Order Items */}
                                 <div className="space-y-4">
                                     <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                                        <Package size={14} className="text-[#D70018]" />
+                                        <Package size={14} className="text-accent" />
                                         Sản phẩm ({selectedOrder.items?.length || 0})
                                     </h3>
                                     <div className="space-y-3">
@@ -516,14 +516,14 @@ export const AdminOrdersPage = () => {
                                     </div>
                                     <div className="border-t border-gray-200 pt-3 flex justify-between">
                                         <span className="text-sm font-bold text-gray-900">Tổng cộng</span>
-                                        <span className="text-lg font-black text-[#D70018]">{formatCurrency(selectedOrder.totalAmount)}</span>
+                                        <span className="text-lg font-black text-accent">{formatCurrency(selectedOrder.totalAmount)}</span>
                                     </div>
                                 </div>
 
                                 {/* Shipping Info */}
                                 <div className="space-y-4">
                                     <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                                        <MapPin size={14} className="text-[#D70018]" />
+                                        <MapPin size={14} className="text-accent" />
                                         Thông tin giao hàng
                                     </h3>
                                     <div className="p-4 bg-gray-50 rounded-xl">
@@ -554,17 +554,17 @@ export const AdminOrdersPage = () => {
                         >
                             <div className="flex items-center justify-between p-8 border-b border-gray-50">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-[#D70018]">
+                                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-accent">
                                         <ShoppingCart size={24} />
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">
-                                            Tạo <span className="text-[#D70018]">Đơn hàng mới</span>
+                                            Tạo <span className="text-accent">Đơn hàng mới</span>
                                         </h2>
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Khởi tạo đơn hàng thủ công từ Admin</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#D70018] transition-all">
+                                <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-accent transition-all">
                                     <X size={20} />
                                 </button>
                             </div>
@@ -573,7 +573,7 @@ export const AdminOrdersPage = () => {
                                 <div className="space-y-6">
                                     <div className="space-y-4">
                                         <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                                            <Package size={14} className="text-[#D70018]" />
+                                            <Package size={14} className="text-accent" />
                                             Thông tin sản phẩm
                                         </h3>
                                         <div className="grid grid-cols-3 gap-4">
@@ -594,7 +594,7 @@ export const AdminOrdersPage = () => {
 
                                     <div className="space-y-4">
                                         <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                                            <MapPin size={14} className="text-[#D70018]" />
+                                            <MapPin size={14} className="text-accent" />
                                             Giao hàng & Ghi chú
                                         </h3>
                                         <div className="space-y-4">
@@ -614,7 +614,7 @@ export const AdminOrdersPage = () => {
                                     <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 px-8 py-4 bg-gray-50 text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all">
                                         Hủy
                                     </button>
-                                    <button type="submit" disabled={createOrderMutation.isPending} className="flex-[2] flex items-center justify-center gap-3 px-8 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all disabled:opacity-50">
+                                    <button type="submit" disabled={createOrderMutation.isPending} className="flex-[2] flex items-center justify-center gap-3 px-8 py-4 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all disabled:opacity-50">
                                         {createOrderMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                                         Xác nhận tạo đơn
                                     </button>

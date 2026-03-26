@@ -195,7 +195,7 @@ export const InventoryPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Quản lý <span className="text-[#D70018]">Kho hàng</span>
+                        Quản lý <span className="text-accent">Kho hàng</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
                         Theo dõi số lượng tồn kho, cảnh báo sắp hết hàng và điều chỉnh nhanh

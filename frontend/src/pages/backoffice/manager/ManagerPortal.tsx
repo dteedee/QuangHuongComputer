@@ -60,7 +60,7 @@ export const ManagerPortal = () => {
             label: 'Nhân sự',
             value: employeeCount.total > 0 ? `${employeeCount.active}/${employeeCount.total}` : '—',
             icon: <Users size={20} />,
-            color: 'text-[#D70018]',
+            color: 'text-accent',
             bg: 'bg-red-50'
         },
     ];
@@ -68,7 +68,7 @@ export const ManagerPortal = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D70018]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
             </div>
         );
     }
@@ -80,7 +80,7 @@ export const ManagerPortal = () => {
                 <p className="text-gray-500 font-bold text-sm">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="px-6 py-3 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#b50014] transition-all"
+                    className="px-6 py-3 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-accent-hover transition-all"
                 >
                     Thử lại
                 </button>
@@ -93,14 +93,14 @@ export const ManagerPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Quản lý <span className="text-[#D70018]">Trung tâm Chiến lược</span>
+                        Quản lý <span className="text-accent">Trung tâm Chiến lược</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                         Điều hành chiến lược, quản lý chỉ số KPI và nhân sự trực thuộc
                     </p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 group">
+                    <button className="flex items-center gap-3 px-8 py-4 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 group">
                         <Zap size={18} className="text-white group-hover:scale-125 transition-transform" />
                         Báo cáo nhanh
                     </button>
@@ -137,7 +137,7 @@ export const ManagerPortal = () => {
                     <div className="flex gap-4">
                         <button
                             onClick={() => navigate('/backoffice/reports')}
-                            className="px-6 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all"
+                            className="px-6 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all"
                         >
                             Phân tích tăng trưởng
                         </button>
@@ -162,7 +162,7 @@ export const ManagerPortal = () => {
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Điều phối tài nguyên nhân sự, phân bổ ca trực và giải quyết các khiếu nại khách hàng cấp quản lý.</p>
                     <button
                         onClick={() => navigate('/backoffice/hr')}
-                        className="px-6 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] hover:text-white transition-all"
+                        className="px-6 py-3 bg-white text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-accent hover:text-white transition-all"
                     >
                         Quản lý Đội ngũ
                     </button>

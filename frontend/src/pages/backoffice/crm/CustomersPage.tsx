@@ -95,7 +95,7 @@ export default function CustomersPage() {
               placeholder="Tìm kiếm khách hàng..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
 
@@ -105,7 +105,7 @@ export default function CustomersPage() {
               setLifecycleStage(e.target.value as LifecycleStage | '');
               setPage(1);
             }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
           >
             <option value="">Tất cả Lifecycle</option>
             <option value="New">Mới</option>
@@ -122,7 +122,7 @@ export default function CustomersPage() {
               setSegmentId(e.target.value);
               setPage(1);
             }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
           >
             <option value="">Tất cả phân nhóm</option>
             {segments.map((s) => (
@@ -144,7 +144,7 @@ export default function CustomersPage() {
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600" />
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
           </div>
         ) : customers.length === 0 ? (
           <div className="text-center py-20 text-gray-500">

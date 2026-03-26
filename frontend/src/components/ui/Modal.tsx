@@ -52,7 +52,7 @@ export const Modal = ({
               </div>
               <button
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#D70018] transition-all"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-accent transition-all"
                 aria-label="Close modal"
               >
                 <X size={20} />

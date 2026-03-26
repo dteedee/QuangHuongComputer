@@ -3,12 +3,14 @@ import { motion } from 'framer-motion';
 import { Target, Plus, DollarSign, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { crmApi, type PipelineView, type Lead, formatCurrency } from '../../../api/crm';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { LeadCard } from '../../../components/crm';
 
 export default function LeadPipelinePage() {
   const navigate = useNavigate();
   const [pipeline, setPipeline] = useState<PipelineView[]>([]);
   const [loading, setLoading] = useState(true);
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadPipeline();
@@ -36,7 +38,8 @@ export default function LeadPipelinePage() {
   };
 
   const handleConvert = async (lead: Lead) => {
-    if (!confirm('Chuyển đổi lead này thành khách hàng?')) return;
+    const ok = await confirm({ message: 'Chuyển đổi lead này thành khách hàng?', variant: 'info' });
+    if (!ok) return;
     try {
       await crmApi.leads.convert(lead.id);
       loadPipeline();
@@ -48,7 +51,7 @@ export default function LeadPipelinePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
       </div>
     );
   }
@@ -83,7 +86,7 @@ export default function LeadPipelinePage() {
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/leads?new=true')}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover"
           >
             <Plus size={18} />
             <span>Thêm Lead</span>

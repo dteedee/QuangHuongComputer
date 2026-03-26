@@ -83,7 +83,7 @@ export function RedeemPointsModal({ isOpen, onClose, availablePoints, onSuccess 
                   onClick={() => setPoints(preset)}
                   className={`py-2 rounded-lg text-sm font-medium transition ${
                     points === preset
-                      ? 'bg-red-600 text-white'
+                      ? 'bg-accent text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -105,7 +105,7 @@ export function RedeemPointsModal({ isOpen, onClose, availablePoints, onSuccess 
                 max={availablePoints}
                 value={points}
                 onChange={(e) => setPoints(Math.min(availablePoints, Math.max(0, parseInt(e.target.value) || 0)))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent"
               />
               <button
                 onClick={() => setPoints(availablePoints)}
@@ -140,7 +140,7 @@ export function RedeemPointsModal({ isOpen, onClose, availablePoints, onSuccess 
             <button
               onClick={handleRedeem}
               disabled={!isValid || loading}
-              className="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

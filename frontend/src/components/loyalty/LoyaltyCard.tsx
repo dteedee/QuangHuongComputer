@@ -111,7 +111,7 @@ export function LoyaltyCard({ compact = false, onRedeemClick }: LoyaltyCardProps
           {onRedeemClick && account.availablePoints >= 100 && (
             <button
               onClick={onRedeemClick}
-              className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition"
+              className="px-3 py-1.5 bg-accent text-white text-sm rounded-lg hover:bg-accent-hover transition"
             >
               Đổi điểm
             </button>
@@ -173,7 +173,7 @@ export function LoyaltyCard({ compact = false, onRedeemClick }: LoyaltyCardProps
         {onRedeemClick && account.availablePoints >= 100 && (
           <button
             onClick={onRedeemClick}
-            className="w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2"
+            className="w-full py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition flex items-center justify-center gap-2"
           >
             <Star className="w-4 h-4" />
             Đổi điểm lấy ưu đãi

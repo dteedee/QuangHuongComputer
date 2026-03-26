@@ -304,7 +304,7 @@ export function ComparePage() {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={product.stockQuantity === 0}
-                        className="w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         <ShoppingCart />
                         Thêm vào giỏ

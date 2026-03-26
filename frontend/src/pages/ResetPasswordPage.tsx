@@ -56,7 +56,7 @@ export const ResetPasswordPage = () => {
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6 font-sans">
             <div className="w-full max-w-[500px] bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
                 <div className="p-8 lg:p-12">
-                    <Link to="/login" className="inline-flex items-center gap-2 text-gray-600 hover:text-[#D70018] mb-8 font-bold transition-colors">
+                    <Link to="/login" className="inline-flex items-center gap-2 text-gray-600 hover:text-accent mb-8 font-bold transition-colors">
                         <ArrowLeft size={18} />
                         Quay lại đăng nhập
                     </Link>
@@ -79,7 +79,7 @@ export const ResetPasswordPage = () => {
                                     type="text"
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-bold tracking-[0.5em] focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-bold tracking-[0.5em] focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                                     placeholder="000000"
                                     required
                                     maxLength={20}
@@ -97,7 +97,7 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                                     placeholder="Tối thiểu 6 ký tự"
                                     required
                                     minLength={6}
@@ -115,7 +115,7 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                                     placeholder="Nhập lại mật khẩu"
                                     required
                                     minLength={6}
@@ -133,7 +133,7 @@ export const ResetPasswordPage = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-4 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
+                            className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -4,11 +4,13 @@ import { salesApi, type Order } from '../../api/sales';
 import { ArrowLeft, Package, MapPin, CreditCard, FileText, Clock, CheckCircle, Truck, Ban, XCircle, RotateCcw, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
+import { useConfirm } from '../../context/ConfirmContext';
 import client from '../../api/client';
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
     const navigate = useNavigate();
+    const confirm = useConfirm();
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export const OrderDetailPage = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D70018]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
             </div>
         );
     }
@@ -83,7 +85,9 @@ export const OrderDetailPage = () => {
     const canReturn = order.status === 'Delivered';
 
     const handleCancelOrder = async () => {
-        if (!order || !confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+        if (!order) return;
+        const ok = await confirm({ message: 'Bạn có chắc chắn muốn hủy đơn hàng này?', variant: 'warning' });
+        if (!ok) return;
 
         try {
             await client.post(`/sales/orders/${order.id}/cancel`, {
@@ -107,14 +111,14 @@ export const OrderDetailPage = () => {
                 {/* Header */}
                 <Link
                     to="/account/orders"
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#D70018] font-bold mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold mb-6 transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     Quay lại danh sách đơn hàng
                 </Link>
 
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 bg-red-100 rounded-2xl text-[#D70018]">
+                    <div className="p-3 bg-red-100 rounded-2xl text-accent">
                         <Package size={28} />
                     </div>
                     <div>
@@ -214,7 +218,7 @@ export const OrderDetailPage = () => {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-black text-[#D70018] text-lg">
+                                            <p className="font-black text-accent text-lg">
                                                 {formatCurrency(item.unitPrice * item.quantity)}
                                             </p>
                                         </div>
@@ -245,7 +249,7 @@ export const OrderDetailPage = () => {
                                 </div>
                                 <div className="flex justify-between text-sm pt-3 border-t border-gray-200">
                                     <span className="font-black uppercase">Tổng cộng</span>
-                                    <span className="font-black text-[#D70018] text-xl">
+                                    <span className="font-black text-accent text-xl">
                                         {formatCurrency(order.totalAmount)}
                                     </span>
                                 </div>
@@ -255,7 +259,7 @@ export const OrderDetailPage = () => {
                         {/* Shipping Info */}
                         <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
-                                <MapPin className="w-5 h-5 text-[#D70018]" />
+                                <MapPin className="w-5 h-5 text-accent" />
                                 <h3 className="font-black uppercase text-sm tracking-wide">Địa chỉ giao hàng</h3>
                             </div>
                             <p className="text-gray-700 text-sm leading-relaxed">{order.shippingAddress}</p>
@@ -265,7 +269,7 @@ export const OrderDetailPage = () => {
                         {order.notes && (
                             <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <FileText className="w-5 h-5 text-[#D70018]" />
+                                    <FileText className="w-5 h-5 text-accent" />
                                     <h3 className="font-black uppercase text-sm tracking-wide">Ghi chú</h3>
                                 </div>
                                 <p className="text-gray-700 text-sm leading-relaxed">{order.notes}</p>

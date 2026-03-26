@@ -34,11 +34,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const isDisabled = disabled || loading;
 
     const variants = {
-      primary: 'bg-[#D70018] text-white hover:bg-[#B50014] focus:ring-[#D70018] shadow-md hover:shadow-xl hover:shadow-red-500/25',
-      secondary: 'bg-white text-[#D70018] border-2 border-[#D70018] hover:bg-[#D70018] hover:text-white hover:shadow-lg',
-      outline: 'bg-transparent text-[#D70018] border-2 border-[#D70018] hover:bg-[#D70018]/10 hover:border-[#B50014]',
-      ghost: 'bg-transparent text-[#D70018] hover:bg-[#D70018]/10',
-      danger: 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/25',
+      primary: 'bg-accent text-white hover:bg-accent-hover focus:ring-accent shadow-md hover:shadow-xl hover:shadow-red-500/25',
+      secondary: 'bg-white text-accent border-2 border-accent hover:bg-accent hover:text-white hover:shadow-lg',
+      outline: 'bg-transparent text-accent border-2 border-accent hover:bg-accent/10 hover:border-accent-hover',
+      ghost: 'bg-transparent text-accent hover:bg-accent/10',
+      danger: 'bg-accent text-white hover:bg-accent-hover hover:shadow-lg hover:shadow-red-500/25',
       success: 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/25',
     };
 

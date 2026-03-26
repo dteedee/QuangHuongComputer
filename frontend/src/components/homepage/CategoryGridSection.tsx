@@ -51,12 +51,12 @@ export const CategoryGridSection: React.FC<CategoryGridSectionProps> = ({ title,
         <div className="max-w-[1400px] mx-auto px-4 mt-16">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
-                    <span className="text-[#D70018]"><LayoutGrid size={28} /></span>
+                    <span className="text-accent"><LayoutGrid size={28} /></span>
                     {title || 'DANH MỤC SẢN PHẨM'}
                 </h2>
                 <Link
                     to="/products"
-                    className="text-sm font-bold text-[#D70018] hover:underline flex items-center gap-1 uppercase tracking-wider"
+                    className="text-sm font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
                 >
                     Tất cả danh mục <ChevronRight size={16} />
                 </Link>
@@ -75,7 +75,7 @@ export const CategoryGridSection: React.FC<CategoryGridSectionProps> = ({ title,
                             to={`/products?category=${cat.id}`}
                             className="block bg-white rounded-3xl p-8 text-center border-4 border-gray-50 hover:border-red-100 shadow-lg hover:shadow-2xl transition-all"
                         >
-                            <div className="text-[#D70018] flex justify-center mb-6 transform group-hover:scale-110 transition-transform">
+                            <div className="text-accent flex justify-center mb-6 transform group-hover:scale-110 transition-transform">
                                 {getCategoryIcon(cat.name)}
                             </div>
                             <h4 className="font-black text-gray-800 text-sm uppercase leading-tight h-10 flex items-center justify-center">

@@ -59,7 +59,7 @@ export const MessageBubble = memo<MessageBubbleProps>(({
         <div
           className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
             isOwn
-              ? 'bg-[#D70018] text-white rounded-br-sm shadow-lg shadow-red-500/20'
+              ? 'bg-accent text-white rounded-br-sm shadow-lg shadow-red-500/20'
               : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
           }`}
         >

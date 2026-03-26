@@ -10,10 +10,12 @@ import {
   crmApi, type Lead, type LeadSource, type LeadStatus,
   formatCurrency, formatDate, getLeadStatusColor
 } from '../../../api/crm';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function LeadsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const confirm = useConfirm();
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
@@ -67,7 +69,8 @@ export default function LeadsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa lead này?')) return;
+    const ok = await confirm({ message: 'Bạn có chắc muốn xóa lead này?', variant: 'danger' });
+    if (!ok) return;
     try {
       await crmApi.leads.delete(id);
       loadData();
@@ -77,7 +80,8 @@ export default function LeadsPage() {
   };
 
   const handleConvert = async (lead: Lead) => {
-    if (!confirm('Chuyển đổi lead này thành khách hàng?')) return;
+    const ok = await confirm({ message: 'Chuyển đổi lead này thành khách hàng?', variant: 'info' });
+    if (!ok) return;
     try {
       await crmApi.leads.convert(lead.id);
       loadData();
@@ -105,7 +109,7 @@ export default function LeadsPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover"
           >
             <Plus size={18} />
             <span>Thêm Lead</span>
@@ -123,7 +127,7 @@ export default function LeadsPage() {
               placeholder="Tìm kiếm leads..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
 
@@ -133,7 +137,7 @@ export default function LeadsPage() {
               setStatus(e.target.value as LeadStatus | '');
               setPage(1);
             }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="New">Mới</option>
@@ -151,7 +155,7 @@ export default function LeadsPage() {
               setSource(e.target.value as LeadSource | '');
               setPage(1);
             }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
           >
             <option value="">Tất cả nguồn</option>
             <option value="Website">Website</option>
@@ -177,7 +181,7 @@ export default function LeadsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600" />
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
           </div>
         ) : leads.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
@@ -408,7 +412,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               required
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -421,7 +425,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -433,7 +437,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               type="tel"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -445,7 +449,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               type="text"
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -456,7 +460,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <select
               value={form.source}
               onChange={(e) => setForm({ ...form, source: e.target.value as LeadSource })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             >
               <option value="Website">Website</option>
               <option value="Referral">Giới thiệu</option>
@@ -476,7 +480,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               type="number"
               value={form.estimatedValue}
               onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -488,7 +492,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
               rows={3}
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -503,7 +507,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50"
             >
               {loading ? 'Đang tạo...' : 'Tạo Lead'}
             </button>

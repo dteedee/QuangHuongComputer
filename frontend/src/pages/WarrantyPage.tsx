@@ -88,7 +88,7 @@ export const WarrantyPage = () => {
         return (
             <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
                 <div className="bg-white p-16 max-w-2xl mx-auto rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
-                    <h2 className="text-3xl font-black text-gray-900 mb-4 uppercase italic tracking-tighter">Vui lòng <span className="text-[#D70018]">Đăng nhập</span></h2>
+                    <h2 className="text-3xl font-black text-gray-900 mb-4 uppercase italic tracking-tighter">Vui lòng <span className="text-accent">Đăng nhập</span></h2>
                     <p className="text-gray-500 font-medium mb-10 italic">Bạn cần đăng nhập để sử dụng dịch vụ bảo hành và gửi yêu cầu hỗ trợ.</p>
                 </div>
             </div>
@@ -97,7 +97,7 @@ export const WarrantyPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-7xl font-sans">
-            <h2 className="text-4xl font-black text-gray-900 mb-12 uppercase italic tracking-tighter">Dịch vụ <span className="text-[#D70018]">Bảo hành</span></h2>
+            <h2 className="text-4xl font-black text-gray-900 mb-12 uppercase italic tracking-tighter">Dịch vụ <span className="text-accent">Bảo hành</span></h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Coverage Lookup */}
@@ -129,7 +129,7 @@ export const WarrantyPage = () => {
                                 <input
                                     value={lookupSerial}
                                     onChange={e => setLookupSerial(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                                     placeholder="Ví dụ: SN123456"
                                 />
                             </div>
@@ -139,7 +139,7 @@ export const WarrantyPage = () => {
                                 <input
                                     value={lookupInvoice}
                                     onChange={e => setLookupInvoice(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                                     placeholder="Ví dụ: ORD-20260120-001"
                                 />
                             </div>
@@ -155,7 +155,7 @@ export const WarrantyPage = () => {
                         {/* Error Message */}
                         {errorMessage && lookupMode && (
                             <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                                <p className="text-[#D70018] font-bold text-xs tracking-tighter">{errorMessage}</p>
+                                <p className="text-accent font-bold text-xs tracking-tighter">{errorMessage}</p>
                             </div>
                         )}
 
@@ -268,7 +268,7 @@ export const WarrantyPage = () => {
                             <input
                                 value={serialNumber}
                                 onChange={e => setSerialNumber(e.target.value)}
-                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                                 placeholder="Ví dụ: SN123456"
                                 required
                             />
@@ -278,7 +278,7 @@ export const WarrantyPage = () => {
                             <textarea
                                 value={issueDescription}
                                 onChange={e => setIssueDescription(e.target.value)}
-                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner min-h-[140px] resize-none"
+                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner min-h-[140px] resize-none"
                                 placeholder="Vui lòng mô tả chi tiết lỗi sản phẩm đang gặp phải..."
                                 required
                             />
@@ -288,7 +288,7 @@ export const WarrantyPage = () => {
                             <select
                                 value={preferredResolution}
                                 onChange={e => setPreferredResolution(e.target.value as ResolutionPreference)}
-                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                             >
                                 <option value={ResolutionPreference.Repair}>Sửa chữa</option>
                                 <option value={ResolutionPreference.Replace}>Đổi mới</option>
@@ -298,7 +298,7 @@ export const WarrantyPage = () => {
                         {success && <p className="text-emerald-600 text-xs font-black italic uppercase">Đã gửi yêu cầu thành công!</p>}
                         {errorMessage && !success && (
                             <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                                <p className="text-[#D70018] font-bold text-xs tracking-tighter">{errorMessage}</p>
+                                <p className="text-accent font-bold text-xs tracking-tighter">{errorMessage}</p>
                             </div>
                         )}
                         <button
@@ -323,7 +323,7 @@ export const WarrantyPage = () => {
                     ) : (
                         <div className="space-y-6">
                             {claims?.map(claim => (
-                                <div key={claim.id} className="bg-white p-6 rounded-3xl border border-gray-100 hover:border-[#D70018]/30 transition-all shadow-lg shadow-gray-200/20 group">
+                                <div key={claim.id} className="bg-white p-6 rounded-3xl border border-gray-100 hover:border-accent/30 transition-all shadow-lg shadow-gray-200/20 group">
                                     <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-50">
                                         <div>
                                             <h4 className="text-lg font-black text-gray-900 tracking-tighter">SN: {claim.serialNumber}</h4>

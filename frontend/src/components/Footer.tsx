@@ -79,7 +79,7 @@ export const Footer = () => {
     };
 
     return (
-        <footer className="bg-white border-t-2 border-[#D70018] pt-16 mt-16 font-sans">
+        <footer className="bg-white border-t-2 border-accent pt-16 mt-16 font-sans">
             {/* Top Newsletter / CTA */}
             <div className="max-w-[1400px] mx-auto px-4 mb-16">
                 <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -91,11 +91,11 @@ export const Footer = () => {
                         <input
                             type="email"
                             placeholder="Nhập email của bạn..."
-                            className="px-6 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm w-full lg:w-96 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 transition-all placeholder:text-gray-400"
+                            className="px-6 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm w-full lg:w-96 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-gray-400"
                             value={newsletterEmail}
                             onChange={(e) => setNewsletterEmail(e.target.value)}
                         />
-                        <button type="submit" className="bg-[#D70018] hover:bg-[#b50014] text-white font-black px-8 py-3.5 rounded-xl text-sm transition-all uppercase shadow-lg shadow-red-500/10 active:scale-95" disabled={isSubscribing}>
+                        <button type="submit" className="bg-accent hover:bg-accent-hover text-white font-black px-8 py-3.5 rounded-xl text-sm transition-all uppercase shadow-lg shadow-red-500/10 active:scale-95" disabled={isSubscribing}>
                             {isSubscribing ? 'Đang gửi...' : 'Gửi ngay'}
                         </button>
                     </form>
@@ -107,20 +107,20 @@ export const Footer = () => {
                 {/* Brand Column */}
                 <div className="space-y-6">
                     <Link to="/" className="flex flex-col group">
-                        <span className="text-2xl font-black text-[#D70018] uppercase tracking-tighter leading-none">{companyBrand1}</span>
+                        <span className="text-2xl font-black text-accent uppercase tracking-tighter leading-none">{companyBrand1}</span>
                         <span className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase mt-1">{companyBrand2}</span>
                     </Link>
                     <div className="space-y-4 text-gray-600">
                         <div className="flex gap-3">
-                            <MapPin size={20} className="text-[#D70018] flex-shrink-0" />
+                            <MapPin size={20} className="text-accent flex-shrink-0" />
                             <p className="text-sm">Công ty: {companyAddress}</p>
                         </div>
                         <div className="flex gap-3">
-                            <Phone size={20} className="text-[#D70018] flex-shrink-0" />
+                            <Phone size={20} className="text-accent flex-shrink-0" />
                             <p className="text-sm font-black text-nowrap">{companyPhone2} - {companyPhone}</p>
                         </div>
                         <div className="flex gap-3">
-                            <Mail size={20} className="text-[#D70018] flex-shrink-0" />
+                            <Mail size={20} className="text-accent flex-shrink-0" />
                             <p className="text-sm">{companyEmail}</p>
                         </div>
                         <div className="flex gap-3">
@@ -137,14 +137,14 @@ export const Footer = () => {
                     <ul className="space-y-3 text-gray-500 text-sm font-medium">
                         {categoryMenu?.items?.map(item => (
                             <li key={item.id}>
-                                <Link to={item.url || '/'} className="hover:text-[#D70018] transition-colors flex items-center gap-1">
+                                <Link to={item.url || '/'} className="hover:text-accent transition-colors flex items-center gap-1">
                                     <ChevronRight size={14} /> {item.label}
                                 </Link>
                             </li>
                         )) || (
                             <>
-                                <li><Link to="/laptop" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Laptop</Link></li>
-                                <li><Link to="/pc" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> PC Gaming</Link></li>
+                                <li><Link to="/laptop" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Laptop</Link></li>
+                                <li><Link to="/pc" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> PC Gaming</Link></li>
                             </>
                         )}
                     </ul>
@@ -156,14 +156,14 @@ export const Footer = () => {
                     <ul className="space-y-3 text-gray-500 text-sm font-medium">
                         {supportMenu?.items?.map(item => (
                             <li key={item.id}>
-                                <Link to={item.url || '/'} className="hover:text-[#D70018] transition-colors flex items-center gap-1">
+                                <Link to={item.url || '/'} className="hover:text-accent transition-colors flex items-center gap-1">
                                     <ChevronRight size={14} /> {item.label}
                                 </Link>
                             </li>
                         )) || (
                             <>
-                                <li><Link to="/policy/warranty" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
-                                <li><Link to="/contact" className="hover:text-[#D70018] transition-colors flex items-center gap-1"><ChevronRight size={14} /> Liên hệ</Link></li>
+                                <li><Link to="/policy/warranty" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
+                                <li><Link to="/contact" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Liên hệ</Link></li>
                             </>
                         )}
                     </ul>
@@ -174,15 +174,15 @@ export const Footer = () => {
                     <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">Kết nối với chúng tôi</h4>
                     <div className="flex gap-3">
                         <Link to={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform"><Facebook size={20} /></Link>
-                        <Link to={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-[#D70018] flex items-center justify-center text-white hover:scale-110 transition-transform"><Youtube size={20} /></Link>
+                        <Link to={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:scale-110 transition-transform"><Youtube size={20} /></Link>
                         <Link to={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center text-white hover:scale-110 transition-transform"><Instagram size={20} /></Link>
                     </div>
                     <div className="pt-4">
                         <p className="text-xs font-black text-gray-400 uppercase mb-3">Chấp nhận thanh toán</p>
                         <div className="flex flex-wrap gap-2 text-gray-400">
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-[#D70018] transition-colors"><CreditCard size={20} /></a>
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-[#D70018] transition-colors font-bold text-[10px]">VISA</a>
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-[#D70018] transition-colors font-bold text-[10px]">CASH</a>
+                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors"><CreditCard size={20} /></a>
+                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">VISA</a>
+                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">CASH</a>
                         </div>
                     </div>
                 </div>

@@ -85,7 +85,7 @@ export const ReportsPortal = () => {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Báo cáo & <span className="text-[#D70018]">Phân tích</span>
+                        Báo cáo & <span className="text-accent">Phân tích</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">
                         Dữ liệu kinh doanh thời gian thực
@@ -96,7 +96,7 @@ export const ReportsPortal = () => {
                     <button
                         onClick={() => handleExport('full')}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
                     >
                         <FileSpreadsheet size={18} />
                         {isExporting ? 'Đang xuất...' : 'Xuất báo cáo tổng hợp'}
@@ -237,7 +237,7 @@ export const ReportsPortal = () => {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${height}%` }}
                                             transition={{ duration: 0.8, delay: i * 0.05 }}
-                                            className="bg-gradient-to-t from-[#D70018] to-red-400 rounded-t-lg hover:from-[#b50014] transition-all cursor-pointer"
+                                            className="bg-gradient-to-t from-accent to-red-400 rounded-t-lg hover:from-accent-hover transition-all cursor-pointer"
                                         />
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
                                             {formatCurrency(m.revenue)}
@@ -294,7 +294,7 @@ export const ReportsPortal = () => {
                         </h3>
                         <button
                             onClick={() => handleExport('products')}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#D70018] hover:bg-[#b50014] text-white rounded-lg text-xs font-bold transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-xs font-bold transition-all"
                         >
                             <FileSpreadsheet size={14} />
                             Xuất Excel
@@ -327,7 +327,7 @@ export const ReportsPortal = () => {
                                             <p className="font-bold text-gray-900">{product.productName}</p>
                                         </td>
                                         <td className="px-6 py-4 text-right font-bold text-gray-900">{product.totalQuantity}</td>
-                                        <td className="px-6 py-4 text-right font-black text-[#D70018]">{formatCurrency(product.totalRevenue)}</td>
+                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(product.totalRevenue)}</td>
                                         <td className="px-6 py-4 text-right text-gray-500">{product.orderCount}</td>
                                     </tr>
                                 ))}
@@ -372,7 +372,7 @@ export const ReportsPortal = () => {
                                             <p className="font-bold text-gray-900">{customer.customerName}</p>
                                             <p className="text-xs text-gray-400">{customer.email}</p>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-black text-[#D70018]">{formatCurrency(customer.totalSpent)}</td>
+                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(customer.totalSpent)}</td>
                                         <td className="px-6 py-4 text-right font-bold text-gray-900">{customer.orderCount}</td>
                                         <td className="px-6 py-4 text-right text-gray-500 text-sm">
                                             {new Date(customer.lastOrderDate).toLocaleDateString('vi-VN')}
@@ -394,7 +394,7 @@ export const ReportsPortal = () => {
                         </h3>
                         <button
                             onClick={() => handleExport('technicians')}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#D70018] hover:bg-[#b50014] text-white rounded-lg text-xs font-bold transition-all"
+                            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-xs font-bold transition-all"
                         >
                             <FileSpreadsheet size={14} />
                             Xuất Excel
@@ -438,7 +438,7 @@ export const ReportsPortal = () => {
                                                 {tech.successRate}%
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-black text-[#D70018]">{formatCurrency(tech.totalRevenue)}</td>
+                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(tech.totalRevenue)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -452,7 +452,7 @@ export const ReportsPortal = () => {
                 <h3 className="text-xl font-black text-white uppercase tracking-tight mb-6">Xuất báo cáo Excel</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     {[
-                        { id: 'full', label: 'Báo cáo tổng hợp', icon: BarChart3, color: 'bg-[#D70018]' },
+                        { id: 'full', label: 'Báo cáo tổng hợp', icon: BarChart3, color: 'bg-accent' },
                         { id: 'sales', label: 'Báo cáo bán hàng', icon: ShoppingCart, color: 'bg-emerald-600' },
                         { id: 'products', label: 'Top sản phẩm', icon: Trophy, color: 'bg-amber-600' },
                         { id: 'technicians', label: 'Kỹ thuật viên', icon: Wrench, color: 'bg-blue-600' },

@@ -114,7 +114,7 @@ export default function WriteReviewModal({
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-scale-in">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#D70018] to-[#ff4d4d] px-6 py-4">
+        <div className="bg-gradient-to-r from-accent to-[#ff4d4d] px-6 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-white uppercase tracking-tight">
               Viết đánh giá
@@ -137,7 +137,7 @@ export default function WriteReviewModal({
           {/* Rating Selector */}
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Đánh giá của bạn <span className="text-[#D70018]">*</span>
+              Đánh giá của bạn <span className="text-accent">*</span>
             </label>
             <div className="flex flex-col items-center gap-3 py-4 bg-gray-50 rounded-xl">
               <div className="flex gap-2">
@@ -183,14 +183,14 @@ export default function WriteReviewModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="VD: Sản phẩm tuyệt vời!"
               maxLength={100}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#D70018] focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-accent focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
           {/* Comment Textarea */}
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Nội dung đánh giá <span className="text-[#D70018]">*</span>
+              Nội dung đánh giá <span className="text-accent">*</span>
             </label>
             <textarea
               value={comment}
@@ -199,7 +199,7 @@ export default function WriteReviewModal({
               rows={4}
               maxLength={1000}
               className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-red-100 outline-none transition-all font-medium resize-none text-gray-900 placeholder:text-gray-400 ${
-                errors.comment ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'
+                errors.comment ? 'border-red-300 focus:border-accent' : 'border-gray-200 focus:border-accent'
               }`}
             />
             <div className="flex justify-between items-center">
@@ -227,7 +227,7 @@ export default function WriteReviewModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 bg-[#D70018] text-white rounded-xl font-black uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-[#b50014] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
+            className="w-full py-4 bg-accent text-white rounded-xl font-black uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-accent-hover active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
           >
             {isSubmitting ? (
               <>

@@ -176,7 +176,7 @@ export const ConfigPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
-                        Cấu hình <span className="text-[#D70018]">Hệ thống</span>
+                        Cấu hình <span className="text-accent">Hệ thống</span>
                     </h1>
                     <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
                         <Database size={16} />
@@ -205,12 +205,12 @@ export const ConfigPortal = () => {
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
                         >
-                            <span className={activeCategory === cat.name ? 'text-[#D70018]' : cat.color}>
+                            <span className={activeCategory === cat.name ? 'text-accent' : cat.color}>
                                 {cat.icon}
                             </span>
                             {cat.label}
                             {activeCategory === cat.name && (
-                                <span className="ml-auto bg-[#D70018] text-white px-2 py-1 rounded-full text-[10px]">
+                                <span className="ml-auto bg-accent text-white px-2 py-1 rounded-full text-[10px]">
                                     {filteredConfigs.length}
                                 </span>
                             )}
@@ -244,7 +244,7 @@ export const ConfigPortal = () => {
                                         placeholder="Tìm kiếm..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="px-4 py-3 pr-10 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#D70018] transition-all"
+                                        className="px-4 py-3 pr-10 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-accent transition-all"
                                     />
                                     <Database size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 </div>
@@ -254,7 +254,7 @@ export const ConfigPortal = () => {
                                     onClick={handleSave}
                                     disabled={!hasChanges}
                                     className={`flex items-center gap-3 px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 group ${hasChanges
-                                        ? 'bg-[#D70018] hover:bg-[#b50014] shadow-red-500/20'
+                                        ? 'bg-accent hover:bg-accent-hover shadow-red-500/20'
                                         : 'bg-gray-300 cursor-not-allowed'
                                         }`}
                                 >
@@ -266,7 +266,7 @@ export const ConfigPortal = () => {
 
                         <div className="space-y-6">
                             {filteredConfigs.map((config) => (
-                                <div key={config.key} className="space-y-3 group border-2 border-gray-50 rounded-2xl p-6 hover:border-[#D70018]/20 transition-all bg-gradient-to-r from-gray-50/50 to-white">
+                                <div key={config.key} className="space-y-3 group border-2 border-gray-50 rounded-2xl p-6 hover:border-accent/20 transition-all bg-gradient-to-r from-gray-50/50 to-white">
                                     <div className="flex justify-between items-center">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest flex items-center gap-3">
                                             <span className="bg-gray-900 text-white p-2 rounded-lg">
@@ -285,7 +285,7 @@ export const ConfigPortal = () => {
                                             type="text"
                                             value={config.value}
                                             onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                            className="w-full px-6 py-4 bg-white border-2 border-gray-200 rounded-xl text-base font-bold text-gray-950 focus:outline-none focus:border-[#D70018] transition-all shadow-sm hover:shadow-md font-mono"
+                                            className="w-full px-6 py-4 bg-white border-2 border-gray-200 rounded-xl text-base font-bold text-gray-950 focus:outline-none focus:border-accent transition-all shadow-sm hover:shadow-md font-mono"
                                         />
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
@@ -303,7 +303,7 @@ export const ConfigPortal = () => {
                                 <div className="py-24 text-center flex flex-col items-center">
                                     <div className="relative">
                                         <RefreshCw className="text-red-50 animate-spin" size={100} strokeWidth={1} />
-                                        <Settings className="absolute inset-0 m-auto text-[#D70018]" size={48} />
+                                        <Settings className="absolute inset-0 m-auto text-accent" size={48} />
                                     </div>
                                     <p className="text-sm text-gray-900 font-black uppercase tracking-widest mt-8 italic">
                                         Đang đồng bộ cấu hình hệ thống...

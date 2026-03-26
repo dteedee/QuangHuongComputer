@@ -17,7 +17,7 @@ export const Spinner = ({ size = 'md', color = 'brand', className }: LoadingProp
   };
 
   const colors = {
-    brand: 'border-[#D70018]',
+    brand: 'border-accent',
     white: 'border-white',
     gray: 'border-gray-400',
   };
@@ -48,7 +48,7 @@ export const DotLoader = ({ size = 'md', className }: LoadingProps) => {
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className={cn('rounded-full bg-[#D70018]', sizes[size])}
+          className={cn('rounded-full bg-accent', sizes[size])}
           animate={{
             scale: [1, 1.5, 1],
             opacity: [1, 0.5, 1],
@@ -89,8 +89,8 @@ export const PageLoader = () => (
         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         className="w-20 h-20 mx-auto mb-6 relative"
       >
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#D70018] to-[#B50014] opacity-20" />
-        <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-[#D70018] to-[#B50014]" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent to-accent-hover opacity-20" />
+        <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-accent to-accent-hover" />
       </motion.div>
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Quang Hưởng Computer</h2>
       <p className="text-gray-500">Đang tải...</p>
@@ -106,7 +106,7 @@ export const InlineLoader = ({ text = 'Đang tải...' }: { text?: string }) => 
 );
 
 export const FullPageLoader = () => (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-[#D70018]/5 to-[#B50014]/5 backdrop-blur-sm">
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-accent/5 to-accent-hover/5 backdrop-blur-sm">
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -119,23 +119,23 @@ export const FullPageLoader = () => (
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border-4 border-[#D70018]/20"
+          className="absolute inset-0 rounded-full border-4 border-accent/20"
         />
         {/* Middle ring */}
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-2 rounded-full border-4 border-[#D70018]/40 border-t-transparent"
+          className="absolute inset-2 rounded-full border-4 border-accent/40 border-t-transparent"
         />
         {/* Inner ring */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-4 rounded-full border-4 border-[#D70018] border-t-transparent border-r-transparent"
+          className="absolute inset-4 rounded-full border-4 border-accent border-t-transparent border-r-transparent"
         />
         {/* Logo */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D70018] to-[#B50014] flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center text-white font-bold text-lg">
             QH
           </div>
         </div>

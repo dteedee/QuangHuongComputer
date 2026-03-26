@@ -70,7 +70,7 @@ export const PromotionSection = () => {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none mb-2">
-                        Tin tức & <span className="text-[#D70018]">Khuyến mãi</span>
+                        Tin tức & <span className="text-accent">Khuyến mãi</span>
                     </h2>
                     <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">
                         Cập nhật những thông tin công nghệ và ưu đãi mới nhất
@@ -78,10 +78,10 @@ export const PromotionSection = () => {
                 </div>
                 <Link
                     to="/products"
-                    className="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] transition-colors"
+                    className="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-accent transition-colors"
                 >
                     Xem tất cả
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center group-hover:bg-[#D70018] group-hover:border-[#D70018] group-hover:text-white transition-all shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all shadow-sm">
                         <ChevronRight size={14} />
                     </div>
                 </Link>
@@ -133,13 +133,13 @@ export const PromotionSection = () => {
                                             5 phút đọc
                                         </span>
                                     </div>
-                                    <h3 className="text-2xl font-black text-white leading-tight mb-3 group-hover:text-[#D70018] transition-colors line-clamp-2">
+                                    <h3 className="text-2xl font-black text-white leading-tight mb-3 group-hover:text-accent transition-colors line-clamp-2">
                                         {featuredPost.title}
                                     </h3>
                                     <p className="text-white/80 text-sm line-clamp-2">
                                         {stripHtml(featuredPost.content).substring(0, 150)}...
                                     </p>
-                                    <div className="mt-4 flex items-center gap-2 text-[#D70018] font-bold text-sm group-hover:gap-3 transition-all">
+                                    <div className="mt-4 flex items-center gap-2 text-accent font-bold text-sm group-hover:gap-3 transition-all">
                                         Đọc ngay <ArrowRight size={16} />
                                     </div>
                                 </div>
@@ -193,10 +193,10 @@ export const PromotionSection = () => {
 
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                        <Calendar size={10} className="text-[#D70018]" />
+                                        <Calendar size={10} className="text-accent" />
                                         {new Date(item.publishedAt || item.createdAt).toLocaleDateString('vi-VN')}
                                     </div>
-                                    <h3 className="font-bold text-gray-900 text-sm leading-snug group-hover:text-[#D70018] transition-colors line-clamp-2">
+                                    <h3 className="font-bold text-gray-900 text-sm leading-snug group-hover:text-accent transition-colors line-clamp-2">
                                         {item.title}
                                     </h3>
                                 </div>
@@ -213,7 +213,7 @@ export const PromotionSection = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     className="mt-8"
                 >
-                    <div className="bg-gradient-to-r from-[#D70018] via-red-600 to-orange-500 rounded-2xl p-6 flex items-center justify-between overflow-hidden relative">
+                    <div className="bg-gradient-to-r from-accent via-red-600 to-orange-500 rounded-2xl p-6 flex items-center justify-between overflow-hidden relative">
                         {/* Decorative elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                         <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-white/5 rounded-full translate-y-1/2"></div>
@@ -226,7 +226,7 @@ export const PromotionSection = () => {
                         </div>
                         <Link
                             to="/products"
-                            className="relative z-10 bg-white text-[#D70018] px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-lg"
+                            className="relative z-10 bg-white text-accent px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-lg"
                         >
                             Mua ngay
                             <ArrowRight size={16} />

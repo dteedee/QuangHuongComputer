@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../context/ConfirmContext';
 
 export interface UseCrudDeleteOptions {
   mutationKey: string[];
@@ -19,6 +20,7 @@ export function useCrudDelete({
   confirmMessage = 'Are you sure you want to delete this item?',
 }: UseCrudDeleteOptions) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const mutation = useMutation({
     mutationKey,
@@ -36,8 +38,9 @@ export function useCrudDelete({
     },
   });
 
-  const deleteWithConfirm = (id: string) => {
-    if (window.confirm(confirmMessage)) {
+  const deleteWithConfirm = async (id: string) => {
+    const ok = await confirm({ message: confirmMessage, variant: 'danger' });
+    if (ok) {
       mutation.mutate(id);
     }
   };
@@ -52,3 +55,4 @@ export function useCrudDelete({
     error: mutation.error,
   };
 }
+

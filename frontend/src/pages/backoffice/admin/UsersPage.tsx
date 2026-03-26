@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useConfirm } from '@context/ConfirmContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +18,7 @@ import { formatDate, getStatusBadgeClass, getRoleBadgeColor } from '@api/admin';
 export function UsersPage() {
   const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -99,9 +101,10 @@ export function UsersPage() {
     setIsFormOpen(true);
   };
 
-  const handleToggleStatus = (user: User) => {
+  const handleToggleStatus = async (user: User) => {
     const action = user.isActive ? 'vô hiệu hóa' : 'kích hoạt';
-    if (window.confirm(`Bạn có chắc muốn ${action} người dùng "${user.fullName}"?`)) {
+    const ok = await confirm({ message: `Bạn có chắc muốn ${action} người dùng "${user.fullName}"?`, variant: 'warning' });
+    if (ok) {
       toggleStatusMutation.mutate(user);
     }
   };
@@ -145,7 +148,7 @@ export function UsersPage() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAdd}
-            className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-2xl shadow-lg shadow-red-500/20 font-bold transition-all"
+            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl shadow-lg shadow-red-500/20 font-bold transition-all"
           >
             <Plus size={20} />
             <span>Thêm Người dùng</span>

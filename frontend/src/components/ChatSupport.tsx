@@ -252,7 +252,7 @@ export const ChatSupport = () => {
         {/* Header */}
         <div className="p-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#D70018] rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
+            <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
               <Users className="text-white" size={20} />
             </div>
             <div>
@@ -277,7 +277,7 @@ export const ChatSupport = () => {
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-[#D70018]">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-accent">
                 <Info size={40} />
               </div>
               <div className="text-center">
@@ -286,7 +286,7 @@ export const ChatSupport = () => {
               </div>
               <button
                 onClick={() => handleSendMessage()} // Mock action
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase text-gray-600 shadow-sm hover:border-[#D70018] hover:text-[#D70018] transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase text-gray-600 shadow-sm hover:border-accent hover:text-accent transition-all"
               >
                 <Phone size={14} /> Hotline: 1900.6321
               </button>
@@ -342,14 +342,14 @@ export const ChatSupport = () => {
                   handleSendMessage();
                 }
               }}
-              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D70018]/20 focus:border-[#D70018] transition-all font-medium text-sm"
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all font-medium text-sm"
               placeholder={connectionStatus === 'connected' ? 'Nhập tin nhắn hỗ trợ...' : 'Đang kết nối lại...'}
               disabled={!connection}
             />
             <button
               onClick={handleSendMessage}
               disabled={!input.trim() || !connection}
-              className="px-6 bg-[#D70018] hover:bg-[#b50014] text-white rounded-xl transition-all flex items-center gap-2 font-bold text-sm shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+              className="px-6 bg-accent hover:bg-accent-hover text-white rounded-xl transition-all flex items-center gap-2 font-bold text-sm shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
             >
               <Send size={18} /> Gửi
             </button>

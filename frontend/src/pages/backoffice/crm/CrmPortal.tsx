@@ -37,7 +37,7 @@ export default function CrmPortal() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function CrmPortal() {
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/campaigns/new')}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover"
           >
             <Mail size={18} />
             <span>Tạo Campaign</span>

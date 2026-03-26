@@ -7,6 +7,7 @@ import {
     AlertCircle, CheckCircle2, X, Search
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../context/ConfirmContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     groupPermissionsByCategory,
@@ -52,6 +53,7 @@ export const RolesPage = () => {
     const [isCreatingRole, setIsCreatingRole] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const confirm = useConfirm();
 
     // Filter roles based on search term
     const filteredRoles = roles.filter(role =>
@@ -124,7 +126,12 @@ export const RolesPage = () => {
             return;
         }
 
-        if (!window.confirm(`Bạn có chắc muốn xóa vai trò "${roleName}"?\nNgười dùng có vai trò này sẽ mất quyền truy cập.`)) {
+        const ok = await confirm({
+            title: 'Xóa vai trò',
+            message: `Bạn có chắc muốn xóa vai trò "${roleName}"?\nNgười dùng có vai trò này sẽ mất quyền truy cập.`,
+            variant: 'danger',
+        });
+        if (!ok) {
             return;
         }
 
@@ -190,7 +197,7 @@ export const RolesPage = () => {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-[#D70018] mx-auto mb-4" />
+                    <Loader2 className="w-12 h-12 animate-spin text-accent mx-auto mb-4" />
                     <p className="text-gray-600 font-medium">Đang tải dữ liệu phân quyền...</p>
                 </div>
             </div>
@@ -203,7 +210,7 @@ export const RolesPage = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
-                        Quản lý <span className="text-[#D70018]">Phân quyền</span>
+                        Quản lý <span className="text-accent">Phân quyền</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
                         Cấu hình vai trò và quyền hạn cho từng nhóm người dùng trong hệ thống
@@ -211,7 +218,7 @@ export const RolesPage = () => {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-3 px-6 py-4 bg-[#D70018] hover:bg-red-700 text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
                 >
                     <Plus size={20} />
                     Tạo vai trò mới
@@ -224,7 +231,7 @@ export const RolesPage = () => {
                     <div className="bg-white rounded-2xl border-2 border-gray-100 shadow-sm sticky top-6">
                         <div className="p-6 border-b-2 border-gray-50">
                             <h2 className="text-lg font-black text-gray-900 uppercase tracking-wide flex items-center gap-3">
-                                <Shield className="text-[#D70018]" size={22} />
+                                <Shield className="text-accent" size={22} />
                                 Danh sách vai trò
                             </h2>
                             <p className="text-xs text-gray-500 mt-1">{roles.length} vai trò trong hệ thống</p>
@@ -239,7 +246,7 @@ export const RolesPage = () => {
                                     placeholder="Tìm vai trò..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                                    className="w-full pl-9 pr-8 py-2.5 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
                                 />
                                 {searchTerm && (
                                     <button
@@ -325,7 +332,7 @@ export const RolesPage = () => {
                             <div className="p-6 border-b-2 border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                     <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-[#D70018] text-white flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center">
                                             <Shield size={22} />
                                         </div>
                                         {selectedRole.name}
@@ -362,7 +369,7 @@ export const RolesPage = () => {
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${(selectedCount / totalPermissions) * 100}%` }}
-                                            className="h-full bg-gradient-to-r from-[#D70018] to-amber-500 rounded-full"
+                                            className="h-full bg-gradient-to-r from-accent to-amber-500 rounded-full"
                                         />
                                     </div>
                                     <span className="text-sm font-bold text-gray-600 whitespace-nowrap">
@@ -390,7 +397,7 @@ export const RolesPage = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                                                         allSelected
-                                                            ? 'bg-[#D70018] text-white'
+                                                            ? 'bg-accent text-white'
                                                             : 'bg-gray-100 text-gray-500'
                                                     }`}>
                                                         {CATEGORY_ICONS[category] || <Settings size={20} />}
@@ -406,7 +413,7 @@ export const RolesPage = () => {
                                                 </div>
                                                 <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                                                     allSelected
-                                                        ? 'bg-[#D70018] border-[#D70018] text-white'
+                                                        ? 'bg-accent border-accent text-white'
                                                         : someSelected
                                                             ? 'bg-amber-100 border-amber-400'
                                                             : 'border-gray-300 bg-white'
@@ -437,7 +444,7 @@ export const RolesPage = () => {
                                                                 }}
                                                                 className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
                                                                     isChecked
-                                                                        ? 'bg-[#D70018] border-[#D70018] text-white'
+                                                                        ? 'bg-accent border-accent text-white'
                                                                         : 'border-gray-300 bg-white hover:border-gray-400'
                                                                 }`}
                                                             >
@@ -514,7 +521,7 @@ export const RolesPage = () => {
                                         value={newRoleName}
                                         onChange={e => setNewRoleName(e.target.value)}
                                         placeholder="Ví dụ: Supervisor, Cashier..."
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         autoFocus
                                     />
                                     <p className="text-xs text-gray-500 mt-2">
@@ -533,7 +540,7 @@ export const RolesPage = () => {
                                     <button
                                         type="submit"
                                         disabled={isCreatingRole || !newRoleName.trim()}
-                                        className="flex-1 py-3 px-4 bg-[#D70018] text-white font-bold uppercase tracking-wide rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 px-4 bg-accent text-white font-bold uppercase tracking-wide rounded-xl hover:bg-accent-hover transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {isCreatingRole ? (
                                             <Loader2 size={18} className="animate-spin" />

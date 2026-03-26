@@ -33,12 +33,12 @@ export const StatCard = ({ title, value, change, icon, trend, className }: StatC
   >
     {/* Background Pattern */}
     <div className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#D70018] to-[#B50014]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-hover" />
     </div>
 
     <div className="relative">
       <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D70018]/10 to-[#B50014]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/10 to-accent-hover/10 flex items-center justify-center group-hover:scale-110 transition-transform">
           {icon}
         </div>
         {change !== undefined && (
@@ -72,28 +72,28 @@ export const StatCard = ({ title, value, change, icon, trend, className }: StatC
 export const RevenueCard = (props: Omit<StatCardProps, 'icon'>) => (
   <StatCard
     {...props}
-    icon={<DollarSign className="w-7 h-7 text-[#D70018]" />}
+    icon={<DollarSign className="w-7 h-7 text-accent" />}
   />
 );
 
 export const OrdersCard = (props: Omit<StatCardProps, 'icon'>) => (
   <StatCard
     {...props}
-    icon={<ShoppingCart className="w-7 h-7 text-[#D70018]" />}
+    icon={<ShoppingCart className="w-7 h-7 text-accent" />}
   />
 );
 
 export const ProductsCard = (props: Omit<StatCardProps, 'icon'>) => (
   <StatCard
     {...props}
-    icon={<Package className="w-7 h-7 text-[#D70018]" />}
+    icon={<Package className="w-7 h-7 text-accent" />}
   />
 );
 
 export const CustomersCard = (props: Omit<StatCardProps, 'icon'>) => (
   <StatCard
     {...props}
-    icon={<Users className="w-7 h-7 text-[#D70018]" />}
+    icon={<Users className="w-7 h-7 text-accent" />}
   />
 );
 
@@ -118,7 +118,7 @@ export const ChartCard = ({ title, value, children, className }: ChartCardProps)
     <div className="flex items-center justify-between mb-6">
       <div>
         <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-        <p className="text-3xl font-bold text-[#D70018] mt-1">{value}</p>
+        <p className="text-3xl font-bold text-accent mt-1">{value}</p>
       </div>
     </div>
     {children}
@@ -141,11 +141,11 @@ export const ActivityItem = ({ icon, title, description, time, onClick }: Activi
     className="flex items-start gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer group"
     onClick={onClick}
   >
-    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D70018]/10 to-[#B50014]/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/10 to-accent-hover/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-semibold text-gray-900 group-hover:text-[#D70018] transition-colors">
+      <p className="text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
         {title}
       </p>
       <p className="text-xs text-gray-500 mt-0.5">{description}</p>
@@ -166,7 +166,7 @@ export const ProgressCard = ({ title, progress, total, color = 'brand' }: Progre
   const percentage = Math.round((progress / total) * 100);
 
   const colors = {
-    brand: 'from-[#D70018] to-[#B50014]',
+    brand: 'from-accent to-accent-hover',
     success: 'from-[#10B981] to-[#047857]',
     warning: 'from-[#F59E0B] to-[#D97706]',
   };
@@ -179,7 +179,7 @@ export const ProgressCard = ({ title, progress, total, color = 'brand' }: Progre
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-gray-900">{title}</h3>
-        <span className="text-sm font-bold text-[#D70018]">{percentage}%</span>
+        <span className="text-sm font-bold text-accent">{percentage}%</span>
       </div>
 
       {/* Progress Bar */}
@@ -210,7 +210,7 @@ interface MiniChartCardProps {
 
 export const MiniChartCard = ({ title, value, data, color = 'brand' }: MiniChartCardProps) => {
   const colors = {
-    brand: '#D70018',
+    brand: 'var(--accent-primary)',
     success: '#10B981',
     warning: '#F59E0B',
   };
@@ -227,21 +227,21 @@ export const MiniChartCard = ({ title, value, data, color = 'brand' }: MiniChart
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 group-hover:text-[#D70018] transition-colors">
+          <p className="text-2xl font-bold text-gray-900 group-hover:text-accent transition-colors">
             {value}
           </p>
         </div>
         <div
           className={cn(
             'w-10 h-10 rounded-xl flex items-center justify-center',
-            color === 'brand' && 'bg-[#D70018]/10',
+            color === 'brand' && 'bg-accent/10',
             color === 'success' && 'bg-green-100',
             color === 'warning' && 'bg-yellow-100'
           )}
         >
           <TrendingUp className={cn(
             'w-5 h-5',
-            color === 'brand' && 'text-[#D70018]',
+            color === 'brand' && 'text-accent',
             color === 'success' && 'text-green-600',
             color === 'warning' && 'text-yellow-600'
           )} />
@@ -260,7 +260,7 @@ export const MiniChartCard = ({ title, value, data, color = 'brand' }: MiniChart
               transition={{ duration: 0.5, delay: index * 0.05 }}
               className={cn(
                 'flex-1 rounded-t-md',
-                color === 'brand' && 'bg-gradient-to-t from-[#D70018] to-[#FF4D4D]',
+                color === 'brand' && 'bg-gradient-to-t from-accent to-[#FF4D4D]',
                 color === 'success' && 'bg-gradient-to-t from-[#10B981] to-[#34D399]',
                 color === 'warning' && 'bg-gradient-to-t from-[#F59E0B] to-[#FBBF24]'
               )}

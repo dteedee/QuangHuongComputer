@@ -45,7 +45,7 @@ export const JobDetailPage = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <Loader2 className="animate-spin text-[#D70018] mx-auto" size={48} />
+                    <Loader2 className="animate-spin text-accent mx-auto" size={48} />
                     <p className="mt-4 text-gray-500 font-medium">Đang tải thông tin...</p>
                 </div>
             </div>
@@ -58,7 +58,7 @@ export const JobDetailPage = () => {
                 <Briefcase size={64} className="text-gray-300 mb-4" />
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Vị trí không tồn tại</h1>
                 <p className="text-gray-500 mb-6 text-center">Tin tuyển dụng này có thể đã hết hạn hoặc bị gỡ bỏ.</p>
-                <Link to="/recruitment" className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-[#D70018] transition-all">
+                <Link to="/recruitment" className="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-accent transition-all">
                     Quay lại danh sách
                 </Link>
             </div>
@@ -75,16 +75,16 @@ export const JobDetailPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <ChevronRight size={14} />
-                    <Link to="/recruitment" className="hover:text-[#D70018]">Tuyển dụng</Link>
+                    <Link to="/recruitment" className="hover:text-accent">Tuyển dụng</Link>
                     <ChevronRight size={14} />
                     <span className="text-gray-900 font-medium truncate max-w-[200px] md:max-w-none">{job.title}</span>
                 </div>
             </div>
 
             <div className="container mx-auto px-4 mt-8">
-                <Link to="/recruitment" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D70018] font-medium mb-6 transition-colors">
+                <Link to="/recruitment" className="inline-flex items-center gap-2 text-gray-500 hover:text-accent font-medium mb-6 transition-colors">
                     <ArrowLeft size={18} />
                     Quay lại danh sách tuyển dụng
                 </Link>
@@ -98,7 +98,7 @@ export const JobDetailPage = () => {
                             className="bg-white p-8 md:p-10 rounded-[40px] shadow-sm border border-gray-100"
                         >
                             <div className="flex flex-wrap gap-2 mb-4">
-                                <span className="px-3 py-1 bg-red-50 text-[#D70018] text-xs font-bold rounded-full uppercase">
+                                <span className="px-3 py-1 bg-red-50 text-accent text-xs font-bold rounded-full uppercase">
                                     {job.department}
                                 </span>
                                 <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase">
@@ -113,7 +113,7 @@ export const JobDetailPage = () => {
                                 <div>
                                     <p className="text-xs text-gray-400 uppercase font-bold mb-1">Địa điểm</p>
                                     <div className="flex items-center gap-1.5 text-gray-900 font-bold">
-                                        <MapPin size={16} className="text-[#D70018]" />
+                                        <MapPin size={16} className="text-accent" />
                                         <span>{job.location}</span>
                                     </div>
                                 </div>
@@ -127,14 +127,14 @@ export const JobDetailPage = () => {
                                 <div>
                                     <p className="text-xs text-gray-400 uppercase font-bold mb-1">Hạn nộp</p>
                                     <div className="flex items-center gap-1.5 text-gray-900 font-bold">
-                                        <Calendar size={16} className="text-[#D70018]" />
+                                        <Calendar size={16} className="text-accent" />
                                         <span>{new Date(job.expiryDate).toLocaleDateString('vi-VN')}</span>
                                     </div>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-400 uppercase font-bold mb-1">Hình thức</p>
                                     <div className="flex items-center gap-1.5 text-gray-900 font-bold">
-                                        <Clock size={16} className="text-[#D70018]" />
+                                        <Clock size={16} className="text-accent" />
                                         <span>{job.jobType}</span>
                                     </div>
                                 </div>
@@ -143,7 +143,7 @@ export const JobDetailPage = () => {
                             <div className="py-8 space-y-10">
                                 <section>
                                     <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <div className="w-1.5 h-6 bg-[#D70018] rounded-full"></div>
+                                        <div className="w-1.5 h-6 bg-accent rounded-full"></div>
                                         Mô tả công việc
                                     </h2>
                                     <div className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-3">
@@ -153,7 +153,7 @@ export const JobDetailPage = () => {
 
                                 <section>
                                     <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <div className="w-1.5 h-6 bg-[#D70018] rounded-full"></div>
+                                        <div className="w-1.5 h-6 bg-accent rounded-full"></div>
                                         Yêu cầu ứng viên
                                     </h2>
                                     <div className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-3">
@@ -163,7 +163,7 @@ export const JobDetailPage = () => {
 
                                 <section>
                                     <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <div className="w-1.5 h-6 bg-[#D70018] rounded-full"></div>
+                                        <div className="w-1.5 h-6 bg-accent rounded-full"></div>
                                         Quyền lợi được hưởng
                                     </h2>
                                     <div className="text-gray-600 leading-relaxed whitespace-pre-wrap pl-3">
@@ -208,7 +208,7 @@ export const JobDetailPage = () => {
                                 </div>
                             </div>
 
-                            <button className="w-full bg-[#D70018] text-white py-4 rounded-2xl font-black uppercase italic text-lg hover:bg-red-600 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg shadow-red-900/20">
+                            <button className="w-full bg-accent text-white py-4 rounded-2xl font-black uppercase italic text-lg hover:bg-accent-hover transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg shadow-accent-dark/20">
                                 <Send size={24} />
                                 Nộp đơn ứng tuyển
                             </button>
@@ -222,7 +222,7 @@ export const JobDetailPage = () => {
                         <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
                             <h3 className="text-lg font-bold text-gray-900 mb-6 italic uppercase">Về Quang Hưởng Computer</h3>
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="p-3 bg-red-50 text-[#D70018] rounded-2xl">
+                                <div className="p-3 bg-red-50 text-accent rounded-2xl">
                                     <Building2 size={24} />
                                 </div>
                                 <div>
@@ -233,7 +233,7 @@ export const JobDetailPage = () => {
                             <p className="text-gray-500 text-sm leading-relaxed mb-6">
                                 Một trong những đơn vị hàng đầu tại Việt Nam cung cấp giải pháp máy tính và thiết bị công nghệ.
                             </p>
-                            <Link to="/about" className="text-[#D70018] font-bold text-sm inline-flex items-center gap-1 hover:gap-2 transition-all">
+                            <Link to="/about" className="text-accent font-bold text-sm inline-flex items-center gap-1 hover:gap-2 transition-all">
                                 Tìm hiểu thêm về chúng tôi
                                 <ArrowRight size={14} />
                             </Link>

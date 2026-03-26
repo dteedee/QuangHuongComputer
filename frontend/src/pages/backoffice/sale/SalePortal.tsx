@@ -56,7 +56,7 @@ export const SalePortal = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D70018]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
             </div>
         );
     }
@@ -67,7 +67,7 @@ export const SalePortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
-                        Trung tâm <span className="text-[#D70018]">Kinh doanh</span>
+                        Trung tâm <span className="text-accent">Kinh doanh</span>
                     </h1>
                     <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
                         Quản lý đơn hàng, doanh thu và chương trình bán hàng
@@ -91,7 +91,7 @@ export const SalePortal = () => {
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
-                        className="flex items-center gap-3 px-6 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-[#b50014] transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                        className="flex items-center gap-3 px-6 py-4 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo đơn hàng
@@ -161,7 +161,7 @@ export const SalePortal = () => {
                 <div className="lg:col-span-2 premium-card overflow-hidden border-2">
                     <div className="p-8 flex items-center justify-between border-b-2 border-gray-50">
                         <h2 className="text-2xl font-black text-gray-950 tracking-tight uppercase italic">Đơn hàng gần đây</h2>
-                        <Link to="/backoffice/orders" className="flex items-center gap-2 text-sm text-[#D70018] font-black hover:underline uppercase tracking-widest">
+                        <Link to="/backoffice/orders" className="flex items-center gap-2 text-sm text-accent font-black hover:underline uppercase tracking-widest">
                             Xem tất cả <ExternalLink size={16} />
                         </Link>
                     </div>
@@ -186,7 +186,7 @@ export const SalePortal = () => {
                                         >
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
-                                                    <span className="text-base font-black text-gray-950 group-hover:text-[#D70018] transition-colors tracking-tight">#{order.orderNumber}</span>
+                                                    <span className="text-base font-black text-gray-950 group-hover:text-accent transition-colors tracking-tight">#{order.orderNumber}</span>
                                                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{formatDate(order.orderDate)}</span>
                                                 </div>
                                             </td>
@@ -215,7 +215,7 @@ export const SalePortal = () => {
                         <div className="relative z-10">
                             <h3 className="text-2xl font-black mb-2 uppercase italic tracking-tighter">Tạo khuyến mãi</h3>
                             <p className="text-gray-400 text-sm font-bold mb-8 uppercase tracking-wide">Tăng doanh số với các chương trình Hot Sale</p>
-                            <button className="w-full bg-[#D70018] text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95">
+                            <button className="w-full bg-accent text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95">
                                 Tạo chiến dịch ngay
                             </button>
                         </div>

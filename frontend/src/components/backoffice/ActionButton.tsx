@@ -50,8 +50,8 @@ export const ActionButton = ({
                     : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100';
             case 'danger':
                 return isDark
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-red-600 text-white hover:bg-red-700';
+                    ? 'bg-accent text-white hover:bg-accent-hover'
+                    : 'bg-accent text-white hover:bg-accent-hover';
             default:
                 return '';
         }

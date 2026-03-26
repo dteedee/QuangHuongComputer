@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 const expenseSchema = z.object({
     categoryId: z.string().min(1, 'Vui lòng chọn danh mục'),
@@ -93,7 +94,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Danh mục *</label>
                                     <select
                                         {...register('categoryId')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         disabled={isSubmitting}
                                     >
                                         <option value="">Chọn danh mục</option>
@@ -109,7 +110,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <input
                                         type="text"
                                         {...register('description')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
                                         placeholder="Nhập mô tả chi phí..."
                                         disabled={isSubmitting}
                                     />
@@ -121,7 +122,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <input
                                         type="number"
                                         {...register('amount', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-black text-lg text-[#D70018]"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-black text-lg text-accent"
                                         placeholder="0"
                                         disabled={isSubmitting}
                                     />
@@ -133,7 +134,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <input
                                         type="number"
                                         {...register('vatRate', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         placeholder="10"
                                         disabled={isSubmitting}
                                     />
@@ -144,7 +145,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <input
                                         type="date"
                                         {...register('expenseDate')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
                                         disabled={isSubmitting}
                                     />
                                 </div>
@@ -153,7 +154,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Tiền tệ</label>
                                     <select
                                         {...register('currency')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         disabled={isSubmitting}
                                     >
                                         <option value="VND">VND</option>
@@ -165,7 +166,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Ghi chú</label>
                                     <textarea
                                         {...register('notes')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm min-h-[80px]"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm min-h-[80px]"
                                         placeholder="Ghi chú thêm..."
                                         disabled={isSubmitting}
                                     />
@@ -184,7 +185,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
                                 <div className="flex justify-between text-lg pt-3 border-t border-white/10">
                                     <span className="text-gray-400 uppercase text-xs font-black tracking-widest">Tổng cộng</span>
-                                    <span className="font-black text-[#D70018] text-2xl italic">{formatCurrency(totalAmount || 0)}</span>
+                                    <span className="font-black text-accent text-2xl italic">{formatCurrency(totalAmount || 0)}</span>
                                 </div>
                             </div>
                         </div>
@@ -200,7 +201,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             </button>
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 disabled:opacity-50"
+                                className="px-8 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Đang tạo...' : 'Tạo chi phí'}
@@ -220,6 +221,7 @@ export const ExpensesPage = () => {
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
     const [page, setPage] = useState(1);
     const pageSize = 20;
+    const confirm = useConfirm();
 
     // Queries with caching for better performance
     const { data: categoriesData } = useQuery({
@@ -286,8 +288,9 @@ export const ExpensesPage = () => {
         },
     });
 
-    const handleApprove = (id: string) => {
-        if (confirm('Xác nhận duyệt chi phí này?')) {
+    const handleApprove = async (id: string) => {
+        const ok = await confirm({ message: 'Xác nhận duyệt chi phí này?', variant: 'info' });
+        if (ok) {
             approveMutation.mutate(id);
         }
     };
@@ -324,7 +327,7 @@ export const ExpensesPage = () => {
             key: 'expenseNumber',
             label: 'Mã chi phí',
             sortable: true,
-            render: (item) => <span className="font-black text-[#D70018] font-mono text-xs">{item.expenseNumber}</span>,
+            render: (item) => <span className="font-black text-accent font-mono text-xs">{item.expenseNumber}</span>,
         },
         {
             key: 'categoryName',
@@ -378,7 +381,7 @@ export const ExpensesPage = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Quản lý <span className="text-[#D70018]">Chi phí</span>
+                        Quản lý <span className="text-accent">Chi phí</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
                         Theo dõi và phê duyệt các khoản chi phí
@@ -386,7 +389,7 @@ export const ExpensesPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#D70018] transition-all shadow-xl flex items-center gap-3"
+                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent transition-all shadow-xl flex items-center gap-3"
                 >
                     <Plus size={16} />
                     Tạo chi phí
@@ -464,7 +467,7 @@ export const ExpensesPage = () => {
                     <select
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold border-2 border-gray-100 focus:border-[#D70018] focus:ring-0"
+                        className="px-4 py-2 rounded-xl text-xs font-bold border-2 border-gray-100 focus:border-accent focus:ring-0"
                     >
                         <option value="all">Tất cả danh mục</option>
                         {categories.map((cat) => (
@@ -533,7 +536,7 @@ export const ExpensesPage = () => {
                                     <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{cat.categoryName}</span>
                                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{cat.categoryCode}</span>
                                 </div>
-                                <p className="text-xl font-black text-[#D70018] tracking-tighter">{formatCurrency(cat.totalAmount)}</p>
+                                <p className="text-xl font-black text-accent tracking-tighter">{formatCurrency(cat.totalAmount)}</p>
                                 <p className="text-[10px] text-gray-400 mt-1">{cat.expenseCount} khoản chi</p>
                             </div>
                         ))}

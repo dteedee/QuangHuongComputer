@@ -41,7 +41,7 @@ export function WishlistPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart className="w-10 h-10 text-[#D70018]" />
+            <Heart className="w-10 h-10 text-accent" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Đăng nhập để xem yêu thích</h2>
           <p className="text-gray-500 mb-6">
@@ -49,7 +49,7 @@ export function WishlistPage() {
           </p>
           <button
             onClick={() => navigate('/login', { state: { from: '/account/wishlist' } })}
-            className="w-full py-3 bg-[#D70018] hover:bg-[#b50014] text-white font-bold rounded-xl transition-colors"
+            className="w-full py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
           >
             Đăng nhập ngay
           </button>
@@ -63,7 +63,7 @@ export function WishlistPage() {
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <div className="p-3 bg-red-100 rounded-2xl text-[#D70018]">
+          <div className="p-3 bg-red-100 rounded-2xl text-accent">
             <Heart className="w-7 h-7" fill="currentColor" />
           </div>
           <div>
@@ -74,7 +74,7 @@ export function WishlistPage() {
 
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <div className="animate-spin w-10 h-10 border-3 border-red-500 border-t-transparent rounded-full mx-auto"></div>
+            <div className="animate-spin w-10 h-10 border-3 border-accent border-t-transparent rounded-full mx-auto"></div>
             <p className="text-gray-500 mt-4">Đang tải...</p>
           </div>
         ) : items.length === 0 ? (
@@ -88,7 +88,7 @@ export function WishlistPage() {
             </p>
             <button
               onClick={() => navigate('/products')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#D70018] hover:bg-[#b50014] text-white font-bold rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
             >
               Khám phá sản phẩm
               <ArrowRight className="w-5 h-5" />
@@ -112,7 +112,7 @@ export function WishlistPage() {
                     className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
                   />
                   {item.product.oldPrice && item.product.oldPrice > item.product.price && (
-                    <div className="absolute top-3 left-3 bg-[#D70018] text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="absolute top-3 left-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
                       -{Math.round(((item.product.oldPrice - item.product.price) / item.product.oldPrice) * 100)}%
                     </div>
                   )}
@@ -133,14 +133,14 @@ export function WishlistPage() {
                 <div className="p-4">
                   <h3
                     onClick={() => navigate(`/products/${item.productId}`)}
-                    className="font-bold text-gray-900 text-sm line-clamp-2 h-10 cursor-pointer hover:text-[#D70018] transition-colors"
+                    className="font-bold text-gray-900 text-sm line-clamp-2 h-10 cursor-pointer hover:text-accent transition-colors"
                   >
                     {item.product.name}
                   </h3>
 
                   <div className="mt-3 flex items-end justify-between">
                     <div>
-                      <span className="text-lg font-black text-[#D70018]">
+                      <span className="text-lg font-black text-accent">
                         {formatPrice(item.product.price)}
                       </span>
                       {item.product.oldPrice && item.product.oldPrice > item.product.price && (
@@ -166,7 +166,7 @@ export function WishlistPage() {
                   <button
                     onClick={() => handleAddToCart(item)}
                     disabled={item.product.stockQuantity === 0}
-                    className="w-full mt-4 py-2.5 bg-[#D70018] hover:bg-[#b50014] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="w-full mt-4 py-2.5 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     <ShoppingCart className="w-4 h-4" />
                     {item.product.stockQuantity > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}

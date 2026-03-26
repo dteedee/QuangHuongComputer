@@ -2,6 +2,71 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* ==================== Accent Color System ==================== */
+/* These CSS variables are dynamically set by ThemeContext.tsx    */
+/* Default values match the 'red' accent (brand color #D70018)   */
+:root {
+  --accent-primary: #D70018;
+  --accent-primary-hover: #B50014;
+  --accent-primary-light: #FEE2E2;
+  --accent-primary-dark: #991B1B;
+}
+
+
+
+
+/* --- Borders --- */
+
+
+
+
+
+/* --- Input & Form elements --- */
+
+
+
+/* --- Hover states --- */
+
+
+
+
+
+/* --- Shadows & rings --- */
+
+/* --- Tables --- */
+
+
+
+
+
+
+/* --- Modals & Overlays --- */
+
+/* --- Scrollbar (dark) --- */
+
+
+
+/* --- Specific component patterns --- */
+
+/* Stat cards with colored backgrounds - keep but add vibrancy */
+
+/* Tags/Badges - more vivid in dark mode */
+
+/* Colored text should be slightly brighter in dark */
+
+/* Gradient text adjustments */
+
+/* Border-t/b/l specific overrides for darker theme */
+
+
+/* Dropdown/Select option background */
+
+/* Focus visible ring in dark mode */
+
+/* --- Skeleton loading for dark mode --- */
+
+/* Ring/outline color overrides */
+
 /* Base Styles - Giữ nguyên bản gốc, chỉ thêm smooth transitions */
 * {
   margin: 0;
@@ -116,30 +181,30 @@ textarea::placeholder {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D70018;
+  background: var(--accent-primary);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B50014;
+  background: var(--accent-primary-hover);
 }
 
 /* Brand color utilities */
 .text-brand {
-  color: #D70018;
+  color: var(--accent-primary);
 }
 
 .bg-brand {
-  background-color: #D70018;
+  background-color: var(--accent-primary);
 }
 
 .border-brand {
-  border-color: #D70018;
+  border-color: var(--accent-primary);
 }
 
 /* Focus ring for accessibility */
 *:focus-visible {
-  outline: 2px solid #D70018;
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
 
@@ -428,7 +493,7 @@ img[loaded] {
   left: 50%;
   width: 0;
   height: 2px;
-  background: #D70018;
+  background: var(--accent-primary);
   transition: all 0.3s ease;
   transform: translateX(-50%);
 }
@@ -491,7 +556,7 @@ img[loaded] {
 
 /* ==================== Text Gradient ==================== */
 .text-gradient {
-  background: linear-gradient(135deg, #D70018 0%, #ff4d6d 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #ff4d6d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -527,10 +592,12 @@ img[loaded] {
     transition: all 0.3s ease;
 }
 
+
 .premium-card:hover {
     border-color: #d1d5db; /* gray-300 */
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
+
 
 .admin-title {
     font-weight: 900;
@@ -538,6 +605,7 @@ img[loaded] {
     color: #111827; /* gray-900 */
     text-transform: uppercase;
 }
+
 
 .admin-label {
     font-weight: 700;
@@ -547,10 +615,12 @@ img[loaded] {
     font-size: 0.875rem; /* 14px */
 }
 
+
 .admin-value {
     font-weight: 800;
     color: #111827; /* gray-900 */
 }
+
 
 /* Override small text in admin */
 .admin-area .text-xs { font-size: 0.875rem !important; } /* force to 14px */
@@ -561,9 +631,11 @@ img[loaded] {
 .admin-area .text-gray-400 { color: #6b7280; } /* gray-500 for better admin readability */
 .admin-area .text-gray-500 { color: #374151; } /* gray-700 for better admin readability */
 
+
 /* Branding overrides */
 .backoffice-active {
-    background-color: #fef2f2 !important; /* red-50 */
-    color: #b91c1c !important; /* red-700 */
-    border-left: 4px solid #dc2626 !important; /* red-600 */
+    background-color: var(--accent-primary-light) !important;
+    color: var(--accent-primary-dark) !important;
+    border-left: 4px solid var(--accent-primary) !important;
 }
+

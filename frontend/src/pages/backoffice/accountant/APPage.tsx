@@ -60,7 +60,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Còn nợ</span>
-                                    <span className="font-black text-[#D70018] text-xl">{formatCurrency(invoice.outstandingAmount)}</span>
+                                    <span className="font-black text-accent text-xl">{formatCurrency(invoice.outstandingAmount)}</span>
                                 </div>
                             </div>
 
@@ -72,7 +72,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(Number(e.target.value))}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-black text-xl text-[#D70018]"
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-black text-xl text-accent"
                                     placeholder="0"
                                     disabled={isSubmitting}
                                 />
@@ -88,7 +88,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                                 <select
                                     value={paymentMethod}
                                     onChange={(e) => setPaymentMethod(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                     disabled={isSubmitting}
                                 >
                                     <option value="BankTransfer">Chuyển khoản</option>
@@ -105,7 +105,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                                     type="text"
                                     value={reference}
                                     onChange={(e) => setReference(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm"
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
                                     placeholder="Mã giao dịch, chứng từ..."
                                     disabled={isSubmitting}
                                 />
@@ -123,7 +123,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                             </button>
                             <button
                                 type="submit"
-                                className="px-6 py-2.5 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#b50014] transition-all disabled:opacity-50"
+                                className="px-6 py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-accent-hover transition-all disabled:opacity-50"
                                 disabled={isSubmitting || isOverLimit || amount <= 0}
                             >
                                 {isSubmitting ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
@@ -223,7 +223,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                     <input
                                         type="text"
                                         {...register('supplierId')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         placeholder="NCC-001"
                                         disabled={isSubmitting}
                                     />
@@ -235,7 +235,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                     <input
                                         type="date"
                                         {...register('dueDate')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
                                         disabled={isSubmitting}
                                     />
                                 </div>
@@ -245,7 +245,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                     <input
                                         type="number"
                                         {...register('vatRate', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         disabled={isSubmitting}
                                     />
                                 </div>
@@ -254,7 +254,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Tiền tệ</label>
                                     <select
                                         {...register('currency')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-bold text-sm"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
                                         disabled={isSubmitting}
                                     >
                                         <option value="VND">VND</option>
@@ -267,7 +267,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Ghi chú</label>
                                 <textarea
                                     {...register('notes')}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-[#D70018] font-medium text-sm min-h-[60px]"
+                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm min-h-[60px]"
                                     placeholder="Ghi chú cho hóa đơn..."
                                     disabled={isSubmitting}
                                 />
@@ -347,7 +347,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                                 </div>
                                 <div className="flex justify-between text-lg pt-3 border-t border-white/10">
                                     <span className="text-gray-400 uppercase text-xs font-black tracking-widest">Tổng cộng</span>
-                                    <span className="font-black text-[#D70018] text-2xl italic">{formatCurrency(total)}</span>
+                                    <span className="font-black text-accent text-2xl italic">{formatCurrency(total)}</span>
                                 </div>
                             </div>
                         </div>
@@ -363,7 +363,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                             </button>
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl hover:bg-[#b50014] transition-all disabled:opacity-50"
+                                className="px-8 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl hover:bg-accent-hover transition-all disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Đang tạo...' : 'Tạo hóa đơn'}
@@ -469,7 +469,7 @@ export const APPage = () => {
             key: 'invoiceNumber',
             label: 'Mã hóa đơn',
             sortable: true,
-            render: (item) => <span className="font-black text-[#D70018] font-mono">{item.invoiceNumber}</span>,
+            render: (item) => <span className="font-black text-accent font-mono">{item.invoiceNumber}</span>,
         },
         {
             key: 'supplierId',
@@ -521,7 +521,7 @@ export const APPage = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Công nợ <span className="text-[#D70018]">phải trả</span>
+                        Công nợ <span className="text-accent">phải trả</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
                         Quản lý hóa đơn và thanh toán nhà cung cấp (AP)
@@ -529,7 +529,7 @@ export const APPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#D70018] transition-all shadow-xl flex items-center gap-3"
+                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent transition-all shadow-xl flex items-center gap-3"
                 >
                     <Plus size={16} />
                     Tạo hóa đơn
@@ -583,7 +583,7 @@ export const APPage = () => {
                             key={filter.key}
                             onClick={() => setSelectedStatus(filter.key)}
                             className={`px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${selectedStatus === filter.key
-                                ? 'bg-[#D70018] text-white'
+                                ? 'bg-accent text-white'
                                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                             }`}
                         >
@@ -605,7 +605,7 @@ export const APPage = () => {
                             placeholder="Tìm kiếm theo mã hóa đơn, nhà cung cấp..."
                             value={search}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
+                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
                         />
                     </div>
                 </div>
@@ -624,7 +624,7 @@ export const APPage = () => {
                                 {(item.status === 'Issued' || item.status === 'Overdue') && item.outstandingAmount > 0 && (
                                     <button
                                         onClick={() => openPaymentModal(item)}
-                                        className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] transition-all active:scale-95 shadow-lg shadow-gray-200"
+                                        className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-accent transition-all active:scale-95 shadow-lg shadow-gray-200"
                                     >
                                         Thanh toán
                                     </button>

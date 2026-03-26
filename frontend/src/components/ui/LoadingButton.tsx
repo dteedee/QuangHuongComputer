@@ -94,7 +94,7 @@ export const SecondaryLoadingButton: React.FC<LoadingButtonProps> = (props) => {
 export const DangerLoadingButton: React.FC<LoadingButtonProps> = (props) => {
     return (
         <LoadingButton
-            className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500"
+            className="bg-accent hover:bg-accent-hover text-white focus:ring-accent"
             {...props}
         />
     );

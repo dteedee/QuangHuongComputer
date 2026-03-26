@@ -88,7 +88,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                 </div>
                 <div className="flex justify-between text-sm border-t-2 border-dashed border-gray-200 pt-3">
                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Dư nợ hiện tại</span>
-                  <span className="font-black text-[#D70018] text-xl tracking-tighter italic">
+                  <span className="font-black text-accent text-xl tracking-tighter italic">
                     {formatCurrency(invoice.outstandingAmount)}
                   </span>
                 </div>
@@ -102,7 +102,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   <input
                     type="number"
                     {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-2xl tracking-tighter italic text-[#D70018] placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
@@ -123,7 +123,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   </label>
                   <textarea
                     {...register('notes')}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
                     placeholder="Nhập ghi chú thanh toán..."
                     disabled={isSubmitting}
                   />
@@ -142,7 +142,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
               </button>
               <button
                 type="submit"
-                className="px-8 py-3 bg-[#D70018] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
+                className="px-8 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
                 disabled={isSubmitting || isOverLimit}
               >
                 {isSubmitting ? 'Đang xử lý...' : 'Xác nhận thu nợ'}
@@ -230,7 +230,7 @@ export const ARPage = () => {
       label: 'Mã hóa đơn',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-[#D70018] font-mono tracking-tighter">{item.invoiceNumber}</span>
+        <span className="font-black text-accent font-mono tracking-tighter">{item.invoiceNumber}</span>
       ),
     },
     {
@@ -252,7 +252,7 @@ export const ARPage = () => {
       label: 'Còn nợ',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-[#D70018] tracking-tighter italic">{formatCurrency(item.outstandingAmount)}</span>
+        <span className="font-black text-accent tracking-tighter italic">{formatCurrency(item.outstandingAmount)}</span>
       ),
     },
     {
@@ -289,7 +289,7 @@ export const ARPage = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-            Quản lý <span className="text-[#D70018]">Công nợ phải thu</span>
+            Quản lý <span className="text-accent">Công nợ phải thu</span>
           </h1>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
             Theo dõi khoản thu từ khách hàng đại lý (AR)
@@ -304,7 +304,7 @@ export const ARPage = () => {
             <DollarSign size={120} />
           </div>
           <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Tổng nợ chưa thu</p>
-          <h3 className="text-4xl font-black text-[#D70018] tracking-tighter italic">
+          <h3 className="text-4xl font-black text-accent tracking-tighter italic">
             {formatCurrency(totalOutstanding)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50 flex items-center gap-3">
@@ -370,7 +370,7 @@ export const ARPage = () => {
               placeholder="Tìm kiếm theo mã hóa đơn, khách hàng..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-[#D70018] rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
             />
           </div>
         </div>
@@ -388,7 +388,7 @@ export const ARPage = () => {
               <button
                 onClick={() => openPaymentModal(item)}
                 disabled={item.outstandingAmount <= 0}
-                className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-[#D70018] transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-gray-200"
+                className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-accent transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-gray-200"
               >
                 Ghi nhận thu nợ
               </button>

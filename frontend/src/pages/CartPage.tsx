@@ -37,13 +37,13 @@ export const CartPage = () => {
             <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
                 <div className="bg-white p-16 max-w-2xl mx-auto rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50 flex flex-col items-center">
                     <div className="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-8 animate-float">
-                        <ShoppingBag className="w-16 h-16 text-[#D70018]" />
+                        <ShoppingBag className="w-16 h-16 text-accent" />
                     </div>
                     <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight uppercase italic">Giỏ hàng đang trống</h2>
                     <p className="text-gray-500 text-lg mb-10 max-w-md mx-auto italic font-medium">Khám phá ngay hàng ngàn sản phẩm công nghệ đỉnh cao tại Quang Hưởng.</p>
                     <Link
                         to="/"
-                        className="inline-flex items-center px-12 py-5 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 uppercase tracking-widest text-sm group"
+                        className="inline-flex items-center px-12 py-5 bg-accent hover:bg-accent-hover text-white font-black rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 uppercase tracking-widest text-sm group"
                     >
                         Bắt đầu mua sắm
                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -62,7 +62,7 @@ export const CartPage = () => {
         <div className="bg-gray-50 min-h-screen py-10 font-sans">
             <div className="max-w-[1400px] mx-auto px-4 animate-fade-in">
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 bg-red-100 rounded-2xl text-[#D70018]">
+                    <div className="p-3 bg-red-100 rounded-2xl text-accent">
                         <ShoppingBag size={28} />
                     </div>
                     <div>
@@ -79,13 +79,13 @@ export const CartPage = () => {
                                 {items.map((item) => (
                                     <div key={item.id} className="group flex flex-col md:flex-row items-center gap-6 py-4 first:pt-0 border-b border-gray-50 last:border-none last:pb-0">
                                         <div className="w-24 h-24 bg-gray-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-500 relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-[#D70018]/5 to-transparent" />
+                                            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent" />
                                             {/* Ideally real image here, placeholder for now */}
                                             <span className="text-2xl font-black text-gray-200">{item.name.charAt(0)}</span>
                                         </div>
 
                                         <div className="flex-1 text-center md:text-left space-y-1">
-                                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#D70018] transition-colors line-clamp-2 uppercase italic tracking-tight">{item.name}</h3>
+                                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-accent transition-colors line-clamp-2 uppercase italic tracking-tight">{item.name}</h3>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 px-1">Mã SP: {item.id.substring(0, 8).toUpperCase()}</p>
                                         </div>
 
@@ -93,7 +93,7 @@ export const CartPage = () => {
                                             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100">
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-[#D70018] transition shadow-sm disabled:opacity-30 font-bold"
+                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-accent transition shadow-sm disabled:opacity-30 font-bold"
                                                     disabled={item.quantity <= 1}
                                                 >
                                                     <Minus size={14} />
@@ -101,7 +101,7 @@ export const CartPage = () => {
                                                 <span className="text-gray-900 font-bold w-8 text-center text-sm">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-[#D70018] transition shadow-sm font-bold"
+                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-accent transition shadow-sm font-bold"
                                                 >
                                                     <Plus size={14} />
                                                 </button>
@@ -115,7 +115,7 @@ export const CartPage = () => {
                                         </div>
 
                                         <div className="text-right min-w-[120px]">
-                                            <p className="text-xl font-black text-[#D70018] tracking-tight">{formatCurrency(item.price * item.quantity)}</p>
+                                            <p className="text-xl font-black text-accent tracking-tight">{formatCurrency(item.price * item.quantity)}</p>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 italic">{formatCurrency(item.price)}/cái</p>
                                         </div>
                                     </div>
@@ -124,12 +124,12 @@ export const CartPage = () => {
                             <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
                                 <button
                                     onClick={clearCart}
-                                    className="flex items-center gap-2 text-gray-400 hover:text-[#D70018] font-bold uppercase text-[10px] tracking-widest transition-colors"
+                                    className="flex items-center gap-2 text-gray-400 hover:text-accent font-bold uppercase text-[10px] tracking-widest transition-colors"
                                 >
                                     <RotateCcw size={14} />
                                     Xóa tất cả
                                 </button>
-                                <Link to="/" className="text-[#D70018] hover:text-[#b50014] font-black uppercase text-[10px] tracking-widest flex items-center gap-1">
+                                <Link to="/" className="text-accent hover:text-accent-hover font-black uppercase text-[10px] tracking-widest flex items-center gap-1">
                                     Tiếp tục mua sắm <ArrowRight size={14} />
                                 </Link>
                             </div>
@@ -139,7 +139,7 @@ export const CartPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[
                                 { icon: <ShieldCheck className="text-emerald-500" />, title: 'Bảo hành chính hãng', sub: 'Hỗ trợ 100%' },
-                                { icon: <Truck className="text-[#D70018]" />, title: 'Giao hàng siêu tốc', sub: 'An toàn & nhanh chóng' },
+                                { icon: <Truck className="text-accent" />, title: 'Giao hàng siêu tốc', sub: 'An toàn & nhanh chóng' },
                                 { icon: <RotateCcw className="text-amber-500" />, title: 'Đổi trả 7 ngày', sub: 'Lỗi là đổi mới ngay' },
                             ].map((b, i) => (
                                 <div key={i} className="bg-white p-4 rounded-2xl flex items-center gap-3 border border-gray-100 shadow-sm">
@@ -226,7 +226,7 @@ export const CartPage = () => {
                                 <div className="flex justify-between items-end pt-2">
                                     <span className="text-sm font-black text-gray-900 uppercase tracking-wide">Tổng cộng</span>
                                     <div className="text-right">
-                                        <p className="text-3xl font-black text-[#D70018] tracking-tight">{formatCurrency(total)}</p>
+                                        <p className="text-3xl font-black text-accent tracking-tight">{formatCurrency(total)}</p>
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 italic">Đã bao gồm VAT</p>
                                     </div>
                                 </div>
@@ -234,7 +234,7 @@ export const CartPage = () => {
 
                             <button
                                 onClick={() => navigate('/checkout')}
-                                className="w-full py-4 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 text-xs uppercase tracking-widest group"
+                                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 text-xs uppercase tracking-widest group"
                             >
                                 Tiến hành thanh toán
                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

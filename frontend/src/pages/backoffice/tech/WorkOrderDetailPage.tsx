@@ -166,7 +166,7 @@ export const WorkOrderDetailPage = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-96">
-                <div className="animate-spin w-12 h-12 border-4 border-[#D70018] border-t-transparent rounded-full"></div>
+                <div className="animate-spin w-12 h-12 border-4 border-accent border-t-transparent rounded-full"></div>
             </div>
         );
     }
@@ -275,7 +275,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Device Info */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
-                            <Smartphone size={20} className="text-[#D70018]" />
+                            <Smartphone size={20} className="text-accent" />
                             Thông tin thiết bị
                         </h2>
                         <div className="grid grid-cols-2 gap-4">
@@ -306,13 +306,13 @@ export const WorkOrderDetailPage = () => {
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                <Package size={20} className="text-[#D70018]" />
+                                <Package size={20} className="text-accent" />
                                 Linh kiện sử dụng
                             </h2>
                             {canAddParts && (
                                 <button
                                     onClick={() => setShowAddPartModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#D70018] text-white rounded-lg font-bold text-sm hover:bg-red-700 transition"
+                                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-bold text-sm hover:bg-accent-hover transition"
                                 >
                                     <Plus size={16} />
                                     Thêm linh kiện
@@ -350,7 +350,7 @@ export const WorkOrderDetailPage = () => {
                                 ))}
                                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                                     <span className="font-bold text-gray-700">Tổng chi phí linh kiện:</span>
-                                    <span className="text-xl font-black text-[#D70018]">
+                                    <span className="text-xl font-black text-accent">
                                         {formatCurrency(parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0))}
                                     </span>
                                 </div>
@@ -384,7 +384,7 @@ export const WorkOrderDetailPage = () => {
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                <MessageSquare size={20} className="text-[#D70018]" />
+                                <MessageSquare size={20} className="text-accent" />
                                 Lịch sử hoạt động
                             </h2>
                             <button
@@ -420,7 +420,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Cost Summary */}
                     <div className="bg-gray-900 rounded-2xl p-6 text-white">
                         <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-2">
-                            <DollarSign size={20} className="text-[#D70018]" />
+                            <DollarSign size={20} className="text-accent" />
                             Tổng chi phí
                         </h2>
                         <div className="space-y-3">
@@ -438,7 +438,7 @@ export const WorkOrderDetailPage = () => {
                             </div>
                             <div className="border-t border-gray-700 pt-3 flex justify-between">
                                 <span className="font-bold">Tổng cộng</span>
-                                <span className="text-2xl font-black text-[#D70018]">{formatCurrency(workOrder.totalCost)}</span>
+                                <span className="text-2xl font-black text-accent">{formatCurrency(workOrder.totalCost)}</span>
                             </div>
                         </div>
                     </div>
@@ -446,7 +446,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Timeline */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
-                            <Calendar size={20} className="text-[#D70018]" />
+                            <Calendar size={20} className="text-accent" />
                             Timeline
                         </h2>
                         <div className="space-y-4">
@@ -510,7 +510,7 @@ export const WorkOrderDetailPage = () => {
                                     type="text"
                                     value={inventorySearch}
                                     onChange={(e) => setInventorySearch(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     placeholder="Tìm theo tên hoặc SKU..."
                                 />
                                 {inventorySearch && !selectedInventoryItemId && (
@@ -564,7 +564,7 @@ export const WorkOrderDetailPage = () => {
                                         value={partQuantity}
                                         onChange={(e) => setPartQuantity(Number(e.target.value))}
                                         min="1"
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                                 <div>
@@ -574,13 +574,13 @@ export const WorkOrderDetailPage = () => {
                                         value={partUnitPrice}
                                         onChange={(e) => setPartUnitPrice(Number(e.target.value))}
                                         min="0"
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                             </div>
                             <div className="p-3 bg-gray-50 rounded-xl">
                                 <p className="text-sm text-gray-500">Thành tiền:</p>
-                                <p className="text-xl font-black text-[#D70018]">{formatCurrency(partQuantity * partUnitPrice)}</p>
+                                <p className="text-xl font-black text-accent">{formatCurrency(partQuantity * partUnitPrice)}</p>
                             </div>
                         </div>
                         <div className="flex gap-4 mt-6">
@@ -593,7 +593,7 @@ export const WorkOrderDetailPage = () => {
                             <button
                                 onClick={() => addPartMutation.mutate()}
                                 disabled={!selectedInventoryItemId || !partName || partQuantity < 1 || addPartMutation.isPending}
-                                className="flex-1 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
                             >
                                 {addPartMutation.isPending ? 'Đang thêm...' : 'Thêm'}
                             </button>
@@ -621,7 +621,7 @@ export const WorkOrderDetailPage = () => {
                                         type="number"
                                         value={quoteLaborCost}
                                         onChange={(e) => setQuoteLaborCost(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                                 <div>
@@ -630,7 +630,7 @@ export const WorkOrderDetailPage = () => {
                                         type="number"
                                         value={quoteServiceFee}
                                         onChange={(e) => setQuoteServiceFee(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                             </div>
@@ -641,7 +641,7 @@ export const WorkOrderDetailPage = () => {
                                         type="number"
                                         value={quoteEstimatedHours}
                                         onChange={(e) => setQuoteEstimatedHours(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                                 <div>
@@ -650,7 +650,7 @@ export const WorkOrderDetailPage = () => {
                                         type="number"
                                         value={quoteHourlyRate}
                                         onChange={(e) => setQuoteHourlyRate(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
                                     />
                                 </div>
                             </div>
@@ -659,7 +659,7 @@ export const WorkOrderDetailPage = () => {
                                 <textarea
                                     value={quoteDescription}
                                     onChange={(e) => setQuoteDescription(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] min-h-[80px]"
+                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[80px]"
                                     placeholder="Mô tả chi tiết công việc sửa chữa..."
                                 />
                             </div>
@@ -668,11 +668,11 @@ export const WorkOrderDetailPage = () => {
                                 <textarea
                                     value={quoteNotes}
                                     onChange={(e) => setQuoteNotes(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] min-h-[60px]"
+                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[60px]"
                                     placeholder="Ghi chú thêm..."
                                 />
                             </div>
-                            <div className="p-4 bg-[#D70018] rounded-xl text-white">
+                            <div className="p-4 bg-accent rounded-xl text-white">
                                 <p className="text-sm opacity-80">Tổng báo giá:</p>
                                 <p className="text-2xl font-black">
                                     {formatCurrency(
@@ -693,7 +693,7 @@ export const WorkOrderDetailPage = () => {
                             <button
                                 onClick={() => createQuoteMutation.mutate()}
                                 disabled={createQuoteMutation.isPending}
-                                className="flex-1 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
                             >
                                 {createQuoteMutation.isPending ? 'Đang tạo...' : 'Tạo báo giá'}
                             </button>
@@ -710,7 +710,7 @@ export const WorkOrderDetailPage = () => {
                         <textarea
                             value={noteContent}
                             onChange={(e) => setNoteContent(e.target.value)}
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] min-h-[120px]"
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[120px]"
                             placeholder="Nhập ghi chú..."
                         />
                         <div className="flex gap-4 mt-6">
@@ -723,7 +723,7 @@ export const WorkOrderDetailPage = () => {
                             <button
                                 onClick={() => addNoteMutation.mutate()}
                                 disabled={!noteContent.trim() || addNoteMutation.isPending}
-                                className="flex-1 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
                             >
                                 {addNoteMutation.isPending ? 'Đang thêm...' : 'Thêm ghi chú'}
                             </button>

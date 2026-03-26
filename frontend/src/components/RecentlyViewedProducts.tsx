@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, ShoppingCart, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useCart } from '../context/CartContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { catalogApi, type Product } from '../api/catalog';
 import toast from 'react-hot-toast';
 
@@ -21,6 +22,7 @@ export function RecentlyViewedProducts({
 }: RecentlyViewedProductsProps) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const confirm = useConfirm();
   const { recentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,8 +82,9 @@ export function RecentlyViewedProducts({
     }
   };
 
-  const handleClear = () => {
-    if (window.confirm('Xóa tất cả sản phẩm đã xem?')) {
+  const handleClear = async () => {
+    const ok = await confirm({ message: 'Xóa tất cả sản phẩm đã xem?', variant: 'warning' });
+    if (ok) {
       clearRecentlyViewed();
       setProducts([]);
     }
@@ -113,7 +116,7 @@ export function RecentlyViewedProducts({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[#D70018]" />
+          <Clock className="w-5 h-5 text-accent" />
           <h2 className="text-lg font-bold text-gray-900 uppercase">{title}</h2>
           <span className="text-sm text-gray-400">({products.length})</span>
         </div>
@@ -168,7 +171,7 @@ export function RecentlyViewedProducts({
             <div
               key={product.id}
               onClick={() => navigate(`/products/${product.id}`)}
-              className="w-[200px] flex-shrink-0 bg-white rounded-xl border border-gray-100 hover:border-[#D70018]/30 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
+              className="w-[200px] flex-shrink-0 bg-white rounded-xl border border-gray-100 hover:border-accent/30 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
             >
               {/* Image */}
               <div className="aspect-square bg-gray-50 p-3 relative overflow-hidden">
@@ -178,7 +181,7 @@ export function RecentlyViewedProducts({
                   className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
                 />
                 {product.oldPrice && product.oldPrice > product.price && (
-                  <div className="absolute top-2 left-2 bg-[#D70018] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <div className="absolute top-2 left-2 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
                   </div>
                 )}
@@ -186,7 +189,7 @@ export function RecentlyViewedProducts({
                 <button
                   onClick={(e) => handleAddToCart(e, product)}
                   disabled={product.stockQuantity === 0}
-                  className="absolute bottom-2 right-2 p-2 bg-white shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#D70018] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute bottom-2 right-2 p-2 bg-white shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ShoppingCart className="w-4 h-4" />
                 </button>
@@ -194,11 +197,11 @@ export function RecentlyViewedProducts({
 
               {/* Info */}
               <div className="p-3">
-                <h3 className="text-xs font-bold text-gray-900 line-clamp-2 h-8 group-hover:text-[#D70018] transition-colors uppercase leading-tight">
+                <h3 className="text-xs font-bold text-gray-900 line-clamp-2 h-8 group-hover:text-accent transition-colors uppercase leading-tight">
                   {product.name}
                 </h3>
                 <div className="mt-2">
-                  <span className="text-sm font-black text-[#D70018]">
+                  <span className="text-sm font-black text-accent">
                     {formatPrice(product.price)}
                   </span>
                   {product.oldPrice && product.oldPrice > product.price && (

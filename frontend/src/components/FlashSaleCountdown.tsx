@@ -93,7 +93,7 @@ export default function FlashSaleCountdown({
     if (variant === 'banner') {
       return (
         <div className="flex flex-col items-center">
-          <div className="bg-white text-[#D70018] font-black text-2xl md:text-3xl w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="bg-white text-accent font-black text-2xl md:text-3xl w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center shadow-lg">
             {String(value).padStart(2, '0')}
           </div>
           <span className="text-white/90 text-[10px] md:text-xs font-bold mt-1 uppercase tracking-wider">
@@ -106,7 +106,7 @@ export default function FlashSaleCountdown({
     if (variant === 'large') {
       return (
         <div className="flex flex-col items-center">
-          <div className="bg-[#D70018] text-white font-black text-xl md:text-2xl w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center shadow-lg">
+          <div className="bg-accent text-white font-black text-xl md:text-2xl w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center shadow-lg">
             {String(value).padStart(2, '0')}
           </div>
           <span className="text-gray-600 text-[10px] font-bold mt-1 uppercase">
@@ -137,14 +137,14 @@ export default function FlashSaleCountdown({
       return <span className="text-white font-bold text-2xl md:text-3xl mx-1 md:mx-2">:</span>;
     }
     if (variant === 'large') {
-      return <span className="text-[#D70018] font-bold text-xl mx-1">:</span>;
+      return <span className="text-accent font-bold text-xl mx-1">:</span>;
     }
     return <span className="text-gray-400 font-bold mx-0.5">:</span>;
   };
 
   if (variant === 'compact') {
     return (
-      <div className={`flex items-center gap-1 text-[#D70018] ${className}`}>
+      <div className={`flex items-center gap-1 text-accent ${className}`}>
         <Clock className="w-3.5 h-3.5" />
         <span className="text-xs font-bold">
           {timeLeft.days > 0 && (

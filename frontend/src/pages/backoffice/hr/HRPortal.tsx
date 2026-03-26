@@ -69,7 +69,7 @@ export const HRPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Quản trị <span className="text-[#D70018]">Nhân sự</span>
+                        Quản trị <span className="text-accent">Nhân sự</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                         Quản lý đội ngũ nhân viên và quy trình tính lương
@@ -85,7 +85,7 @@ export const HRPortal = () => {
                     </Link>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-[#b50014] transition-all active:scale-95 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 group"
                     >
                         <UserPlus size={18} className="group-hover:scale-110 transition-transform" />
                         Thêm nhân viên
@@ -116,13 +116,13 @@ export const HRPortal = () => {
                     </div>
                     <div className="divide-y divide-gray-50">
                         {empLoading ? (
-                            <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-[#D70018]" /></div>
+                            <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-accent" /></div>
                         ) : employees.length === 0 ? (
                             <div className="p-20 text-center"><UserCheck className="mx-auto text-gray-100 mb-4" size={60} /><p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">Không có dữ liệu nhân sự.</p></div>
                         ) : employees.map((emp) => (
                             <div key={emp.id} className="p-8 flex items-center justify-between hover:bg-gray-50/50 transition-all group cursor-pointer">
                                 <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-gray-400 shadow-inner group-hover:bg-[#D70018] group-hover:text-white transition-all">
+                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-gray-400 shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
                                         {emp.fullName.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
@@ -144,7 +144,7 @@ export const HRPortal = () => {
                         <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Bảng lương tháng {currentMonth}</h3>
                         <button
                             onClick={() => generatePayrollMutation.mutate({ month: currentMonth, year: currentYear })}
-                            className="text-[10px] font-black text-[#D70018] uppercase tracking-widest hover:underline italic"
+                            className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline italic"
                         >
                             Chốt lương &gt;
                         </button>
@@ -180,7 +180,7 @@ export const HRPortal = () => {
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddModalOpen(false)} className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" />
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8">
-                            <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6 tracking-tighter">Thêm <span className="text-[#D70018]">Nhân sự mới</span></h2>
+                            <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6 tracking-tighter">Thêm <span className="text-accent">Nhân sự mới</span></h2>
                             <form onSubmit={handleAddEmployee} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Họ và tên</label>
@@ -202,7 +202,7 @@ export const HRPortal = () => {
                                 </div>
                                 <div className="flex gap-4 pt-4">
                                     <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-400 font-black uppercase text-[10px] rounded-2xl">Hủy</button>
-                                    <button type="submit" disabled={createEmployeeMutation.isPending} className="flex-[2] py-4 bg-[#D70018] text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-red-500/20">
+                                    <button type="submit" disabled={createEmployeeMutation.isPending} className="flex-[2] py-4 bg-accent text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-red-500/20">
                                         {createEmployeeMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
                                         Lưu nhân sự
                                     </button>

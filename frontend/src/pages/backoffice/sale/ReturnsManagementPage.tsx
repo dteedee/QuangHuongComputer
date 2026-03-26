@@ -194,7 +194,7 @@ const ReturnDetailModal = ({
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Vui lòng nhập lý do từ chối..."
                 rows={3}
-                className="w-full px-4 py-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"
+                className="w-full px-4 py-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-accent outline-none resize-none"
               />
               <div className="flex gap-2">
                 <button
@@ -212,7 +212,7 @@ const ReturnDetailModal = ({
                     }
                   }}
                   disabled={!rejectReason.trim() || processing}
-                  className="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 py-2 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
                 >
                   Xác nhận từ chối
                 </button>
@@ -478,7 +478,7 @@ export const ReturnsManagementPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo mã đơn hoặc lý do..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] outline-none"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent outline-none"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -486,7 +486,7 @@ export const ReturnsManagementPage = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] outline-none"
+            className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent outline-none"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="Pending">Chờ duyệt</option>
@@ -534,7 +534,7 @@ export const ReturnsManagementPage = () => {
 
                   {returnReq.refundAmount > 0 && (
                     <div className="text-right">
-                      <p className="font-bold text-[#D70018]">{formatCurrency(returnReq.refundAmount)}</p>
+                      <p className="font-bold text-accent">{formatCurrency(returnReq.refundAmount)}</p>
                       <p className="text-xs text-gray-500">Hoàn tiền</p>
                     </div>
                   )}

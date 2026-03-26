@@ -27,7 +27,7 @@ export function CompareButton({ product, variant = 'icon', className = '' }: Com
       <button
         onClick={handleClick}
         className={`p-2 rounded-full transition ${inComparison
-            ? 'bg-red-600 text-white'
+            ? 'bg-accent text-white'
             : 'bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600'
           } ${className}`}
         title={inComparison ? 'Xóa khỏi so sánh' : 'Thêm vào so sánh'}
@@ -42,7 +42,7 @@ export function CompareButton({ product, variant = 'icon', className = '' }: Com
       <button
         onClick={handleClick}
         className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${inComparison
-            ? 'bg-red-600 text-white hover:bg-red-700'
+            ? 'bg-accent text-white hover:bg-accent-hover'
             : 'bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-600'
           } ${className}`}
       >

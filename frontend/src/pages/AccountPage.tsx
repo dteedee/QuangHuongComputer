@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { authApi, type UserProfile, type CustomerAddress } from '../api/auth';
 import { salesApi, type Order, type OrderStatus } from '../api/sales';
 import { formatCurrency } from '../utils/format';
+import { useConfirm } from '../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 type TabType = 'overview' | 'orders' | 'addresses' | 'security';
@@ -38,6 +39,7 @@ export const AccountPage = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { user, logout } = useAuth();
+    const confirm = useConfirm();
     const [activeTab, setActiveTab] = useState<TabType>((searchParams.get('tab') as TabType) || 'overview');
 
     // Profile state
@@ -234,7 +236,8 @@ export const AccountPage = () => {
     };
 
     const handleDeleteAddress = async (id: string) => {
-        if (!confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
+        const ok = await confirm({ message: 'Bạn có chắc muốn xóa địa chỉ này?', variant: 'danger' });
+        if (!ok) return;
         try {
             await authApi.deleteAddress(id);
             toast.success('Đã xóa địa chỉ');
@@ -245,7 +248,8 @@ export const AccountPage = () => {
     };
 
     const handleCancelOrder = async (orderId: string) => {
-        if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+        const ok = await confirm({ message: 'Bạn có chắc chắn muốn hủy đơn hàng này?', variant: 'warning' });
+        if (!ok) return;
         try {
             // Call API to cancel order
             await fetch(`/api/sales/orders/${orderId}/cancel`, {
@@ -277,7 +281,7 @@ export const AccountPage = () => {
     if (isLoadingProfile) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#D70018]" />
+                <Loader2 className="w-8 h-8 animate-spin text-accent" />
             </div>
         );
     }
@@ -288,7 +292,7 @@ export const AccountPage = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
-                        Tài khoản <span className="text-[#D70018]">của tôi</span>
+                        Tài khoản <span className="text-accent">của tôi</span>
                     </h1>
                     <p className="text-gray-500 mt-1">Quản lý thông tin cá nhân và đơn hàng</p>
                 </div>
@@ -327,7 +331,7 @@ export const AccountPage = () => {
                                         onClick={() => handleTabChange(tab.id)}
                                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
                                             activeTab === tab.id
-                                                ? 'bg-red-50 text-[#D70018] font-bold'
+                                                ? 'bg-red-50 text-accent font-bold'
                                                 : 'text-gray-600 hover:bg-gray-50'
                                         }`}
                                     >
@@ -337,7 +341,7 @@ export const AccountPage = () => {
                                         </span>
                                         <div className="flex items-center gap-2">
                                             {tab.badge ? (
-                                                <span className="bg-[#D70018] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                                <span className="bg-accent text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                                     {tab.badge}
                                                 </span>
                                             ) : null}
@@ -391,7 +395,7 @@ export const AccountPage = () => {
                                                 </div>
                                                 <span className="text-sm text-gray-500 font-medium">Tổng chi tiêu</span>
                                             </div>
-                                            <p className="text-xl font-black text-[#D70018]">{formatCurrency(stats?.totalSpent || 0)}</p>
+                                            <p className="text-xl font-black text-accent">{formatCurrency(stats?.totalSpent || 0)}</p>
                                         </div>
 
                                         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
@@ -411,7 +415,7 @@ export const AccountPage = () => {
                                             <h3 className="font-bold text-gray-900 uppercase text-sm tracking-wide">Thông tin cá nhân</h3>
                                             <button
                                                 onClick={() => setIsEditingProfile(!isEditingProfile)}
-                                                className="flex items-center gap-2 text-[#D70018] text-sm font-bold hover:underline"
+                                                className="flex items-center gap-2 text-accent text-sm font-bold hover:underline"
                                             >
                                                 <Edit2 size={14} />
                                                 {isEditingProfile ? 'Hủy' : 'Chỉnh sửa'}
@@ -428,7 +432,7 @@ export const AccountPage = () => {
                                                             value={editForm.fullName}
                                                             onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                                                             placeholder="Nhập họ và tên"
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
                                                         {!editForm.fullName.trim() && (
                                                             <p className="text-red-500 text-xs mt-1">Vui lòng nhập họ và tên</p>
@@ -441,7 +445,7 @@ export const AccountPage = () => {
                                                             value={editForm.phoneNumber}
                                                             onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
                                                             placeholder="Nhập số điện thoại"
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
                                                     </div>
                                                     <div>
@@ -451,14 +455,14 @@ export const AccountPage = () => {
                                                             value={editForm.address}
                                                             onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                                                             placeholder="Nhập địa chỉ"
-                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                         />
                                                     </div>
                                                     <div className="flex gap-3 pt-2">
                                                         <button
                                                             onClick={handleSaveProfile}
                                                             disabled={!editForm.fullName.trim() || isSavingProfile}
-                                                            className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014] disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold text-sm hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             {isSavingProfile ? (
                                                                 <Loader2 size={16} className="animate-spin" />
@@ -505,7 +509,7 @@ export const AccountPage = () => {
                                             <h3 className="font-bold text-gray-900 uppercase text-sm tracking-wide">Đơn hàng gần đây</h3>
                                             <button
                                                 onClick={() => handleTabChange('orders')}
-                                                className="text-[#D70018] text-sm font-bold hover:underline"
+                                                className="text-accent text-sm font-bold hover:underline"
                                             >
                                                 Xem tất cả
                                             </button>
@@ -539,7 +543,7 @@ export const AccountPage = () => {
                                                             <span className={`text-xs px-3 py-1 rounded-full font-bold ${statusConfig[order.status]?.bgColor} ${statusConfig[order.status]?.color}`}>
                                                                 {statusConfig[order.status]?.label}
                                                             </span>
-                                                            <span className="font-bold text-[#D70018]">{formatCurrency(order.totalAmount)}</span>
+                                                            <span className="font-bold text-accent">{formatCurrency(order.totalAmount)}</span>
                                                             <ChevronRight size={18} className="text-gray-300" />
                                                         </div>
                                                     </Link>
@@ -566,7 +570,7 @@ export const AccountPage = () => {
                                                 onClick={() => setOrderFilter('all')}
                                                 className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${
                                                     orderFilter === 'all'
-                                                        ? 'bg-[#D70018] text-white'
+                                                        ? 'bg-accent text-white'
                                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
                                             >
@@ -581,7 +585,7 @@ export const AccountPage = () => {
                                                         onClick={() => setOrderFilter(status as OrderStatus)}
                                                         className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${
                                                             orderFilter === status
-                                                                ? 'bg-[#D70018] text-white'
+                                                                ? 'bg-accent text-white'
                                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                         }`}
                                                     >
@@ -595,7 +599,7 @@ export const AccountPage = () => {
                                     {/* Orders List */}
                                     {isLoadingOrders ? (
                                         <div className="flex justify-center py-12">
-                                            <Loader2 className="w-8 h-8 animate-spin text-[#D70018]" />
+                                            <Loader2 className="w-8 h-8 animate-spin text-accent" />
                                         </div>
                                     ) : filteredOrders.length === 0 ? (
                                         <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
@@ -633,7 +637,7 @@ export const AccountPage = () => {
                                                                 </div>
                                                                 <div className="col-span-2">
                                                                     <p className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-1">Tổng tiền</p>
-                                                                    <p className="text-[#D70018] font-black text-xl tracking-tight">{formatCurrency(order.totalAmount)}</p>
+                                                                    <p className="text-accent font-black text-xl tracking-tight">{formatCurrency(order.totalAmount)}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -641,7 +645,7 @@ export const AccountPage = () => {
                                                         <div className="flex items-center gap-2 lg:flex-col lg:items-stretch">
                                                             <Link
                                                                 to={`/account/orders/${order.id}`}
-                                                                className="flex-1 lg:flex-none px-6 py-3 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                                                                className="flex-1 lg:flex-none px-6 py-3 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                                             >
                                                                 <Eye className="w-4 h-4" />
                                                                 Xem chi tiết
@@ -702,7 +706,7 @@ export const AccountPage = () => {
                                                 });
                                                 setShowAddressForm(true);
                                             }}
-                                            className="flex items-center gap-2 px-4 py-2 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014]"
+                                            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl font-bold text-sm hover:bg-accent-hover"
                                         >
                                             <Plus size={18} />
                                             Thêm địa chỉ
@@ -722,7 +726,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.recipientName}
                                                         onChange={(e) => setAddressForm({ ...addressForm, recipientName: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -731,7 +735,7 @@ export const AccountPage = () => {
                                                         type="tel"
                                                         value={addressForm.phoneNumber}
                                                         onChange={(e) => setAddressForm({ ...addressForm, phoneNumber: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
@@ -741,7 +745,7 @@ export const AccountPage = () => {
                                                         value={addressForm.addressLine}
                                                         onChange={(e) => setAddressForm({ ...addressForm, addressLine: e.target.value })}
                                                         placeholder="Số nhà, tên đường..."
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -750,7 +754,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.city}
                                                         onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -759,7 +763,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.district}
                                                         onChange={(e) => setAddressForm({ ...addressForm, district: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -768,7 +772,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.ward}
                                                         onChange={(e) => setAddressForm({ ...addressForm, ward: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div>
@@ -777,7 +781,7 @@ export const AccountPage = () => {
                                                         type="text"
                                                         value={addressForm.addressLabel || ''}
                                                         onChange={(e) => setAddressForm({ ...addressForm, addressLabel: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
@@ -786,7 +790,7 @@ export const AccountPage = () => {
                                                             type="checkbox"
                                                             checked={addressForm.isDefault}
                                                             onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
-                                                            className="w-4 h-4 rounded border-gray-300 text-[#D70018] focus:ring-[#D70018]"
+                                                            className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
                                                         />
                                                         <span className="text-sm font-medium text-gray-700">Đặt làm địa chỉ mặc định</span>
                                                     </label>
@@ -795,7 +799,7 @@ export const AccountPage = () => {
                                             <div className="flex gap-3 mt-6">
                                                 <button
                                                     onClick={handleSaveAddress}
-                                                    className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014]"
+                                                    className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold text-sm hover:bg-accent-hover"
                                                 >
                                                     <Save size={16} />
                                                     Lưu địa chỉ
@@ -817,7 +821,7 @@ export const AccountPage = () => {
                                     {/* Addresses List */}
                                     {isLoadingAddresses ? (
                                         <div className="flex justify-center py-12">
-                                            <Loader2 className="w-8 h-8 animate-spin text-[#D70018]" />
+                                            <Loader2 className="w-8 h-8 animate-spin text-accent" />
                                         </div>
                                     ) : addresses.length === 0 ? (
                                         <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
@@ -830,10 +834,10 @@ export const AccountPage = () => {
                                             {addresses.map((address) => (
                                                 <div
                                                     key={address.id}
-                                                    className={`bg-white rounded-2xl p-5 border ${address.isDefault ? 'border-[#D70018]' : 'border-gray-100'} shadow-sm relative`}
+                                                    className={`bg-white rounded-2xl p-5 border ${address.isDefault ? 'border-accent' : 'border-gray-100'} shadow-sm relative`}
                                                 >
                                                     {address.isDefault && (
-                                                        <span className="absolute top-3 right-3 bg-[#D70018] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                                        <span className="absolute top-3 right-3 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                                                             Mặc định
                                                         </span>
                                                     )}
@@ -902,7 +906,7 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.currentPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div>
@@ -911,7 +915,7 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.newPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div>
@@ -920,14 +924,14 @@ export const AccountPage = () => {
                                                     type="password"
                                                     value={passwordForm.confirmPassword}
                                                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent text-gray-900 bg-white placeholder:text-gray-400"
                                                 />
                                             </div>
                                             <div className="pt-2">
                                                 <button
                                                     onClick={handleChangePassword}
                                                     disabled={isChangingPassword}
-                                                    className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold text-sm hover:bg-[#b50014] disabled:opacity-50"
+                                                    className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold text-sm hover:bg-accent-hover disabled:opacity-50"
                                                 >
                                                     {isChangingPassword ? (
                                                         <Loader2 className="w-4 h-4 animate-spin" />

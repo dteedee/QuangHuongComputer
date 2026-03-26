@@ -9,9 +9,11 @@ import {
   crmApi, type Campaign, type CampaignStatus,
   formatDate, getCampaignStatusColor
 } from '../../../api/crm';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [total, setTotal] = useState(0);
@@ -52,7 +54,8 @@ export default function CampaignsPage() {
   };
 
   const handleSend = async (id: string) => {
-    if (!confirm('Gửi campaign này ngay bây giờ?')) return;
+    const ok = await confirm({ message: 'Gửi campaign này ngay bây giờ?', variant: 'warning' });
+    if (!ok) return;
     try {
       await crmApi.campaigns.send(id);
       loadData();
@@ -80,7 +83,8 @@ export default function CampaignsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa campaign này?')) return;
+    const ok = await confirm({ message: 'Bạn có chắc muốn xóa campaign này?', variant: 'danger' });
+    if (!ok) return;
     try {
       await crmApi.campaigns.delete(id);
       loadData();
@@ -101,7 +105,7 @@ export default function CampaignsPage() {
         </div>
         <button
           onClick={() => navigate('/backoffice/crm/campaigns/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover"
         >
           <Plus size={18} />
           <span>Tạo Chiến dịch</span>
@@ -118,7 +122,7 @@ export default function CampaignsPage() {
               placeholder="Tìm kiếm chiến dịch..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
 
@@ -128,7 +132,7 @@ export default function CampaignsPage() {
               setStatus(e.target.value as CampaignStatus | '');
               setPage(1);
             }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="Draft">Bản nháp</option>
@@ -152,7 +156,7 @@ export default function CampaignsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600" />
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
           </div>
         ) : campaigns.length === 0 ? (
           <div className="text-center py-20 text-gray-500">

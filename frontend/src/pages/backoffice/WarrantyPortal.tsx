@@ -150,7 +150,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                                 <button
                                     onClick={() => { onReject(claim.id, rejectReason); onClose(); }}
                                     disabled={!rejectReason.trim()}
-                                    className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl disabled:opacity-50"
+                                    className="px-6 py-2 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl disabled:opacity-50"
                                 >
                                     Xác nhận từ chối
                                 </button>
@@ -201,7 +201,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                                 </button>
                                 <button
                                     onClick={() => setShowRejectForm(true)}
-                                    className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl flex items-center justify-center gap-2"
                                 >
                                     <X className="w-5 h-5" /> Từ chối
                                 </button>
@@ -365,7 +365,7 @@ export const WarrantyPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight uppercase">
-                        Quản lý <span className="text-[#D70018]">Bảo hành</span>
+                        Quản lý <span className="text-accent">Bảo hành</span>
                     </h1>
                     <p className="text-gray-500 font-medium mt-2">
                         Theo dõi và xử lý bảo hành sản phẩm khách hàng
@@ -384,18 +384,18 @@ export const WarrantyPortal = () => {
             <div className="flex bg-gray-100 rounded-2xl p-1.5 gap-1">
                 <button
                     onClick={() => setActiveTab('claims')}
-                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'claims' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'claims' ? 'bg-white text-accent shadow-sm' : 'text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <FileText className="w-5 h-5" />
                     Yêu cầu bảo hành
                     {claimStats?.pending > 0 && (
-                        <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{claimStats.pending}</span>
+                        <span className="px-2 py-0.5 bg-accent text-white text-xs rounded-full">{claimStats.pending}</span>
                     )}
                 </button>
                 <button
                     onClick={() => setActiveTab('warranties')}
-                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'warranties' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'warranties' ? 'bg-white text-accent shadow-sm' : 'text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <Shield className="w-5 h-5" />
@@ -480,7 +480,7 @@ export const WarrantyPortal = () => {
 
                         {loading ? (
                             <div className="p-12 text-center">
-                                <div className="animate-spin w-10 h-10 border-3 border-red-500 border-t-transparent rounded-full mx-auto"></div>
+                                <div className="animate-spin w-10 h-10 border-3 border-accent border-t-transparent rounded-full mx-auto"></div>
                                 <p className="text-gray-500 mt-4">Đang tải...</p>
                             </div>
                         ) : claims.length === 0 ? (
@@ -556,7 +556,7 @@ export const WarrantyPortal = () => {
                     {/* Search Box */}
                     <div className="bg-white rounded-2xl border border-gray-200 p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <Search className="text-[#D70018]" size={20} />
+                            <Search className="text-accent" size={20} />
                             <h3 className="text-lg font-bold text-gray-900">Tra cứu bảo hành</h3>
                         </div>
                         <div className="flex gap-4">
@@ -566,7 +566,7 @@ export const WarrantyPortal = () => {
                                 onChange={(e) => setSearchSerial(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                 placeholder="Nhập số Serial..."
-                                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-mono focus:border-[#D70018] focus:outline-none transition-colors"
+                                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-mono focus:border-accent focus:outline-none transition-colors"
                             />
                             <button
                                 onClick={handleSearch}
@@ -681,7 +681,7 @@ export const WarrantyPortal = () => {
                                         <tr key={warranty.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-red-50 text-[#D70018] flex items-center justify-center">
+                                                    <div className="w-8 h-8 rounded-lg bg-red-50 text-accent flex items-center justify-center">
                                                         <Shield size={16} />
                                                     </div>
                                                     <span className="font-mono font-bold text-gray-900">{warranty.serialNumber}</span>

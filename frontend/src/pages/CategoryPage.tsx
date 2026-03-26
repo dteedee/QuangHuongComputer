@@ -186,7 +186,7 @@ export const CategoryPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <span>/</span>
                     <span className="text-gray-900 font-medium">{categoryTitle}</span>
                 </div>
@@ -196,7 +196,7 @@ export const CategoryPage = () => {
                 {/* Header Banner */}
                 <div className="bg-white p-4 rounded-md shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-[#D70018]">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-accent">
                             <Monitor size={32} />
                         </div>
                         <div>
@@ -227,12 +227,12 @@ export const CategoryPage = () => {
                                     <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Thương hiệu</h4>
                                     <div className="flex flex-col gap-2 text-sm text-gray-600 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                         {brands.map((brand) => (
-                                            <label key={brand.id} className="flex items-center gap-2 cursor-pointer hover:text-[#D70018] transition-colors">
+                                            <label key={brand.id} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedBrandId === brand.id}
                                                     onChange={() => handleBrandSelect(brand.id)}
-                                                    className="rounded border-gray-300 text-[#D70018] focus:ring-[#D70018]"
+                                                    className="rounded border-gray-300 text-accent focus:ring-accent"
                                                 />
                                                 <span>{brand.name}</span>
                                             </label>
@@ -255,13 +255,13 @@ export const CategoryPage = () => {
                                         ].map((range, idx) => {
                                             const isChecked = priceRange?.min === range.min && priceRange?.max === range.max;
                                             return (
-                                                <label key={idx} className="flex items-center gap-2 cursor-pointer hover:text-[#D70018] transition-colors">
+                                                <label key={idx} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
                                                     <input
                                                         type="radio"
                                                         name="price_range"
                                                         checked={isChecked}
                                                         onChange={() => handlePriceSelect(range.min, range.max)}
-                                                        className="rounded-full border-gray-300 text-[#D70018] focus:ring-[#D70018]"
+                                                        className="rounded-full border-gray-300 text-accent focus:ring-accent"
                                                     />
                                                     <span>{range.label}</span>
                                                 </label>
@@ -275,12 +275,12 @@ export const CategoryPage = () => {
                                 <div>
                                     <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Trạng thái</h4>
                                     <div className="flex flex-col gap-2 text-sm text-gray-600">
-                                        <label className="flex items-center gap-2 cursor-pointer hover:text-[#D70018] transition-colors">
+                                        <label className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={inStockOnly}
                                                 onChange={(e) => setInStockOnly(e.target.checked)}
-                                                className="rounded border-gray-300 text-[#D70018] focus:ring-[#D70018]"
+                                                className="rounded border-gray-300 text-accent focus:ring-accent"
                                             />
                                             <span>Chỉ hiển thị hàng có sẵn</span>
                                         </label>
@@ -298,7 +298,7 @@ export const CategoryPage = () => {
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="flex items-center gap-1 border border-gray-300 px-3 py-1.5 rounded text-sm cursor-pointer hover:border-[#D70018] bg-white"
+                                className="flex items-center gap-1 border border-gray-300 px-3 py-1.5 rounded text-sm cursor-pointer hover:border-accent bg-white"
                             >
                                 <option value="newest">Mới nhất</option>
                                 <option value="price_asc">Giá tăng dần</option>
@@ -329,7 +329,7 @@ export const CategoryPage = () => {
                                 ) : (
                                     <div className="bg-white p-8 text-center rounded-lg shadow-sm">
                                         <p className="text-gray-500">Không tìm thấy sản phẩm nào phù hợp.</p>
-                                        <button onClick={clearFilters} className="mt-2 text-[#D70018] hover:underline">Xóa bộ lọc</button>
+                                        <button onClick={clearFilters} className="mt-2 text-accent hover:underline">Xóa bộ lọc</button>
                                     </div>
                                 )}
 
@@ -349,7 +349,7 @@ export const CategoryPage = () => {
                                                     key={i}
                                                     onClick={() => setPage(i + 1)}
                                                     className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${page === i + 1
-                                                        ? 'bg-[#D70018] text-white shadow-lg shadow-red-500/30'
+                                                        ? 'bg-accent text-white shadow-lg shadow-red-500/30'
                                                         : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                                         }`}
                                                 >

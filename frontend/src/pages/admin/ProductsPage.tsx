@@ -287,13 +287,13 @@ export const AdminProductsPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] pb-24">
+        <div className="min-h-screen bg-gray-50 pb-24">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-10 pt-10 space-y-8">
                 {/* Modern Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                            <Package className="text-[#D70018]" size={32} />
+                            <Package className="text-accent" size={32} />
                             Quản lý Sản phẩm
                         </h1>
                         <p className="text-sm text-gray-500 font-medium">Quản lý kho hàng, giá bán và nội dung tiếp thị của bạn.</p>
@@ -302,7 +302,7 @@ export const AdminProductsPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleOpenModal()}
-                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#D70018] text-white text-sm font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-[#B50014] transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all"
                     >
                         <PlusCircle size={20} />
                         Thêm sản phẩm
@@ -314,13 +314,13 @@ export const AdminProductsPage = () => {
                     <div className="flex flex-col lg:flex-row items-stretch gap-4">
                         {/* Search */}
                         <div className="relative flex-1 group">
-                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={20} />
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={20} />
                             <input
                                 type="text"
                                 placeholder="Tìm kiếm sản phẩm..."
                                 value={filters.search}
                                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                                className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
+                                className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none"
                             />
                             {filters.search && (
                                 <button
@@ -339,7 +339,7 @@ export const AdminProductsPage = () => {
                                 value={filters.categoryId}
                                 onChange={(e) => handleFilterChange('categoryId', e.target.value)}
                                 className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.categoryId ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                    filters.categoryId ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                                 }`}
                             >
                                 <option value="">Tất cả danh mục</option>
@@ -351,7 +351,7 @@ export const AdminProductsPage = () => {
                                 value={filters.brandId}
                                 onChange={(e) => handleFilterChange('brandId', e.target.value)}
                                 className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.brandId ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                    filters.brandId ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                                 }`}
                             >
                                 <option value="">Tất cả thương hiệu</option>
@@ -363,7 +363,7 @@ export const AdminProductsPage = () => {
                                 value={filters.stockFilter}
                                 onChange={(e) => handleFilterChange('stockFilter', e.target.value)}
                                 className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.stockFilter !== 'all' ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]' : 'bg-gray-50 border-transparent text-gray-700'
+                                    filters.stockFilter !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
                                 }`}
                             >
                                 <option value="all">Tất cả tồn kho</option>
@@ -389,7 +389,7 @@ export const AdminProductsPage = () => {
                             {(filters.search || filters.categoryId || filters.brandId || filters.stockFilter !== 'all' || filters.status !== 'active') && (
                                 <button
                                     onClick={resetFilters}
-                                    className="flex items-center gap-2 px-5 py-4 text-sm font-semibold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-2xl transition-all"
+                                    className="flex items-center gap-2 px-5 py-4 text-sm font-semibold text-gray-500 hover:text-accent hover:bg-red-50 rounded-2xl transition-all"
                                 >
                                     <RefreshCw size={16} />
                                     Đặt lại
@@ -426,7 +426,7 @@ export const AdminProductsPage = () => {
                                         <div className="text-gray-200"><Box size={60} /></div>
                                     )}
                                     {product.oldPrice && product.oldPrice > product.price && (
-                                        <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">SALE</div>
+                                        <div className="absolute top-4 left-4 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">SALE</div>
                                     )}
                                     <div className="absolute top-4 right-4 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform opacity-0 group-hover:opacity-100">
                                         <button onClick={() => handleOpenModal(product)} className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-700 hover:text-blue-600 transition-colors">
@@ -555,14 +555,14 @@ export const AdminProductsPage = () => {
                                         onClick={() => setActiveTab(tab.id as FormTab)}
                                         className={`flex items-center gap-3 px-6 py-4 relative group transition-all`}
                                     >
-                                        <span className={`p-2 rounded-xl transition-all ${activeTab === tab.id ? 'bg-[#D70018] text-white shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}>
+                                        <span className={`p-2 rounded-xl transition-all ${activeTab === tab.id ? 'bg-accent text-white shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}>
                                             {tab.icon}
                                         </span>
                                         <span className={`text-sm font-bold transition-all ${activeTab === tab.id ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-700'}`}>
                                             {tab.label}
                                         </span>
                                         {activeTab === tab.id && (
-                                            <motion.div layoutId="tab-underline" className="absolute bottom-0 left-6 right-6 h-1 bg-[#D70018] rounded-t-full" />
+                                            <motion.div layoutId="tab-underline" className="absolute bottom-0 left-6 right-6 h-1 bg-accent rounded-t-full" />
                                         )}
                                     </button>
                                 ))}
@@ -574,7 +574,7 @@ export const AdminProductsPage = () => {
                                     <motion.div key="general" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="md:col-span-2 space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Tên sản phẩm *</label>
-                                            <input name="name" defaultValue={editingProduct?.name} placeholder="Ví dụ: Laptop Dell XPS 13" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-base font-semibold focus:ring-2 focus:ring-[#D70018]/10 outline-none" />
+                                            <input name="name" defaultValue={editingProduct?.name} placeholder="Ví dụ: Laptop Dell XPS 13" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none" />
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Danh mục</label>
@@ -590,7 +590,7 @@ export const AdminProductsPage = () => {
                                         </div>
                                         <div className="md:col-span-2 space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Mô tả chi tiết</label>
-                                            <textarea name="description" defaultValue={editingProduct?.description} rows={8} placeholder="Mô tả các đặc điểm nổi bật..." className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-[#D70018]/10" />
+                                            <textarea name="description" defaultValue={editingProduct?.description} rows={8} placeholder="Mô tả các đặc điểm nổi bật..." className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10" />
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -607,7 +607,7 @@ export const AdminProductsPage = () => {
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Giá bán *</label>
                                             <div className="relative">
-                                                <input name="price" type="number" defaultValue={editingProduct?.price} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl text-xl font-extrabold text-[#D70018] outline-none" />
+                                                <input name="price" type="number" defaultValue={editingProduct?.price} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl text-xl font-extrabold text-accent outline-none" />
                                                 <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                             </div>
                                         </div>
@@ -668,7 +668,7 @@ export const AdminProductsPage = () => {
                                                                 defaultValue={editingProduct?.imageUrl}
                                                                 onChange={(e) => { const img = document.getElementById('main-preview') as HTMLImageElement; if (img) img.src = e.target.value; }}
                                                                 placeholder="https://example.com/image.jpg"
-                                                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium outline-none text-blue-600 focus:ring-2 focus:ring-[#D70018]/10"
+                                                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium outline-none text-blue-600 focus:ring-2 focus:ring-accent/10"
                                                             />
                                                         </div>
 
@@ -857,7 +857,7 @@ export const AdminProductsPage = () => {
                             {/* Modal Footer */}
                             <div className="px-10 py-8 bg-white border-t border-gray-100 flex items-center gap-4 sticky bottom-0 z-10 font-sans">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-500 text-sm font-bold rounded-2xl hover:bg-gray-100 transition-all active:scale-95">Hủy</button>
-                                <button type="submit" form="mainForm" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] py-4 bg-[#D70018] text-white text-sm font-bold rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50">
+                                <button type="submit" form="mainForm" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] py-4 bg-accent text-white text-sm font-bold rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50">
                                     {createMutation.isPending || updateMutation.isPending ? 'Đang thực thi...' : 'Hoàn tất & Lưu lại'}
                                 </button>
                             </div>

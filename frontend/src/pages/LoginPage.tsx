@@ -32,7 +32,7 @@ export const LoginPage = () => {
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ['#D70018', '#ff4d6d', '#ffd700', '#00ff00']
+            colors: [getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#D70018', '#ff4d6d', '#ffd700', '#00ff00']
         });
     };
 
@@ -99,12 +99,12 @@ export const LoginPage = () => {
             {/* Animated background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute -top-40 -right-40 w-80 h-80 bg-[#D70018]/10 rounded-full blur-3xl"
+                    className="absolute -top-40 -right-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#D70018]/5 rounded-full blur-3xl"
+                    className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
                     animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -118,7 +118,7 @@ export const LoginPage = () => {
             >
 
                 {/* Visual Side */}
-                <div className="hidden lg:flex bg-gradient-to-br from-[#D70018] via-[#c50016] to-[#a00012] p-12 flex-col justify-between relative overflow-hidden">
+                <div className="hidden lg:flex bg-gradient-to-br from-accent via-[#c50016] to-[#a00012] p-12 flex-col justify-between relative overflow-hidden">
                     {/* Animated shapes */}
                     <motion.div
                         className="absolute top-20 right-20 w-32 h-32 border border-white/10 rounded-2xl"
@@ -135,7 +135,7 @@ export const LoginPage = () => {
                         <Link to="/" className="flex items-center gap-3 mb-16 group">
                             <motion.div
                                 whileHover={{ rotate: 12, scale: 1.1 }}
-                                className="w-12 h-12 bg-white text-[#D70018] rounded-xl flex items-center justify-center font-black text-2xl shadow-lg"
+                                className="w-12 h-12 bg-white text-accent rounded-xl flex items-center justify-center font-black text-2xl shadow-lg"
                             >
                                 QH
                             </motion.div>
@@ -276,7 +276,7 @@ export const LoginPage = () => {
                                     >
                                         <div className="flex justify-between items-center px-1">
                                             <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Mật khẩu</label>
-                                            <Link to="/forgot-password" className="text-[11px] text-[#D70018] hover:underline font-black uppercase transition-colors hover:text-[#b50014]">Quên mật khẩu?</Link>
+                                            <Link to="/forgot-password" className="text-[11px] text-accent hover:underline font-black uppercase transition-colors hover:text-accent-hover">Quên mật khẩu?</Link>
                                         </div>
                                         <Input
                                             type={showPassword ? 'text' : 'password'}
@@ -288,7 +288,7 @@ export const LoginPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="text-gray-400 hover:text-[#D70018] focus:outline-none transition-colors p-1"
+                                                    className="text-gray-400 hover:text-accent focus:outline-none transition-colors p-1"
                                                 >
                                                     {showPassword ? (
                                                         <EyeOff size={18} />
@@ -396,7 +396,7 @@ export const LoginPage = () => {
                                     className="mt-10 text-center text-gray-500 text-sm font-medium italic"
                                 >
                                     Chưa có tài khoản?{' '}
-                                    <Link to="/register" className="text-[#D70018] hover:underline font-black not-italic transition-colors hover:text-[#b50014]">
+                                    <Link to="/register" className="text-accent hover:underline font-black not-italic transition-colors hover:text-accent-hover">
                                         Đăng ký ngay
                                     </Link>
                                 </motion.div>

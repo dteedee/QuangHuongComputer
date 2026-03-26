@@ -1,103 +1,151 @@
 
+import { Suspense, lazy } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { PolicyPage } from './pages/PolicyPage';
-import { PostDetailPage } from './pages/PostDetailPage';
-import { ContactPage } from './pages/ContactPage';
-import { TermsPage } from './pages/TermsPage';
-import { PrivacyPage } from './pages/PrivacyPage';
-import { AboutPage } from './pages/AboutPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { RepairPage } from './pages/RepairPage';
-import { RepairDetailPage } from './pages/RepairDetailPage';
-import { WarrantyPage } from './pages/WarrantyPage';
-import { ChatSupport } from './components/ChatSupport';
-import { RootLayout } from './layouts/RootLayout';
-import { HomePage } from './pages/HomePage';
-import { ProfilePage } from './pages/ProfilePage';
-import { AccountPage } from './pages/AccountPage';
-import { RecruitmentPage } from './pages/RecruitmentPage';
-import { JobDetailPage } from './pages/JobDetailPage';
-import { CategoryPage } from './pages/CategoryPage';
-import { BackofficeLayout } from './layouts/BackofficeLayout';
-import { CommonDashboard } from './pages/backoffice/CommonDashboard';
-import { SalePortal } from './pages/backoffice/sale/SalePortal';
-import { TechPortal } from './pages/backoffice/tech/TechPortal';
-import { WorkOrderDetailPage } from './pages/backoffice/tech/WorkOrderDetailPage';
-import { AccountingPortal } from './pages/backoffice/accountant/AccountingPortal';
-import { ARPage } from './pages/backoffice/accountant/ARPage';
-import { APPage } from './pages/backoffice/accountant/APPage';
-import { ShiftsPage } from './pages/backoffice/accountant/ShiftsPage';
-import { ExpensesPage } from './pages/backoffice/accountant/ExpensesPage';
-import { FinancialReportsPage } from './pages/backoffice/accountant/FinancialReportsPage';
-import { InventoryPortal } from './pages/backoffice/inventory/InventoryPortal';
-import { SuppliersPage } from './pages/backoffice/inventory/SuppliersPage';
-import PurchaseOrdersPage from './pages/backoffice/inventory/PurchaseOrdersPage';
-import { HRPortal } from './pages/backoffice/hr/HRPortal';
-import { RecruitmentManagement } from './pages/backoffice/hr/RecruitmentManagement';
-import { ManagerPortal } from './pages/backoffice/manager/ManagerPortal';
-import { AdminPortal } from './pages/backoffice/admin/AdminPortal';
-import {
-  CrmPortal,
-  CustomersPage as CrmCustomersPage,
-  LeadsPage as CrmLeadsPage,
-  LeadPipelinePage,
-  SegmentsPage as CrmSegmentsPage,
-  CampaignsPage as CrmCampaignsPage
-} from './pages/backoffice/crm';
-import { WarrantyPortal } from './pages/backoffice/WarrantyPortal';
-import { CMSPortal } from './pages/backoffice/CMSPortal';
-import { ReportsPortal } from './pages/backoffice/ReportsPortal';
-import { ConfigPortal } from './pages/backoffice/ConfigPortal';
-import { AdminProductsPage } from './pages/admin/ProductsPage';
-import { AdminOrdersPage } from './pages/admin/OrdersPage';
-import { CategoriesPage } from './pages/admin/CategoriesPage';
-import { PermissionsPage as RolesPage } from './pages/backoffice/admin/PermissionsPage';
-import { UsersPage as AdminUsersPage } from './pages/backoffice/admin/UsersPage';
-import { ReviewsManagementPage } from './pages/backoffice/admin/ReviewsManagementPage';
-import { CouponsPage } from './pages/backoffice/admin/CouponsPage';
-
-import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { PaymentPage } from './pages/PaymentPage';
-import { PaymentResultPage } from './pages/PaymentResultPage';
-import { PaymentCallbackPage } from './pages/PaymentCallbackPage';
-import ProductCatalogPage from './pages/ProductCatalogPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import { OrdersPage } from './pages/account/OrdersPage';
-import { OrderDetailPage } from './pages/account/OrderDetailPage';
-import { NewReturnRequestPage } from './pages/account/NewReturnRequestPage';
-import { LoyaltyPage } from './pages/account/LoyaltyPage';
-import { ComparePage } from './pages/ComparePage';
+import { ConfirmProvider } from './context/ConfirmContext';
 import { ComparisonBar } from './components/comparison';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-
-import POSPage from './pages/backoffice/sale/POSPage';
-import { ReturnsManagementPage } from './pages/backoffice/sale/ReturnsManagementPage';
 import { ScrollToTop } from './components/ScrollToTop';
-import { MenuManager } from './pages/admin/MenuManager';
-import { HomepageBuilder } from './pages/admin/HomepageBuilder';
-import { AdminLayout } from './layouts/AdminLayout';
-// import SePayAdminPage from './pages/admin/PaymentSettingsPage';
 
+// ---------------------------------------------------------------------------
+// Loading fallback
+// ---------------------------------------------------------------------------
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '60vh',
+    fontSize: '1rem',
+    color: '#888',
+  }}>
+    <div className="page-loader">
+      <svg width="38" height="38" viewBox="0 0 38 38" stroke="#6366f1" style={{ margin: '0 auto', display: 'block' }}>
+        <g fill="none" fillRule="evenodd">
+          <g transform="translate(1 1)" strokeWidth="2">
+            <circle strokeOpacity=".25" cx="18" cy="18" r="18" />
+            <path d="M36 18c0-9.94-8.06-18-18-18">
+              <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="0.8s" repeatCount="indefinite" />
+            </path>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Helper: wrap named exports for React.lazy (which requires default export)
+// ---------------------------------------------------------------------------
+// For named exports we use a small wrapper that re-exports them as default.
+
+// -- Layouts (small, keep eager for shells) --
+import { RootLayout } from './layouts/RootLayout';
+import { BackofficeLayout } from './layouts/BackofficeLayout';
+import { AdminLayout } from './layouts/AdminLayout';
+
+// ---------------------------------------------------------------------------
+// Lazy-loaded pages — Store / Public
+// ---------------------------------------------------------------------------
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const RepairPage = lazy(() => import('./pages/RepairPage').then(m => ({ default: m.RepairPage })));
+const RepairDetailPage = lazy(() => import('./pages/RepairDetailPage').then(m => ({ default: m.RepairDetailPage })));
+const WarrantyPage = lazy(() => import('./pages/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
+const ChatSupport = lazy(() => import('./components/ChatSupport').then(m => ({ default: m.ChatSupport })));
+const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const PaymentPage = lazy(() => import('./pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
+const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage').then(m => ({ default: m.PaymentCallbackPage })));
+const PaymentResultPage = lazy(() => import('./pages/PaymentResultPage').then(m => ({ default: m.PaymentResultPage })));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const ProductCatalogPage = lazy(() => import('./pages/ProductCatalogPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
+const RecruitmentPage = lazy(() => import('./pages/RecruitmentPage').then(m => ({ default: m.RecruitmentPage })));
+const JobDetailPage = lazy(() => import('./pages/JobDetailPage').then(m => ({ default: m.JobDetailPage })));
+const CategoryPage = lazy(() => import('./pages/CategoryPage').then(m => ({ default: m.CategoryPage })));
+const PolicyPage = lazy(() => import('./pages/PolicyPage').then(m => ({ default: m.PolicyPage })));
+const PostDetailPage = lazy(() => import('./pages/PostDetailPage').then(m => ({ default: m.PostDetailPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+
+// Auth pages
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+
+// Account pages
+const OrdersPage = lazy(() => import('./pages/account/OrdersPage').then(m => ({ default: m.OrdersPage })));
+const OrderDetailPage = lazy(() => import('./pages/account/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
+const NewReturnRequestPage = lazy(() => import('./pages/account/NewReturnRequestPage').then(m => ({ default: m.NewReturnRequestPage })));
+const LoyaltyPage = lazy(() => import('./pages/account/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
+
+// ---------------------------------------------------------------------------
+// Lazy-loaded pages — Backoffice
+// ---------------------------------------------------------------------------
+const CommonDashboard = lazy(() => import('./pages/backoffice/CommonDashboard').then(m => ({ default: m.CommonDashboard })));
+const SalePortal = lazy(() => import('./pages/backoffice/sale/SalePortal').then(m => ({ default: m.SalePortal })));
+const POSPage = lazy(() => import('./pages/backoffice/sale/POSPage'));
+const ReturnsManagementPage = lazy(() => import('./pages/backoffice/sale/ReturnsManagementPage').then(m => ({ default: m.ReturnsManagementPage })));
+const TechPortal = lazy(() => import('./pages/backoffice/tech/TechPortal').then(m => ({ default: m.TechPortal })));
+const WorkOrderDetailPage = lazy(() => import('./pages/backoffice/tech/WorkOrderDetailPage').then(m => ({ default: m.WorkOrderDetailPage })));
+const AccountingPortal = lazy(() => import('./pages/backoffice/accountant/AccountingPortal').then(m => ({ default: m.AccountingPortal })));
+const ARPage = lazy(() => import('./pages/backoffice/accountant/ARPage').then(m => ({ default: m.ARPage })));
+const APPage = lazy(() => import('./pages/backoffice/accountant/APPage').then(m => ({ default: m.APPage })));
+const ShiftsPage = lazy(() => import('./pages/backoffice/accountant/ShiftsPage').then(m => ({ default: m.ShiftsPage })));
+const ExpensesPage = lazy(() => import('./pages/backoffice/accountant/ExpensesPage').then(m => ({ default: m.ExpensesPage })));
+const FinancialReportsPage = lazy(() => import('./pages/backoffice/accountant/FinancialReportsPage').then(m => ({ default: m.FinancialReportsPage })));
+const InventoryPortal = lazy(() => import('./pages/backoffice/inventory/InventoryPortal').then(m => ({ default: m.InventoryPortal })));
+const SuppliersPage = lazy(() => import('./pages/backoffice/inventory/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
+const PurchaseOrdersPage = lazy(() => import('./pages/backoffice/inventory/PurchaseOrdersPage'));
+const HRPortal = lazy(() => import('./pages/backoffice/hr/HRPortal').then(m => ({ default: m.HRPortal })));
+const RecruitmentManagement = lazy(() => import('./pages/backoffice/hr/RecruitmentManagement').then(m => ({ default: m.RecruitmentManagement })));
+const ManagerPortal = lazy(() => import('./pages/backoffice/manager/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
+const AdminPortal = lazy(() => import('./pages/backoffice/admin/AdminPortal').then(m => ({ default: m.AdminPortal })));
+const WarrantyPortal = lazy(() => import('./pages/backoffice/WarrantyPortal').then(m => ({ default: m.WarrantyPortal })));
+const CMSPortal = lazy(() => import('./pages/backoffice/CMSPortal').then(m => ({ default: m.CMSPortal })));
+const ReportsPortal = lazy(() => import('./pages/backoffice/ReportsPortal').then(m => ({ default: m.ReportsPortal })));
+const ConfigPortal = lazy(() => import('./pages/backoffice/ConfigPortal').then(m => ({ default: m.ConfigPortal })));
+
+// Admin pages
+const AdminProductsPage = lazy(() => import('./pages/admin/ProductsPage').then(m => ({ default: m.AdminProductsPage })));
+const AdminOrdersPage = lazy(() => import('./pages/admin/OrdersPage').then(m => ({ default: m.AdminOrdersPage })));
+const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
+const MenuManager = lazy(() => import('./pages/admin/MenuManager').then(m => ({ default: m.MenuManager })));
+const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(m => ({ default: m.HomepageBuilder })));
+
+// Backoffice admin pages
+const RolesPage = lazy(() => import('./pages/backoffice/admin/PermissionsPage').then(m => ({ default: m.PermissionsPage })));
+const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').then(m => ({ default: m.UsersPage })));
+const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
+const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
+
+// CRM pages
+const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
+const CrmCustomersPage = lazy(() => import('./pages/backoffice/crm/CustomersPage'));
+const CrmLeadsPage = lazy(() => import('./pages/backoffice/crm/LeadsPage'));
+const LeadPipelinePage = lazy(() => import('./pages/backoffice/crm/LeadPipelinePage'));
+const CrmSegmentsPage = lazy(() => import('./pages/backoffice/crm/SegmentsPage'));
+const CrmCampaignsPage = lazy(() => import('./pages/backoffice/crm/CampaignsPage'));
+
+// ---------------------------------------------------------------------------
+// App
+// ---------------------------------------------------------------------------
 const queryClient = new QueryClient();
 
-// Google OAuth Client ID - required for Google login functionality
-// If not configured, Google login button will show as disabled
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function App() {
-  // Use a placeholder client ID to prevent GoogleOAuthProvider errors
-  // The actual login will fail validation on the backend if not properly configured
   const effectiveClientId = GOOGLE_CLIENT_ID || 'placeholder.apps.googleusercontent.com';
 
   return (
@@ -107,127 +155,130 @@ function App() {
 
         <BrowserRouter>
           <ScrollToTop />
+          <ConfirmProvider>
           <AuthProvider>
             <ThemeProvider>
               <CartProvider>
                 <ComparisonProvider>
                   <ComparisonBar />
-                  <Routes>
-                    {/* Main Store Layout */}
-                    <Route path="/" element={<RootLayout />}>
-                      <Route index element={<HomePage />} />
-                      <Route path="repairs" element={<RepairPage />} />
-                      <Route path="repair" element={<RepairPage />} />
-                      <Route path="repair/:id" element={<RepairDetailPage />} />
-                      <Route path="warranty" element={<WarrantyPage />} />
-                      <Route path="support" element={<ChatSupport />} />
-                      <Route path="cart" element={<CartPage />} />
-                      <Route path="checkout" element={<CheckoutPage />} />
-                      <Route path="payment/:orderId" element={<PaymentPage />} />
-                      <Route path="payment/callback" element={<PaymentCallbackPage />} />
-                      <Route path="payment/success" element={<PaymentResultPage />} />
-                      <Route path="payment/failed" element={<PaymentResultPage />} />
-                      <Route path="product/:id" element={<ProductDetailPage />} />
-                      <Route path="products" element={<ProductCatalogPage />} />
-                      <Route path="products/:id" element={<ProductDetailPage />} />
-                      <Route path="catalog" element={<ProductCatalogPage />} />
-                      <Route path="compare" element={<ComparePage />} />
-                      <Route path="profile" element={<AccountPage />} />
-                      <Route path="account" element={<AccountPage />} />
-                      <Route path="recruitment" element={<RecruitmentPage />} />
-                      <Route path="recruitment/:id" element={<JobDetailPage />} />
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      {/* Main Store Layout */}
+                      <Route path="/" element={<RootLayout />}>
+                        <Route index element={<HomePage />} />
+                        <Route path="repairs" element={<RepairPage />} />
+                        <Route path="repair" element={<RepairPage />} />
+                        <Route path="repair/:id" element={<RepairDetailPage />} />
+                        <Route path="warranty" element={<WarrantyPage />} />
+                        <Route path="support" element={<ChatSupport />} />
+                        <Route path="cart" element={<CartPage />} />
+                        <Route path="checkout" element={<CheckoutPage />} />
+                        <Route path="payment/:orderId" element={<PaymentPage />} />
+                        <Route path="payment/callback" element={<PaymentCallbackPage />} />
+                        <Route path="payment/success" element={<PaymentResultPage />} />
+                        <Route path="payment/failed" element={<PaymentResultPage />} />
+                        <Route path="product/:id" element={<ProductDetailPage />} />
+                        <Route path="products" element={<ProductCatalogPage />} />
+                        <Route path="products/:id" element={<ProductDetailPage />} />
+                        <Route path="catalog" element={<ProductCatalogPage />} />
+                        <Route path="compare" element={<ComparePage />} />
+                        <Route path="profile" element={<AccountPage />} />
+                        <Route path="account" element={<AccountPage />} />
+                        <Route path="recruitment" element={<RecruitmentPage />} />
+                        <Route path="recruitment/:id" element={<JobDetailPage />} />
 
-                      {/* Account Routes */}
-                      <Route path="account/orders" element={<OrdersPage />} />
-                      <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
-                      <Route path="account/returns/new" element={<NewReturnRequestPage />} />
-                      <Route path="account/loyalty" element={<LoyaltyPage />} />
+                        {/* Account Routes */}
+                        <Route path="account/orders" element={<OrdersPage />} />
+                        <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
+                        <Route path="account/returns/new" element={<NewReturnRequestPage />} />
+                        <Route path="account/loyalty" element={<LoyaltyPage />} />
 
-                      {/* Category Routes */}
-                      <Route path="laptop" element={<CategoryPage />} />
-                      <Route path="pc-gaming" element={<CategoryPage />} />
-                      <Route path="workstation" element={<CategoryPage />} />
-                      <Route path="office" element={<CategoryPage />} />
-                      <Route path="components" element={<CategoryPage />} />
-                      <Route path="screens" element={<CategoryPage />} />
-                      <Route path="search" element={<CategoryPage />} />
-                      <Route path="category/:slug" element={<CategoryPage />} />
+                        {/* Category Routes */}
+                        <Route path="laptop" element={<CategoryPage />} />
+                        <Route path="pc-gaming" element={<CategoryPage />} />
+                        <Route path="workstation" element={<CategoryPage />} />
+                        <Route path="office" element={<CategoryPage />} />
+                        <Route path="components" element={<CategoryPage />} />
+                        <Route path="screens" element={<CategoryPage />} />
+                        <Route path="search" element={<CategoryPage />} />
+                        <Route path="category/:slug" element={<CategoryPage />} />
 
-                      {/* Content Pages */}
-                      <Route path="policy/:type" element={<PolicyPage />} />
-                      <Route path="post/:slug" element={<PostDetailPage />} />
-                      <Route path="contact" element={<ContactPage />} />
-                      <Route path="terms" element={<TermsPage />} />
-                      <Route path="privacy" element={<PrivacyPage />} />
-                      <Route path="about" element={<AboutPage />} />
-                    </Route>
-
-                    {/* Backoffice Routes */}
-                    <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
-                      <Route path="/backoffice" element={<BackofficeLayout />}>
-                        <Route index element={<CommonDashboard />} />
-                        <Route path="pos" element={<POSPage />} />
-                        <Route path="sale" element={<SalePortal />} />
-                        <Route path="returns" element={<ReturnsManagementPage />} />
-                        <Route path="tech" element={<TechPortal />} />
-                        <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
-                        <Route path="inventory" element={<InventoryPortal />} />
-                        <Route path="inventory/suppliers" element={<SuppliersPage />} />
-                        <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
-                        <Route path="accounting" element={<AccountingPortal />} />
-                        <Route path="accounting/ar" element={<ARPage />} />
-                        <Route path="accounting/ap" element={<APPage />} />
-                        <Route path="accounting/shifts" element={<ShiftsPage />} />
-                        <Route path="accounting/expenses" element={<ExpensesPage />} />
-                        <Route path="accounting/reports" element={<FinancialReportsPage />} />
-                        <Route path="hr" element={<HRPortal />} />
-                        <Route path="hr/recruitment" element={<RecruitmentManagement />} />
-                        <Route path="warranty" element={<WarrantyPortal />} />
-                        <Route path="cms" element={<CMSPortal />} />
-                        <Route path="reports" element={<ReportsPortal />} />
-                        <Route path="users" element={<AdminUsersPage />} />
-                        <Route path="roles" element={<RolesPage />} />
-                        <Route path="products" element={<AdminProductsPage />} />
-                        <Route path="categories" element={<CategoriesPage />} />
-                        <Route path="orders" element={<AdminOrdersPage />} />
-                        <Route path="reviews" element={<ReviewsManagementPage />} />
-                        <Route path="coupons" element={<CouponsPage />} />
-                        <Route path="config" element={<ConfigPortal />} />
-                        <Route path="admin" element={<AdminPortal />} />
-                        <Route path="manager" element={<ManagerPortal />} />
-                        {/* CRM Routes */}
-                        <Route path="crm" element={<CrmPortal />} />
-                        <Route path="crm/customers" element={<CrmCustomersPage />} />
-                        <Route path="crm/leads" element={<CrmLeadsPage />} />
-                        <Route path="crm/leads/pipeline" element={<LeadPipelinePage />} />
-                        <Route path="crm/segments" element={<CrmSegmentsPage />} />
-                        <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
-                        {/* <Route path="payments/sepay" element={<SePayAdminPage />} /> */}
+                        {/* Content Pages */}
+                        <Route path="policy/:type" element={<PolicyPage />} />
+                        <Route path="post/:slug" element={<PostDetailPage />} />
+                        <Route path="contact" element={<ContactPage />} />
+                        <Route path="terms" element={<TermsPage />} />
+                        <Route path="privacy" element={<PrivacyPage />} />
+                        <Route path="about" element={<AboutPage />} />
                       </Route>
-                    </Route>
 
-                    {/* Admin Routes — CMS-specific only; other admin pages live in /backoffice */}
-                    <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
-                      <Route path="/admin" element={<AdminPortal />} />
-                      <Route element={<AdminLayout />}>
-                        <Route path="/admin/menus" element={<MenuManager />} />
-                        <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
+                      {/* Backoffice Routes */}
+                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
+                        <Route path="/backoffice" element={<BackofficeLayout />}>
+                          <Route index element={<CommonDashboard />} />
+                          <Route path="pos" element={<POSPage />} />
+                          <Route path="sale" element={<SalePortal />} />
+                          <Route path="returns" element={<ReturnsManagementPage />} />
+                          <Route path="tech" element={<TechPortal />} />
+                          <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
+                          <Route path="inventory" element={<InventoryPortal />} />
+                          <Route path="inventory/suppliers" element={<SuppliersPage />} />
+                          <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
+                          <Route path="accounting" element={<AccountingPortal />} />
+                          <Route path="accounting/ar" element={<ARPage />} />
+                          <Route path="accounting/ap" element={<APPage />} />
+                          <Route path="accounting/shifts" element={<ShiftsPage />} />
+                          <Route path="accounting/expenses" element={<ExpensesPage />} />
+                          <Route path="accounting/reports" element={<FinancialReportsPage />} />
+                          <Route path="hr" element={<HRPortal />} />
+                          <Route path="hr/recruitment" element={<RecruitmentManagement />} />
+                          <Route path="warranty" element={<WarrantyPortal />} />
+                          <Route path="cms" element={<CMSPortal />} />
+                          <Route path="reports" element={<ReportsPortal />} />
+                          <Route path="users" element={<AdminUsersPage />} />
+                          <Route path="roles" element={<RolesPage />} />
+                          <Route path="products" element={<AdminProductsPage />} />
+                          <Route path="categories" element={<CategoriesPage />} />
+                          <Route path="orders" element={<AdminOrdersPage />} />
+                          <Route path="reviews" element={<ReviewsManagementPage />} />
+                          <Route path="coupons" element={<CouponsPage />} />
+                          <Route path="config" element={<ConfigPortal />} />
+                          <Route path="admin" element={<AdminPortal />} />
+                          <Route path="manager" element={<ManagerPortal />} />
+                          {/* CRM Routes */}
+                          <Route path="crm" element={<CrmPortal />} />
+                          <Route path="crm/customers" element={<CrmCustomersPage />} />
+                          <Route path="crm/leads" element={<CrmLeadsPage />} />
+                          <Route path="crm/leads/pipeline" element={<LeadPipelinePage />} />
+                          <Route path="crm/segments" element={<CrmSegmentsPage />} />
+                          <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
+                        </Route>
                       </Route>
-                    </Route>
 
-                    {/* Auth Pages (Standalone) */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  </Routes >
-                </ComparisonProvider >
-              </CartProvider >
-            </ThemeProvider >
-          </AuthProvider >
-        </BrowserRouter >
-      </QueryClientProvider >
-    </GoogleOAuthProvider >
+                      {/* Admin Routes — CMS-specific only */}
+                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                        <Route path="/admin" element={<AdminPortal />} />
+                        <Route element={<AdminLayout />}>
+                          <Route path="/admin/menus" element={<MenuManager />} />
+                          <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
+                        </Route>
+                      </Route>
+
+                      {/* Auth Pages (Standalone) */}
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    </Routes>
+                  </Suspense>
+                </ComparisonProvider>
+              </CartProvider>
+            </ThemeProvider>
+          </AuthProvider>
+          </ConfirmProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -88,7 +88,7 @@ export const NewReturnRequestPage = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D70018]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
             </div>
         );
     }
@@ -110,7 +110,7 @@ export const NewReturnRequestPage = () => {
                 {/* Header */}
                 <Link
                     to={`/account/orders/${orderId}`}
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-[#D70018] font-bold mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold mb-6 transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     Quay lại chi tiết đơn hàng
@@ -143,7 +143,7 @@ export const NewReturnRequestPage = () => {
                                     key={item.id}
                                     className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                                         selectedItem === item.id
-                                            ? 'border-[#D70018] bg-red-50'
+                                            ? 'border-accent bg-red-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                 >
@@ -153,7 +153,7 @@ export const NewReturnRequestPage = () => {
                                         value={item.id}
                                         checked={selectedItem === item.id}
                                         onChange={(e) => setSelectedItem(e.target.value)}
-                                        className="w-5 h-5 text-[#D70018] focus:ring-[#D70018]"
+                                        className="w-5 h-5 text-accent focus:ring-accent"
                                     />
                                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                                         <Package className="w-6 h-6 text-gray-400" />
@@ -181,7 +181,7 @@ export const NewReturnRequestPage = () => {
                                     key={r}
                                     className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                                         reason === r
-                                            ? 'border-[#D70018] bg-red-50'
+                                            ? 'border-accent bg-red-50'
                                             : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                 >
@@ -191,7 +191,7 @@ export const NewReturnRequestPage = () => {
                                         value={r}
                                         checked={reason === r}
                                         onChange={(e) => setReason(e.target.value)}
-                                        className="w-4 h-4 text-[#D70018] focus:ring-[#D70018]"
+                                        className="w-4 h-4 text-accent focus:ring-accent"
                                     />
                                     <span className="font-medium text-gray-700">{r}</span>
                                 </label>
@@ -210,7 +210,7 @@ export const NewReturnRequestPage = () => {
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Mô tả thêm về vấn đề của sản phẩm..."
                             rows={4}
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D70018] focus:border-transparent resize-none"
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
                         />
                     </div>
 
@@ -231,7 +231,7 @@ export const NewReturnRequestPage = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting || !selectedItem || !reason}
-                        className="w-full px-6 py-4 bg-[#D70018] hover:bg-[#b50014] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
+                        className="w-full px-6 py-4 bg-accent hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
                     >
                         {isSubmitting ? (
                             <>

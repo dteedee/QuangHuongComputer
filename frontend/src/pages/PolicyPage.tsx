@@ -77,7 +77,7 @@ export const PolicyPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <span>/</span>
                     <span className="text-gray-900 font-medium">Chính sách & Tin tức</span>
                 </div>
@@ -87,7 +87,7 @@ export const PolicyPage = () => {
                 {/* Sidebar */}
                 <div className="w-full lg:w-1/4">
                     <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100 sticky top-4">
-                        <div className="bg-[#D70018] text-white p-6 font-black uppercase text-xs italic tracking-widest">Danh mục</div>
+                        <div className="bg-accent text-white p-6 font-black uppercase text-xs italic tracking-widest">Danh mục</div>
                         <div className="flex flex-col">
                             {Object.entries(titleMapping).map(([key, label]) => {
                                 const ItemIcon = iconMapping[key] || ShieldCheck;
@@ -95,7 +95,7 @@ export const PolicyPage = () => {
                                     <Link
                                         key={key}
                                         to={`/policy/${key}`}
-                                        className={`p-5 border-b border-gray-50 flex items-center justify-between hover:bg-gray-50 hover:text-[#D70018] transition-all ${key === currentType ? 'text-[#D70018] font-black bg-red-50' : 'text-gray-500 font-bold'}`}
+                                        className={`p-5 border-b border-gray-50 flex items-center justify-between hover:bg-gray-50 hover:text-accent transition-all ${key === currentType ? 'text-accent font-black bg-red-50' : 'text-gray-500 font-bold'}`}
                                     >
                                         <div className="flex items-center gap-3 text-sm">
                                             <ItemIcon size={18} />
@@ -113,14 +113,14 @@ export const PolicyPage = () => {
                 <div className="flex-1 bg-white p-6 md:p-10 rounded-[40px] shadow-xl shadow-gray-200/50 border border-gray-50 min-h-[500px]">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
-                            <Loader2 size={40} className="animate-spin text-[#D70018] mb-4" />
+                            <Loader2 size={40} className="animate-spin text-accent mb-4" />
                             <p className="uppercase font-bold text-xs tracking-widest">Đang tải nội dung...</p>
                         </div>
                     ) : isListPage ? (
                         // List View
                         <div>
                             <div className="flex items-center gap-5 mb-8 border-b border-gray-100 pb-6">
-                                <div className="p-4 bg-red-50 text-[#D70018] rounded-2xl shadow-inner">
+                                <div className="p-4 bg-red-50 text-accent rounded-2xl shadow-inner">
                                     <Icon size={32} />
                                 </div>
                                 <h1 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">{titleMapping[currentType]}</h1>
@@ -139,14 +139,14 @@ export const PolicyPage = () => {
                                                         <FileText size={48} />
                                                     </div>
                                                 )}
-                                                <div className="absolute top-3 left-3 bg-[#D70018] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                                <div className="absolute top-3 left-3 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                                     {post.type}
                                                 </div>
                                             </div>
                                             <div className="p-5">
-                                                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#D70018] transition-colors">{post.title}</h3>
+                                                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-accent transition-colors">{post.title}</h3>
                                                 <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.summary || post.content?.replace(/<[^>]*>?/gm, '').substring(0, 100)}...</p>
-                                                <Link to={`/post/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-[#D70018] flex items-center gap-1 hover:gap-2 transition-all">
+                                                <Link to={`/post/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-1 hover:gap-2 transition-all">
                                                     Xem chi tiết <ChevronRight size={12} />
                                                 </Link>
                                             </div>
@@ -169,7 +169,7 @@ export const PolicyPage = () => {
                         // Single Page View
                         <>
                             <div className="flex items-center gap-5 mb-10 border-b border-gray-100 pb-8">
-                                <div className="p-5 bg-red-50 text-[#D70018] rounded-2xl shadow-inner">
+                                <div className="p-5 bg-red-50 text-accent rounded-2xl shadow-inner">
                                     <Icon size={40} />
                                 </div>
                                 <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">{page.title}</h1>

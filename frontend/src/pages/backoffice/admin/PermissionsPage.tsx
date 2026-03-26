@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Shield, Save, Grid, List, Check, Search, Fil
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminApi, type Permission, type Role } from '@api/admin';
 import { usePermissions } from '@hooks/usePermissions';
+import { useConfirm } from '@context/ConfirmContext';
 
 type ViewMode = 'tree' | 'matrix';
 
@@ -17,6 +18,7 @@ export function PermissionsPage() {
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const confirm = useConfirm();
 
   // Permissions check
   const canManagePermissions = hasPermission('admin.permissions.manage');
@@ -104,9 +106,10 @@ export function PermissionsPage() {
     });
   };
 
-  const handleRoleChange = (roleId: string) => {
+  const handleRoleChange = async (roleId: string) => {
     if (hasChanges) {
-      if (!window.confirm('Có các thay đổi chưa được lưu. Bạn có muốn bỏ qua không?')) return;
+      const ok = await confirm({ message: 'Có các thay đổi chưa được lưu. Bạn có muốn bỏ qua không?', variant: 'warning' });
+      if (!ok) return;
     }
     setSelectedRole(roleId);
     setHasChanges(false);
@@ -261,7 +264,7 @@ export function PermissionsPage() {
                           whileTap={{ scale: 0.95 }}
                           onClick={handleSavePermissions}
                           disabled={updatePermissionsMutation.isPending}
-                          className="flex items-center gap-2 px-6 py-2 bg-[#D70018] text-white rounded-xl shadow-lg shadow-red-500/30 hover:bg-[#b50014] font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-xl shadow-lg shadow-red-500/30 hover:bg-accent-hover font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save size={18} />
                           {updatePermissionsMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}

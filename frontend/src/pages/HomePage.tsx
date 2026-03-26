@@ -26,7 +26,7 @@ export const HomePage = () => {
     if (isLoading) return (
         <div className="flex justify-center items-center py-40 min-h-[60vh] bg-gray-50">
             <div className="text-center">
-                <div className="w-16 h-16 border-4 border-gray-200 border-t-[#D70018] rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-16 h-16 border-4 border-gray-200 border-t-accent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-lg font-semibold text-gray-500">Đang tải trang chủ...</p>
             </div>
         </div>
@@ -43,7 +43,7 @@ export const HomePage = () => {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-[#D70018] to-[#b91c1c] text-white py-2.5 text-center"
+                className="bg-gradient-to-r from-accent to-[#b91c1c] text-white py-2.5 text-center"
             >
                 <div className="flex items-center justify-center gap-2">
                     <Zap className="text-yellow-300" size={18} />

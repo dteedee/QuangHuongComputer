@@ -84,13 +84,13 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                                 <Link
                                     key={cat.id}
                                     to={`/products?category=${cat.id}`}
-                                    className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-[#D70018] transition-all group border-l-4 border-transparent hover:border-[#D70018]"
+                                    className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-accent transition-all group border-l-4 border-transparent hover:border-accent"
                                 >
-                                    <span className="text-gray-400 group-hover:text-[#D70018] transition-colors">
+                                    <span className="text-gray-400 group-hover:text-accent transition-colors">
                                         {getCategoryIcon(cat.name)}
                                     </span>
                                     <span className="flex-1 line-clamp-1">{cat.name}</span>
-                                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-[#D70018]" />
+                                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-accent" />
                                 </Link>
                             ))}
                         </div>

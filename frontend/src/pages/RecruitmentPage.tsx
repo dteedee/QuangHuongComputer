@@ -56,14 +56,14 @@ export const RecruitmentPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <ChevronRight size={14} />
                     <span className="text-gray-900 font-medium">Tuyển dụng</span>
                 </div>
             </div>
 
             {/* Hero Section */}
-            <div className="bg-[#D70018] py-16 md:py-24 text-white overflow-hidden relative">
+            <div className="bg-accent py-16 md:py-24 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-red-600 skew-x-12 transform translate-x-1/2 opacity-50"></div>
                 <div className="container mx-auto px-4 relative z-10">
                     <motion.div
@@ -105,7 +105,7 @@ export const RecruitmentPage = () => {
                         <input
                             type="text"
                             placeholder="Tìm kiếm vị trí..."
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -113,7 +113,7 @@ export const RecruitmentPage = () => {
                     <div className="relative">
                         <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <select
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all appearance-none"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all appearance-none"
                             value={selectedDepartment}
                             onChange={(e) => setSelectedDepartment(e.target.value)}
                         >
@@ -132,7 +132,7 @@ export const RecruitmentPage = () => {
             <div className="container mx-auto px-4 py-12">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="animate-spin text-[#D70018]" size={48} />
+                        <Loader2 className="animate-spin text-accent" size={48} />
                         <p className="mt-4 text-gray-500 font-medium">Đang tải danh sách công việc...</p>
                     </div>
                 ) : filteredJobs.length > 0 ? (
@@ -147,14 +147,14 @@ export const RecruitmentPage = () => {
                             >
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="px-3 py-1 bg-red-50 text-[#D70018] text-xs font-bold rounded-full uppercase">
+                                        <span className="px-3 py-1 bg-red-50 text-accent text-xs font-bold rounded-full uppercase">
                                             {job.department}
                                         </span>
                                         <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase">
                                             {job.jobType}
                                         </span>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-[#D70018] transition-colors">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-accent transition-colors">
                                         {job.title}
                                     </h3>
                                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
@@ -178,7 +178,7 @@ export const RecruitmentPage = () => {
                                 </div>
                                 <Link
                                     to={`/recruitment/${job.id}`}
-                                    className="flex items-center justify-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#D70018] transition-all transform hover:scale-105"
+                                    className="flex items-center justify-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-accent transition-all transform hover:scale-105"
                                 >
                                     Xem chi tiết
                                     <ArrowRight size={20} />
@@ -201,9 +201,9 @@ export const RecruitmentPage = () => {
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter mb-4">
                             Tại sao nên làm việc tại <br />
-                            <span className="text-[#D70018]">Quang Hưởng Computer?</span>
+                            <span className="text-accent">Quang Hưởng Computer?</span>
                         </h2>
-                        <div className="w-24 h-1.5 bg-[#D70018] mx-auto rounded-full"></div>
+                        <div className="w-24 h-1.5 bg-accent mx-auto rounded-full"></div>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
@@ -225,7 +225,7 @@ export const RecruitmentPage = () => {
                             }
                         ].map((item, i) => (
                             <div key={i} className="p-8 rounded-3xl bg-gray-50 border border-gray-100 hover:bg-white hover:shadow-xl transition-all group">
-                                <div className="p-4 bg-white text-[#D70018] w-16 h-16 rounded-2xl shadow-sm mb-6 flex items-center justify-center group-hover:bg-[#D70018] group-hover:text-white transition-all">
+                                <div className="p-4 bg-white text-accent w-16 h-16 rounded-2xl shadow-sm mb-6 flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all">
                                     {item.icon}
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>

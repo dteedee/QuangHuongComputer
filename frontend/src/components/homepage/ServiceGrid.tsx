@@ -40,7 +40,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({ title, config }) => {
                             whileHover={{ scale: 1.05, y: -10 }}
                             className="text-center p-8 bg-white rounded-2xl shadow-lg border-2 border-red-100 group transition-all"
                         >
-                            <div className="text-[#D70018] flex justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <div className="text-accent flex justify-center mb-6 group-hover:scale-110 transition-transform">
                                 {renderIcon(item.icon)}
                             </div>
                             <h4 className="font-black text-gray-800 text-sm uppercase mb-3">

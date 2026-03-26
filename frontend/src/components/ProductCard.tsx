@@ -113,7 +113,7 @@ const ProductHoverPopup = ({
                     onMouseLeave={onMouseLeave}
                 >
                     {/* Header */}
-                    <div className="bg-[#D70018] text-white p-3">
+                    <div className="bg-accent text-white p-3">
                         <h4 className="font-bold text-sm leading-tight line-clamp-2">
                             {product.name}
                         </h4>
@@ -129,7 +129,7 @@ const ProductHoverPopup = ({
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-gray-500">- Giá QH:</span>
-                                <span className="text-[#D70018] font-bold text-base">{formatCurrency(product.price)}</span>
+                                <span className="text-accent font-bold text-base">{formatCurrency(product.price)}</span>
                                 <span className="text-xs text-gray-400">[Đã bao gồm VAT]</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -141,15 +141,15 @@ const ProductHoverPopup = ({
                         {/* Store Locations */}
                         <div className="space-y-2 border-t border-gray-100 pt-3">
                             <div className="flex items-center gap-2 text-gray-600">
-                                <MapPin size={14} className="text-[#D70018]" />
+                                <MapPin size={14} className="text-accent" />
                                 <span className="font-medium">Kho hàng:</span>
                             </div>
                             <div className="pl-5 space-y-1">
                                 {locations.length > 0 ? (
                                     locations.map((store: { city: string, address: string }, idx: number) => (
                                         <div key={idx} className="flex items-start gap-1 text-xs">
-                                            <MapPin size={10} className="text-[#D70018] mt-0.5 flex-shrink-0" />
-                                            <span className="text-[#D70018]">
+                                            <MapPin size={10} className="text-accent mt-0.5 flex-shrink-0" />
+                                            <span className="text-accent">
                                                 {store.address}
                                                 {store.city && ` - ${store.city}`}
                                             </span>
@@ -190,7 +190,7 @@ const ProductHoverPopup = ({
                     <div className="border-t border-gray-100 p-3 flex gap-2 bg-gray-50">
                         <Link
                             to={`/product/${product.id}`}
-                            className="flex-1 bg-[#D70018] text-white text-center py-2 rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors"
+                            className="flex-1 bg-accent text-white text-center py-2 rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors"
                         >
                             Xem chi tiết
                         </Link>
@@ -291,7 +291,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     whileHover={{ y: -5 }}
                     transition={{ duration: 0.3 }}
                     className={`group relative bg-white border rounded-lg overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300
-                        ${showPopup ? 'border-[#D70018] shadow-xl z-30' : 'border-gray-200 hover:border-[#D70018]'}`}
+                        ${showPopup ? 'border-accent shadow-xl z-30' : 'border-gray-200 hover:border-accent'}`}
                 >
                     {/* Discount Badge */}
                     <motion.div
@@ -299,7 +299,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute top-2 left-2 z-20"
                     >
-                        <div className="bg-[#D70018] text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
+                        <div className="bg-accent text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
                             -{discount}%
                         </div>
                     </motion.div>
@@ -348,7 +348,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         </div>
 
                         <Link to={`/product/${product.id}`} className="mb-3 block">
-                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#D70018] transition-colors line-clamp-2 min-h-[40px] leading-tight group-hover:underline">
+                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-accent transition-colors line-clamp-2 min-h-[40px] leading-tight group-hover:underline">
                                 {product.name}
                             </h3>
                         </Link>
@@ -356,7 +356,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         <div className="mt-auto space-y-2">
                             <div className="flex flex-col">
                                 <span className="text-xs text-gray-400 line-through leading-none">{formatCurrency(oldPrice)}</span>
-                                <span className="text-lg font-black text-[#D70018] leading-tight">{formatCurrency(product.price)}</span>
+                                <span className="text-lg font-black text-accent leading-tight">{formatCurrency(product.price)}</span>
                             </div>
 
                             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
@@ -396,7 +396,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                             addToCart(product, quantity);
                                             setQuantity(1); // Reset interaction
                                         }}
-                                        className="w-8 h-8 flex items-center justify-center bg-[#D70018] text-white rounded-lg hover:bg-[#b5001a] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-8 h-8 flex items-center justify-center bg-accent text-white rounded-lg hover:bg-[#b5001a] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={product.stockQuantity === 0}
                                         title="Thêm vào giỏ hàng"
                                     >
@@ -411,7 +411,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300">
                         <Link
                             to={`/product/${product.id}`}
-                            className="bg-white/95 backdrop-blur text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-2xl border border-gray-100 hover:bg-[#D70018] hover:text-white transition-all transform hover:scale-110 active:scale-95"
+                            className="bg-white/95 backdrop-blur text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-2xl border border-gray-100 hover:bg-accent hover:text-white transition-all transform hover:scale-110 active:scale-95"
                         >
                             Xem nhanh
                         </Link>

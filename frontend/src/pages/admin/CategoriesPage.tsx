@@ -10,6 +10,7 @@ import 'react-tooltip/dist/react-tooltip.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogApi, type Category, type Brand } from '../../api/catalog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 export const CategoriesPage = () => {
@@ -25,6 +26,7 @@ export const CategoriesPage = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [selectAllChecked, setSelectAllChecked] = useState(false);
     const queryClient = useQueryClient();
+    const confirm = useConfirm();
 
     const hasActiveFilters = searchTerm || statusFilter !== 'all';
 
@@ -163,22 +165,24 @@ export const CategoriesPage = () => {
         setSelectAllChecked(allPageItemsSelected && paginatedItems.length > 0);
     };
 
-    const handleBulkDelete = () => {
+    const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
 
         const confirmMessage = `Bạn có chắc muốn vô hiệu hóa ${selectedIds.length} mục đã chọn? Hành động này không thể hoàn tác.`;
-        if (confirm(confirmMessage)) {
+        const ok = await confirm({ message: confirmMessage, variant: 'danger' });
+        if (ok) {
             selectedIds.forEach(id => deactivateMutation.mutate(id));
             setSelectedIds([]);
             setSelectAllChecked(false);
         }
     };
 
-    const handleToggleStatus = (item: Category | Brand) => {
+    const handleToggleStatus = async (item: Category | Brand) => {
         const action = item.isActive ? 'vô hiệu hóa' : 'kích hoạt';
         const warning = item.isActive ? ' Các sản phẩm liên quan cũng sẽ không hiển thị.' : '';
 
-        if (confirm(`Bạn có chắc muốn ${action} mục này?${warning}`)) {
+        const ok = await confirm({ message: `Bạn có chắc muốn ${action} mục này?${warning}`, variant: 'warning' });
+        if (ok) {
             if (item.isActive) {
                 deactivateMutation.mutate(item.id);
             } else {
@@ -224,13 +228,13 @@ export const CategoriesPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] pb-24">
+        <div className="min-h-screen bg-gray-50 pb-24">
             <div className="max-w-[1400px] mx-auto px-6 lg:px-10 pt-10 space-y-8">
                 {/* Modern Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                            <Box className="text-[#D70018]" size={32} />
+                            <Box className="text-accent" size={32} />
                             Quản lý Phân loại & Thương hiệu
                         </h1>
                         <p className="text-sm text-gray-500 font-medium">Tổ chức danh mục sản phẩm và các hãng sản xuất của bạn.</p>
@@ -239,7 +243,7 @@ export const CategoriesPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleOpenModal()}
-                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#D70018] text-white text-sm font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-[#B50014] transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all"
                     >
                         <PlusCircle size={20} />
                         Thêm {activeType === 'categories' ? 'Danh mục' : 'Thương hiệu'}
@@ -275,13 +279,13 @@ export const CategoriesPage = () => {
 
                         {/* Search */}
                         <div className="relative flex-1 group">
-                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={18} />
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={18} />
                             <input
                                 type="text"
                                 placeholder={`Tìm kiếm ${activeType === 'categories' ? 'danh mục' : 'thương hiệu'}...`}
                                 value={searchTerm}
                                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                                className="w-full pl-12 pr-10 py-4 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none"
+                                className="w-full pl-12 pr-10 py-4 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none"
                             />
                             {searchTerm && (
                                 <button
@@ -301,7 +305,7 @@ export const CategoriesPage = () => {
                                 onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
                                 className={`px-4 py-4 border rounded-xl text-sm font-semibold outline-none cursor-pointer transition-all ${
                                     statusFilter !== 'all'
-                                        ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]'
+                                        ? 'bg-accent/5 border-accent/20 text-accent'
                                         : 'bg-gray-50 border-transparent text-gray-700'
                                 }`}
                             >
@@ -314,7 +318,7 @@ export const CategoriesPage = () => {
                             {hasActiveFilters && (
                                 <button
                                     onClick={resetFilters}
-                                    className="flex items-center gap-2 px-4 py-4 text-sm font-semibold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-xl transition-all"
+                                    className="flex items-center gap-2 px-4 py-4 text-sm font-semibold text-gray-500 hover:text-accent hover:bg-red-50 rounded-xl transition-all"
                                 >
                                     <RotateCcw size={14} />
                                     Đặt lại
@@ -369,7 +373,7 @@ export const CategoriesPage = () => {
                                             type="checkbox"
                                             checked={selectAllChecked}
                                             onChange={handleSelectAll}
-                                            className="w-4 h-4 text-[#D70018] bg-gray-100 border-gray-300 rounded focus:ring-[#D70018] cursor-pointer"
+                                            className="w-4 h-4 text-accent bg-gray-100 border-gray-300 rounded focus:ring-accent cursor-pointer"
                                         />
                                     </div>
                                     <div className="col-span-1">STT</div>
@@ -394,7 +398,7 @@ export const CategoriesPage = () => {
                                                     type="checkbox"
                                                     checked={selectedIds.includes(item.id)}
                                                     onChange={(e) => handleSelectItem(item.id, e)}
-                                                    className="w-4 h-4 text-[#D70018] bg-gray-100 border-gray-300 rounded focus:ring-[#D70018] cursor-pointer"
+                                                    className="w-4 h-4 text-accent bg-gray-100 border-gray-300 rounded focus:ring-accent cursor-pointer"
                                                 />
                                             </div>
 
@@ -412,7 +416,7 @@ export const CategoriesPage = () => {
                                                     }
                                                 </div>
                                                 <Tooltip content={item.name} place="right" delayShow={300}>
-                                                    <span className="text-gray-900 hover:text-[#D70018] cursor-help">
+                                                    <span className="text-gray-900 hover:text-accent cursor-help">
                                                         {item.name.length > 40 ? item.name.substring(0, 40) + '...' : item.name}
                                                     </span>
                                                 </Tooltip>
@@ -453,7 +457,7 @@ export const CategoriesPage = () => {
                                                 <Tooltip content="Chỉnh sửa" place="top" delayShow={300}>
                                                     <button
                                                         onClick={() => handleOpenModal(item)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-400 hover:bg-[#D70018] hover:text-white transition-all"
+                                                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-400 hover:bg-accent hover:text-white transition-all"
                                                     >
                                                         <Edit size={14} />
                                                     </button>
@@ -516,7 +520,7 @@ export const CategoriesPage = () => {
                                                         onClick={() => setCurrentPage(pageNum)}
                                                         className={`w-10 h-10 rounded-lg font-bold transition-all ${
                                                             currentPage === pageNum
-                                                                ? 'bg-[#D70018] text-white shadow-lg'
+                                                                ? 'bg-accent text-white shadow-lg'
                                                                 : 'text-gray-600 hover:bg-gray-100'
                                                         }`}
                                                     >
@@ -578,7 +582,7 @@ export const CategoriesPage = () => {
                                         required
                                         defaultValue={editingItem?.name}
                                         placeholder={`Ví dụ: ${activeType === 'categories' ? 'Laptop Gaming' : 'ASUS'}`}
-                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-base font-semibold focus:ring-2 focus:ring-[#D70018]/10 outline-none"
+                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none"
                                     />
                                 </div>
 
@@ -589,7 +593,7 @@ export const CategoriesPage = () => {
                                         defaultValue={editingItem?.description}
                                         rows={4}
                                         placeholder="Mô tả tóm tắt..."
-                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-[#D70018]/10"
+                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10"
                                     />
                                 </div>
 
@@ -610,7 +614,7 @@ export const CategoriesPage = () => {
 
                                 {editingItem && (
                                     <div className="flex items-start gap-4 p-5 bg-red-50 rounded-2xl border border-red-100">
-                                        <AlertCircle className="text-[#D70018] flex-shrink-0" size={20} />
+                                        <AlertCircle className="text-accent flex-shrink-0" size={20} />
                                         <p className="text-[11px] text-red-900 font-medium leading-relaxed">
                                             Lưu ý: Nếu thay đổi trạng thái thành "Tạm dừng", toàn bộ sản phẩm thuộc mục này sẽ không được liệt kê trên website cho đến khi được kích hoạt lại.
                                         </p>
@@ -622,7 +626,7 @@ export const CategoriesPage = () => {
                                     <button
                                         type="submit"
                                         disabled={createMutation.isPending || updateMutation.isPending}
-                                        className="flex-[2] py-4 bg-[#D70018] text-white text-sm font-bold rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
+                                        className="flex-[2] py-4 bg-accent text-white text-sm font-bold rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {createMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                                     </button>

@@ -42,20 +42,20 @@ export const ProfilePage = () => {
 
     if (isLoading) return (
         <div className="flex justify-center items-center min-h-[60vh]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D70018]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
         </div>
     );
 
     return (
         <div className="container mx-auto px-4 py-12 font-sans">
-            <h1 className="text-3xl font-black text-gray-900 mb-8 border-b border-gray-100 pb-4 uppercase italic tracking-tighter">Tài khoản <span className="text-[#D70018]">của tôi</span></h1>
+            <h1 className="text-3xl font-black text-gray-900 mb-8 border-b border-gray-100 pb-4 uppercase italic tracking-tighter">Tài khoản <span className="text-accent">của tôi</span></h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Sidebar */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-3xl p-6 border border-gray-100 sticky top-24 shadow-xl shadow-gray-200/50">
                         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-50">
-                            <div className="w-12 h-12 bg-[#D70018] rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg shadow-red-500/20">
+                            <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg shadow-red-500/20">
                                 KH
                             </div>
                             <div>
@@ -64,7 +64,7 @@ export const ProfilePage = () => {
                             </div>
                         </div>
                         <nav className="space-y-2">
-                            <Link to="/account/orders" className="w-full text-left px-4 py-3 bg-red-50 text-[#D70018] rounded-xl font-black text-[10px] border border-red-100 flex items-center gap-3 uppercase tracking-widest">
+                            <Link to="/account/orders" className="w-full text-left px-4 py-3 bg-red-50 text-accent rounded-xl font-black text-[10px] border border-red-100 flex items-center gap-3 uppercase tracking-widest">
                                 <Package size={16} /> Lịch sử đơn hàng
                             </Link>
                             <Link to="/account/loyalty" className="w-full text-left px-4 py-3 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition text-[10px] font-black flex items-center gap-3 uppercase tracking-widest">
@@ -87,12 +87,12 @@ export const ProfilePage = () => {
                 {/* Main Content */}
                 <div className="lg:col-span-3">
                     <h2 className="text-xl font-black text-gray-900 mb-6 uppercase italic flex items-center gap-2 tracking-tighter">
-                        <Package className="text-[#D70018]" />
+                        <Package className="text-accent" />
                         Lịch sử mua hàng
                     </h2>
 
                     {error ? (
-                        <div className="flex items-center gap-3 bg-red-50 border border-red-100 p-6 rounded-3xl text-[#D70018] font-bold text-sm">
+                        <div className="flex items-center gap-3 bg-red-50 border border-red-100 p-6 rounded-3xl text-accent font-bold text-sm">
                             <AlertCircle className="w-5 h-5" />
                             {error}
                         </div>
@@ -105,10 +105,10 @@ export const ProfilePage = () => {
                     ) : (
                         <div className="space-y-6">
                             {orders.map((order) => (
-                                <div key={order.id} className="bg-white border border-gray-100 rounded-3xl p-8 overflow-hidden hover:border-[#D70018]/30 transition-all group relative shadow-lg shadow-gray-200/20">
+                                <div key={order.id} className="bg-white border border-gray-100 rounded-3xl p-8 overflow-hidden hover:border-accent/30 transition-all group relative shadow-lg shadow-gray-200/20">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-gray-50 pb-6">
                                         <div className="flex items-center gap-5">
-                                            <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-red-50 transition-colors text-gray-400 group-hover:text-[#D70018]">
+                                            <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-red-50 transition-colors text-gray-400 group-hover:text-accent">
                                                 <Hash className="w-6 h-6" />
                                             </div>
                                             <div>
@@ -143,7 +143,7 @@ export const ProfilePage = () => {
                                             <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-3 italic">
                                                 <DollarSign className="w-3 h-3" /> Tổng thanh toán
                                             </div>
-                                            <p className="text-[#D70018] text-3xl font-black tracking-tighter">{formatCurrency(order.totalAmount)}</p>
+                                            <p className="text-accent text-3xl font-black tracking-tighter">{formatCurrency(order.totalAmount)}</p>
                                         </div>
                                     </div>
 

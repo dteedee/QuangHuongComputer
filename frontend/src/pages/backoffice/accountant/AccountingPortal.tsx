@@ -89,7 +89,7 @@ export const AccountingPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
-                        Kế toán & <span className="text-[#D70018]">Tài chính</span>
+                        Kế toán & <span className="text-accent">Tài chính</span>
                     </h1>
                     <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
                         Quản lý hóa đơn, công nợ và báo cáo tài chính
@@ -112,7 +112,7 @@ export const AccountingPortal = () => {
                                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950'
                                 }`}
                             >
-                                <span className={`${isActive ? 'text-[#D70018]' : 'text-gray-400 group-hover:text-[#D70018]'} transition-colors`}>
+                                <span className={`${isActive ? 'text-accent' : 'text-gray-400 group-hover:text-accent'} transition-colors`}>
                                     {tab.icon}
                                 </span>
                                 <div>
@@ -121,7 +121,7 @@ export const AccountingPortal = () => {
                                         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{tab.description}</p>
                                     )}
                                 </div>
-                                {isActive && <ArrowRight size={14} className="text-[#D70018] ml-2" />}
+                                {isActive && <ArrowRight size={14} className="text-accent ml-2" />}
                             </Link>
                         );
                     })}
@@ -132,7 +132,7 @@ export const AccountingPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-red-50 text-[#D70018] rounded-2xl">
+                        <div className="p-3 bg-red-50 text-accent rounded-2xl">
                             <DollarSign size={24} />
                         </div>
                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Công nợ</span>
@@ -200,7 +200,7 @@ export const AccountingPortal = () => {
                             <div className="flex-1">
                                 <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{action.label}</span>
                             </div>
-                            <ArrowRight size={16} className="text-gray-300 group-hover:text-[#D70018] group-hover:translate-x-1 transition-all" />
+                            <ArrowRight size={16} className="text-gray-300 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                         </Link>
                     ))}
                 </div>
@@ -253,7 +253,7 @@ export const AccountingPortal = () => {
                                 invoices.map((invoice: Invoice) => (
                                     <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="px-8 py-6">
-                                            <span className="font-black text-[#D70018] font-mono">
+                                            <span className="font-black text-accent font-mono">
                                                 {invoice.invoiceNumber}
                                             </span>
                                         </td>
@@ -282,7 +282,7 @@ export const AccountingPortal = () => {
                                         <td className="px-8 py-6 text-right">
                                             <button
                                                 onClick={() => viewInvoiceHTML(invoice.id)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-[#D70018] hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
                                             >
                                                 <Eye size={18} />
                                             </button>

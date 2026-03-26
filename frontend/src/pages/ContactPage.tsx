@@ -134,7 +134,7 @@ export const ContactPage = () => {
                 <SEO title="Liên hệ" description={`Liên hệ với ${companyName}`} />
                 <div className="bg-white py-3 border-b border-gray-200">
                     <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                        <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                        <Link to="/" className="hover:text-accent">Trang chủ</Link>
                         <span>/</span>
                         <span className="text-gray-900 font-medium">Liên hệ</span>
                     </div>
@@ -158,7 +158,7 @@ export const ContactPage = () => {
                             </Link>
                             <button
                                 onClick={() => setSubmitSuccess(false)}
-                                className="px-6 py-3 bg-[#D70018] text-white font-bold rounded-xl hover:bg-[#b50014] transition"
+                                className="px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition"
                             >
                                 Gửi liên hệ khác
                             </button>
@@ -177,7 +177,7 @@ export const ContactPage = () => {
             />
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <span>/</span>
                     <span className="text-gray-900 font-medium">Liên hệ</span>
                 </div>
@@ -185,35 +185,35 @@ export const ContactPage = () => {
 
             <div className="container mx-auto px-4 mt-8 font-sans">
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 p-8 md:p-16 border border-gray-50">
-                    <h1 className="text-4xl font-black text-gray-900 mb-12 text-center uppercase italic tracking-tighter">Liên hệ với <span className="text-[#D70018]">Quang Hưởng</span></h1>
+                    <h1 className="text-4xl font-black text-gray-900 mb-12 text-center uppercase italic tracking-tighter">Liên hệ với <span className="text-accent">Quang Hưởng</span></h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-10">
-                            <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter border-l-4 border-[#D70018] pl-4">Thông tin hệ thống</h3>
+                            <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter border-l-4 border-accent pl-4">Thông tin hệ thống</h3>
                             <div className="space-y-4">
                                 <div className="flex items-start gap-5 group">
-                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><MapPin /></div>
+                                    <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><MapPin /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Trụ sở chính:</b>
                                         <p className="text-gray-900 font-bold">{address}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
-                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Phone /></div>
+                                    <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Phone /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Tổng đài hỗ trợ:</b>
-                                        <p className="text-[#D70018] font-black text-2xl tracking-tighter">{phone}</p>
+                                        <p className="text-accent font-black text-2xl tracking-tighter">{phone}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
-                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Mail /></div>
+                                    <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Mail /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Email phản hồi:</b>
                                         <p className="text-gray-900 font-bold">{email}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
-                                    <div className="bg-red-50 p-4 rounded-2xl text-[#D70018] group-hover:bg-[#D70018] group-hover:text-white transition-all shadow-sm"><Clock /></div>
+                                    <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Clock /></div>
                                     <div>
                                         <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Thời gian phục vụ:</b>
                                         <p className="text-gray-900 font-bold">{workingHours}</p>
@@ -224,7 +224,7 @@ export const ContactPage = () => {
 
                         {/* Form */}
                         <div className="bg-gray-50/50 p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-inner">
-                            <h3 className="text-2xl font-black text-gray-900 mb-8 uppercase italic tracking-tighter">Gửi tin nhắn <span className="text-[#D70018]">tư vấn</span></h3>
+                            <h3 className="text-2xl font-black text-gray-900 mb-8 uppercase italic tracking-tighter">Gửi tin nhắn <span className="text-accent">tư vấn</span></h3>
 
                             {submitError && (
                                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
@@ -241,7 +241,7 @@ export const ContactPage = () => {
                                             name="fullName"
                                             value={formData.fullName}
                                             onChange={handleInputChange}
-                                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-red-500/5 ${errors.fullName ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'}`}
+                                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-accent/5 ${errors.fullName ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
                                             placeholder="Nguyễn Văn A"
                                         />
                                         {errors.fullName && <p className="text-red-500 text-xs mt-1 px-1">{errors.fullName}</p>}
@@ -253,7 +253,7 @@ export const ContactPage = () => {
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleInputChange}
-                                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-red-500/5 ${errors.phone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'}`}
+                                            className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-accent/5 ${errors.phone ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
                                             placeholder="09xxx..."
                                         />
                                         {errors.phone && <p className="text-red-500 text-xs mt-1 px-1">{errors.phone}</p>}
@@ -266,7 +266,7 @@ export const ContactPage = () => {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-red-500/5 ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'}`}
+                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-accent/5 ${errors.email ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
                                         placeholder="email@example.com"
                                     />
                                     {errors.email && <p className="text-red-500 text-xs mt-1 px-1">{errors.email}</p>}
@@ -277,7 +277,7 @@ export const ContactPage = () => {
                                         name="subject"
                                         value={formData.subject}
                                         onChange={handleInputChange}
-                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-red-500/5 ${errors.subject ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'}`}
+                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-accent/5 ${errors.subject ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
                                     >
                                         <option value="">-- Chọn chủ đề --</option>
                                         <option value="Tư vấn mua hàng">Tư vấn mua hàng</option>
@@ -295,7 +295,7 @@ export const ContactPage = () => {
                                         name="message"
                                         value={formData.message}
                                         onChange={handleInputChange}
-                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold h-32 outline-none transition-all focus:ring-4 focus:ring-red-500/5 resize-none ${errors.message ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#D70018]'}`}
+                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold h-32 outline-none transition-all focus:ring-4 focus:ring-accent/5 resize-none ${errors.message ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
                                         placeholder="Nội dung cần tư vấn..."
                                     />
                                     {errors.message && <p className="text-red-500 text-xs mt-1 px-1">{errors.message}</p>}
@@ -303,7 +303,7 @@ export const ContactPage = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full bg-[#D70018] hover:bg-[#b50014] text-white font-black py-5 rounded-xl transition-all uppercase shadow-xl shadow-red-500/20 active:scale-95 tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="w-full bg-accent hover:bg-accent-hover text-white font-black py-5 rounded-xl transition-all uppercase shadow-xl shadow-red-500/20 active:scale-95 tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? (
                                         <>

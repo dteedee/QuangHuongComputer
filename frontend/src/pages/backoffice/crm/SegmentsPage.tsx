@@ -4,6 +4,7 @@ import {
   Target, Plus, Edit, Trash2, Users, Play, X
 } from 'lucide-react';
 import { crmApi, type Segment, type CreateSegmentDto } from '../../../api/crm';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function SegmentsPage() {
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -11,6 +12,7 @@ export default function SegmentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingSegment, setEditingSegment] = useState<Segment | null>(null);
   const [runningAutoAssign, setRunningAutoAssign] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadSegments();
@@ -29,7 +31,8 @@ export default function SegmentsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa segment này?')) return;
+    const ok = await confirm({ message: 'Bạn có chắc muốn xóa segment này?', variant: 'danger' });
+    if (!ok) return;
     try {
       await crmApi.segments.delete(id);
       loadSegments();
@@ -54,7 +57,7 @@ export default function SegmentsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
       </div>
     );
   }
@@ -81,7 +84,7 @@ export default function SegmentsPage() {
               setEditingSegment(null);
               setShowModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover"
           >
             <Plus size={18} />
             <span>Thêm Phân nhóm</span>
@@ -255,7 +258,7 @@ function SegmentModal({
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -269,7 +272,7 @@ function SegmentModal({
               disabled={!!segment}
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 disabled:bg-gray-50"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent disabled:bg-gray-50"
             />
           </div>
 
@@ -281,7 +284,7 @@ function SegmentModal({
               rows={3}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
             />
           </div>
 
@@ -306,7 +309,7 @@ function SegmentModal({
                 type="number"
                 value={form.sortOrder}
                 onChange={(e) => setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
@@ -322,7 +325,7 @@ function SegmentModal({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50"
             >
               {loading ? 'Đang lưu...' : 'Lưu'}
             </button>

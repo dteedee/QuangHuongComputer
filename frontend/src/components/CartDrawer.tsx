@@ -45,7 +45,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-white">
                     <div className="flex items-center gap-3">
-                        <ShoppingBag className="text-[#D70018]" />
+                        <ShoppingBag className="text-accent" />
                         <h2 className="text-xl font-bold text-gray-900">Giỏ hàng ({items.length})</h2>
                     </div>
                     <button
@@ -69,7 +69,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                             </div>
                             <button
                                 onClick={onClose}
-                                className="mt-4 px-6 py-2.5 bg-[#D70018] text-white rounded-lg font-bold text-sm shadow-lg shadow-red-500/30 hover:bg-[#b50014] transition-all hover:-translate-y-0.5"
+                                className="mt-4 px-6 py-2.5 bg-accent text-white rounded-lg font-bold text-sm shadow-lg shadow-red-500/30 hover:bg-accent-hover transition-all hover:-translate-y-0.5"
                             >
                                 Tiếp tục mua sắm
                             </button>
@@ -90,11 +90,11 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                     {/* Content */}
                                     <div className="flex-1 flex flex-col justify-between">
                                         <div>
-                                            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-tight mb-1 group-hover:text-[#D70018] transition-colors">
+                                            <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-tight mb-1 group-hover:text-accent transition-colors">
                                                 {item.name}
                                             </h3>
                                             <div className="flex items-center gap-2">
-                                                <p className="text-[#D70018] font-bold text-sm">{formatCurrency(item.price)}</p>
+                                                <p className="text-accent font-bold text-sm">{formatCurrency(item.price)}</p>
                                                 {item.oldPrice && item.oldPrice > item.price && (
                                                     <p className="text-gray-400 text-xs line-through">{formatCurrency(item.oldPrice)}</p>
                                                 )}
@@ -106,7 +106,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                             <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-[#D70018] disabled:opacity-50 transition-colors"
+                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-accent disabled:opacity-50 transition-colors"
                                                     disabled={item.quantity <= 1}
                                                 >
                                                     <Minus size={12} />
@@ -114,7 +114,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                                 <span className="w-8 text-center text-xs font-bold text-gray-700">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-[#D70018] transition-colors"
+                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-accent transition-colors"
                                                 >
                                                     <Plus size={12} />
                                                 </button>
@@ -147,7 +147,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                             <div className="border-t border-gray-200 my-2 pt-2 flex justify-between items-end">
                                 <span className="text-gray-900 font-bold">Tổng tiền</span>
                                 <div className="text-right">
-                                    <span className="block text-xl font-black text-[#D70018]">{formatCurrency(total)}</span>
+                                    <span className="block text-xl font-black text-accent">{formatCurrency(total)}</span>
                                     <span className="text-[10px] text-gray-500 font-normal">(Đã bao gồm VAT)</span>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                             </button>
                             <button
                                 onClick={handleCheckout}
-                                className="py-3 px-4 bg-[#D70018] text-white font-bold rounded-xl hover:bg-[#b50014] transition-all shadow-lg shadow-red-500/20 text-sm flex items-center justify-center gap-2"
+                                className="py-3 px-4 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition-all shadow-lg shadow-red-500/20 text-sm flex items-center justify-center gap-2"
                             >
                                 Thanh toán <ArrowRight size={16} />
                             </button>

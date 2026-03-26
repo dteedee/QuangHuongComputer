@@ -12,7 +12,7 @@ export const AboutPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-[#D70018]">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
                     <ChevronRight size={14} />
                     <span className="text-gray-900 font-medium">Giới thiệu</span>
                 </div>
@@ -21,7 +21,7 @@ export const AboutPage = () => {
             <div className="container mx-auto px-4 mt-8">
                 <div className="bg-white p-10 md:p-16 rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
                     <div className="flex items-center gap-5 mb-10 border-b border-gray-100 pb-8">
-                        <div className="p-5 bg-red-50 text-[#D70018] rounded-2xl shadow-inner">
+                        <div className="p-5 bg-red-50 text-accent rounded-2xl shadow-inner">
                             <Building2 size={40} />
                         </div>
                         <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">
@@ -32,7 +32,7 @@ export const AboutPage = () => {
                     <div className="space-y-8 text-gray-700">
                         <section>
                             <p className="text-lg leading-relaxed">
-                                <strong className="text-2xl text-[#D70018]">Quang Hưởng Computer</strong> là một trong những
+                                <strong className="text-2xl text-accent">Quang Hưởng Computer</strong> là một trong những
                                 đơn vị hàng đầu tại Việt Nam chuyên cung cấp các giải pháp máy tính, linh kiện và dịch vụ
                                 sửa chữa bảo hành chuyên nghiệp. Với hơn 10 năm kinh nghiệm trong ngành, chúng tôi tự hào
                                 là đối tác tin cậy của hàng ngàn khách hàng cá nhân và doanh nghiệp.
@@ -42,7 +42,7 @@ export const AboutPage = () => {
                         <section className="grid md:grid-cols-2 gap-6 my-8">
                             <div className="bg-gradient-to-br from-red-50 to-white p-6 rounded-2xl border border-red-100">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 bg-[#D70018] rounded-lg">
+                                    <div className="p-3 bg-accent rounded-lg">
                                         <Target className="text-white" size={24} />
                                     </div>
                                     <h2 className="text-xl font-bold text-gray-900">Sứ mệnh</h2>
@@ -69,12 +69,12 @@ export const AboutPage = () => {
 
                         <section>
                             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Award className="text-[#D70018]" size={28} />
+                                <Award className="text-accent" size={28} />
                                 Giá trị cốt lõi
                             </h2>
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-[#D70018] text-white rounded-full flex items-center justify-center font-bold">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
                                         1
                                     </div>
                                     <div>
@@ -83,7 +83,7 @@ export const AboutPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-[#D70018] text-white rounded-full flex items-center justify-center font-bold">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
                                         2
                                     </div>
                                     <div>
@@ -92,7 +92,7 @@ export const AboutPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-[#D70018] text-white rounded-full flex items-center justify-center font-bold">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
                                         3
                                     </div>
                                     <div>
@@ -101,7 +101,7 @@ export const AboutPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-[#D70018] text-white rounded-full flex items-center justify-center font-bold">
+                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
                                         4
                                     </div>
                                     <div>
@@ -114,7 +114,7 @@ export const AboutPage = () => {
 
                         <section>
                             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Users className="text-[#D70018]" size={28} />
+                                <Users className="text-accent" size={28} />
                                 Đội ngũ của chúng tôi
                             </h2>
                             <p className="mb-4">
@@ -180,7 +180,7 @@ export const AboutPage = () => {
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Hotline:</p>
-                                        <p className="text-[#D70018] font-bold">1800.6321</p>
+                                        <p className="text-accent font-bold">1800.6321</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Email:</p>
@@ -194,7 +194,7 @@ export const AboutPage = () => {
                             </div>
                         </section>
 
-                        <div className="bg-gradient-to-r from-[#D70018] to-red-600 text-white p-8 rounded-2xl mt-8">
+                        <div className="bg-gradient-to-r from-accent to-red-600 text-white p-8 rounded-2xl mt-8">
                             <h2 className="text-2xl font-bold mb-4">Cam kết của chúng tôi</h2>
                             <div className="grid md:grid-cols-2 gap-4 text-sm">
                                 <div className="flex gap-2">
@@ -219,8 +219,8 @@ export const AboutPage = () => {
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-8">
                             <p className="text-sm">
                                 <strong>Liên hệ với chúng tôi:</strong> Để biết thêm thông tin về sản phẩm và dịch vụ,
-                                vui lòng <Link to="/contact" className="text-[#D70018] font-bold">liên hệ tại đây</Link> hoặc
-                                gọi hotline <a href="tel:18006321" className="text-[#D70018] font-bold">1800.6321</a>
+                                vui lòng <Link to="/contact" className="text-accent font-bold">liên hệ tại đây</Link> hoặc
+                                gọi hotline <a href="tel:18006321" className="text-accent font-bold">1800.6321</a>
                             </p>
                         </div>
                     </div>

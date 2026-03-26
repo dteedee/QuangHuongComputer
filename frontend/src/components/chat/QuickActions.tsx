@@ -54,7 +54,7 @@ export const QuickActions = memo(({
           onClick={() => onActionClick(action.message)}
           className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg text-sm text-gray-700 hover:text-gray-900 transition-all hover:scale-[1.02]"
         >
-          <div className="text-[#D70018]">{action.icon}</div>
+          <div className="text-accent">{action.icon}</div>
           <span className="text-xs font-medium">{action.label}</span>
         </button>
       ))}

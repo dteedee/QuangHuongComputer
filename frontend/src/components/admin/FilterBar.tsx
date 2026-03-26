@@ -68,13 +68,13 @@ const SearchInput = ({
 
     return (
         <div className="relative flex-1 min-w-[200px] group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={18} />
             <input
                 type="text"
                 placeholder={config.placeholder || 'Tìm kiếm...'}
                 value={localValue}
                 onChange={(e) => setLocalValue(e.target.value)}
-                className="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 focus:border-[#D70018]/20 transition-all outline-none placeholder:text-gray-400"
+                className="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-accent/10 focus:border-accent/20 transition-all outline-none placeholder:text-gray-400"
             />
             {localValue && (
                 <button
@@ -125,7 +125,7 @@ const SelectDropdown = ({
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
                     hasValue
-                        ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]'
+                        ? 'bg-accent/5 border-accent/20 text-accent'
                         : 'bg-white border-gray-100 text-gray-700 hover:border-gray-200'
                 }`}
             >
@@ -152,7 +152,7 @@ const SelectDropdown = ({
                                 }}
                                 className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
                                     value === option.value
-                                        ? 'bg-[#D70018]/5 text-[#D70018]'
+                                        ? 'bg-accent/5 text-accent'
                                         : 'text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
@@ -198,7 +198,7 @@ const DateRangeInput = ({
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
                     hasValue
-                        ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]'
+                        ? 'bg-accent/5 border-accent/20 text-accent'
                         : 'bg-white border-gray-100 text-gray-700 hover:border-gray-200'
                 }`}
             >
@@ -228,7 +228,7 @@ const DateRangeInput = ({
                                     type="date"
                                     value={value?.from || ''}
                                     onChange={(e) => onChange({ ...value, from: e.target.value })}
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-[#D70018]/30"
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-accent/30"
                                 />
                             </div>
                             <div>
@@ -237,7 +237,7 @@ const DateRangeInput = ({
                                     type="date"
                                     value={value?.to || ''}
                                     onChange={(e) => onChange({ ...value, to: e.target.value })}
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-[#D70018]/30"
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-accent/30"
                                 />
                             </div>
                             <div className="flex gap-2 pt-2">
@@ -249,7 +249,7 @@ const DateRangeInput = ({
                                 </button>
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="flex-1 py-2 text-xs font-bold text-white bg-[#D70018] rounded-lg hover:bg-[#b50014] transition-colors"
+                                    className="flex-1 py-2 text-xs font-bold text-white bg-accent rounded-lg hover:bg-accent-hover transition-colors"
                                 >
                                     Áp dụng
                                 </button>
@@ -302,7 +302,7 @@ const PriceRangeInput = ({
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm font-semibold transition-all min-w-[120px] ${
                     hasValue
-                        ? 'bg-[#D70018]/5 border-[#D70018]/20 text-[#D70018]'
+                        ? 'bg-accent/5 border-accent/20 text-accent'
                         : 'bg-white border-gray-100 text-gray-700 hover:border-gray-200'
                 }`}
             >
@@ -344,7 +344,7 @@ const PriceRangeInput = ({
                                         placeholder="Từ"
                                         value={value?.min || ''}
                                         onChange={(e) => onChange({ ...value, min: e.target.value })}
-                                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-[#D70018]/30"
+                                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-accent/30"
                                     />
                                     <span className="text-gray-400">-</span>
                                     <input
@@ -352,7 +352,7 @@ const PriceRangeInput = ({
                                         placeholder="Đến"
                                         value={value?.max || ''}
                                         onChange={(e) => onChange({ ...value, max: e.target.value })}
-                                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-[#D70018]/30"
+                                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-medium focus:outline-none focus:border-accent/30"
                                     />
                                 </div>
                             </div>
@@ -366,7 +366,7 @@ const PriceRangeInput = ({
                                 </button>
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="flex-1 py-2 text-xs font-bold text-white bg-[#D70018] rounded-lg hover:bg-[#b50014] transition-colors"
+                                    className="flex-1 py-2 text-xs font-bold text-white bg-accent rounded-lg hover:bg-accent-hover transition-colors"
                                 >
                                     Áp dụng
                                 </button>
@@ -490,7 +490,7 @@ export const FilterBar = ({
                     <Filter size={18} />
                     Bộ lọc
                     {hasActiveFilters && (
-                        <span className="w-2 h-2 bg-[#D70018] rounded-full" />
+                        <span className="w-2 h-2 bg-accent rounded-full" />
                     )}
                 </span>
                 <ChevronDown size={18} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -516,7 +516,7 @@ export const FilterBar = ({
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     onClick={onReset}
-                                    className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-xl transition-colors"
+                                    className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-500 hover:text-accent hover:bg-red-50 rounded-xl transition-colors"
                                 >
                                     <RotateCcw size={16} />
                                     Đặt lại

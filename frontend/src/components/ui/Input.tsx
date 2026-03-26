@@ -37,7 +37,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             htmlFor={inputId}
             className={cn(
               "block text-[11px] font-black uppercase tracking-widest px-1 transition-colors duration-200",
-              isFocused ? 'text-[#D70018]' : 'text-gray-400',
+              isFocused ? 'text-accent' : 'text-gray-400',
               hasError && 'text-red-500'
             )}
           >
@@ -48,7 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative group">
           {/* Animated border glow on focus */}
           <div className={cn(
-            "absolute -inset-0.5 rounded-xl bg-gradient-to-r from-[#D70018] to-[#ff4d6d] opacity-0 blur transition-all duration-300",
+            "absolute -inset-0.5 rounded-xl bg-gradient-to-r from-accent to-[#ff4d6d] opacity-0 blur transition-all duration-300",
             isFocused && !hasError && "opacity-30",
             hasError && "opacity-30 from-red-500 to-red-400"
           )} />
@@ -58,7 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               <Icon
                 className={cn(
                   'absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-200',
-                  hasError ? 'text-red-500' : isFocused ? 'text-[#D70018] scale-110' : 'text-gray-300',
+                  hasError ? 'text-red-500' : isFocused ? 'text-accent scale-110' : 'text-gray-300',
                 )}
                 size={20}
               />
@@ -74,8 +74,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 'text-gray-900 placeholder:text-gray-400 placeholder:transition-opacity placeholder:duration-200',
                 'focus:placeholder:opacity-50',
                 hasError
-                  ? 'border-red-400 focus:border-red-500 bg-red-50/50'
-                  : 'border-gray-200 focus:border-[#D70018] hover:border-gray-300',
+                  ? 'border-red-400 focus:border-accent bg-red-50/50'
+                  : 'border-gray-200 focus:border-accent hover:border-gray-300',
                 Icon && iconPosition === 'left' && 'pl-12',
                 (Icon && iconPosition === 'right') || suffix ? 'pr-12' : '',
                 className
@@ -95,7 +95,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               <Icon
                 className={cn(
                   'absolute right-4 top-1/2 -translate-y-1/2 transition-all duration-200',
-                  hasError ? 'text-red-500' : isFocused ? 'text-[#D70018]' : 'text-gray-300'
+                  hasError ? 'text-red-500' : isFocused ? 'text-accent' : 'text-gray-300'
                 )}
                 size={20}
               />

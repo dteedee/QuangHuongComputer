@@ -160,7 +160,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
           <h1 className="text-5xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-3">
-            Trung tâm <span className="text-[#D70018]">Quản trị</span>
+            Trung tâm <span className="text-accent">Quản trị</span>
           </h1>
           <div className="flex items-center gap-4">
             <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic leading-none">
-                Xu hướng <span className="text-[#D70018]">Tăng trưởng</span>
+                Xu hướng <span className="text-accent">Tăng trưởng</span>
               </h2>
               <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-2">
                 Doanh thu 12 tháng gần nhất
@@ -312,8 +312,8 @@ export default function AdminDashboard() {
                 <AreaChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#D70018" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#D70018" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
                   <Area
                     type="monotone"
                     dataKey="Doanh thu"
-                    stroke="#D70018"
+                    stroke="var(--accent-primary)"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorRevenue)"
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
         {/* Order Status Pie */}
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
           <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-6">
-            Phân bổ <span className="text-[#D70018]">Đơn hàng</span>
+            Phân bổ <span className="text-accent">Đơn hàng</span>
           </h2>
           <div className="flex-1 min-h-[250px]">
             {loading ? (
@@ -397,7 +397,7 @@ export default function AdminDashboard() {
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
           <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gray-50">
             <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none flex items-center gap-3">
-              <Sparkles size={24} className="text-amber-500" /> TOP <span className="text-[#D70018]">Sản phẩm</span>
+              <Sparkles size={24} className="text-amber-500" /> TOP <span className="text-accent">Sản phẩm</span>
             </h2>
           </div>
           {loading ? (
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
                   <XAxis type="number" tickFormatter={(v) => formatCompact(v)} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
                   <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 10, fontWeight: 900, fill: '#1f2937' }} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="Doanh thu" fill="#D70018" radius={[0, 8, 8, 0]} animationDuration={1000} />
+                  <Bar dataKey="Doanh thu" fill="var(--accent-primary)" radius={[0, 8, 8, 0]} animationDuration={1000} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -432,11 +432,11 @@ export default function AdminDashboard() {
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
           <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gray-50">
             <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none flex items-center gap-3">
-              <AlertTriangle size={24} className="text-amber-500" /> Cảnh báo <span className="text-[#D70018]">Tồn kho</span>
+              <AlertTriangle size={24} className="text-amber-500" /> Cảnh báo <span className="text-accent">Tồn kho</span>
             </h2>
             <Link
               to="/backoffice/inventory"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#D70018] transition-colors flex items-center gap-1"
+              className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-accent transition-colors flex items-center gap-1"
             >
               Xem tất cả <ChevronRight size={14} />
             </Link>
@@ -450,13 +450,13 @@ export default function AdminDashboard() {
               {inventoryData.lowStockItems.map((item, index) => (
                 <div key={item.productId} className="flex items-center gap-5 group cursor-pointer transition-all hover:translate-x-2 p-3 rounded-xl hover:bg-red-50/50">
                   <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-sm italic ${item.quantityOnHand === 0
-                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                    ? 'bg-accent text-white shadow-lg shadow-red-500/30'
                     : 'bg-amber-100 text-amber-700'
                     }`}>
                     {item.quantityOnHand}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-black text-gray-950 text-sm italic uppercase tracking-tight truncate leading-none group-hover:text-[#D70018] transition-colors">
+                    <h4 className="font-black text-gray-950 text-sm italic uppercase tracking-tight truncate leading-none group-hover:text-accent transition-colors">
                       {item.productName}
                     </h4>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">
@@ -495,7 +495,7 @@ export default function AdminDashboard() {
       {techData && (
         <div className="premium-card p-10 border-2 bg-white">
           <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-8 flex items-center gap-3">
-            <Wrench size={24} className="text-blue-600" /> Hiệu suất <span className="text-[#D70018]">Kỹ thuật</span>
+            <Wrench size={24} className="text-blue-600" /> Hiệu suất <span className="text-accent">Kỹ thuật</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center p-6 rounded-2xl bg-gray-50 border-2 border-gray-100">
@@ -521,14 +521,14 @@ export default function AdminDashboard() {
       {/* ========== Quick Actions Portal ========== */}
       <div className="mt-16">
         <h2 className="text-2xl font-black text-gray-950 mb-8 uppercase italic tracking-tighter">
-          Cổng tác vụ <span className="text-[#D70018]">Ưu tiên</span>
+          Cổng tác vụ <span className="text-accent">Ưu tiên</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
             { to: '/backoffice/products', icon: <Package size={32} />, title: 'Xuất bản Sản phẩm', desc: 'Thiết lập danh mục mới', color: 'text-blue-600', hover: 'hover:border-blue-200 hover:shadow-blue-500/10' },
             { to: '/backoffice/orders', icon: <ShoppingCart size={32} />, title: 'Kiểm soát Đơn hàng', desc: 'Xử lý luồng vận hành', color: 'text-emerald-600', hover: 'hover:border-emerald-200 hover:shadow-emerald-500/10' },
             { to: '/backoffice/users', icon: <Users size={32} />, title: 'Quản trị Hội viên', desc: 'Phát triển tệp khách hàng', color: 'text-purple-600', hover: 'hover:border-purple-200 hover:shadow-purple-500/10' },
-            { to: '/backoffice/reports', icon: <BarChart3 size={32} />, title: 'Trích xuất Dữ liệu', desc: 'Tổng kết doanh thu', color: 'text-[#D70018]', hover: 'hover:border-red-200 hover:shadow-red-500/10' },
+            { to: '/backoffice/reports', icon: <BarChart3 size={32} />, title: 'Trích xuất Dữ liệu', desc: 'Tổng kết doanh thu', color: 'text-accent', hover: 'hover:border-red-200 hover:shadow-red-500/10' },
           ].map((action, i) => (
             <Link
               key={i}
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
               </div>
               <h3 className="font-black text-gray-950 uppercase italic tracking-tight text-lg leading-none">{action.title}</h3>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4 flex items-center gap-2">
-                {action.desc} <ChevronRight size={14} className="text-[#D70018]" />
+                {action.desc} <ChevronRight size={14} className="text-accent" />
               </p>
             </Link>
           ))}

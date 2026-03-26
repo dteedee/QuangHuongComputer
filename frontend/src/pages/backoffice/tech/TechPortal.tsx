@@ -165,7 +165,7 @@ export const TechPortal = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">
-                        Phiếu sửa chữa <span className="text-[#D70018]">của tôi</span>
+                        Phiếu sửa chữa <span className="text-accent">của tôi</span>
                     </h1>
                     <p className="text-gray-600 font-medium">
                         Quản lý các phiếu sửa chữa được giao cho bạn
@@ -252,7 +252,7 @@ export const TechPortal = () => {
                             <input
                                 type="text"
                                 placeholder="Tìm theo mã phiếu, S/N..."
-                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#D70018] focus:border-transparent w-64 transition-all placeholder:text-gray-400"
+                                className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent w-64 transition-all placeholder:text-gray-400"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -281,12 +281,12 @@ export const TechPortal = () => {
                                                     setShowFilterDropdown(false);
                                                 }}
                                                 className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center justify-between hover:bg-gray-50 transition-all ${
-                                                    filterStatus === option.value ? 'text-[#D70018] bg-red-50' : 'text-gray-700'
+                                                    filterStatus === option.value ? 'text-accent bg-red-50' : 'text-gray-700'
                                                 }`}
                                             >
                                                 <span>{option.label}</span>
                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                    filterStatus === option.value ? 'bg-[#D70018] text-white' : 'bg-gray-100 text-gray-500'
+                                                    filterStatus === option.value ? 'bg-accent text-white' : 'bg-gray-100 text-gray-500'
                                                 }`}>
                                                     {option.count}
                                                 </span>
@@ -324,7 +324,7 @@ export const TechPortal = () => {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={5} className="py-20 text-center">
-                                        <Loader2 className="animate-spin mx-auto text-[#D70018] mb-3" size={40} />
+                                        <Loader2 className="animate-spin mx-auto text-accent mb-3" size={40} />
                                         <p className="text-gray-500 font-semibold text-sm">Đang tải dữ liệu...</p>
                                     </td>
                                 </tr>
@@ -341,7 +341,7 @@ export const TechPortal = () => {
                                                     setSearchTerm('');
                                                     setFilterStatus('all');
                                                 }}
-                                                className="mt-3 text-sm text-[#D70018] font-semibold hover:underline"
+                                                className="mt-3 text-sm text-accent font-semibold hover:underline"
                                             >
                                                 Xóa bộ lọc
                                             </button>

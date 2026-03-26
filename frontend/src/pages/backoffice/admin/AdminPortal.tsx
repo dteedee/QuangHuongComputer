@@ -295,7 +295,7 @@ export const AdminPortal = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
-                        Trung tâm <span className="text-[#D70018]">Điều hành</span>
+                        Trung tâm <span className="text-accent">Điều hành</span>
                     </h1>
                     <p className="text-sm text-gray-500 font-medium italic">
                         Giám sát và quản trị hệ thống Quang Hưởng Computer chuyên sâu.

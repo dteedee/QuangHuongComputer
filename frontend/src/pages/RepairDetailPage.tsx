@@ -93,7 +93,7 @@ export const RepairDetailPage = () => {
         return (
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <div className="text-center py-20">
-                    <div className="animate-spin w-12 h-12 border-4 border-[#D70018] border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div className="animate-spin w-12 h-12 border-4 border-accent border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-gray-500 font-bold">Đang tải...</p>
                 </div>
             </div>
@@ -106,7 +106,7 @@ export const RepairDetailPage = () => {
                 <div className="text-center py-20">
                     <XCircle size={48} className="mx-auto mb-4 text-red-500" />
                     <p className="text-gray-900 font-bold text-xl mb-4">Không tìm thấy phiếu sửa chữa</p>
-                    <Link to="/repair" className="text-[#D70018] font-bold hover:underline">
+                    <Link to="/repair" className="text-accent font-bold hover:underline">
                         Quay lại trang sửa chữa
                     </Link>
                 </div>
@@ -198,7 +198,7 @@ export const RepairDetailPage = () => {
                             </div>
                             <div className="flex justify-between items-center py-4 bg-gray-900 rounded-xl px-4 -mx-2">
                                 <span className="text-white font-black uppercase tracking-wider">Tổng cộng</span>
-                                <span className="text-2xl font-black text-[#D70018]">{formatCurrency(quote.totalCost)}</span>
+                                <span className="text-2xl font-black text-accent">{formatCurrency(quote.totalCost)}</span>
                             </div>
                         </div>
 
@@ -241,7 +241,7 @@ export const RepairDetailPage = () => {
             {quote && !needsAction && (
                 <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mb-8">
                     <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic mb-6 flex items-center gap-2">
-                        <FileText size={20} className="text-[#D70018]" />
+                        <FileText size={20} className="text-accent" />
                         Thông tin báo giá
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -257,7 +257,7 @@ export const RepairDetailPage = () => {
                             <p className="text-xs text-gray-500 font-bold uppercase mb-1">Phí dịch vụ</p>
                             <p className="font-bold text-gray-900">{formatCurrency(quote.serviceFee)}</p>
                         </div>
-                        <div className="p-4 bg-[#D70018] rounded-xl">
+                        <div className="p-4 bg-accent rounded-xl">
                             <p className="text-xs text-red-100 font-bold uppercase mb-1">Tổng cộng</p>
                             <p className="font-black text-white text-lg">{formatCurrency(quote.totalCost)}</p>
                         </div>
@@ -268,7 +268,7 @@ export const RepairDetailPage = () => {
             {/* Work Order Details */}
             <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mb-8">
                 <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic mb-6 flex items-center gap-2">
-                    <MessageSquare size={20} className="text-[#D70018]" />
+                    <MessageSquare size={20} className="text-accent" />
                     Chi tiết yêu cầu
                 </h2>
 
@@ -327,7 +327,7 @@ export const RepairDetailPage = () => {
                         <User size={18} />
                         1900 123 456
                     </a>
-                    <a href="mailto:support@quanghuong.com" className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white font-bold rounded-xl hover:bg-red-700 transition">
+                    <a href="mailto:support@quanghuong.com" className="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition">
                         <MessageSquare size={18} />
                         Email hỗ trợ
                     </a>
@@ -346,7 +346,7 @@ export const RepairDetailPage = () => {
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
                             placeholder="Nhập lý do từ chối..."
-                            className="w-full p-4 border border-gray-200 rounded-xl mb-6 min-h-[100px] focus:outline-none focus:border-[#D70018]"
+                            className="w-full p-4 border border-gray-200 rounded-xl mb-6 min-h-[100px] focus:outline-none focus:border-accent"
                         />
                         <div className="flex gap-4">
                             <button
@@ -358,7 +358,7 @@ export const RepairDetailPage = () => {
                             <button
                                 onClick={() => rejectMutation.mutate()}
                                 disabled={!rejectReason.trim() || rejectMutation.isPending}
-                                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50"
+                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition disabled:opacity-50"
                             >
                                 {rejectMutation.isPending ? 'Đang xử lý...' : 'Xác nhận từ chối'}
                             </button>

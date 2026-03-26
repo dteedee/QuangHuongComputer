@@ -19,6 +19,7 @@ import {
     Calendar, Hash, ExternalLink, CheckCircle, XCircle, BarChart3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../../context/ConfirmContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
@@ -145,7 +146,7 @@ const SupplierForm = ({
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all ${
                             activeTab === tab.id
-                                ? 'border-[#D70018] text-[#D70018]'
+                                ? 'border-accent text-accent'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                     >
@@ -168,7 +169,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.name}
                                     onChange={e => handleChange('name', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="VD: Công ty TNHH ABC"
                                     required
                                 />
@@ -181,7 +182,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.shortName || ''}
                                     onChange={e => handleChange('shortName', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="VD: ABC"
                                 />
                             </div>
@@ -192,7 +193,7 @@ const SupplierForm = ({
                                 <select
                                     value={formData.supplierType}
                                     onChange={e => handleChange('supplierType', e.target.value as SupplierType)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                 >
                                     {Object.entries(supplierTypeLabels).map(([value, label]) => (
                                         <option key={value} value={value}>{label}</option>
@@ -208,7 +209,7 @@ const SupplierForm = ({
                                 value={formData.description || ''}
                                 onChange={e => handleChange('description', e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all resize-none"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all resize-none"
                                 placeholder="Mô tả về nhà cung cấp..."
                             />
                         </div>
@@ -221,7 +222,7 @@ const SupplierForm = ({
                                     type="url"
                                     value={formData.website || ''}
                                     onChange={e => handleChange('website', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="https://example.com"
                                 />
                             </div>
@@ -233,7 +234,7 @@ const SupplierForm = ({
                                     type="url"
                                     value={formData.logoUrl || ''}
                                     onChange={e => handleChange('logoUrl', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="https://example.com/logo.png"
                                 />
                             </div>
@@ -252,7 +253,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.taxCode || ''}
                                     onChange={e => handleChange('taxCode', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="0123456789"
                                 />
                             </div>
@@ -263,7 +264,7 @@ const SupplierForm = ({
                                 <select
                                     value={formData.paymentTerms}
                                     onChange={e => handleChange('paymentTerms', e.target.value as PaymentTermType)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                 >
                                     {Object.entries(paymentTermLabels).map(([value, label]) => (
                                         <option key={value} value={value}>{label}</option>
@@ -280,7 +281,7 @@ const SupplierForm = ({
                                     type="number"
                                     value={formData.paymentDays || ''}
                                     onChange={e => handleChange('paymentDays', parseInt(e.target.value) || undefined)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="30"
                                     min={1}
                                 />
@@ -294,7 +295,7 @@ const SupplierForm = ({
                                 type="number"
                                 value={formData.creditLimit}
                                 onChange={e => handleChange('creditLimit', parseFloat(e.target.value) || 0)}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                 placeholder="100000000"
                                 min={0}
                             />
@@ -314,7 +315,7 @@ const SupplierForm = ({
                                         type="text"
                                         value={formData.bankAccount || ''}
                                         onChange={e => handleChange('bankAccount', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         placeholder="0123456789"
                                     />
                                 </div>
@@ -326,7 +327,7 @@ const SupplierForm = ({
                                         type="text"
                                         value={formData.bankName || ''}
                                         onChange={e => handleChange('bankName', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         placeholder="VD: Vietcombank"
                                     />
                                 </div>
@@ -338,7 +339,7 @@ const SupplierForm = ({
                                         type="text"
                                         value={formData.bankBranch || ''}
                                         onChange={e => handleChange('bankBranch', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         placeholder="VD: Chi nhánh Hà Nội"
                                     />
                                 </div>
@@ -358,7 +359,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.contactPerson}
                                     onChange={e => handleChange('contactPerson', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="Nguyễn Văn A"
                                     required
                                 />
@@ -371,7 +372,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.contactTitle || ''}
                                     onChange={e => handleChange('contactTitle', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="Giám đốc kinh doanh"
                                 />
                             </div>
@@ -383,7 +384,7 @@ const SupplierForm = ({
                                     type="tel"
                                     value={formData.phone}
                                     onChange={e => handleChange('phone', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="0901234567"
                                     required
                                 />
@@ -396,7 +397,7 @@ const SupplierForm = ({
                                     type="email"
                                     value={formData.email}
                                     onChange={e => handleChange('email', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="contact@example.com"
                                     required
                                 />
@@ -409,7 +410,7 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.fax || ''}
                                     onChange={e => handleChange('fax', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                     placeholder="028 1234 5678"
                                 />
                             </div>
@@ -429,7 +430,7 @@ const SupplierForm = ({
                                         type="text"
                                         value={formData.address}
                                         onChange={e => handleChange('address', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         placeholder="Số nhà, tên đường"
                                         required
                                     />
@@ -443,7 +444,7 @@ const SupplierForm = ({
                                             type="text"
                                             value={formData.ward || ''}
                                             onChange={e => handleChange('ward', e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         />
                                     </div>
                                     <div>
@@ -454,7 +455,7 @@ const SupplierForm = ({
                                             type="text"
                                             value={formData.district || ''}
                                             onChange={e => handleChange('district', e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         />
                                     </div>
                                     <div>
@@ -465,7 +466,7 @@ const SupplierForm = ({
                                             type="text"
                                             value={formData.city || ''}
                                             onChange={e => handleChange('city', e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                         />
                                     </div>
                                 </div>
@@ -509,7 +510,7 @@ const SupplierForm = ({
                                 type="text"
                                 value={formData.categories || ''}
                                 onChange={e => handleChange('categories', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                 placeholder="Laptop, PC, Linh kiện, ..."
                             />
                             <p className="text-xs text-gray-500 mt-1">Phân cách bằng dấu phẩy</p>
@@ -522,7 +523,7 @@ const SupplierForm = ({
                                 type="text"
                                 value={formData.brands || ''}
                                 onChange={e => handleChange('brands', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                                 placeholder="Dell, HP, Lenovo, ..."
                             />
                         </div>
@@ -534,7 +535,7 @@ const SupplierForm = ({
                                 value={formData.notes || ''}
                                 onChange={e => handleChange('notes', e.target.value)}
                                 rows={5}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all resize-none"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all resize-none"
                                 placeholder="Ghi chú về nhà cung cấp này (chỉ hiển thị nội bộ)..."
                             />
                         </div>
@@ -554,7 +555,7 @@ const SupplierForm = ({
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition-all disabled:opacity-50"
                 >
                     {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />
@@ -588,13 +589,13 @@ const SupplierDetailDrawer = ({
                     {supplier.logoUrl ? (
                         <img src={supplier.logoUrl} alt={supplier.name} className="w-16 h-16 rounded-2xl object-cover" />
                     ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D70018] to-red-600 flex items-center justify-center text-white text-2xl font-black">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-black">
                             {supplier.name.charAt(0)}
                         </div>
                     )}
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#D70018] bg-red-50 px-2 py-1 rounded-lg">
+                            <span className="text-xs font-bold text-accent bg-red-50 px-2 py-1 rounded-lg">
                                 {supplier.code}
                             </span>
                             <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
@@ -792,7 +793,7 @@ const SupplierDetailDrawer = ({
         <div className="p-6 border-t border-gray-200">
             <button
                 onClick={onEdit}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#D70018] text-white font-bold rounded-xl hover:bg-red-700 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition-all"
             >
                 <Edit2 size={18} />
                 Chỉnh sửa
@@ -813,6 +814,7 @@ export function SuppliersPage() {
     const [showForm, setShowForm] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
     const [viewingSupplier, setViewingSupplier] = useState<Supplier | null>(null);
+    const confirm = useConfirm();
 
     // Queries
     const { data: suppliersData, isLoading } = useQuery({
@@ -897,9 +899,10 @@ export function SuppliersPage() {
         }
     };
 
-    const handleToggleActive = (supplier: SupplierListItem) => {
+    const handleToggleActive = async (supplier: SupplierListItem) => {
         const action = supplier.isActive ? 'vô hiệu hóa' : 'kích hoạt';
-        if (window.confirm(`Bạn có chắc muốn ${action} nhà cung cấp "${supplier.name}"?`)) {
+        const ok = await confirm({ message: `Bạn có chắc muốn ${action} nhà cung cấp "${supplier.name}"?`, variant: 'warning' });
+        if (ok) {
             toggleActiveMutation.mutate(supplier.id);
         }
     };
@@ -910,7 +913,7 @@ export function SuppliersPage() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
-                        Nhà <span className="text-[#D70018]">Cung Cấp</span>
+                        Nhà <span className="text-accent">Cung Cấp</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
                         Quản lý danh sách nhà cung cấp, thông tin liên hệ và công nợ
@@ -918,7 +921,7 @@ export function SuppliersPage() {
                 </div>
                 <button
                     onClick={() => { setEditingSupplier(null); setShowForm(true); }}
-                    className="flex items-center gap-3 px-6 py-4 bg-[#D70018] hover:bg-red-700 text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
                 >
                     <Plus size={20} />
                     Thêm nhà cung cấp
@@ -969,13 +972,13 @@ export function SuppliersPage() {
                         placeholder="Tìm theo tên, mã, MST, email, điện thoại..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] focus:bg-white transition-all"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                     />
                 </div>
                 <select
                     value={filterType}
                     onChange={e => setFilterType(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018] min-w-[200px]"
+                    className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-w-[200px]"
                 >
                     <option value="">Tất cả loại</option>
                     {Object.entries(supplierTypeLabels).map(([value, label]) => (
@@ -987,7 +990,7 @@ export function SuppliersPage() {
                         type="checkbox"
                         checked={includeInactive}
                         onChange={e => setIncludeInactive(e.target.checked)}
-                        className="w-4 h-4 rounded text-[#D70018] focus:ring-[#D70018]"
+                        className="w-4 h-4 rounded text-accent focus:ring-accent"
                     />
                     <span className="text-sm font-medium text-gray-700">Hiển thị đã ngừng</span>
                 </label>
@@ -997,7 +1000,7 @@ export function SuppliersPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-10 h-10 animate-spin text-[#D70018]" />
+                        <Loader2 className="w-10 h-10 animate-spin text-accent" />
                     </div>
                 ) : suppliersData?.items.length === 0 ? (
                     <div className="text-center py-20">
@@ -1030,7 +1033,7 @@ export function SuppliersPage() {
                                     >
                                         <td className="py-4 px-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D70018] to-red-600 flex items-center justify-center text-white font-bold text-sm">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white font-bold text-sm">
                                                     {supplier.name.charAt(0)}
                                                 </div>
                                                 <div>

@@ -5,6 +5,7 @@ import {
   Calendar, Percent, DollarSign, AlertCircle, Check, X, Copy
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '@context/ConfirmContext';
 import client from '@api/client';
 
 // Types
@@ -79,6 +80,7 @@ export function CouponsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const confirm = useConfirm();
 
   // Form state
   const [formData, setFormData] = useState<CouponFormData>({
@@ -195,8 +197,9 @@ export function CouponsPage() {
     }
   };
 
-  const handleDelete = (coupon: Coupon) => {
-    if (window.confirm(`Bạn có chắc muốn xóa mã "${coupon.code}"?`)) {
+  const handleDelete = async (coupon: Coupon) => {
+    const ok = await confirm({ message: `Bạn có chắc muốn xóa mã "${coupon.code}"?`, variant: 'danger' });
+    if (ok) {
       deleteMutation.mutate(coupon.id);
     }
   };
@@ -254,7 +257,7 @@ export function CouponsPage() {
           </button>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Tạo mã mới
@@ -326,7 +329,7 @@ export function CouponsPage() {
               placeholder="Tìm kiếm mã giảm giá..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -334,7 +337,7 @@ export function CouponsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white"
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
             >
               <option value="all">Tất cả</option>
               <option value="active">Đang hoạt động</option>
@@ -348,7 +351,7 @@ export function CouponsPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto"></div>
+            <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto"></div>
             <p className="text-gray-500 mt-3">Đang tải...</p>
           </div>
         ) : filteredCoupons.length === 0 ? (
@@ -473,7 +476,7 @@ export function CouponsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-[#D70018] to-[#ff4d4d] px-6 py-4">
+            <div className="bg-gradient-to-r from-accent to-[#ff4d4d] px-6 py-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">
                   {editingCoupon ? 'Chỉnh sửa mã giảm giá' : 'Tạo mã giảm giá mới'}
@@ -496,7 +499,7 @@ export function CouponsPage() {
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                     placeholder="VD: QHSALE20"
-                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 uppercase"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent uppercase"
                     required
                     disabled={!!editingCoupon}
                   />
@@ -520,7 +523,7 @@ export function CouponsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="VD: Giảm 20% cho đơn hàng đầu tiên"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
               </div>
 
@@ -531,7 +534,7 @@ export function CouponsPage() {
                   <select
                     value={formData.discountType}
                     onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
                   >
                     <option value="Percentage">Phần trăm (%)</option>
                     <option value="FixedAmount">Số tiền cố định</option>
@@ -547,7 +550,7 @@ export function CouponsPage() {
                     onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
                     min={0}
                     max={formData.discountType === 'Percentage' ? 100 : undefined}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     required
                   />
                 </div>
@@ -562,7 +565,7 @@ export function CouponsPage() {
                     value={formData.minOrderAmount}
                     onChange={(e) => setFormData({ ...formData, minOrderAmount: Number(e.target.value) })}
                     min={0}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                   />
                 </div>
                 <div>
@@ -573,7 +576,7 @@ export function CouponsPage() {
                     onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value ? Number(e.target.value) : null })}
                     min={0}
                     placeholder="Không giới hạn"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                   />
                 </div>
               </div>
@@ -586,7 +589,7 @@ export function CouponsPage() {
                     type="date"
                     value={formData.validFrom}
                     onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     required
                   />
                 </div>
@@ -596,7 +599,7 @@ export function CouponsPage() {
                     type="date"
                     value={formData.validTo}
                     onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                     required
                   />
                 </div>
@@ -611,7 +614,7 @@ export function CouponsPage() {
                   onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value ? Number(e.target.value) : null })}
                   min={1}
                   placeholder="Không giới hạn"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
               </div>
 
@@ -627,7 +630,7 @@ export function CouponsPage() {
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors disabled:opacity-50"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Đang xử lý...' : editingCoupon ? 'Cập nhật' : 'Tạo mã'}
                 </button>

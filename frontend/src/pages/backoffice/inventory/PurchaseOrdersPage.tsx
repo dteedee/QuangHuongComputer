@@ -8,6 +8,7 @@ import type { PurchaseOrder, POStatus, SupplierDropdownItem, CreatePurchaseOrder
 import { catalogApi } from '../../../api/catalog';
 import type { Product } from '../../../api/catalog';
 import { toast } from 'react-hot-toast';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 // ============================
 // Status badge config
@@ -155,7 +156,7 @@ const CreatePOModal = ({
                         <select
                             value={supplierId}
                             onChange={e => setSupplierId(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#D70018]/30 focus:border-[#D70018] bg-white"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent bg-white"
                             required
                         >
                             <option value="">-- Chọn nhà cung cấp --</option>
@@ -176,7 +177,7 @@ const CreatePOModal = ({
                                 onChange={e => setProductSearch(e.target.value)}
                                 onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
                                 placeholder="Tìm theo tên, SKU sản phẩm..."
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#D70018]/30 focus:border-[#D70018]"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent"
                             />
                             {isSearching && (
                                 <RefreshCw size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
@@ -195,7 +196,7 @@ const CreatePOModal = ({
                                             <p className="text-sm font-medium text-gray-900">{product.name}</p>
                                             <p className="text-xs text-gray-500">SKU: {product.sku} • Tồn: {product.stockQuantity}</p>
                                         </div>
-                                        <span className="text-sm font-semibold text-[#D70018]">
+                                        <span className="text-sm font-semibold text-accent">
                                             {(product.costPrice || product.price || 0).toLocaleString('vi-VN')}đ
                                         </span>
                                     </button>
@@ -253,7 +254,7 @@ const CreatePOModal = ({
                                 <tfoot>
                                     <tr className="border-t-2 border-gray-200 bg-gray-50">
                                         <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700">Tổng cộng:</td>
-                                        <td className="px-4 py-3 text-right font-bold text-[#D70018] text-lg">
+                                        <td className="px-4 py-3 text-right font-bold text-accent text-lg">
                                             {totalAmount.toLocaleString('vi-VN')}đ
                                         </td>
                                         <td></td>
@@ -283,7 +284,7 @@ const CreatePOModal = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting || items.length === 0 || !supplierId}
-                            className="px-5 py-2.5 bg-[#D70018] text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
                             <Plus size={16} />
@@ -307,6 +308,7 @@ export default function PurchaseOrdersPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<POStatus | 'all'>('all');
+    const confirm = useConfirm();
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -347,7 +349,8 @@ export default function PurchaseOrdersPage() {
             toast.error('Đơn hàng đã được nhận');
             return;
         }
-        if (!confirm(`Xác nhận nhận hàng cho đơn ${po.poNumber}?\nCập nhật tồn kho cho ${po.items.length} sản phẩm.`)) return;
+        const ok = await confirm({ message: `Xác nhận nhận hàng cho đơn ${po.poNumber}?\nCập nhật tồn kho cho ${po.items.length} sản phẩm.`, variant: 'info' });
+        if (!ok) return;
         try {
             await inventoryApi.receivePurchaseOrder(po.id);
             toast.success(`Đã nhận hàng ${po.poNumber}`);
@@ -384,7 +387,7 @@ export default function PurchaseOrdersPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#D70018] to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
                             <ShoppingCart size={22} className="text-white" />
                         </div>
                         Đơn mua hàng
@@ -393,7 +396,7 @@ export default function PurchaseOrdersPage() {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#D70018] text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-all shadow-lg shadow-red-200 hover:shadow-red-300"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-all shadow-lg shadow-red-200 hover:shadow-red-300"
                 >
                     <Plus size={18} />
                     Tạo đơn mua hàng
@@ -406,7 +409,7 @@ export default function PurchaseOrdersPage() {
                 <StatCard icon={FileText} label="Nháp" value={stats.draft} color="bg-gradient-to-br from-gray-400 to-gray-500" />
                 <StatCard icon={Truck} label="Đã gửi" value={stats.sent} color="bg-gradient-to-br from-orange-400 to-orange-500" />
                 <StatCard icon={CheckCircle} label="Đã nhận" value={stats.received} color="bg-gradient-to-br from-green-500 to-green-600" />
-                <StatCard icon={Package} label="Tổng giá trị" value={`${(stats.totalValue / 1e6).toFixed(1)}tr`} color="bg-gradient-to-br from-[#D70018] to-[#ff4d6a]" />
+                <StatCard icon={Package} label="Tổng giá trị" value={`${(stats.totalValue / 1e6).toFixed(1)}tr`} color="bg-gradient-to-br from-accent to-[#ff4d6a]" />
             </div>
 
             {/* Filters */}
@@ -418,13 +421,13 @@ export default function PurchaseOrdersPage() {
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         placeholder="Tìm theo mã đơn..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#D70018]/30 focus:border-[#D70018]"
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent"
                     />
                 </div>
                 <select
                     value={statusFilter}
                     onChange={e => setStatusFilter(e.target.value as POStatus | 'all')}
-                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-[#D70018]/30 focus:border-[#D70018] bg-white min-w-[160px]"
+                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent bg-white min-w-[160px]"
                 >
                     <option value="all">Tất cả trạng thái</option>
                     <option value="Draft">Nháp</option>

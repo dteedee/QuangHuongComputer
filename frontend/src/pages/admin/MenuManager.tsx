@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { contentApi, type Menu, type MenuItem } from '../../api/content';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 interface SortableItemProps {
@@ -69,14 +70,14 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
                     value={item.label}
                     placeholder="Label"
                     onChange={(e) => onUpdate(item.id, { label: e.target.value })}
-                    className="bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-red-500"
+                    className="bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-accent"
                 />
                 <input 
                     type="text"
                     value={item.url}
                     placeholder="URL (/path or https://)"
                     onChange={(e) => onUpdate(item.id, { url: e.target.value })}
-                    className="bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"
+                    className="bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent"
                 />
                 <div className="flex items-center gap-2">
                     <input 
@@ -84,14 +85,14 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
                         value={item.icon || ''}
                         placeholder="Icon (Lucide name)"
                         onChange={(e) => onUpdate(item.id, { icon: e.target.value })}
-                        className="flex-1 bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"
+                        className="flex-1 bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent"
                     />
                     <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
                         <input 
                             type="checkbox"
                             checked={item.openInNewTab}
                             onChange={(e) => onUpdate(item.id, { openInNewTab: e.target.checked })}
-                            className="rounded text-red-600 focus:ring-red-500"
+                            className="rounded text-red-600 focus:ring-accent"
                         />
                         New Tab
                     </label>
@@ -123,6 +124,7 @@ export const MenuManager = () => {
     const [localItems, setLocalItems] = useState<MenuItem[]>([]);
     const [hasChanges, setHasChanges] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const confirm = useConfirm();
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -216,9 +218,10 @@ export const MenuManager = () => {
         });
     };
 
-    const deleteItem = (id: string) => {
+    const deleteItem = async (id: string) => {
         if (!selectedMenu) return;
-        if (!confirm('Remove this link?')) return;
+        const ok = await confirm({ message: 'Remove this link?', variant: 'danger' });
+        if (!ok) return;
         setDeletingId(id);
         deleteMutation.mutate({ menuId: selectedMenu.id, itemId: id });
     };
@@ -235,7 +238,8 @@ export const MenuManager = () => {
 
     const handleLocationChange = async (loc: MenuLocationKey) => {
         if (hasChanges) {
-            if (!confirm('You have unsaved changes. Switch menu anyway?')) return;
+            const ok = await confirm({ message: 'You have unsaved changes. Switch menu anyway?', variant: 'warning' });
+            if (!ok) return;
         }
         setSelectedLocation(loc);
     };
@@ -266,7 +270,7 @@ export const MenuManager = () => {
                     <button 
                         onClick={handleSave}
                         disabled={!selectedMenu || saveMutation.isLoading || !hasChanges}
-                        className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-red-900/20"
+                        className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-accent-dark/20"
                     >
                         {saveMutation.isLoading ? (
                             <Loader2 size={18} className="animate-spin" />
@@ -285,7 +289,7 @@ export const MenuManager = () => {
                         <button
                             key={loc.key}
                             onClick={() => handleLocationChange(loc.key)}
-                            className={`w-full text-left p-4 rounded-2xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-red-600 border-red-500 text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                            className={`w-full text-left p-4 rounded-2xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
                         >
                             <div className="font-bold flex items-center justify-between">
                                 {loc.label}

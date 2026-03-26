@@ -91,12 +91,12 @@ export function FinancialReportsPage() {
             {
                 label: 'Lợi nhuận',
                 data: revenueExpense?.monthlyData.map(d => d.profit) || [],
-                borderColor: '#D70018',
+                borderColor: 'var(--accent-primary)',
                 backgroundColor: 'rgba(215, 0, 24, 0.1)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#D70018',
+                pointBackgroundColor: 'var(--accent-primary)',
             },
         ],
     };
@@ -161,7 +161,7 @@ export function FinancialReportsPage() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
-                        Báo Cáo <span className="text-[#D70018]">Tài Chính</span>
+                        Báo Cáo <span className="text-accent">Tài Chính</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
                         Xem tổng quan dòng tiền, doanh thu, chi phí và tài sản
@@ -196,7 +196,7 @@ export function FinancialReportsPage() {
 
             {isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#D70018]"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-accent"></div>
                 </div>
             ) : (
                 <>
@@ -266,7 +266,7 @@ export function FinancialReportsPage() {
                         {/* Revenue vs Expense Chart */}
                         <div className="premium-card p-8 border-2">
                             <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
-                                <BarChart3 size={20} className="text-[#D70018]" />
+                                <BarChart3 size={20} className="text-accent" />
                                 Doanh thu vs Chi phí
                             </h3>
                             <div className="h-[300px]">
@@ -277,7 +277,7 @@ export function FinancialReportsPage() {
                         {/* Profit Trend Chart */}
                         <div className="premium-card p-8 border-2">
                             <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
-                                <TrendingUp size={20} className="text-[#D70018]" />
+                                <TrendingUp size={20} className="text-accent" />
                                 Xu hướng lợi nhuận
                             </h3>
                             <div className="h-[300px]">
@@ -434,7 +434,7 @@ export function FinancialReportsPage() {
                                             <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{cat.categoryName}</span>
                                             <span className="text-[9px] font-bold text-gray-400">{cat.count} khoản</span>
                                         </div>
-                                        <p className="text-xl font-black text-[#D70018] tracking-tighter">{formatCurrency(cat.total)}</p>
+                                        <p className="text-xl font-black text-accent tracking-tighter">{formatCurrency(cat.total)}</p>
                                     </div>
                                 ))}
                             </div>

@@ -84,7 +84,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <input
                     type="text"
                     {...register('cashierId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="ENTER ID"
                     disabled={isSubmitting}
                   />
@@ -94,7 +94,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <input
                     type="text"
                     {...register('warehouseId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all font-mono"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all font-mono"
                     placeholder="MAIN"
                     disabled={isSubmitting}
                   />
@@ -107,7 +107,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <input
                     type="number"
                     {...register('openingBalance', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-[#D70018] font-black text-2xl tracking-tighter italic text-[#D70018] transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-2xl tracking-tighter italic text-accent transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
@@ -144,7 +144,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
               </button>
               <button
                 type="submit"
-                className="px-10 py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-gray-950/20 hover:bg-[#D70018] transform hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
+                className="px-10 py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-gray-950/20 hover:bg-accent transform hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'ĐANG MỞ CHỨNG TỪ...' : (
@@ -242,7 +242,7 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
                 <input
                   type="number"
                   {...register('actualCash', { valueAsNumber: true })}
-                  className="w-full px-8 py-10 bg-gray-50 border-4 border-gray-100 rounded-[32px] focus:ring-0 focus:border-[#D70018] font-black text-5xl tracking-tighter italic text-[#D70018] transition-all text-center"
+                  className="w-full px-8 py-10 bg-gray-50 border-4 border-gray-100 rounded-[32px] focus:ring-0 focus:border-accent font-black text-5xl tracking-tighter italic text-accent transition-all text-center"
                   placeholder="0"
                   disabled={isSubmitting}
                 />
@@ -252,7 +252,7 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
             {actualCash > 0 && (
               <div className={`p-8 rounded-[32px] border-4 ${variance === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
                 <div className="flex items-center gap-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${variance === 0 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-red-500 text-white shadow-red-500/20'}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${variance === 0 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-accent text-white shadow-red-500/20'}`}>
                     <CheckCircle size={28} />
                   </div>
                   <div>
@@ -269,7 +269,7 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
 
             <button
               type="submit"
-              className="w-full py-6 bg-gray-950 text-white text-sm font-black uppercase tracking-[0.2em] rounded-[32px] shadow-2xl shadow-gray-950/40 hover:bg-[#D70018] transform hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-gray-950 text-white text-sm font-black uppercase tracking-[0.2em] rounded-[32px] shadow-2xl shadow-gray-950/40 hover:bg-accent transform hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'ĐANG CHỐT SỔ...' : 'KẾT THÚC & ĐÓNG CA'}
@@ -375,7 +375,7 @@ export const ShiftsPage = () => {
       render: (item) => (
         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
           {item.closedAt ? new Date(item.closedAt).toLocaleString('vi-VN') : (
-            <span className="text-[#D70018] animate-pulse">ĐANG HOẠT ĐỘNG</span>
+            <span className="text-accent animate-pulse">ĐANG HOẠT ĐỘNG</span>
           )}
         </span>
       ),
@@ -408,7 +408,7 @@ export const ShiftsPage = () => {
         const isZero = item.cashVariance === 0;
         return (
           <span
-            className={`font-black italic tracking-tighter ${isZero ? 'text-gray-400' : isPositive ? 'text-blue-600' : 'text-[#D70018]'
+            className={`font-black italic tracking-tighter ${isZero ? 'text-gray-400' : isPositive ? 'text-blue-600' : 'text-accent'
               }`}
           >
             {isPositive && '+'}{formatCurrency(item.cashVariance)}
@@ -429,10 +429,10 @@ export const ShiftsPage = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
           <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-4">
-            Quản lý <span className="text-[#D70018]">Ca làm việc</span>
+            Quản lý <span className="text-accent">Ca làm việc</span>
           </h1>
           <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-[#D70018] animate-ping" /> Kiểm soát dòng tiền mặt & đối soát ca trực
+            <span className="w-2 h-2 rounded-full bg-accent animate-ping" /> Kiểm soát dòng tiền mặt & đối soát ca trực
           </p>
         </div>
       </div>
@@ -450,7 +450,7 @@ export const ShiftsPage = () => {
 
           <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-12">
             <div className="flex items-center gap-10">
-              <div className="w-24 h-24 bg-[#D70018] text-white rounded-[32px] flex items-center justify-center shadow-2xl shadow-red-500/30 transform group-hover:rotate-12 transition-transform duration-500">
+              <div className="w-24 h-24 bg-accent text-white rounded-[32px] flex items-center justify-center shadow-2xl shadow-red-500/30 transform group-hover:rotate-12 transition-transform duration-500">
                 <Clock size={40} />
               </div>
               <div className="space-y-4">
@@ -469,7 +469,7 @@ export const ShiftsPage = () => {
             </div>
             <button
               onClick={() => setIsCloseShiftModalOpen(true)}
-              className="px-12 py-5 bg-white text-gray-950 rounded-[20px] font-black uppercase tracking-[0.2em] text-xs hover:bg-[#D70018] hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+              className="px-12 py-5 bg-white text-gray-950 rounded-[20px] font-black uppercase tracking-[0.2em] text-xs hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
             >
               KẾT THÚC PHIÊN TRỰC
             </button>
@@ -500,9 +500,9 @@ export const ShiftsPage = () => {
 
       {/* Action Button */}
       {!currentShift && (
-        <div className="premium-card p-12 border-2 border-dashed border-gray-200 bg-gray-50/50 group hover:border-[#D70018] transition-colors">
+        <div className="premium-card p-12 border-2 border-dashed border-gray-200 bg-gray-50/50 group hover:border-accent transition-colors">
           <div className="flex flex-col items-center text-center gap-8">
-            <div className="w-20 h-20 rounded-[28px] bg-white shadow-xl flex items-center justify-center text-gray-300 group-hover:text-[#D70018] group-hover:scale-110 transition-all duration-500">
+            <div className="w-20 h-20 rounded-[28px] bg-white shadow-xl flex items-center justify-center text-gray-300 group-hover:text-accent group-hover:scale-110 transition-all duration-500">
               <AlertCircle size={40} />
             </div>
             <div className="space-y-3">
@@ -511,7 +511,7 @@ export const ShiftsPage = () => {
             </div>
             <button
               onClick={() => setIsOpenShiftModalOpen(true)}
-              className="px-14 py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-[#D70018] transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-4"
+              className="px-14 py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-accent transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-4"
             >
               MỞ CA LÀM VIỆC MỚI <ArrowRight size={18} />
             </button>

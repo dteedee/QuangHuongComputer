@@ -51,7 +51,7 @@ export const AiChatbot = () => {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-14 h-14 bg-[#D70018] rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/30 hover:bg-[#b50014] transition-all transform hover:scale-110 active:scale-95 group"
+                    className="w-14 h-14 bg-accent rounded-full flex items-center justify-center text-white shadow-lg shadow-red-500/30 hover:bg-accent-hover transition-all transform hover:scale-110 active:scale-95 group"
                 >
                     <MessageCircle size={28} className="group-hover:rotate-12 transition-transform" />
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></span>
@@ -62,7 +62,7 @@ export const AiChatbot = () => {
             {isOpen && (
                 <div className="w-[360px] h-[520px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
                     {/* Header */}
-                    <div className="p-4 bg-gradient-to-r from-[#D70018] to-[#ff4d4d] flex justify-between items-center shadow-md z-10">
+                    <div className="p-4 bg-gradient-to-r from-accent to-[#ff4d4d] flex justify-between items-center shadow-md z-10">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
                                 <Bot size={22} className="text-white" />
@@ -90,12 +90,12 @@ export const AiChatbot = () => {
                             <div key={msg.id} className={`flex gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 {msg.sender === 'ai' && (
                                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-1 border border-gray-200">
-                                        <Bot size={14} className="text-[#D70018]" />
+                                        <Bot size={14} className="text-accent" />
                                     </div>
                                 )}
 
                                 <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${msg.sender === 'user'
-                                        ? 'bg-[#D70018] text-white rounded-br-none shadow-lg shadow-red-500/20'
+                                        ? 'bg-accent text-white rounded-br-none shadow-lg shadow-red-500/20'
                                         : 'bg-white border border-gray-200 text-gray-700 rounded-bl-none shadow-md'
                                     }`}>
                                     <p className="leading-relaxed">{msg.text}</p>
@@ -106,7 +106,7 @@ export const AiChatbot = () => {
                                 </div>
 
                                 {msg.sender === 'user' && (
-                                    <div className="w-8 h-8 rounded-full bg-[#D70018] flex items-center justify-center flex-shrink-0 mt-1 shadow-lg shadow-red-500/20">
+                                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-1 shadow-lg shadow-red-500/20">
                                         <User size={14} className="text-white" />
                                     </div>
                                 )}
@@ -116,7 +116,7 @@ export const AiChatbot = () => {
                         {isLoading && (
                             <div className="flex gap-2 justify-start">
                                 <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 mt-1">
-                                    <Bot size={14} className="text-[#D70018]" />
+                                    <Bot size={14} className="text-accent" />
                                 </div>
                                 <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none flex gap-1 items-center shadow-md">
                                     <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
@@ -129,7 +129,7 @@ export const AiChatbot = () => {
 
                     {/* Footer */}
                     <div className="p-3 bg-white border-t border-gray-100">
-                        <div className="flex gap-2 items-center bg-gray-50 p-1.5 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-[#D70018]/20 focus-within:border-[#D70018] transition-all">
+                        <div className="flex gap-2 items-center bg-gray-50 p-1.5 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-accent/20 focus-within:border-accent transition-all">
                             <input
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
@@ -140,14 +140,14 @@ export const AiChatbot = () => {
                             <button
                                 onClick={handleSend}
                                 disabled={isLoading || !input.trim()}
-                                className="w-9 h-9 bg-[#D70018] rounded-lg flex items-center justify-center text-white hover:bg-[#b50014] disabled:opacity-50 disabled:hover:bg-[#D70018] transition-all shadow-sm active:scale-95"
+                                className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-white hover:bg-accent-hover disabled:opacity-50 disabled:hover:bg-accent transition-all shadow-sm active:scale-95"
                             >
                                 <Send size={16} />
                             </button>
                         </div>
                         <div className="text-center mt-2.5">
                             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-                                Powered by <span className="text-[#D70018]">Gemini AI</span>
+                                Powered by <span className="text-accent">Gemini AI</span>
                             </span>
                         </div>
                     </div>

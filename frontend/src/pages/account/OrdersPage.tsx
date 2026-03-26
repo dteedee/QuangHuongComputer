@@ -4,6 +4,7 @@ import { salesApi, type Order, type OrderStatus } from '../../api/sales';
 import { Package, Search, Filter, Eye, XCircle, RotateCcw, Clock, CheckCircle, Truck, Ban, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
+import { useConfirm } from '../../context/ConfirmContext';
 import client from '../../api/client';
 
 const statusConfig: Record<OrderStatus, { label: string; icon: JSX.Element; color: string; bgColor: string }> = {
@@ -22,6 +23,7 @@ export const OrdersPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const confirm = useConfirm();
 
     useEffect(() => {
         loadOrders();
@@ -54,7 +56,8 @@ export const OrdersPage = () => {
     };
 
     const handleCancelOrder = async (orderId: string) => {
-        if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+        const ok = await confirm({ message: 'Bạn có chắc chắn muốn hủy đơn hàng này?', variant: 'warning' });
+        if (!ok) return;
 
         try {
             await client.post(`/sales/orders/${orderId}/cancel`, {
@@ -71,7 +74,7 @@ export const OrdersPage = () => {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D70018]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
             </div>
         );
     }
@@ -81,7 +84,7 @@ export const OrdersPage = () => {
             <div className="max-w-[1400px] mx-auto px-4">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 bg-red-100 rounded-2xl text-[#D70018]">
+                    <div className="p-3 bg-red-100 rounded-2xl text-accent">
                         <Package size={28} />
                     </div>
                     <div>
@@ -103,7 +106,7 @@ export const OrdersPage = () => {
                                 placeholder="Tìm kiếm theo mã đơn hàng..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D70018] focus:border-transparent font-medium text-sm"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent font-medium text-sm"
                             />
                         </div>
 
@@ -113,7 +116,7 @@ export const OrdersPage = () => {
                             <button
                                 onClick={() => setFilter('all')}
                                 className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${filter === 'all'
-                                    ? 'bg-[#D70018] text-white'
+                                    ? 'bg-accent text-white'
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
@@ -124,7 +127,7 @@ export const OrdersPage = () => {
                                     key={status}
                                     onClick={() => setFilter(status as OrderStatus)}
                                     className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide transition-all whitespace-nowrap ${filter === status
-                                        ? 'bg-[#D70018] text-white'
+                                        ? 'bg-accent text-white'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                 >
@@ -189,7 +192,7 @@ export const OrdersPage = () => {
                                                 <p className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-1">
                                                     Tổng tiền
                                                 </p>
-                                                <p className="text-[#D70018] font-black text-xl tracking-tight">
+                                                <p className="text-accent font-black text-xl tracking-tight">
                                                     {formatCurrency(order.totalAmount)}
                                                 </p>
                                             </div>
@@ -200,7 +203,7 @@ export const OrdersPage = () => {
                                     <div className="flex items-center gap-2 lg:flex-col lg:items-stretch">
                                         <Link
                                             to={`/account/orders/${order.id}`}
-                                            className="flex-1 lg:flex-none px-6 py-3 bg-[#D70018] hover:bg-[#b50014] text-white font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                                            className="flex-1 lg:flex-none px-6 py-3 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                         >
                                             <Eye className="w-4 h-4" />
                                             Xem chi tiết

@@ -109,7 +109,7 @@ const ReceiptModal = ({
             )}
             <div className="flex justify-between text-lg font-black pt-2 border-t border-gray-200">
               <span>Tổng cộng</span>
-              <span className="text-[#D70018]">{formatCurrency(order.total)}</span>
+              <span className="text-accent">{formatCurrency(order.total)}</span>
             </div>
           </div>
 
@@ -132,7 +132,7 @@ const ReceiptModal = ({
           </button>
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors"
+            className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-colors"
           >
             Đơn mới
           </button>
@@ -197,7 +197,7 @@ const CustomerSearchModal = ({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#D70018]" />
+            <Users className="w-5 h-5 text-accent" />
             Chọn khách hàng
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -214,7 +214,7 @@ const CustomerSearchModal = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo tên, email, SĐT..."
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#D70018] focus:outline-none"
+              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-accent focus:outline-none"
             />
           </div>
 
@@ -239,7 +239,7 @@ const CustomerSearchModal = ({
 
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin w-8 h-8 border-2 border-[#D70018] border-t-transparent rounded-full mx-auto" />
+                <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto" />
               </div>
             ) : customers.length === 0 && search.trim() ? (
               <div className="text-center py-8 text-gray-500">
@@ -325,7 +325,7 @@ const HeldOrdersModal = ({
                       {new Date(order.heldAt).toLocaleTimeString('vi-VN')} - {order.items.length} sản phẩm
                     </p>
                   </div>
-                  <p className="font-bold text-[#D70018]">
+                  <p className="font-bold text-accent">
                     {formatCurrency(order.items.reduce((sum, item) => sum + item.price * item.quantity, 0))}
                   </p>
                 </div>
@@ -757,7 +757,7 @@ export default function POSPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Tìm sản phẩm... (Enter)"
-                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                 />
                 {searchQuery && (
                   <button
@@ -774,7 +774,7 @@ export default function POSPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#D70018] focus:border-transparent outline-none min-w-[150px]"
+                className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent outline-none min-w-[150px]"
               >
                 <option value="">Tất cả</option>
                 {categories.map((cat) => (
@@ -811,7 +811,7 @@ export default function POSPage() {
                     onClick={() => handleAddToCart(product)}
                     disabled={product.stockQuantity === 0}
                     className={`bg-white rounded-xl p-2 text-left transition-all hover:shadow-lg active:scale-95 ${
-                      product.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#D70018]'
+                      product.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-accent'
                     } border border-gray-200 group flex flex-col`}
                   >
                     <div className="aspect-square bg-gray-50 rounded-lg mb-2 overflow-hidden flex items-center justify-center p-1">
@@ -827,7 +827,7 @@ export default function POSPage() {
                     </div>
                     <h3 className="font-medium text-gray-900 text-xs line-clamp-2 mb-1 min-h-[32px]">{product.name}</h3>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-sm font-bold text-[#D70018]">{formatCurrency(product.price)}</span>
+                      <span className="text-sm font-bold text-accent">{formatCurrency(product.price)}</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
                         product.stockQuantity > 10 ? 'bg-emerald-100 text-emerald-700' :
                         product.stockQuantity > 0 ? 'bg-amber-100 text-amber-700' :
@@ -908,7 +908,7 @@ export default function POSPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 text-sm truncate">{item.name}</h4>
-                      <p className="text-[#D70018] font-bold text-sm">{formatCurrency(item.price)}</p>
+                      <p className="text-accent font-bold text-sm">{formatCurrency(item.price)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button
@@ -949,13 +949,13 @@ export default function POSPage() {
                   value={discount || ''}
                   onChange={(e) => setDiscount(Number(e.target.value) || 0)}
                   placeholder="Giảm giá"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#D70018] outline-none"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none"
                 />
               </div>
               <select
                 value={discountType}
                 onChange={(e) => setDiscountType(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#D70018] outline-none"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none"
               >
                 <option value="percentage">%</option>
                 <option value="fixed">VND</option>
@@ -966,7 +966,7 @@ export default function POSPage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ghi chú đơn hàng..."
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#D70018] outline-none resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none resize-none"
             />
           </div>
 
@@ -991,7 +991,7 @@ export default function POSPage() {
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-bold text-gray-900">Tổng cộng</span>
-                <span className="text-xl font-black text-[#D70018]">{formatCurrency(calculateFinalTotal())}</span>
+                <span className="text-xl font-black text-accent">{formatCurrency(calculateFinalTotal())}</span>
               </div>
             </div>
 
@@ -1081,7 +1081,7 @@ export default function POSPage() {
       {processingOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 text-center">
-            <div className="animate-spin w-12 h-12 border-4 border-[#D70018] border-t-transparent rounded-full mx-auto mb-4" />
+            <div className="animate-spin w-12 h-12 border-4 border-accent border-t-transparent rounded-full mx-auto mb-4" />
             <p className="font-bold text-gray-900">Đang xử lý thanh toán...</p>
           </div>
         </div>

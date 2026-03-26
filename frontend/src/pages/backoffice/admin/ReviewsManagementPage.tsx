@@ -5,6 +5,7 @@ import {
   MessageSquare, Eye, AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '@context/ConfirmContext';
 import client from '@api/client';
 
 interface PendingReview {
@@ -59,6 +60,7 @@ export function ReviewsManagementPage() {
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'all'>('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  const confirm = useConfirm();
 
   // Fetch pending reviews
   const { data: pendingReviews, isLoading, refetch } = useQuery({
@@ -95,8 +97,9 @@ export function ReviewsManagementPage() {
     approveMutation.mutate(reviewId);
   };
 
-  const handleReject = (reviewId: string) => {
-    if (window.confirm('Bạn có chắc muốn từ chối đánh giá này?')) {
+  const handleReject = async (reviewId: string) => {
+    const ok = await confirm({ message: 'Bạn có chắc muốn từ chối đánh giá này?', variant: 'danger' });
+    if (ok) {
       rejectMutation.mutate(reviewId);
     }
   };
@@ -189,7 +192,7 @@ export function ReviewsManagementPage() {
               placeholder="Tìm kiếm theo sản phẩm, nội dung..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
           </div>
 
@@ -199,7 +202,7 @@ export function ReviewsManagementPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white"
+              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
             >
               <option value="pending">Chờ duyệt</option>
               <option value="approved">Đã duyệt</option>
@@ -213,7 +216,7 @@ export function ReviewsManagementPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto"></div>
+            <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto"></div>
             <p className="text-gray-500 mt-3">Đang tải...</p>
           </div>
         ) : filteredReviews.length === 0 ? (
@@ -282,7 +285,7 @@ export function ReviewsManagementPage() {
                     <button
                       onClick={() => handleReject(review.id)}
                       disabled={rejectMutation.isPending}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                       <X className="w-4 h-4" />
                       Từ chối

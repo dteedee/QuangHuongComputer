@@ -72,7 +72,7 @@ export const ProductDetailsPage = () => {
 
     if (isLoading) return (
         <div className="flex justify-center items-center min-h-[50vh] bg-white">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D70018]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
         </div>
     );
 
@@ -109,9 +109,9 @@ export const ProductDetailsPage = () => {
             {/* Breadcrumbs */}
             <div className="bg-white py-3 border-b border-gray-100 sticky top-[72px] z-30 shadow-sm">
                 <div className="max-w-[1400px] mx-auto px-4 text-xs text-gray-500 flex items-center gap-2 uppercase font-bold tracking-wide">
-                    <Link to="/" className="hover:text-[#D70018] transition-colors">Trang chủ</Link>
+                    <Link to="/" className="hover:text-accent transition-colors">Trang chủ</Link>
                     <ChevronRight size={12} />
-                    <Link to="/products" className="hover:text-[#D70018] transition-colors">Sản phẩm</Link>
+                    <Link to="/products" className="hover:text-accent transition-colors">Sản phẩm</Link>
                     <ChevronRight size={12} />
                     <span className="text-gray-900 truncate max-w-[300px]">{product.name}</span>
                 </div>
@@ -141,7 +141,7 @@ export const ProductDetailsPage = () => {
 
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                <div className="absolute top-4 left-4 bg-[#D70018] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-red-500/30 animate-pulse">
+                                <div className="absolute top-4 left-4 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-red-500/30 animate-pulse">
                                     GIẢM {discount}%
                                 </div>
                             </div>
@@ -154,7 +154,7 @@ export const ProductDetailsPage = () => {
                                         key={i}
                                         whileHover={{ y: -2 }}
                                         onClick={() => setSelectedImageIndex(i)}
-                                        className={`bg-white border rounded-xl p-2 cursor-pointer transition-all aspect-square flex items-center justify-center hover:shadow-md ${selectedImageIndex === i ? 'border-[#D70018] ring-1 ring-[#D70018]' : 'border-gray-200 hover:border-[#D70018]'}`}
+                                        className={`bg-white border rounded-xl p-2 cursor-pointer transition-all aspect-square flex items-center justify-center hover:shadow-md ${selectedImageIndex === i ? 'border-accent ring-1 ring-accent' : 'border-gray-200 hover:border-accent'}`}
                                     >
                                         <div className="w-full h-full rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
                                             <img src={img} alt={`Thumbnail ${i}`} className="w-full h-full object-contain mix-blend-multiply" />
@@ -173,13 +173,13 @@ export const ProductDetailsPage = () => {
                                 { icon: Award, text: "Cam kết chính hãng" }
                             ].map((item, idx) => (
                                 item.link ? (
-                                    <Link key={idx} to={item.link} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:border-[#D70018] transition-colors">
-                                        <item.icon size={18} className="text-[#D70018]" />
+                                    <Link key={idx} to={item.link} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:border-accent transition-colors">
+                                        <item.icon size={18} className="text-accent" />
                                         <span className="text-[10px] font-bold text-gray-700 uppercase">{item.text}</span>
                                     </Link>
                                 ) : (
                                     <div key={idx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                                        <item.icon size={18} className="text-[#D70018]" />
+                                        <item.icon size={18} className="text-accent" />
                                         <span className="text-[10px] font-bold text-gray-700 uppercase">{item.text}</span>
                                     </div>
                                 )
@@ -212,15 +212,15 @@ export const ProductDetailsPage = () => {
 
                         {/* Price Box */}
                         <div className="bg-white p-5 rounded-2xl border border-red-100 shadow-lg shadow-red-500/5 mb-6 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-2 bg-[#D70018]/10 rounded-bl-2xl">
-                                <Tag className="text-[#D70018]" size={16} />
+                            <div className="absolute top-0 right-0 p-2 bg-accent/10 rounded-bl-2xl">
+                                <Tag className="text-accent" size={16} />
                             </div>
 
                             <div className="flex flex-col mb-2">
                                 <span className="text-sm text-gray-400 font-medium">Giá niêm yết: <span className="line-through">{formatCurrency(oldPrice)}</span></span>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-black text-[#D70018] tracking-tight">{formatCurrency(product.price)}</span>
-                                    <span className="mb-1.5 text-xs font-bold text-[#D70018] bg-red-50 px-2 py-1 rounded-lg">-{discount}%</span>
+                                    <span className="text-4xl font-black text-accent tracking-tight">{formatCurrency(product.price)}</span>
+                                    <span className="mb-1.5 text-xs font-bold text-accent bg-red-50 px-2 py-1 rounded-lg">-{discount}%</span>
                                 </div>
                             </div>
                             <p className="text-xs text-gray-500 italic">Giá đã bao gồm VAT. Hỗ trợ trả góp 0%</p>
@@ -264,14 +264,14 @@ export const ProductDetailsPage = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <button className="w-full bg-[#D70018] hover:bg-[#b50014] text-white py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/30 transition-all active:scale-95 flex flex-col items-center justify-center">
+                                <button className="w-full bg-accent hover:bg-accent-hover text-white py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/30 transition-all active:scale-95 flex flex-col items-center justify-center">
                                     <span className="uppercase text-sm">Mua ngay</span>
                                     <span className="text-[10px] font-normal opacity-90">Giao hàng tận nơi hoặc nhận tại cửa hàng</span>
                                 </button>
 
                                 <button
                                     onClick={() => addToCart(product, quantity)}
-                                    className="w-full bg-white border-2 border-[#D70018] text-[#D70018] hover:bg-red-50 py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/10 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                                    className="w-full bg-white border-2 border-accent text-accent hover:bg-red-50 py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/10 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                                 >
                                     <ShoppingBag size={18} className="group-hover:scale-110 transition-transform" />
                                     <span className="uppercase text-sm">Thêm vào giỏ</span>
@@ -287,20 +287,20 @@ export const ProductDetailsPage = () => {
                                 <h4 className="font-bold text-xs text-gray-900 mb-2">Chính sách:</h4>
                                 <ul className="text-[11px] text-gray-600 space-y-1.5">
                                     <li className="flex items-start gap-1.5">
-                                        <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
-                                        <Link to="/policy/warranty" className="hover:text-[#D70018] hover:underline">
+                                        <div className="w-1 h-1 rounded-full bg-accent mt-1.5" />
+                                        <Link to="/policy/warranty" className="hover:text-accent hover:underline">
                                             {product.warrantyInfo || "Bảo hành 24 tháng"}
                                         </Link>
                                     </li>
                                     <li className="flex items-start gap-1.5">
-                                        <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
-                                        <Link to="/policy/return" className="hover:text-[#D70018] hover:underline">
+                                        <div className="w-1 h-1 rounded-full bg-accent mt-1.5" />
+                                        <Link to="/policy/return" className="hover:text-accent hover:underline">
                                             Chính sách đổi trả trong 30 ngày
                                         </Link>
                                     </li>
                                     <li className="flex items-start gap-1.5">
-                                        <div className="w-1 h-1 rounded-full bg-[#D70018] mt-1.5" />
-                                        <Link to="/policy/shipping" className="hover:text-[#D70018] hover:underline">
+                                        <div className="w-1 h-1 rounded-full bg-accent mt-1.5" />
+                                        <Link to="/policy/shipping" className="hover:text-accent hover:underline">
                                             Chính sách giao hàng
                                         </Link>
                                     </li>
@@ -322,13 +322,13 @@ export const ProductDetailsPage = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-all relative
-                                    ${activeTab === tab.id ? 'text-[#D70018] bg-red-50/50' : 'text-gray-500 hover:bg-gray-50'}
+                                    ${activeTab === tab.id ? 'text-accent bg-red-50/50' : 'text-gray-500 hover:bg-gray-50'}
                                 `}
                             >
                                 <tab.icon size={16} />
                                 {tab.label}
                                 {activeTab === tab.id && (
-                                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D70018]" />
+                                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
                                 )}
                             </button>
                         ))}
@@ -409,7 +409,7 @@ export const ProductDetailsPage = () => {
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-1">Chưa có đánh giá nào</h3>
                                     <p className="text-gray-500 text-sm mb-6">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-                                    <button className="bg-[#D70018] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#b50014] transition shadow-lg shadow-red-500/20">
+                                    <button className="bg-accent text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-accent-hover transition shadow-lg shadow-red-500/20">
                                         Viết đánh giá ngay
                                     </button>
                                 </motion.div>
@@ -421,7 +421,7 @@ export const ProductDetailsPage = () => {
                 {/* Related Products Title */}
                 <div className="mt-12 mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-black text-gray-900 uppercase italic">Sản phẩm liên quan</h2>
-                    <Link to="/products" className="text-sm font-bold text-[#D70018] hover:underline flex items-center gap-1">
+                    <Link to="/products" className="text-sm font-bold text-accent hover:underline flex items-center gap-1">
                         Xem tất cả <ChevronRight size={16} />
                     </Link>
                 </div>

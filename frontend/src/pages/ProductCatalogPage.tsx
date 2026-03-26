@@ -173,7 +173,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                <Link to="/" className="hover:text-[#D70018] flex items-center gap-1 transition-colors"><Home size={14} /> Trang chủ</Link>
+                <Link to="/" className="hover:text-accent flex items-center gap-1 transition-colors"><Home size={14} /> Trang chủ</Link>
                 <ChevronRight size={14} />
                 <span className="text-gray-900 font-medium">Sản phẩm</span>
               </nav>
@@ -190,9 +190,9 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm kiếm sản phẩm..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full focus:ring-2 focus:ring-[#D70018]/20 focus:bg-white transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full focus:ring-2 focus:ring-accent/20 focus:bg-white transition-all outline-none"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-[#D70018] transition-colors" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-accent transition-colors" />
               </form>
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                 <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
                   <button
                     onClick={() => setShowMobileFilter(false)}
-                    className="w-full py-3 bg-[#D70018] text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition-colors"
+                    className="w-full py-3 bg-accent text-white font-bold rounded-lg shadow-lg hover:bg-accent-hover transition-colors"
                   >
                     Xem {total} kết quả
                   </button>
@@ -319,14 +319,14 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                 <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     title="Lưới"
                   >
                     <Grid size={18} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-[#D70018] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     title="Danh sách"
                   >
                     <List size={18} />
@@ -366,7 +366,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                     setPage(1);
                     setSearchParams({});
                   }}
-                  className="px-8 py-3 bg-[#D70018] text-white rounded-full hover:bg-red-700 font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                  className="px-8 py-3 bg-accent text-white rounded-full hover:bg-accent-hover font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                 >
                   Xóa tất cả bộ lọc
                 </button>
@@ -419,7 +419,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                           key={pageNum}
                           onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                           className={`min-w-[40px] h-10 rounded-lg font-medium text-sm transition-all shadow-sm ${page === pageNum
-                            ? 'bg-[#D70018] text-white shadow-md transform scale-105'
+                            ? 'bg-accent text-white shadow-md transform scale-105'
                             : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
                             }`}
                         >

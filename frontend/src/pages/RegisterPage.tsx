@@ -35,14 +35,14 @@ export const RegisterPage = () => {
                 angle: 60,
                 spread: 55,
                 origin: { x: 0 },
-                colors: ['#D70018', '#ff4d6d', '#ffd700']
+                colors: [getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#D70018', '#ff4d6d', '#ffd700']
             });
             confetti({
                 particleCount: 3,
                 angle: 120,
                 spread: 55,
                 origin: { x: 1 },
-                colors: ['#D70018', '#ff4d6d', '#ffd700']
+                colors: [getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#D70018', '#ff4d6d', '#ffd700']
             });
 
             if (Date.now() < end) {
@@ -110,12 +110,12 @@ export const RegisterPage = () => {
             {/* Animated background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute -top-40 -left-40 w-80 h-80 bg-[#D70018]/10 rounded-full blur-3xl"
+                    className="absolute -top-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#D70018]/5 rounded-full blur-3xl"
+                    className="absolute -bottom-40 -right-40 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
                     animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -129,7 +129,7 @@ export const RegisterPage = () => {
             >
 
                 {/* Visual Side */}
-                <div className="hidden lg:flex bg-gradient-to-br from-[#D70018] via-[#c50016] to-[#a00012] p-12 flex-col justify-between relative overflow-hidden order-last">
+                <div className="hidden lg:flex bg-gradient-to-br from-accent via-[#c50016] to-[#a00012] p-12 flex-col justify-between relative overflow-hidden order-last">
                     {/* Animated shapes */}
                     <motion.div
                         className="absolute top-20 left-20 w-32 h-32 border border-white/10 rounded-2xl"
@@ -146,7 +146,7 @@ export const RegisterPage = () => {
                         <Link to="/" className="flex items-center gap-3 mb-16 group">
                             <motion.div
                                 whileHover={{ rotate: -12, scale: 1.1 }}
-                                className="w-12 h-12 bg-white text-[#D70018] rounded-xl flex items-center justify-center font-black text-2xl shadow-lg"
+                                className="w-12 h-12 bg-white text-accent rounded-xl flex items-center justify-center font-black text-2xl shadow-lg"
                             >
                                 QH
                             </motion.div>
@@ -322,7 +322,7 @@ export const RegisterPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="text-gray-400 hover:text-[#D70018] focus:outline-none transition-colors p-1"
+                                                    className="text-gray-400 hover:text-accent focus:outline-none transition-colors p-1"
                                                 >
                                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
@@ -348,7 +348,7 @@ export const RegisterPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="text-gray-400 hover:text-[#D70018] focus:outline-none transition-colors p-1"
+                                                    className="text-gray-400 hover:text-accent focus:outline-none transition-colors p-1"
                                                 >
                                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
@@ -372,7 +372,7 @@ export const RegisterPage = () => {
                                             />
                                             <label
                                                 htmlFor="acceptTerms"
-                                                className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center cursor-pointer transition-all peer-checked:bg-[#D70018] peer-checked:border-[#D70018] hover:border-[#D70018]"
+                                                className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center cursor-pointer transition-all peer-checked:bg-accent peer-checked:border-accent hover:border-accent"
                                             >
                                                 {acceptTerms && (
                                                     <motion.svg
@@ -388,7 +388,7 @@ export const RegisterPage = () => {
                                         </div>
                                         <label htmlFor="acceptTerms" className="text-sm text-gray-600 font-medium cursor-pointer">
                                             Tôi đồng ý với{' '}
-                                            <Link to="/policy/terms" target="_blank" className="text-[#D70018] hover:underline font-bold">
+                                            <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold">
                                                 Điều khoản sử dụng
                                             </Link>
                                             {' '}của Quang Hưởng Computer
@@ -435,7 +435,7 @@ export const RegisterPage = () => {
                                     className="mt-8 text-center text-gray-500 text-sm font-medium italic"
                                 >
                                     Đã có tài khoản?{' '}
-                                    <Link to="/login" className="text-[#D70018] hover:underline font-black not-italic transition-colors hover:text-[#b50014]">
+                                    <Link to="/login" className="text-accent hover:underline font-black not-italic transition-colors hover:text-accent-hover">
                                         Đăng nhập ngay
                                     </Link>
                                 </motion.div>

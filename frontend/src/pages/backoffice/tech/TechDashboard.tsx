@@ -149,7 +149,7 @@ export const TechDashboard: React.FC = () => {
                         </div>
                         <div>
                             <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                                Xin chào, <span className="text-[#D70018]">{user?.fullName || 'Kỹ thuật viên'}</span>
+                                Xin chào, <span className="text-accent">{user?.fullName || 'Kỹ thuật viên'}</span>
                             </h1>
                             <p className="text-gray-600 font-semibold flex items-center gap-2 mt-1">
                                 <Briefcase size={16} />

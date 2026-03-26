@@ -15,7 +15,7 @@ export function ComparisonBar() {
       {/* Toggle button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-t-lg shadow-lg flex items-center gap-2 hover:bg-red-700 transition"
+        className="absolute -top-10 left-1/2 -translate-x-1/2 bg-accent text-white px-4 py-2 rounded-t-lg shadow-lg flex items-center gap-2 hover:bg-accent-hover transition"
       >
         <Scale />
         <span className="font-medium">So sánh ({items.length})</span>
@@ -85,7 +85,7 @@ export function ComparisonBar() {
               {items.length >= 2 && (
                 <Link
                   to="/compare"
-                  className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                  className="px-6 py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition flex items-center gap-2"
                 >
                   <Scale />
                   So sánh ngay

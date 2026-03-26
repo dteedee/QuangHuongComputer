@@ -8,6 +8,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Accent color (dynamic via CSS variables from ThemeContext)
+        'accent': 'var(--accent-primary)',
+        'accent-hover': 'var(--accent-primary-hover)',
+        'accent-light': 'var(--accent-primary-light)',
+        'accent-dark': 'var(--accent-primary-dark)',
+
         // Brand colors (Quang Hưởng đỏ)
         'brand-red': '#D70018',
         'brand-red-dark': '#B50014',

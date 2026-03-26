@@ -35,12 +35,12 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
         <div className="max-w-[1400px] mx-auto px-4 mt-16">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
-                    <span className="text-[#D70018]"><FileText size={28} /></span>
+                    <span className="text-accent"><FileText size={28} /></span>
                     {title || 'TIN TỨC & KHUYẾN MÃI'}
                 </h2>
                 <Link
                     to={postType === 'News' ? '/policy/news' : '/policy/promotions'}
-                    className="text-sm font-bold text-[#D70018] hover:underline flex items-center gap-1 uppercase tracking-wider"
+                    className="text-sm font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
                 >
                     Xem tất cả <ChevronRight size={16} />
                 </Link>
@@ -64,11 +64,11 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                                 />
                             </div>
                             <div className="p-6">
-                                <div className="flex items-center gap-2 text-xs font-bold text-[#D70018] uppercase mb-3">
+                                <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase mb-3">
                                     <Calendar size={14} />
                                     {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Dec 24, 2025'}
                                 </div>
-                                <h3 className="font-black text-gray-800 text-lg group-hover:text-[#D70018] transition-colors line-clamp-2 leading-tight">
+                                <h3 className="font-black text-gray-800 text-lg group-hover:text-accent transition-colors line-clamp-2 leading-tight">
                                     {post.title}
                                 </h3>
                             </div>

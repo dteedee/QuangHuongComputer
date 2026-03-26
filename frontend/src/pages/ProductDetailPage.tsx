@@ -271,7 +271,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#D70018] mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
         </div>
       </div>
@@ -285,7 +285,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Không tìm thấy sản phẩm</h2>
           <button
             onClick={() => navigate('/products')}
-            className="px-6 py-3 bg-[#D70018] text-white rounded-lg hover:bg-[#b50014]"
+            className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-hover"
           >
             Quay lại danh sách
           </button>
@@ -328,11 +328,11 @@ export default function ProductDetailPage() {
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-2 text-sm">
-            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-[#D70018] font-medium">
+            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-accent font-medium">
               Trang chủ
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-[#D70018] font-medium">
+            <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-accent font-medium">
               Sản phẩm
             </button>
             <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -353,7 +353,7 @@ export default function ProductDetailPage() {
                   className="w-full h-full object-contain mix-blend-multiply"
                 />
                 {discount && (
-                  <div className="absolute top-4 left-4 bg-[#D70018] text-white px-3 py-1 rounded-full font-bold text-xs shadow-lg shadow-red-500/30">
+                  <div className="absolute top-4 left-4 bg-accent text-white px-3 py-1 rounded-full font-bold text-xs shadow-lg shadow-red-500/30">
                     -{discount}%
                   </div>
                 )}
@@ -365,7 +365,7 @@ export default function ProductDetailPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-[#D70018] ring-1 ring-[#D70018]' : 'border-transparent hover:border-[#D70018]/50'
+                    className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-accent ring-1 ring-accent' : 'border-transparent hover:border-accent/50'
                       }`}
                   >
                     <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
@@ -384,14 +384,14 @@ export default function ProductDetailPage() {
               {/* Price */}
               <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
                 <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-black text-[#D70018] tracking-tight">{formatPrice(product.price)}</span>
+                  <span className="text-4xl font-black text-accent tracking-tight">{formatPrice(product.price)}</span>
                   {product.oldPrice && (
                     <>
                       <span className="text-lg text-gray-400 line-through font-medium">
                         {formatPrice(product.oldPrice)}
                       </span>
                       {discount && (
-                        <span className="bg-red-100 text-[#D70018] px-2 py-1 rounded-lg text-xs font-bold uppercase">
+                        <span className="bg-red-100 text-accent px-2 py-1 rounded-lg text-xs font-bold uppercase">
                           Tiết kiệm {formatPrice(product.oldPrice - product.price)}
                         </span>
                       )}
@@ -454,14 +454,14 @@ export default function ProductDetailPage() {
                   <button
                     onClick={handleBuyNow}
                     disabled={product.stockQuantity === 0}
-                    className="px-6 py-4 bg-[#D70018] text-white rounded-xl hover:bg-[#b50014] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-black uppercase text-sm shadow-lg shadow-red-500/20 active:scale-95"
+                    className="px-6 py-4 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-black uppercase text-sm shadow-lg shadow-red-500/20 active:scale-95"
                   >
                     Mua ngay
                   </button>
                   <button
                     onClick={handleAddToCart}
                     disabled={product.stockQuantity === 0 || addingToCart}
-                    className="px-6 py-4 bg-white border-2 border-[#D70018] text-[#D70018] rounded-xl hover:bg-red-50 disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all font-bold uppercase text-sm flex items-center justify-center gap-2 active:scale-95 group"
+                    className="px-6 py-4 bg-white border-2 border-accent text-accent rounded-xl hover:bg-red-50 disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all font-bold uppercase text-sm flex items-center justify-center gap-2 active:scale-95 group"
                   >
                     <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
@@ -472,17 +472,17 @@ export default function ProductDetailPage() {
               {/* Features */}
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
                 <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <Truck className="w-6 h-6 text-[#D70018] mb-2" />
+                  <Truck className="w-6 h-6 text-accent mb-2" />
                   <span className="text-xs font-bold uppercase">Miễn phí vẫn chuyển</span>
                   <span className="text-[10px] text-gray-500 mt-1">Đơn hàng &gt; 5tr</span>
                 </div>
                 <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <Shield className="w-6 h-6 text-[#D70018] mb-2" />
+                  <Shield className="w-6 h-6 text-accent mb-2" />
                   <span className="text-xs font-bold uppercase">Bảo hành chính hãng</span>
                   <span className="text-[10px] text-gray-500 mt-1">{product.warrantyInfo || '12 tháng'}</span>
                 </div>
                 <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <HeadphonesIcon className="w-6 h-6 text-[#D70018] mb-2" />
+                  <HeadphonesIcon className="w-6 h-6 text-accent mb-2" />
                   <span className="text-xs font-bold uppercase">Hỗ trợ 24/7</span>
                   <span className="text-[10px] text-gray-500 mt-1">1900.6321</span>
                 </div>
@@ -496,7 +496,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => setActiveTab('description')}
                 className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'description'
-                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  ? 'border-accent text-accent bg-red-50/50'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -505,7 +505,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => setActiveTab('specifications')}
                 className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'specifications'
-                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  ? 'border-accent text-accent bg-red-50/50'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -514,7 +514,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => setActiveTab('reviews')}
                 className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'reviews'
-                  ? 'border-[#D70018] text-[#D70018] bg-red-50/50'
+                  ? 'border-accent text-accent bg-red-50/50'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -568,7 +568,7 @@ export default function ProductDetailPage() {
                       ) : hasPurchased ? (
                         <button
                           onClick={handleWriteReview}
-                          className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                          className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
                         >
                           Viết đánh giá
                         </button>
@@ -588,7 +588,7 @@ export default function ProductDetailPage() {
                       ) : (
                         <button
                           onClick={handleWriteReview}
-                          className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                          className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
                         >
                           Đăng nhập để đánh giá
                         </button>
@@ -623,7 +623,7 @@ export default function ProductDetailPage() {
                             onClick={() => setReviewSort(option.value as ReviewSortOption)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                               reviewSort === option.value
-                                ? 'bg-[#D70018] text-white'
+                                ? 'bg-accent text-white'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                           >
@@ -637,7 +637,7 @@ export default function ProductDetailPage() {
                   {/* Reviews List */}
                   {loadingReviews ? (
                     <div className="py-10 text-center">
-                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D70018] mx-auto"></div>
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent mx-auto"></div>
                       <p className="mt-4 text-gray-500 font-medium">Đang tải đánh giá...</p>
                     </div>
                   ) : sortedReviews.length > 0 ? (
@@ -661,7 +661,7 @@ export default function ProductDetailPage() {
                           <p className="text-gray-500 text-sm mb-4">Hãy là người đầu tiên chia sẻ cảm nhận về sản phẩm này!</p>
                           <button
                             onClick={handleWriteReview}
-                            className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                            className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
                           >
                             Viết đánh giá đầu tiên
                           </button>
@@ -675,7 +675,7 @@ export default function ProductDetailPage() {
                           <p className="text-gray-500 text-sm mb-4">Đăng nhập và mua sản phẩm để đánh giá!</p>
                           <button
                             onClick={handleWriteReview}
-                            className="px-6 py-2.5 bg-[#D70018] text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-[#b50014]"
+                            className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
                           >
                             Đăng nhập ngay
                           </button>
@@ -691,7 +691,7 @@ export default function ProductDetailPage() {
 
         {/* Related Products */}
         <div className="mt-12 mb-8 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-6 border-l-4 border-[#D70018] pl-4">
+          <div className="flex items-center justify-between mb-6 border-l-4 border-accent pl-4">
             <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Sản phẩm liên quan</h2>
             <button
               onClick={handleViewAllRelated}
@@ -722,17 +722,17 @@ export default function ProductDetailPage() {
                       className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
                     />
                     {p.oldPrice && p.oldPrice > p.price && (
-                      <div className="absolute top-3 left-3 bg-[#D70018] text-white text-[10px] font-black px-2 py-1 rounded-full uppercase shadow-lg shadow-red-500/30">
+                      <div className="absolute top-3 left-3 bg-accent text-white text-[10px] font-black px-2 py-1 rounded-full uppercase shadow-lg shadow-red-500/30">
                         -{Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)}%
                       </div>
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <h3 className="font-bold text-gray-900 line-clamp-2 text-xs h-8 group-hover:text-[#D70018] transition-colors leading-tight uppercase">
+                    <h3 className="font-bold text-gray-900 line-clamp-2 text-xs h-8 group-hover:text-accent transition-colors leading-tight uppercase">
                       {p.name}
                     </h3>
                     <div className="flex flex-col">
-                      <span className="text-[#D70018] font-black text-base">{formatPrice(p.price)}</span>
+                      <span className="text-accent font-black text-base">{formatPrice(p.price)}</span>
                       {p.oldPrice && (
                         <span className="text-gray-400 line-through text-[10px] font-bold">
                           {formatPrice(p.oldPrice)}

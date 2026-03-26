@@ -5,6 +5,7 @@ import {
     Calendar, TrendingUp, Package, AlertCircle, X, Check, Search, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../context/ConfirmContext';
 import FlashSaleCountdown from '../../components/FlashSaleCountdown';
 
 type ModalMode = 'create' | 'edit' | null;
@@ -58,6 +59,7 @@ export default function FlashSalesPage() {
     const [filter, setFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const confirm = useConfirm();
 
     // Debounce search
     useEffect(() => {
@@ -209,7 +211,8 @@ export default function FlashSalesPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Bạn có chắc muốn xóa Flash Sale này?')) return;
+        const ok = await confirm({ message: 'Bạn có chắc muốn xóa Flash Sale này?', variant: 'danger' });
+        if (!ok) return;
 
         try {
             await contentApi.admin.flashSales.delete(id);
@@ -262,7 +265,7 @@ export default function FlashSalesPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <Zap className="w-7 h-7 text-[#D70018]" />
+                        <Zap className="w-7 h-7 text-accent" />
                         Quản lý Flash Sales
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">
@@ -271,7 +274,7 @@ export default function FlashSalesPage() {
                 </div>
                 <button
                     onClick={openCreateModal}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     Tạo Flash Sale
@@ -344,13 +347,13 @@ export default function FlashSalesPage() {
                 <div className="flex flex-col lg:flex-row items-stretch gap-4">
                     {/* Search */}
                     <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D70018] transition-colors" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={18} />
                         <input
                             type="text"
                             placeholder="Tìm kiếm tên chương trình Flash Sale..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[#D70018]/10 transition-all outline-none placeholder:text-gray-400"
+                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
                         />
                         {searchTerm && (
                             <button
@@ -375,7 +378,7 @@ export default function FlashSalesPage() {
                                 onClick={() => setFilter(tab.value)}
                                 className={`px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                                     filter === tab.value
-                                        ? 'bg-[#D70018] text-white shadow-lg shadow-red-500/20'
+                                        ? 'bg-accent text-white shadow-lg shadow-red-500/20'
                                         : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -387,7 +390,7 @@ export default function FlashSalesPage() {
                         {hasActiveFilters && (
                             <button
                                 onClick={resetFilters}
-                                className="flex items-center gap-1.5 px-4 py-3 text-sm font-bold text-gray-500 hover:text-[#D70018] hover:bg-red-50 rounded-xl transition-all"
+                                className="flex items-center gap-1.5 px-4 py-3 text-sm font-bold text-gray-500 hover:text-accent hover:bg-red-50 rounded-xl transition-all"
                             >
                                 <RefreshCw size={14} />
                                 Đặt lại
@@ -408,7 +411,7 @@ export default function FlashSalesPage() {
                 if (loading) {
                     return (
                         <div className="flex justify-center py-20">
-                            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#D70018] rounded-full animate-spin" />
+                            <div className="w-10 h-10 border-4 border-gray-200 border-t-accent rounded-full animate-spin" />
                         </div>
                     );
                 }
@@ -428,7 +431,7 @@ export default function FlashSalesPage() {
                             {!debouncedSearch && (
                                 <button
                                     onClick={openCreateModal}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-colors"
                                 >
                                     <Plus className="w-5 h-5" />
                                     Tạo Flash Sale
@@ -453,7 +456,7 @@ export default function FlashSalesPage() {
                                     </div>
                                     <p className="text-sm text-gray-500 mb-3">{sale.description}</p>
                                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                                        <div className="flex items-center gap-1 text-[#D70018] font-bold">
+                                        <div className="flex items-center gap-1 text-accent font-bold">
                                             <Zap className="w-4 h-4" />
                                             {sale.discountType === 'Percentage'
                                                 ? `-${sale.discountValue}%`
@@ -531,7 +534,7 @@ export default function FlashSalesPage() {
                         onClick={closeModal}
                     />
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-                        <div className="bg-gradient-to-r from-[#D70018] to-[#ff4d4d] px-6 py-4">
+                        <div className="bg-gradient-to-r from-accent to-[#ff4d4d] px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-black text-white">
                                     {modalMode === 'create' ? 'Tạo Flash Sale mới' : 'Chỉnh sửa Flash Sale'}
@@ -557,7 +560,7 @@ export default function FlashSalesPage() {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
                                     placeholder="VD: Flash Sale Tết 2026"
-                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                 />
                             </div>
 
@@ -571,7 +574,7 @@ export default function FlashSalesPage() {
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={2}
                                     placeholder="Mô tả ngắn về chương trình khuyến mãi"
-                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none resize-none placeholder:text-gray-400"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none resize-none placeholder:text-gray-400"
                                 />
                             </div>
 
@@ -589,7 +592,7 @@ export default function FlashSalesPage() {
                                                 discountType: e.target.value as 'Percentage' | 'FixedAmount',
                                             })
                                         }
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     >
                                         <option value="Percentage">Phần trăm (%)</option>
                                         <option value="FixedAmount">Số tiền cố định (đ)</option>
@@ -608,7 +611,7 @@ export default function FlashSalesPage() {
                                         required
                                         min={1}
                                         max={formData.discountType === 'Percentage' ? 100 : undefined}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -624,7 +627,7 @@ export default function FlashSalesPage() {
                                         value={formData.startTime}
                                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                                         required
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>
@@ -636,7 +639,7 @@ export default function FlashSalesPage() {
                                         value={formData.endTime}
                                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                                         required
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -658,7 +661,7 @@ export default function FlashSalesPage() {
                                         }
                                         placeholder="Không giới hạn"
                                         min={1}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>
@@ -676,7 +679,7 @@ export default function FlashSalesPage() {
                                         }
                                         placeholder="Không giới hạn"
                                         min={1}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                             </div>
@@ -693,7 +696,7 @@ export default function FlashSalesPage() {
                                         onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
                                         placeholder="VD: HOT, SALE, -50%"
                                         maxLength={20}
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-[#D70018] outline-none placeholder:text-gray-400"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
                                 </div>
                                 <div>
@@ -711,7 +714,7 @@ export default function FlashSalesPage() {
                                             type="text"
                                             value={formData.badgeColor || '#D70018'}
                                             onChange={(e) => setFormData({ ...formData, badgeColor: e.target.value })}
-                                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#D70018] outline-none"
+                                            className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-accent outline-none"
                                         />
                                     </div>
                                 </div>
@@ -726,7 +729,7 @@ export default function FlashSalesPage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, applyToAllProducts: e.target.checked })
                                     }
-                                    className="w-5 h-5 rounded border-gray-300 text-[#D70018] focus:ring-[#D70018]"
+                                    className="w-5 h-5 rounded border-gray-300 text-accent focus:ring-accent"
                                 />
                                 <label htmlFor="applyToAll" className="text-sm font-medium text-gray-700">
                                     Áp dụng cho tất cả sản phẩm
@@ -745,7 +748,7 @@ export default function FlashSalesPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 px-4 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-[#b50014] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {submitting ? (
                                         <>

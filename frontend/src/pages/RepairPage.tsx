@@ -95,12 +95,12 @@ export const RepairPage = () => {
             <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
                 <div className="bg-white p-16 max-w-2xl mx-auto rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
                     <h2 className="text-3xl font-black text-gray-900 mb-4 uppercase italic tracking-tighter">
-                        Vui lòng <span className="text-[#D70018]">Đăng nhập</span>
+                        Vui lòng <span className="text-accent">Đăng nhập</span>
                     </h2>
                     <p className="text-gray-500 font-medium mb-10 italic">
                         Bạn cần đăng nhập để đặt lịch sửa chữa và theo dõi tiến độ.
                     </p>
-                    <Link to="/login" className="inline-block px-10 py-4 bg-[#D70018] text-white font-black rounded-2xl hover:bg-[#b00014] transition shadow-lg shadow-red-600/20 uppercase tracking-widest text-[10px] active:scale-95">
+                    <Link to="/login" className="inline-block px-10 py-4 bg-accent text-white font-black rounded-2xl hover:bg-[#b00014] transition shadow-lg shadow-red-600/20 uppercase tracking-widest text-[10px] active:scale-95">
                         Đăng nhập ngay
                     </Link>
                 </div>
@@ -117,7 +117,7 @@ export const RepairPage = () => {
     return (
         <div className="container mx-auto px-4 py-12 max-w-6xl font-sans">
             <h2 className="text-4xl font-black text-gray-900 mb-12 uppercase italic tracking-tighter">
-                Dịch vụ <span className="text-[#D70018]">Sửa chữa</span>
+                Dịch vụ <span className="text-accent">Sửa chữa</span>
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -136,7 +136,7 @@ export const RepairPage = () => {
                                 <input
                                     value={deviceModel}
                                     onChange={e => setDeviceModel(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                                     placeholder="Ví dụ: Dell XPS 15"
                                     required
                                 />
@@ -148,7 +148,7 @@ export const RepairPage = () => {
                                 <input
                                     value={serialNumber}
                                     onChange={e => setSerialNumber(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
                                     placeholder="Ví dụ: SN123456"
                                     required
                                 />
@@ -160,7 +160,7 @@ export const RepairPage = () => {
                                 <textarea
                                     value={issueDescription}
                                     onChange={e => setIssueDescription(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-[#D70018] text-gray-900 font-bold focus:outline-none transition-all shadow-inner min-h-[100px] resize-none"
+                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner min-h-[100px] resize-none"
                                     placeholder="Thiết bị của bạn đang gặp vấn đề gì?"
                                     required
                                 />
@@ -183,7 +183,7 @@ export const RepairPage = () => {
                     {/* Book Service Button */}
                     <Link
                         to="/booking"
-                        className="block bg-gradient-to-br from-[#D70018] to-red-700 p-8 rounded-[32px] shadow-xl shadow-red-500/20 text-white hover:shadow-2xl hover:shadow-red-500/30 transition-all group"
+                        className="block bg-gradient-to-br from-accent to-red-700 p-8 rounded-[32px] shadow-xl shadow-red-500/20 text-white hover:shadow-2xl hover:shadow-red-500/30 transition-all group"
                     >
                         <h3 className="text-xl font-black mb-2 uppercase italic tracking-tighter flex items-center gap-2">
                             Đặt lịch dịch vụ
@@ -219,7 +219,7 @@ export const RepairPage = () => {
                                     return (
                                         <div
                                             key={`wo-${repair.id}`}
-                                            className={`bg-white p-8 rounded-[32px] border transition-all shadow-lg shadow-gray-200/20 group cursor-pointer hover:shadow-xl ${needsAction ? 'border-amber-300 ring-2 ring-amber-100' : 'border-gray-100 hover:border-[#D70018]/30'
+                                            className={`bg-white p-8 rounded-[32px] border transition-all shadow-lg shadow-gray-200/20 group cursor-pointer hover:shadow-xl ${needsAction ? 'border-amber-300 ring-2 ring-amber-100' : 'border-gray-100 hover:border-accent/30'
                                                 }`}
                                             onClick={() => navigate(`/repair/${repair.id}`)}
                                         >
@@ -259,7 +259,7 @@ export const RepairPage = () => {
                                             <div className="flex justify-between items-center text-[10px] text-gray-400 font-black uppercase tracking-widest italic border-t border-gray-50 pt-6">
                                                 <span>Ngày đặt: {new Date(repair.createdAt).toLocaleDateString('vi-VN')}</span>
                                                 {repair.totalCost > 0 && (
-                                                    <span className="text-[#D70018] text-sm">
+                                                    <span className="text-accent text-sm">
                                                         {formatCurrency(repair.totalCost)}
                                                     </span>
                                                 )}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AccentColor = 'red' | 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'amber';
@@ -138,6 +138,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         document.documentElement.style.setProperty('--accent-primary', colors.primary);
         document.documentElement.style.setProperty('--accent-primary-hover', colors.primaryHover);
         document.documentElement.style.setProperty('--accent-primary-light', colors.primaryLight);
+        document.documentElement.style.setProperty('--accent-primary-dark', colors.primaryDark);
     }, [isDark, accent]);
 
     const setMode = (newMode: ThemeMode) => {

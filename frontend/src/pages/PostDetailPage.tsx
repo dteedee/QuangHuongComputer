@@ -19,7 +19,7 @@ export const PostDetailPage = () => {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 size={40} className="animate-spin text-[#D70018]" />
+                    <Loader2 size={40} className="animate-spin text-accent" />
                     <p className="font-medium text-gray-500">Đang tải bài viết...</p>
                 </div>
             </div>
@@ -31,7 +31,7 @@ export const PostDetailPage = () => {
             <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy bài viết</h1>
                 <p className="text-gray-500 mb-6">Bài viết bạn tìm kiếm không tồn tại hoặc đã bị xóa.</p>
-                <Link to="/" className="px-6 py-2 bg-[#D70018] text-white rounded-lg hover:bg-red-700 transition-colors">
+                <Link to="/" className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors">
                     Về trang chủ
                 </Link>
             </div>
@@ -50,9 +50,9 @@ export const PostDetailPage = () => {
             <div className="bg-white border-b border-gray-200">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link to="/" className="hover:text-[#D70018] transition-colors">Trang chủ</Link>
+                        <Link to="/" className="hover:text-accent transition-colors">Trang chủ</Link>
                         <span>/</span>
-                        <Link to="/policy/news" className="hover:text-[#D70018] transition-colors">Tin tức & Blog</Link>
+                        <Link to="/policy/news" className="hover:text-accent transition-colors">Tin tức & Blog</Link>
                         <span>/</span>
                         <span className="text-gray-900 font-medium truncate max-w-[200px] md:max-w-md">{post.title}</span>
                     </div>
@@ -68,7 +68,7 @@ export const PostDetailPage = () => {
                         <div className="w-full h-64 md:h-96 bg-gray-100 relative">
                             <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
                             <div className="absolute top-4 left-4">
-                                <span className="bg-[#D70018] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                                <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
                                     {post.type}
                                 </span>
                             </div>
@@ -80,7 +80,7 @@ export const PostDetailPage = () => {
                         <div className="mb-10 border-b border-gray-100 pb-8">
                             {!post.featuredImage && (
                                 <div className="mb-4">
-                                    <span className="bg-red-50 text-[#D70018] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                    <span className="bg-red-50 text-accent text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                         {post.type}
                                     </span>
                                 </div>
@@ -92,15 +92,15 @@ export const PostDetailPage = () => {
 
                             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
                                 <div className="flex items-center gap-2">
-                                    <Calendar size={16} className="text-[#D70018]" />
+                                    <Calendar size={16} className="text-accent" />
                                     <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('vi-VN') : 'Mới cập nhật'}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <User size={16} className="text-[#D70018]" />
+                                    <User size={16} className="text-accent" />
                                     <span>Admin</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Clock size={16} className="text-[#D70018]" />
+                                    <Clock size={16} className="text-accent" />
                                     <span>5 phút đọc</span>
                                 </div>
                             </div>
@@ -132,7 +132,7 @@ export const PostDetailPage = () => {
 
                 {/* Back Button */}
                 <div className="max-w-4xl mx-auto mt-8 mb-12">
-                    <Link to="/policy/news" className="inline-flex items-center gap-2 text-gray-600 hover:text-[#D70018] font-bold transition-colors group">
+                    <Link to="/policy/news" className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold transition-colors group">
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                         Quay lại danh sách tin tức
                     </Link>

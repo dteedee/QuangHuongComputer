@@ -48,8 +48,8 @@ export function WishlistButton({
         disabled={isLoading}
         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
           inWishlist
-            ? 'bg-red-50 text-[#D70018] border border-red-200'
-            : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-[#D70018] border border-transparent'
+            ? 'bg-red-50 text-accent border border-red-200'
+            : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-accent border border-transparent'
         } disabled:opacity-50 ${className}`}
       >
         <Heart
@@ -70,8 +70,8 @@ export function WishlistButton({
       disabled={isLoading}
       className={`${sizeClasses[size]} flex items-center justify-center rounded-full transition-all ${
         inWishlist
-          ? 'bg-red-50 text-[#D70018]'
-          : 'bg-white text-gray-400 hover:text-[#D70018] hover:bg-red-50 shadow-md'
+          ? 'bg-red-50 text-accent'
+          : 'bg-white text-gray-400 hover:text-accent hover:bg-red-50 shadow-md'
       } disabled:opacity-50 ${className}`}
       title={inWishlist ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
     >

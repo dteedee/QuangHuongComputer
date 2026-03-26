@@ -21,7 +21,7 @@ export const AdminDashboard = () => {
     if (statsLoading || ordersLoading) {
         return (
             <div className="flex flex-col justify-center items-center h-full min-h-[500px]">
-                <Loader2 className="w-12 h-12 animate-spin text-[#D70018]" />
+                <Loader2 className="w-12 h-12 animate-spin text-accent" />
                 <p className="mt-4 text-gray-500 font-semibold animate-pulse">Đang tải dữ liệu hệ thống...</p>
             </div>
         );

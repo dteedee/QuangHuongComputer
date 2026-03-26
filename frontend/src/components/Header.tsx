@@ -114,8 +114,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const getLinkClass = (path: string) => {
         const active = isActive(path);
         const baseClass = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all uppercase tracking-tight";
-        const activeClass = "bg-[#D70018] text-white shadow-lg shadow-red-500/20";
-        const inactiveClass = "text-gray-600 hover:bg-gray-100 hover:text-[#D70018]";
+        const activeClass = "bg-accent text-white shadow-lg shadow-red-500/20";
+        const inactiveClass = "text-gray-600 hover:bg-gray-100 hover:text-accent";
 
         return `${baseClass} ${active ? activeClass : inactiveClass}`;
     };
@@ -129,7 +129,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     return (
         <div className="flex flex-col w-full z-50 sticky top-0 bg-white shadow-sm font-sans">
             {/* 1. Top Bar (Red) */}
-            <div className="bg-[#D70018] text-white text-[11px] font-medium py-1.5 hidden md:block relative z-[60]">
+            <div className="bg-accent text-white text-[11px] font-medium py-1.5 hidden md:block relative z-[60]">
                 <div className="max-w-[1400px] mx-auto px-4 flex justify-between items-center">
                     <div className="flex gap-4">
                         <Link to="/" className="bg-white/20 px-2 py-0.5 rounded hover:bg-white/30 transition-colors uppercase">Khách hàng cá nhân</Link>
@@ -154,7 +154,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                 {showUserMenu && (
                                     <div className="absolute top-full right-0 mt-2 w-56 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-100 py-2 z-[100]">
                                         <div className="px-4 py-2 border-b border-gray-50 flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-red-50 text-[#D70018] flex items-center justify-center font-bold">
+                                            <div className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center font-bold">
                                                 {user?.fullName.charAt(0)}
                                             </div>
                                             <div className="flex flex-col">
@@ -229,12 +229,12 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                 <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-4 lg:gap-8 justify-between">
                     <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
                         <div className="relative">
-                            <div className="w-12 h-12 bg-[#D70018] rounded-lg flex items-center justify-center text-white font-black text-2xl transform shadow-lg shadow-red-500/20 group-hover:rotate-3 transition-transform">
+                            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center text-white font-black text-2xl transform shadow-lg shadow-red-500/20 group-hover:rotate-3 transition-transform">
                                 QH
                             </div>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xl font-black text-[#D70018] uppercase tracking-tighter leading-none group-hover:scale-105 transition-transform origin-left">{companyBrand1}</span>
+                            <span className="text-xl font-black text-accent uppercase tracking-tighter leading-none group-hover:scale-105 transition-transform origin-left">{companyBrand1}</span>
                             <span className="text-[10px] font-bold text-gray-500 tracking-[0.2em] uppercase mt-1">{companyBrand2}</span>
                         </div>
                     </Link>
@@ -256,7 +256,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                             onClick={() => setShowCategoryMenu(false)}
                                             className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-700 font-medium border-b border-gray-100"
                                         >
-                                            <MenuIcon size={16} className="text-[#D70018]" />
+                                            <MenuIcon size={16} className="text-accent" />
                                             Tất cả sản phẩm
                                         </Link>
                                         {categories.map((category) => (
@@ -264,7 +264,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                                                 key={category.id}
                                                 to={`/products?categoryId=${category.id}`}
                                                 onClick={() => setShowCategoryMenu(false)}
-                                                className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-600 hover:text-[#D70018] transition-colors"
+                                                className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 text-gray-600 hover:text-accent transition-colors"
                                             >
                                                 <span>{category.name}</span>
                                                 {category.productCount !== undefined && category.productCount > 0 && (
@@ -285,11 +285,11 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             <input
                                 type="text"
                                 placeholder="Nhập tên sản phẩm, mã sản phẩm, từ khoá..."
-                                className="flex-1 px-4 bg-gray-100 text-gray-900 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#D70018]/20 transition-all border-y border-gray-100 placeholder:text-gray-400"
+                                className="flex-1 px-4 bg-gray-100 text-gray-900 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-accent/20 transition-all border-y border-gray-100 placeholder:text-gray-400"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <button type="submit" className="bg-[#D70018] text-white px-6 rounded-r-xl hover:bg-[#b50014] transition-all font-bold">
+                            <button type="submit" className="bg-accent text-white px-6 rounded-r-xl hover:bg-accent-hover transition-all font-bold">
                                 <Search size={20} />
                             </button>
                         </form>
@@ -301,22 +301,22 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             className="flex items-center gap-3 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all relative border border-red-200 group"
                         >
                             <div className="relative">
-                                <ShoppingCart size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
+                                <ShoppingCart size={22} className="text-accent group-hover:scale-110 transition-transform" />
                                 {itemCount > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-[#D70018] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white animate-bounce">
+                                    <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white animate-bounce">
                                         {itemCount}
                                     </span>
                                 )}
                             </div>
-                            <span className="text-sm font-bold text-[#D70018] hidden sm:block">Giỏ hàng</span>
+                            <span className="text-sm font-bold text-accent hidden sm:block">Giỏ hàng</span>
                         </button>
 
                         <button
                             onClick={onChatClick}
                             className="flex items-center gap-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all border border-red-200 group"
                         >
-                            <MessageCircle size={22} className="text-[#D70018] group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-bold text-[#D70018] hidden sm:block">Chat</span>
+                            <MessageCircle size={22} className="text-accent group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-bold text-accent hidden sm:block">Chat</span>
                         </button>
                     </div>
                 </div>
@@ -348,8 +348,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Link to="/promotion" className="text-xs font-bold text-[#D70018] animate-pulse flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
-                            <Zap size={14} className="fill-[#D70018]" />
+                        <Link to="/promotion" className="text-xs font-bold text-accent animate-pulse flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
+                            <Zap size={14} className="fill-accent" />
                             SIÊU SELL TỔNG KẾT NĂM
                         </Link>
                     </div>

@@ -59,7 +59,7 @@ export default function FlashSaleBanner({
     return (
       <Link
         to={`/flash-sales/${currentSale.id}`}
-        className={`block bg-gradient-to-r from-[#D70018] to-[#ff4d4d] rounded-xl p-3 hover:shadow-lg transition-all ${className}`}
+        className={`block bg-gradient-to-r from-accent to-[#ff4d4d] rounded-xl p-3 hover:shadow-lg transition-all ${className}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export default function FlashSaleBanner({
 
   if (variant === 'sidebar') {
     return (
-      <div className={`bg-gradient-to-br from-[#D70018] to-[#ff4d4d] rounded-2xl p-5 ${className}`}>
+      <div className={`bg-gradient-to-br from-accent to-[#ff4d4d] rounded-2xl p-5 ${className}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center animate-pulse">
             <Zap className="w-6 h-6 text-yellow-300 fill-yellow-300" />
@@ -104,7 +104,7 @@ export default function FlashSaleBanner({
 
         <Link
           to={`/flash-sales/${currentSale.id}`}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-white text-[#D70018] rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-3 bg-white text-accent rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors"
         >
           <ShoppingBag className="w-4 h-4" />
           Xem ngay
@@ -117,7 +117,7 @@ export default function FlashSaleBanner({
   // Hero variant (default)
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#D70018] via-[#ff2d2d] to-[#ff6b35] ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r from-accent via-[#ff2d2d] to-[#ff6b35] ${className}`}
     >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -157,7 +157,7 @@ export default function FlashSaleBanner({
                 </h2>
                 <div className="flex items-center gap-1">
                   <span className="text-yellow-300 font-bold text-sm">Giảm đến</span>
-                  <span className="bg-yellow-400 text-[#D70018] font-black text-lg px-2 py-0.5 rounded">
+                  <span className="bg-yellow-400 text-accent font-black text-lg px-2 py-0.5 rounded">
                     {currentSale.discountType === 'Percentage'
                       ? `${currentSale.discountValue}%`
                       : `${currentSale.discountValue.toLocaleString()}đ`}
@@ -202,7 +202,7 @@ export default function FlashSaleBanner({
 
             <Link
               to={`/flash-sales/${currentSale.id}`}
-              className="flex items-center gap-2 px-8 py-3 bg-white text-[#D70018] rounded-xl font-black uppercase text-sm hover:bg-yellow-50 hover:scale-105 transition-all shadow-lg"
+              className="flex items-center gap-2 px-8 py-3 bg-white text-accent rounded-xl font-black uppercase text-sm hover:bg-yellow-50 hover:scale-105 transition-all shadow-lg"
             >
               <ShoppingBag className="w-5 h-5" />
               Mua ngay
