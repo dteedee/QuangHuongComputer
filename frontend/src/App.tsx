@@ -38,6 +38,8 @@ import { ShiftsPage } from './pages/backoffice/accountant/ShiftsPage';
 import { ExpensesPage } from './pages/backoffice/accountant/ExpensesPage';
 import { FinancialReportsPage } from './pages/backoffice/accountant/FinancialReportsPage';
 import { InventoryPortal } from './pages/backoffice/inventory/InventoryPortal';
+import { SuppliersPage } from './pages/backoffice/inventory/SuppliersPage';
+import PurchaseOrdersPage from './pages/backoffice/inventory/PurchaseOrdersPage';
 import { HRPortal } from './pages/backoffice/hr/HRPortal';
 import { RecruitmentManagement } from './pages/backoffice/hr/RecruitmentManagement';
 import { ManagerPortal } from './pages/backoffice/manager/ManagerPortal';
@@ -61,13 +63,12 @@ import { PermissionsPage as RolesPage } from './pages/backoffice/admin/Permissio
 import { UsersPage as AdminUsersPage } from './pages/backoffice/admin/UsersPage';
 import { ReviewsManagementPage } from './pages/backoffice/admin/ReviewsManagementPage';
 import { CouponsPage } from './pages/backoffice/admin/CouponsPage';
-import FlashSalesPage from './pages/admin/FlashSalesPage';
+
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
 import { PaymentCallbackPage } from './pages/PaymentCallbackPage';
-import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import { OrdersPage } from './pages/account/OrdersPage';
@@ -79,7 +80,7 @@ import { ComparisonBar } from './components/comparison';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import AdminDashboard from './pages/admin/AdminDashboard';
+
 import POSPage from './pages/backoffice/sale/POSPage';
 import { ReturnsManagementPage } from './pages/backoffice/sale/ReturnsManagementPage';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -126,7 +127,7 @@ function App() {
                       <Route path="payment/callback" element={<PaymentCallbackPage />} />
                       <Route path="payment/success" element={<PaymentResultPage />} />
                       <Route path="payment/failed" element={<PaymentResultPage />} />
-                      <Route path="product/:id" element={<ProductDetailsPage />} />
+                      <Route path="product/:id" element={<ProductDetailPage />} />
                       <Route path="products" element={<ProductCatalogPage />} />
                       <Route path="products/:id" element={<ProductDetailPage />} />
                       <Route path="catalog" element={<ProductCatalogPage />} />
@@ -171,6 +172,8 @@ function App() {
                         <Route path="tech" element={<TechPortal />} />
                         <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
                         <Route path="inventory" element={<InventoryPortal />} />
+                        <Route path="inventory/suppliers" element={<SuppliersPage />} />
+                        <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
                         <Route path="accounting" element={<AccountingPortal />} />
                         <Route path="accounting/ar" element={<ARPage />} />
                         <Route path="accounting/ap" element={<APPage />} />
@@ -192,23 +195,6 @@ function App() {
                         <Route path="config" element={<ConfigPortal />} />
                         <Route path="admin" element={<AdminPortal />} />
                         <Route path="manager" element={<ManagerPortal />} />
-
-                        {/* Admin CMS Routes */}
-                        <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
-                          <Route element={<AdminLayout />}>
-                            <Route path="/admin/menus" element={<MenuManager />} />
-                            <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
-                          </Route>
-
-                          {/* Other standalone admin routes */}
-                          <Route path="/admin" element={<AdminPortal />} />
-                          <Route path="/admin/products" element={<AdminProductsPage />} />
-                          <Route path="/admin/products/new" element={<AdminProductsPage />} />
-                          <Route path="/admin/orders" element={<AdminOrdersPage />} />
-                          <Route path="/admin/orders/:orderId" element={<AdminOrdersPage />} />
-                          <Route path="/admin/users" element={<AdminUsersPage />} />
-                          <Route path="/admin/roles" element={<RolesPage />} />
-                        </Route>
                         {/* CRM Routes */}
                         <Route path="crm" element={<CrmPortal />} />
                         <Route path="crm/customers" element={<CrmCustomersPage />} />
@@ -220,17 +206,13 @@ function App() {
                       </Route>
                     </Route>
 
-                    {/* Admin Routes */}
+                    {/* Admin Routes — CMS-specific only; other admin pages live in /backoffice */}
                     <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
                       <Route path="/admin" element={<AdminPortal />} />
-                      <Route path="/admin/products" element={<AdminProductsPage />} />
-                      <Route path="/admin/products/new" element={<AdminProductsPage />} />
-                      <Route path="/admin/orders" element={<AdminOrdersPage />} />
-                      <Route path="/admin/orders/:orderId" element={<AdminOrdersPage />} />
-                      <Route path="/admin/users" element={<AdminUsersPage />} />
-                      <Route path="/admin/roles" element={<RolesPage />} />
-                      <Route path="/admin/flash-sales" element={<FlashSalesPage />} />
-                      {/* <Route path="/admin/payments/sepay" element={<SePayAdminPage />} /> */}
+                      <Route element={<AdminLayout />}>
+                        <Route path="/admin/menus" element={<MenuManager />} />
+                        <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
+                      </Route>
                     </Route>
 
                     {/* Auth Pages (Standalone) */}

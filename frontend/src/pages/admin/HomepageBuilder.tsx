@@ -18,8 +18,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { 
     Save, Plus, Trash2, GripVertical, 
-    Edit3, Layout, ChevronRight, Settings, 
-    CheckCircle2, XCircle, Eye
+    Edit3, Settings, 
+    CheckCircle2, XCircle, Eye, Loader2
 } from 'lucide-react';
 import { contentApi, type HomepageSection } from '../../api/content';
 import toast from 'react-hot-toast';
@@ -27,12 +27,13 @@ import toast from 'react-hot-toast';
 interface SortableSectionProps {
     id: string;
     section: HomepageSection;
+    isDeleting: boolean;
     onDelete: (id: string) => void;
     onEdit: (section: HomepageSection) => void;
     onToggle: (id: string) => void;
 }
 
-const SortableSection: React.FC<SortableSectionProps> = ({ id, section, onDelete, onEdit, onToggle }) => {
+const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleting, onDelete, onEdit, onToggle }) => {
     const {
         attributes,
         listeners,
@@ -99,10 +100,11 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, onDelete
                 </button>
                 <button 
                     onClick={() => onDelete(section.id)}
-                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={isDeleting}
+                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                     title="Delete Section"
                 >
-                    <Trash2 size={20} />
+                    {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
                 </button>
             </div>
         </div>
@@ -113,8 +115,11 @@ export const HomepageBuilder = () => {
     const [sections, setSections] = useState<HomepageSection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingSection, setEditingSection] = useState<HomepageSection | null>(null);
     const [configText, setConfigText] = useState('');
+    const [hasOrderChanged, setHasOrderChanged] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -129,11 +134,13 @@ export const HomepageBuilder = () => {
 
     const fetchSections = async () => {
         try {
-            const data = await contentApi.getHomepageSections();
-            setSections(data.sort((a, b) => a.order - b.order));
-            setIsLoading(false);
+            setIsLoading(true);
+            const data = await contentApi.admin.getHomepageSections();
+            setSections(data.sort((a, b) => a.displayOrder - b.displayOrder));
         } catch (error) {
             toast.error('Failed to fetch sections');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -144,9 +151,9 @@ export const HomepageBuilder = () => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
                 const updated = arrayMove(items, oldIndex, newIndex);
-                // Update order values
-                return updated.map((section, index) => ({ ...section, order: index + 1 }));
+                return updated.map((section, index) => ({ ...section, displayOrder: index + 1 }));
             });
+            setHasOrderChanged(true);
         }
     };
 
@@ -155,45 +162,102 @@ export const HomepageBuilder = () => {
         setConfigText(section.configuration || '{}');
     };
 
-    const handleSaveConfig = () => {
+    const handleSaveConfig = async () => {
         if (!editingSection) return;
         try {
-            // Validate JSON
-            JSON.parse(configText);
-            setSections(sections.map(s => s.id === editingSection.id ? { ...s, configuration: configText } : s));
-            setEditingSection(null);
-            toast.success('Configuration updated in draft');
+            JSON.parse(configText); // Validate JSON
         } catch (e) {
             toast.error('Invalid JSON format');
+            return;
+        }
+
+        try {
+            await contentApi.admin.updateHomepageSection(editingSection.id, {
+                ...editingSection,
+                configuration: configText,
+            });
+            setSections(sections.map(s => 
+                s.id === editingSection.id ? { ...s, configuration: configText } : s
+            ));
+            setEditingSection(null);
+            toast.success('Configuration saved!');
+        } catch (error) {
+            toast.error('Failed to save configuration');
         }
     };
 
-    const addSection = (type: string) => {
-        const newSection: HomepageSection = {
-            id: Math.random().toString(36).substr(2, 9),
-            title: `New ${type.replace('_', ' ')} Section`,
+    const addSection = async (type: string) => {
+        setIsAdding(true);
+        const newSectionData = {
+            title: `New ${type.replace(/_/g, ' ')} Section`,
             sectionType: type,
             configuration: '{}',
-            order: sections.length + 1,
+            displayOrder: sections.length + 1,
             isActive: true,
+            isVisible: true,
             cssClass: ''
         };
-        setSections([...sections, newSection]);
+
+        try {
+            const created = await contentApi.admin.createHomepageSection(newSectionData);
+            setSections([...sections, created]);
+            toast.success('Section added!');
+        } catch (error) {
+            toast.error('Failed to add section');
+        } finally {
+            setIsAdding(false);
+        }
     };
 
-    const deleteSection = (id: string) => {
-        setSections(sections.filter(s => s.id !== id));
+    const deleteSection = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this section? This cannot be undone.')) {
+            return;
+        }
+
+        setDeletingId(id);
+        try {
+            await contentApi.admin.deleteHomepageSection(id);
+            setSections(sections.filter(s => s.id !== id));
+            toast.success('Section deleted!');
+        } catch (error) {
+            toast.error('Failed to delete section');
+        } finally {
+            setDeletingId(null);
+        }
     };
 
-    const toggleSection = (id: string) => {
-        setSections(sections.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s));
+    const toggleSection = async (id: string) => {
+        const section = sections.find(s => s.id === id);
+        if (!section) return;
+
+        const newIsActive = !section.isActive;
+        // Optimistic update
+        setSections(sections.map(s => s.id === id ? { ...s, isActive: newIsActive } : s));
+
+        try {
+            await contentApi.admin.updateHomepageSection(id, {
+                ...section,
+                isActive: newIsActive,
+                isVisible: newIsActive,
+            });
+            toast.success(newIsActive ? 'Section is now visible' : 'Section is now hidden');
+        } catch (error) {
+            // Revert on failure
+            setSections(sections.map(s => s.id === id ? { ...s, isActive: !newIsActive } : s));
+            toast.error('Failed to toggle visibility');
+        }
     };
 
     const handlePublish = async () => {
         setIsSaving(true);
         try {
-            // Simulated publish
-            toast.success('Homepage layout published successfully (Simulated)');
+            const reorderData = sections.map((s, index) => ({
+                id: s.id,
+                displayOrder: index + 1,
+            }));
+            await contentApi.admin.reorderHomepageSections(reorderData);
+            setHasOrderChanged(false);
+            toast.success('Homepage layout published successfully!');
         } catch (error) {
             toast.error('Failed to publish layout');
         } finally {
@@ -201,7 +265,14 @@ export const HomepageBuilder = () => {
         }
     };
 
-    if (isLoading) return <div className="p-8 text-white">Loading sections...</div>;
+    if (isLoading) {
+        return (
+            <div className="max-w-6xl mx-auto p-8 flex flex-col items-center justify-center gap-4">
+                <Loader2 className="animate-spin text-red-500" size={48} />
+                <p className="text-gray-400 font-bold uppercase text-sm tracking-widest">Loading sections...</p>
+            </div>
+        );
+    }
 
     const SECTION_TYPES = [
         'hero_slider', 'banner_grid', 'flash_deal', 
@@ -226,11 +297,11 @@ export const HomepageBuilder = () => {
                     </button>
                     <button 
                         onClick={handlePublish}
-                        disabled={isSaving}
+                        disabled={isSaving || !hasOrderChanged}
                         className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-red-900/20"
                     >
-                        <Save size={18} />
-                        {isSaving ? 'Publishing...' : 'Publish Layout'}
+                        {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                        {isSaving ? 'Publishing...' : hasOrderChanged ? 'Publish Order' : 'Order Saved'}
                     </button>
                 </div>
             </header>
@@ -244,11 +315,16 @@ export const HomepageBuilder = () => {
                             <button
                                 key={type}
                                 onClick={() => addSection(type)}
-                                className="w-full bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-gray-400 p-4 rounded-2xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group"
+                                disabled={isAdding}
+                                className="w-full bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-gray-400 p-4 rounded-2xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group disabled:opacity-50"
                             >
                                 <div className="flex items-center justify-between font-bold text-sm uppercase">
-                                    {type.replace('_', ' ')}
-                                    <Plus size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    {type.replace(/_/g, ' ')}
+                                    {isAdding ? (
+                                        <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                        <Plus size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    )}
                                 </div>
                             </button>
                         ))}
@@ -258,29 +334,37 @@ export const HomepageBuilder = () => {
                 {/* Layout Builder */}
                 <div className="lg:col-span-3">
                     <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6">Current Layout</h3>
-                    <DndContext 
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext 
-                            items={sections.map(s => s.id)}
-                            strategy={verticalListSortingStrategy}
+                    {sections.length === 0 ? (
+                        <div className="text-center py-16 text-gray-500">
+                            <p className="text-lg font-bold">No sections yet</p>
+                            <p className="text-sm mt-2">Add a section from the left panel to get started</p>
+                        </div>
+                    ) : (
+                        <DndContext 
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
                         >
-                            <div className="space-y-2">
-                                {sections.map((section) => (
-                                    <SortableSection 
-                                        key={section.id} 
-                                        id={section.id} 
-                                        section={section}
-                                        onDelete={deleteSection}
-                                        onEdit={handleEdit}
-                                        onToggle={toggleSection}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
+                            <SortableContext 
+                                items={sections.map(s => s.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="space-y-2">
+                                    {sections.map((section) => (
+                                        <SortableSection 
+                                            key={section.id} 
+                                            id={section.id} 
+                                            section={section}
+                                            isDeleting={deletingId === section.id}
+                                            onDelete={deleteSection}
+                                            onEdit={handleEdit}
+                                            onToggle={toggleSection}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    )}
                 </div>
             </div>
 
@@ -324,7 +408,7 @@ export const HomepageBuilder = () => {
                                 onClick={handleSaveConfig}
                                 className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-xl font-bold shadow-lg transition"
                             >
-                                Apply Changes
+                                Save to Server
                             </button>
                         </footer>
                     </div>

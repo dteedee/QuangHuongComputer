@@ -161,6 +161,10 @@ export interface SalesStats {
     monthRevenue: number;
     pendingOrders: number;
     completedOrders: number;
+    averageOrderValue: number;
+    todayRevenue: number;
+    orderGrowth: number;
+    revenueGrowth: number;
 }
 
 export interface RevenueChartData {

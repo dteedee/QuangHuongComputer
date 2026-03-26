@@ -1,15 +1,92 @@
-﻿import { Users, Target, Rocket, Zap, BarChart3, TrendingUp, Briefcase } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, Target, Rocket, Zap, BarChart3, TrendingUp, Briefcase, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { reportingApi, type BusinessOverview } from '../../../api/reporting';
+import { hrApi } from '../../../api/hr';
+import { formatCurrency } from '../../../utils/format';
 
 export const ManagerPortal = () => {
     const navigate = useNavigate();
+    const [overview, setOverview] = useState<BusinessOverview | null>(null);
+    const [employeeCount, setEmployeeCount] = useState({ active: 0, total: 0 });
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [overviewData, employeesData] = await Promise.all([
+                    reportingApi.getBusinessOverview(),
+                    hrApi.getEmployees(1, 100)
+                ]);
+                setOverview(overviewData);
+                const employees = employeesData.items || [];
+                const activeCount = employees.filter(e => e.status === 'Active').length;
+                setEmployeeCount({ active: activeCount, total: employees.length });
+            } catch (err) {
+                console.error('Failed to fetch manager data:', err);
+                setError('Không thể tải dữ liệu');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
     const stats = [
-        { label: 'Doanh thu tháng', value: '₫1.2B', icon: <TrendingUp size={20} />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-        { label: 'KPI Hoàn thành', value: '85%', icon: <Target size={20} />, color: 'text-blue-500', bg: 'bg-blue-50' },
-        { label: 'Dự án đang chạy', value: '08', icon: <Rocket size={20} />, color: 'text-purple-500', bg: 'bg-purple-50' },
-        { label: 'Nhân sự trực', value: '12/15', icon: <Users size={20} />, color: 'text-[#D70018]', bg: 'bg-red-50' },
+        {
+            label: 'Doanh thu tháng',
+            value: overview ? formatCurrency(overview.sales.thisMonthRevenue) : '—',
+            icon: <TrendingUp size={20} />,
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-50'
+        },
+        {
+            label: 'Tăng trưởng',
+            value: overview ? `${overview.sales.growthPercent >= 0 ? '+' : ''}${overview.sales.growthPercent.toFixed(1)}%` : '—',
+            icon: <Target size={20} />,
+            color: 'text-blue-500',
+            bg: 'bg-blue-50'
+        },
+        {
+            label: 'Sửa chữa chờ',
+            value: overview ? String(overview.repairs.pendingCount).padStart(2, '0') : '—',
+            icon: <Rocket size={20} />,
+            color: 'text-purple-500',
+            bg: 'bg-purple-50'
+        },
+        {
+            label: 'Nhân sự',
+            value: employeeCount.total > 0 ? `${employeeCount.active}/${employeeCount.total}` : '—',
+            icon: <Users size={20} />,
+            color: 'text-[#D70018]',
+            bg: 'bg-red-50'
+        },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D70018]"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <AlertCircle size={48} className="text-red-400" />
+                <p className="text-gray-500 font-bold text-sm">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-[#D70018] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#b50014] transition-all"
+                >
+                    Thử lại
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-10 pb-20 animate-fade-in">

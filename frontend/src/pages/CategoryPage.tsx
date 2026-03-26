@@ -1,9 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Brand, type Category } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
 import { Monitor, Filter, ArrowDownWideNarrow, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import SEO from '../components/SEO';
+import { generateItemListSchema, generateBreadcrumbSchema } from '../utils/structuredData';
 
 // Helper to normalize strings for comparison
 const normalize = (str: string) => {
@@ -167,6 +169,20 @@ export const CategoryPage = () => {
 
     return (
         <div className="bg-gray-100 min-h-screen pb-10">
+            {/* SEO for category / search pages */}
+            <SEO
+                title={categoryTitle}
+                description={`${categoryTitle} - Mua sắm ${categoryTitle} chính hãng giá tốt tại Quang Hưởng Computer. Tìm thấy ${totalProducts} sản phẩm.`}
+                keywords={`${categoryTitle}, mua ${categoryTitle}, ${categoryTitle} giá rẻ, quang hưởng computer`}
+                noindex={!!searchQuery}
+                structuredData={[
+                    ...(products.length > 0 ? [generateItemListSchema(products, categoryTitle)] : []),
+                    generateBreadcrumbSchema([
+                        { name: 'Trang chủ', url: '/' },
+                        { name: categoryTitle },
+                    ]),
+                ]}
+            />
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">

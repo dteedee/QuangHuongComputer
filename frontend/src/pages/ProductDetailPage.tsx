@@ -10,6 +10,8 @@ import client from '../api/client';
 import { WriteReviewModal, RatingBreakdown, ReviewItem } from '../components/reviews';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
+import SEO from '../components/SEO';
+import { generateProductSchema, generateBreadcrumbSchema } from '../utils/structuredData';
 
 interface Specification {
   [key: string]: string;
@@ -297,6 +299,23 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
+      {/* SEO with Product JSON-LD */}
+      <SEO
+        title={product.metaTitle || product.name}
+        description={product.metaDescription || product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Mua ${product.name} chính hãng giá tốt tại Quang Hưởng Computer`}
+        keywords={product.metaKeywords || `${product.name}, mua ${product.name}, ${product.sku}`}
+        image={product.imageUrl || '/logo.png'}
+        type="product"
+        canonicalUrl={product.canonicalUrl}
+        structuredData={[
+          generateProductSchema(product),
+          generateBreadcrumbSchema([
+            { name: 'Trang chủ', url: '/' },
+            { name: 'Sản phẩm', url: '/products' },
+            { name: product.name },
+          ]),
+        ]}
+      />
       {/* Added to Cart Notification */}
       {showAddedNotification && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-slide-in">

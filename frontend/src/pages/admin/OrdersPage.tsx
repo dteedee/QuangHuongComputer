@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Eye, Filter, Loader2, Search, ArrowRight, Clock, CheckCircle2, Package, XCircle, Truck, Plus, X, Check, ShoppingCart, User, MapPin, FileText, Calendar, RefreshCw, CreditCard, DollarSign } from 'lucide-react';
 import { salesApi, type Order, type OrderStatus } from '../../api/sales';
@@ -103,31 +103,6 @@ export const AdminOrdersPage = () => {
         queryFn: () => catalogApi.getProducts({ pageSize: 100 }),
     });
 
-    // Mock data for demo/fallback
-    const mockOrders: Order[] = [
-        {
-            id: '1', orderNumber: 'ORD-8852', customerId: 'CUST-001', status: 'Confirmed',
-            paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
-            subtotalAmount: 12500000, discountAmount: 0, taxAmount: 500000, shippingAmount: 50000,
-            totalAmount: 13050000, taxRate: 0.1, shippingAddress: '123 Đường Láng, Hà Nội', retryCount: 0,
-            orderDate: new Date().toISOString(), items: [{ id: 'i1', orderId: '1', productId: 'p1', productName: 'Laptop ASUS ROG', quantity: 1, unitPrice: 12500000, lineTotal: 12500000, discountAmount: 0 }]
-        },
-        {
-            id: '2', orderNumber: 'ORD-8853', customerId: 'CUST-002', status: 'Confirmed',
-            paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
-            subtotalAmount: 2500000, discountAmount: 200000, taxAmount: 230000, shippingAmount: 30000,
-            totalAmount: 2560000, taxRate: 0.1, shippingAddress: '456 Lê Lợi, TP. HCM', retryCount: 0,
-            orderDate: new Date(Date.now() - 3600000).toISOString(), items: [{ id: 'i2', orderId: '2', productId: 'p2', productName: 'Bàn phím cơ Akko', quantity: 2, unitPrice: 1250000, lineTotal: 2500000, discountAmount: 200000 }]
-        },
-        {
-            id: '3', orderNumber: 'ORD-8854', customerId: 'CUST-003', status: 'Shipped',
-            paymentStatus: 'Paid', fulfillmentStatus: 'Shipped',
-            subtotalAmount: 45000000, discountAmount: 0, taxAmount: 4500000, shippingAmount: 0,
-            totalAmount: 49500000, taxRate: 0.1, shippingAddress: '789 Trần Hưng Đạo, Đà Nẵng', retryCount: 0,
-            orderDate: new Date(Date.now() - 86400000).toISOString(), items: [{ id: 'i3', orderId: '3', productId: 'p3', productName: 'PC Gaming G-Series', quantity: 1, unitPrice: 45000000, lineTotal: 45000000, discountAmount: 0 }]
-        }
-    ];
-
     const updateStatusMutation = useMutation({
         mutationFn: ({ id, status }: { id: string, status: string }) => salesApi.orders.updateStatus(id, status as any),
         onSuccess: () => {
@@ -147,7 +122,7 @@ export const AdminOrdersPage = () => {
         onError: () => toast.error('Tạo đơn hàng thất bại!')
     });
 
-    const rawOrders = (response?.orders && response.orders.length > 0) ? response.orders : mockOrders;
+    const rawOrders = response?.orders || [];
 
     // Apply client-side filters for payment status and date range
     const orders = rawOrders.filter(order => {

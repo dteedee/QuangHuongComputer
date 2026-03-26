@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { repairApi, getStatusColor } from '../../../api/repair';
 import type { WorkOrder } from '../../../api/repair';
+import { hrApi } from '../../../api/hr';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -25,7 +26,25 @@ export const TechDashboard: React.FC = () => {
 
     const workOrders = workOrdersResponse?.workOrders || [];
 
-    // Mock data cho ngày công và lương (sẽ được thay thế bằng API thực)
+    // Fetch attendance data from HR API
+    const { data: timesheetData } = useQuery({
+        queryKey: ['tech-timesheets', user?.id, selectedMonth, selectedYear],
+        queryFn: () => user?.id ? hrApi.getEmployeeTimesheets(user.id, selectedMonth + 1, selectedYear) : Promise.resolve([]),
+        enabled: !!user?.id,
+    });
+
+    // Fetch payroll data from HR API
+    const { data: payrollData } = useQuery({
+        queryKey: ['tech-payroll', selectedMonth, selectedYear],
+        queryFn: () => hrApi.getPayrolls(selectedMonth + 1, selectedYear),
+    });
+
+    const myPayroll = useMemo(() => {
+        if (!payrollData || !user?.id) return null;
+        return (payrollData as any[]).find((p: any) => p.employeeId === user.id) || null;
+    }, [payrollData, user?.id]);
+
+    // Build attendance calendar from real timesheet data
     const attendanceData = useMemo(() => {
         const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
         const today = new Date();
@@ -33,8 +52,8 @@ export const TechDashboard: React.FC = () => {
             ? today.getDate()
             : daysInMonth;
 
-        // Mock attendance records
         const records: { date: number; checkIn?: string; checkOut?: string; status: 'present' | 'absent' | 'late' | 'leave' | 'future' }[] = [];
+        const timesheets = (timesheetData as any[]) || [];
 
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(selectedYear, selectedMonth, day);
@@ -43,21 +62,31 @@ export const TechDashboard: React.FC = () => {
             if (day > currentDay) {
                 records.push({ date: day, status: 'future' });
             } else if (dayOfWeek === 0) {
-                // Chủ nhật - nghỉ
                 records.push({ date: day, status: 'leave' });
-            } else if (Math.random() > 0.9) {
-                // 10% nghỉ phép
-                records.push({ date: day, status: 'leave' });
-            } else if (Math.random() > 0.85) {
-                // 15% đi muộn
-                records.push({ date: day, checkIn: '08:' + (15 + Math.floor(Math.random() * 30)), checkOut: '17:30', status: 'late' });
             } else {
-                records.push({ date: day, checkIn: '08:0' + Math.floor(Math.random() * 10), checkOut: '17:30', status: 'present' });
+                // Find matching timesheet record for this day
+                const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const ts = timesheets.find((t: any) => t.date?.startsWith(dateStr) || t.workDate?.startsWith(dateStr));
+
+                if (ts) {
+                    const checkInTime = ts.checkIn || ts.clockIn || '';
+                    const checkOutTime = ts.checkOut || ts.clockOut || '';
+                    const isLate = ts.isLate || (checkInTime && checkInTime > '08:15');
+                    records.push({
+                        date: day,
+                        checkIn: checkInTime ? checkInTime.substring(0, 5) : undefined,
+                        checkOut: checkOutTime ? checkOutTime.substring(0, 5) : undefined,
+                        status: isLate ? 'late' : 'present',
+                    });
+                } else {
+                    // No timesheet record — mark as absent (or leave if backend says so)
+                    records.push({ date: day, status: 'absent' });
+                }
             }
         }
 
         return records;
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, timesheetData]);
 
     // Calculate statistics
     const stats = useMemo(() => {
@@ -69,14 +98,12 @@ export const TechDashboard: React.FC = () => {
         const inProgressOrders = workOrders.filter(w => w.status === 'InProgress').length;
         const pendingOrders = workOrders.filter(w => w.status === 'Assigned' || w.status === 'Requested').length;
 
-        // Mock salary calculation
-        const baseSalary = 8000000; // 8 triệu base
-        const perOrderBonus = 50000; // 50k/đơn hoàn thành
-        const estimatedSalary = baseSalary + (completedOrders * perOrderBonus);
+        // Salary from payroll API (or show 0 if not available)
+        const estimatedSalary = myPayroll?.netSalary || myPayroll?.totalAmount || 0;
 
-        // Performance rating (mock)
-        const avgRating = 4.5 + Math.random() * 0.5;
+        // Completion-based rating (deterministic, no Math.random)
         const completionRate = completedOrders > 0 ? Math.min(100, (completedOrders / (completedOrders + inProgressOrders + pendingOrders)) * 100) : 0;
+        const avgRating = completedOrders > 0 ? Math.min(5.0, 3.5 + (completionRate / 100) * 1.5) : 0;
 
         return {
             totalWorkDays,
@@ -118,11 +145,11 @@ export const TechDashboard: React.FC = () => {
                 <div>
                     <div className="flex items-center gap-4 mb-3">
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-xl">
-                            {user?.name?.charAt(0) || 'T'}
+                            {user?.fullName?.charAt(0) || 'T'}
                         </div>
                         <div>
                             <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                                Xin chào, <span className="text-[#D70018]">{user?.name || 'Kỹ thuật viên'}</span>
+                                Xin chào, <span className="text-[#D70018]">{user?.fullName || 'Kỹ thuật viên'}</span>
                             </h1>
                             <p className="text-gray-600 font-semibold flex items-center gap-2 mt-1">
                                 <Briefcase size={16} />
@@ -176,7 +203,7 @@ export const TechDashboard: React.FC = () => {
                             <p className="text-gray-500 font-bold text-xs uppercase tracking-wider">Lương ước tính</p>
                             <h3 className="text-3xl font-black text-emerald-600 mt-2">{formatCurrency(stats.estimatedSalary)}</h3>
                             <p className="text-sm text-gray-500 mt-1">
-                                Bao gồm <span className="text-emerald-500 font-semibold">{formatCurrency(stats.completedOrders * 50000)}</span> thưởng
+                                {myPayroll ? 'Từ bảng lương' : 'Chưa có dữ liệu bảng lương'}
                             </p>
                         </div>
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -464,7 +491,7 @@ export const TechDashboard: React.FC = () => {
                 </Link>
 
                 <button
-                    onClick={() => toast.info('Chức năng đang phát triển')}
+                    onClick={() => toast('Chức năng đang phát triển')}
                     className="premium-card p-5 flex items-center gap-4 hover:shadow-lg transition-all group border-2 hover:border-purple-200 text-left"
                 >
                     <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -477,7 +504,7 @@ export const TechDashboard: React.FC = () => {
                 </button>
 
                 <button
-                    onClick={() => toast.info('Chức năng đang phát triển')}
+                    onClick={() => toast('Chức năng đang phát triển')}
                     className="premium-card p-5 flex items-center gap-4 hover:shadow-lg transition-all group border-2 hover:border-emerald-200 text-left"
                 >
                     <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -490,7 +517,7 @@ export const TechDashboard: React.FC = () => {
                 </button>
 
                 <button
-                    onClick={() => toast.info('Chức năng đang phát triển')}
+                    onClick={() => toast('Chức năng đang phát triển')}
                     className="premium-card p-5 flex items-center gap-4 hover:shadow-lg transition-all group border-2 hover:border-amber-200 text-left"
                 >
                     <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">

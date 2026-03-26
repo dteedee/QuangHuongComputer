@@ -308,46 +308,13 @@ export const ReturnsManagementPage = () => {
       });
     } catch (error) {
       console.error('Failed to load returns:', error);
-      // Mock data for demo
-      const mockReturns: ReturnRequest[] = [
-        {
-          id: '1',
-          orderId: 'ORD-001',
-          orderItemId: 'ITEM-001',
-          reason: 'Sản phẩm bị lỗi/hỏng',
-          description: 'Màn hình laptop bị vỡ góc, có vết nứt',
-          status: 'Pending',
-          refundAmount: 15000000,
-          requestedAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          orderId: 'ORD-002',
-          orderItemId: 'ITEM-002',
-          reason: 'Nhận sai sản phẩm',
-          status: 'Approved',
-          refundAmount: 8500000,
-          requestedAt: new Date(Date.now() - 86400000).toISOString(),
-          approvedAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          orderId: 'ORD-003',
-          orderItemId: 'ITEM-003',
-          reason: 'Đổi ý không muốn mua',
-          status: 'Rejected',
-          refundAmount: 0,
-          rejectionReason: 'Sản phẩm đã qua sử dụng, không đủ điều kiện đổi trả',
-          requestedAt: new Date(Date.now() - 172800000).toISOString(),
-          rejectedAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-      ];
-      setReturns(mockReturns);
+      toast.error('Không thể tải danh sách đổi trả');
+      setReturns([]);
       setStats({
-        total: 3,
-        pending: 1,
-        approved: 1,
-        rejected: 1,
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
         refunded: 0,
       });
     } finally {

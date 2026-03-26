@@ -1,4 +1,4 @@
-﻿import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { DollarSign, FileText, TrendingUp, Clock, Eye, Calendar, Filter, ArrowRight, CreditCard, Receipt, BarChart3, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -179,6 +179,32 @@ export const AccountingPortal = () => {
                 </motion.div>
             </div>
 
+            {/* Quick Actions */}
+            <div className="premium-card p-8 border-2">
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 italic">Thao tác nhanh</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                        { to: '/backoffice/accounting/ar', icon: <TrendingUp size={20} />, label: 'Thu nợ khách', color: 'text-green-600 bg-green-50' },
+                        { to: '/backoffice/accounting/ap', icon: <CreditCard size={20} />, label: 'Trả nợ NCC', color: 'text-blue-600 bg-blue-50' },
+                        { to: '/backoffice/accounting/expenses', icon: <Wallet size={20} />, label: 'Ghi chi phí', color: 'text-amber-600 bg-amber-50' },
+                        { to: '/backoffice/accounting/reports', icon: <Receipt size={20} />, label: 'Xem báo cáo', color: 'text-purple-600 bg-purple-50' },
+                    ].map((action) => (
+                        <Link
+                            key={action.to}
+                            to={action.to}
+                            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-gray-50 hover:border-gray-200 hover:shadow-lg transition-all group active:scale-[0.98]"
+                        >
+                            <div className={`p-3 rounded-xl ${action.color}`}>
+                                {action.icon}
+                            </div>
+                            <div className="flex-1">
+                                <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{action.label}</span>
+                            </div>
+                            <ArrowRight size={16} className="text-gray-300 group-hover:text-[#D70018] group-hover:translate-x-1 transition-all" />
+                        </Link>
+                    ))}
+                </div>
+            </div>
             {/* Invoices Table */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -224,7 +250,7 @@ export const AccountingPortal = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                invoices.map((invoice) => (
+                                invoices.map((invoice: Invoice) => (
                                     <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="px-8 py-6">
                                             <span className="font-black text-[#D70018] font-mono">

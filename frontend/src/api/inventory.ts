@@ -199,15 +199,26 @@ export interface SupplierDropdownItem {
 // ============================================
 // PURCHASE ORDER
 // ============================================
+export type POStatus = 'Draft' | 'Sent' | 'PartialReceived' | 'Received' | 'Cancelled';
+
+export interface PurchaseOrderItem {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+}
+
 export interface PurchaseOrder {
     id: string;
     poNumber: string;
     supplierId: string;
-    supplierName?: string;
-    status: string;
+    status: POStatus;
     totalAmount: number;
-    orderDate: string;
-    items: any[];
+    items: PurchaseOrderItem[];
+}
+
+export interface CreatePurchaseOrderDto {
+    supplierId: string;
+    items: { productId: string; quantity: number; unitPrice: number }[];
 }
 
 // ============================================
@@ -287,21 +298,21 @@ export const inventoryApi = {
     // ========================================
     // PURCHASE ORDER API
     // ========================================
-    getPurchaseOrders: async () => {
-        const response = await client.get<any[]>('/inventory/po');
+    getPurchaseOrders: async (): Promise<PurchaseOrder[]> => {
+        const response = await client.get<PurchaseOrder[]>('/inventory/po');
         return response.data;
     },
-    createPurchaseOrder: async (data: any) => {
-        const response = await client.post('/inventory/po', data);
+
+    createPurchaseOrder: async (data: CreatePurchaseOrderDto): Promise<PurchaseOrder> => {
+        const response = await client.post<PurchaseOrder>('/inventory/po', data);
         return response.data;
     },
-    submitPurchaseOrder: async (_id: string) => {
-        throw new Error('Submit purchase order endpoint not implemented in backend');
-    },
-    receivePurchaseOrder: async (id: string) => {
-        const response = await client.put(`/inventory/po/${id}/receive`);
+
+    receivePurchaseOrder: async (id: string): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/inventory/po/${id}/receive`);
         return response.data;
     },
+
     adjustStock: async (id: string, amount: number, reason: string) => {
         const response = await client.put(`/inventory/stock/${id}/adjust`, null, { params: { amount, reason } });
         return response.data;

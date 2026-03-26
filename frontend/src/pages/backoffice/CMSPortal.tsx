@@ -1,8 +1,10 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Layout, Image as ImageIcon, FileText, Share2,
     Plus, Search, Edit3, Trash2, Globe, Eye,
-    Sparkles, RefreshCcw, Zap, X, Check, Loader2
+    Sparkles, RefreshCcw, Zap, X, Check, Loader2,
+    Home, ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +14,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export const CMSPortal = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Pages');
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Post | Page | null>(null);
@@ -160,6 +163,20 @@ export const CMSPortal = () => {
                             </span>
                         </button>
                     ))}
+
+                    {/* Homepage Builder Link */}
+                    <div className="mt-6 pt-6 border-t-2 border-gray-100">
+                        <button
+                            onClick={() => navigate('/admin/homepage-builder')}
+                            className="w-full flex justify-between items-center px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 shadow-sm bg-gradient-to-r from-red-50 to-white border-red-100 text-[#D70018] hover:border-red-300 hover:shadow-md group"
+                        >
+                            <span className="flex items-center gap-5 font-black uppercase text-xs tracking-tight italic">
+                                <Home size={20} />
+                                Trình thiết kế Trang chủ
+                            </span>
+                            <ExternalLink size={16} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content List */}

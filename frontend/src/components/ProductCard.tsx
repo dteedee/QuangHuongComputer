@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -305,7 +305,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </motion.div>
 
                     {/* Hot/New Badge */}
-                    {(product.soldCount > 10 || Math.random() > 0.6) && (
+                    {product.soldCount > 10 && (
                         <motion.div
                             animate={{ scale: [1, 1.1, 1] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}

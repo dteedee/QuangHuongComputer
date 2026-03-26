@@ -6,7 +6,8 @@ import {
     Zap, Ticket, Sun, Moon, Monitor, Palette, Command,
     Clock, TrendingUp, Sparkles, Star,
     CreditCard, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
-    UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2
+    UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2,
+    ShoppingCart, Truck, Building2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, accentColors, type AccentColor, type ThemeMode } from '../context/ThemeContext';
@@ -83,6 +84,8 @@ export const BackofficeLayout = () => {
                 { title: 'Sản phẩm', icon: <Package size={20} />, path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'], description: 'Danh sách sản phẩm' },
                 { title: 'Danh mục & Hãng', icon: <Archive size={20} />, path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại sản phẩm' },
                 { title: 'Kho hàng', icon: <Box size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'Supplier'], description: 'Quản lý tồn kho' },
+                { title: 'Nhà cung cấp', icon: <Building2 size={20} />, path: '/backoffice/inventory/suppliers', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý NCC' },
+                { title: 'Đơn mua hàng', icon: <ShoppingCart size={20} />, path: '/backoffice/inventory/purchase-orders', allowedRoles: ['Admin', 'Manager'], description: 'Đặt hàng NCC' },
             ]
         },
         {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
     DndContext, 
     closestCenter,
@@ -18,9 +18,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { 
     Save, Plus, Trash2, GripVertical, 
-    ExternalLink, ChevronRight, Settings, Info
+    ChevronRight, Settings, Info, Loader2
 } from 'lucide-react';
 import { contentApi, type Menu, type MenuItem } from '../../api/content';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 interface SortableItemProps {
@@ -28,9 +29,10 @@ interface SortableItemProps {
     item: MenuItem;
     onDelete: (id: string) => void;
     onUpdate: (id: string, updates: Partial<MenuItem>) => void;
+    isDeleting: boolean;
 }
 
-const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onUpdate }) => {
+const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onUpdate, isDeleting }) => {
     const {
         attributes,
         listeners,
@@ -98,20 +100,29 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
 
             <button 
                 onClick={() => onDelete(item.id)}
-                className="text-gray-300 hover:text-red-500 transition-colors p-2"
+                disabled={isDeleting}
+                className="text-gray-300 hover:text-red-500 disabled:opacity-50 transition-colors p-2"
             >
-                <Trash2 size={18} />
+                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
             </button>
         </div>
     );
 };
 
+type MenuLocationKey = 'HeaderMain' | 'FooterMain' | 'FooterBottom';
+
+const MENU_LOCATIONS: { key: MenuLocationKey; label: string; description: string }[] = [
+    { key: 'HeaderMain', label: 'HeaderMain', description: 'Main Header' },
+    { key: 'FooterMain', label: 'FooterMain', description: 'Product Categories' },
+    { key: 'FooterBottom', label: 'FooterBottom', description: 'Policies & Links' },
+];
+
 export const MenuManager = () => {
-    const [menus, setMenus] = useState<Menu[]>([]);
-    const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
-    const [items, setItems] = useState<MenuItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const queryClient = useQueryClient();
+    const [selectedLocation, setSelectedLocation] = useState<MenuLocationKey>('HeaderMain');
+    const [localItems, setLocalItems] = useState<MenuItem[]>([]);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -120,74 +131,122 @@ export const MenuManager = () => {
         })
     );
 
-    useEffect(() => {
-        fetchMenus();
-    }, []);
-
-    const fetchMenus = async () => {
-        try {
-            const data = await contentApi.getMenu('HeaderMain'); 
-            handleSelectMenu(data);
-            setIsLoading(false);
-        } catch (error) {
-            toast.error('Failed to fetch menus');
+    // ── Fetch menu for selected location ──────────────────────────
+    const { data: selectedMenu, isLoading } = useQuery({
+        queryKey: ['menu', selectedLocation],
+        queryFn: () => contentApi.getMenu(selectedLocation),
+        onSuccess: (menu: Menu) => {
+            setLocalItems([...menu.items].sort((a, b) => a.order - b.order));
+            setHasChanges(false);
         }
-    };
+    });
 
-    const handleSelectMenu = (menu: Menu) => {
-        setSelectedMenu(menu);
-        setItems([...menu.items].sort((a, b) => a.order - b.order));
-    };
+    // ── Add menu item via API ─────────────────────────────────────
+    const addMutation = useMutation({
+        mutationFn: (data: { menuId: string; item: Partial<MenuItem> }) =>
+            contentApi.admin.createMenuItem(data.menuId, data.item),
+        onSuccess: (newItem: MenuItem) => {
+            setLocalItems(prev => [...prev, newItem]);
+            toast.success('Link added');
+        },
+        onError: () => toast.error('Failed to add link'),
+    });
 
+    // ── Delete menu item via API ──────────────────────────────────
+    const deleteMutation = useMutation({
+        mutationFn: (data: { menuId: string; itemId: string }) =>
+            contentApi.admin.deleteMenuItem(data.menuId, data.itemId),
+        onSuccess: (_: unknown, vars: { menuId: string; itemId: string }) => {
+            setLocalItems(prev => prev.filter(i => i.id !== vars.itemId));
+            setDeletingId(null);
+            toast.success('Link removed');
+        },
+        onError: () => {
+            setDeletingId(null);
+            toast.error('Failed to delete link');
+        },
+    });
+
+    // ── Save all changes (order + field edits) via updateMenu ─────
+    const saveMutation = useMutation({
+        mutationFn: (data: { menuId: string; items: MenuItem[] }) =>
+            contentApi.admin.updateMenu(data.menuId, {
+                items: data.items.map((item, idx) => ({
+                    id: item.id,
+                    label: item.label,
+                    url: item.url,
+                    icon: item.icon,
+                    openInNewTab: item.openInNewTab,
+                    order: idx + 1,
+                    type: item.type,
+                }))
+            }),
+        onSuccess: () => {
+            setHasChanges(false);
+            queryClient.invalidateQueries({ queryKey: ['menu', selectedLocation] });
+            toast.success('Menu saved successfully!');
+        },
+        onError: () => toast.error('Failed to save menu'),
+    });
+
+    // ── Handlers ──────────────────────────────────────────────────
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
-            setItems((items) => {
+            setLocalItems((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
                 const updated = arrayMove(items, oldIndex, newIndex);
-                // Update order values
                 return updated.map((item, index) => ({ ...item, order: index + 1 }));
             });
+            setHasChanges(true);
         }
     };
 
     const addItem = () => {
-        const newItem: MenuItem = {
-            id: Math.random().toString(36).substr(2, 9), // Temporary ID
-            label: 'New Link',
-            url: '/',
-            order: items.length + 1,
-            openInNewTab: false,
-            menuId: selectedMenu?.id || ''
-        };
-        setItems([...items, newItem]);
+        if (!selectedMenu) return;
+        addMutation.mutate({
+            menuId: selectedMenu.id,
+            item: {
+                label: 'New Link',
+                url: '/',
+                order: localItems.length + 1,
+                openInNewTab: false,
+            }
+        });
     };
 
     const deleteItem = (id: string) => {
-        setItems(items.filter(i => i.id !== id));
+        if (!selectedMenu) return;
+        if (!confirm('Remove this link?')) return;
+        setDeletingId(id);
+        deleteMutation.mutate({ menuId: selectedMenu.id, itemId: id });
     };
 
     const updateItem = (id: string, updates: Partial<MenuItem>) => {
-        setItems(items.map(i => i.id === id ? { ...i, ...updates } : i));
+        setLocalItems(items => items.map(i => i.id === id ? { ...i, ...updates } : i));
+        setHasChanges(true);
     };
 
-    const handleSave = async () => {
+    const handleSave = () => {
         if (!selectedMenu) return;
-        setIsSaving(true);
-        try {
-            // For now, update the whole menu. 
-            // The API needs to support direct menu updates.
-            // We'll simulate success here as we need to implement the PUT endpoint.
-            toast.success('Menu saved successfully (Simulated)');
-        } catch (error) {
-            toast.error('Failed to save menu');
-        } finally {
-            setIsSaving(false);
-        }
+        saveMutation.mutate({ menuId: selectedMenu.id, items: localItems });
     };
 
-    if (isLoading) return <div className="p-8 text-white">Loading menus...</div>;
+    const handleLocationChange = async (loc: MenuLocationKey) => {
+        if (hasChanges) {
+            if (!confirm('You have unsaved changes. Switch menu anyway?')) return;
+        }
+        setSelectedLocation(loc);
+    };
+
+    // ── Render ─────────────────────────────────────────────────────
+    if (isLoading) return (
+        <div className="p-8 text-white flex items-center gap-3">
+            <Loader2 className="animate-spin" size={24} />
+            Loading menus...
+        </div>
+    );
 
     return (
         <div className="max-w-6xl mx-auto">
@@ -206,11 +265,15 @@ export const MenuManager = () => {
                     </button>
                     <button 
                         onClick={handleSave}
-                        disabled={!selectedMenu || isSaving}
+                        disabled={!selectedMenu || saveMutation.isLoading || !hasChanges}
                         className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-red-900/20"
                     >
-                        <Save size={18} />
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {saveMutation.isLoading ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Save size={18} />
+                        )}
+                        {saveMutation.isLoading ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
                     </button>
                 </div>
             </header>
@@ -218,21 +281,18 @@ export const MenuManager = () => {
             <div className="grid lg:grid-cols-4 gap-8">
                 {/* Menu List */}
                 <div className="lg:col-span-1 space-y-3">
-                    {['HeaderMain', 'FooterMain', 'FooterBottom'].map((loc) => (
+                    {MENU_LOCATIONS.map((loc) => (
                         <button
-                            key={loc}
-                            onClick={async () => {
-                                const data = await contentApi.getMenu(loc as any);
-                                handleSelectMenu(data);
-                            }}
-                            className={`w-full text-left p-4 rounded-2xl transition-all border-2 ${selectedMenu?.location === loc ? 'bg-red-600 border-red-500 text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                            key={loc.key}
+                            onClick={() => handleLocationChange(loc.key)}
+                            className={`w-full text-left p-4 rounded-2xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-red-600 border-red-500 text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
                         >
                             <div className="font-bold flex items-center justify-between">
-                                {loc}
+                                {loc.label}
                                 <ChevronRight size={16} />
                             </div>
-                            <p className={`text-xs mt-1 ${selectedMenu?.location === loc ? 'text-red-100' : 'text-gray-500'}`}>
-                                {loc === 'HeaderMain' ? 'Main Header' : loc === 'FooterMain' ? 'Product Categories' : 'Policies & Links'}
+                            <p className={`text-xs mt-1 ${selectedLocation === loc.key ? 'text-red-100' : 'text-gray-500'}`}>
+                                {loc.description}
                             </p>
                         </button>
                     ))}
@@ -253,10 +313,15 @@ export const MenuManager = () => {
                                 </h2>
                                 <button 
                                     onClick={addItem}
-                                    className="text-red-400 hover:text-red-300 flex items-center gap-2 text-sm font-bold bg-red-400/10 px-4 py-2 rounded-xl transition"
+                                    disabled={addMutation.isLoading}
+                                    className="text-red-400 hover:text-red-300 disabled:opacity-50 flex items-center gap-2 text-sm font-bold bg-red-400/10 px-4 py-2 rounded-xl transition"
                                 >
-                                    <Plus size={18} />
-                                    Add Link
+                                    {addMutation.isLoading ? (
+                                        <Loader2 size={18} className="animate-spin" />
+                                    ) : (
+                                        <Plus size={18} />
+                                    )}
+                                    {addMutation.isLoading ? 'Adding...' : 'Add Link'}
                                 </button>
                             </div>
 
@@ -266,26 +331,33 @@ export const MenuManager = () => {
                                 onDragEnd={handleDragEnd}
                             >
                                 <SortableContext 
-                                    items={items.map(i => i.id)}
+                                    items={localItems.map(i => i.id)}
                                     strategy={verticalListSortingStrategy}
                                 >
                                     <div className="space-y-3">
-                                        {items.map((item) => (
+                                        {localItems.map((item) => (
                                             <SortableMenuItem 
                                                 key={item.id} 
                                                 id={item.id} 
                                                 item={item}
                                                 onDelete={deleteItem}
                                                 onUpdate={updateItem}
+                                                isDeleting={deletingId === item.id}
                                             />
                                         ))}
                                     </div>
                                 </SortableContext>
                             </DndContext>
 
-                            {items.length === 0 && (
+                            {localItems.length === 0 && (
                                 <div className="text-center py-20 text-gray-500">
-                                    No items in this menu.
+                                    No items in this menu. Click "Add Link" to get started.
+                                </div>
+                            )}
+
+                            {hasChanges && (
+                                <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-sm text-center">
+                                    You have unsaved changes. Click <strong>"Save Changes"</strong> to apply.
                                 </div>
                             )}
                         </div>

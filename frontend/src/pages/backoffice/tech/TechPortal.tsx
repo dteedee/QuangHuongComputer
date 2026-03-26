@@ -69,14 +69,7 @@ export const TechPortal = () => {
         }
     });
 
-    // Mock data if API fails or empty
-    const mockOrders: WorkOrder[] = [
-        { id: '1', ticketNumber: 'TK-8852', customerId: 'CUST-001', deviceModel: 'MacBook Pro M1', serialNumber: 'C02XXXXX', description: 'Màn hình không lên', status: 'Requested', createdAt: new Date().toISOString(), estimatedCost: 0, actualCost: 0, partsCost: 0, laborCost: 0, serviceFee: 0, totalCost: 0 },
-        { id: '2', ticketNumber: 'TK-8853', customerId: 'CUST-002', deviceModel: 'Dell XPS 15', serialNumber: 'DL34234', description: 'Pin chai, cần thay', status: 'InProgress', createdAt: new Date().toISOString(), estimatedCost: 0, actualCost: 0, partsCost: 0, laborCost: 0, serviceFee: 0, totalCost: 0 },
-        { id: '3', ticketNumber: 'TK-8854', customerId: 'CUST-003', deviceModel: 'Asus ROG Strix', serialNumber: 'ROG9988', description: 'Vệ sinh máy, tra keo tản nhiệt', status: 'Completed', createdAt: new Date().toISOString(), estimatedCost: 0, actualCost: 0, partsCost: 0, laborCost: 0, serviceFee: 0, totalCost: 0 },
-    ];
-
-    const rawWorkOrders = (response?.workOrders && response.workOrders.length > 0) ? response.workOrders : mockOrders;
+    const rawWorkOrders = response?.workOrders || [];
 
     // Filter and sort
     const workOrders = useMemo(() => {

@@ -101,6 +101,35 @@ export function FinancialReportsPage() {
         ],
     };
 
+    // Cash Flow Trend Chart
+    const cashFlowChartData = {
+        labels: cashFlow?.monthlyInflows.map(d => d.month) || [],
+        datasets: [
+            {
+                label: 'Thu vào',
+                data: cashFlow?.monthlyInflows.map(d => d.amount) || [],
+                borderColor: 'rgba(34, 197, 94, 1)',
+                backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 2,
+            },
+            {
+                label: 'Chi ra',
+                data: cashFlow?.monthlyOutflows.map(d => d.amount) || [],
+                borderColor: 'rgba(239, 68, 68, 1)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 2,
+            },
+        ],
+    };
+
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -257,6 +286,29 @@ export function FinancialReportsPage() {
                         </div>
                     </div>
 
+                    {/* Cash Flow Trend Chart */}
+                    {cashFlow?.monthlyInflows && cashFlow.monthlyInflows.length > 0 && (
+                        <div className="premium-card p-8 border-2">
+                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                                <Wallet size={20} className="text-purple-600" />
+                                Xu hướng dòng tiền
+                            </h3>
+                            <div className="h-[300px]">
+                                <Line data={cashFlowChartData} options={chartOptions} />
+                            </div>
+                            <div className="mt-6 grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-green-50 rounded-xl border border-green-100 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Tổng thu vào</span>
+                                    <span className="font-black text-green-700 tracking-tighter">{formatCurrency(cashFlow.totalInflows)}</span>
+                                </div>
+                                <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-red-700 uppercase tracking-widest">Tổng chi ra</span>
+                                    <span className="font-black text-red-700 tracking-tighter">{formatCurrency(cashFlow.totalOutflows)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Balance Overview */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Assets */}
@@ -278,6 +330,27 @@ export function FinancialReportsPage() {
                                     <span className="text-sm font-black text-green-700 uppercase tracking-widest">Tổng tài sản</span>
                                     <span className="font-black text-green-700 text-xl">{formatCurrency(balance?.assets.totalAssets || 0)}</span>
                                 </div>
+                                {/* AR Aging Breakdown */}
+                                {balance?.arAgingBreakdown && balance.arAgingBreakdown.length > 0 && (
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tuổi nợ AR</p>
+                                        <div className="space-y-2">
+                                            {balance.arAgingBreakdown.map((item, idx) => {
+                                                const maxAmount = Math.max(...balance.arAgingBreakdown.map(b => b.amount));
+                                                const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
+                                                return (
+                                                    <div key={idx} className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                                            <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -300,6 +373,27 @@ export function FinancialReportsPage() {
                                     <span className="text-sm font-black text-red-700 uppercase tracking-widest">Tổng nợ</span>
                                     <span className="font-black text-red-700 text-xl">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</span>
                                 </div>
+                                {/* AP Aging Breakdown */}
+                                {balance?.apAgingBreakdown && balance.apAgingBreakdown.length > 0 && (
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tuổi nợ AP</p>
+                                        <div className="space-y-2">
+                                            {balance.apAgingBreakdown.map((item, idx) => {
+                                                const maxAmount = Math.max(...balance.apAgingBreakdown.map(b => b.amount));
+                                                const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
+                                                return (
+                                                    <div key={idx} className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
+                                                        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                                            <div className="bg-red-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

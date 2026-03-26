@@ -76,10 +76,11 @@ export interface HomepageSection {
     id: string;
     sectionType: string;
     title: string;
-    order: number;
-    configuration?: string;
-    isActive: boolean;
-    cssClass?: string;
+    displayOrder: number;
+    configuration: string | null;
+    cssClass: string | null;
+    isActive?: boolean;
+    isVisible?: boolean;
 }
 export interface FlashSale {
     id: string;
@@ -174,13 +175,17 @@ export const contentApi = {
         const response = await client.get<Coupon>(`/content/coupons/${code}`, { params: { orderAmount } });
         return response.data;
     },
-    getMenus: async () => {
-        const response = await client.get<Menu[]>('/content/menus');
+    getMenus: async (location?: MenuLocation) => {
+        const response = await client.get<Menu[]>('/content/menus', {
+            params: location ? { location } : undefined
+        });
         return response.data;
     },
     getMenu: async (location: MenuLocation) => {
-        const response = await client.get<Menu>(`/content/menus/${location}`);
-        return response.data;
+        const response = await client.get<Menu[]>('/content/menus', {
+            params: { location }
+        });
+        return response.data.length > 0 ? response.data[0] : null;
     },
     getHomepageSections: async () => {
         const response = await client.get<HomepageSection[]>('/content/homepage/sections');

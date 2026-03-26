@@ -1146,22 +1146,21 @@ public static class ContentEndpoints
         publicGroup.MapGet("/homepage/sections", async (ContentDbContext db, ICacheService cache) =>
         {
             var cacheKey = "cache:homepage:sections";
-            var cached = await cache.GetAsync<List<dynamic>>(cacheKey);
+            var cached = await cache.GetAsync<List<HomepageSectionPublicDto>>(cacheKey);
             if (cached != null) return Results.Ok(cached);
 
             var sections = await db.HomepageSections
                 .Where(s => s.IsVisible && s.IsActive)
                 .OrderBy(s => s.DisplayOrder)
-                .Select(s => new
-                {
+                .Select(s => new HomepageSectionPublicDto(
                     s.Id,
                     s.SectionType,
                     s.Title,
                     s.DisplayOrder,
                     s.Configuration,
                     s.CssClass
-                })
-                .ToListAsync<object>();
+                ))
+                .ToListAsync();
 
             await cache.SetAsync(cacheKey, sections, TimeSpan.FromMinutes(30));
             return Results.Ok(sections);
@@ -1264,6 +1263,14 @@ public record UpdateHomepageSectionDto(
 );
 public record ReorderSectionsDto(List<OrderItemDto> Sections);
 public record VisibilityDto(bool IsVisible);
+public record HomepageSectionPublicDto(
+    Guid Id,
+    string SectionType,
+    string Title,
+    int DisplayOrder,
+    string? Configuration,
+    string? CssClass
+);
 // Flash Sale DTOs
 public record CreateFlashSaleDto(
     string Name,

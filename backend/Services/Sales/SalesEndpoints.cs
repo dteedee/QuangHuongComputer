@@ -584,7 +584,7 @@ public static class SalesEndpoints
 
         // ==================== CHECKOUT ENDPOINT ====================
 
-        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint) =>
+        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext) =>
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // 30 second timeout
             try
@@ -773,8 +773,8 @@ public static class SalesEndpoints
                     items: orderItems, 
                     taxRate: 0.1m, 
                     notes: model.Notes ?? "", 
-                    customerIp: "127.0.0.1", // TODO: Get from actual request
-                    customerUserAgent: "Web App", // TODO: Get from actual request
+                    customerIp: httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    customerUserAgent: httpContext.Request.Headers.UserAgent.ToString().Length > 0 ? httpContext.Request.Headers.UserAgent.ToString() : "unknown",
                     sourceId: Guid.Parse("00000000-0000-0000-0000-000000000001") // Default web source
                 );
                 
@@ -1486,18 +1486,48 @@ public static class SalesEndpoints
         {
             var today = DateTime.UtcNow.Date;
             var thisMonth = new DateTime(today.Year, today.Month, 1);
+            var lastMonthStart = thisMonth.AddMonths(-1);
+            var lastMonthEnd = thisMonth.AddTicks(-1);
+
+            var totalOrders = await db.Orders.CountAsync();
+            var todayOrders = await db.Orders.CountAsync(o => o.OrderDate >= today);
+            var monthOrders = await db.Orders.CountAsync(o => o.OrderDate >= thisMonth);
+            var lastMonthOrders = await db.Orders.CountAsync(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd);
+            var totalRevenue = await db.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var monthRevenue = await db.Orders
+                .Where(o => o.OrderDate >= thisMonth)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var lastMonthRevenue = await db.Orders
+                .Where(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var todayRevenue = await db.Orders
+                .Where(o => o.OrderDate >= today)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var pendingOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Pending);
+            var completedOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Delivered);
+            var averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            // Growth calculations: compare current month vs previous month
+            var orderGrowth = lastMonthOrders > 0
+                ? Math.Round((decimal)(monthOrders - lastMonthOrders) / lastMonthOrders * 100, 1)
+                : (monthOrders > 0 ? 100m : 0m);
+            var revenueGrowth = lastMonthRevenue > 0
+                ? Math.Round((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100, 1)
+                : (monthRevenue > 0 ? 100m : 0m);
 
             var stats = new
             {
-                TotalOrders = await db.Orders.CountAsync(),
-                TodayOrders = await db.Orders.CountAsync(o => o.OrderDate >= today),
-                MonthOrders = await db.Orders.CountAsync(o => o.OrderDate >= thisMonth),
-                TotalRevenue = await db.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0,
-                MonthRevenue = await db.Orders
-                    .Where(o => o.OrderDate >= thisMonth)
-                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0,
-                PendingOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Pending),
-                CompletedOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Delivered)
+                TotalOrders = totalOrders,
+                TodayOrders = todayOrders,
+                MonthOrders = monthOrders,
+                TotalRevenue = totalRevenue,
+                MonthRevenue = monthRevenue,
+                TodayRevenue = todayRevenue,
+                PendingOrders = pendingOrders,
+                CompletedOrders = completedOrders,
+                AverageOrderValue = averageOrderValue,
+                OrderGrowth = orderGrowth,
+                RevenueGrowth = revenueGrowth
             };
 
             return Results.Ok(stats);

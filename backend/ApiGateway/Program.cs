@@ -79,7 +79,10 @@ CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("vi-VN");
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+});
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
@@ -527,6 +530,17 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             logger.LogError(ex, "HR seeding failed");
+        }
+
+        // Add Content Seeding (homepage sections, pages, menus)
+        try
+        {
+            await ContentDbSeeder.SeedAsync(services.GetRequiredService<ContentDbContext>());
+            logger.LogInformation("Content seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Content seeding failed");
         }
     }
 }

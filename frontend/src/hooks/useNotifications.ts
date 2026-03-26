@@ -3,7 +3,8 @@ import { salesApi } from '../api/sales';
 import { repairApi } from '../api/repair';
 import { warrantyApi } from '../api/warranty';
 import { catalogApi } from '../api/catalog';
-import { notificationApi, NotificationDto } from '../api/notification';
+import { notificationApi } from '../api/notification';
+import type { NotificationDto } from '../api/notification';
 import { useRealtimeNotifications } from './useRealtimeNotifications';
 import toast from 'react-hot-toast';
 

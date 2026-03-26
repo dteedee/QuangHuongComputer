@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { HomepageSection } from '../api/content';
+import type { HomepageSection } from '../api/content';
 import { HeroSlider } from './homepage/HeroSlider';
 import { BannerGrid } from './homepage/BannerGrid';
 import { FlashDeal } from './homepage/FlashDeal';

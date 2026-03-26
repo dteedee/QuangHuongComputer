@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { catalogApi, type Product } from '../api/catalog';
 import { useCart } from '../context/CartContext';
@@ -226,7 +226,7 @@ export const ProductDetailsPage = () => {
                             <p className="text-xs text-gray-500 italic">Giá đã bao gồm VAT. Hỗ trợ trả góp 0%</p>
                         </div>
 
-                        {/* Short Specs (Mock) */}
+                        {/* Short Specs */}
                         <div className="mb-6">
                             <h3 className="font-bold text-sm uppercase text-gray-900 mb-3 flex items-center gap-2">
                                 <Cpu size={16} /> Thông số nổi bật

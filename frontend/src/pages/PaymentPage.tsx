@@ -65,25 +65,9 @@ export const PaymentPage = () => {
             return;
         }
 
-        setStep('gateway');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        try {
-            await paymentApi.mockWebhook({
-                paymentId,
-                success: true
-            });
-
-            setStep('success');
-            setTimeout(() => {
-                navigate('/profile');
-                toast.success('Payment Successful! Order Paid.');
-            }, 2000);
-        } catch (error) {
-            toast.error('Payment failed');
-            setIsProcessing(false);
-            setStep('review');
-        }
+        // No payment gateway URL — online payment not configured
+        toast.error('Thanh toán trực tuyến chưa được kích hoạt. Vui lòng liên hệ cửa hàng.');
+        setIsProcessing(false);
     };
 
     if (!order) return <div className="p-12 text-center text-white">Loading order...</div>;
@@ -101,7 +85,7 @@ export const PaymentPage = () => {
                         </div>
 
                         <h2 className="text-2xl font-bold text-center text-white mb-2">Confirm Payment</h2>
-                        <p className="text-center text-gray-400 mb-8">Secure Checkout via MockGateway</p>
+                        <p className="text-center text-gray-400 mb-8">Thanh toán an toàn qua VNPay</p>
 
                         <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
                             <div className="flex justify-between text-sm mb-2">
@@ -120,7 +104,7 @@ export const PaymentPage = () => {
                             className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <Lock size={18} />
-                            Pay Now
+                            Thanh toán ngay
                         </button>
                     </>
                 )}
@@ -130,7 +114,7 @@ export const PaymentPage = () => {
                         <Loader2 size={48} className="animate-spin text-blue-500 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">Processing Payment...</h3>
                         <p className="text-gray-400">Please do not close this window.</p>
-                        <p className="text-xs text-gray-600 mt-4">Connecting to VnPay Mock...</p>
+                        <p className="text-xs text-gray-600 mt-4">Đang kết nối tới VNPay...</p>
                     </div>
                 )}
 

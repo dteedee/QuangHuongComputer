@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Plus, CreditCard, ArrowRight,
     Tag, Star, TrendingUp, Clock, DollarSign, Package, ExternalLink,
@@ -19,57 +19,15 @@ export const SalePortal = () => {
 
     const fetchData = async () => {
         try {
-            // Mock data for demo if API fails
-            const mockStats: SalesStats = {
-                totalOrders: 156,
-                todayOrders: 12,
-                monthOrders: 45,
-                monthRevenue: 45200000,
-                totalRevenue: 500000000,
-                pendingOrders: 8,
-                completedOrders: 142,
-                averageOrderValue: 3200000,
-                todayRevenue: 12500000
-            };
-
-            const mockOrders: Order[] = [
-                {
-                    id: '1', orderNumber: 'ORD-2024001', customerId: 'CUST-001', status: 'Confirmed',
-                    paymentStatus: 'Pending', fulfillmentStatus: 'Pending',
-                    subtotalAmount: 12000000, discountAmount: 0, taxAmount: 1200000, shippingAmount: 0,
-                    totalAmount: 13200000, taxRate: 0.1, shippingAddress: 'Hanoi', retryCount: 0,
-                    orderDate: new Date().toISOString(), items: [{ productName: 'Laptop Gaming ASUS ROG', quantity: 1, unitPrice: 12000000 }]
-                },
-                {
-                    id: '2', orderNumber: 'ORD-2024002', customerId: 'CUST-002', status: 'Paid',
-                    paymentStatus: 'Paid', fulfillmentStatus: 'Pending',
-                    subtotalAmount: 25000000, discountAmount: 500000, taxAmount: 2450000, shippingAmount: 0,
-                    totalAmount: 26950000, taxRate: 0.1, shippingAddress: 'HCM', retryCount: 0,
-                    orderDate: new Date(Date.now() - 3600000).toISOString(), items: [{ productName: 'PC Gaming Custom Build', quantity: 1, unitPrice: 25000000 }]
-                },
-                {
-                    id: '3', orderNumber: 'ORD-2024003', customerId: 'CUST-003', status: 'Shipped',
-                    paymentStatus: 'Paid', fulfillmentStatus: 'Shipped',
-                    subtotalAmount: 8500000, discountAmount: 0, taxAmount: 850000, shippingAmount: 50000,
-                    totalAmount: 9400000, taxRate: 0.1, shippingAddress: 'Da Nang', retryCount: 0,
-                    orderDate: new Date(Date.now() - 7200000).toISOString(), items: [{ productName: 'Monitor LG 27"', quantity: 2, unitPrice: 4250000 }]
-                },
-            ] as Order[];
-
-            try {
-                const [ordersData, statsData] = await Promise.all([
-                    salesApi.admin.getOrders({ page: 1, pageSize: 10 }),
-                    salesApi.admin.getStats()
-                ]);
-                setOrders(ordersData.orders?.length > 0 ? ordersData.orders : mockOrders);
-                setStats(statsData || mockStats);
-            } catch (apiError) {
-                console.warn('API error, using mock data:', apiError);
-                setStats(mockStats);
-                setOrders(mockOrders);
-            }
+            const [ordersData, statsData] = await Promise.all([
+                salesApi.admin.getOrders(1, 10),
+                salesApi.admin.getStats()
+            ]);
+            setOrders(ordersData.orders || []);
+            setStats(statsData || null);
         } catch (error) {
-            console.error('Failed to fetch data', error);
+            console.error('Failed to fetch sales data:', error);
+            toast.error('Không thể tải dữ liệu bán hàng');
         } finally {
             setIsLoading(false);
         }
@@ -148,8 +106,8 @@ export const SalePortal = () => {
                         <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg">
                             <Package size={28} />
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black bg-emerald-50 text-emerald-700">
-                            <TrendingUp size={14} className="fill-current" /> +12%
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black ${(stats?.orderGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                            <TrendingUp size={14} className="fill-current" /> {(stats?.orderGrowth ?? 0) >= 0 ? '+' : ''}{stats?.orderGrowth ?? 0}%
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -163,8 +121,8 @@ export const SalePortal = () => {
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-lg">
                             <DollarSign size={28} />
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black bg-emerald-50 text-emerald-700">
-                            <TrendingUp size={14} className="fill-current" /> +8.5%
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black ${(stats?.revenueGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                            <TrendingUp size={14} className="fill-current" /> {(stats?.revenueGrowth ?? 0) >= 0 ? '+' : ''}{stats?.revenueGrowth ?? 0}%
                         </div>
                     </div>
                     <div className="space-y-1">
@@ -192,8 +150,8 @@ export const SalePortal = () => {
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Đánh giá trung bình</p>
-                        <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">4.8<span className="text-lg text-gray-400">/5.0</span></h3>
+                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Giá trị đơn TB</p>
+                        <h3 className="text-3xl font-black text-gray-950 tracking-tighter italic">{formatCurrency(stats?.averageOrderValue || 0)}</h3>
                     </div>
                 </div>
             </div>

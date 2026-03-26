@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { repairApi, type WorkOrderStatus, getStatusColor } from '../../../api/repair';
+import { inventoryApi } from '../../../api/inventory';
 import { formatCurrency } from '../../../utils/format';
 import toast from 'react-hot-toast';
 import {
@@ -38,6 +39,8 @@ export const WorkOrderDetailPage = () => {
     const [showNoteModal, setShowNoteModal] = useState(false);
 
     // Part form
+    const [selectedInventoryItemId, setSelectedInventoryItemId] = useState('');
+    const [inventorySearch, setInventorySearch] = useState('');
     const [partName, setPartName] = useState('');
     const [partNumber, setPartNumber] = useState('');
     const [partQuantity, setPartQuantity] = useState(1);
@@ -61,6 +64,22 @@ export const WorkOrderDetailPage = () => {
         enabled: !!id
     });
 
+    // Fetch inventory items for part selection
+    const { data: inventoryItems = [] } = useQuery({
+        queryKey: ['inventory-items-for-parts'],
+        queryFn: () => inventoryApi.getInventory(),
+        staleTime: 5 * 60 * 1000
+    });
+
+    const filteredInventoryItems = useMemo(() => {
+        if (!inventorySearch.trim()) return inventoryItems.slice(0, 20);
+        const q = inventorySearch.toLowerCase();
+        return inventoryItems.filter(item =>
+            (item.productName?.toLowerCase().includes(q)) ||
+            item.sku?.toLowerCase().includes(q)
+        ).slice(0, 20);
+    }, [inventoryItems, inventorySearch]);
+
     const workOrder = data?.workOrder;
     const parts = data?.parts || [];
     const logs = data?.logs || [];
@@ -80,7 +99,7 @@ export const WorkOrderDetailPage = () => {
 
     const addPartMutation = useMutation({
         mutationFn: () => repairApi.technician.addPart(id!, {
-            inventoryItemId: crypto.randomUUID(), // Should be from inventory selection
+            inventoryItemId: selectedInventoryItemId,
             partName,
             partNumber,
             quantity: partQuantity,
@@ -136,6 +155,8 @@ export const WorkOrderDetailPage = () => {
     });
 
     const resetPartForm = () => {
+        setSelectedInventoryItemId('');
+        setInventorySearch('');
         setPartName('');
         setPartNumber('');
         setPartQuantity(1);
@@ -484,24 +505,56 @@ export const WorkOrderDetailPage = () => {
                         <h3 className="text-xl font-black text-gray-900 mb-6">Thêm linh kiện</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Tên linh kiện *</label>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Chọn linh kiện từ kho *</label>
                                 <input
                                     type="text"
-                                    value={partName}
-                                    onChange={(e) => setPartName(e.target.value)}
+                                    value={inventorySearch}
+                                    onChange={(e) => setInventorySearch(e.target.value)}
                                     className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
-                                    placeholder="VD: Pin laptop Dell"
+                                    placeholder="Tìm theo tên hoặc SKU..."
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Mã linh kiện</label>
-                                <input
-                                    type="text"
-                                    value={partNumber}
-                                    onChange={(e) => setPartNumber(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#D70018]"
-                                    placeholder="VD: PN-123456"
-                                />
+                                {inventorySearch && !selectedInventoryItemId && (
+                                    <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white shadow-lg">
+                                        {filteredInventoryItems.length === 0 ? (
+                                            <p className="p-3 text-sm text-gray-400">Không tìm thấy linh kiện</p>
+                                        ) : (
+                                            filteredInventoryItems.map(item => (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedInventoryItemId(item.id);
+                                                        setPartName(item.productName || item.sku);
+                                                        setPartNumber(item.sku);
+                                                        setInventorySearch(item.productName || item.sku);
+                                                    }}
+                                                    className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
+                                                >
+                                                    <span className="font-medium text-gray-900">{item.productName || item.sku}</span>
+                                                    <span className="ml-2 text-xs text-gray-400">SKU: {item.sku} · SL: {item.quantity}</span>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                                {selectedInventoryItemId && (
+                                    <div className="mt-1 flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+                                        <CheckCircle size={14} className="text-green-600" />
+                                        <span className="text-sm text-green-700 font-medium">{partName}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedInventoryItemId('');
+                                                setInventorySearch('');
+                                                setPartName('');
+                                                setPartNumber('');
+                                            }}
+                                            className="ml-auto text-xs text-gray-400 hover:text-red-500"
+                                        >
+                                            Đổi
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -539,7 +592,7 @@ export const WorkOrderDetailPage = () => {
                             </button>
                             <button
                                 onClick={() => addPartMutation.mutate()}
-                                disabled={!partName || partQuantity < 1 || addPartMutation.isPending}
+                                disabled={!selectedInventoryItemId || !partName || partQuantity < 1 || addPartMutation.isPending}
                                 className="flex-1 py-3 bg-[#D70018] text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-50"
                             >
                                 {addPartMutation.isPending ? 'Đang thêm...' : 'Thêm'}
