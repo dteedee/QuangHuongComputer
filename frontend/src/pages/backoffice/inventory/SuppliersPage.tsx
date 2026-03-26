@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     inventoryApi,
-    Supplier,
-    SupplierListItem,
-    CreateSupplierDto,
-    SupplierType,
-    PaymentTermType,
+    type Supplier,
+    type SupplierListItem,
+    type CreateSupplierDto,
+    type SupplierType,
+    type PaymentTermType,
     supplierTypeLabels,
     paymentTermLabels,
     formatCurrency
