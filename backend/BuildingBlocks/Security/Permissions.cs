@@ -117,6 +117,8 @@ public static class Permissions
         public const string ViewConfig = "Permissions.System.ViewConfig";
         public const string ManageConfig = "Permissions.System.ManageConfig";
         public const string ViewLogs = "Permissions.System.ViewLogs";
+        public const string ManageLogs = "Permissions.System.ManageLogs";
+        public const string ManageBackups = "Permissions.System.ManageBackups";
     }
 
     public static class HR

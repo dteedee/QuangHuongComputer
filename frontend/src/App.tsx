@@ -129,6 +129,7 @@ const RolesPage = lazy(() => import('./pages/backoffice/admin/PermissionsPage').
 const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').then(m => ({ default: m.UsersPage })));
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
 const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
+const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -244,6 +245,7 @@ function App() {
                           <Route path="coupons" element={<CouponsPage />} />
                           <Route path="config" element={<ConfigPortal />} />
                           <Route path="admin" element={<AdminPortal />} />
+                          <Route path="audit-logs" element={<AuditLogsPage />} />
                           <Route path="manager" element={<ManagerPortal />} />
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />

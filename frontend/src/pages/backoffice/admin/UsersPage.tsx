@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useConfirm } from '@context/ConfirmContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Edit, UserCheck, UserX, Key, Shield, Search,
   Plus, User as UserIcon, Mail,
-  ChevronRight, ChevronLeft, RefreshCw, Power, PowerOff
+  ChevronRight, ChevronLeft, RefreshCw, Power, PowerOff,
+  CheckSquare, Square, X, Download, Loader2,
+  MinusSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApi, type User } from '@api/admin';
@@ -53,6 +55,110 @@ export function UsersPage() {
       includeInactive: statusFilter !== 'active'
     })
   });
+
+  // ======== BULK OPERATIONS STATE ========
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+
+  const currentItems = usersData?.items || [];
+  const allOnPageSelected = currentItems.length > 0 && currentItems.every(u => selectedIds.has(u.id));
+  const someOnPageSelected = currentItems.some(u => selectedIds.has(u.id));
+
+  const toggleSelectOne = useCallback((userId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = () => {
+    if (allOnPageSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        currentItems.forEach(u => next.delete(u.id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        currentItems.forEach(u => next.add(u.id));
+        return next;
+      });
+    }
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleBulkActivate = async () => {
+    const selected = currentItems.filter(u => selectedIds.has(u.id) && !u.isActive);
+    if (selected.length === 0) {
+      toast.error('Không có người dùng nào cần kích hoạt trong các mục đã chọn.');
+      return;
+    }
+    const ok = await confirm({
+      message: `Bạn có chắc muốn KÍCH HOẠT ${selected.length} người dùng đã chọn?`,
+      variant: 'warning'
+    });
+    if (!ok) return;
+    setBulkProcessing(true);
+    let success = 0, fail = 0;
+    for (const user of selected) {
+      try { await adminApi.users.activate(user.id); success++; }
+      catch { fail++; }
+    }
+    queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    clearSelection();
+    setBulkProcessing(false);
+    toast.success(`Đã kích hoạt ${success} người dùng` + (fail > 0 ? `, ${fail} lỗi` : ''));
+  };
+
+  const handleBulkDeactivate = async () => {
+    const selected = currentItems.filter(u => selectedIds.has(u.id) && u.isActive);
+    if (selected.length === 0) {
+      toast.error('Không có người dùng nào cần vô hiệu hóa trong các mục đã chọn.');
+      return;
+    }
+    const ok = await confirm({
+      message: `Bạn có chắc muốn VÔ HIỆU HÓA ${selected.length} người dùng đã chọn? Họ sẽ không thể đăng nhập!`,
+      variant: 'warning'
+    });
+    if (!ok) return;
+    setBulkProcessing(true);
+    let success = 0, fail = 0;
+    for (const user of selected) {
+      try { await adminApi.users.toggleStatus(user.id); success++; }
+      catch { fail++; }
+    }
+    queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    clearSelection();
+    setBulkProcessing(false);
+    toast.success(`Đã vô hiệu hóa ${success} người dùng` + (fail > 0 ? `, ${fail} lỗi` : ''));
+  };
+
+  const handleBulkExport = () => {
+    const selected = currentItems.filter(u => selectedIds.has(u.id));
+    if (selected.length === 0) return;
+    const headers = ['Họ tên', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tạo'];
+    const rows = selected.map(u => [
+      u.fullName, u.email, u.roles.join('; '),
+      u.isActive ? 'Hoạt động' : 'Đã khóa',
+      new Date(u.createdAt).toLocaleDateString('vi-VN')
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `NguoiDung_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Đã xuất ${selected.length} người dùng ra CSV!`);
+  };
 
   // Mutations
   const createMutation = useMutation({
@@ -207,7 +313,18 @@ export function UsersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50">
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest pl-10">Người dùng</th>
+                <th className="px-4 py-4 w-12">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                    title={allOnPageSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả trang này'}
+                  >
+                    {allOnPageSelected ? <CheckSquare size={20} className="text-blue-600" /> :
+                     someOnPageSelected ? <MinusSquare size={20} className="text-blue-400" /> :
+                     <Square size={20} />}
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Người dùng</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Vai trò</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Ngày tạo</th>
@@ -216,7 +333,9 @@ export function UsersPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               <AnimatePresence mode="popLayout">
-                {usersData?.items.map((user, idx) => (
+                {usersData?.items.map((user, idx) => {
+                  const isSelected = selectedIds.has(user.id);
+                  return (
                   <motion.tr
                     layout
                     initial={{ opacity: 0, y: 10 }}
@@ -224,9 +343,20 @@ export function UsersPage() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: idx * 0.05 }}
                     key={user.id}
-                    className="group hover:bg-blue-50/30 transition-colors"
+                    className={`group transition-colors ${isSelected ? 'bg-blue-50/60 hover:bg-blue-50' : 'hover:bg-blue-50/30'}`}
                   >
-                    <td className="px-6 py-5 pl-10">
+                    <td className="px-4 py-5 w-12">
+                      <button
+                        onClick={() => toggleSelectOne(user.id)}
+                        className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        {isSelected
+                          ? <CheckSquare size={20} className="text-blue-600" />
+                          : <Square size={20} className="text-gray-300 group-hover:text-gray-400" />
+                        }
+                      </button>
+                    </td>
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
                           {user.fullName.charAt(0)}
@@ -301,12 +431,13 @@ export function UsersPage() {
                       </div>
                     </td>
                   </motion.tr>
-                ))}
+                  );
+                })}
               </AnimatePresence>
 
               {isLoading && [...Array(5)].map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  <td colSpan={5} className="px-10 py-6">
+                  <td colSpan={6} className="px-10 py-6">
                     <div className="h-12 bg-gray-100 rounded-2xl w-full"></div>
                   </td>
                 </tr>
@@ -314,7 +445,7 @@ export function UsersPage() {
 
               {!isLoading && usersData?.items.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center">
+                  <td colSpan={6} className="py-20 text-center">
                     <UserIcon size={48} className="mx-auto text-gray-200 mb-4" />
                     <p className="text-gray-400 font-medium">Không tìm thấy người dùng nào</p>
                   </td>
@@ -397,6 +528,73 @@ export function UsersPage() {
           isLoading={resetPasswordMutation.isPending}
         />
       )}
+
+      {/* ======== FLOATING BULK ACTION BAR ======== */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 80, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 80, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="bg-gray-900 text-white rounded-2xl shadow-2xl shadow-black/30 px-6 py-4 flex items-center gap-5 min-w-[500px] border border-gray-700">
+              {/* Selection Count */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-black text-lg">
+                  {selectedIds.size}
+                </div>
+                <div>
+                  <p className="text-sm font-bold">đã chọn</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">người dùng</p>
+                </div>
+              </div>
+
+              <div className="w-px h-10 bg-gray-700" />
+
+              {/* Bulk Actions */}
+              <div className="flex items-center gap-2 flex-1">
+                <button
+                  onClick={handleBulkActivate}
+                  disabled={bulkProcessing}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {bulkProcessing ? <Loader2 size={14} className="animate-spin" /> : <Power size={14} />}
+                  Kích hoạt
+                </button>
+
+                <button
+                  onClick={handleBulkDeactivate}
+                  disabled={bulkProcessing}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {bulkProcessing ? <Loader2 size={14} className="animate-spin" /> : <PowerOff size={14} />}
+                  Vô hiệu hóa
+                </button>
+
+                <button
+                  onClick={handleBulkExport}
+                  disabled={bulkProcessing}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download size={14} />
+                  Xuất CSV
+                </button>
+              </div>
+
+              {/* Close */}
+              <button
+                onClick={clearSelection}
+                className="p-2 hover:bg-gray-700 rounded-xl transition-colors text-gray-400 hover:text-white"
+                title="Bỏ chọn tất cả"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

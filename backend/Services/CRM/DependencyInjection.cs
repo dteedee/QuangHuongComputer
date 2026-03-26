@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using CRM.Infrastructure;
 using CRM.Services;
 using Microsoft.Extensions.Configuration;
+using BuildingBlocks.Database;
 
 namespace CRM;
 
@@ -13,7 +14,8 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<CrmDbContext>(options =>
+        services.AddDbContextPool<CrmDbContext>((serviceProvider, options) =>
+        {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
@@ -21,7 +23,12 @@ public static class DependencyInjection
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(5),
                     errorCodesToAdd: null);
-            }),
+            });
+
+            var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
+            if (interceptor != null)
+                options.AddInterceptors(interceptor);
+        },
             poolSize: 128);
 
         // Register CRM services

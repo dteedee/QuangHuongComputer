@@ -1,4 +1,4 @@
-﻿
+
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -95,8 +95,8 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                             </h3>
                                             <div className="flex items-center gap-2">
                                                 <p className="text-accent font-bold text-sm">{formatCurrency(item.price)}</p>
-                                                {item.oldPrice && item.oldPrice > item.price && (
-                                                    <p className="text-gray-400 text-xs line-through">{formatCurrency(item.oldPrice)}</p>
+                                                {(item as any).oldPrice && (item as any).oldPrice > item.price && (
+                                                    <p className="text-gray-400 text-xs line-through">{formatCurrency((item as any).oldPrice)}</p>
                                                 )}
                                             </div>
                                         </div>

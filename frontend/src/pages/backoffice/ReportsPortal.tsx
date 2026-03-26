@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
     BarChart3, PieChart, TrendingUp, TrendingDown,
     Download, Calendar, ArrowUpRight, ArrowDownRight,
     Package, Users, Wrench, DollarSign, AlertTriangle,
-    FileSpreadsheet, Trophy, Star, ShoppingCart
+    FileSpreadsheet, Trophy, Star, ShoppingCart,
+    Filter, RefreshCw, Clock
 } from 'lucide-react';
 import { reportingApi } from '../../api/reporting';
 import type { TopProduct, TopCustomer, TopTechnician } from '../../api/reporting';
@@ -12,19 +13,58 @@ import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/format';
 import toast from 'react-hot-toast';
 
+// Date range helpers
+type DatePreset = 'today' | '7d' | '30d' | '90d' | 'year' | 'custom';
+
+const getPresetDates = (preset: DatePreset): { start: string; end: string } => {
+    const end = new Date();
+    const start = new Date();
+    switch (preset) {
+        case 'today': break;
+        case '7d': start.setDate(start.getDate() - 7); break;
+        case '30d': start.setDate(start.getDate() - 30); break;
+        case '90d': start.setDate(start.getDate() - 90); break;
+        case 'year': start.setMonth(0, 1); break;
+        default: break;
+    }
+    return {
+        start: start.toISOString().split('T')[0],
+        end: end.toISOString().split('T')[0]
+    };
+};
+
+const presetLabels: Record<DatePreset, string> = {
+    today: 'Hôm nay',
+    '7d': '7 ngày',
+    '30d': '30 ngày',
+    '90d': '90 ngày',
+    year: 'Năm nay',
+    custom: 'Tùy chọn'
+};
+
 export const ReportsPortal = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'customers' | 'technicians'>('overview');
     const [isExporting, setIsExporting] = useState(false);
+    const [datePreset, setDatePreset] = useState<DatePreset>('30d');
+    const [customStart, setCustomStart] = useState('');
+    const [customEnd, setCustomEnd] = useState('');
 
-    // Queries
-    const { data: overview, isLoading: loadingOverview } = useQuery({
-        queryKey: ['reports', 'business-overview'],
+    const dateRange = useMemo(() => {
+        if (datePreset === 'custom' && customStart && customEnd) {
+            return { start: customStart, end: customEnd };
+        }
+        return getPresetDates(datePreset);
+    }, [datePreset, customStart, customEnd]);
+
+    // Queries - now with date range
+    const { data: overview, isLoading: loadingOverview, refetch: refetchAll } = useQuery({
+        queryKey: ['reports', 'business-overview', dateRange],
         queryFn: () => reportingApi.getBusinessOverview()
     });
 
     const { data: salesStats } = useQuery({
-        queryKey: ['reports', 'sales-summary'],
-        queryFn: () => reportingApi.getSalesSummary()
+        queryKey: ['reports', 'sales-summary', dateRange],
+        queryFn: () => reportingApi.getSalesSummary(dateRange.start, dateRange.end)
     });
 
     const { data: invValue } = useQuery({
@@ -33,8 +73,8 @@ export const ReportsPortal = () => {
     });
 
     const { data: topProducts } = useQuery({
-        queryKey: ['reports', 'top-products'],
-        queryFn: () => reportingApi.getTopProducts(10)
+        queryKey: ['reports', 'top-products', dateRange],
+        queryFn: () => reportingApi.getTopProducts(10, dateRange.start, dateRange.end)
     });
 
     const { data: topCustomers } = useQuery({
@@ -94,6 +134,13 @@ export const ReportsPortal = () => {
 
                 <div className="flex flex-wrap gap-3">
                     <button
+                        onClick={() => refetchAll()}
+                        className="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
+                    >
+                        <RefreshCw size={16} />
+                        Làm mới
+                    </button>
+                    <button
                         onClick={() => handleExport('full')}
                         disabled={isExporting}
                         className="flex items-center gap-2 px-6 py-3 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
@@ -101,6 +148,52 @@ export const ReportsPortal = () => {
                         <FileSpreadsheet size={18} />
                         {isExporting ? 'Đang xuất...' : 'Xuất báo cáo tổng hợp'}
                     </button>
+                </div>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div className="flex items-center gap-2 text-gray-500">
+                        <Calendar size={18} />
+                        <span className="text-xs font-bold uppercase tracking-wider">Khoảng thời gian:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {(Object.keys(presetLabels) as DatePreset[]).map(preset => (
+                            <button
+                                key={preset}
+                                onClick={() => setDatePreset(preset)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                    datePreset === preset
+                                        ? 'bg-gray-900 text-white shadow-lg'
+                                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                                }`}
+                            >
+                                {presetLabels[preset]}
+                            </button>
+                        ))}
+                    </div>
+                    {datePreset === 'custom' && (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="date"
+                                value={customStart}
+                                onChange={e => setCustomStart(e.target.value)}
+                                className="px-3 py-2 border border-gray-200 rounded-xl text-sm font-medium focus:border-accent outline-none"
+                            />
+                            <span className="text-gray-400 text-sm">→</span>
+                            <input
+                                type="date"
+                                value={customEnd}
+                                onChange={e => setCustomEnd(e.target.value)}
+                                className="px-3 py-2 border border-gray-200 rounded-xl text-sm font-medium focus:border-accent outline-none"
+                            />
+                        </div>
+                    )}
+                    <div className="ml-auto flex items-center gap-2 text-xs text-gray-400">
+                        <Clock size={14} />
+                        <span>{dateRange.start} — {dateRange.end}</span>
+                    </div>
                 </div>
             </div>
 

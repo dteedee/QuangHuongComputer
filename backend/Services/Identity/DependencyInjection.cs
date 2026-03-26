@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using BuildingBlocks.Database;
 
 namespace Identity;
 
@@ -16,7 +17,8 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<IdentityDbContext>(options =>
+        services.AddDbContextPool<IdentityDbContext>((serviceProvider, options) =>
+        {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
@@ -24,7 +26,12 @@ public static class DependencyInjection
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
                 npgsqlOptions.MigrationsAssembly(typeof(IdentityDbContext).Assembly.FullName);
-            }),
+            });
+
+            var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
+            if (interceptor != null)
+                options.AddInterceptors(interceptor);
+        },
             poolSize: 128);
 
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>

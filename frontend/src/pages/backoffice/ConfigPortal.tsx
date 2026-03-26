@@ -1,15 +1,102 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Settings, Save, RefreshCw, Info,
     Globe, Shield, MessageCircle, Truck,
     AlertTriangle, Bell, Zap, Database, Building2,
     DollarSign, Users, Clock, Percent, Phone,
-    Mail, MapPin, Award, ShoppingBag, Wrench
+    Mail, MapPin, Award, ShoppingBag, Wrench,
+    CheckCircle, XCircle, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { systemConfigApi } from '../../api/systemConfig';
 import type { ConfigurationEntry } from '../../api/systemConfig';
 
 import toast from 'react-hot-toast';
+
+// ============================================
+// Config Validation System
+// ============================================
+type ConfigType = 'boolean' | 'number' | 'percentage' | 'currency' | 'url' | 'email' | 'phone' | 'text';
+
+interface ValidationRule {
+    type: ConfigType;
+    min?: number;
+    max?: number;
+    required?: boolean;
+}
+
+const getConfigType = (key: string, value: string): ConfigType => {
+    // Boolean
+    if (value === 'true' || value === 'false' ||
+        key.includes('ENABLED') || key.includes('REQUIRE_') ||
+        key.includes('_NOTIFICATIONS') || key.includes('CONFIRMATION')) return 'boolean';
+    // URL
+    if (key.includes('_URL') || key.includes('WEBSITE')) return 'url';
+    // Email
+    if (key.includes('EMAIL') && !key.includes('NOTIFICATION')) return 'email';
+    // Phone
+    if (key.includes('PHONE') || key.includes('ZALO')) return 'phone';
+    // Percentage/Rate
+    if (key.includes('RATE') || key.includes('PERCENT')) return 'percentage';
+    // Currency
+    if (key.includes('SALARY') || key.includes('FEE') || key.includes('AMOUNT') ||
+        key.includes('THRESHOLD')) return 'currency';
+    // Number
+    if (key.includes('DAYS') || key.includes('HOURS') || key.includes('MONTHS') ||
+        key.includes('TIMEOUT') || key.includes('ATTEMPTS') || key.includes('LENGTH') ||
+        key.includes('MAX_') || key.includes('MIN_') || key.includes('DELAY') ||
+        key.includes('PERIOD') || key.includes('PER_')) return 'number';
+    // Check if value is numeric
+    if (/^\d+(\.\d+)?$/.test(value)) return 'number';
+    return 'text';
+};
+
+const getValidationRule = (key: string, value: string): ValidationRule => {
+    const type = getConfigType(key, value);
+    switch (type) {
+        case 'percentage':
+            return { type, min: 0, max: 1, required: true };
+        case 'currency':
+            return { type, min: 0, required: true };
+        case 'number':
+            return { type, min: 0, required: true };
+        default:
+            return { type, required: true };
+    }
+};
+
+const validateConfig = (key: string, value: string): string | null => {
+    if (!value && value !== '0') return 'Giá trị không được để trống';
+    const rule = getValidationRule(key, value);
+
+    switch (rule.type) {
+        case 'boolean':
+            if (value !== 'true' && value !== 'false') return 'Chỉ chấp nhận true hoặc false';
+            break;
+        case 'percentage':
+            const pct = parseFloat(value);
+            if (isNaN(pct)) return 'Phải là số thập phân (VD: 0.08)';
+            if (pct < 0 || pct > 1) return 'Tỷ lệ phải từ 0 đến 1 (VD: 0.08 = 8%)';
+            break;
+        case 'currency':
+        case 'number': {
+            const num = parseFloat(value);
+            if (isNaN(num)) return 'Phải là số hợp lệ';
+            if (rule.min !== undefined && num < rule.min) return `Giá trị tối thiểu là ${rule.min}`;
+            if (rule.max !== undefined && num > rule.max) return `Giá trị tối đa là ${rule.max}`;
+            break;
+        }
+        case 'url':
+            if (value && !/^https?:\/\/.+/.test(value)) return 'URL phải bắt đầu bằng http:// hoặc https://';
+            break;
+        case 'email':
+            if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Email không hợp lệ';
+            break;
+        case 'phone':
+            if (value && !/^[0-9.\-\s+()]+$/.test(value)) return 'Số điện thoại không hợp lệ';
+            break;
+    }
+    return null;
+};
 
 // Extended config structure with default values
 const DEFAULT_CONFIGS: Record<string, ConfigurationEntry[]> = {
@@ -88,6 +175,7 @@ export const ConfigPortal = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('Company');
     const [hasChanges, setHasChanges] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -127,6 +215,18 @@ export const ConfigPortal = () => {
     ];
 
     const handleSave = async () => {
+        // Validate all configs before saving
+        const errors: Record<string, string | null> = {};
+        let hasErrors = false;
+        configs.forEach(c => {
+            const err = validateConfig(c.key, c.value);
+            if (err) { errors[c.key] = err; hasErrors = true; }
+        });
+        setValidationErrors(errors);
+        if (hasErrors) {
+            toast.error('Vui lòng sửa các lỗi cấu hình trước khi lưu!');
+            return;
+        }
         try {
             await toast.promise(
                 systemConfigApi.updateConfigs(configs),
@@ -146,14 +246,17 @@ export const ConfigPortal = () => {
         }
     };
 
-    const handleConfigChange = (key: string, newValue: string) => {
+    const handleConfigChange = useCallback((key: string, newValue: string) => {
         setConfigs(prev => prev.map(config =>
             config.key === key
                 ? { ...config, value: newValue, lastUpdated: new Date().toISOString() }
                 : config
         ));
+        // Validate on change
+        const error = validateConfig(key, newValue);
+        setValidationErrors(prev => ({ ...prev, [key]: error }));
         setHasChanges(true);
-    };
+    }, []);
 
     const filteredConfigs = configs.filter(config =>
         config.category === activeCategory &&
@@ -265,14 +368,28 @@ export const ConfigPortal = () => {
                         </div>
 
                         <div className="space-y-6">
-                            {filteredConfigs.map((config) => (
-                                <div key={config.key} className="space-y-3 group border-2 border-gray-50 rounded-2xl p-6 hover:border-accent/20 transition-all bg-gradient-to-r from-gray-50/50 to-white">
+                            {filteredConfigs.map((config) => {
+                                const configType = getConfigType(config.key, config.value);
+                                const error = validationErrors[config.key];
+                                const hasError = !!error;
+
+                                return (
+                                <div key={config.key} className={`space-y-3 group border-2 rounded-2xl p-6 transition-all bg-gradient-to-r from-gray-50/50 to-white ${hasError ? 'border-red-200 bg-red-50/30' : 'border-gray-50 hover:border-accent/20'}`}>
                                     <div className="flex justify-between items-center">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest flex items-center gap-3">
                                             <span className="bg-gray-900 text-white p-2 rounded-lg">
                                                 {getConfigIcon(config.key)}
                                             </span>
                                             {config.key.replace(/_/g, ' ')}
+                                            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                                configType === 'boolean' ? 'bg-purple-100 text-purple-600' :
+                                                configType === 'percentage' ? 'bg-blue-100 text-blue-600' :
+                                                configType === 'currency' ? 'bg-emerald-100 text-emerald-600' :
+                                                configType === 'url' ? 'bg-indigo-100 text-indigo-600' :
+                                                configType === 'email' ? 'bg-orange-100 text-orange-600' :
+                                                configType === 'number' ? 'bg-cyan-100 text-cyan-600' :
+                                                'bg-gray-100 text-gray-500'
+                                            }`}>{configType}</span>
                                         </label>
                                         <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest flex items-center gap-2">
                                             <Clock size={12} />
@@ -280,24 +397,74 @@ export const ConfigPortal = () => {
                                         </span>
                                     </div>
 
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={config.value}
-                                            onChange={(e) => handleConfigChange(config.key, e.target.value)}
-                                            className="w-full px-6 py-4 bg-white border-2 border-gray-200 rounded-xl text-base font-bold text-gray-950 focus:outline-none focus:border-accent transition-all shadow-sm hover:shadow-md font-mono"
-                                        />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
+                                    {/* Boolean Toggle */}
+                                    {configType === 'boolean' ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleConfigChange(config.key, config.value === 'true' ? 'false' : 'true')}
+                                            className={`flex items-center gap-4 w-full px-6 py-4 rounded-xl border-2 transition-all ${
+                                                config.value === 'true'
+                                                    ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
+                                                    : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            {config.value === 'true'
+                                                ? <ToggleRight size={32} className="text-emerald-500" />
+                                                : <ToggleLeft size={32} className="text-gray-400" />
+                                            }
+                                            <span className={`text-sm font-black uppercase tracking-widest ${
+                                                config.value === 'true' ? 'text-emerald-700' : 'text-gray-500'
+                                            }`}>
+                                                {config.value === 'true' ? 'Đang bật' : 'Đang tắt'}
+                                            </span>
+                                        </button>
+                                    ) : (
+                                        <div className="relative">
+                                            <input
+                                                type={configType === 'number' || configType === 'currency' || configType === 'percentage' ? 'number' : 'text'}
+                                                step={configType === 'percentage' ? '0.01' : configType === 'currency' ? '1000' : '1'}
+                                                min={configType === 'percentage' ? '0' : configType === 'number' || configType === 'currency' ? '0' : undefined}
+                                                max={configType === 'percentage' ? '1' : undefined}
+                                                value={config.value}
+                                                onChange={(e) => handleConfigChange(config.key, e.target.value)}
+                                                className={`w-full px-6 py-4 bg-white border-2 rounded-xl text-base font-bold text-gray-950 focus:outline-none transition-all shadow-sm hover:shadow-md font-mono ${
+                                                    hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-accent'
+                                                }`}
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                                {configType === 'percentage' && (
+                                                    <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">
+                                                        {(parseFloat(config.value) * 100 || 0).toFixed(1)}%
+                                                    </span>
+                                                )}
+                                                {configType === 'currency' && (
+                                                    <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">VNĐ</span>
+                                                )}
+                                                {!hasError && (
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <CheckCircle size={16} className="text-emerald-500" />
+                                                    </div>
+                                                )}
+                                                {hasError && <XCircle size={16} className="text-red-500" />}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* Validation Error */}
+                                    {hasError && (
+                                        <p className="text-xs text-red-600 font-bold px-2 flex items-center gap-2">
+                                            <AlertTriangle size={12} />
+                                            {error}
+                                        </p>
+                                    )}
 
                                     <p className="text-xs text-gray-600 font-semibold px-2 leading-relaxed flex items-start gap-2">
                                         <Info size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
                                         {config.description}
                                     </p>
                                 </div>
-                            ))}
+                                );
+                            })}
 
                             {isLoading && (
                                 <div className="py-24 text-center flex flex-col items-center">

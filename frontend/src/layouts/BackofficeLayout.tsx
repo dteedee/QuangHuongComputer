@@ -7,7 +7,7 @@ import {
     Clock, TrendingUp, Sparkles, Star,
     CreditCard, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
     UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2,
-    ShoppingCart, Truck, Building2
+    ShoppingCart, Truck, Building2, Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, accentColors, type AccentColor, type ThemeMode } from '../context/ThemeContext';
@@ -146,6 +146,7 @@ export const BackofficeLayout = () => {
                 { title: 'Cấu hình', icon: <Settings size={20} />, path: '/backoffice/config', allowedRoles: ['Admin'], description: 'Cài đặt hệ thống' },
                 { title: 'Thanh toán SePay', icon: <CreditCard size={20} />, path: '/backoffice/payments/sepay', allowedRoles: ['Admin'], description: 'Cấu hình & Giao dịch' },
                 { title: 'Báo cáo', icon: <BarChart3 size={20} />, path: '/backoffice/reports', allowedRoles: ['Admin', 'Manager'], description: 'Thống kê & báo cáo' },
+                { title: 'Nhật ký & Backup', icon: <Activity size={20} />, path: '/backoffice/audit-logs', allowedRoles: ['Admin'], description: 'Log hoạt động & sao lưu' },
             ]
         }
     ];

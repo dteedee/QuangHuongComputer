@@ -1,12 +1,194 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronRight, Shield, Save, Grid, List, Check, Search, Filter } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown, ChevronRight, Shield, Save, Grid, List, Check, Search, Filter, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminApi, type Permission, type Role } from '@api/admin';
 import { usePermissions } from '@hooks/usePermissions';
 import { useConfirm } from '@context/ConfirmContext';
+import toast from 'react-hot-toast';
 
 type ViewMode = 'tree' | 'matrix';
+
+// ============================================
+// Matrix View Component
+// ============================================
+interface MatrixViewProps {
+  roles: Role[];
+  allPermissions: string[];
+  groupedPermissions: Record<string, Record<string, any[]>>;
+  canManagePermissions: boolean;
+}
+
+function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermissions }: MatrixViewProps) {
+  const queryClient = useQueryClient();
+  const [matrixData, setMatrixData] = useState<Record<string, Set<string>>>({});
+  const [changedRoles, setChangedRoles] = useState<Set<string>>(new Set());
+  const [savingRole, setSavingRole] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+
+  // Fetch permissions for ALL roles
+  const rolePermissionQueries = useQueries({
+    queries: roles.map(role => ({
+      queryKey: ['admin', 'roles', role.id, 'permissions', 'matrix'],
+      queryFn: () => adminApi.roles.getPermissions(role.id),
+      staleTime: 30000,
+    }))
+  });
+
+  const allLoaded = rolePermissionQueries.every(q => !q.isLoading);
+
+  useEffect(() => {
+    if (!allLoaded) return;
+    const data: Record<string, Set<string>> = {};
+    roles.forEach((role, i) => {
+      data[role.id] = new Set(rolePermissionQueries[i]?.data || []);
+    });
+    setMatrixData(data);
+    setChangedRoles(new Set());
+  }, [allLoaded, roles.length]);
+
+  const toggleCell = useCallback((roleId: string, permissionId: string) => {
+    if (!canManagePermissions) return;
+    setMatrixData(prev => {
+      const newData = { ...prev };
+      const rolePerms = new Set(prev[roleId] || []);
+      if (rolePerms.has(permissionId)) rolePerms.delete(permissionId);
+      else rolePerms.add(permissionId);
+      newData[roleId] = rolePerms;
+      return newData;
+    });
+    setChangedRoles(prev => new Set(prev).add(roleId));
+  }, [canManagePermissions]);
+
+  const saveRole = async (roleId: string) => {
+    setSavingRole(roleId);
+    try {
+      await adminApi.roles.updatePermissions(roleId, Array.from(matrixData[roleId] || []));
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });
+      setChangedRoles(prev => { const s = new Set(prev); s.delete(roleId); return s; });
+      toast.success(`Đã lưu quyền cho ${roles.find(r => r.id === roleId)?.name}`);
+    } catch { toast.error('Lỗi khi lưu quyền'); }
+    finally { setSavingRole(null); }
+  };
+
+  const saveAll = async () => {
+    for (const roleId of changedRoles) { await saveRole(roleId); }
+  };
+
+  if (!allLoaded) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-20 text-center">
+        <Loader2 size={48} className="mx-auto animate-spin text-blue-500 mb-4" />
+        <p className="text-gray-500 font-medium">Đang tải ma trận quyền hạn...</p>
+      </div>
+    );
+  }
+
+  const filteredModules = Object.entries(groupedPermissions).filter(([module, categories]) => {
+    if (!filterText) return true;
+    const lower = filterText.toLowerCase();
+    return module.toLowerCase().includes(lower) ||
+      Object.values(categories).flat().some((p: any) => p.name.toLowerCase().includes(lower));
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text" placeholder="Lọc quyền..." value={filterText}
+            onChange={e => setFilterText(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-gray-50 border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-400 font-medium">
+            {roles.length} vai trò × {allPermissions.length} quyền
+          </span>
+          {changedRoles.size > 0 && (
+            <button onClick={saveAll}
+              className="flex items-center gap-2 px-5 py-2 bg-accent text-white rounded-xl shadow-lg shadow-red-500/30 hover:bg-accent-hover font-bold text-sm transition-all">
+              <Save size={16} /> Lưu tất cả ({changedRoles.size})
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto max-h-[70vh]">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 z-20 bg-white">
+              <tr>
+                <th className="sticky left-0 z-30 bg-gray-50 px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest border-b border-r border-gray-100 min-w-[280px]">
+                  Quyền hạn
+                </th>
+                {roles.map(role => (
+                  <th key={role.id} className="px-3 py-4 text-center border-b border-gray-100 min-w-[100px] bg-gray-50">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs font-bold text-gray-900 whitespace-nowrap">{role.name}</span>
+                      {changedRoles.has(role.id) && (
+                        <button onClick={() => saveRole(role.id)} disabled={savingRole === role.id}
+                          className="text-[10px] px-2 py-0.5 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all">
+                          {savingRole === role.id ? '...' : 'Lưu'}
+                        </button>
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredModules.map(([module, categories]) => (
+                <>{/* Module Header */}
+                  <tr key={`mod-${module}`} className="bg-blue-50/50">
+                    <td colSpan={1 + roles.length} className="px-6 py-3 border-b border-gray-100">
+                      <span className="text-sm font-black text-gray-800 uppercase tracking-tight">{module}</span>
+                      <span className="ml-2 text-xs font-bold text-gray-400">({Object.values(categories).flat().length})</span>
+                    </td>
+                  </tr>
+                  {Object.entries(categories).map(([category, permissions]) =>
+                    (permissions as any[]).filter((p: any) => !filterText || p.name.toLowerCase().includes(filterText.toLowerCase()))
+                      .map((permission: any) => (
+                        <tr key={permission.id} className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="sticky left-0 bg-white group-hover:bg-gray-50 px-6 py-2.5 border-b border-r border-gray-50 z-10">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-gray-300 uppercase">{category}.</span>
+                              <span className="text-xs font-medium text-gray-700 truncate max-w-[200px]" title={permission.name}>
+                                {permission.name.split('.').pop()}
+                              </span>
+                            </div>
+                          </td>
+                          {roles.map(role => {
+                            const has = matrixData[role.id]?.has(permission.id) ?? false;
+                            return (
+                              <td key={role.id} className="px-3 py-2.5 text-center border-b border-gray-50">
+                                <button onClick={() => toggleCell(role.id, permission.id)} disabled={!canManagePermissions}
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all transform hover:scale-110 ${
+                                    has ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 shadow-sm'
+                                      : 'bg-gray-50 text-gray-200 hover:bg-gray-100 hover:text-gray-400'
+                                  } ${!canManagePermissions ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                                  {has && <Check size={16} strokeWidth={3} />}
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// Main Component
+// ============================================
 
 export function PermissionsPage() {
   const { hasPermission } = usePermissions();
@@ -434,15 +616,14 @@ export function PermissionsPage() {
         </div>
       )}
 
-      {/* Matrix View - Disabled as API not ready */}
+      {/* Matrix View - Full Implementation */}
       {viewMode === 'matrix' && (
-        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-20 text-center">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 mx-auto">
-            <Grid size={40} className="text-gray-300" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Tính năng đang phát triển</h3>
-          <p className="text-gray-500 max-w-sm mx-auto">Ma trận quyền hạn đang được xây dựng để cung cấp cái nhìn tổng quan hơn.</p>
-        </div>
+        <MatrixView
+          roles={roles || []}
+          allPermissions={allPermissions || []}
+          groupedPermissions={groupedPermissions}
+          canManagePermissions={canManagePermissions}
+        />
       )}
     </div>
   );

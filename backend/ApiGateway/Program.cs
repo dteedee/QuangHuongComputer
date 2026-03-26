@@ -101,6 +101,12 @@ builder.Services.AddResponseCompression(options =>
 });
 
 // ========================================
+// AUDIT INTERCEPTOR (Auto-log all DB changes)
+// ========================================
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<BuildingBlocks.Database.AuditSaveChangesInterceptor>();
+
+// ========================================
 // RATE LIMITING CONFIGURATION
 // ========================================
 builder.Services.AddRateLimiter(options =>
@@ -646,6 +652,10 @@ app.MapInventoryEndpoints();
 app.MapAccountingEndpoints();
 app.MapReportingEndpoints();
 app.MapCrmEndpoints();
+
+// Audit Logs & System Management
+app.MapAuditLogEndpoints();
+app.MapBackupEndpoints();
 
 // Add fast checkout endpoint
 app.MapFastCheckoutEndpoint();

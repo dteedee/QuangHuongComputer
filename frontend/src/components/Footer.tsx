@@ -173,27 +173,29 @@ export const Footer = () => {
                 <div className="space-y-6">
                     <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">Kết nối với chúng tôi</h4>
                     <div className="flex gap-3">
-                        <Link to={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform"><Facebook size={20} /></Link>
-                        <Link to={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:scale-110 transition-transform"><Youtube size={20} /></Link>
-                        <Link to={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center text-white hover:scale-110 transition-transform"><Instagram size={20} /></Link>
+                        <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-blue-600/20"><Facebook size={20} /></a>
+                        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-red-500/20"><Youtube size={20} /></a>
+                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-pink-500/20"><Instagram size={20} /></a>
                     </div>
                     <div className="pt-4">
                         <p className="text-xs font-black text-gray-400 uppercase mb-3">Chấp nhận thanh toán</p>
-                        <div className="flex flex-wrap gap-2 text-gray-400">
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors"><CreditCard size={20} /></a>
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">VISA</a>
-                            <a href="#" className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">CASH</a>
+                        <div className="flex flex-wrap gap-2 text-gray-500">
+                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors"><CreditCard size={20} /></span>
+                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">VISA</span>
+                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">MC</span>
+                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">NAPAS</span>
+                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">COD</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Bar */}
-            <div className="bg-gray-100 py-6 border-t border-gray-200">
+            {/* Bottom Bar — extra padding on mobile for bottom nav */}
+            <div className="bg-gray-100 py-6 pb-20 lg:pb-6 border-t border-gray-200">
                 <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-bold text-gray-500 uppercase tracking-tight">
                     <p>© {new Date().getFullYear()} Bản quyền thuộc về {companyBrand1} {companyBrand2}.</p>
                     <div className="flex gap-6">
-                        <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Hệ thống đang hoạt động</span>
+                        <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Hệ thống đang hoạt động</span>
                         <span>Thiết kế bởi Đỗ Tùng Dương</span>
                     </div>
                 </div>

@@ -19,15 +19,20 @@ public class AuditLogConsumer : IConsumer<AuditLogIntegrationEvent>
     public async Task Consume(ConsumeContext<AuditLogIntegrationEvent> context)
     {
         var message = context.Message;
-        _logger.LogInformation("Consuming AuditLogIntegrationEvent for Action: {Action}, Entity: {EntityName}", message.Action, message.EntityName);
+        _logger.LogInformation("Consuming AuditLogIntegrationEvent for Action: {Action}, Entity: {EntityName}, Module: {Module}", 
+            message.Action, message.EntityName, message.Module ?? "N/A");
 
         var auditLog = new AuditLog
         {
             UserId = message.UserId,
+            UserName = message.UserName,
             Action = message.Action,
             EntityName = message.EntityName,
             EntityId = message.EntityId,
             Details = message.Details,
+            Module = message.Module,
+            OldValues = message.OldValues,
+            NewValues = message.NewValues,
             Timestamp = DateTime.UtcNow,
             IpAddress = message.IpAddress,
             UserAgent = message.UserAgent,
@@ -39,3 +44,4 @@ public class AuditLogConsumer : IConsumer<AuditLogIntegrationEvent>
         await _dbContext.SaveChangesAsync();
     }
 }
+

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -478,6 +478,7 @@ export const AdminPortal = () => {
                             icon={Terminal}
                             label="Log hệ thống"
                             color="gray"
+                            onClick={() => navigate('/backoffice/audit-logs')}
                         />
                     </div>
                 </div>
@@ -612,6 +613,23 @@ export const AdminPortal = () => {
                             <div>
                                 <h4 className="font-semibold text-gray-900">Cấu hình Hệ thống</h4>
                                 <p className="text-sm text-gray-500">Thiết lập và bảo mật</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Audit Logs */}
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        onClick={() => navigate('/backoffice/audit-logs')}
+                        className="group cursor-pointer p-5 rounded-xl border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-indigo-100 rounded-xl group-hover:bg-indigo-200 transition-colors">
+                                <Activity size={24} className="text-indigo-600" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-gray-900">Nhật ký & Backup</h4>
+                                <p className="text-sm text-gray-500">Log hoạt động & sao lưu</p>
                             </div>
                         </div>
                     </motion.div>

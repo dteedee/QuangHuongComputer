@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Repair.Infrastructure;
 using Repair.Services;
+using BuildingBlocks.Database;
 
 namespace Repair;
 
@@ -13,14 +14,20 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<RepairDbContext>(options =>
+        services.AddDbContextPool<RepairDbContext>((serviceProvider, options) =>
+        {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
                 npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
-            }),
+            });
+
+            var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
+            if (interceptor != null)
+                options.AddInterceptors(interceptor);
+        },
             poolSize: 128);
 
         // Register services

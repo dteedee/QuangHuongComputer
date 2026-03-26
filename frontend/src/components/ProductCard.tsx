@@ -218,6 +218,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     const isHovering = useRef(false);
     const timeoutRef = useRef<number | null>(null);
 
+    // Detect touch device — disable hover popup on mobile
+    const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
     // Calculate mock discount
     const oldPrice = product.oldPrice || product.price * 1.15;
     const discount = product.oldPrice
@@ -243,13 +246,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     }, []);
 
     const handleCardMouseEnter = useCallback(() => {
+        if (isTouchDevice) return; // Skip hover on touch devices
         isHovering.current = true;
         if (timeoutRef.current) {
             window.clearTimeout(timeoutRef.current);
         }
         // Show popup after short delay
         timeoutRef.current = window.setTimeout(openPopup, 150);
-    }, [openPopup]);
+    }, [openPopup, isTouchDevice]);
 
     const handleCardMouseLeave = useCallback(() => {
         isHovering.current = false;
