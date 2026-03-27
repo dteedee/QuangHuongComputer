@@ -246,12 +246,9 @@ export const salesApi = {
         },
 
         create: async (data: CheckoutDto) => {
-            // Log checkout data for debugging
             console.log('Checkout data:', JSON.stringify(data, null, 2));
 
             // Try fast checkout first for better performance
-            // Try fast checkout first for better performance
-            /* TEMPORARILY DISABLED TO FIX CONCURRENCY ISSUE
             try {
                 const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/fast-checkout', {
                     items: data.items,
@@ -266,12 +263,10 @@ export const salesApi = {
                     couponCode: data.couponCode
                 });
                 return response.data;
-            } catch (error: any) {
-                // Log detailed error from backend
-                const errorData = error.response?.data;
-                const errorMessage = errorData?.error || errorData?.Error || errorData?.message || error.message || 'Unknown error';
-                console.log('Fast checkout failed:', errorMessage, errorData);
-            */
+            } catch (fastError: any) {
+                const errorData = fastError.response?.data;
+                console.warn('Fast checkout failed, falling back to regular checkout:', errorData?.error || fastError.message);
+            }
 
             // Fall back to regular checkout if fast checkout fails
             try {
@@ -288,15 +283,11 @@ export const salesApi = {
                 });
                 return response.data;
             } catch (checkoutError: any) {
-                // Log detailed error from regular checkout
                 const checkoutErrorData = checkoutError.response?.data;
-                console.log('Regular checkout also failed:', checkoutErrorData);
-
-                // Throw with meaningful error message
+                console.error('Regular checkout also failed:', checkoutErrorData);
                 const finalError = checkoutErrorData?.error || checkoutErrorData?.Error || checkoutErrorData?.message || 'Không thể đặt hàng';
                 throw new Error(finalError);
             }
-            /* } */
         },
 
         guestCheckout: async (data: GuestCheckoutDto) => {

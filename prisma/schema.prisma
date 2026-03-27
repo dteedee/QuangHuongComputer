@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PropertyType {
+enum PropertyTypeEnum {
   APARTMENT
   HOUSE
   TOWNHOUSE
@@ -66,7 +66,8 @@ model Location {
   metaTitle    String?
   metaDesc     String?
   
-  properties Property[]
+  properties     Property[]
+  neighborhoods  Neighborhood[]
   
   @@map("locations")
 }
@@ -143,12 +144,12 @@ model PropertyTypeCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  propertyTypes PropertyType[]
+  propertyTypes PropertyTypeModel[]
   
   @@map("property_type_categories")
 }
 
-model PropertyType {
+model PropertyTypeModel {
   id          String   @id @default(cuid())
   name        String
   nameEn      String
@@ -212,7 +213,7 @@ model Property {
   wardId          String?
   
   // Basic info
-  type            PropertyType
+  propertyType    PropertyTypeEnum
   typeId          String
   transactionType TransactionType
   area            Float         // Area in m²
@@ -250,6 +251,9 @@ model Property {
   metaTitle       String?
   metaDesc        String?
   
+  // Owner
+  userId          String?
+  
   // Timestamps
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -258,15 +262,12 @@ model Property {
   // Relations
   location        Location          @relation(fields: [locationId], references: [id])
   neighborhood    Neighborhood?     @relation(fields: [neighborhoodId], references: [id])
-  type            PropertyType      @relation(fields: [typeId], references: [id])
+  typeRef         PropertyTypeModel @relation(fields: [typeId], references: [id])
+  user            User?             @relation(fields: [userId], references: [id])
   
   // Media
   propertyImages  PropertyImage[]
   propertyFacilities PropertyFacility[]
-  
-  // Virtual fields for calculated data
-  totalPrice      Float            @virtual @db.Real(getter: true)
-  formattedPrice  String           @virtual
   
   @@map("properties")
 }

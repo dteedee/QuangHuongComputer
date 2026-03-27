@@ -14,6 +14,9 @@ public class ProductReview : Entity<Guid>
     public int HelpfulCount { get; private set; }
     public DateTime? ApprovedAt { get; private set; }
     public string? ApprovedBy { get; private set; }
+    public string? ImageUrls { get; private set; } // JSON array of image URLs
+    public string? VideoUrl { get; private set; } // Single video URL
+    
     
     public ProductReview(
         Guid productId,
@@ -21,7 +24,9 @@ public class ProductReview : Entity<Guid>
         int rating,
         string comment,
         string? title = null,
-        bool isVerifiedPurchase = false)
+        bool isVerifiedPurchase = false,
+        string? imageUrls = null,
+        string? videoUrl = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -32,6 +37,8 @@ public class ProductReview : Entity<Guid>
         IsVerifiedPurchase = isVerifiedPurchase;
         IsApproved = false; // Requires moderation
         HelpfulCount = 0;
+        ImageUrls = imageUrls;
+        VideoUrl = videoUrl;
     }
 
     protected ProductReview() { }

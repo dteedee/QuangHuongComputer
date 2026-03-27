@@ -833,6 +833,84 @@ public static class AccountingEndpoints
 
             return Results.Ok(summary);
         }).WithName("GetExpenseSummary");
+
+        // ===== Vietnamese Tax Calculation Endpoints =====
+        var taxGroup = group.MapGroup("/tax");
+
+        taxGroup.MapPost("/pit", (PitCalculationRequest request) =>
+        {
+            var result = VietnameseTaxEngine.CalculateMonthlyPit(
+                request.GrossSalary,
+                request.NumberOfDependents,
+                request.SocialInsurance,
+                request.HealthInsurance,
+                request.UnemploymentInsurance,
+                request.OtherDeductions
+            );
+            return Results.Ok(result);
+        }).WithName("CalculatePIT");
+
+        taxGroup.MapPost("/insurance", (InsuranceCalculationRequest request) =>
+        {
+            var result = VietnameseTaxEngine.CalculateInsurance(request.GrossSalary, request.RegionalMinSalary);
+            return Results.Ok(result);
+        }).WithName("CalculateInsurance");
+
+        taxGroup.MapPost("/vat", (VatCalculationRequest request) =>
+        {
+            var result = request.IsInclusive
+                ? VietnameseTaxEngine.ExtractVat(request.Amount, request.VatRate)
+                : VietnameseTaxEngine.CalculateVat(request.Amount, request.VatRate);
+            return Results.Ok(result);
+        }).WithName("CalculateVAT");
+
+        taxGroup.MapPost("/cit", (CitCalculationRequest request) =>
+        {
+            var result = VietnameseTaxEngine.CalculateCit(request.Revenue, request.DeductibleExpenses);
+            return Results.Ok(result);
+        }).WithName("CalculateCIT");
+
+        taxGroup.MapPost("/payroll", (PayrollCalculationRequest request) =>
+        {
+            var result = VietnameseTaxEngine.CalculatePayroll(
+                request.GrossSalary,
+                request.NumberOfDependents,
+                request.OtherDeductions,
+                request.RegionalMinSalary
+            );
+            return Results.Ok(result);
+        }).WithName("CalculatePayroll");
+
+        taxGroup.MapGet("/rates", () =>
+        {
+            return Results.Ok(new
+            {
+                Pit = new
+                {
+                    PersonalDeduction = VietnameseTaxEngine.PersonalDeduction,
+                    DependentDeduction = VietnameseTaxEngine.DependentDeduction,
+                    Brackets = new[]
+                    {
+                        new { From = 0, To = 5000000, Rate = 0.05 },
+                        new { From = 5000000, To = 10000000, Rate = 0.10 },
+                        new { From = 10000000, To = 18000000, Rate = 0.15 },
+                        new { From = 18000000, To = 32000000, Rate = 0.20 },
+                        new { From = 32000000, To = 52000000, Rate = 0.25 },
+                        new { From = 52000000, To = 80000000, Rate = 0.30 },
+                        new { From = 80000000, To = 0, Rate = 0.35 }
+                    }
+                },
+                Insurance = new
+                {
+                    Employee = new { BHXH = 0.08, BHYT = 0.015, BHTN = 0.01, Total = 0.105 },
+                    Employer = new { BHXH = 0.175, BHYT = 0.03, BHTN = 0.01, Total = 0.215 },
+                    MaxInsurableSalary = VietnameseTaxEngine.MaxInsurableSalary,
+                    BaseSalary = VietnameseTaxEngine.BaseSalary2025
+                },
+                Vat = new { Standard = 0.08, Telecom = 0.10, Export = 0.00 },
+                Cit = new { StandardRate = 0.20 }
+            });
+        }).WithName("GetTaxRates");
     }
 }
 
@@ -840,3 +918,10 @@ public record CreateInvoiceDto(Guid? CustomerId, List<CreateInvoiceItemDto> Item
 public record CreateInvoiceItemDto(string Description, int Quantity, decimal UnitPrice);
 public record CreateAccountDto(string Name, decimal CreditLimit);
 public record ApplyAPPaymentRequest(decimal Amount, string PaymentMethod, string? Reference);
+
+// Tax request DTOs
+public record PitCalculationRequest(decimal GrossSalary, int NumberOfDependents = 0, decimal SocialInsurance = 0, decimal HealthInsurance = 0, decimal UnemploymentInsurance = 0, decimal OtherDeductions = 0);
+public record InsuranceCalculationRequest(decimal GrossSalary, decimal? RegionalMinSalary = null);
+public record VatCalculationRequest(decimal Amount, decimal VatRate = 0.08m, bool IsInclusive = false);
+public record CitCalculationRequest(decimal Revenue, decimal DeductibleExpenses);
+public record PayrollCalculationRequest(decimal GrossSalary, int NumberOfDependents = 0, decimal OtherDeductions = 0, decimal? RegionalMinSalary = null);

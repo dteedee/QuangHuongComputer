@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { catalogApi, type Product, type Category, type Brand } from '../api/catalog';
-import { Filter, Grid, List, ChevronRight, Home, Search, X } from 'lucide-react';
+import { aiApi } from '../api/ai';
+import { Filter, Grid, List, ChevronRight, Home, Search, X, Sparkles } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { ProductFilter } from '../components/ProductFilter';
 import { ProductListItem } from '../components/ProductListItem';
@@ -21,6 +22,8 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [loadingAiResult, setLoadingAiResult] = useState(false);
 
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>(
@@ -92,6 +95,17 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
 
   const loadProducts = async () => {
     setLoading(true);
+
+    if (searchQuery && page === 1) {
+      setLoadingAiResult(true);
+      aiApi.naturalLanguageSearch(searchQuery)
+        .then(res => setAiResult(res.intelligentResult))
+        .catch(() => setAiResult(null))
+        .finally(() => setLoadingAiResult(false));
+    } else if (!searchQuery) {
+      setAiResult(null);
+    }
+
     try {
       const data = await catalogApi.searchProducts({
         query: searchQuery || undefined,
@@ -291,6 +305,28 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0">
+            {/* AI Search Banner */}
+            {(aiResult || loadingAiResult) && searchQuery && (
+              <div className="mb-6 bg-gradient-to-r from-red-50 to-white p-5 rounded-2xl border border-red-100 shadow-sm animate-fade-in-down relative overflow-hidden">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2 text-accent">
+                    <Sparkles className="w-5 h-5 flex-shrink-0" />
+                    <h3 className="font-bold text-sm uppercase tracking-wide">Trợ lý AI phân tích</h3>
+                  </div>
+                  {loadingAiResult ? (
+                    <div className="space-y-2">
+                      <div className="h-4 bg-red-100/50 rounded w-3/4 animate-pulse"></div>
+                      <div className="h-4 bg-red-100/50 rounded w-1/2 animate-pulse"></div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{aiResult}</p>
+                  )}
+                </div>
+                {/* Decorative blob */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+              </div>
+            )}
+
             {/* Toolbar */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between sticky top-20 z-20">
               <div className="hidden md:block text-gray-500 text-sm">

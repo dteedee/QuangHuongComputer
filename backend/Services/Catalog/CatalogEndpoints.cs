@@ -1019,6 +1019,8 @@ public static class CatalogEndpoints
                     r.IsVerifiedPurchase,
                     r.IsApproved,
                     r.HelpfulCount,
+                    r.ImageUrls,
+                    r.VideoUrl,
                     r.CreatedAt
                 })
                 .ToListAsync();
@@ -1078,7 +1080,9 @@ public static class CatalogEndpoints
                 rating: dto.Rating,
                 comment: dto.Comment,
                 title: dto.Title,
-                isVerifiedPurchase: isVerifiedPurchase
+                isVerifiedPurchase: isVerifiedPurchase,
+                imageUrls: dto.ImageUrls,
+                videoUrl: dto.VideoUrl
             );
 
             db.ProductReviews.Add(review);
@@ -1112,6 +1116,26 @@ public static class CatalogEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Đã duyệt đánh giá thành công" });
+        });
+
+        reviewsAdmin.MapGet("/sentiment-analysis", async (CatalogDbContext db) =>
+        {
+            var totalReviews = await db.ProductReviews.CountAsync();
+            if (totalReviews == 0) return Results.Ok(new { Positive = 0, Neutral = 0, Negative = 0, TopKeywords = new string[0] });
+
+            // Mock sentiment analysis based on Rating
+            var positive = await db.ProductReviews.CountAsync(r => r.Rating >= 4);
+            var neutral = await db.ProductReviews.CountAsync(r => r.Rating == 3);
+            var negative = await db.ProductReviews.CountAsync(r => r.Rating <= 2);
+
+            return Results.Ok(new
+            {
+                PositivePercent = Math.Round((double)positive / totalReviews * 100, 1),
+                NeutralPercent = Math.Round((double)neutral / totalReviews * 100, 1),
+                NegativePercent = Math.Round((double)negative / totalReviews * 100, 1),
+                TotalReviews = totalReviews,
+                TopKeywords = new[] { "Chất lượng tốt", "Giao hàng nhanh", "Đẹp", "Chính hãng", "Hơi nóng", "Pin kém" } // Mock
+            });
         });
 
         reviewsAdmin.MapGet("/pending", async (CatalogDbContext db) =>
@@ -1299,7 +1323,7 @@ public record UpdateProductDto(
 
 public record CreateCategoryDto(string Name, string Description);
 
-public record CreateProductReviewDto(int Rating, string Comment, string? Title = null);
+public record CreateProductReviewDto(int Rating, string Comment, string? Title = null, string? ImageUrls = null, string? VideoUrl = null);
 public record UpdateCategoryDto(string Name, string Description, bool? IsActive = null);
 public record CreateBrandDto(string Name, string Description);
 public record UpdateBrandDto(string Name, string Description, bool? IsActive = null);

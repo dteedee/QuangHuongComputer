@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { catalogApi, type Product, type ProductReview } from '../api/catalog';
 import { salesApi } from '../api/sales';
+import { aiApi, type AiRecommendation } from '../api/ai';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag } from 'lucide-react';
+import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../api/client';
 import { WriteReviewModal, RatingBreakdown, ReviewItem } from '../components/reviews';
@@ -33,7 +34,9 @@ export default function ProductDetailPage() {
   const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [loadingAi, setLoadingAi] = useState(false);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSort, setReviewSort] = useState<ReviewSortOption>('newest');
@@ -145,6 +148,7 @@ export default function ProductDetailPage() {
     if (id) {
       loadProduct(id);
       loadRelatedProducts(id);
+      loadAiRecommendations(id);
       loadReviews(id);
       checkPurchaseStatus(id);
     }
@@ -180,6 +184,18 @@ export default function ProductDetailPage() {
       console.error('Failed to load related products:', error);
     } finally {
       setLoadingRelated(false);
+    }
+  };
+
+  const loadAiRecommendations = async (productId: string) => {
+    setLoadingAi(true);
+    try {
+      const { recommendations } = await aiApi.getRecommendations(productId);
+      setAiRecommendations(recommendations);
+    } catch (error) {
+      console.error('Failed to load AI recommendations:', error);
+    } finally {
+      setLoadingAi(false);
     }
   };
 
@@ -688,6 +704,33 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* AI Recommendations */}
+        {aiRecommendations.length > 0 && !loadingAi && (
+          <div className="mt-12 mb-8 animate-fade-in-up bg-gradient-to-r from-red-50 to-white p-6 rounded-2xl border border-red-100">
+            <div className="flex items-center gap-2 mb-6 text-accent">
+              <Sparkles className="w-6 h-6" />
+              <h2 className="text-xl font-black uppercase tracking-tight">Thường được mua kèm</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {aiRecommendations.map((rec) => (
+                <div key={rec.id} className="bg-white p-4 rounded-xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center p-2">
+                    <img src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=100&h=100&fit=crop`} alt={rec.name} className="w-full h-full object-contain mix-blend-multiply" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xs font-bold text-gray-900 line-clamp-2 mb-1">{rec.name}</h3>
+                    <div className="text-accent font-black text-sm">{formatPrice(rec.price)}</div>
+                    <div className="text-[9px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Độ tương thích {Math.round(rec.similarityScore * 100)}%</div>
+                  </div>
+                  <button onClick={() => navigate(`/product/${rec.id}`)} className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
+                    <Plus size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Related Products */}
         <div className="mt-12 mb-8 animate-fade-in-up">

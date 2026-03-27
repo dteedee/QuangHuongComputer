@@ -15,6 +15,9 @@ public class InventoryDbContext : DbContext
     public DbSet<StockTransfer> StockTransfers { get; set; }
     public DbSet<StockAdjustment> StockAdjustments { get; set; }
     public DbSet<StockReservation> StockReservations { get; set; }
+    public DbSet<Warehouse> Warehouses { get; set; }
+    public DbSet<SerialNumber> SerialNumbers { get; set; }
+    public DbSet<StockMovement> StockMovements { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -158,6 +161,51 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => e.ReferenceId);
             entity.HasIndex(e => new { e.ProductId, e.InventoryItemId, e.Status });
             entity.HasIndex(e => e.ExpiresAt);
+        });
+
+        modelBuilder.Entity<Warehouse>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Address).HasMaxLength(300);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.District).HasMaxLength(100);
+            entity.Property(e => e.Ward).HasMaxLength(100);
+            entity.Property(e => e.Phone).HasMaxLength(20);
+            entity.Property(e => e.ManagerName).HasMaxLength(100);
+            entity.Property(e => e.ManagerEmail).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.HasIndex(e => e.Code).IsUnique().HasDatabaseName("IX_Warehouse_Code");
+            entity.HasIndex(e => e.IsDefault).HasDatabaseName("IX_Warehouse_Default");
+        });
+
+        modelBuilder.Entity<SerialNumber>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Serial).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ProductName).HasMaxLength(300);
+            entity.Property(e => e.ProductSku).HasMaxLength(50);
+            entity.Property(e => e.CustomerId).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.HasIndex(e => e.Serial).IsUnique().HasDatabaseName("IX_Serial_Number");
+            entity.HasIndex(e => new { e.ProductId, e.Status }).HasDatabaseName("IX_Serial_Product_Status");
+            entity.HasIndex(e => e.WarehouseId).HasDatabaseName("IX_Serial_Warehouse");
+            entity.HasIndex(e => e.OrderId).HasDatabaseName("IX_Serial_Order");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_Serial_Status");
+        });
+
+        modelBuilder.Entity<StockMovement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.ReferenceId).HasMaxLength(100);
+            entity.Property(e => e.ReferenceType).HasMaxLength(50);
+            entity.Property(e => e.PerformedBy).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.HasIndex(e => new { e.ProductId, e.MovementDate }).HasDatabaseName("IX_StockMovement_Product_Date");
+            entity.HasIndex(e => e.Type).HasDatabaseName("IX_StockMovement_Type");
+            entity.HasIndex(e => e.ReferenceId).HasDatabaseName("IX_StockMovement_Reference");
         });
     }
 }

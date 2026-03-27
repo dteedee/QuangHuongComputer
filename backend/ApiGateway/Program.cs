@@ -83,11 +83,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 });
-builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-{
-    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-});
-
 // ========================================
 // RESPONSE COMPRESSION
 // ========================================
@@ -206,6 +201,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
+builder.Services.AddOmnichannelModule(builder.Configuration);
 builder.Services.AddSalesModule(builder.Configuration);
 builder.Services.AddRepairModule(builder.Configuration);
 builder.Services.AddWarrantyModule(builder.Configuration);
@@ -248,6 +244,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddHostedService<OutboxProcessorBackgroundService>();
+builder.Services.AddHostedService<CRM.BackgroundServices.AutomationJobService>();
 
 // Security
 builder.Services.AddAuthorization(options =>
@@ -639,19 +636,28 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 
 // Map Endpoints
 app.MapCatalogEndpoints();
+app.MapAiEndpoints();
+app.MapCatalogPCBuilderEndpoints();
+app.MapCatalogBundleEndpoints();
 app.MapIdentityEndpoints();
 app.MapSalesEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();
+app.MapInstallmentEndpoints();
 app.MapContentEndpoints();
 app.MapCommunicationEndpoints(); // Added Communication Endpoints
 app.MapHREndpoints();
+app.MapHRLeaveEndpoints();
 app.MapSystemConfigEndpoints();
 app.MapInventoryEndpoints();
+app.MapWarehouseEndpoints();
 app.MapAccountingEndpoints();
+app.MapEInvoiceEndpoints();
+app.MapTaxReportingEndpoints();
 app.MapReportingEndpoints();
 app.MapCrmEndpoints();
+app.MapAutomationRuleEndpoints();
 
 // Audit Logs & System Management
 app.MapAuditLogEndpoints();

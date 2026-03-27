@@ -105,6 +105,7 @@ const APPage = lazy(() => import('./pages/backoffice/accountant/APPage').then(m 
 const ShiftsPage = lazy(() => import('./pages/backoffice/accountant/ShiftsPage').then(m => ({ default: m.ShiftsPage })));
 const ExpensesPage = lazy(() => import('./pages/backoffice/accountant/ExpensesPage').then(m => ({ default: m.ExpensesPage })));
 const FinancialReportsPage = lazy(() => import('./pages/backoffice/accountant/FinancialReportsPage').then(m => ({ default: m.FinancialReportsPage })));
+const TaxReportsPage = lazy(() => import('./pages/backoffice/accountant/TaxReportsPage').then(m => ({ default: m.TaxReportsPage })));
 const InventoryPortal = lazy(() => import('./pages/backoffice/inventory/InventoryPortal').then(m => ({ default: m.InventoryPortal })));
 const SuppliersPage = lazy(() => import('./pages/backoffice/inventory/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
 const PurchaseOrdersPage = lazy(() => import('./pages/backoffice/inventory/PurchaseOrdersPage'));
@@ -231,6 +232,7 @@ function App() {
                           <Route path="accounting/shifts" element={<ShiftsPage />} />
                           <Route path="accounting/expenses" element={<ExpensesPage />} />
                           <Route path="accounting/reports" element={<FinancialReportsPage />} />
+                          <Route path="accounting/tax-reports" element={<TaxReportsPage />} />
                           <Route path="hr" element={<HRPortal />} />
                           <Route path="hr/recruitment" element={<RecruitmentManagement />} />
                           <Route path="warranty" element={<WarrantyPortal />} />

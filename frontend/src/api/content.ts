@@ -255,8 +255,9 @@ export const contentApi = {
             const response = await client.delete(`/content/admin/posts/${id}`);
             return response.data;
         },
-        publishPost: async (_id: string, _isPublished: boolean) => {
-            throw new Error('Publish post endpoint not implemented in backend');
+        publishPost: async (id: string, isPublished: boolean) => {
+            const response = await client.put<Post>(`/content/admin/posts/${id}`, { isPublished });
+            return response.data;
         },
 
         // Coupons

@@ -41,6 +41,7 @@ const tabs: TabItem[] = [
     { label: 'Quản lý ca', path: '/backoffice/accounting/shifts', icon: <Clock size={18} />, description: 'Shift Management' },
     { label: 'Chi phí', path: '/backoffice/accounting/expenses', icon: <Wallet size={18} />, description: 'Expense Tracking' },
     { label: 'Báo cáo', path: '/backoffice/accounting/reports', icon: <Receipt size={18} />, description: 'Financial Reports' },
+    { label: 'Báo cáo thuế', path: '/backoffice/accounting/tax-reports', icon: <FileText size={18} />, description: 'VAT, CIT Declarations' },
 ];
 
 export const AccountingPortal = () => {

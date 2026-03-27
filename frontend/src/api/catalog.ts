@@ -58,6 +58,8 @@ export interface ProductReview {
     helpfulCount: number;
     approvedAt?: string;
     approvedBy?: string;
+    imageUrls?: string;
+    videoUrl?: string;
     createdAt: string;
     updatedAt?: string;
 }
@@ -186,7 +188,7 @@ export const catalogApi = {
     },
 
     createProduct: async (data: CreateProductDto) => {
-        const response = await client.post<{ message: string; productId: string; product: Product }>(
+        const response = await client.post<Product>(
             '/catalog/products',
             data
         );
@@ -194,11 +196,11 @@ export const catalogApi = {
     },
 
     updateProduct: async (id: string, data: UpdateProductDto) => {
-        const response = await client.put<{ message: string; product: Product }>(
+        const response = await client.put<{ Message: string; Product: Product }>(
             `/catalog/products/${id}`,
             data
         );
-        return response.data;
+        return { message: response.data.Message, product: response.data.Product };
     },
 
     deleteProduct: async (id: string) => {
@@ -230,6 +232,8 @@ export const catalogApi = {
         rating: number;
         title?: string;
         comment: string;
+        imageUrls?: string;
+        videoUrl?: string;
     }) => {
         const response = await client.post<{ message: string; id: string; isVerifiedPurchase: boolean }>(
             `/catalog/products/${productId}/reviews`,
@@ -269,7 +273,7 @@ export const catalogApi = {
     },
 
     createCategory: async (data: { name: string; description: string }) => {
-        const response = await client.post<{ message: string; categoryId: string; category: Category }>(
+        const response = await client.post<Category>(
             '/catalog/categories',
             data
         );
@@ -285,10 +289,8 @@ export const catalogApi = {
     },
 
     deleteCategory: async (id: string) => {
-        // Instead of hard delete, just deactivate the category
-        const response = await client.put<{ message: string; category: Category }>(
-            `/catalog/categories/${id}`,
-            { isActive: false }
+        const response = await client.delete<{ message: string }>(
+            `/catalog/categories/${id}`
         );
         return response.data;
     },
@@ -300,7 +302,7 @@ export const catalogApi = {
     },
 
     createBrand: async (data: { name: string; description: string }) => {
-        const response = await client.post<{ message: string; brandId: string; brand: Brand }>(
+        const response = await client.post<Brand>(
             '/catalog/brands',
             data
         );
@@ -316,10 +318,8 @@ export const catalogApi = {
     },
 
     deleteBrand: async (id: string) => {
-        // Instead of hard delete, just deactivate the brand
-        const response = await client.put<{ message: string; brand: Brand }>(
-            `/catalog/brands/${id}`,
-            { isActive: false }
+        const response = await client.delete<{ message: string }>(
+            `/catalog/brands/${id}`
         );
         return response.data;
     },

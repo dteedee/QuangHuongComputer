@@ -107,3 +107,28 @@ public enum RecipientStatus
     Unsubscribed = 6,
     Failed = 7
 }
+
+/// <summary>
+/// Triggers for CRM automation workflows
+/// </summary>
+public enum AutomationTrigger
+{
+    AbandonedCart = 0,
+    WarrantyExpiration = 1,
+    VipInactivity = 2,
+    Birthday = 3,
+    PostPurchaseFollowUp = 4
+}
+
+/// <summary>
+/// Actions executed by automation workflows
+/// </summary>
+public enum AutomationAction
+{
+    SendEmail = 0,
+    SendSms = 1,
+    SendZaloMessage = 2,
+    AddToSegment = 3,
+    CreateTask = 4,
+    IssueVoucher = 5
+}

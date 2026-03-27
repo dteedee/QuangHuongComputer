@@ -19,6 +19,7 @@ public class CrmDbContext : DbContext
     public DbSet<CustomerTask> CustomerTasks { get; set; }
     public DbSet<EmailCampaign> EmailCampaigns { get; set; }
     public DbSet<EmailCampaignRecipient> EmailCampaignRecipients { get; set; }
+    public DbSet<AutomationRule> AutomationRules { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,7 +37,8 @@ public class CrmDbContext : DbContext
         modelBuilder.Entity<LeadPipelineStage>().HasQueryFilter(p => p.IsActive);
         modelBuilder.Entity<CustomerInteraction>().HasQueryFilter(i => i.IsActive);
         modelBuilder.Entity<CustomerTask>().HasQueryFilter(t => t.IsActive);
-        modelBuilder.Entity<EmailCampaign>().HasQueryFilter(c => c.IsActive);
+        modelBuilder.Entity<EmailCampaign>().HasQueryFilter(e => e.IsActive);
+        modelBuilder.Entity<AutomationRule>().HasQueryFilter(a => a.IsActive);
         modelBuilder.Entity<EmailCampaignRecipient>().HasQueryFilter(r => r.IsActive);
 
         // CustomerAnalytics configuration
@@ -319,8 +321,21 @@ public class CrmDbContext : DbContext
                 .IsUnique()
                 .HasDatabaseName("uq_recipients_campaign_email");
 
-            entity.HasIndex(r => r.Status)
-                .HasDatabaseName("ix_recipients_status");
+            entity.HasIndex(x => new { x.CampaignId, x.Status })
+                .HasDatabaseName("ix_email_campaign_recipients_campaign_id_status");
+        });
+
+        // AutomationRule configurations
+        modelBuilder.Entity<AutomationRule>(entity =>
+        {
+            entity.ToTable("AutomationRules");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Name).IsRequired().HasMaxLength(150);
+            entity.Property(a => a.Description).HasColumnType("text");
+            entity.Property(a => a.ParameterJson).HasColumnType("jsonb");
+
+            entity.HasIndex(a => new { a.Trigger, a.IsActive })
+                .HasDatabaseName("ix_automation_rules_trigger_active");
         });
     }
 }

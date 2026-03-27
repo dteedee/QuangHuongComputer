@@ -158,10 +158,10 @@ public static class HREndpoints
 
             return Results.Ok(new
             {
-                Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Timesheets = timesheets
+                total = total,
+                page = page,
+                pageSize = pageSize,
+                timesheets = timesheets
             });
         });
 
@@ -210,8 +210,8 @@ public static class HREndpoints
 
             return Results.Ok(new
             {
-                Message = "Timesheet updated",
-                Timesheet = new
+                message = "Timesheet updated",
+                timesheet = new
                 {
                     timesheet.Id,
                     timesheet.Date,
@@ -243,9 +243,9 @@ public static class HREndpoints
 
             return Results.Ok(new
             {
-                Message = "Timesheet approved",
-                Status = timesheet.Status.ToString(),
-                ApprovedAt = timesheet.ApprovedAt
+                message = "Timesheet approved",
+                status = timesheet.Status.ToString(),
+                approvedAt = timesheet.ApprovedAt
             });
         });
 
@@ -268,9 +268,9 @@ public static class HREndpoints
 
             return Results.Ok(new
             {
-                Message = "Timesheet rejected",
-                Status = timesheet.Status.ToString(),
-                RejectionReason = timesheet.RejectionReason
+                message = "Timesheet rejected",
+                status = timesheet.Status.ToString(),
+                rejectionReason = timesheet.RejectionReason
             });
         });
 
@@ -345,6 +345,189 @@ public static class HREndpoints
             ));
 
             return Results.Ok(new { Message = "Payroll marked as paid", PayrollId = payroll.Id });
+        });
+
+        // Get Payroll by ID
+        group.MapGet("/payroll/{id:guid}", async (Guid id, HRDbContext db) =>
+        {
+            var payroll = await db.Payrolls
+                .Include(p => p.Employee)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            return Results.Ok(new
+            {
+                payroll.Id,
+                payroll.EmployeeId,
+                EmployeeName = payroll.Employee?.FullName,
+                payroll.Month,
+                payroll.Year,
+                payroll.BaseSalary,
+                payroll.Deductions,
+                payroll.Bonuses,
+                payroll.NetPay,
+                Status = payroll.Status.ToString(),
+                payroll.RegularHours,
+                payroll.OvertimeHours,
+                payroll.OvertimePay,
+                payroll.TaxDeduction,
+                payroll.InsuranceDeduction,
+                payroll.OtherDeductions,
+                payroll.PerformanceBonus,
+                payroll.AttendanceBonus,
+                payroll.CalculatedAt,
+                payroll.ApprovedAt,
+                payroll.ProcessedAt,
+                payroll.PaidAt,
+                payroll.ApprovedBy,
+                payroll.ProcessedBy,
+                payroll.Notes
+            });
+        });
+
+        // Calculate Payroll
+        group.MapPost("/payroll/{id:guid}/calculate", async (Guid id, HRDbContext db) =>
+        {
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            try
+            {
+                payroll.Calculate();
+                await db.SaveChangesAsync();
+                return Results.Ok(new
+                {
+                    message = "Payroll calculated",
+                    payrollId = payroll.Id,
+                    baseSalary = payroll.BaseSalary,
+                    bonuses = payroll.Bonuses,
+                    deductions = payroll.Deductions,
+                    netPay = payroll.NetPay,
+                    status = payroll.Status.ToString()
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        });
+
+        // Approve Payroll
+        group.MapPost("/payroll/{id:guid}/approve", async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            try
+            {
+                payroll.Approve(userId);
+                await db.SaveChangesAsync();
+                return Results.Ok(new
+                {
+                    message = "Payroll approved",
+                    payrollId = payroll.Id,
+                    status = payroll.Status.ToString(),
+                    approvedAt = payroll.ApprovedAt
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        });
+
+        // Process Payroll
+        group.MapPost("/payroll/{id:guid}/process", async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Results.Unauthorized();
+
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            try
+            {
+                payroll.Process(userId);
+                await db.SaveChangesAsync();
+                return Results.Ok(new
+                {
+                    message = "Payroll processed",
+                    payrollId = payroll.Id,
+                    status = payroll.Status.ToString(),
+                    processedAt = payroll.ProcessedAt
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        });
+
+        // Add Bonus to Payroll
+        group.MapPost("/payroll/{id:guid}/bonus", async (Guid id, AddPayrollBonusDto dto, HRDbContext db) =>
+        {
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            try
+            {
+                payroll.AddBonus(dto.Amount, dto.Type ?? "Performance");
+                await db.SaveChangesAsync();
+                return Results.Ok(new
+                {
+                    Message = $"Bonus of {dto.Amount:N0} added",
+                    payroll.Bonuses,
+                    payroll.PerformanceBonus,
+                    payroll.AttendanceBonus
+                });
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        });
+
+        // Add Deduction to Payroll
+        group.MapPost("/payroll/{id:guid}/deduction", async (Guid id, AddPayrollDeductionDto dto, HRDbContext db) =>
+        {
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            try
+            {
+                payroll.AddDeduction(dto.Amount, dto.Type ?? "Other");
+                await db.SaveChangesAsync();
+                return Results.Ok(new
+                {
+                    Message = $"Deduction of {dto.Amount:N0} added",
+                    payroll.Deductions,
+                    payroll.TaxDeduction,
+                    payroll.InsuranceDeduction,
+                    payroll.OtherDeductions
+                });
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
+        });
+
+        // Update Payroll Notes
+        group.MapPut("/payroll/{id:guid}/notes", async (Guid id, UpdatePayrollNotesDto dto, HRDbContext db) =>
+        {
+            var payroll = await db.Payrolls.FindAsync(id);
+            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
+
+            payroll.UpdateNotes(dto.Notes);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { Message = "Notes updated" });
         });
 
         // ==================== RECRUITMENT MANAGEMENT (ADMIN) ====================
@@ -486,4 +669,18 @@ public record UpdateJobListingDto(
     decimal? SalaryRangeMin,
     decimal? SalaryRangeMax,
     JobStatus Status
+);
+
+public record AddPayrollBonusDto(
+    decimal Amount,
+    string? Type
+);
+
+public record AddPayrollDeductionDto(
+    decimal Amount,
+    string? Type
+);
+
+public record UpdatePayrollNotesDto(
+    string? Notes
 );
