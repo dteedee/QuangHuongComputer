@@ -13,7 +13,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<SystemConfigDbContext>((serviceProvider, options) =>
+        services.AddDbContext<SystemConfigDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
@@ -27,8 +27,7 @@ public static class DependencyInjection
             var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
             if (interceptor != null)
                 options.AddInterceptors(interceptor);
-        },
-            poolSize: 128);
+        });
 
         return services;
     }

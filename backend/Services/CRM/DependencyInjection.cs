@@ -14,7 +14,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<CrmDbContext>((serviceProvider, options) =>
+        services.AddDbContext<CrmDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
@@ -28,8 +28,7 @@ public static class DependencyInjection
             var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
             if (interceptor != null)
                 options.AddInterceptors(interceptor);
-        },
-            poolSize: 128);
+        });
 
         // Register CRM services
         services.AddScoped<IRfmCalculationService, RfmCalculationService>();

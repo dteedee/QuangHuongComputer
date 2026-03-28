@@ -201,7 +201,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 // Modules
 builder.Services.AddCatalogModule(builder.Configuration);
-builder.Services.AddOmnichannelModule(builder.Configuration);
+// builder.Services.AddOmnichannelModule(builder.Configuration); // TODO: Omnichannel module lacks .csproj
 builder.Services.AddSalesModule(builder.Configuration);
 builder.Services.AddRepairModule(builder.Configuration);
 builder.Services.AddWarrantyModule(builder.Configuration);
@@ -644,7 +644,7 @@ app.MapSalesEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();
-app.MapInstallmentEndpoints();
+// app.MapInstallmentEndpoints(); // TODO: Payment module lacks .csproj
 app.MapContentEndpoints();
 app.MapCommunicationEndpoints(); // Added Communication Endpoints
 app.MapHREndpoints();
@@ -657,7 +657,7 @@ app.MapEInvoiceEndpoints();
 app.MapTaxReportingEndpoints();
 app.MapReportingEndpoints();
 app.MapCrmEndpoints();
-app.MapAutomationRuleEndpoints();
+// app.MapAutomationRuleEndpoints(); // TODO: CRM AutomationRule endpoint not compiled
 
 // Audit Logs & System Management
 app.MapAuditLogEndpoints();

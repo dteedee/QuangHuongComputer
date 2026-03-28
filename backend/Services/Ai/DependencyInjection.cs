@@ -13,15 +13,14 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
-        services.AddDbContextPool<AiDbContext>(options =>
+        services.AddDbContext<AiDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
                 npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
-            }),
-            poolSize: 128);
+            }));
 
         services.AddScoped<IAiService, AiService>();
 
