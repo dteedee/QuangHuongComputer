@@ -288,7 +288,7 @@ export const ChatSupport = () => {
                 onClick={() => handleSendMessage()} // Mock action
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase text-gray-600 shadow-sm hover:border-accent hover:text-accent transition-all"
               >
-                <Phone size={14} /> Hotline: 1900.6321
+                <Phone size={14} /> Hotline: 0904.235.090
               </button>
             </div>
           )}

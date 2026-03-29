@@ -11,11 +11,7 @@ import {
 import { catalogApi, type Category } from '../../api/catalog';
 
 // Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/effect-fade';
-
+import 'swiper/swiper-bundle.css';
 interface HeroSliderProps {
     title: string;
     config: {
@@ -109,6 +105,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                         pagination={{ clickable: true }}
                         autoplay={{ delay: 5000, disableOnInteraction: false }}
                         effect="fade"
+                        fadeEffect={{ crossFade: true }}
                         loop
                         className="h-full"
                     >
@@ -117,27 +114,27 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                                 <div className="relative w-full h-full">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${slide.image})` }}
+                                        style={{ backgroundImage: `url(${slide.image.startsWith('/uploads') ? `http://localhost:5000${slide.image}` : slide.image})` }}
                                     >
-                                        <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient || 'from-red-600 via-red-700 to-amber-600'} opacity-80`} />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-red-700 to-amber-600 opacity-80" />
                                     </div>
 
                                     <div className="relative h-full flex items-center p-8 md:p-16 text-white z-10">
-                                        <div className="max-w-2xl">
+                                        <div className="max-w-4xl w-full">
                                             {slide.badge && (
                                                 <motion.div
                                                     initial={{ scale: 0 }}
                                                     whileInView={{ scale: 1 }}
-                                                    className="inline-block bg-yellow-400 text-red-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg mb-4 flex items-center gap-2"
+                                                    className="inline-flex bg-yellow-400 text-red-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg mb-4 items-center gap-2"
                                                 >
                                                     <Star size={14} className="fill-current" />
                                                     {slide.badge}
                                                 </motion.div>
                                             )}
-                                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight drop-shadow-2xl">
+                                            <h1 className="text-3xl md:text-5xl lg:text-[56px] tracking-tight font-black leading-tight drop-shadow-2xl">
                                                 {slide.title}
                                             </h1>
-                                            <h2 className="text-xl md:text-2xl font-bold mt-2 text-yellow-200 drop-shadow-lg">
+                                            <h2 className="text-lg md:text-2xl font-bold mt-2 text-yellow-200 drop-shadow-lg">
                                                 {slide.subtitle}
                                             </h2>
                                             <p className="text-lg mt-4 text-white/90 font-semibold drop-shadow">

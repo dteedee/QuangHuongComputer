@@ -279,7 +279,7 @@ export const ProductDetailsPage = () => {
 
                                 <button className="w-full bg-white border border-gray-200 hover:border-gray-300 text-gray-700 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2">
                                     <Phone size={14} />
-                                    Tư vấn: 1800.6321
+                                    Tư vấn: 0904.235.090
                                 </button>
                             </div>
 

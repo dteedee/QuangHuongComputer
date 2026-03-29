@@ -64,7 +64,8 @@ export const OrdersPage = () => {
                 reason: 'Khách hàng yêu cầu hủy'
             });
             toast.success('Đã hủy đơn hàng thành công');
-            loadOrders(); // Refresh orders
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'Cancelled' as OrderStatus } : o));
+            loadOrders(); // Sync with server
         } catch (error: any) {
             const errorMessage = error?.response?.data?.Error || 'Không thể hủy đơn hàng';
             toast.error(errorMessage);

@@ -426,10 +426,10 @@ export function CheckoutPage() {
                             <MapPin className="w-5 h-5 text-accent" />
                             TRỤ SỞ CHÍNH - QUANG HƯỞNG COMPUTER
                           </h4>
-                          <p className="text-sm text-slate-600 font-medium">Số 123, Đường ABC, Quận XYZ, TP. Hà Nội</p>
+                          <p className="text-sm text-slate-600 font-medium">Số 179, Thôn 3/2, xã Vĩnh Bảo, Hải Phòng</p>
                           <div className="mt-4 flex items-center gap-4">
                             <div className="text-xs bg-white px-3 py-1 rounded-full font-bold text-slate-500 border border-slate-100">
-                              Mở cửa: 08:00 - 21:00
+                              Mở cửa: 07:00 - 17:15
                             </div>
                             {(() => {
                               const now = new Date();

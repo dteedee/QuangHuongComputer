@@ -648,7 +648,7 @@ export default function POSPage() {
           <p>Thanh toán: ${completedOrder?.paymentMethod === 'cash' ? 'Tiền mặt' : completedOrder?.paymentMethod === 'card' ? 'Thẻ' : 'Chuyển khoản'}</p>
           <div class="footer">
             <p>Cảm ơn quý khách!</p>
-            <p>Hotline: 1900-xxxx</p>
+            <p>Hotline: 0904.235.090</p>
           </div>
         </body>
       </html>

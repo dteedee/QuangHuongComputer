@@ -538,7 +538,7 @@ export default function ProductDetailPage() {
                 <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <HeadphonesIcon className="w-6 h-6 text-gray-400 mb-2" />
                   <span className="text-xs font-semibold text-gray-900 leading-tight">Hỗ trợ 24/7</span>
-                  <span className="text-xs text-gray-500 mt-1">1900.6321</span>
+                  <span className="text-xs text-gray-500 mt-1">0904.235.090</span>
                 </div>
               </div>
             </div>

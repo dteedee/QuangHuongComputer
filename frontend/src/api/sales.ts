@@ -182,7 +182,7 @@ export const salesApi = {
     cart: {
         get: async () => {
             const response = await client.get<CartDto>('/sales/cart');
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         addItem: async (item: {
@@ -192,37 +192,37 @@ export const salesApi = {
             quantity: number;
         }) => {
             const response = await client.post<{ message: string }>('/sales/cart/items', item);
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         updateQuantity: async (productId: string, quantity: number) => {
             const response = await client.put<{ message: string }>(`/sales/cart/items/${productId}`, { quantity });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         removeItem: async (productId: string) => {
             const response = await client.delete<{ message: string }>(`/sales/cart/items/${productId}`);
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         clear: async () => {
             const response = await client.delete<{ message: string }>('/sales/cart/clear');
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         applyCoupon: async (couponCode: string) => {
             const response = await client.post<{ message: string; discount: number }>('/sales/cart/apply-coupon', { couponCode });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         removeCoupon: async () => {
             const response = await client.delete<{ message: string }>('/sales/cart/remove-coupon');
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         setShipping: async (amount: number) => {
             const response = await client.post<{ message: string; totalAmount: number }>('/sales/cart/set-shipping', { shippingAmount: amount });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
     },
 
@@ -237,12 +237,12 @@ export const salesApi = {
             endDate?: string;
         }) => {
             const response = await client.get<{ total: number; page: number; pageSize: number; orders: Order[] }>('/sales/admin/orders', { params });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         getById: async (id: string) => {
             const response = await client.get<Order>(`/sales/orders/${id}`);
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         create: async (data: CheckoutDto) => {
@@ -262,7 +262,7 @@ export const salesApi = {
                     manualDiscount: data.manualDiscount,
                     couponCode: data.couponCode
                 });
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             } catch (fastError: any) {
                 const errorData = fastError.response?.data;
                 console.warn('Fast checkout failed, falling back to regular checkout:', errorData?.error || fastError.message);
@@ -281,7 +281,7 @@ export const salesApi = {
                     pickupStoreId: data.pickupStoreId,
                     pickupStoreName: data.pickupStoreName
                 });
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             } catch (checkoutError: any) {
                 const checkoutErrorData = checkoutError.response?.data;
                 console.error('Regular checkout also failed:', checkoutErrorData);
@@ -301,25 +301,25 @@ export const salesApi = {
                 notes: data.notes,
                 paymentMethod: data.paymentMethod,
             });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         updateStatus: async (id: string, status: OrderStatus, reason?: string) => {
             // Only admins can update status via /sales/admin/orders/{id}/status
             const response = await client.put<{ message: string }>(`/sales/admin/orders/${id}/status`, { status });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         // Cancel order (customer)
         cancel: async (id: string, reason: string) => {
             const response = await client.post<{ message: string; status: string }>(`/sales/orders/${id}/cancel`, { reason });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         // Get order history
         getHistory: async (orderId: string) => {
             const response = await client.get<OrderHistory[]>(`/sales/orders/${orderId}/history`);
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         // Return Requests
@@ -327,13 +327,13 @@ export const salesApi = {
             // Get my return requests
             getList: async () => {
                 const response = await client.get<ReturnRequest[]>('/sales/returns');
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Get return request by ID
             getById: async (id: string) => {
                 const response = await client.get<ReturnRequest>(`/sales/returns/${id}`);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Create return request
@@ -344,7 +344,7 @@ export const salesApi = {
                 description?: string;
             }) => {
                 const response = await client.post<{ id: string; orderId: string; status: string; message: string }>('/sales/returns', data);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Admin: Get all returns
@@ -354,31 +354,31 @@ export const salesApi = {
                 params.append('pageSize', pageSize.toString());
                 if (status) params.append('status', status);
                 const response = await client.get<{ total: number; page: number; pageSize: number; returns: ReturnRequest[] }>(`/sales/admin/returns?${params.toString()}`);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Admin: Get return by ID
             adminGetById: async (id: string) => {
                 const response = await client.get<ReturnRequest>(`/sales/admin/returns/${id}`);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Admin: Approve return
             approve: async (id: string) => {
                 const response = await client.post<{ message: string; status: string }>(`/sales/admin/returns/${id}/approve`);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Admin: Reject return
             reject: async (id: string, reason: string) => {
                 const response = await client.post<{ message: string; status: string }>(`/sales/admin/returns/${id}/reject`, { reason });
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
 
             // Admin: Process refund
             processRefund: async (id: string) => {
                 const response = await client.post<{ message: string; status: string }>(`/sales/admin/returns/${id}/refund`);
-                return response.data;
+                console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
             },
         },
     },
@@ -387,13 +387,13 @@ export const salesApi = {
     stats: {
         get: async (params?: { startDate?: string; endDate?: string }) => {
             const response = await client.get<SalesStats>('/sales/admin/stats', { params });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
         getRevenueChart: async (year?: number) => {
             const response = await client.get<RevenueChartData>('/sales/admin/stats/revenue-chart', {
                 params: year ? { year } : undefined
             });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
     },
 
@@ -412,17 +412,17 @@ export const salesApi = {
         },
         getStats: async () => {
             const response = await client.get<SalesStats>('/sales/admin/stats');
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         }
     },
     // Compatibility aliases
     getMyOrders: async () => {
-        const response = await client.get<Order[]>('/sales/orders');
-        return response.data;
+        const response = await client.get<Order[]>(`/sales/orders?t=${Date.now()}`);
+        console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
     },
     getMyOrder: async (id: string) => {
         const response = await client.get<Order>(`/sales/orders/${id}`);
-        return response.data;
+        console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
     },
 
     // Customer Stats
@@ -441,7 +441,7 @@ export const salesApi = {
             customerTier: string;
             loyaltyPoints: number;
         }>('/sales/my-stats');
-        return response.data;
+        console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
     },
 
     // Verify Purchase
@@ -451,14 +451,14 @@ export const salesApi = {
             hasPurchased: boolean;
             message: string;
         }>(`/sales/verify-purchase/${productId}`);
-        return response.data;
+        console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
     },
 
     // Loyalty Points
     loyalty: {
         getAccount: async () => {
             const response = await client.get<LoyaltyAccount>('/sales/loyalty');
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         getTransactions: async (page = 1, pageSize = 20) => {
@@ -466,7 +466,7 @@ export const salesApi = {
                 total: number;
                 transactions: LoyaltyTransaction[];
             }>('/sales/loyalty/transactions', { params: { page, pageSize } });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         redeemPoints: async (points: number, orderId?: string, description?: string) => {
@@ -476,7 +476,7 @@ export const salesApi = {
                 redemptionValue: number;
                 remainingPoints: number;
             }>('/sales/loyalty/redeem', { points, orderId, description });
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
 
         calculateOrderPoints: async (orderAmount: number) => {
@@ -485,7 +485,7 @@ export const salesApi = {
                 pointsToEarn: number;
                 message: string;
             }>(`/sales/loyalty/calculate/${orderAmount}`);
-            return response.data;
+            console.log("SALES_ORDERS_RESPONSE:", JSON.stringify(response.data)); return response.data;
         },
     },
 };

@@ -1,4 +1,4 @@
-﻿
+
 import { useState, useRef, useEffect } from 'react';
 import client from '../api/client';
 import { MessageCircle, Send, X, Bot, Sparkles, User } from 'lucide-react';
@@ -24,6 +24,12 @@ export const AiChatbot = () => {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, isOpen]);
+
+    useEffect(() => {
+        const handleOpenChat = () => setIsOpen(true);
+        window.addEventListener('open-chat', handleOpenChat);
+        return () => window.removeEventListener('open-chat', handleOpenChat);
+    }, []);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;

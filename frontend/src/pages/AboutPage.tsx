@@ -176,19 +176,19 @@ export const AboutPage = () => {
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Địa chỉ:</p>
-                                        <p>91 Nguyễn Xiển, Hạ Đình, Thanh Xuân, Hà Nội</p>
+                                        <p>Số 179, Thôn 3/2, xã Vĩnh Bảo, Hải Phòng</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Hotline:</p>
-                                        <p className="text-accent font-bold">1800.6321</p>
+                                        <p className="text-accent font-bold">0904.235.090</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Email:</p>
-                                        <p>kinhdoanh@qhcomputer.com</p>
+                                        <p>quanghuongvbhp@gmail.com</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold mb-1">Giờ làm việc:</p>
-                                        <p>Thứ 2 - Chủ nhật: 8:00 - 21:00</p>
+                                        <p>7:00 - 17h15 (Từ thứ 2 đến thứ 7)</p>
                                     </div>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@ export const AboutPage = () => {
                             <p className="text-sm">
                                 <strong>Liên hệ với chúng tôi:</strong> Để biết thêm thông tin về sản phẩm và dịch vụ,
                                 vui lòng <Link to="/contact" className="text-accent font-bold">liên hệ tại đây</Link> hoặc
-                                gọi hotline <a href="tel:18006321" className="text-accent font-bold">1800.6321</a>
+                                gọi hotline <a href="tel:0904235090" className="text-accent font-bold">0904.235.090</a>
                             </p>
                         </div>
                     </div>

@@ -112,13 +112,27 @@ public class ContentDbContext : DbContext
         modelBuilder.Entity<ContactMessage>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Message).IsRequired().HasColumnType("text");
-            entity.Property(e => e.AdminNotes).HasColumnType("text");
-            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.ToTable("contact_messages");
+            
+            // Map PascalCase properties to snake_case columns
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(100).HasColumnName("full_name");
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(20).HasColumnName("phone");
+            entity.Property(e => e.Email).HasMaxLength(100).HasColumnName("email");
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(200).HasColumnName("subject");
+            entity.Property(e => e.Message).IsRequired().HasColumnType("text").HasColumnName("message");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.AdminNotes).HasColumnType("text").HasColumnName("admin_notes");
+            entity.Property(e => e.RepliedBy).HasMaxLength(100).HasColumnName("replied_by");
+            entity.Property(e => e.RepliedAt).HasColumnName("replied_at");
+            entity.Property(e => e.IpAddress).HasMaxLength(50).HasColumnName("ip_address");
+            
+            // Base Entity properties
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 
             entity.HasIndex(e => e.Status)
                 .HasDatabaseName("IX_ContactMessage_Status");

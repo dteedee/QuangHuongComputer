@@ -323,9 +323,9 @@ export const RepairDetailPage = () => {
                     Liên hệ với chúng tôi nếu bạn có bất kỳ câu hỏi nào về phiếu sửa chữa này.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                    <a href="tel:1900123456" className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition">
+                    <a href="tel:0904235090" className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition">
                         <User size={18} />
-                        1900 123 456
+                        0904 235 090
                     </a>
                     <a href="mailto:support@quanghuong.com" className="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition">
                         <MessageSquare size={18} />

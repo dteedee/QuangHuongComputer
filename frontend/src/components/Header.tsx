@@ -359,7 +359,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             </button>
 
                             <button
-                                onClick={onChatClick}
+                                onClick={onChatClick || (() => window.dispatchEvent(new Event('open-chat')))}
                                 className="hidden lg:flex items-center gap-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all border border-red-200 group"
                             >
                                 <MessageCircle size={22} className="text-accent group-hover:scale-110 transition-transform" />

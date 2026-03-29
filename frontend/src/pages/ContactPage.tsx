@@ -48,10 +48,10 @@ export const ContactPage = () => {
     }, []);
 
     const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Hưởng Computer', (v) => v);
-    const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'Số 91 Nguyễn Xiển, Thanh Xuân, Hà Nội', (v) => v);
-    const phone = getConfigValue(configs, 'COMPANY_PHONE', '1800.6321', (v) => v);
-    const email = getConfigValue(configs, 'COMPANY_EMAIL', 'contact@quanghuong.com', (v) => v);
-    const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '8:00 - 21:00 (Tất cả các ngày trong tuần)', (v) => v);
+    const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'Số 179, Thôn 3/2, xã Vĩnh Bảo, Hải Phòng', (v) => v);
+    const phone = getConfigValue(configs, 'COMPANY_PHONE', '0904.235.090', (v) => v);
+    const email = getConfigValue(configs, 'COMPANY_EMAIL', 'quanghuongvbhp@gmail.com', (v) => v);
+    const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '7:00 - 17h15 (Từ thứ 2 đến thứ 7)', (v) => v);
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
