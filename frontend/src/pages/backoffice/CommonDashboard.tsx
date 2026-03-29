@@ -1,4 +1,4 @@
-﻿import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
     ArrowUpRight, ArrowDownRight, Package,
     ShoppingCart, Users, DollarSign, TrendingUp,
@@ -65,7 +65,7 @@ export const CommonDashboard = () => {
         },
     ];
 
-    const activities = latestOrders?.slice(0, 4).map(order => ({
+    const activities = latestOrders?.orders?.slice(0, 4).map(order => ({
         type: 'order',
         title: `Đơn hàng #${order.orderNumber}`,
         user: order.customerId,
@@ -181,18 +181,18 @@ export const CommonDashboard = () => {
                     </div>
 
                     <div className="flex-1 flex items-end gap-3 md:gap-4 px-2 relative h-full">
-                        {revenueChart?.monthlyData.map((data, i) => {
-                            const maxRevenue = Math.max(...(revenueChart.monthlyData.map(m => m.revenue) || [1]));
+                        {revenueChart?.monthlyData && Math.max(...revenueChart.monthlyData.map(m => m.revenue)) > 0 ? revenueChart.monthlyData.map((data, i) => {
+                            const maxRevenue = Math.max(...(revenueChart.monthlyData.map(m => m.revenue)));
                             const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
 
                             return (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full justify-end">
-                                    <div className="relative w-full">
+                                    <div className="relative w-full h-full flex flex-col justify-end">
                                         <motion.div
                                             initial={{ height: 0 }}
-                                            animate={{ height: `${heightPercent}%` }}
+                                            animate={{ height: `${Math.max(heightPercent, 2)}%` }} // Ensure at least a tiny visible bar
                                             transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gray-950 shadow-2xl' : 'bg-gray-100 group-hover:bg-accent group-hover:shadow-accent/30'}`}
+                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gradient-to-t from-accent to-red-600 shadow-2xl' : 'bg-gradient-to-t from-red-100 to-red-200 group-hover:from-accent group-hover:to-red-500 group-hover:shadow-brand-lg'}`}
                                         >
                                             <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
                                                 {formatCurrency(data.revenue)}
@@ -202,14 +202,14 @@ export const CommonDashboard = () => {
                                     <span className={`text-[10px] font-black uppercase italic tracking-tighter ${i === new Date().getMonth() ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
                                 </div>
                             );
-                        }) || [40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
+                        }) : [40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full justify-end">
-                                <div className="relative w-full">
+                                <div className="relative w-full h-full flex flex-col justify-end">
                                     <motion.div
                                         initial={{ height: 0 }}
                                         animate={{ height: `${h}%` }}
                                         transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gray-950 shadow-2xl' : 'bg-gray-100 group-hover:bg-accent group-hover:shadow-accent/30'}`}
+                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-accent to-red-600 shadow-2xl' : 'bg-gradient-to-t from-red-100 to-red-200 group-hover:from-accent group-hover:to-red-500 group-hover:shadow-brand-lg'}`}
                                     >
                                         <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
                                             {h}%

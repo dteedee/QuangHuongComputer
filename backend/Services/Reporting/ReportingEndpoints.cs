@@ -43,13 +43,26 @@ public static class ReportingEndpoints
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var todayOrders = await salesDb.Orders.CountAsync(o => o.OrderDate >= today);
 
-            // Monthly revenue for chart
-            var monthlyData = await salesDb.Orders
+            // Monthly revenue for chart (pad to 12 months)
+            var rawMonthlyData = await salesDb.Orders
                 .Where(o => o.OrderDate >= today.AddMonths(-11))
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
-                .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToListAsync();
+
+            var monthlyData = new List<object>();
+            for (int i = 11; i >= 0; i--)
+            {
+                var targetDate = today.AddMonths(-i);
+                var data = rawMonthlyData.FirstOrDefault(m => m.Year == targetDate.Year && m.Month == targetDate.Month);
+                monthlyData.Add(new
+                {
+                    Year = targetDate.Year,
+                    Month = targetDate.Month,
+                    Revenue = data?.Revenue ?? 0,
+                    OrderCount = data?.OrderCount ?? 0
+                });
+            }
 
             // Order status distribution
             var statusDistribution = await salesDb.Orders
@@ -191,7 +204,7 @@ public static class ReportingEndpoints
             var completedJobs = await repairDb.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Completed);
             var avgCost = await repairDb.WorkOrders
                 .Where(w => w.Status == WorkOrderStatus.Completed)
-                .AverageAsync(w => (decimal?)w.TotalCost) ?? 0;
+                .AverageAsync(w => (decimal?)w.ActualCost) ?? 0;
 
             return Results.Ok(new
             {
@@ -213,7 +226,7 @@ public static class ReportingEndpoints
                     TechnicianId = g.Key,
                     TotalJobs = g.Count(),
                     CompletedJobs = g.Count(w => w.Status == WorkOrderStatus.Completed),
-                    TotalRevenue = g.Sum(w => w.TotalCost)
+                    TotalRevenue = g.Sum(w => w.ActualCost)
                 })
                 .OrderByDescending(x => x.CompletedJobs)
                 .Take(top)
@@ -270,7 +283,7 @@ public static class ReportingEndpoints
             var pendingRepairsTask = repairDb.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Pending || w.Status == WorkOrderStatus.InProgress);
             var thisMonthRepairRevenueTask = repairDb.WorkOrders
                 .Where(w => w.FinishedAt >= thisMonth && w.Status == WorkOrderStatus.Completed)
-                .SumAsync(w => (decimal?)w.TotalCost);
+                .SumAsync(w => (decimal?)w.ActualCost);
 
             var totalARTask = accDb.Accounts.SumAsync(a => (decimal?)a.Balance);
 
@@ -483,7 +496,7 @@ public static class ReportingEndpoints
                     TechnicianId = g.Key,
                     TotalJobs = g.Count(),
                     CompletedJobs = g.Count(w => w.Status == WorkOrderStatus.Completed),
-                    TotalRevenue = g.Sum(w => w.TotalCost)
+                    TotalRevenue = g.Sum(w => w.ActualCost)
                 })
                 .OrderByDescending(x => x.CompletedJobs)
                 .ToListAsync();
@@ -633,7 +646,7 @@ public static class ReportingEndpoints
             var monthRevenue = await salesDb.Orders.Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var totalOrders = await salesDb.Orders.CountAsync();
             var invValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
-            var repairRevenue = await repairDb.WorkOrders.Where(w => w.Status == WorkOrderStatus.Completed).SumAsync(w => (decimal?)w.TotalCost) ?? 0;
+            var repairRevenue = await repairDb.WorkOrders.Where(w => w.Status == WorkOrderStatus.Completed).SumAsync(w => (decimal?)w.ActualCost) ?? 0;
 
             summary.Cell(4, 1).Value = "DOANH THU";
             summary.Cell(4, 1).Style.Font.Bold = true;

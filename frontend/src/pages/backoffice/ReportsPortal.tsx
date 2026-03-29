@@ -323,14 +323,14 @@ export const ReportsPortal = () => {
                         <div className="h-64 flex items-end gap-2">
                             {(salesStats?.monthlyData ?? []).map((m, i) => {
                                 const maxRevenue = Math.max(...(salesStats?.monthlyData ?? []).map(d => d.revenue), 1);
-                                const height = (m.revenue / maxRevenue) * 100;
+                                const heightPercent = Math.max((m.revenue / maxRevenue) * 100, 2); // Minimum 2% visible bar
                                 return (
-                                    <div key={i} className="flex-1 group relative">
+                                    <div key={i} className="flex-1 group relative h-full flex flex-col justify-end">
                                         <motion.div
                                             initial={{ height: 0 }}
-                                            animate={{ height: `${height}%` }}
+                                            animate={{ height: `${heightPercent}%` }}
                                             transition={{ duration: 0.8, delay: i * 0.05 }}
-                                            className="bg-gradient-to-t from-accent to-red-400 rounded-t-lg hover:from-accent-hover transition-all cursor-pointer"
+                                            className="bg-gradient-to-t from-accent to-red-400 rounded-t-lg hover:from-accent-hover transition-all cursor-pointer w-full"
                                         />
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
                                             {formatCurrency(m.revenue)}

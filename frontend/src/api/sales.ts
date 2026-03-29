@@ -236,7 +236,7 @@ export const salesApi = {
             startDate?: string;
             endDate?: string;
         }) => {
-            const response = await client.get<Order[]>('/sales/orders', { params });
+            const response = await client.get<{ total: number; page: number; pageSize: number; orders: Order[] }>('/sales/admin/orders', { params });
             return response.data;
         },
 
