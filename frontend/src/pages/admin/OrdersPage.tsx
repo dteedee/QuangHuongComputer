@@ -149,9 +149,12 @@ export const AdminOrdersPage = () => {
     const getStatusInfo = (status: string) => {
         switch (status) {
             case 'Draft': return { color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock size={16} />, label: 'Bản nháp' };
-            case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Xác nhận' };
+            case 'Pending': return { color: 'text-orange-500', bg: 'bg-orange-50', icon: <Clock size={16} />, label: 'Chờ xác nhận' };
+            case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Đã xác nhận' };
+            case 'Paid': return { color: 'text-indigo-500', bg: 'bg-indigo-50', icon: <CheckCircle2 size={16} />, label: 'Đã thanh toán' };
             case 'Shipped': return { color: 'text-purple-500', bg: 'bg-purple-50', icon: <Truck size={16} />, label: 'Đang giao' };
             case 'Delivered': return { color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <Package size={16} />, label: 'Đã giao' };
+            case 'Completed': return { color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <CheckCircle2 size={16} />, label: 'Hoàn tất' };
             case 'Cancelled': return { color: 'text-rose-500', bg: 'bg-rose-50', icon: <XCircle size={16} />, label: 'Đã hủy' };
             default: return { color: 'text-gray-500', bg: 'bg-gray-50', icon: <Clock size={16} />, label: status };
         }
@@ -364,7 +367,9 @@ export const AdminOrdersPage = () => {
                                                         className={`items-center gap-2 px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest italic border ${status.bg} ${status.color} border-transparent hover:border-current transition-all appearance-none cursor-pointer focus:outline-none`}
                                                     >
                                                         <option value="Draft">Bản nháp</option>
-                                                        <option value="Confirmed">Xác nhận</option>
+                                                        <option value="Pending">Chờ xác nhận</option>
+                                                        <option value="Confirmed">Đã xác nhận</option>
+                                                        <option value="Paid">Đã thanh toán</option>
                                                         <option value="Shipped">Đang giao</option>
                                                         <option value="Delivered">Đã giao</option>
                                                         <option value="Completed">Hoàn tất</option>

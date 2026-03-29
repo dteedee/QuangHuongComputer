@@ -181,50 +181,31 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
         description={`Danh mục ${seoTitle} tại Quang Hưởng Computer. Cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt nhất.`}
       />
 
-      {/* Hero / Header Section */}
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                <Link to="/" className="hover:text-accent flex items-center gap-1 transition-colors"><Home size={14} /> Trang chủ</Link>
-                <ChevronRight size={14} />
-                <span className="text-gray-900 font-medium">Sản phẩm</span>
-              </nav>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                {currentCategoryName}
-                {currentBrandName && <span className="text-gray-400 font-normal">/ {currentBrandName}</span>}
-              </h1>
-            </div>
+      {/* Breadcrumb + Title */}
+      <div className="container mx-auto px-4 pt-4 pb-2">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <Link to="/" className="hover:text-accent flex items-center gap-1 transition-colors"><Home size={14} /> Trang chủ</Link>
+          <ChevronRight size={14} />
+          <span className="text-gray-900 font-medium">Sản phẩm</span>
+        </nav>
+        <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          {currentCategoryName}
+          {currentBrandName && <span className="text-gray-400 font-normal">/ {currentBrandName}</span>}
+        </h1>
 
-            <div className="flex items-center gap-4">
-              <form onSubmit={handleSearch} className="relative w-full md:w-80 group">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm kiếm sản phẩm..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full focus:ring-2 focus:ring-accent/20 focus:bg-white transition-all outline-none"
-                />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-accent transition-colors" />
-              </form>
-            </div>
-          </div>
+        {/* Mobile Filter Toggle */}
+        <div className="mt-3 md:hidden flex items-center justify-between">
+          <button
+            onClick={() => setShowMobileFilter(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-sm active:bg-gray-50"
+          >
+            <Filter size={16} />
+            Bộ lọc {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          </button>
 
-          {/* Mobile Filter Toggle */}
-          <div className="mt-4 md:hidden flex items-center justify-between">
-            <button
-              onClick={() => setShowMobileFilter(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-sm active:bg-gray-50"
-            >
-              <Filter size={16} />
-              Bộ lọc {activeFiltersCount > 0 && `(${activeFiltersCount})`}
-            </button>
-
-            <span className="text-sm text-gray-500">
-              {total} sản phẩm
-            </span>
-          </div>
+          <span className="text-sm text-gray-500">
+            {total} sản phẩm
+          </span>
         </div>
       </div>
 
@@ -328,7 +309,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
             )}
 
             {/* Toolbar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between sticky top-20 z-20">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between">
               <div className="hidden md:block text-gray-500 text-sm">
                 Hiển thị <strong>{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)}</strong> trong <strong>{total}</strong> sản phẩm
               </div>

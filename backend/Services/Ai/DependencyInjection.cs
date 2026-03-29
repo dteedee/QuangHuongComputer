@@ -22,6 +22,7 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
             }));
 
+        services.AddHttpClient();
         services.AddScoped<IAiService, AiService>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

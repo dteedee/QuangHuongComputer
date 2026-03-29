@@ -298,27 +298,19 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         ${showPopup ? 'border-accent shadow-xl z-30' : 'border-gray-200 hover:border-accent'}`}
                 >
                     {/* Discount Badge */}
-                    <motion.div
-                        animate={{ y: [0, -4, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-2 left-2 z-20"
-                    >
+                    <div className="absolute top-2 left-2 z-20">
                         <div className="bg-accent text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
                             -{discount}%
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Hot/New Badge */}
                     {product.soldCount > 10 && (
-                        <motion.div
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute top-2 right-2 z-20"
-                        >
+                        <div className="absolute top-2 right-2 z-20">
                             <div className="bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm uppercase">
                                 Bán chạy
                             </div>
-                        </motion.div>
+                        </div>
                     )}
 
                     {/* Product Image Area */}

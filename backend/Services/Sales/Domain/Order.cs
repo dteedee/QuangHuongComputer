@@ -76,7 +76,7 @@ public class Order : Entity<Guid>
         Id = Guid.NewGuid();
         OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Id.ToString().Substring(0, 8).ToUpper()}";
         CustomerId = customerId;
-        Status = OrderStatus.Draft;
+        Status = OrderStatus.Pending;
         PaymentStatus = PaymentStatus.Pending;
         FulfillmentStatus = FulfillmentStatus.Pending;
         Items = items;
@@ -110,8 +110,8 @@ public class Order : Entity<Guid>
 
     public void ApplyCoupon(string couponCode, decimal discountAmount, string couponSnapshot, string? discountReason = null)
     {
-        if (Status != OrderStatus.Draft)
-            throw new InvalidOperationException("Cannot apply coupon to non-draft order");
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Cannot apply coupon to non-draft and non-pending order");
 
         CouponCode = couponCode;
         DiscountAmount = discountAmount;
@@ -122,8 +122,8 @@ public class Order : Entity<Guid>
 
     public void SetShippingAmount(decimal amount)
     {
-        if (Status != OrderStatus.Draft)
-            throw new InvalidOperationException("Cannot change shipping on non-draft order");
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Cannot change shipping on non-draft and non-pending order");
 
         ShippingAmount = amount;
         CalculateAmounts();
@@ -131,8 +131,8 @@ public class Order : Entity<Guid>
 
     public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)
     {
-        if (Status != OrderStatus.Draft)
-            throw new InvalidOperationException("Cannot add items to non-draft order");
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Cannot add items to non-draft and non-pending order");
 
         var item = new OrderItem(productId, productName, unitPrice, quantity);
         Items.Add(item);
@@ -141,8 +141,8 @@ public class Order : Entity<Guid>
 
     public void RemoveItem(Guid itemId)
     {
-        if (Status != OrderStatus.Draft)
-            throw new InvalidOperationException("Cannot remove items from non-draft order");
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Cannot remove items from non-draft and non-pending order");
 
         var item = Items.FirstOrDefault(i => i.Id == itemId);
         if (item != null)
@@ -155,7 +155,7 @@ public class Order : Entity<Guid>
     // BUSINESS REQUIREMENT: Proper state transitions
     public void Confirm()
     {
-        if (Status != OrderStatus.Draft)
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
             throw new InvalidOperationException($"Cannot confirm order in status {Status}");
 
         Status = OrderStatus.Confirmed;
@@ -276,8 +276,11 @@ public class Order : Entity<Guid>
     {
         Status = status;
         if (status == OrderStatus.Confirmed) ConfirmedAt = DateTime.UtcNow;
-        if (status == OrderStatus.Shipped) FulfilledAt = DateTime.UtcNow;
-        if (status == OrderStatus.Delivered) CompletedAt = DateTime.UtcNow;
+        if (status == OrderStatus.Paid) PaidAt = DateTime.UtcNow;
+        if (status == OrderStatus.Fulfilled) FulfilledAt = DateTime.UtcNow;
+        if (status == OrderStatus.Shipped) ShippedAt = DateTime.UtcNow;
+        if (status == OrderStatus.Delivered) DeliveredAt = DateTime.UtcNow;
+        if (status == OrderStatus.Completed) CompletedAt = DateTime.UtcNow;
         if (status == OrderStatus.Cancelled) CancelledAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }

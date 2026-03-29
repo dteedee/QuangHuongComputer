@@ -490,17 +490,21 @@ public static class CatalogEndpoints
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
 
-            product.UpdateDetails(
-                model.Name,
-                model.Description,
-                model.Price,
-                model.OldPrice,
-                model.Specifications,
-                model.WarrantyInfo,
-                model.StockLocations,
-                model.Weight,
-                model.Barcode
-            );
+            // Only update core details if they are provided (support partial updates)
+            if (model.Name != null || model.Description != null || model.Price.HasValue)
+            {
+                product.UpdateDetails(
+                    model.Name ?? product.Name,
+                    model.Description ?? product.Description,
+                    model.Price ?? product.Price,
+                    model.OldPrice,
+                    model.Specifications,
+                    model.WarrantyInfo,
+                    model.StockLocations,
+                    model.Weight,
+                    model.Barcode
+                );
+            }
 
             product.UpdateImage(model.ImageUrl ?? product.ImageUrl, model.GalleryImages);
 
@@ -1300,9 +1304,9 @@ public record CreateProductDto(
     string? GalleryImages = null);
 
 public record UpdateProductDto(
-    string Name,
-    string Description,
-    decimal Price,
+    string? Name = null,
+    string? Description = null,
+    decimal? Price = null,
     decimal? OldPrice = null,
     decimal? CostPrice = null,
     Guid? CategoryId = null,

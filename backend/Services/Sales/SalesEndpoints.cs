@@ -1271,11 +1271,29 @@ public static class SalesEndpoints
                     o.Id,
                     o.OrderNumber,
                     o.CustomerId,
-                    o.Status,
+                    Status = o.Status.ToString(),
                     o.TotalAmount,
                     o.OrderDate,
                     o.ShippingAddress,
-                    ItemCount = o.Items.Count
+                    o.PaymentStatus,
+                    o.SubtotalAmount,
+                    o.DiscountAmount,
+                    o.TaxAmount,
+                    o.ShippingAmount,
+                    o.Notes,
+                    ItemCount = o.Items.Count, // Keep this for backward compatibility if needed somewhere else
+                    Items = o.Items.Select(i => new
+                    {
+                        i.Id,
+                        i.OrderId,
+                        i.ProductId,
+                        i.ProductName,
+                        i.ProductSku,
+                        i.UnitPrice,
+                        i.Quantity,
+                        i.DiscountAmount,
+                        i.LineTotal
+                    }).ToList()
                 })
                 .ToListAsync();
 
@@ -1327,11 +1345,6 @@ public static class SalesEndpoints
 
             try
             {
-                // Set status to Draft first if Pending (to allow Confirm transition)
-                if (order.Status == OrderStatus.Pending)
-                {
-                    order.SetStatus(OrderStatus.Draft);
-                }
                 order.Confirm();
             }
             catch (InvalidOperationException ex)

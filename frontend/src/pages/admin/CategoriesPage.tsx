@@ -378,9 +378,9 @@ export const CategoriesPage = () => {
                                     </div>
                                     <div className="col-span-1">STT</div>
                                     <div className="col-span-3">Tên</div>
-                                    <div className="col-span-4">Mô tả</div>
+                                    <div className="col-span-3">Mô tả</div>
                                     <div className="col-span-2">Trạng thái</div>
-                                    <div className="col-span-1">Thao tác</div>
+                                    <div className="col-span-2">Thao tác</div>
                                 </div>
                             </div>
 
@@ -403,7 +403,7 @@ export const CategoriesPage = () => {
                                             </div>
 
                                             {/* STT */}
-                                            <div className="col-span-1 text-gray-500">
+                                            <div className="col-span-1 flex items-center text-gray-500">
                                                 {(currentPage - 1) * itemsPerPage + index + 1}
                                             </div>
 
@@ -415,34 +415,33 @@ export const CategoriesPage = () => {
                                                         <Bookmark size={16} className="fill-current" />
                                                     }
                                                 </div>
-                                                <Tooltip content={item.name} place="right" delayShow={300}>
-                                                    <span className="text-gray-900 hover:text-accent cursor-help">
-                                                        {item.name.length > 40 ? item.name.substring(0, 40) + '...' : item.name}
-                                                    </span>
-                                                </Tooltip>
+                                                <span
+                                                    className="text-gray-900 hover:text-accent cursor-help"
+                                                    data-tooltip-id="table-tooltip"
+                                                    data-tooltip-content={item.name}
+                                                >
+                                                    {item.name.length > 40 ? item.name.substring(0, 40) + '...' : item.name}
+                                                </span>
                                             </div>
 
                                             {/* Description with Tooltip */}
-                                            <div className="col-span-4">
-                                                <Tooltip 
-                                                    content={item.description || 'Không có mô tả'} 
-                                                    place="right" 
-                                                    delayShow={300}
-                                                    className="max-w-xs"
+                                            <div className="col-span-3">
+                                                <p
+                                                    className="text-gray-600 cursor-help"
+                                                    data-tooltip-id="table-tooltip"
+                                                    data-tooltip-content={item.description || 'Không có mô tả'}
                                                 >
-                                                    <p className="text-gray-600 cursor-help">
-                                                        {item.description 
-                                                            ? item.description.length > 60 
-                                                                ? item.description.substring(0, 60) + '...' 
-                                                                : item.description
-                                                            : 'Không có mô tả'
-                                                        }
-                                                    </p>
-                                                </Tooltip>
+                                                    {item.description 
+                                                        ? item.description.length > 60 
+                                                            ? item.description.substring(0, 60) + '...' 
+                                                            : item.description
+                                                        : 'Không có mô tả'
+                                                    }
+                                                </p>
                                             </div>
 
                                             {/* Status */}
-                                            <div className="col-span-2">
+                                            <div className="col-span-2 flex items-center">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
                                                     item.isActive 
                                                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
@@ -453,27 +452,27 @@ export const CategoriesPage = () => {
                                             </div>
 
                                             {/* Actions */}
-                                            <div className="col-span-1 flex items-center justify-end gap-2">
-                                                <Tooltip content="Chỉnh sửa" place="top" delayShow={300}>
-                                                    <button
-                                                        onClick={() => handleOpenModal(item)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-400 hover:bg-accent hover:text-white transition-all"
-                                                    >
-                                                        <Edit size={14} />
-                                                    </button>
-                                                </Tooltip>
-                                                <Tooltip content={item.isActive ? "Vô hiệu hóa" : "Kích hoạt"} place="top" delayShow={300}>
-                                                    <button
-                                                        onClick={() => handleToggleStatus(item)}
-                                                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
-                                                            item.isActive
-                                                                ? 'bg-gray-100 text-gray-400 hover:bg-amber-100 hover:text-amber-600'
-                                                                : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 hover:text-emerald-800'
-                                                        }`}
-                                                    >
-                                                        {item.isActive ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-                                                    </button>
-                                                </Tooltip>
+                                            <div className="col-span-2 flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleOpenModal(item)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-400 hover:bg-accent hover:text-white transition-all"
+                                                    data-tooltip-id="table-tooltip"
+                                                    data-tooltip-content="Chỉnh sửa"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleStatus(item)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+                                                        item.isActive
+                                                            ? 'bg-gray-100 text-gray-400 hover:bg-amber-100 hover:text-amber-600'
+                                                            : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200 hover:text-emerald-800'
+                                                    }`}
+                                                    data-tooltip-id="table-tooltip"
+                                                    data-tooltip-content={item.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+                                                >
+                                                    {item.isActive ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
+                                                </button>
                                             </div>
                                         </div>
                                     ))
@@ -541,6 +540,7 @@ export const CategoriesPage = () => {
                                 </div>
                             )}
                         </div>
+                        <Tooltip id="table-tooltip" place="top" delayShow={300} />
                     </>
                 )}
             </div>

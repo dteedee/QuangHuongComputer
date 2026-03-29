@@ -7,18 +7,20 @@ namespace Sales.Domain;
 /// </summary>
 public enum OrderStatus
 {
-    Draft = 0,          // Cart/initial creation
+    Pending = 0,        // Submitted but waiting for confirmation
     Confirmed = 1,      // Customer confirmed, stock reserved
     Paid = 2,           // Payment received/verified
-    Fulfilled = 3,      // Shipped/delivered
-    Completed = 4,      // Fully completed (paid + fulfilled)
+    Fulfilled = 3,      // Fulfillment process started
+    Completed = 4,      // Fully completed
+    
+    Shipped = 5,        // Handed to carrier
+    Delivered = 6,      // Customer received it
+    Draft = 7,          // Cart/initial creation
+    
     Cancelled = 99,     // Cancelled at any stage
     
-    // Legacy statuses for backward compatibility
-    Pending = 0,        // Same as Draft
-    Processing = 1,     // Same as Confirmed
-    Shipped = 3,        // Same as Fulfilled
-    Delivered = 4       // Same as Completed
+    // Legacy statuses for mapping
+    Processing = Confirmed
 }
 
 /// <summary>

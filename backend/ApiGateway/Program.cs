@@ -613,12 +613,7 @@ app.UseAuthorization();
 // Review validation: Ensure users have purchased a product before reviewing
 app.UseReviewValidation();
 
-// Chatbot Endpoint
-app.MapPost("/api/ai/chat", async (GatewayChatRequest request, IAiService ai) =>
-{
-    var response = await ai.AskAsync(request.Message);
-    return Results.Ok(new { Response = response });
-}).WithName("ChatWithAi");
+// Chatbot endpoint moved to AiEndpoints.cs (MapAiEndpoints)
 
 app.MapHub<Communication.Hubs.ChatHub>("/hubs/chat");
 app.MapHub<Communication.Hubs.NotificationHub>("/hubs/notification");

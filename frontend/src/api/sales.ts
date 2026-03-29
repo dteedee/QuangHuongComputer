@@ -404,11 +404,11 @@ export const salesApi = {
             if (search) params.search = search;
             if (status && status !== 'all') params.status = status;
 
-            const response = await client.get<{ Total: number; Page: number; PageSize: number; Orders: Order[] }>(
+            const response = await client.get<{ total: number; page: number; pageSize: number; orders: Order[] }>(
                 '/sales/admin/orders',
                 { params }
             );
-            return { orders: response.data.Orders, total: response.data.Total };
+            return { orders: response.data.orders, total: response.data.total };
         },
         getStats: async () => {
             const response = await client.get<SalesStats>('/sales/admin/stats');

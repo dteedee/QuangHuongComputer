@@ -196,11 +196,11 @@ export const catalogApi = {
     },
 
     updateProduct: async (id: string, data: UpdateProductDto) => {
-        const response = await client.put<{ Message: string; Product: Product }>(
+        const response = await client.put<{ message: string; product: Product }>(
             `/catalog/products/${id}`,
             data
         );
-        return { message: response.data.Message, product: response.data.Product };
+        return { message: response.data.message, product: response.data.product };
     },
 
     deleteProduct: async (id: string) => {
