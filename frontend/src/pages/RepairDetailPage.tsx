@@ -132,7 +132,7 @@ export const RepairDetailPage = () => {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                                 {workOrder.deviceModel}
                             </h1>
                             <span className="px-3 py-1 bg-gray-900 text-white text-xs font-black rounded-lg uppercase">
@@ -141,7 +141,7 @@ export const RepairDetailPage = () => {
                         </div>
                         <p className="text-gray-500 font-medium">S/N: {workOrder.serialNumber || 'N/A'}</p>
                     </div>
-                    <span className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black uppercase tracking-wider border ${getStatusColor(workOrder.status)}`}>
+                    <span className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border ${getStatusColor(workOrder.status)}`}>
                         {workOrder.status === 'Completed' ? <CheckCircle size={18} /> :
                             workOrder.status === 'InProgress' ? <Play size={18} /> :
                                 workOrder.status === 'AwaitingApproval' ? <AlertCircle size={18} /> :
@@ -166,10 +166,10 @@ export const RepairDetailPage = () => {
                             <FileText size={24} className="text-white" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic">
+                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                                 Báo giá sửa chữa
                             </h2>
-                            <p className="text-amber-700 text-sm font-bold">
+                            <p className="text-amber-700 text-sm font-semibold mt-1">
                                 Mã báo giá: {quote.quoteNumber}
                             </p>
                         </div>
@@ -220,17 +220,17 @@ export const RepairDetailPage = () => {
                         <button
                             onClick={() => approveMutation.mutate()}
                             disabled={approveMutation.isPending}
-                            className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 uppercase tracking-widest text-sm active:scale-95 disabled:opacity-50"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm active:scale-[0.98] disabled:opacity-50"
                         >
-                            <CheckCircle size={20} />
+                            <CheckCircle size={18} />
                             {approveMutation.isPending ? 'Đang xử lý...' : 'Đồng ý báo giá'}
                         </button>
                         <button
                             onClick={() => setShowRejectModal(true)}
                             disabled={rejectMutation.isPending}
-                            className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-white text-red-600 border-2 border-red-200 font-black rounded-xl hover:bg-red-50 transition uppercase tracking-widest text-sm active:scale-95 disabled:opacity-50"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-white text-red-600 border border-red-200 font-bold rounded-xl hover:bg-red-50 transition active:scale-[0.98] disabled:opacity-50"
                         >
-                            <XCircle size={20} />
+                            <XCircle size={18} />
                             Từ chối
                         </button>
                     </div>
@@ -239,8 +239,8 @@ export const RepairDetailPage = () => {
 
             {/* Completed Quote Info */}
             {quote && !needsAction && (
-                <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mb-8">
-                    <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic mb-6 flex items-center gap-2">
+                <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 mb-8">
+                    <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-6 flex items-center gap-2">
                         <FileText size={20} className="text-accent" />
                         Thông tin báo giá
                     </h2>
@@ -266,8 +266,8 @@ export const RepairDetailPage = () => {
             )}
 
             {/* Work Order Details */}
-            <div className="bg-white rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mb-8">
-                <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic mb-6 flex items-center gap-2">
+            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 mb-8">
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-6 flex items-center gap-2">
                     <MessageSquare size={20} className="text-accent" />
                     Chi tiết yêu cầu
                 </h2>

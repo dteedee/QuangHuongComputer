@@ -1,4 +1,4 @@
-﻿
+
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -157,7 +157,7 @@ export const RegisterPage = () => {
                             initial={{ opacity: 0, x: 30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2, duration: 0.6 }}
-                            className="text-5xl font-extrabold text-white leading-tight mb-8 italic uppercase"
+                            className="text-4xl md:text-5xl font-bold text-white leading-tight mb-8 tracking-tight"
                         >
                             Gia nhập<br />
                             Cộng đồng<br />
@@ -233,7 +233,7 @@ export const RegisterPage = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2 }}
-                                    className="text-2xl font-black text-gray-900 mb-2"
+                                    className="text-2xl font-bold text-gray-900 mb-2 tracking-tight"
                                 >
                                     Đăng ký thành công!
                                 </motion.h2>
@@ -267,8 +267,8 @@ export const RegisterPage = () => {
                                     transition={{ delay: 0.1 }}
                                     className="mb-8"
                                 >
-                                    <h1 className="text-3xl font-black text-gray-800 mb-2 uppercase italic">Tạo tài khoản mới</h1>
-                                    <p className="text-gray-500 font-medium italic">Đăng ký để trở thành thành viên của gia đình Quang Hưởng.</p>
+                                    <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Tạo tài khoản mới</h1>
+                                    <p className="text-gray-500 font-medium">Đăng ký để trở thành thành viên của gia đình Quang Hưởng.</p>
                                 </motion.div>
 
                                 <form onSubmit={handleSubmit} className="space-y-5">

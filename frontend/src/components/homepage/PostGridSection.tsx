@@ -56,12 +56,16 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                         className="group"
                     >
                         <Link to={`/posts/${post.slug}`} className="block h-full bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-gray-100 h-full">
-                            <div className="aspect-video overflow-hidden">
-                                <img 
-                                    src={post.featuredImage || 'https://images.unsplash.com/photo-1517433447755-d1490d892477?w=800&h=450&fit=crop'} 
-                                    alt={post.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
+                            <div className="aspect-video overflow-hidden bg-gray-50 flex items-center justify-center">
+                                {post.featuredImage ? (
+                                    <img 
+                                        src={post.featuredImage} 
+                                        alt={post.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <span className="text-4xl font-black text-gray-300 uppercase">{post?.title?.charAt(0) || '?'}</span>
+                                )}
                             </div>
                             <div className="p-6">
                                 <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase mb-3">

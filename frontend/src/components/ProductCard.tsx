@@ -213,6 +213,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [showPopup, setShowPopup] = useState(false);
+    const [imgError, setImgError] = useState(false);
     const [cardRect, setCardRect] = useState<DOMRect | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const isHovering = useRef(false);
@@ -272,6 +273,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         closePopup();
     }, [closePopup]);
 
+    useEffect(() => {
+        setImgError(false);
+    }, [product.imageUrl]);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -290,24 +295,24 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 onMouseLeave={handleCardMouseLeave}
             >
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
-                    whileHover={{ y: -5 }}
-                    transition={{ duration: 0.3 }}
-                    className={`group relative bg-white border rounded-lg overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300
-                        ${showPopup ? 'border-accent shadow-xl z-30' : 'border-gray-200 hover:border-accent'}`}
+                    whileHover={{ y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className={`group relative bg-white border rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300
+                        ${showPopup ? 'border-accent shadow-xl ring-1 ring-accent/20 z-30' : 'border-gray-100 hover:border-accent/40 shadow-sm hover:shadow-xl'}`}
                 >
                     {/* Discount Badge */}
-                    <div className="absolute top-2 left-2 z-20">
-                        <div className="bg-accent text-white text-[11px] font-bold px-2 py-0.5 rounded-br-lg rounded-tl-lg shadow-md">
+                    <div className="absolute top-3 left-3 z-20">
+                        <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
                             -{discount}%
                         </div>
                     </div>
 
                     {/* Hot/New Badge */}
                     {product.soldCount > 10 && (
-                        <div className="absolute top-2 right-2 z-20">
-                            <div className="bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm uppercase">
+                        <div className="absolute top-3 right-3 z-20">
+                            <div className="bg-amber-400 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm uppercase tracking-wide">
                                 Bán chạy
                             </div>
                         </div>
@@ -316,47 +321,48 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     {/* Product Image Area */}
                     <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                         <div className="absolute inset-0 flex items-center justify-center p-1">
-                            {product.imageUrl ? (
+                            {product.imageUrl && !imgError ? (
                                 <img
                                     src={product.imageUrl}
                                     alt={product.name}
                                     className="w-full h-full object-contain"
+                                    onError={() => setImgError(true)}
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center text-gray-300 border border-gray-100">
-                                    <span className="text-5xl font-black">{product.name.charAt(0)}</span>
+                                    <span className="text-5xl font-black">{product?.name?.charAt(0) || '?'}</span>
                                 </div>
                             )}
                         </div>
                     </Link>
 
                     {/* Info Area */}
-                    <div className="p-4 flex flex-col flex-1 border-t border-gray-50">
+                    <div className="p-4 flex flex-col flex-1 border-t border-gray-50 bg-white group-hover:bg-red-50/10 transition-colors">
                         <div className="mb-2 flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map(i => (
                                 <Star
                                     key={i}
-                                    size={10}
+                                    size={12}
                                     className={`${i <= Math.round(product.averageRating || 5) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
                                 />
                             ))}
-                            <span className="text-[10px] text-gray-400 ml-1">( Mã: {product.sku || `QH-${product.id.substring(0, 4)}`} )</span>
+                            <span className="text-xs text-gray-400 ml-1 font-medium">Mã: {product.sku || `QH-${product.id.substring(0, 4)}`}</span>
                         </div>
 
                         <Link to={`/product/${product.id}`} className="mb-3 block">
-                            <h3 className="text-sm font-bold text-gray-800 group-hover:text-accent transition-colors line-clamp-2 min-h-[40px] leading-tight group-hover:underline">
+                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-accent transition-colors line-clamp-2 min-h-[40px] leading-relaxed group-hover:underline">
                                 {product.name}
                             </h3>
                         </Link>
 
-                        <div className="mt-auto space-y-2">
+                        <div className="mt-auto space-y-3">
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-400 line-through leading-none">{formatCurrency(oldPrice)}</span>
-                                <span className="text-lg font-black text-accent leading-tight">{formatCurrency(product.price)}</span>
+                                <span className="text-xs text-gray-400 line-through mb-0.5">{formatCurrency(oldPrice)}</span>
+                                <span className="text-lg font-bold text-accent">{formatCurrency(product.price)}</span>
                             </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <span className={`flex items-center gap-1 text-[11px] font-bold ${product.stockQuantity > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                <span className={`flex items-center gap-1 text-xs font-semibold ${product.stockQuantity > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                                     <PackageCheck size={14} />
                                     {product.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'}
                                 </span>
@@ -365,22 +371,22 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                     {/* Quantity Selector */}
                                     <div
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                        className="flex items-center bg-gray-100 rounded-lg p-0.5 mr-1"
+                                        className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-0.5 mr-1"
                                     >
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white rounded-md transition-all disabled:opacity-50"
                                             disabled={quantity <= 1}
                                         >
-                                            <Minus size={12} />
+                                            <Minus size={14} />
                                         </button>
-                                        <span className="w-6 text-center text-xs font-bold text-gray-800">{quantity}</span>
+                                        <span className="w-6 text-center text-sm font-semibold text-gray-800">{quantity}</span>
                                         <button
                                             onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
-                                            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-black hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white rounded-md transition-all disabled:opacity-50"
                                             disabled={quantity >= product.stockQuantity}
                                         >
-                                            <Plus size={12} />
+                                            <Plus size={14} />
                                         </button>
                                     </div>
 
@@ -392,11 +398,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                             addToCart(product, quantity);
                                             setQuantity(1); // Reset interaction
                                         }}
-                                        className="w-8 h-8 flex items-center justify-center bg-accent text-white rounded-lg hover:bg-[#b5001a] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-10 h-10 flex items-center justify-center bg-accent text-white rounded-xl hover:bg-[#b5001a] transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={product.stockQuantity === 0}
                                         title="Thêm vào giỏ hàng"
                                     >
-                                        <ShoppingCart size={16} />
+                                        <ShoppingCart size={18} />
                                     </button>
                                 </div>
                             </div>
@@ -404,10 +410,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </div>
 
                     {/* Quick view overlay on hover */}
-                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300">
+                    <div className="absolute inset-x-0 top-[40%] flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300 pointer-events-none">
                         <Link
                             to={`/product/${product.id}`}
-                            className="bg-white/95 backdrop-blur text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-2xl border border-gray-100 hover:bg-accent hover:text-white transition-all transform hover:scale-110 active:scale-95"
+                            className="pointer-events-auto bg-white/90 backdrop-blur-md text-xs font-bold uppercase text-accent px-6 py-2.5 rounded-full shadow-xl border border-white/50 hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95"
                         >
                             Xem nhanh
                         </Link>

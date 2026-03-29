@@ -318,8 +318,8 @@ export function CheckoutPage() {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-medium">{step > 1 ? 'Quay lại bước trước' : 'Quay lại giỏ hàng'}</span>
             </button>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
-              CHECKOUT <span className="text-accent">EXPERIENCE</span>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              Thanh toán <span className="text-accent">đơn hàng</span>
             </h1>
           </div>
 
@@ -363,7 +363,7 @@ export function CheckoutPage() {
                       <User className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Thông tin vận chuyển</h2>
+                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Thông tin vận chuyển</h2>
                       <p className="text-slate-500 text-sm">Vui lòng nhập chính xác thông tin để chúng tôi phục vụ bạn tốt nhất</p>
                     </div>
                   </div>
@@ -450,7 +450,7 @@ export function CheckoutPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Họ và tên <span className="text-accent">*</span>
                             </label>
                             <input
@@ -462,7 +462,7 @@ export function CheckoutPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Số điện thoại <span className="text-accent">*</span>
                             </label>
                             <input
@@ -479,7 +479,7 @@ export function CheckoutPage() {
                       <>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Họ và tên <span className="text-accent">*</span>
                             </label>
                             <div className="relative">
@@ -497,7 +497,7 @@ export function CheckoutPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Số điện thoại <span className="text-accent">*</span>
                             </label>
                             <div className="relative">
@@ -515,7 +515,7 @@ export function CheckoutPage() {
                           </div>
 
                           <div className="md:col-span-2 space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Email <span className="text-accent">*</span>
                             </label>
                             <div className="relative">
@@ -538,7 +538,7 @@ export function CheckoutPage() {
                         <div className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
-                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Tỉnh / Thành <span className="text-accent">*</span>
                               </label>
                               <select
@@ -555,7 +555,7 @@ export function CheckoutPage() {
                               </select>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Quận / Huyện <span className="text-accent">*</span>
                               </label>
                               <input
@@ -569,7 +569,7 @@ export function CheckoutPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                              <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Phường / Xã <span className="text-accent">*</span>
                               </label>
                               <input
@@ -585,7 +585,7 @@ export function CheckoutPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="text-xs font-semibold text-slate-500 mb-1 block">
                               Địa chỉ chi tiết <span className="text-accent">*</span>
                             </label>
                             <textarea
@@ -605,10 +605,10 @@ export function CheckoutPage() {
                     <button
                       type="button"
                       onClick={nextStep}
-                      className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-red-500/30 hover:shadow-red-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                      className="w-full py-4 bg-accent text-white rounded-xl font-bold text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
                       TIẾP TỤC THANH TOÁN
-                      <ArrowRight className="w-6 h-6" />
+                      <ArrowRight className="w-5 h-5" />
                     </button>
                   </form>
                 </motion.div>
@@ -627,7 +627,7 @@ export function CheckoutPage() {
                       <CreditCard className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Phương thức thanh toán</h2>
+                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Phương thức thanh toán</h2>
                       <p className="text-slate-500 text-sm">Lựa chọn cách thức thanh toán tiện lợi nhất cho bạn</p>
                     </div>
                   </div>
@@ -675,7 +675,7 @@ export function CheckoutPage() {
                       className="bg-slate-50 rounded-2xl p-6 mb-8 space-y-4 border border-slate-100 overflow-hidden"
                     >
                       <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                        <label className="text-xs font-semibold text-slate-500 mb-1 block">
                           Số thẻ <span className="text-accent">*</span>
                         </label>
                         <input
@@ -689,7 +689,7 @@ export function CheckoutPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-semibold text-slate-500 mb-1 block">
                             Hạn dùng <span className="text-accent">*</span>
                           </label>
                           <input
@@ -702,7 +702,7 @@ export function CheckoutPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-semibold text-slate-500 mb-1 block">
                             CVV <span className="text-accent">*</span>
                           </label>
                           <input
@@ -718,11 +718,11 @@ export function CheckoutPage() {
                     </motion.div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-4 mt-10">
+                  <div className="flex flex-col sm:flex-row gap-4 mt-8">
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="flex-1 py-5 border-2 border-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-50 transition-all"
+                      className="flex-1 py-4 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
                     >
                       QUAY LẠI
                     </button>
@@ -730,14 +730,14 @@ export function CheckoutPage() {
                       type="button"
                       onClick={handleSubmit}
                       disabled={loading}
-                      className={`flex-[2] py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-red-500/30 hover:shadow-red-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                      className={`flex-[2] py-4 bg-accent text-white rounded-xl font-bold text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
                       {loading ? (
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : (
                         <>
                           XÁC NHẬN ĐẶT HÀNG
-                          <ShieldCheck className="w-6 h-6" />
+                          <ShieldCheck className="w-5 h-5" />
                         </>
                       )}
                     </button>
@@ -764,7 +764,7 @@ export function CheckoutPage() {
                     <div className="absolute -inset-4 border border-green-100 rounded-[3rem] animate-pulse" />
                   </div>
 
-                  <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-2">ĐẶT HÀNG THÀNH CÔNG!</h2>
+                  <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">ĐẶT HÀNG THÀNH CÔNG!</h2>
                   <p className="text-slate-500 font-medium mb-8">
                     Cảm ơn bạn đã tin tưởng Quang Hưởng Computer. <br />
                     Mã đơn hàng của bạn là: <span className="text-accent font-black tracking-widest bg-red-50 px-3 py-1 rounded-lg ml-1">#{orderId}</span>
@@ -897,11 +897,17 @@ export function CheckoutPage() {
                     {items.map((item) => (
                       <div key={item.id} className="group flex gap-4 p-3 rounded-2xl hover:bg-slate-50 transition-all">
                         <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
-                          <img
-                            src={item.imageUrl || `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200&h=200&fit=crop`}
-                            alt={item.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                              <span className="text-3xl font-black uppercase">{item?.name?.charAt(0) || '?'}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-slate-900 text-xs truncate leading-tight mb-1">{item.name}</h4>

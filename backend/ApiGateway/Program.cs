@@ -442,6 +442,26 @@ if (app.Environment.IsDevelopment())
                         END;
                     END $$;
                 ");
+
+                var catalogContext = salesScope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+                logger.LogInformation("Updating Catalog Schema manually...");
+                await catalogContext.Database.ExecuteSqlRawAsync(@"
+                    DO $$
+                    BEGIN
+                        BEGIN
+                            ALTER TABLE ""ProductReviews"" ADD COLUMN ""ImageUrls"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                        BEGIN
+                            ALTER TABLE ""ProductReviews"" ADD COLUMN ""VideoUrl"" text;
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                            WHEN undefined_table THEN NULL;
+                        END;
+                    END $$;
+                ");
             }
         }
         catch (Exception ex)

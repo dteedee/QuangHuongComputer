@@ -175,11 +175,17 @@ export function RecentlyViewedProducts({
             >
               {/* Image */}
               <div className="aspect-square bg-gray-50 p-3 relative overflow-hidden">
-                <img
-                  src={product.imageUrl || `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=200&h=200&fit=crop`}
-                  alt={product.name}
-                  className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
-                />
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 font-black text-4xl uppercase">
+                    {product?.name?.charAt(0) || '?'}
+                  </div>
+                )}
                 {product.oldPrice && product.oldPrice > product.price && (
                   <div className="absolute top-2 left-2 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%

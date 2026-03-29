@@ -106,11 +106,17 @@ export function WishlistPage() {
                   onClick={() => navigate(`/products/${item.productId}`)}
                   className="aspect-square bg-gray-50 p-4 relative cursor-pointer overflow-hidden"
                 >
-                  <img
-                    src={item.product.imageUrl || `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
-                    alt={item.product.name}
-                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
-                  />
+                  {item.product.imageUrl ? (
+                    <img
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 font-black text-4xl uppercase group-hover:scale-110 transition-transform duration-300">
+                      {item?.product?.name?.charAt(0) || '?'}
+                    </div>
+                  )}
                   {item.product.oldPrice && item.product.oldPrice > item.product.price && (
                     <div className="absolute top-3 left-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
                       -{Math.round(((item.product.oldPrice - item.product.price) / item.product.oldPrice) * 100)}%

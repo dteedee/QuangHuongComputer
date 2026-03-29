@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star, PackageCheck, Truck } from 'lucide-react';
 import type { Product } from '../api/catalog';
@@ -10,6 +11,11 @@ interface ProductListItemProps {
 
 export const ProductListItem = ({ product }: ProductListItemProps) => {
     const { addToCart } = useCart();
+    const [imgError, setImgError] = useState(false);
+
+    useEffect(() => {
+        setImgError(false);
+    }, [product.imageUrl]);
 
     const discount = product.oldPrice && product.oldPrice > product.price
         ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
@@ -20,15 +26,16 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
             {/* Image */}
             <div className="relative w-full sm:w-56 h-56 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
                 <Link to={`/product/${product.id}`} className="block w-full h-full flex items-center justify-center p-4">
-                    {product.imageUrl ? (
+                    {product.imageUrl && !imgError ? (
                         <img
                             src={product.imageUrl}
                             alt={product.name}
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                            onError={() => setImgError(true)}
                         />
                     ) : (
                         <div className="text-gray-300 font-bold text-4xl select-none">
-                            {product.name.charAt(0)}
+                            {product?.name?.charAt(0) || '?'}
                         </div>
                     )}
                 </Link>

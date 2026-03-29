@@ -4,6 +4,7 @@ export interface AiRecommendation {
     id: string;
     name: string;
     price: number;
+    imageUrl?: string;
     similarityScore: number;
 }
 

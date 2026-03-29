@@ -146,7 +146,7 @@ export const LoginPage = () => {
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2, duration: 0.6 }}
-                            className="text-5xl font-extrabold text-white leading-tight mb-6 italic uppercase"
+                            className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6 tracking-tight"
                         >
                             Nâng tầm<br />
                             Trải nghiệm<br />
@@ -222,7 +222,7 @@ export const LoginPage = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.2 }}
-                                    className="text-2xl font-black text-gray-900 mb-2"
+                                    className="text-2xl font-bold text-gray-900 mb-2 tracking-tight"
                                 >
                                     Đăng nhập thành công!
                                 </motion.h2>
@@ -248,8 +248,8 @@ export const LoginPage = () => {
                                     transition={{ delay: 0.1 }}
                                     className="mb-10"
                                 >
-                                    <h1 className="text-3xl font-black text-gray-800 mb-2 uppercase italic">Đăng nhập tài khoản</h1>
-                                    <p className="text-gray-500 font-medium italic">Chào mừng bạn quay trở lại với Quang Hưởng Computer.</p>
+                                    <h1 className="text-3xl font-bold text-gray-800 mb-2 tracking-tight">Đăng nhập tài khoản</h1>
+                                    <p className="text-gray-500 font-medium">Chào mừng bạn quay trở lại với Quang Hưởng Computer.</p>
                                 </motion.div>
 
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -275,8 +275,8 @@ export const LoginPage = () => {
                                         className="space-y-2"
                                     >
                                         <div className="flex justify-between items-center px-1">
-                                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Mật khẩu</label>
-                                            <Link to="/forgot-password" className="text-[11px] text-accent hover:underline font-black uppercase transition-colors hover:text-accent-hover">Quên mật khẩu?</Link>
+                                            <label className="text-xs font-semibold text-gray-500">Mật khẩu</label>
+                                            <Link to="/forgot-password" className="text-xs text-accent hover:underline font-semibold transition-colors hover:text-accent-hover">Quên mật khẩu?</Link>
                                         </div>
                                         <Input
                                             type={showPassword ? 'text' : 'password'}
@@ -341,7 +341,7 @@ export const LoginPage = () => {
                                         <div className="absolute inset-0 flex items-center">
                                             <div className="w-full border-t border-gray-100"></div>
                                         </div>
-                                        <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                        <div className="relative flex justify-center text-xs font-semibold text-gray-400">
                                             <span className="px-4 bg-white">Hoặc đăng nhập với</span>
                                         </div>
                                     </motion.div>
@@ -396,7 +396,7 @@ export const LoginPage = () => {
                                     className="mt-10 text-center text-gray-500 text-sm font-medium italic"
                                 >
                                     Chưa có tài khoản?{' '}
-                                    <Link to="/register" className="text-accent hover:underline font-black not-italic transition-colors hover:text-accent-hover">
+                                    <Link to="/register" className="text-accent hover:underline font-bold transition-colors hover:text-accent-hover">
                                         Đăng ký ngay
                                     </Link>
                                 </motion.div>

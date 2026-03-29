@@ -35,15 +35,15 @@ export const CartPage = () => {
     if (items.length === 0) {
         return (
             <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
-                <div className="bg-white p-16 max-w-2xl mx-auto rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50 flex flex-col items-center">
-                    <div className="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-8 animate-float">
-                        <ShoppingBag className="w-16 h-16 text-accent" />
+                <div className="bg-white p-12 md:p-16 max-w-2xl mx-auto rounded-[32px] shadow-sm border border-gray-100 flex flex-col items-center">
+                    <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 animate-float">
+                        <ShoppingBag className="w-12 h-12 text-accent" />
                     </div>
-                    <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight uppercase italic">Giỏ hàng đang trống</h2>
-                    <p className="text-gray-500 text-lg mb-10 max-w-md mx-auto italic font-medium">Khám phá ngay hàng ngàn sản phẩm công nghệ đỉnh cao tại Quang Hưởng.</p>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Giỏ hàng đang trống</h2>
+                    <p className="text-gray-500 text-base mb-10 max-w-md mx-auto font-medium">Khám phá ngay hàng ngàn sản phẩm công nghệ đỉnh cao tại Quang Hưởng.</p>
                     <Link
                         to="/"
-                        className="inline-flex items-center px-12 py-5 bg-accent hover:bg-accent-hover text-white font-black rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 uppercase tracking-widest text-sm group"
+                        className="inline-flex items-center px-8 py-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl transition-all shadow-sm active:scale-[0.98] text-sm group"
                     >
                         Bắt đầu mua sắm
                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -66,8 +66,8 @@ export const CartPage = () => {
                         <ShoppingBag size={28} />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">Giỏ hàng của bạn</h2>
-                        <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">{items.length} sản phẩm đã sẵn sàng thanh toán</p>
+                        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Giỏ hàng của bạn</h2>
+                        <p className="text-gray-500 font-medium text-sm mt-1">{items.length} sản phẩm đã sẵn sàng thanh toán</p>
                     </div>
                 </div>
 
@@ -81,12 +81,12 @@ export const CartPage = () => {
                                         <div className="w-24 h-24 bg-gray-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-500 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent" />
                                             {/* Ideally real image here, placeholder for now */}
-                                            <span className="text-2xl font-black text-gray-200">{item.name.charAt(0)}</span>
+                                            <span className="text-2xl font-black text-gray-200">{item?.name?.charAt(0) || '?'}</span>
                                         </div>
 
-                                        <div className="flex-1 text-center md:text-left space-y-1">
-                                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-accent transition-colors line-clamp-2 uppercase italic tracking-tight">{item.name}</h3>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 px-1">Mã SP: {item.id.substring(0, 8).toUpperCase()}</p>
+                                        <div className="flex-1 text-center md:text-left space-y-1 md:px-4">
+                                            <h3 className="text-base font-semibold text-gray-900 group-hover:text-accent transition-colors line-clamp-2 leading-snug">{item.name}</h3>
+                                            <p className="text-xs font-medium text-gray-500">Mã SP: {item.id.substring(0, 8).toUpperCase()}</p>
                                         </div>
 
                                         <div className="flex flex-col items-center gap-2">
@@ -115,8 +115,8 @@ export const CartPage = () => {
                                         </div>
 
                                         <div className="text-right min-w-[120px]">
-                                            <p className="text-xl font-black text-accent tracking-tight">{formatCurrency(item.price * item.quantity)}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 italic">{formatCurrency(item.price)}/cái</p>
+                                            <p className="text-xl font-bold text-accent tracking-tight">{formatCurrency(item.price * item.quantity)}</p>
+                                            <p className="text-xs font-medium text-gray-500 mt-1">{formatCurrency(item.price)}/cái</p>
                                         </div>
                                     </div>
                                 ))}
@@ -124,13 +124,13 @@ export const CartPage = () => {
                             <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
                                 <button
                                     onClick={clearCart}
-                                    className="flex items-center gap-2 text-gray-400 hover:text-accent font-bold uppercase text-[10px] tracking-widest transition-colors"
+                                    className="flex items-center gap-2 text-gray-500 hover:text-red-500 font-semibold text-sm transition-colors"
                                 >
-                                    <RotateCcw size={14} />
+                                    <RotateCcw size={16} />
                                     Xóa tất cả
                                 </button>
-                                <Link to="/" className="text-accent hover:text-accent-hover font-black uppercase text-[10px] tracking-widest flex items-center gap-1">
-                                    Tiếp tục mua sắm <ArrowRight size={14} />
+                                <Link to="/" className="text-accent hover:text-accent-hover font-bold text-sm flex items-center gap-2">
+                                    Tiếp tục mua sắm <ArrowRight size={16} />
                                 </Link>
                             </div>
                         </div>
@@ -145,8 +145,8 @@ export const CartPage = () => {
                                 <div key={i} className="bg-white p-4 rounded-2xl flex items-center gap-3 border border-gray-100 shadow-sm">
                                     <div className="p-2 bg-gray-50 rounded-xl">{b.icon}</div>
                                     <div>
-                                        <h4 className="text-gray-900 font-bold text-xs uppercase italic">{b.title}</h4>
-                                        <p className="text-gray-400 text-[10px] font-bold mt-0.5">{b.sub}</p>
+                                        <h4 className="text-gray-900 font-semibold text-sm">{b.title}</h4>
+                                        <p className="text-gray-500 text-xs mt-0.5">{b.sub}</p>
                                     </div>
                                 </div>
                             ))}
@@ -155,25 +155,25 @@ export const CartPage = () => {
 
                     {/* Summary Side */}
                     <div className="xl:w-1/3">
-                        <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-xl shadow-gray-200/50 sticky top-24">
-                            <h3 className="text-xl font-black text-gray-900 mb-6 uppercase italic tracking-tighter">Tóm tắt đơn hàng</h3>
+                        <div className="bg-white p-6 md:p-8 rounded-[24px] border border-gray-100 shadow-sm sticky top-24">
+                            <h3 className="text-xl font-bold text-gray-900 mb-6 tracking-tight">Tóm tắt đơn hàng</h3>
 
                             {/* Coupon Input */}
-                            <div className="mb-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100">
+                            <div className="mb-6 p-4 bg-orange-50/50 rounded-xl border border-orange-100/50">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Tag className="w-4 h-4 text-amber-600" />
-                                    <span className="text-xs font-black uppercase tracking-wide text-amber-900">Mã giảm giá</span>
+                                    <Tag className="w-4 h-4 text-orange-600" />
+                                    <span className="text-sm font-semibold text-orange-900">Mã giảm giá</span>
                                 </div>
 
                                 {couponCode ? (
                                     <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200">
                                         <div className="flex items-center gap-2">
                                             <Tag className="w-4 h-4 text-emerald-600" />
-                                            <span className="font-black text-emerald-700 uppercase text-sm">{couponCode}</span>
+                                            <span className="font-bold text-emerald-700 uppercase text-sm">{couponCode}</span>
                                         </div>
                                         <button
                                             onClick={removeCoupon}
-                                            className="text-red-500 hover:text-red-700 transition-colors"
+                                            className="text-red-500 hover:text-red-700 transition-colors p-1"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -186,12 +186,12 @@ export const CartPage = () => {
                                             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                                             onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
                                             placeholder="Nhập mã giảm giá"
-                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold uppercase"
+                                            className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-accent font-medium uppercase transition-shadow shadow-sm"
                                         />
                                         <button
                                             onClick={handleApplyCoupon}
                                             disabled={!couponInput.trim() || isApplyingCoupon}
-                                            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase"
+                                            className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm active:scale-[0.98]"
                                         >
                                             {isApplyingCoupon ? 'Đang áp dụng...' : 'Áp dụng'}
                                         </button>
@@ -200,44 +200,44 @@ export const CartPage = () => {
                             </div>
 
                             <div className="space-y-4 mb-6">
-                                <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
+                                <div className="flex justify-between text-gray-600 text-sm font-medium">
                                     <span>Tạm tính</span>
-                                    <span className="text-gray-900">{formatCurrency(subtotal)}</span>
+                                    <span className="text-gray-900 font-semibold">{formatCurrency(subtotal)}</span>
                                 </div>
 
                                 {discountAmount > 0 && (
-                                    <div className="flex justify-between text-emerald-600 text-xs font-bold uppercase tracking-wide">
-                                        <span className="flex items-center gap-1">
-                                            <Tag className="w-3 h-3" />
+                                    <div className="flex justify-between text-emerald-600 text-sm font-medium">
+                                        <span className="flex items-center gap-1.5">
+                                            <Tag className="w-4 h-4" />
                                             Giảm giá
                                         </span>
-                                        <span>-{formatCurrency(discountAmount)}</span>
+                                        <span className="font-semibold">-{formatCurrency(discountAmount)}</span>
                                     </div>
                                 )}
 
-                                <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide">
+                                <div className="flex justify-between text-gray-600 text-sm font-medium">
                                     <span>Thuế GTGT (10%)</span>
-                                    <span className="text-gray-900">{formatCurrency(tax)}</span>
+                                    <span className="text-gray-900 font-semibold">{formatCurrency(tax)}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-500 text-xs font-bold uppercase tracking-wide pb-4 border-b border-gray-100">
+                                <div className="flex justify-between text-gray-600 text-sm font-medium pb-4 border-b border-gray-100">
                                     <span>Vận chuyển</span>
-                                    <span className="text-emerald-600 italic">Miễn phí</span>
+                                    <span className="text-emerald-600 font-semibold">Miễn phí</span>
                                 </div>
                                 <div className="flex justify-between items-end pt-2">
-                                    <span className="text-sm font-black text-gray-900 uppercase tracking-wide">Tổng cộng</span>
+                                    <span className="text-base font-bold text-gray-900">Tổng cộng</span>
                                     <div className="text-right">
-                                        <p className="text-3xl font-black text-accent tracking-tight">{formatCurrency(total)}</p>
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 italic">Đã bao gồm VAT</p>
+                                        <p className="text-3xl font-bold text-accent tracking-tight leading-none">{formatCurrency(total)}</p>
+                                        <p className="text-xs text-gray-500 font-medium mt-1.5">Đã bao gồm VAT</p>
                                     </div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => navigate('/checkout')}
-                                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 text-xs uppercase tracking-widest group"
+                                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] text-base group"
                             >
                                 Tiến hành thanh toán
-                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
 
                             <div className="mt-6 pt-6 border-t border-gray-100">

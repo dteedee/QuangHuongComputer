@@ -77,71 +77,70 @@ const HomepageSkeleton = () => (
 // Fallback hero when no sections load
 const FallbackHero = () => (
     <div className="max-w-[1400px] mx-auto px-4 pt-6">
-        <div className="relative bg-gradient-to-br from-accent via-[#c50016] to-[#8b0000] rounded-2xl overflow-hidden shadow-2xl h-[400px] md:h-[480px]">
+        <div className="relative bg-gradient-to-br from-slate-900 via-red-900 to-black rounded-3xl overflow-hidden shadow-2xl h-[400px] md:h-[520px]">
             {/* Animated background shapes */}
-            <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden opacity-40">
                 <motion.div
-                    className="absolute top-10 right-10 w-64 h-64 border border-white/10 rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                    className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-red-600/30 blur-[100px] rounded-full"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
-                    className="absolute bottom-10 left-10 w-40 h-40 border border-white/10 rounded-2xl"
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute bottom-[-10%] left-[-10%] w-[30rem] h-[30rem] bg-accent/20 blur-[80px] rounded-full"
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.4, 0.2] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                 />
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/10 to-transparent" />
             </div>
 
             <div className="relative h-full flex items-center p-8 md:p-16 z-10">
                 <div className="max-w-2xl">
                     <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="inline-flex items-center gap-2 bg-yellow-400 text-red-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg mb-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg mb-8"
                     >
-                        <Star size={14} className="fill-current" />
-                        SỐ 1 HẢI PHÒNG
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        Đại lý ủy quyền chính hãng
                     </motion.div>
 
                     <motion.h1
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight drop-shadow-2xl"
+                        className="text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] drop-shadow-2xl"
                     >
-                        Quang Hưởng<br />
-                        <span className="text-yellow-300">Computer</span>
+                        Nâng Tầm<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-400">Trải Nghiệm</span>
                     </motion.h1>
 
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="text-lg mt-4 text-white/90 font-semibold drop-shadow max-w-lg"
+                        className="text-lg md:text-xl mt-6 text-gray-300 font-medium max-w-lg leading-relaxed mix-blend-lighten"
                     >
-                        Chuyên cung cấp Laptop, PC Gaming, Linh kiện máy tính chính hãng giá tốt nhất tại Hải Phòng
+                        Chuyên cung cấp Laptop, PC Gaming, và linh kiện máy tính cao cấp với dịch vụ hậu mãi tốt nhất tại Hải Phòng.
                     </motion.p>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.6 }}
-                        className="mt-8 flex flex-wrap gap-4"
+                        className="mt-10 flex flex-wrap gap-4"
                     >
                         <Link
                             to="/products"
-                            className="inline-flex items-center gap-3 bg-white text-red-600 px-8 py-4 rounded-full font-black text-lg uppercase hover:bg-yellow-400 hover:text-red-700 transition-all shadow-2xl hover:scale-105 active:scale-95"
+                            className="inline-flex items-center gap-3 bg-gradient-to-r from-accent to-[#b91c1c] text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-red-500/30 transition-all hover:-translate-y-1"
                         >
-                            <ShoppingBag className="fill-current" size={24} />
-                            MUA NGAY
-                            <ChevronRight size={24} />
+                            <ShoppingBag size={22} />
+                            Khám Phá Ngay
                         </Link>
                         <Link
-                            to="/contact"
-                            className="inline-flex items-center gap-2 bg-white/20 text-white px-6 py-4 rounded-full font-bold text-sm uppercase hover:bg-white/30 transition-all backdrop-blur-sm border border-white/30"
+                            to="/build-pc"
+                            className="inline-flex items-center gap-2 bg-white/10 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/20 transition-all backdrop-blur-md border border-white/20 hover:-translate-y-1"
                         >
-                            Liên hệ tư vấn
+                            <Cpu size={22} />
+                            Build PC
                         </Link>
                     </motion.div>
                 </div>
@@ -153,38 +152,41 @@ const FallbackHero = () => (
 // Fallback category grid
 const FallbackCategories = () => {
     const items = [
-        { icon: Laptop, name: 'Laptop', color: 'from-blue-500 to-indigo-600' },
-        { icon: Gamepad, name: 'PC Gaming', color: 'from-red-500 to-pink-600' },
-        { icon: Monitor, name: 'Màn hình', color: 'from-purple-500 to-violet-600' },
-        { icon: Cpu, name: 'Linh kiện', color: 'from-amber-500 to-orange-600' },
-        { icon: Wrench, name: 'Sửa chữa', color: 'from-emerald-500 to-teal-600' },
-        { icon: Package, name: 'Phụ kiện', color: 'from-sky-500 to-blue-600' },
+        { icon: Laptop, name: 'Laptop', color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600' },
+        { icon: Gamepad, name: 'PC Gaming', color: 'bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600' },
+        { icon: Monitor, name: 'Màn hình', color: 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:border-indigo-600' },
+        { icon: Cpu, name: 'Linh kiện', color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white hover:border-amber-600' },
+        { icon: Wrench, name: 'Sửa chữa', color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600' },
+        { icon: Package, name: 'Phụ kiện', color: 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white hover:border-purple-600' },
     ];
 
     return (
-        <div className="max-w-[1400px] mx-auto px-4 mt-12">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-800 uppercase tracking-tight text-center mb-8">
-                Danh mục sản phẩm
-            </h2>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
+        <div className="max-w-[1400px] mx-auto px-4 mt-16">
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    Khám phá danh mục
+                </h2>
+                <Link to="/products" className="text-sm font-semibold text-accent hover:underline flex items-center gap-1">
+                    Xem tất cả <ChevronRight size={16} />
+                </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {items.map((item, i) => {
                     const Icon = item.icon;
                     return (
                         <motion.div
                             key={i}
                             initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
                             transition={{ delay: i * 0.1 }}
-                            whileHover={{ y: -8 }}
                         >
                             <Link
                                 to="/products"
-                                className="block bg-white rounded-2xl p-6 text-center border-2 border-gray-50 hover:border-accent/30 shadow-lg hover:shadow-2xl transition-all group"
+                                className={`flex flex-col items-center justify-center p-6 bg-white rounded-2xl border transition-all duration-300 group ${item.color}`}
                             >
-                                <div className={`w-14 h-14 mx-auto mb-3 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                                    <Icon size={28} />
-                                </div>
-                                <h4 className="font-bold text-gray-800 text-xs uppercase leading-tight">
+                                <Icon size={32} className="mb-4 transition-transform duration-300 group-hover:scale-110" />
+                                <h4 className="font-semibold text-sm">
                                     {item.name}
                                 </h4>
                             </Link>
@@ -198,14 +200,14 @@ const FallbackCategories = () => {
 
 // Trust badges section
 const TrustBadges = () => (
-    <div className="max-w-[1400px] mx-auto px-4 mt-12">
-        <div className="bg-gradient-to-br from-white via-red-50 to-amber-50 rounded-3xl border-2 border-red-100 p-8 shadow-xl">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div className="max-w-[1400px] mx-auto px-4 mt-16">
+        <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
-                    { icon: Truck, title: 'Giao hàng miễn phí', desc: 'Đơn từ 500K toàn quốc', color: 'text-blue-600 bg-blue-50' },
-                    { icon: Shield, title: 'Bảo hành chính hãng', desc: 'Cam kết 100% authentic', color: 'text-emerald-600 bg-emerald-50' },
-                    { icon: HeadphonesIcon, title: 'Hỗ trợ 24/7', desc: 'Hotline: 0904.235.090', color: 'text-amber-600 bg-amber-50' },
-                    { icon: Star, title: 'Uy tín #1', desc: 'Số 1 tại Hải Phòng', color: 'text-accent bg-red-50' },
+                    { icon: Truck, title: 'Giao hàng tận nơi', desc: 'Miễn phí cho đơn từ 500K', color: 'text-blue-600 bg-blue-50' },
+                    { icon: Shield, title: 'Bảo hành an tâm', desc: 'Cam kết 100% chính hãng', color: 'text-emerald-600 bg-emerald-50' },
+                    { icon: HeadphonesIcon, title: 'Hỗ trợ chu đáo', desc: 'Hotline: 0904.235.090', color: 'text-amber-600 bg-amber-50' },
+                    { icon: Star, title: 'Đánh giá uy tín', desc: 'Hàng ngàn khách hàng tin dùng', color: 'text-accent bg-red-50' },
                 ].map((item, i) => {
                     const Icon = item.icon;
                     return (
@@ -215,13 +217,15 @@ const TrustBadges = () => (
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.1 }}
-                            className="text-center group"
+                            className="flex items-center gap-4 group"
                         >
-                            <div className={`w-14 h-14 mx-auto mb-3 rounded-2xl ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <Icon size={28} />
+                            <div className={`w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+                                <Icon size={24} />
                             </div>
-                            <h4 className="font-black text-gray-800 text-sm uppercase mb-1">{item.title}</h4>
-                            <p className="text-xs text-gray-500 font-medium">{item.desc}</p>
+                            <div>
+                                <h4 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h4>
+                                <p className="text-sm text-gray-500">{item.desc}</p>
+                            </div>
                         </motion.div>
                     );
                 })}

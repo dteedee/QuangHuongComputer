@@ -145,7 +145,7 @@ export const ContactPage = () => {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-10 h-10 text-green-600" />
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 mb-4">Gửi liên hệ thành công!</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4">Gửi liên hệ thành công!</h1>
                         <p className="text-gray-600 mb-8">
                             Cảm ơn bạn đã liên hệ với chúng tôi. Chúng tôi sẽ phản hồi trong thời gian sớm nhất có thể.
                         </p>
@@ -185,37 +185,37 @@ export const ContactPage = () => {
 
             <div className="container mx-auto px-4 mt-8 font-sans">
                 <div className="bg-white rounded-[40px] shadow-2xl shadow-gray-200/50 p-8 md:p-16 border border-gray-50">
-                    <h1 className="text-4xl font-black text-gray-900 mb-12 text-center uppercase italic tracking-tighter">Liên hệ với <span className="text-accent">Quang Hưởng</span></h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-12 text-center tracking-tight">Liên hệ với <span className="text-accent">Quang Hưởng</span></h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-10">
-                            <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter border-l-4 border-accent pl-4">Thông tin hệ thống</h3>
+                            <h3 className="text-xl font-bold text-gray-900 tracking-tight border-l-4 border-accent pl-4">Thông tin hệ thống</h3>
                             <div className="space-y-4">
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><MapPin /></div>
                                     <div>
-                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Trụ sở chính:</b>
+                                        <b className="block text-gray-500 text-xs font-semibold mb-1">Trụ sở chính:</b>
                                         <p className="text-gray-900 font-bold">{address}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Phone /></div>
                                     <div>
-                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Tổng đài hỗ trợ:</b>
+                                        <b className="block text-gray-500 text-xs font-semibold mb-1">Tổng đài hỗ trợ:</b>
                                         <p className="text-accent font-black text-2xl tracking-tighter">{phone}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Mail /></div>
                                     <div>
-                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Email phản hồi:</b>
+                                        <b className="block text-gray-500 text-xs font-semibold mb-1">Email phản hồi:</b>
                                         <p className="text-gray-900 font-bold">{email}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-5 group">
                                     <div className="bg-red-50 p-4 rounded-2xl text-accent group-hover:bg-accent group-hover:text-white transition-all shadow-sm"><Clock /></div>
                                     <div>
-                                        <b className="block text-gray-400 text-[10px] uppercase font-black tracking-widest mb-1 italic">Thời gian phục vụ:</b>
+                                        <b className="block text-gray-500 text-xs font-semibold mb-1">Thời gian phục vụ:</b>
                                         <p className="text-gray-900 font-bold">{workingHours}</p>
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@ export const ContactPage = () => {
 
                         {/* Form */}
                         <div className="bg-gray-50/50 p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-inner">
-                            <h3 className="text-2xl font-black text-gray-900 mb-8 uppercase italic tracking-tighter">Gửi tin nhắn <span className="text-accent">tư vấn</span></h3>
+                            <h3 className="text-xl font-bold text-gray-900 mb-8 tracking-tight">Gửi tin nhắn <span className="text-accent">tư vấn</span></h3>
 
                             {submitError && (
                                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
@@ -235,7 +235,7 @@ export const ContactPage = () => {
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Họ tên *</label>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Họ tên *</label>
                                         <input
                                             type="text"
                                             name="fullName"
@@ -247,7 +247,7 @@ export const ContactPage = () => {
                                         {errors.fullName && <p className="text-red-500 text-xs mt-1 px-1">{errors.fullName}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Điện thoại *</label>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Điện thoại *</label>
                                         <input
                                             type="text"
                                             name="phone"
@@ -260,7 +260,7 @@ export const ContactPage = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Email</label>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Email</label>
                                     <input
                                         type="email"
                                         name="email"
@@ -272,7 +272,7 @@ export const ContactPage = () => {
                                     {errors.email && <p className="text-red-500 text-xs mt-1 px-1">{errors.email}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Tiêu đề *</label>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Tiêu đề *</label>
                                     <select
                                         name="subject"
                                         value={formData.subject}
@@ -290,7 +290,7 @@ export const ContactPage = () => {
                                     {errors.subject && <p className="text-red-500 text-xs mt-1 px-1">{errors.subject}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">Nội dung *</label>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Nội dung *</label>
                                     <textarea
                                         name="message"
                                         value={formData.message}
@@ -303,7 +303,7 @@ export const ContactPage = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full bg-accent hover:bg-accent-hover text-white font-black py-5 rounded-xl transition-all uppercase shadow-xl shadow-red-500/20 active:scale-95 tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-sm active:scale-[0.98] text-base flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? (
                                         <>

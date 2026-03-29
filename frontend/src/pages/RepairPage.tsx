@@ -93,14 +93,14 @@ export const RepairPage = () => {
     if (!isAuthenticated) {
         return (
             <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
-                <div className="bg-white p-16 max-w-2xl mx-auto rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
-                    <h2 className="text-3xl font-black text-gray-900 mb-4 uppercase italic tracking-tighter">
+                <div className="bg-white p-12 max-w-lg mx-auto rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100/50">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">
                         Vui lòng <span className="text-accent">Đăng nhập</span>
                     </h2>
-                    <p className="text-gray-500 font-medium mb-10 italic">
+                    <p className="text-gray-500 mb-10 text-lg">
                         Bạn cần đăng nhập để đặt lịch sửa chữa và theo dõi tiến độ.
                     </p>
-                    <Link to="/login" className="inline-block px-10 py-4 bg-accent text-white font-black rounded-2xl hover:bg-[#b00014] transition shadow-lg shadow-red-600/20 uppercase tracking-widest text-[10px] active:scale-95">
+                    <Link to="/login" className="inline-block px-10 py-3.5 bg-accent text-white font-semibold rounded-xl hover:bg-[#b00014] transition shadow-lg shadow-red-600/20 active:scale-95 text-lg">
                         Đăng nhập ngay
                     </Link>
                 </div>
@@ -116,64 +116,64 @@ export const RepairPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-6xl font-sans">
-            <h2 className="text-4xl font-black text-gray-900 mb-12 uppercase italic tracking-tighter">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 tracking-tight">
                 Dịch vụ <span className="text-accent">Sửa chữa</span>
             </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Options */}
                 <div className="space-y-6">
                     {/* Quick Create Form */}
-                    <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100">
-                        <h3 className="text-xl font-black text-blue-600 mb-6 uppercase italic tracking-tighter">
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 tracking-tight">
                             Gửi yêu cầu nhanh
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Tên thiết bị / Model
                                 </label>
                                 <input
                                     value={deviceModel}
                                     onChange={e => setDeviceModel(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none"
                                     placeholder="Ví dụ: Dell XPS 15"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Số Serial (S/N)
                                 </label>
                                 <input
                                     value={serialNumber}
                                     onChange={e => setSerialNumber(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none"
                                     placeholder="Ví dụ: SN123456"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 italic">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
                                     Mô tả tình trạng
                                 </label>
                                 <textarea
                                     value={issueDescription}
                                     onChange={e => setIssueDescription(e.target.value)}
-                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:border-accent text-gray-900 font-bold focus:outline-none transition-all shadow-inner min-h-[100px] resize-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none min-h-[100px] resize-none"
                                     placeholder="Thiết bị của bạn đang gặp vấn đề gì?"
                                     required
                                 />
                             </div>
                             {success && (
-                                <p className="text-emerald-600 text-xs font-black italic uppercase">
+                                <p className="text-emerald-600 text-sm font-medium">
                                     Đã gửi yêu cầu thành công!
                                 </p>
                             )}
                             <button
                                 type="submit"
                                 disabled={createRepair.isPending}
-                                className="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 uppercase tracking-widest text-[10px] active:scale-95 disabled:opacity-50"
+                                className="w-full py-3.5 bg-accent text-white font-semibold rounded-xl hover:bg-[#b00014] transition-all shadow-md shadow-accent/20 active:scale-95 disabled:opacity-50"
                             >
                                 {createRepair.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
                             </button>
@@ -183,30 +183,30 @@ export const RepairPage = () => {
                     {/* Book Service Button */}
                     <Link
                         to="/booking"
-                        className="block bg-gradient-to-br from-accent to-red-700 p-8 rounded-[32px] shadow-xl shadow-red-500/20 text-white hover:shadow-2xl hover:shadow-red-500/30 transition-all group"
+                        className="block bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-3xl shadow-lg text-white hover:shadow-xl hover:from-gray-800 hover:to-gray-700 transition-all group"
                     >
-                        <h3 className="text-xl font-black mb-2 uppercase italic tracking-tighter flex items-center gap-2">
+                        <h3 className="text-xl font-bold mb-2 tracking-tight flex items-center gap-2">
                             Đặt lịch dịch vụ
                             <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                         </h3>
-                        <p className="text-red-100 text-sm font-medium italic">
-                            Đặt lịch sửa chữa tại cửa hàng hoặc tại nhà với nhiều tùy chọn
+                        <p className="text-gray-300 text-sm">
+                            Đặt lịch sửa chữa tại cửa hàng hoặc tại nhà với nhiều tùy chọn.
                         </p>
                     </Link>
                 </div>
 
                 {/* Repair History */}
                 <div className="lg:col-span-2">
-                    <h3 className="text-xl font-black text-gray-900 mb-6 uppercase italic tracking-tighter">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">
                         Lịch sử sửa chữa
                     </h3>
 
                     {isLoading ? (
-                        <div className="text-center text-gray-400 font-bold py-10 italic">
+                        <div className="text-center text-gray-500 py-10">
                             Đang tải dữ liệu...
                         </div>
                     ) : allItems.length === 0 ? (
-                        <div className="bg-white p-12 rounded-[32px] border border-gray-100 shadow-xl shadow-gray-200/50 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest italic">
+                        <div className="bg-white py-12 px-6 rounded-3xl border border-gray-100 shadow-sm text-center text-gray-500">
                             Chưa có dữ liệu sửa chữa.
                         </div>
                     ) : (
@@ -219,55 +219,55 @@ export const RepairPage = () => {
                                     return (
                                         <div
                                             key={`wo-${repair.id}`}
-                                            className={`bg-white p-8 rounded-[32px] border transition-all shadow-lg shadow-gray-200/20 group cursor-pointer hover:shadow-xl ${needsAction ? 'border-amber-300 ring-2 ring-amber-100' : 'border-gray-100 hover:border-accent/30'
+                                            className={`bg-white p-6 rounded-2xl border transition-all shadow-sm hover:shadow-md cursor-pointer ${needsAction ? 'border-amber-300 ring-1 ring-amber-100' : 'border-gray-100 hover:border-accent/30'
                                                 }`}
                                             onClick={() => navigate(`/repair/${repair.id}`)}
                                         >
                                             {needsAction && (
                                                 <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-2">
                                                     <AlertCircle size={16} className="text-amber-600" />
-                                                    <span className="text-amber-700 text-xs font-bold uppercase tracking-wider">
+                                                    <span className="text-amber-700 text-xs font-semibold">
                                                         Cần xác nhận báo giá
                                                     </span>
                                                 </div>
                                             )}
 
-                                            <div className="flex justify-between items-start mb-6 pb-6 border-b border-gray-50">
+                                            <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
                                                 <div>
                                                     <div className="flex items-center gap-3">
-                                                        <h4 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic">
+                                                        <h4 className="text-lg font-bold text-gray-900 tracking-tight">
                                                             {repair.deviceModel}
                                                         </h4>
-                                                        <span className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black rounded uppercase">
+                                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-md">
                                                             {repair.ticketNumber}
                                                         </span>
                                                     </div>
-                                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1 italic">
+                                                    <p className="text-sm text-gray-500 mt-1">
                                                         S/N: {repair.serialNumber || 'N/A'}
                                                     </p>
                                                 </div>
-                                                <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest italic border ${getStatusColor(repair.status)}`}>
+                                                <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${getStatusColor(repair.status)}`}>
                                                     {getStatusIcon(repair.status)}
                                                     {translateStatus(repair.status)}
                                                 </span>
                                             </div>
 
-                                            <p className="text-gray-600 text-sm font-medium mb-6 italic leading-relaxed line-clamp-2">
+                                            <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-2">
                                                 {repair.description}
                                             </p>
 
-                                            <div className="flex justify-between items-center text-[10px] text-gray-400 font-black uppercase tracking-widest italic border-t border-gray-50 pt-6">
+                                            <div className="flex justify-between items-center text-sm text-gray-500 pt-4 border-t border-gray-50">
                                                 <span>Ngày đặt: {new Date(repair.createdAt).toLocaleDateString('vi-VN')}</span>
                                                 {repair.totalCost > 0 && (
-                                                    <span className="text-accent text-sm">
+                                                    <span className="text-accent font-bold">
                                                         {formatCurrency(repair.totalCost)}
                                                     </span>
                                                 )}
                                             </div>
 
                                             {repair.technicalNotes && (
-                                                <div className="mt-6 p-5 bg-gray-50 rounded-2xl text-xs text-gray-500 border border-gray-100 italic">
-                                                    <strong className="text-gray-900 font-black uppercase tracking-widest text-[9px] mb-1 block">
+                                                <div className="mt-4 p-4 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-100">
+                                                    <strong className="text-gray-900 block mb-1">
                                                         Ghi chú kỹ thuật:
                                                     </strong>
                                                     {repair.technicalNotes}
@@ -280,23 +280,23 @@ export const RepairPage = () => {
                                     return (
                                         <div
                                             key={`booking-${booking.id}`}
-                                            className="bg-white p-8 rounded-[32px] border border-purple-200 hover:border-purple-400 transition-all shadow-lg shadow-gray-200/20 group"
+                                            className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-purple-300 transition-all shadow-sm"
                                         >
-                                            <div className="flex justify-between items-start mb-6 pb-6 border-b border-gray-50">
+                                            <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
                                                 <div>
                                                     <div className="flex items-center gap-3">
-                                                        <h4 className="text-xl font-black text-gray-900 tracking-tighter uppercase italic">
+                                                        <h4 className="text-lg font-bold text-gray-900 tracking-tight">
                                                             {booking.deviceModel}
                                                         </h4>
-                                                        <span className="px-2 py-0.5 bg-purple-600 text-white text-[9px] font-black rounded uppercase">
+                                                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-md">
                                                             Đặt lịch
                                                         </span>
                                                     </div>
-                                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1 italic">
+                                                    <p className="text-sm text-gray-500 mt-1">
                                                         {booking.serviceType === 'OnSite' ? 'Sửa tại nhà' : 'Sửa tại cửa hàng'}
                                                     </p>
                                                 </div>
-                                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest italic border ${booking.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${booking.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                                                     booking.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' :
                                                         booking.status === 'Converted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                                             'bg-red-50 text-red-700 border-red-200'
@@ -308,14 +308,14 @@ export const RepairPage = () => {
                                                 </span>
                                             </div>
 
-                                            <p className="text-gray-600 text-sm font-medium mb-6 italic leading-relaxed line-clamp-2">
+                                            <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">
                                                 {booking.issueDescription}
                                             </p>
 
-                                            <div className="flex justify-between items-center text-[10px] text-gray-400 font-black uppercase tracking-widest italic">
+                                            <div className="flex justify-between items-center text-sm text-gray-500">
                                                 <span>Ngày hẹn: {new Date(booking.preferredDate).toLocaleDateString('vi-VN')}</span>
                                                 {booking.onSiteFee > 0 && (
-                                                    <span className="text-purple-600 text-sm">
+                                                    <span className="text-purple-600 font-semibold">
                                                         Phí dịch vụ: {formatCurrency(booking.onSiteFee)}
                                                     </span>
                                                 )}

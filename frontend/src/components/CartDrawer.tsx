@@ -81,7 +81,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                     {/* Image */}
                                     <div className="w-20 h-20 bg-gray-50 rounded-lg flex-shrink-0 border border-gray-100 overflow-hidden flex items-center justify-center">
                                         <img
-                                            src={item.imageUrl || `https://placehold.co/100x100?text=${item.name.charAt(0)}`}
+                                            src={item.imageUrl || `https://placehold.co/100x100?text=${item?.name?.charAt(0) || '?'}`}
                                             alt={item.name}
                                             className="w-full h-full object-contain mix-blend-multiply p-1"
                                         />

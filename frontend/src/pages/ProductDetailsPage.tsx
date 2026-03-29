@@ -200,7 +200,7 @@ export const ProductDetailsPage = () => {
                                 <span className="text-[10px] text-blue-500 underline cursor-pointer">Xem 24 đánh giá</span>
                             </div>
 
-                            <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-3">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-3 tracking-tight">
                                 {product.name}
                             </h1>
 
@@ -251,7 +251,7 @@ export const ProductDetailsPage = () => {
                     {/* Right Column: Buying Actions (Span 3) */}
                     <div className="lg:col-span-3">
                         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 sticky top-[130px]">
-                            <h3 className="font-black text-gray-900 mb-4 uppercase text-sm">Mua hàng ngay</h3>
+                            <h3 className="font-bold text-gray-900 mb-4 uppercase tracking-wide text-sm">Mua hàng ngay</h3>
 
                             {/* Quantity */}
                             <div className="flex items-center justify-between mb-4 bg-gray-50 p-2 rounded-xl">
@@ -420,7 +420,7 @@ export const ProductDetailsPage = () => {
 
                 {/* Related Products Title */}
                 <div className="mt-12 mb-6 flex items-center justify-between">
-                    <h2 className="text-2xl font-black text-gray-900 uppercase italic">Sản phẩm liên quan</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Sản phẩm liên quan</h2>
                     <Link to="/products" className="text-sm font-bold text-accent hover:underline flex items-center gap-1">
                         Xem tất cả <ChevronRight size={16} />
                     </Link>

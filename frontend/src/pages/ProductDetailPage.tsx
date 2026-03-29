@@ -18,6 +18,7 @@ interface Specification {
   [key: string]: string;
 }
 
+
 type ReviewSortOption = 'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful';
 
 export default function ProductDetailPage() {
@@ -26,6 +27,7 @@ export default function ProductDetailPage() {
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -277,11 +279,22 @@ export default function ProductDetailPage() {
     }
   };
 
-  const productImages = [
-    `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=600&h=600&fit=crop`,
-    `https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=600&h=600&fit=crop`,
-    `https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&h=600&fit=crop`,
-  ];
+  const productImages = useMemo(() => {
+    if (!product) return [];
+    const images: string[] = [];
+    if (product.imageUrl) images.push(product.imageUrl);
+    if (product.galleryImages) {
+      try {
+        const gallery = JSON.parse(product.galleryImages);
+        if (Array.isArray(gallery)) {
+          images.push(...gallery);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return images;
+  }, [product]);
 
   if (loading) {
     return (
@@ -363,11 +376,18 @@ export default function ProductDetailPage() {
             {/* Product Images */}
             <div className="space-y-4">
               <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
-                <img
-                  src={productImages[selectedImage]}
-                  alt={product.name}
-                  className="w-full h-full object-contain mix-blend-multiply"
-                />
+                {productImages.length > 0 && !imgErrors[productImages[selectedImage]] ? (
+                  <img
+                    src={productImages[selectedImage]}
+                    alt={product?.name}
+                    className="w-full h-full object-contain mix-blend-multiply"
+                    onError={() => setImgErrors(prev => ({ ...prev, [productImages[selectedImage]]: true }))}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                    <span className="text-6xl font-black mb-4">{product?.name?.charAt(0) || '?'}</span>
+                  </div>
+                )}
                 {discount && (
                   <div className="absolute top-4 left-4 bg-accent text-white px-3 py-1 rounded-full font-bold text-xs shadow-lg shadow-red-500/30">
                     -{discount}%
@@ -384,7 +404,18 @@ export default function ProductDetailPage() {
                     className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? 'border-accent ring-1 ring-accent' : 'border-transparent hover:border-accent/50'
                       }`}
                   >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover mix-blend-multiply" />
+                    {!imgErrors[image] ? (
+                      <img 
+                        src={image} 
+                        alt={`${product.name} ${index + 1}`} 
+                        className="w-full h-full object-cover mix-blend-multiply" 
+                        onError={() => setImgErrors(prev => ({ ...prev, [image]: true }))}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <span className="text-3xl font-black">{product?.name?.charAt(0) || '?'}</span>
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -393,28 +424,37 @@ export default function ProductDetailPage() {
             {/* Product Info */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-black text-gray-900 mb-2 uppercase tracking-tight">{product.name}</h1>
-                <p className="text-lg text-gray-500 font-medium">Mã SP: <span className="text-gray-900">{product.sku}</span></p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 tracking-tight leading-tight">{product.name}</h1>
+                <p className="text-sm text-gray-500 font-medium flex items-center gap-2">
+                  <span className="bg-gray-100 px-2.5 py-1 rounded text-gray-700">Mã SP: {product.sku}</span>
+                  {averageRating > 0 && (
+                     <span className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2.5 py-1 rounded">
+                       <Star className="w-4 h-4 fill-current" />
+                       <span className="font-bold text-gray-700">{averageRating.toFixed(1)}</span>
+                       <span className="text-gray-500 font-normal">({reviews.length} đánh giá)</span>
+                     </span>
+                  )}
+                </p>
               </div>
 
               {/* Price */}
               <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-black text-accent tracking-tight">{formatPrice(product.price)}</span>
+                <div className="flex items-end gap-3 flex-wrap">
+                  <span className="text-3xl font-bold text-accent tracking-tight leading-none">{formatPrice(product.price)}</span>
                   {product.oldPrice && (
                     <>
-                      <span className="text-lg text-gray-400 line-through font-medium">
+                      <span className="text-base text-gray-400 line-through font-medium mb-1">
                         {formatPrice(product.oldPrice)}
                       </span>
                       {discount && (
-                        <span className="bg-red-100 text-accent px-2 py-1 rounded-lg text-xs font-bold uppercase">
-                          Tiết kiệm {formatPrice(product.oldPrice - product.price)}
+                        <span className="bg-red-50 border border-red-100 text-accent px-2 py-0.5 rounded text-xs font-semibold mb-1">
+                          -{discount}%
                         </span>
                       )}
                     </>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-2 italic">Giá đã bao gồm VAT</p>
+                <p className="text-xs text-gray-500 mt-2">Giá đã bao gồm VAT</p>
               </div>
 
               {/* Stock Status */}
@@ -465,42 +505,40 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
-                <div className="flex-1 grid grid-cols-2 gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     onClick={handleBuyNow}
                     disabled={product.stockQuantity === 0}
-                    className="px-6 py-4 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-black uppercase text-sm shadow-lg shadow-red-500/20 active:scale-95"
+                    className="flex-1 py-3.5 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-bold text-sm shadow-sm active:scale-[0.98]"
                   >
-                    Mua ngay
+                    MUA NGAY
                   </button>
                   <button
                     onClick={handleAddToCart}
                     disabled={product.stockQuantity === 0 || addingToCart}
-                    className="px-6 py-4 bg-white border-2 border-accent text-accent rounded-xl hover:bg-red-50 disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all font-bold uppercase text-sm flex items-center justify-center gap-2 active:scale-95 group"
+                    className="flex-1 py-3.5 bg-white border border-gray-200 text-gray-900 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:text-accent disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
                   >
-                    <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <ShoppingCart className="w-5 h-5" />
                     {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
                   </button>
-                </div>
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
-                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <Truck className="w-6 h-6 text-accent mb-2" />
-                  <span className="text-xs font-bold uppercase">Miễn phí vẫn chuyển</span>
-                  <span className="text-[10px] text-gray-500 mt-1">Đơn hàng &gt; 5tr</span>
+              <div className="grid grid-cols-3 gap-4 pt-6 mt-6 border-t border-gray-100">
+                <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <Truck className="w-6 h-6 text-gray-400 mb-2" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">Miễn phí vận chuyển</span>
+                  <span className="text-xs text-gray-500 mt-1">Đơn hàng &gt; 5tr</span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <Shield className="w-6 h-6 text-accent mb-2" />
-                  <span className="text-xs font-bold uppercase">Bảo hành chính hãng</span>
-                  <span className="text-[10px] text-gray-500 mt-1">{product.warrantyInfo || '12 tháng'}</span>
+                <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <Shield className="w-6 h-6 text-gray-400 mb-2" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">Bảo hành chính hãng</span>
+                  <span className="text-xs text-gray-500 mt-1">{product.warrantyInfo || '12 tháng'}</span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                  <HeadphonesIcon className="w-6 h-6 text-accent mb-2" />
-                  <span className="text-xs font-bold uppercase">Hỗ trợ 24/7</span>
-                  <span className="text-[10px] text-gray-500 mt-1">1900.6321</span>
+                <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <HeadphonesIcon className="w-6 h-6 text-gray-400 mb-2" />
+                  <span className="text-xs font-semibold text-gray-900 leading-tight">Hỗ trợ 24/7</span>
+                  <span className="text-xs text-gray-500 mt-1">1900.6321</span>
                 </div>
               </div>
             </div>
@@ -511,8 +549,8 @@ export default function ProductDetailPage() {
             <div className="flex border-b border-gray-100">
               <button
                 onClick={() => setActiveTab('description')}
-                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'description'
-                  ? 'border-accent text-accent bg-red-50/50'
+                className={`flex-1 md:flex-none px-6 py-4 font-semibold text-sm border-b-2 transition-colors ${activeTab === 'description'
+                  ? 'border-accent text-accent'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -520,8 +558,8 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('specifications')}
-                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'specifications'
-                  ? 'border-accent text-accent bg-red-50/50'
+                className={`flex-1 md:flex-none px-6 py-4 font-semibold text-sm border-b-2 transition-colors ${activeTab === 'specifications'
+                  ? 'border-accent text-accent'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -529,8 +567,8 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`px-8 py-4 font-bold text-sm uppercase tracking-wide border-b-2 transition-all ${activeTab === 'reviews'
-                  ? 'border-accent text-accent bg-red-50/50'
+                className={`flex-1 md:flex-none px-6 py-4 font-semibold text-sm border-b-2 transition-colors ${activeTab === 'reviews'
+                  ? 'border-accent text-accent'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
@@ -540,71 +578,72 @@ export default function ProductDetailPage() {
 
             <div className="p-8 bg-gray-50/30">
               {activeTab === 'description' && (
-                <div className="prose max-w-none text-gray-600">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase">Giới thiệu sản phẩm</h3>
-                  <p className="leading-relaxed whitespace-pre-line">
-                    {product.description}
-                  </p>
+                <div className="prose max-w-none text-gray-700">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Giới thiệu sản phẩm</h3>
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <p className="leading-relaxed whitespace-pre-line">
+                      {product.description}
+                    </p>
+                  </div>
                 </div>
               )}
 
               {activeTab === 'specifications' && (
                 <div className="max-w-3xl">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6 uppercase">Thông số kỹ thuật</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Thông số kỹ thuật</h3>
                   {Object.keys(specifications).length > 0 ? (
-                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm bg-white">
                       {Object.entries(specifications).map(([key, value], index) => (
-                        <div key={key} className={`grid grid-cols-3 gap-4 py-3 px-4 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                          <div className="text-gray-500 font-semibold text-sm">{key}</div>
-                          <div className="col-span-2 text-gray-900 font-medium text-sm">{value}</div>
+                        <div key={key} className={`grid grid-cols-3 gap-4 py-3.5 px-5 ${index % 2 === 0 ? 'bg-gray-50/80' : 'bg-white'}`}>
+                          <div className="text-gray-600 font-medium text-sm">{key}</div>
+                          <div className="col-span-2 text-gray-900 font-semibold text-sm">{value}</div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 italic">Chưa có thông số kỹ thuật</p>
+                    <p className="text-gray-500 italic bg-white p-6 rounded-2xl border border-gray-100">Chưa có thông số kỹ thuật</p>
                   )}
                 </div>
               )}
 
               {activeTab === 'reviews' && (
-                <div className="space-y-8">
+                <div className="space-y-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                   {/* Header */}
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 uppercase">
+                      <h3 className="text-xl font-bold text-gray-900">
                         Đánh giá từ khách hàng ({reviews.length})
                       </h3>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2">
                       {/* Show different UI based on purchase status */}
                       {checkingPurchase ? (
-                        <div className="px-4 py-2 text-gray-500 text-sm">
+                        <div className="text-gray-500 text-sm">
                           Đang kiểm tra...
                         </div>
                       ) : hasPurchased ? (
                         <button
                           onClick={handleWriteReview}
-                          className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
+                          className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold shadow-sm hover:bg-accent-hover transition-colors"
                         >
                           Viết đánh giá
                         </button>
                       ) : isAuthenticated ? (
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
                           <button
                             disabled
-                            className="px-6 py-2.5 bg-gray-200 text-gray-500 rounded-xl text-xs font-black uppercase cursor-not-allowed"
+                            className="px-5 py-2.5 bg-gray-100 text-gray-400 rounded-lg text-sm font-semibold cursor-not-allowed"
                           >
                             Viết đánh giá
                           </button>
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <ShoppingBag size={12} />
-                            Mua sản phẩm để đánh giá
+                          <span className="text-xs text-gray-500 hidden sm:flex items-center gap-1">
+                            Mua để đánh giá
                           </span>
                         </div>
                       ) : (
                         <button
                           onClick={handleWriteReview}
-                          className="px-6 py-2.5 bg-accent text-white rounded-xl text-xs font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all hover:bg-accent-hover"
+                          className="px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold shadow-sm hover:bg-accent-hover transition-colors"
                         >
                           Đăng nhập để đánh giá
                         </button>
@@ -707,40 +746,48 @@ export default function ProductDetailPage() {
 
         {/* AI Recommendations */}
         {aiRecommendations.length > 0 && !loadingAi && (
-          <div className="mt-12 mb-8 animate-fade-in-up bg-gradient-to-r from-red-50 to-white p-6 rounded-2xl border border-red-100">
-            <div className="flex items-center gap-2 mb-6 text-accent">
-              <Sparkles className="w-6 h-6" />
-              <h2 className="text-xl font-black uppercase tracking-tight">Thường được mua kèm</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {aiRecommendations.map((rec) => (
-                <div key={rec.id} className="bg-white p-4 rounded-xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center p-2">
-                    <img src={`https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=100&h=100&fit=crop`} alt={rec.name} className="w-full h-full object-contain mix-blend-multiply" />
+          <div className="mt-12 mb-8 bg-gradient-to-r from-red-50 to-white p-6 sm:p-8 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-6 text-accent">
+                <Sparkles className="w-6 h-6" />
+                <h2 className="text-xl font-bold tracking-tight">Thường được mua kèm</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {aiRecommendations.map((rec) => (
+                  <div key={rec.id} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center">
+                    <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2">
+                      {rec?.imageUrl ? (
+                        <img src={rec.imageUrl} alt={rec?.name} className="w-full h-full object-contain mix-blend-multiply" />
+                      ) : (
+                        <span className="text-2xl font-black text-gray-300 uppercase">{rec?.name?.charAt(0) || '?'}</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1 leading-tight">{rec.name}</h3>
+                      <div className="text-accent font-bold text-sm">{formatPrice(rec.price)}</div>
+                      <div className="text-[10px] text-gray-500 mt-1 uppercase font-semibold tracking-wider">Độ tương thích {Math.round(rec.similarityScore * 100)}%</div>
+                    </div>
+                    <button onClick={() => navigate(`/product/${rec.id}`)} className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
+                      <Plus size={16} />
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xs font-bold text-gray-900 line-clamp-2 mb-1">{rec.name}</h3>
-                    <div className="text-accent font-black text-sm">{formatPrice(rec.price)}</div>
-                    <div className="text-[9px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Độ tương thích {Math.round(rec.similarityScore * 100)}%</div>
-                  </div>
-                  <button onClick={() => navigate(`/product/${rec.id}`)} className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+            {/* Decorative blob */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-red-100/40 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           </div>
         )}
 
         {/* Related Products */}
-        <div className="mt-12 mb-8 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-6 border-l-4 border-accent pl-4">
-            <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Sản phẩm liên quan</h2>
+        <div className="mt-12 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Sản phẩm liên quan</h2>
             <button
               onClick={handleViewAllRelated}
-              className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-[10px] uppercase rounded-lg transition-all"
+              className="text-accent text-sm font-semibold hover:text-accent-hover transition-colors flex items-center gap-1"
             >
-              Xem tất cả
+              Xem tất cả <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -751,33 +798,39 @@ export default function ProductDetailPage() {
               ))}
             </div>
           ) : relatedProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((p) => (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/product/${p.id}`)}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group cursor-pointer"
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer"
                 >
-                  <div className="aspect-square bg-gray-50 p-4 flex items-center justify-center relative overflow-hidden">
-                    <img
-                      src={p.imageUrl || `https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=300&h=300&fit=crop`}
-                      alt={p.name}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
-                    />
+                  <div className="aspect-square bg-white p-6 flex items-center justify-center relative overflow-hidden">
+                    {p.imageUrl ? (
+                      <img
+                        src={p.imageUrl}
+                        alt={p.name}
+                        className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl font-black uppercase">
+                        {p?.name?.charAt(0) || '?'}
+                      </div>
+                    )}
                     {p.oldPrice && p.oldPrice > p.price && (
-                      <div className="absolute top-3 left-3 bg-accent text-white text-[10px] font-black px-2 py-1 rounded-full uppercase shadow-lg shadow-red-500/30">
+                      <div className="absolute top-3 left-3 bg-red-50 text-red-600 border border-red-100 text-xs font-bold px-2 py-0.5 rounded-md">
                         -{Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)}%
                       </div>
                     )}
                   </div>
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-bold text-gray-900 line-clamp-2 text-xs h-8 group-hover:text-accent transition-colors leading-tight uppercase">
+                  <div className="p-4 space-y-1.5 border-t border-gray-50">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm h-10 group-hover:text-accent transition-colors leading-snug">
                       {p.name}
                     </h3>
-                    <div className="flex flex-col">
-                      <span className="text-accent font-black text-base">{formatPrice(p.price)}</span>
-                      {p.oldPrice && (
-                        <span className="text-gray-400 line-through text-[10px] font-bold">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-accent font-bold text-base">{formatPrice(p.price)}</span>
+                      {p.oldPrice && p.oldPrice > p.price && (
+                        <span className="text-gray-400 line-through text-xs font-medium">
                           {formatPrice(p.oldPrice)}
                         </span>
                       )}
@@ -788,7 +841,7 @@ export default function ProductDetailPage() {
             </div>
           ) : (
             <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200">
-              <p className="text-gray-400 text-sm italic font-medium">Không tìm thấy sản phẩm liên quan</p>
+              <p className="text-gray-500 text-sm font-medium">Không tìm thấy sản phẩm liên quan</p>
             </div>
           )}
         </div>

@@ -12,8 +12,8 @@ export const AboutPage = () => {
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
-                    <ChevronRight size={14} />
+                    <Link to="/" className="hover:text-accent font-medium">Trang chủ</Link>
+                    <ChevronRight size={14} className="text-gray-400" />
                     <span className="text-gray-900 font-medium">Giới thiệu</span>
                 </div>
             </div>
@@ -24,7 +24,7 @@ export const AboutPage = () => {
                         <div className="p-5 bg-red-50 text-accent rounded-2xl shadow-inner">
                             <Building2 size={40} />
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-none">
                             Giới thiệu công ty
                         </h1>
                     </div>

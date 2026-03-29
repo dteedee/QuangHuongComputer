@@ -36,8 +36,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              "block text-[11px] font-black uppercase tracking-widest px-1 transition-colors duration-200",
-              isFocused ? 'text-accent' : 'text-gray-400',
+              "block text-xs font-semibold px-1 transition-colors duration-200",
+              isFocused ? 'text-accent' : 'text-gray-500',
               hasError && 'text-red-500'
             )}
           >
