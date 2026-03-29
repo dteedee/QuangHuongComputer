@@ -35,13 +35,13 @@ interface AccountingStats {
 }
 
 const tabs: TabItem[] = [
-    { label: 'Tổng quan', path: '/backoffice/accounting', icon: <BarChart3 size={18} />, description: 'Dashboard kế toán' },
-    { label: 'Công nợ thu', path: '/backoffice/accounting/ar', icon: <TrendingUp size={18} />, description: 'Accounts Receivable' },
-    { label: 'Công nợ trả', path: '/backoffice/accounting/ap', icon: <CreditCard size={18} />, description: 'Accounts Payable' },
-    { label: 'Quản lý ca', path: '/backoffice/accounting/shifts', icon: <Clock size={18} />, description: 'Shift Management' },
-    { label: 'Chi phí', path: '/backoffice/accounting/expenses', icon: <Wallet size={18} />, description: 'Expense Tracking' },
-    { label: 'Báo cáo', path: '/backoffice/accounting/reports', icon: <Receipt size={18} />, description: 'Financial Reports' },
-    { label: 'Báo cáo thuế', path: '/backoffice/accounting/tax-reports', icon: <FileText size={18} />, description: 'VAT, CIT Declarations' },
+    { label: 'Tổng quan', path: '/backoffice/accounting', icon: <BarChart3 size={18} />, description: 'Bảng điều khiển' },
+    { label: 'Công nợ thu', path: '/backoffice/accounting/ar', icon: <TrendingUp size={18} />, description: 'Phải thu khách hàng' },
+    { label: 'Công nợ trả', path: '/backoffice/accounting/ap', icon: <CreditCard size={18} />, description: 'Phải trả nhà cung cấp' },
+    { label: 'Quản lý ca', path: '/backoffice/accounting/shifts', icon: <Clock size={18} />, description: 'Quản lý ca làm việc' },
+    { label: 'Chi phí', path: '/backoffice/accounting/expenses', icon: <Wallet size={18} />, description: 'Theo dõi chi phí' },
+    { label: 'Báo cáo', path: '/backoffice/accounting/reports', icon: <Receipt size={18} />, description: 'Báo cáo tài chính' },
+    { label: 'Báo cáo thuế', path: '/backoffice/accounting/tax-reports', icon: <FileText size={18} />, description: 'Kê khai thuế VAT, CIT' },
 ];
 
 export const AccountingPortal = () => {
@@ -71,12 +71,12 @@ export const AccountingPortal = () => {
 
     const getStatusBadge = (status: number) => {
         switch (status) {
-            case 0: return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Draft</span>;
-            case 1: return <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase">Issued</span>;
-            case 2: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase">Partial</span>;
-            case 3: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Paid</span>;
-            case 4: return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Overdue</span>;
-            case 5: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-black uppercase">Cancelled</span>;
+            case 0: return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Bản nháp</span>;
+            case 1: return <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase">Đã xuất</span>;
+            case 2: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase">Trả một phần</span>;
+            case 3: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Đã thanh toán</span>;
+            case 4: return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Quá hạn</span>;
+            case 5: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-black uppercase">Đã hủy</span>;
             default: return null;
         }
     };

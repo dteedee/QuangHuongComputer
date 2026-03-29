@@ -28,7 +28,7 @@ public class Repository<TEntity, TId, TDbContext> : IRepository<TEntity, TId>
         var query = _dbSet.AsQueryable();
 
         // Apply active filter unless explicitly including inactive
-        if (!queryParams.IncludeInactive)
+        if (!(queryParams.IncludeInactive ?? false))
         {
             query = query.Where(e => e.IsActive);
         }
@@ -40,7 +40,7 @@ public class Repository<TEntity, TId, TDbContext> : IRepository<TEntity, TId>
         var total = await query.CountAsync(cancellationToken);
 
         // Apply sorting
-        query = ApplySorting(query, queryParams.SortBy, queryParams.SortDescending);
+        query = ApplySorting(query, queryParams.SortBy, queryParams.SortDescending ?? false);
 
         // Apply pagination
         var items = await query
@@ -48,7 +48,7 @@ public class Repository<TEntity, TId, TDbContext> : IRepository<TEntity, TId>
             .Take(queryParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<TEntity>(items, total, queryParams.Page, queryParams.PageSize);
+        return new PagedResult<TEntity>(items, total, queryParams.Page ?? 1, queryParams.PageSize ?? 20);
     }
 
     public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)

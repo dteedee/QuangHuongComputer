@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { FileText, DollarSign, Clock, CheckCircle, X, Plus } from 'lucide-react';
 import { accountingApi, type APInvoice, type InvoiceStatus } from '../../../api/accounting';
@@ -406,6 +406,11 @@ export const APPage = () => {
         initialPageSize: 20,
     });
 
+    const { data: agingSummary } = useQuery({
+        queryKey: ['ap-aging-summary'],
+        queryFn: () => accountingApi.ap.getAgingSummary(),
+    });
+
     const filteredData = useMemo(() => {
         if (selectedStatus === 'all') return data;
         return data.filter((invoice) => invoice.status === selectedStatus);
@@ -512,10 +517,6 @@ export const APPage = () => {
         { key: 'Overdue', label: 'Quá hạn', count: data.filter((d) => d.status === 'Overdue').length },
     ];
 
-    const totalAmount = data.reduce((sum, item) => sum + item.totalAmount, 0);
-    const outstandingAmount = data.reduce((sum, item) => sum + item.outstandingAmount, 0);
-    const overdueAmount = data.filter(d => d.status === 'Overdue').reduce((sum, item) => sum + item.totalAmount, 0);
-
     return (
         <div className="space-y-10 pb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -545,8 +546,8 @@ export const APPage = () => {
                         </div>
                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Tổng số tiền nợ</span>
                     </div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{formatCurrency(outstandingAmount)}</h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Trên tổng {formatCurrency(totalAmount)} hóa đơn</p>
+                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{formatCurrency(agingSummary?.totalPayable ?? 0)}</h3>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Dư nợ trên toàn hệ thống</p>
                 </motion.div>
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
@@ -554,12 +555,12 @@ export const APPage = () => {
                         <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
                             <Clock size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Đang chờ xử lý</span>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Trong khoảng 60 ngày</span>
                     </div>
                     <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
-                        {data.filter((d) => d.status === 'Issued').length}
+                        {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0))}
                     </h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Hóa đơn chờ thanh toán</p>
+                    <p className="text-xs text-gray-400 font-bold mt-2">Hóa đơn chờ thanh toán sớm</p>
                 </motion.div>
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-red-100 bg-red-50/10">
@@ -567,10 +568,10 @@ export const APPage = () => {
                         <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
                             <CheckCircle size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Quá hạn thanh toán</span>
+                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Quá hạn thanh toán (60+ ng)</span>
                     </div>
-                    <h3 className="text-3xl font-black text-red-600 tracking-tighter">{formatCurrency(overdueAmount)}</h3>
-                    <p className="text-xs text-red-400 font-bold mt-2">Cần ưu tiên xử lý</p>
+                    <h3 className="text-3xl font-black text-red-600 tracking-tighter">{formatCurrency((agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}</h3>
+                    <p className="text-xs text-red-400 font-bold mt-2">Cần ưu tiên xử lý dài hạn</p>
                 </motion.div>
             </div>
 

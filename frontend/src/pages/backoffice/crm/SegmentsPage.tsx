@@ -10,6 +10,7 @@ export default function SegmentsPage() {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const [editingSegment, setEditingSegment] = useState<Segment | null>(null);
   const [runningAutoAssign, setRunningAutoAssign] = useState(false);
   const confirm = useConfirm();
@@ -120,9 +121,20 @@ export default function SegmentsPage() {
                 <button
                   onClick={() => {
                     setEditingSegment(segment);
+                    setShowRulesModal(true);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg text-blue-500"
+                  title="Thiết lập Rules"
+                >
+                  <Target size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingSegment(segment);
                     setShowModal(true);
                   }}
                   className="p-2 hover:bg-gray-100 rounded-lg"
+                  title="Chỉnh sửa"
                 >
                   <Edit size={16} className="text-gray-400" />
                 </button>
@@ -176,6 +188,18 @@ export default function SegmentsPage() {
           onClose={() => setShowModal(false)}
           onSaved={() => {
             setShowModal(false);
+            loadSegments();
+          }}
+        />
+      )}
+
+      {/* Rules Modal */}
+      {showRulesModal && editingSegment && (
+        <RulesModal
+          segment={editingSegment}
+          onClose={() => setShowRulesModal(false)}
+          onSaved={() => {
+            setShowRulesModal(false);
             loadSegments();
           }}
         />
@@ -328,6 +352,145 @@ function SegmentModal({
               className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:opacity-50"
             >
               {loading ? 'Đang lưu...' : 'Lưu'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+function RulesModal({
+  segment,
+  onClose,
+  onSaved
+}: {
+  segment: Segment;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  
+  // Parse existing ruleDefinition or initialize empty
+  const defaultRules = segment.ruleDefinition ? JSON.parse(segment.ruleDefinition) : {};
+  
+  const [form, setForm] = useState({
+    MinRfmScore: defaultRules.MinRfmScore || '',
+    MaxRfmScore: defaultRules.MaxRfmScore || '',
+    MinTotalSpent: defaultRules.MinTotalSpent || '',
+    MinOrderCount: defaultRules.MinOrderCount || '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      const payload: any = {};
+      if (form.MinRfmScore) payload.MinRfmScore = parseInt(form.MinRfmScore);
+      if (form.MaxRfmScore) payload.MaxRfmScore = parseInt(form.MaxRfmScore);
+      if (form.MinTotalSpent) payload.MinTotalSpent = parseInt(form.MinTotalSpent);
+      if (form.MinOrderCount) payload.MinOrderCount = parseInt(form.MinOrderCount);
+      
+      const ruleDefStr = Object.keys(payload).length > 0 ? JSON.stringify(payload) : "";
+
+      await crmApi.segments.setRules(segment.id, ruleDefStr);
+      onSaved();
+    } catch (error) {
+      console.error('Failed to set rules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">
+            Thiết Lập Auto-Assign Rules
+          </h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <p className="text-sm text-gray-500 mb-4">
+          Phân nhóm: <span className="font-semibold text-gray-800">{segment.name}</span>
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Min RFM Score
+              </label>
+              <input
+                type="number"
+                placeholder="VD: 10"
+                value={form.MinRfmScore}
+                onChange={(e) => setForm({ ...form, MinRfmScore: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Max RFM Score
+              </label>
+              <input
+                type="number"
+                placeholder="VD: 15"
+                value={form.MaxRfmScore}
+                onChange={(e) => setForm({ ...form, MaxRfmScore: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Chi tiêu tối thiểu (VND)
+            </label>
+            <input
+              type="number"
+              placeholder="VD: 10000000"
+              value={form.MinTotalSpent}
+              onChange={(e) => setForm({ ...form, MinTotalSpent: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Số đơn hàng tối thiểu
+            </label>
+            <input
+              type="number"
+              placeholder="VD: 5"
+              value={form.MinOrderCount}
+              onChange={(e) => setForm({ ...form, MinOrderCount: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 mt-2 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Đang lưu...' : 'Lưu Rules'}
             </button>
           </div>
         </form>

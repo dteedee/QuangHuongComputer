@@ -73,6 +73,7 @@ export interface Segment {
   isAutoAssign: boolean;
   sortOrder: number;
   customerCount: number;
+  ruleDefinition?: string;
   createdAt: string;
 }
 

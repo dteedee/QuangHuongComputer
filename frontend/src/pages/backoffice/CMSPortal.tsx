@@ -186,7 +186,15 @@ export const CMSPortal = () => {
                     <div className="premium-card overflow-hidden border-2 bg-white">
                         <div className="p-10 border-b-2 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/30">
                             <h3 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter">
-                                Danh sách: <span className="text-accent">{activeTab}</span>
+                                Danh sách: <span className="text-accent">
+                                    {{
+                                        Pages: 'Trang tĩnh',
+                                        'Blog Posts': 'Bài viết Blog',
+                                        Banners: 'Banner quảng cáo',
+                                        Media: 'Thư viện Media',
+                                        SEO: 'Cấu hình SEO'
+                                    }[activeTab] || activeTab}
+                                </span>
                             </h3>
                         </div>
                         <div className="divide-y-2 divide-gray-50">
@@ -216,7 +224,7 @@ export const CMSPortal = () => {
                                     </div>
                                     <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
                                         <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic border-2 shadow-sm ${item.isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                                            {item.isPublished ? 'Live' : 'Bản nháp'}
+                                            {item.isPublished ? 'Đã xuất bản' : 'Bản nháp'}
                                         </span>
                                         <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                                             <button onClick={() => handleOpenModal(item)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-md active:scale-90"><Edit3 size={20} /></button>
@@ -260,7 +268,7 @@ export const CMSPortal = () => {
                                         <select name="type" defaultValue={editingItem?.type || (activeTab === 'Pages' ? 'Custom' : 'Article')} className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-black text-gray-950 focus:outline-none focus:border-accent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%23000000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:24px] bg-[right_1.5rem_center] bg-no-repeat shadow-sm">
                                             {activeTab === 'Pages' ? (
                                                 <>
-                                                    <option value="Custom">Custom Page</option>
+                                                    <option value="Custom">Trang tùy chỉnh</option>
                                                     <option value="About">Chính sách chung</option>
                                                     <option value="Warranty">Bảo hành</option>
                                                     <option value="Returns">Đổi trả</option>
@@ -299,11 +307,11 @@ export const CMSPortal = () => {
                                     <div className="col-span-2 p-6 bg-gray-50 rounded-2xl border-2 border-gray-100 flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-xs font-black text-gray-900 uppercase tracking-widest">Trạng thái xuất bản</span>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase mt-1 italic">Nội dung sẽ được hiển thị ngay nếu chọn "Live"</span>
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase mt-1 italic">Nội dung sẽ được hiển thị ngay nếu chọn "Đã xuất bản"</span>
                                         </div>
                                         <select name="isPublished" defaultValue={editingItem?.isPublished ? 'true' : 'false'} className="px-8 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-gray-950 focus:border-accent outline-none shadow-sm">
-                                            <option value="true">LIVE</option>
-                                            <option value="false">DRAFT</option>
+                                            <option value="true">ĐÃ XUẤT BẢN</option>
+                                            <option value="false">BẢN NHÁP</option>
                                         </select>
                                     </div>
                                 </div>

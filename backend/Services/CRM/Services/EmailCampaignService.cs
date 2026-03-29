@@ -263,15 +263,65 @@ public partial class EmailCampaignService : IEmailCampaignService
                 c.RecencyScore + c.FrequencyScore + c.MonetaryScore >= minScore);
         }
 
-        // TODO: Get user details from Identity service
+        // Get customers from database
         var customers = await query.ToListAsync(cancellationToken);
+        if (!customers.Any()) return new List<EmailCampaignRecipient>();
 
-        return customers.Select(c => new EmailCampaignRecipient(
-            campaign.Id,
-            $"user_{c.UserId}@email.com", // Placeholder - would get from Identity
-            c.Id,
-            $"Customer {c.UserId}" // Placeholder
-        )).ToList();
+        var userIds = customers.Select(c => c.UserId.ToString()).ToList();
+        
+        var connection = _crmDb.Database.GetDbConnection();
+        bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
+        
+        if (wasClosed) await connection.OpenAsync(cancellationToken);
+        
+        var userDict = new Dictionary<string, (string Email, string FullName)>();
+        
+        try
+        {
+            using var command = connection.CreateCommand();
+            var inIds = string.Join("','", userIds);
+            command.CommandText = $"SELECT \"Id\", \"Email\", \"FullName\" FROM public.\"AspNetUsers\" WHERE \"Id\" IN ('{inIds}')";
+            
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var id = reader.GetString(0);
+                var email = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+                var fullName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                userDict[id] = (email, fullName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to fetch users from identity DB for campaign context");
+        }
+        finally
+        {
+            if (wasClosed) await connection.CloseAsync();
+        }
+
+        var recipients = new List<EmailCampaignRecipient>();
+        foreach (var c in customers)
+        {
+            var userIdStr = c.UserId.ToString();
+            string email = $"user_{c.UserId}@example.com";
+            string name = $"Customer {c.UserId}";
+
+            if (userDict.TryGetValue(userIdStr, out var info))
+            {
+                if (!string.IsNullOrEmpty(info.Email)) email = info.Email;
+                if (!string.IsNullOrEmpty(info.FullName)) name = info.FullName;
+            }
+
+            recipients.Add(new EmailCampaignRecipient(
+                campaign.Id,
+                email,
+                c.Id,
+                name
+            ));
+        }
+
+        return recipients;
     }
 
     private async Task ProcessSendingAsync(EmailCampaign campaign, CancellationToken cancellationToken)
@@ -422,10 +472,53 @@ public partial class EmailCampaignService : IEmailCampaignService
 
         var html = campaign.HtmlContent;
 
-        // Replace personalization variables
-        // TODO: Get actual customer data from Identity service
         var customerName = "Khách hàng thân mến";
-        var lastPurchaseDate = DateTime.UtcNow.AddDays(-30).ToString("dd/MM/yyyy");
+        string lastPurchaseDate = "--";
+        
+        if (customerAnalyticsId.HasValue)
+        {
+            var analytics = await _crmDb.CustomerAnalytics.FirstOrDefaultAsync(c => c.Id == customerAnalyticsId.Value, cancellationToken);
+            if (analytics != null)
+            {
+                if (analytics.LastPurchaseDate.HasValue)
+                {
+                    lastPurchaseDate = analytics.LastPurchaseDate.Value.ToString("dd/MM/yyyy");
+                }
+                
+                var connection = _crmDb.Database.GetDbConnection();
+                bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
+                
+                if (wasClosed) await connection.OpenAsync(cancellationToken);
+                
+                try
+                {
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "SELECT \"FullName\" FROM public.\"AspNetUsers\" WHERE \"Id\" = @Id";
+                    var paramId = command.CreateParameter();
+                    paramId.ParameterName = "@Id";
+                    paramId.Value = analytics.UserId.ToString();
+                    command.Parameters.Add(paramId);
+                    
+                    var fullNameStr = await command.ExecuteScalarAsync(cancellationToken);
+                    if (fullNameStr != null && fullNameStr != DBNull.Value)
+                    {
+                        var fn = fullNameStr.ToString();
+                        if (!string.IsNullOrEmpty(fn))
+                        {
+                            customerName = fn;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to get user name from Identity DB for preview");
+                }
+                finally
+                {
+                    if (wasClosed) await connection.CloseAsync();
+                }
+            }
+        }
 
         html = PersonalizationRegex().Replace(html, customerName);
         html = LastPurchaseDateRegex().Replace(html, lastPurchaseDate);

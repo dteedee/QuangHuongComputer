@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { DollarSign, Clock, AlertCircle, X } from 'lucide-react';
 import { accountingApi, type ARInvoice, type InvoiceStatus, type AgingBucket } from '../../../api/accounting';
@@ -184,6 +184,11 @@ export const ARPage = () => {
     initialPageSize: 20,
   });
 
+  const { data: agingSummary } = useQuery({
+    queryKey: ['ar-aging-summary'],
+    queryFn: () => accountingApi.ar.getAgingSummary(),
+  });
+
   const applyPaymentMutation = useMutation({
     mutationFn: ({ invoiceId, amount, notes }: { invoiceId: string; amount: number; notes?: string }) =>
       accountingApi.ar.applyPayment(invoiceId, { amount, notes, paymentIntentId: 'manual' }),
@@ -282,8 +287,6 @@ export const ARPage = () => {
     { key: 'Over90Days', label: '90+ ngày' },
   ];
 
-  const totalOutstanding = data.reduce((sum, item) => sum + item.outstandingAmount, 0);
-
   return (
     <div className="space-y-10 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -305,10 +308,10 @@ export const ARPage = () => {
           </div>
           <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Tổng nợ chưa thu</p>
           <h3 className="text-4xl font-black text-accent tracking-tighter italic">
-            {formatCurrency(totalOutstanding)}
+            {formatCurrency(agingSummary?.totalOutstanding ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50 flex items-center gap-3">
-            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Trên {data.length} hóa đơn</span>
+            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Toàn bộ dư nợ AR</span>
           </div>
         </motion.div>
 
@@ -316,9 +319,9 @@ export const ARPage = () => {
           <div className="absolute top-0 right-0 p-8 text-amber-500/5 group-hover:scale-125 transition-transform duration-700">
             <Clock size={120} />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Hóa đơn quá hạn</p>
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Dư nợ quá hạn</p>
           <h3 className="text-4xl font-black text-amber-600 tracking-tighter italic">
-            {data.filter((d) => d.status === 'Overdue').length}
+            {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0) + (agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">
             <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic animate-pulse">Cần ưu tiên thu nợ</span>
@@ -329,9 +332,9 @@ export const ARPage = () => {
           <div className="absolute top-0 right-0 p-8 text-blue-500/5 group-hover:scale-125 transition-transform duration-700">
             <AlertCircle size={120} />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Hóa đơn trong hạn</p>
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Dư nợ trong hạn</p>
           <h3 className="text-4xl font-black text-blue-600 tracking-tighter italic">
-            {data.filter((d) => d.status === 'Issued').length}
+            {formatCurrency(agingSummary?.current ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">
             <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Dòng tiền ổn định</span>

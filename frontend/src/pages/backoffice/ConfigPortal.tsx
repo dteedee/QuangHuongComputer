@@ -389,7 +389,15 @@ export const ConfigPortal = () => {
                                                 configType === 'email' ? 'bg-orange-100 text-orange-600' :
                                                 configType === 'number' ? 'bg-cyan-100 text-cyan-600' :
                                                 'bg-gray-100 text-gray-500'
-                                            }`}>{configType}</span>
+                                            }`}>{
+                                                configType === 'boolean' ? 'Toggle' :
+                                                configType === 'percentage' ? 'Tỉ lệ' :
+                                                configType === 'currency' ? 'Tiền tệ' :
+                                                configType === 'url' ? 'Link' :
+                                                configType === 'email' ? 'Email' :
+                                                configType === 'number' ? 'Số' :
+                                                'Văn bản'
+                                            }</span>
                                         </label>
                                         <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest flex items-center gap-2">
                                             <Clock size={12} />

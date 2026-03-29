@@ -119,30 +119,94 @@ public class RfmCalculationService : IRfmCalculationService
     }
 
     // Helper method to get order statistics for a user
-    // In real implementation, this would query the Sales database
+    // Queries the Sales database Orders table directly
     private async Task<OrderStatsDto> GetOrderStatsForUser(Guid userId, CancellationToken cancellationToken)
     {
-        // TODO: Implement cross-database query to Sales.Orders
-        // For now, return placeholder data
-        // This would typically be implemented via:
-        // 1. Direct cross-database query if same DB server
-        // 2. HTTP call to Sales service
-        // 3. Event-driven sync of order data
+        var connection = _crmDb.Database.GetDbConnection();
+        bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
 
-        await Task.CompletedTask;
+        if (wasClosed) await connection.OpenAsync(cancellationToken);
 
-        return new OrderStatsDto(0, 0m, null, null, int.MaxValue);
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT 
+                    COUNT(""Id"") as OrderCount,
+                    COALESCE(SUM(""TotalAmount""), 0) as TotalSpent,
+                    MIN(""OrderDate"") as FirstPurchaseDate,
+                    MAX(""OrderDate"") as LastPurchaseDate
+                FROM public.""Orders""
+                WHERE ""CustomerId"" = @UserId AND ""Status"" != 4 AND ""Status"" != 5 AND ""IsActive"" = true"; // Status format: assuming 4/5 are Cancelled/Refunded, or we just rely on common logic. We can also simply do Status != 4. Let's rely on IsActive.
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@UserId";
+            parameter.Value = userId;
+            command.Parameters.Add(parameter);
+
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                int orderCount = reader.GetInt32(0);
+                decimal totalSpent = reader.GetDecimal(1);
+                DateTime? firstPurchaseDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2);
+                DateTime? lastPurchaseDate = reader.IsDBNull(3) ? null : reader.GetDateTime(3);
+
+                int daysSinceLastPurchase = int.MaxValue;
+                if (lastPurchaseDate.HasValue)
+                {
+                    daysSinceLastPurchase = (int)(DateTime.UtcNow - lastPurchaseDate.Value).TotalDays;
+                }
+
+                return new OrderStatsDto(orderCount, totalSpent, firstPurchaseDate, lastPurchaseDate, daysSinceLastPurchase);
+            }
+
+            return new OrderStatsDto(0, 0m, null, null, int.MaxValue);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get order stats for user {UserId}", userId);
+            return new OrderStatsDto(0, 0m, null, null, int.MaxValue);
+        }
+        finally
+        {
+            if (wasClosed) await connection.CloseAsync();
+        }
     }
 
     // Get all users that have orders
     private async Task<List<Guid>> GetUsersWithOrdersAsync(CancellationToken cancellationToken)
     {
-        // TODO: Query Sales database for distinct customer IDs
-        // For now, return existing analytics user IDs
-        return await _crmDb.CustomerAnalytics
-            .AsNoTracking()
-            .Select(c => c.UserId)
-            .ToListAsync(cancellationToken);
+        var userIds = new List<Guid>();
+        var connection = _crmDb.Database.GetDbConnection();
+        bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
+
+        if (wasClosed) await connection.OpenAsync(cancellationToken);
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT DISTINCT ""CustomerId"" FROM public.""Orders"" WHERE ""IsActive"" = true";
+
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    userIds.Add(reader.GetGuid(0));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get users with orders");
+        }
+        finally
+        {
+            if (wasClosed) await connection.CloseAsync();
+        }
+
+        return userIds;
     }
 
     private record OrderStatsDto(

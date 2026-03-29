@@ -62,7 +62,8 @@ public record SegmentDto(
     bool IsAutoAssign,
     int SortOrder,
     int CustomerCount,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? RuleDefinition
 );
 
 public record CreateSegmentDto(

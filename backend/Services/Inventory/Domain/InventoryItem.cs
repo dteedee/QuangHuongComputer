@@ -68,7 +68,10 @@ public class InventoryItem : Entity<Guid>
     public void ReleaseReservedStock(int quantity)
     {
         if (ReservedQuantity < quantity)
-            throw new InvalidOperationException($"Cannot release more than reserved. Reserved: {ReservedQuantity}, Requested: {quantity}");
+        {
+            // Gracefully handle out-of-sync reservations by capping
+            quantity = ReservedQuantity;
+        }
         
         ReservedQuantity -= quantity;
         LastStockUpdate = DateTime.UtcNow;
@@ -77,10 +80,17 @@ public class InventoryItem : Entity<Guid>
     public void ConfirmReservedStock(int quantity)
     {
         if (ReservedQuantity < quantity)
-            throw new InvalidOperationException($"Cannot confirm more than reserved. Reserved: {ReservedQuantity}, Requested: {quantity}");
+        {
+            // Gracefully handle out-of-sync reservations by capping the reserved portion
+            QuantityOnHand -= quantity; // Still reduce the actual stock by the full amount
+            ReservedQuantity = 0; // And clear whatever was reserved
+        }
+        else
+        {
+            ReservedQuantity -= quantity;
+            QuantityOnHand -= quantity;
+        }
         
-        ReservedQuantity -= quantity;
-        QuantityOnHand -= quantity;
         LastStockUpdate = DateTime.UtcNow;
     }
 

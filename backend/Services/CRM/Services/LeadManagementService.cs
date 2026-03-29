@@ -237,12 +237,75 @@ public class LeadManagementService : ILeadManagementService
         if (lead == null || lead.IsConverted)
             return null;
 
-        // TODO: Create customer in Identity service
-        // For now, create CustomerAnalytics record
-        var customerId = Guid.NewGuid(); // This would be the actual user ID from Identity
+        var customerId = Guid.NewGuid();
+        
+        if (!string.IsNullOrEmpty(lead.Email))
+        {
+            var connection = _crmDb.Database.GetDbConnection();
+            bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
+            
+            if (wasClosed) await connection.OpenAsync(cancellationToken);
+            
+            try
+            {
+                using var command = connection.CreateCommand();
+                
+                // Check if user with email already exists
+                command.CommandText = "SELECT \"Id\" FROM public.\"AspNetUsers\" WHERE \"NormalizedEmail\" = @NormalizedEmail";
+                var paramEmail = command.CreateParameter();
+                paramEmail.ParameterName = "@NormalizedEmail";
+                paramEmail.Value = lead.Email.ToUpperInvariant();
+                command.Parameters.Add(paramEmail);
+                
+                var existingId = await command.ExecuteScalarAsync(cancellationToken);
+                if (existingId != null && existingId != DBNull.Value)
+                {
+                    if (Guid.TryParse(existingId.ToString(), out var parsedId))
+                    {
+                        customerId = parsedId;
+                    }
+                }
+                else
+                {
+                    command.CommandText = @"
+                        INSERT INTO public.""AspNetUsers"" 
+                        (""Id"", ""UserName"", ""NormalizedUserName"", ""Email"", ""NormalizedEmail"", ""EmailConfirmed"", ""PasswordHash"", ""SecurityStamp"", ""ConcurrencyStamp"", ""PhoneNumber"", ""PhoneNumberConfirmed"", ""TwoFactorEnabled"", ""LockoutEnabled"", ""AccessFailedCount"", ""FullName"", ""IsActive"")
+                        VALUES 
+                        (@Id, @UserName, @NormalizedEmail, @Email, @NormalizedEmail, true, @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumber, false, false, true, 0, @FullName, true)
+                    ";
+                    
+                    command.Parameters.Clear();
+                    
+                    var paramId = command.CreateParameter(); paramId.ParameterName = "@Id"; paramId.Value = customerId.ToString(); command.Parameters.Add(paramId);
+                    var paramUn = command.CreateParameter(); paramUn.ParameterName = "@UserName"; paramUn.Value = lead.Email; command.Parameters.Add(paramUn);
+                    var paramNe = command.CreateParameter(); paramNe.ParameterName = "@NormalizedEmail"; paramNe.Value = lead.Email.ToUpperInvariant(); command.Parameters.Add(paramNe);
+                    var paramE = command.CreateParameter(); paramE.ParameterName = "@Email"; paramE.Value = lead.Email; command.Parameters.Add(paramE);
+                    
+                    var paramPh = command.CreateParameter(); paramPh.ParameterName = "@PasswordHash"; paramPh.Value = "AQAAAAIAAYagAAAAEN...DUMMY"; command.Parameters.Add(paramPh);
+                    var paramSs = command.CreateParameter(); paramSs.ParameterName = "@SecurityStamp"; paramSs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramSs);
+                    var paramCs = command.CreateParameter(); paramCs.ParameterName = "@ConcurrencyStamp"; paramCs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramCs);
+                    var paramPn = command.CreateParameter(); paramPn.ParameterName = "@PhoneNumber"; paramPn.Value = lead.Phone ?? (object)DBNull.Value; command.Parameters.Add(paramPn);
+                    var paramFn = command.CreateParameter(); paramFn.ParameterName = "@FullName"; paramFn.Value = lead.FullName; command.Parameters.Add(paramFn);
+                    
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create user in Identity db for lead {LeadId}", leadId);
+            }
+            finally
+            {
+                if (wasClosed) await connection.CloseAsync();
+            }
+        }
 
-        var customerAnalytics = new CustomerAnalytics(customerId);
-        _crmDb.CustomerAnalytics.Add(customerAnalytics);
+        var customerAnalytics = await _crmDb.CustomerAnalytics.FirstOrDefaultAsync(c => c.UserId == customerId, cancellationToken);
+        if (customerAnalytics == null)
+        {
+            customerAnalytics = new CustomerAnalytics(customerId);
+            _crmDb.CustomerAnalytics.Add(customerAnalytics);
+        }
 
         lead.Convert(customerId);
 

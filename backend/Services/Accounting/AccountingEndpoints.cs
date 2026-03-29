@@ -285,19 +285,21 @@ public static class AccountingEndpoints
 
         group.MapGet("/ar/aging-summary", async (AccountingDbContext db) =>
         {
-            // Optimized: Calculate directly in database instead of loading all records
-            var baseQuery = db.Invoices
+            var buckets = await db.Invoices
                 .Where(i => i.Type == InvoiceType.Receivable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled);
+                           i.Status != InvoiceStatus.Cancelled)
+                .GroupBy(i => i.AgingBucket)
+                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.OutstandingAmount) })
+                .ToListAsync();
 
             var summary = new ARAgingSummaryDto(
-                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
-                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
-                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
-                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
-                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
-                TotalOutstanding: await baseQuery.SumAsync(i => i.OutstandingAmount));
+                Current: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Current)?.Total ?? 0,
+                Days1To30: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days1To30)?.Total ?? 0,
+                Days31To60: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days31To60)?.Total ?? 0,
+                Days61To90: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days61To90)?.Total ?? 0,
+                Over90Days: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Over90Days)?.Total ?? 0,
+                TotalOutstanding: buckets.Sum(b => b.Total));
 
             return Results.Ok(summary);
         }).WithName("GetARAgingSummary");
@@ -396,19 +398,21 @@ public static class AccountingEndpoints
 
         group.MapGet("/ap/aging-summary", async (AccountingDbContext db) =>
         {
-            // Optimized: Calculate directly in database instead of loading all records
-            var baseQuery = db.Invoices
+            var buckets = await db.Invoices
                 .Where(i => i.Type == InvoiceType.Payable &&
                            i.Status != InvoiceStatus.Paid &&
-                           i.Status != InvoiceStatus.Cancelled);
+                           i.Status != InvoiceStatus.Cancelled)
+                .GroupBy(i => i.AgingBucket)
+                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.OutstandingAmount) })
+                .ToListAsync();
 
             var summary = new APAgingSummaryDto(
-                Current: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Current).SumAsync(i => i.OutstandingAmount),
-                Days1To30: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days1To30).SumAsync(i => i.OutstandingAmount),
-                Days31To60: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days31To60).SumAsync(i => i.OutstandingAmount),
-                Days61To90: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Days61To90).SumAsync(i => i.OutstandingAmount),
-                Over90Days: await baseQuery.Where(i => i.AgingBucket == AgingBucket.Over90Days).SumAsync(i => i.OutstandingAmount),
-                TotalPayable: await baseQuery.SumAsync(i => i.OutstandingAmount));
+                Current: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Current)?.Total ?? 0,
+                Days1To30: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days1To30)?.Total ?? 0,
+                Days31To60: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days31To60)?.Total ?? 0,
+                Days61To90: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Days61To90)?.Total ?? 0,
+                Over90Days: buckets.FirstOrDefault(b => b.Bucket == AgingBucket.Over90Days)?.Total ?? 0,
+                TotalPayable: buckets.Sum(b => b.Total));
 
             return Results.Ok(summary);
         }).WithName("GetAPAgingSummary");

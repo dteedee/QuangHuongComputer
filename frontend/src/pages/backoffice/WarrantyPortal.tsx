@@ -507,7 +507,7 @@ export const WarrantyPortal = () => {
                                                     <span className="font-mono font-bold text-gray-900">{claim.serialNumber}</span>
                                                     {getClaimStatusBadge(claim.status)}
                                                     {claim.isManagerOverride && (
-                                                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold">Override</span>
+                                                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold">Ngoại lệ</span>
                                                     )}
                                                 </div>
                                                 <p className="text-gray-600 text-sm line-clamp-2">{claim.issueDescription}</p>

@@ -360,6 +360,38 @@ export default function PurchaseOrdersPage() {
         }
     };
 
+    const handleSend = async (po: PurchaseOrder) => {
+        if (po.status !== 'Draft') {
+            toast.error('Chỉ đơn nháp mới có thể gửi');
+            return;
+        }
+        const ok = await confirm({ message: `Xác nhận gửi đơn mua hàng ${po.poNumber} cho nhà cung cấp?`, variant: 'info' });
+        if (!ok) return;
+        try {
+            await inventoryApi.sendPurchaseOrder(po.id);
+            toast.success(`Đã gửi đơn hàng ${po.poNumber}`);
+            fetchData();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.error || 'Lỗi gửi đơn hàng');
+        }
+    };
+
+    const handleCancel = async (po: PurchaseOrder) => {
+        if (po.status === 'Received' || po.status === 'Cancelled') {
+            toast.error('Không thể hủy đơn hàng này');
+            return;
+        }
+        const ok = await confirm({ message: `Xác nhận hủy đơn mua hàng ${po.poNumber}?`, variant: 'danger' });
+        if (!ok) return;
+        try {
+            await inventoryApi.cancelPurchaseOrder(po.id);
+            toast.success(`Đã hủy đơn hàng ${po.poNumber}`);
+            fetchData();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.error || 'Lỗi hủy đơn hàng');
+        }
+    };
+
     // Stats
     const stats = {
         total: orders.length,
@@ -493,24 +525,45 @@ export default function PurchaseOrdersPage() {
                                             {po.totalAmount.toLocaleString('vi-VN')}đ
                                         </td>
                                         <td className="px-5 py-4 text-center">
-                                            {(po.status === 'Sent' || po.status === 'PartialReceived') && (
-                                                <button
-                                                    onClick={() => handleReceive(po)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors"
-                                                >
-                                                    <CheckCircle size={14} />
-                                                    Nhận hàng
-                                                </button>
-                                            )}
-                                            {po.status === 'Received' && (
-                                                <span className="text-xs text-gray-400">✓ Hoàn tất</span>
-                                            )}
-                                            {po.status === 'Draft' && (
-                                                <span className="text-xs text-gray-400 italic">Chờ gửi</span>
-                                            )}
-                                             {po.status === 'Cancelled' && (
-                                                <span className="text-xs text-red-400">Đã hủy</span>
-                                            )}
+                                            <div className="flex items-center justify-center gap-2">
+                                                {po.status === 'Draft' && (
+                                                    <button
+                                                        onClick={() => handleSend(po)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors"
+                                                    >
+                                                        <Truck size={14} />
+                                                        Gửi đơn
+                                                    </button>
+                                                )}
+                                                {(po.status === 'Sent' || po.status === 'PartialReceived') && (
+                                                    <button
+                                                        onClick={() => handleReceive(po)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors"
+                                                    >
+                                                        <CheckCircle size={14} />
+                                                        Nhận hàng
+                                                    </button>
+                                                )}
+                                                {(po.status === 'Draft' || po.status === 'Sent') && (
+                                                    <button
+                                                        onClick={() => handleCancel(po)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-semibold transition-colors"
+                                                    >
+                                                        <XCircle size={14} />
+                                                        Hủy
+                                                    </button>
+                                                )}
+                                                {po.status === 'Received' && (
+                                                    <span className="text-xs text-green-600 font-semibold bg-green-50 px-3 py-1.5 rounded-lg inline-flex items-center gap-1">
+                                                        <CheckCircle size={14} /> Hoàn tất
+                                                    </span>
+                                                )}
+                                                {po.status === 'Cancelled' && (
+                                                    <span className="text-xs text-red-600 font-semibold bg-red-50 px-3 py-1.5 rounded-lg inline-flex items-center gap-1">
+                                                        <XCircle size={14} /> Đã hủy
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );

@@ -308,6 +308,16 @@ export const inventoryApi = {
         return response.data;
     },
 
+    sendPurchaseOrder: async (id: string): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/inventory/po/${id}/send`);
+        return response.data;
+    },
+
+    cancelPurchaseOrder: async (id: string): Promise<{ message: string }> => {
+        const response = await client.put<{ message: string }>(`/inventory/po/${id}/cancel`);
+        return response.data;
+    },
+
     receivePurchaseOrder: async (id: string): Promise<{ message: string }> => {
         const response = await client.put<{ message: string }>(`/inventory/po/${id}/receive`);
         return response.data;

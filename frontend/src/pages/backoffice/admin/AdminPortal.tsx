@@ -258,8 +258,8 @@ export const AdminPortal = () => {
         const activities: any[] = [];
 
         // Add latest orders
-        if (latestOrders && latestOrders.length > 0) {
-            latestOrders.slice(0, 3).forEach(order => {
+        if (latestOrders?.orders && latestOrders.orders.length > 0) {
+            latestOrders.orders.slice(0, 3).forEach(order => {
                 activities.push({
                     action: `Đơn hàng mới #${order.orderNumber}`,
                     user: 'Khách hàng',
@@ -328,7 +328,7 @@ export const AdminPortal = () => {
                 <StatCard
                     title="Tổng người dùng"
                     value={stats.totalUsers}
-                    change={activeUsersData?.total ? `${activeUsersData.total} active` : undefined}
+                    change={activeUsersData?.total ? `${activeUsersData.total} hoạt động` : undefined}
                     changeType="neutral"
                     icon={Users}
                     color="blue"
@@ -409,7 +409,7 @@ export const AdminPortal = () => {
                     className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">Người dùng active</h3>
+                        <h3 className="font-semibold text-gray-900">Người dùng hoạt động</h3>
                         <Activity size={20} className="text-blue-500" />
                     </div>
                     <div className="flex items-end gap-2 mb-4">
@@ -488,10 +488,10 @@ export const AdminPortal = () => {
                     <h3 className="font-semibold text-gray-900 mb-4">Trạng thái hệ thống</h3>
                     <div className="space-y-1">
                         <SystemStatus name="API Server" status={systemLatency < 500 ? 'healthy' : 'warning'} value={`${systemLatency}ms`} icon={Server} />
-                        <SystemStatus name="Database" status="healthy" value="Connected" icon={Database} />
-                        <SystemStatus name="Services" status="healthy" value="Running" icon={Cpu} />
-                        <SystemStatus name="Storage" status="healthy" value="Stable" icon={HardDrive} />
-                        <SystemStatus name="Network" status="healthy" value="Online" icon={Wifi} />
+                        <SystemStatus name="Cơ sở dữ liệu" status="healthy" value="Đã kết nối" icon={Database} />
+                        <SystemStatus name="Dịch vụ" status="healthy" value="Đang chạy" icon={Cpu} />
+                        <SystemStatus name="Lưu trữ" status="healthy" value="Ổn định" icon={HardDrive} />
+                        <SystemStatus name="Mạng" status="healthy" value="Trực tuyến" icon={Wifi} />
                     </div>
                 </div>
             </div>

@@ -282,7 +282,8 @@ public static class CrmEndpoints
                     a.Segment.IsAutoAssign,
                     a.Segment.SortOrder,
                     a.Segment.CustomerCount,
-                    a.Segment.CreatedAt
+                    a.Segment.CreatedAt,
+                    a.Segment.RuleDefinition
                 ))
                 .ToListAsync();
 
@@ -448,7 +449,7 @@ public static class CrmEndpoints
             var segments = await service.GetAllSegmentsAsync();
             return Results.Ok(segments.Select(s => new SegmentDto(
                 s.Id, s.Name, s.Code, s.Description, s.Color,
-                s.IsAutoAssign, s.SortOrder, s.CustomerCount, s.CreatedAt
+                s.IsAutoAssign, s.SortOrder, s.CustomerCount, s.CreatedAt, s.RuleDefinition
             )));
         });
 
@@ -460,7 +461,7 @@ public static class CrmEndpoints
 
             return Results.Ok(new SegmentDto(
                 segment.Id, segment.Name, segment.Code, segment.Description, segment.Color,
-                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt
+                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt, segment.RuleDefinition
             ));
         });
 
@@ -473,7 +474,7 @@ public static class CrmEndpoints
 
             return Results.Created($"/api/crm/segments/{segment.Id}", new SegmentDto(
                 segment.Id, segment.Name, segment.Code, segment.Description, segment.Color,
-                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt
+                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt, segment.RuleDefinition
             ));
         });
 
@@ -488,7 +489,7 @@ public static class CrmEndpoints
 
             return Results.Ok(new SegmentDto(
                 segment.Id, segment.Name, segment.Code, segment.Description, segment.Color,
-                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt
+                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt, segment.RuleDefinition
             ));
         });
 
@@ -509,7 +510,7 @@ public static class CrmEndpoints
 
             return Results.Ok(new SegmentDto(
                 segment.Id, segment.Name, segment.Code, segment.Description, segment.Color,
-                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt
+                segment.IsAutoAssign, segment.SortOrder, segment.CustomerCount, segment.CreatedAt, segment.RuleDefinition
             ));
         });
 

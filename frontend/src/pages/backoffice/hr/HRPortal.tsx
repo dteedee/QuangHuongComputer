@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Users2, CreditCard, Calendar, BarChart,
@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../../utils/format';
+import { Modal } from '../../../components/ui/Modal';
+import { Input } from '../../../components/ui/Input';
+import { Button } from '../../../components/ui/Button';
 
 export const HRPortal = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -175,43 +178,62 @@ export const HRPortal = () => {
             </div>
 
             {/* Add Employee Modal */}
-            <AnimatePresence>
-                {isAddModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddModalOpen(false)} className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8">
-                            <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6 tracking-tighter">Thêm <span className="text-accent">Nhân sự mới</span></h2>
-                            <form onSubmit={handleAddEmployee} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Họ và tên</label>
-                                    <input name="fullName" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vị trí</label>
-                                        <input name="position" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lương cơ bản</label>
-                                        <input name="baseSalary" type="number" required defaultValue={10000000} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email liên hệ</label>
-                                    <input name="email" type="email" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 placeholder:text-gray-400" />
-                                </div>
-                                <div className="flex gap-4 pt-4">
-                                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-400 font-black uppercase text-[10px] rounded-2xl">Hủy</button>
-                                    <button type="submit" disabled={createEmployeeMutation.isPending} className="flex-[2] py-4 bg-accent text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-red-500/20">
-                                        {createEmployeeMutation.isPending ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                                        Lưu nhân sự
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
+            {/* Add Employee Modal */}
+            <Modal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                title="Thêm Nhân sự mới"
+                description="Nhập thông tin chi tiết để thêm nhân sự vào hệ thống"
+            >
+                <form onSubmit={handleAddEmployee} className="space-y-6">
+                    <Input 
+                        label="Họ và tên" 
+                        name="fullName" 
+                        required 
+                        placeholder="Nhập họ và tên nhân viên" 
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input 
+                            label="Vị trí" 
+                            name="position" 
+                            required 
+                            placeholder="VD: Kỹ thuật viên" 
+                        />
+                        <Input 
+                            label="Lương cơ bản" 
+                            name="baseSalary" 
+                            type="number" 
+                            required 
+                            defaultValue={10000000} 
+                        />
                     </div>
-                )}
-            </AnimatePresence>
+                    <Input 
+                        label="Email liên hệ" 
+                        name="email" 
+                        type="email" 
+                        required 
+                        placeholder="email@example.com" 
+                    />
+                    <div className="flex gap-4 pt-4">
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsAddModalOpen(false)} 
+                            className="flex-1 uppercase text-[10px] tracking-widest"
+                        >
+                            Hủy
+                        </Button>
+                        <Button 
+                            type="submit" 
+                            loading={createEmployeeMutation.isPending} 
+                            icon={Check} 
+                            className="flex-[2] uppercase text-[10px] tracking-widest"
+                        >
+                            Lưu nhân sự
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

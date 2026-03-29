@@ -58,7 +58,7 @@ export const CommonDashboard = () => {
         {
             label: 'Đơn hoàn thành',
             value: salesStats?.completedOrders?.toString() || '0',
-            change: 'Orders',
+            change: 'Đơn',
             icon: <Package size={28} />,
             trend: 'none',
             color: 'bg-emerald-600'
@@ -82,7 +82,7 @@ export const CommonDashboard = () => {
 
             // Create CSV content
             const csvContent = [
-                ['Month', 'Revenue', 'Order Count'],
+                ['Tháng', 'Doanh thu', 'Số đơn hàng'],
                 ...response.monthlyData.map(m => [
                     `T${m.month}/${response.year}`,
                     m.revenue.toString(),
@@ -95,13 +95,13 @@ export const CommonDashboard = () => {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `Revenue_Report_${response.year}.csv`);
+            link.setAttribute('download', `Bao_cao_doanh_thu_${response.year}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            toast.success(`Đã xuất báo cáo thành công! (File: Revenue_Report_${response.year}.csv)`);
+            toast.success(`Đã xuất báo cáo thành công! (File: Bao_cao_doanh_thu_${response.year}.csv)`);
         } catch (error) {
             toast.error('Lỗi xuất báo cáo');
             console.error(error);

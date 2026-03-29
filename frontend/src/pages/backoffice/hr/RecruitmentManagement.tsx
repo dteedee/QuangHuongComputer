@@ -20,6 +20,11 @@ import { hrApi, type JobListing } from '../../../api/hr';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useConfirm } from '../../../context/ConfirmContext';
+import { Modal } from '../../../components/ui/Modal';
+import { Input } from '../../../components/ui/Input';
+import { Select } from '../../../components/ui/Select';
+import { Textarea } from '../../../components/ui/Textarea';
+import { Button } from '../../../components/ui/Button';
 
 export const RecruitmentManagement = () => {
     const [jobs, setJobs] = useState<JobListing[]>([]);
@@ -216,184 +221,133 @@ export const RecruitmentManagement = () => {
             </div>
 
             {/* Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
-                        ></motion.div>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editingJob?.id ? 'Chỉnh sửa tin' : 'Đăng tin mới'}
+                description="Điền thông tin vào các trường bên dưới"
+            >
+                <form onSubmit={handleSave} className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <Input
+                                label="Tiêu đề vị trí *"
+                                required
+                                value={editingJob?.title}
+                                onChange={e => setEditingJob({ ...editingJob!, title: e.target.value })}
+                                placeholder="VD: Kỹ thuật viên phần cứng..."
+                            />
+                        </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]"
-                        >
-                            <div className="p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <div>
-                                    <h2 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
-                                        {editingJob?.id ? 'Chỉnh sửa tin' : 'Đăng tin mới'}
-                                    </h2>
-                                    <p className="text-gray-500 text-xs mt-1 uppercase font-bold tracking-widest leading-none">Điền thông tin vào các trường bên dưới</p>
-                                </div>
-                                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white hover:shadow-sm rounded-2xl transition-all">
-                                    <X size={24} className="text-gray-400" />
-                                </button>
-                            </div>
+                        <Input
+                            label="Phòng ban *"
+                            required
+                            value={editingJob?.department}
+                            onChange={e => setEditingJob({ ...editingJob!, department: e.target.value })}
+                            placeholder="VD: Kỹ thuật, Kinh doanh..."
+                        />
 
-                            <form onSubmit={handleSave} className="p-8 overflow-y-auto custom-scrollbar">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Tiêu đề vị trí</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.title}
-                                            onChange={e => setEditingJob({ ...editingJob!, title: e.target.value })}
-                                            placeholder="VD: Kỹ thuật viên phần cứng..."
-                                        />
-                                    </div>
+                        <Input
+                            label="Địa điểm *"
+                            required
+                            value={editingJob?.location}
+                            onChange={e => setEditingJob({ ...editingJob!, location: e.target.value })}
+                        />
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Phòng ban</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.department}
-                                            onChange={e => setEditingJob({ ...editingJob!, department: e.target.value })}
-                                            placeholder="VD: Kỹ thuật, Kinh doanh..."
-                                        />
-                                    </div>
+                        <Select
+                            label="Loại hình *"
+                            value={editingJob?.jobType || 'Full-time'}
+                            onChange={e => setEditingJob({ ...editingJob!, jobType: e.target.value })}
+                            options={[
+                                { label: 'Toàn thời gian', value: 'Full-time' },
+                                { label: 'Bán thời gian', value: 'Part-time' },
+                                { label: 'Hợp đồng', value: 'Contract' },
+                                { label: 'Freelance', value: 'Freelance' }
+                            ]}
+                        />
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Địa điểm</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.location}
-                                            onChange={e => setEditingJob({ ...editingJob!, location: e.target.value })}
-                                        />
-                                    </div>
+                        <Input
+                            label="Hạn nộp hồ sơ *"
+                            required
+                            type="date"
+                            value={editingJob?.expiryDate?.split('T')[0] || ''}
+                            onChange={e => setEditingJob({ ...editingJob!, expiryDate: e.target.value })}
+                        />
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Loại hình</label>
-                                        <select
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400 appearance-none"
-                                            value={editingJob?.jobType}
-                                            onChange={e => setEditingJob({ ...editingJob!, jobType: e.target.value })}
-                                        >
-                                            <option value="Full-time">Toàn thời gian</option>
-                                            <option value="Part-time">Bán thời gian</option>
-                                            <option value="Contract">Hợp đồng</option>
-                                            <option value="Freelance">Freelance</option>
-                                        </select>
-                                    </div>
+                        <Input
+                            label="Lương tối thiểu (VNĐ)"
+                            type="number"
+                            value={editingJob?.salaryRangeMin || 0}
+                            onChange={e => setEditingJob({ ...editingJob!, salaryRangeMin: Number(e.target.value) })}
+                        />
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Hạn nộp hồ sơ</label>
-                                        <input
-                                            required
-                                            type="date"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.expiryDate?.split('T')[0]}
-                                            onChange={e => setEditingJob({ ...editingJob!, expiryDate: e.target.value })}
-                                        />
-                                    </div>
+                        <Input
+                            label="Lương tối đa (VNĐ)"
+                            type="number"
+                            value={editingJob?.salaryRangeMax || 0}
+                            onChange={e => setEditingJob({ ...editingJob!, salaryRangeMax: Number(e.target.value) })}
+                        />
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Lương tối thiểu (VNĐ)</label>
-                                        <input
-                                            type="number"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.salaryRangeMin}
-                                            onChange={e => setEditingJob({ ...editingJob!, salaryRangeMin: Number(e.target.value) })}
-                                        />
-                                    </div>
+                        <div className="md:col-span-2">
+                            <Textarea
+                                label="Mô tả công việc"
+                                rows={3}
+                                value={editingJob?.description || ''}
+                                onChange={e => setEditingJob({ ...editingJob!, description: e.target.value })}
+                            />
+                        </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Lương tối đa (VNĐ)</label>
-                                        <input
-                                            type="number"
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.salaryRangeMax}
-                                            onChange={e => setEditingJob({ ...editingJob!, salaryRangeMax: Number(e.target.value) })}
-                                        />
-                                    </div>
+                        <div className="md:col-span-2">
+                            <Textarea
+                                label="Yêu cầu ứng viên"
+                                rows={3}
+                                value={editingJob?.requirements || ''}
+                                onChange={e => setEditingJob({ ...editingJob!, requirements: e.target.value })}
+                            />
+                        </div>
 
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Mô tả công việc</label>
-                                        <textarea
-                                            rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.description}
-                                            onChange={e => setEditingJob({ ...editingJob!, description: e.target.value })}
-                                        ></textarea>
-                                    </div>
+                        <div className="md:col-span-2">
+                            <Textarea
+                                label="Quyền lợi"
+                                rows={3}
+                                value={editingJob?.benefits || ''}
+                                onChange={e => setEditingJob({ ...editingJob!, benefits: e.target.value })}
+                            />
+                        </div>
 
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Yêu cầu ứng viên</label>
-                                        <textarea
-                                            rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.requirements}
-                                            onChange={e => setEditingJob({ ...editingJob!, requirements: e.target.value })}
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Quyền lợi</label>
-                                        <textarea
-                                            rows={3}
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400"
-                                            value={editingJob?.benefits}
-                                            onChange={e => setEditingJob({ ...editingJob!, benefits: e.target.value })}
-                                        ></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Trạng thái</label>
-                                        <select
-                                            className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3.5 text-gray-900 focus:ring-2 focus:ring-accent/20 font-bold placeholder:text-gray-400 appearance-none"
-                                            value={editingJob?.status}
-                                            onChange={e => setEditingJob({ ...editingJob!, status: e.target.value as any })}
-                                        >
-                                            <option value="Draft">Nháp</option>
-                                            <option value="Active">Hoạt động</option>
-                                            <option value="Closed">Đóng</option>
-                                            <option value="Archived">Lưu trữ</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-4 mt-10">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-3xl font-bold hover:bg-gray-200 transition-all active:scale-95"
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={saving}
-                                        className="flex-1 bg-gray-900 text-white py-4 rounded-3xl font-black uppercase italic text-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl shadow-gray-200"
-                                    >
-                                        {saving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-                                        Lưu thông tin
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
+                        <Select
+                            label="Trạng thái *"
+                            value={editingJob?.status || 'Draft'}
+                            onChange={e => setEditingJob({ ...editingJob!, status: e.target.value as any })}
+                            options={[
+                                { label: 'Nháp', value: 'Draft' },
+                                { label: 'Hoạt động', value: 'Active' },
+                                { label: 'Đóng', value: 'Closed' },
+                                { label: 'Lưu trữ', value: 'Archived' }
+                            ]}
+                        />
                     </div>
-                )}
-            </AnimatePresence>
+
+                    <div className="flex gap-4 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsModalOpen(false)}
+                            className="flex-1 uppercase text-sm tracking-widest"
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            loading={saving}
+                            icon={Save}
+                            className="flex-[2] uppercase text-sm tracking-widest bg-gray-900 border-none hover:bg-gray-800"
+                        >
+                            Lưu thông tin
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

@@ -6,6 +6,10 @@ import { hrApi, type Employee } from '../../../api/hr';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../../context/ConfirmContext';
 import { formatCurrency } from '../../../utils/format';
+import { Modal } from '../../../components/ui/Modal';
+import { Input } from '../../../components/ui/Input';
+import { Select } from '../../../components/ui/Select';
+import { Button } from '../../../components/ui/Button';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -344,185 +348,116 @@ export const EmployeesPage = () => {
             </div>
 
             {/* Add/Edit Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={`${editingEmployee ? 'Chỉnh sửa' : 'Thêm'} Nhân viên`}
+                description="Nhập thông tin chi tiết nhân viên vào hệ thống"
+            >
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Họ và tên *"
+                            name="fullName"
+                            required
+                            defaultValue={editingEmployee?.fullName}
                         />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
-                        >
-                            <h2 className="text-2xl font-black text-gray-900 uppercase italic mb-6 tracking-tighter">
-                                {editingEmployee ? 'Chỉnh sửa' : 'Thêm'} <span className="text-accent">Nhân viên</span>
-                            </h2>
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Họ và tên <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            name="fullName"
-                                            required
-                                            defaultValue={editingEmployee?.fullName}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Email <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            name="email"
-                                            type="email"
-                                            required
-                                            defaultValue={editingEmployee?.email}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Số điện thoại
-                                        </label>
-                                        <input
-                                            name="phone"
-                                            defaultValue={editingEmployee?.phone}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Phòng ban <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            name="department"
-                                            required
-                                            defaultValue={editingEmployee?.department}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        >
-                                            <option value="">Chọn phòng ban</option>
-                                            {departments.map(dept => (
-                                                <option key={dept} value={dept}>{dept}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Vị trí <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            name="position"
-                                            required
-                                            defaultValue={editingEmployee?.position}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Lương cơ bản (VND) <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            name="baseSalary"
-                                            type="number"
-                                            required
-                                            defaultValue={editingEmployee?.baseSalary || 10000000}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Ngày vào làm <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            name="hireDate"
-                                            type="date"
-                                            required
-                                            defaultValue={editingEmployee?.hireDate?.split('T')[0]}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Trạng thái <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            name="status"
-                                            required
-                                            defaultValue={editingEmployee?.status || 'Active'}
-                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                        >
-                                            <option value="Active">Đang làm việc</option>
-                                            <option value="OnLeave">Nghỉ phép</option>
-                                            <option value="Inactive">Đã nghỉ việc</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                        Địa chỉ
-                                    </label>
-                                    <input
-                                        name="address"
-                                        defaultValue={editingEmployee?.address}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                        Liên hệ khẩn cấp
-                                    </label>
-                                    <input
-                                        name="emergencyContact"
-                                        defaultValue={editingEmployee?.emergencyContact}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-accent/5"
-                                    />
-                                </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 py-4 bg-gray-50 text-gray-400 font-black uppercase text-[10px] rounded-2xl hover:bg-gray-100 transition-all"
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={createMutation.isPending || updateMutation.isPending}
-                                        className="flex-[2] py-4 bg-accent text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {(createMutation.isPending || updateMutation.isPending) ? (
-                                            <Loader2 size={16} className="animate-spin" />
-                                        ) : (
-                                            <Check size={16} />
-                                        )}
-                                        {editingEmployee ? 'Cập nhật' : 'Thêm mới'}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
+                        <Input
+                            label="Email *"
+                            name="email"
+                            type="email"
+                            required
+                            defaultValue={editingEmployee?.email}
+                        />
                     </div>
-                )}
-            </AnimatePresence>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Số điện thoại"
+                            name="phone"
+                            defaultValue={editingEmployee?.phone}
+                        />
+                        <Select
+                            label="Phòng ban *"
+                            name="department"
+                            required
+                            defaultValue={editingEmployee?.department || ''}
+                            options={[
+                                { label: 'Chọn phòng ban', value: '' },
+                                ...departments.map(dept => ({ label: dept, value: dept }))
+                            ]}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Vị trí *"
+                            name="position"
+                            required
+                            defaultValue={editingEmployee?.position}
+                        />
+                        <Input
+                            label="Lương cơ bản (VND) *"
+                            name="baseSalary"
+                            type="number"
+                            required
+                            defaultValue={editingEmployee?.baseSalary || 10000000}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Ngày vào làm *"
+                            name="hireDate"
+                            type="date"
+                            required
+                            defaultValue={editingEmployee?.hireDate?.split('T')[0]}
+                        />
+                        <Select
+                            label="Trạng thái *"
+                            name="status"
+                            required
+                            defaultValue={editingEmployee?.status || 'Active'}
+                            options={[
+                                { label: 'Đang làm việc', value: 'Active' },
+                                { label: 'Nghỉ phép', value: 'OnLeave' },
+                                { label: 'Đã nghỉ việc', value: 'Inactive' }
+                            ]}
+                        />
+                    </div>
+
+                    <Input
+                        label="Địa chỉ"
+                        name="address"
+                        defaultValue={editingEmployee?.address}
+                    />
+
+                    <Input
+                        label="Liên hệ khẩn cấp"
+                        name="emergencyContact"
+                        defaultValue={editingEmployee?.emergencyContact}
+                    />
+
+                    <div className="flex gap-4 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsModalOpen(false)}
+                            className="flex-1 uppercase text-[10px] tracking-widest"
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            loading={createMutation.isPending || updateMutation.isPending}
+                            icon={Check}
+                            className="flex-[2] uppercase text-[10px] tracking-widest"
+                        >
+                            {editingEmployee ? 'Cập nhật' : 'Thêm mới'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

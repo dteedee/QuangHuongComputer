@@ -150,29 +150,73 @@ public static class InventoryEndpoints
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
             BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
 
+        group.MapPut("/po/{id:guid}/send", async (Guid id, InventoryDbContext db) =>
+        {
+            var po = await db.PurchaseOrders.FindAsync(id);
+            if (po == null) return Results.NotFound();
+
+            try {
+                po.Send();
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Đã gửi đơn hàng" });
+            } catch (InvalidOperationException ex) {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
+            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
+
+        group.MapPut("/po/{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>
+        {
+            var po = await db.PurchaseOrders.FindAsync(id);
+            if (po == null) return Results.NotFound();
+
+            try {
+                po.Cancel();
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Đã hủy đơn hàng" });
+            } catch (InvalidOperationException ex) {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
+            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
+
         group.MapPut("/po/{id:guid}/receive", async (Guid id, InventoryDbContext db) =>
         {
             var po = await db.PurchaseOrders.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
             if (po == null) return Results.NotFound();
 
-            if (po.Status == POStatus.Received) return Results.BadRequest("Already received");
+            try {
+                po.ReceiveAll(); // Status changes to Received
 
-            foreach (var item in po.Items)
-            {
-                var invItem = await db.InventoryItems.FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
-                if (invItem != null)
+                // 1. Update Inventory Stock
+                foreach (var item in po.Items)
                 {
-                    invItem.AdjustStock(item.Quantity);
+                    var invItem = await db.InventoryItems.FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+                    if (invItem != null)
+                    {
+                        invItem.AdjustStock(item.Quantity, $"Nhận hàng từ PO: {po.PONumber}");
+                    }
+                    else
+                    {
+                        db.InventoryItems.Add(new InventoryItem(item.ProductId, item.Quantity));
+                    }
                 }
-                else
+
+                // 2. Update Supplier Info (Total Orders, Purchase Amount, Debt)
+                var supplier = await db.Suppliers.FindAsync(po.SupplierId);
+                if (supplier != null)
                 {
-                    db.InventoryItems.Add(new InventoryItem(item.ProductId, item.Quantity));
+                    supplier.RecordOrder(po.TotalAmount);
+                    supplier.UpdateDebt(po.TotalAmount); // We owe supplier more money
                 }
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Đã nhận hàng và cập nhật tồn kho" });
+            } catch (InvalidOperationException ex) {
+                return Results.BadRequest(new { error = ex.Message });
             }
-
-            po.ReceiveAll();
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Items received and stock updated" });
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
             BuildingBlocks.Security.Permissions.Inventory.ReceivePurchaseOrder));
