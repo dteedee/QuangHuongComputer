@@ -1,0 +1,68 @@
+# ===========================================
+# Quang Huong Computer - Docker Ignore
+# ===========================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Node
+node_modules
+frontend/node_modules
+
+# .NET build artifacts
+**/bin
+**/obj
+
+# Logs
+*.log
+backend.log
+gateway.log
+
+# Local env files (secrets)
+.env
+.env.local
+.env.docker
+.env.uat
+.env.test
+
+# Documentation
+docs/
+plans/
+*.md
+!README.md
+
+# Backups
+backups/
+
+# Monitoring configs (mounted separately)
+monitoring/
+
+# CI/CD
+.github/
+
+# Agent configs
+.claude/
+.opencode/
+.gemini/
+
+# Misc
+*.py
+*.sql
+test-api.js
+release-manifest.json
+restore.sql
+Makefile
+manage.sh
+status.sh
+prisma/
+lib/
+mobile/
+infra/

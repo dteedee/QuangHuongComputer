@@ -1,0 +1,327 @@
+# ===========================================
+# Quang Huong Computer - Production Environment
+# ===========================================
+# Usage:
+#   1. Copy .env.prod.example to .env.prod
+#   2. Fill in production credentials
+#   3. Run: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# ===========================================
+
+services:
+  # ============================================
+  # DATABASE - PostgreSQL (Production)
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: qhc-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quanghuongdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./backups/postgres:/backups
+    networks:
+      - qhc-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quanghuongdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c maintenance_work_mem=256MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c max_connections=200
+      -c log_min_duration_statement=500
+      -c log_checkpoints=on
+      -c log_lock_waits=on
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  # ============================================
+  # CACHE - Redis (Production)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: qhc-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      --tcp-keepalive 300
+      --timeout 0
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - qhc-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================
+  # MESSAGE QUEUE - RabbitMQ (Production)
+  # ============================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: qhc-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: quanghuong_prod
+    volumes:
+      - rabbitmq_prod_data:/var/lib/rabbitmq
+    networks:
+      - qhc-internal
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================
+  # BACKEND API (Production)
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: qhc-backend:${APP_VERSION:-latest}
+    container_name: qhc-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      # Database
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-quanghuongdb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Timeout=30;Pooling=true;MinPoolSize=10;MaxPoolSize=200"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false,connectTimeout=5000"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASSWORD}@rabbitmq:5672/quanghuong_prod"
+      # Redis
+      Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false"
+      Redis__InstanceName: "qhc-prod:"
+      Redis__DefaultTtl: 3600
+      # JWT
+      Jwt__Key: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      Jwt__Issuer: "QuangHuongComputer"
+      Jwt__Audience: "QuangHuongComputer"
+      Jwt__ExpireMinutes: ${JWT_EXPIRE_MINUTES:-60}
+      # OAuth
+      OAuth__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      OAuth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      OAuth__Facebook__AppId: ${FACEBOOK_APP_ID:-}
+      OAuth__Facebook__AppSecret: ${FACEBOOK_APP_SECRET:-}
+      # Payment (Production)
+      Payment__VNPay__TmnCode: ${VNPAY_TMN_CODE:-}
+      Payment__VNPay__HashSecret: ${VNPAY_HASH_SECRET:-}
+      Payment__VNPay__PaymentUrl: ${VNPAY_PAYMENT_URL:-https://pay.vnpay.vn/vpcpay.html}
+      Payment__VNPay__ReturnUrl: ${VNPAY_RETURN_URL}
+      Payment__Momo__PartnerCode: ${MOMO_PARTNER_CODE:-}
+      Payment__Momo__AccessKey: ${MOMO_ACCESS_KEY:-}
+      Payment__Momo__SecretKey: ${MOMO_SECRET_KEY:-}
+      Payment__Momo__Endpoint: ${MOMO_ENDPOINT:-https://payment.momo.vn/v2/gateway/api/create}
+      Payment__Momo__ReturnUrl: ${MOMO_RETURN_URL:-}
+      Payment__Momo__NotifyUrl: ${MOMO_NOTIFY_URL:-}
+      Payment__ZaloPay__AppId: ${ZALOPAY_APP_ID:-}
+      Payment__ZaloPay__Key1: ${ZALOPAY_KEY1:-}
+      Payment__ZaloPay__Key2: ${ZALOPAY_KEY2:-}
+      Payment__ZaloPay__Endpoint: ${ZALOPAY_ENDPOINT:-https://openapi.zalopay.vn/v2/create}
+      Payment__ZaloPay__CallbackUrl: ${ZALOPAY_CALLBACK_URL:-}
+      Payment__SePay__ApiKey: ${SEPAY_API_KEY:-}
+      Payment__SePay__AccountNumber: ${SEPAY_ACCOUNT_NUMBER:-}
+      Payment__SePay__BankCode: ${SEPAY_BANK_CODE:-}
+      # Email
+      Email__Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Email__Smtp__Port: ${SMTP_PORT:-587}
+      Email__Smtp__EnableSsl: "true"
+      Email__Smtp__Username: ${SMTP_USERNAME}
+      Email__Smtp__Password: ${SMTP_PASSWORD}
+      Email__Smtp__FromName: "Quang Hưởng Computer"
+      Email__Smtp__FromEmail: ${SMTP_FROM_EMAIL}
+      # Storage
+      Storage__CloudinaryUrl: ${CLOUDINARY_URL:-}
+      Storage__LocalPath: /app/uploads
+      # AI
+      AI__Gemini__ApiKey: ${GEMINI_API_KEY:-}
+      # Features
+      Features__UseRealPayment: "true"
+      Features__UseRealEmail: "true"
+      Features__SandboxMode: "false"
+      Features__EnableDetailedErrors: "false"
+      # CORS
+      Cors__AllowedOrigins__0: "${PROD_DOMAIN:?PROD_DOMAIN is required}"
+      Cors__AllowedOrigins__1: "${PROD_DOMAIN_WWW:-}"
+      # Frontend URL (for email links)
+      Frontend__Url: "${PROD_DOMAIN}"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - qhc-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "10"
+
+  # ============================================
+  # FRONTEND (Production)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL is required}
+        VITE_NODE_ENV: production
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        VITE_FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+        VITE_CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+        VITE_VNPAY_RETURN_URL: ${VITE_VNPAY_RETURN_URL:-}
+        VITE_MOMO_RETURN_URL: ${VITE_MOMO_RETURN_URL:-}
+        VITE_ZALOPAY_RETURN_URL: ${VITE_ZALOPAY_RETURN_URL:-}
+        VITE_SIGNALR_HUB_URL: ${VITE_SIGNALR_HUB_URL:-}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
+    image: qhc-frontend:${APP_VERSION:-latest}
+    container_name: qhc-frontend
+    networks:
+      - qhc-internal
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ============================================
+  # REVERSE PROXY - Nginx (Production)
+  # ============================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: qhc-nginx
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - qhc-internal
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  qhc-internal:
+    driver: bridge
+    name: qhc-prod-network
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  postgres_prod_data:
+    name: qhc-postgres-prod
+  redis_prod_data:
+    name: qhc-redis-prod
+  rabbitmq_prod_data:
+    name: qhc-rabbitmq-prod
+  backend_uploads:
+    name: qhc-backend-uploads

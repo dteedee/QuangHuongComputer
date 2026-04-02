@@ -45,6 +45,7 @@ pnpm-lock.yaml
 !.env.docker.example
 !.env.test.example
 !.env.uat.example
+!.env.prod.example
 
 # vercel
 .vercel
