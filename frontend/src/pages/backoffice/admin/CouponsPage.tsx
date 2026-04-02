@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Edit, Trash2, Search, RefreshCw, Filter, Tag,
-  Calendar, Percent, DollarSign, AlertCircle, Check, X, Copy
+  Calendar, Percent, DollarSign, AlertCircle, Check, X, Copy,
+  Layers, PackagePlus // Added for bulk
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useConfirm } from '@context/ConfirmContext';
@@ -79,6 +80,9 @@ export function CouponsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkQuantity, setBulkQuantity] = useState(50);
+  const [bulkPrefix, setBulkPrefix] = useState('SALE');
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const confirm = useConfirm();
 
@@ -218,6 +222,40 @@ export function CouponsPage() {
     setFormData({ ...formData, code });
   };
 
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (bulkQuantity < 1 || bulkQuantity > 500) {
+      toast.error('Số lượng mã chỉ được từ 1 tới 500');
+      return;
+    }
+
+    const toastId = toast.loading(`Đang tạo ${bulkQuantity} mã giảm giá...`);
+    
+    try {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const promises = [];
+
+      for (let x = 0; x < bulkQuantity; x++) {
+        let code = bulkPrefix;
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        promises.push(couponsApi.create({
+          ...formData,
+          code, // Override unique code
+        }));
+      }
+
+      await Promise.all(promises);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+      toast.success(`Đã phát hành thành công ${bulkQuantity} mã giảm giá!`, { id: toastId });
+      setIsBulkModalOpen(false);
+    } catch {
+      toast.error('Có lỗi xảy ra khi tạo mã hàng loạt', { id: toastId });
+    }
+  };
+
   // Filter coupons
   const filteredCoupons = coupons?.filter(coupon =>
     coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,17 +288,37 @@ export function CouponsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-bold text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </button>
           <button
+            onClick={() => {
+              setFormData({
+                code: '',
+                description: '',
+                discountType: 'Percentage',
+                discountValue: 10,
+                minOrderAmount: 0,
+                maxDiscount: null,
+                validFrom: new Date().toISOString().split('T')[0],
+                validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                usageLimit: null,
+              });
+              setIsBulkModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-bold text-sm shadow-lg shadow-purple-500/20"
+          >
+            <Layers className="w-4 h-4" />
+            Tạo hàng loạt
+          </button>
+          <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-bold text-sm shadow-lg shadow-red-500/20"
           >
             <Plus className="w-4 h-4" />
-            Tạo mã mới
+            Tạo mã lẻ
           </button>
         </div>
       </div>
@@ -633,6 +691,179 @@ export function CouponsPage() {
                   className="flex-1 px-4 py-3 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors disabled:opacity-50"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Đang xử lý...' : editingCoupon ? 'Cập nhật' : 'Tạo mã'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Generator Modal */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsBulkModalOpen(false)} />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+                    <PackagePlus className="w-5 h-5" /> 
+                    Phát hành mã hàng loạt
+                  </h2>
+                  <p className="text-purple-100 text-xs font-bold uppercase tracking-widest mt-1">Dành cho chiến dịch Marketing cấm sao chép</p>
+                </div>
+                <button onClick={() => setIsBulkModalOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleBulkSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-100px)]">
+              
+              <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 flex gap-4 items-center">
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-purple-900 uppercase tracking-widest mb-2">Số lượng mã</label>
+                  <input
+                    type="number"
+                    value={bulkQuantity}
+                    onChange={(e) => setBulkQuantity(Number(e.target.value))}
+                    min={1}
+                    max={500}
+                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-0 focus:border-purple-500 font-black text-xl text-center text-purple-700"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-bold text-purple-900 uppercase tracking-widest mb-2">Tiền tố mã</label>
+                  <input
+                    type="text"
+                    value={bulkPrefix}
+                    onChange={(e) => setBulkPrefix(e.target.value.toUpperCase())}
+                    placeholder="VD: SUMMER"
+                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-0 focus:border-purple-500 font-bold uppercase text-center"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Discount Type & Value */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Loại giảm giá</label>
+                  <select
+                    value={formData.discountType}
+                    onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold text-gray-700 outline-none"
+                  >
+                    <option value="Percentage">Phần trăm (%)</option>
+                    <option value="FixedAmount">Số tiền cố định</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                    Giá trị {formData.discountType === 'Percentage' ? '(%)' : '(VNĐ)'}
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.discountValue}
+                    onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
+                    min={0}
+                    max={formData.discountType === 'Percentage' ? 100 : undefined}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold outline-none"
+                    required
+                  />
+                </div>
+              </div>
+
+               {/* Valid From & To */}
+               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Bắt đầu</label>
+                  <input
+                    type="date"
+                    value={formData.validFrom}
+                    onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold text-sm outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Kết thúc</label>
+                  <input
+                    type="date"
+                    value={formData.validTo}
+                    onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold text-sm outline-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Min Order & Max Discount */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Đơn tối thiểu (VNĐ)</label>
+                  <input
+                    type="number"
+                    value={formData.minOrderAmount}
+                    onChange={(e) => setFormData({ ...formData, minOrderAmount: Number(e.target.value) })}
+                    min={0}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Giảm tối đa (VNĐ)</label>
+                  <input
+                    type="number"
+                    value={formData.maxDiscount || ''}
+                    onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value ? Number(e.target.value) : null })}
+                    min={0}
+                    placeholder="Không giới hạn"
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Usage Limit */}
+              <div>
+                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Giới hạn sử dụng MỖI MÃ</label>
+                 <input
+                  type="number"
+                  value={formData.usageLimit || ''}
+                  onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value ? Number(e.target.value) : null })}
+                  min={1}
+                  placeholder="Thường để 1 (Mỗi người 1 mã)"
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold outline-none"
+                 />
+              </div>
+
+               {/* Description */}
+               <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Mô tả (Áp dụng chung)</label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="VD: Mã Marketing phát ngẫu nhiên"
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold outline-none"
+                />
+              </div>
+
+              {/* Submit */}
+              <div className="flex gap-3 pt-6 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="flex-1 px-4 py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-black uppercase tracking-widest transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black uppercase tracking-widest transition-transform shadow-xl shadow-purple-500/30 hover:scale-105 active:scale-95 flex justify-center items-center gap-2"
+                >
+                  <PackagePlus size={18} />
+                  Phát hành ngay
                 </button>
               </div>
             </form>
