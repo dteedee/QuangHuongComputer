@@ -11,7 +11,7 @@ interface CartDrawerProps {
 }
 
 export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-    const { items, removeFromCart, updateQuantity, total } = useCart();
+    const { items, removeFromCart, updateQuantity, total, subtotal, shippingAmount } = useCart();
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
@@ -139,7 +139,9 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                                 <span className="w-8 text-center text-xs font-bold text-gray-700">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-accent transition-colors"
+                                                    disabled={item.quantity >= item.stockQuantity}
+                                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 shadow-sm hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                    title={item.quantity >= item.stockQuantity ? `Kho chỉ còn ${item.stockQuantity} sản phẩm` : 'Tăng số lượng'}
                                                 >
                                                     <Plus size={12} />
                                                 </button>

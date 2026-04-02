@@ -151,6 +151,7 @@ export interface CartItemDto {
     quantity: number;
     subtotal: number;
     imageUrl?: string;
+    stockQuantity?: number;
 }
 
 export interface SalesStats {

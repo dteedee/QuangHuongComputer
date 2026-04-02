@@ -16,6 +16,7 @@ interface CartItem {
     price: number;
     quantity: number;
     imageUrl?: string;
+    stockQuantity: number;
 }
 
 interface CartContextType {
@@ -53,7 +54,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const [items, setItems] = useState<CartItem[]>([]);
     const [couponCode, setCouponCode] = useState<string | null>(null);
     const [discountAmount, setDiscountAmount] = useState<number>(0);
-    const [shippingAmount, setShippingAmount] = useState<number>(0);
     const [taxRate, setTaxRate] = useState<number>(0.1);
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -64,7 +64,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             setItems([]);
             setCouponCode(null);
             setDiscountAmount(0);
-            setShippingAmount(0);
         }
     }, [isAuthenticated]);
 
@@ -80,13 +79,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 name: item.productName,
                 price: item.price,
                 quantity: item.quantity,
-                imageUrl: item.imageUrl || ''
+                imageUrl: item.imageUrl || '',
+                stockQuantity: item.stockQuantity ?? 999
             }));
 
             setItems(cartItems);
             setCouponCode(cart.couponCode || null);
             setDiscountAmount(cart.discountAmount);
-            setShippingAmount(cart.shippingAmount);
             setTaxRate(cart.taxRate);
         } catch (error) {
             console.error('Failed to load cart:', error);
@@ -105,6 +104,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
         if (!isAuthenticated) {
             toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+            return;
+        }
+
+        // Pre-flight stock check on client side
+        const existingItem = items.find(i => i.id === product.id);
+        const currentQty = existingItem?.quantity ?? 0;
+        const maxStock = existingItem?.stockQuantity ?? product.stockQuantity;
+        if (currentQty + quantity > maxStock) {
+            toast.error(`Sản phẩm "${product.name}" chỉ còn ${maxStock} cái trong kho`, {
+                icon: '⚠️', style: { borderRadius: '15px' }
+            });
             return;
         }
 
@@ -129,7 +139,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setIsUpdating(false);
         }
-    }, [isAuthenticated, refreshCart]);
+    }, [isAuthenticated, items, refreshCart]);
 
     const removeFromCart = useCallback(async (productId: string) => {
         if (!isAuthenticated) {
@@ -285,6 +295,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         Math.max(0, (subtotal - discountAmount) * taxRate),
         [subtotal, discountAmount, taxRate]
     );
+
+    const shippingAmount = useMemo(() => {
+        if (items.length === 0) return 0;
+        return (subtotal - discountAmount) >= 500000 ? 0 : 30000;
+    }, [subtotal, discountAmount, items.length]);
 
     const total = useMemo(() =>
         Math.max(0, subtotal - discountAmount + tax + shippingAmount),

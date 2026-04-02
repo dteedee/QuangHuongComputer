@@ -18,7 +18,9 @@ public record CartItemDto(
     string ProductName,
     decimal Price,
     int Quantity,
-    decimal Subtotal
+    decimal Subtotal,
+    string? ImageUrl = null,
+    int StockQuantity = 999
 );
 
 public record AddToCartDto(

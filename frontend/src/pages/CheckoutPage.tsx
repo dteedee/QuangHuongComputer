@@ -44,7 +44,7 @@ interface CheckoutForm {
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { items, subtotal, tax, total, discountAmount, couponCode, clearCart } = useCart();
+  const { items, subtotal, tax, total, discountAmount, shippingAmount, couponCode, clearCart } = useCart();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -292,11 +292,34 @@ export function CheckoutPage() {
     }).format(price);
   };
 
-  const provinces = [
-    'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
-    'Bình Dương', 'Đồng Nai', 'Khánh Hòa', 'Hải Dương', 'Long An',
-    'Quảng Ninh', 'Bắc Ninh', 'Thái Nguyên', 'Nam Định', 'Thái Bình'
-  ];
+  const [dbProvinces, setDbProvinces] = useState<any[]>([]);
+  const [dbDistricts, setDbDistricts] = useState<any[]>([]);
+  const [dbWards, setDbWards] = useState<any[]>([]);
+
+  // Fetch provinces on mount
+  useEffect(() => {
+    fetch('https://provinces.open-api.vn/api/?depth=3')
+      .then(res => res.json())
+      .then(data => setDbProvinces(data))
+      .catch(err => console.error('Failed to load provinces:', err));
+  }, []);
+
+  // Handle province change gracefully
+  const handleProvinceChange = (provinceName: string) => {
+    handleInputChange('province', provinceName);
+    handleInputChange('district', '');
+    handleInputChange('ward', '');
+    const provinceData = dbProvinces.find(p => p.name === provinceName);
+    setDbDistricts(provinceData ? provinceData.districts : []);
+    setDbWards([]);
+  };
+
+  const handleDistrictChange = (districtName: string) => {
+    handleInputChange('district', districtName);
+    handleInputChange('ward', '');
+    const districtData = dbDistricts.find(d => d.name === districtName);
+    setDbWards(districtData ? districtData.wards : []);
+  };
 
   const steps = [
     { title: 'Thông tin', icon: User },
@@ -544,13 +567,13 @@ export function CheckoutPage() {
                               <select
                                 required
                                 value={formData.province}
-                                onChange={(e) => handleInputChange('province', e.target.value)}
+                                onChange={(e) => handleProvinceChange(e.target.value)}
                                 className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.province ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
                                   }`}
                               >
                                 <option value="">Chọn tỉnh/thành</option>
-                                {provinces.map((p) => (
-                                  <option key={p} value={p}>{p}</option>
+                                {dbProvinces.map((p) => (
+                                  <option key={p.code} value={p.name}>{p.name}</option>
                                 ))}
                               </select>
                             </div>
@@ -558,29 +581,37 @@ export function CheckoutPage() {
                               <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Quận / Huyện <span className="text-accent">*</span>
                               </label>
-                              <input
-                                type="text"
+                              <select
                                 required
                                 value={formData.district}
-                                onChange={(e) => handleInputChange('district', e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.district ? 'border-red-500' : 'border-transparent focus:border-accent'
-                                  }`}
-                                placeholder="Nhập quận/huyện"
-                              />
+                                disabled={!formData.province || dbDistricts.length === 0}
+                                onChange={(e) => handleDistrictChange(e.target.value)}
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.district ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
+                                  } disabled:opacity-50`}
+                              >
+                                <option value="">Chọn quận/huyện</option>
+                                {dbDistricts.map((d) => (
+                                  <option key={d.code} value={d.name}>{d.name}</option>
+                                ))}
+                              </select>
                             </div>
                             <div className="space-y-2">
                               <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Phường / Xã <span className="text-accent">*</span>
                               </label>
-                              <input
-                                type="text"
+                              <select
                                 required
                                 value={formData.ward}
+                                disabled={!formData.district || dbWards.length === 0}
                                 onChange={(e) => handleInputChange('ward', e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.ward ? 'border-red-500' : 'border-transparent focus:border-accent'
-                                  }`}
-                                placeholder="Nhập phường/xã"
-                              />
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.ward ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
+                                  } disabled:opacity-50`}
+                              >
+                                <option value="">Chọn phường/xã</option>
+                                {dbWards.map((w) => (
+                                  <option key={w.code} value={w.name}>{w.name}</option>
+                                ))}
+                              </select>
                             </div>
                           </div>
 
@@ -933,9 +964,13 @@ export function CheckoutPage() {
                       </div>
                     )}
 
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm items-center">
                       <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Vận chuyển</span>
-                      <span className="font-bold text-green-500 uppercase text-[10px]">Miễn phí</span>
+                      {shippingAmount === 0 ? (
+                        <span className="font-bold text-green-500 uppercase text-[10px]">Miễn phí</span>
+                      ) : (
+                        <span className="font-bold text-slate-700">{formatPrice(shippingAmount)}</span>
+                      )}
                     </div>
 
                     <div className="flex justify-between text-sm">

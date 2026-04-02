@@ -175,7 +175,7 @@ public static class SalesEndpoints
 
         // ==================== CART ENDPOINTS ====================
 
-        group.MapGet("/cart", async (SalesDbContext db, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
+        group.MapGet("/cart", async (SalesDbContext db, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -192,12 +192,19 @@ public static class SalesEndpoints
                 await db.SaveChangesAsync();
             }
 
-            // Fetch product images
+            // Fetch product images and inventory in parallel
             var productIds = cart.Items.Select(i => i.ProductId).ToList();
-            var products = await catalogDb.Products
+            var productsTask = catalogDb.Products
                 .Where(p => productIds.Contains(p.Id))
                 .Select(p => new { p.Id, p.ImageUrl })
                 .ToDictionaryAsync(p => p.Id, p => p.ImageUrl);
+            var inventoryTask = inventoryDb.InventoryItems
+                .Where(i => productIds.Contains(i.ProductId))
+                .ToDictionaryAsync(i => i.ProductId, i => i.AvailableQuantity);
+
+            await Task.WhenAll(productsTask, inventoryTask);
+            var products = await productsTask;
+            var inventory = await inventoryTask;
 
             return Results.Ok(new CartDto(
                 cart.Id,
@@ -215,7 +222,8 @@ public static class SalesEndpoints
                     i.Price, 
                     i.Quantity, 
                     i.Subtotal,
-                    products.TryGetValue(i.ProductId, out var img) ? img : null
+                    products.TryGetValue(i.ProductId, out var img) ? img : null,
+                    inventory.TryGetValue(i.ProductId, out var stock) ? stock : 999
                 )).ToList()
             ));
         });

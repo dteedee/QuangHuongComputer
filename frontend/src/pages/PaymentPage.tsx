@@ -12,7 +12,7 @@ export const PaymentPage = () => {
     const [order, setOrder] = useState<Order | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentId, setPaymentId] = useState<string | null>(null);
-    const [step, setStep] = useState<'review' | 'gateway' | 'success'>('review');
+    const [step, setStep] = useState<'review' | 'gateway' | 'success' | 'error'>('review');
 
     useEffect(() => {
         if (orderId) {
@@ -49,9 +49,21 @@ export const PaymentPage = () => {
             setPaymentUrl(res.paymentUrl || null);
         } catch (error) {
             console.error('Failed to initiate payment', error);
-            toast.error('Failed to initialize payment system');
+            setStep('error');
+            toast.error('Gặp lỗi khi tạo giao dịch thanh toán trực tuyến.');
         }
     };
+
+    // Auto-redirect when payment URL is generated successfully
+    useEffect(() => {
+        if (paymentUrl) {
+            setStep('gateway');
+            const timer = setTimeout(() => {
+                window.location.href = paymentUrl;
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [paymentUrl]);
 
     const handlePayment = async () => {
         if (!paymentId) return;
@@ -99,14 +111,29 @@ export const PaymentPage = () => {
                         </div>
 
                         <button
-                            onClick={handlePayment}
-                            disabled={!paymentId || isProcessing}
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                            disabled
+                            className="w-full py-4 bg-slate-800 text-slate-400 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
                         >
-                            <Lock size={18} />
-                            Thanh toán ngay
+                            <Loader2 size={18} className="animate-spin" />
+                            Đang khởi tạo thanh toán...
                         </button>
                     </>
+                )}
+
+                {step === 'error' && (
+                    <div className="text-center py-8">
+                        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mx-auto mb-6">
+                            <Lock size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Lỗi Khởi Tạo</h3>
+                        <p className="text-gray-400 mb-6">Không thể kết nối đến cổng thanh toán VNPay hiện tại.</p>
+                        <button
+                            onClick={() => navigate(`/checkout`)}
+                            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition shadow-lg shadow-red-600/20"
+                        >
+                            Quay lại Chọn phương thức khác
+                        </button>
+                    </div>
                 )}
 
                 {step === 'gateway' && (

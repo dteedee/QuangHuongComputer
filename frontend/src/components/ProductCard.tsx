@@ -196,10 +196,15 @@ const ProductHoverPopup = ({
                         </Link>
                         <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
-                            className="flex-1 bg-amber-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                            disabled={product.stockQuantity <= 0}
+                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 ${
+                                product.stockQuantity <= 0
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-amber-500 text-white hover:bg-amber-600'
+                            }`}
                         >
                             <ShoppingCart size={16} />
-                            Mua ngay
+                            {product.stockQuantity <= 0 ? 'Hết hàng' : 'Mua ngay'}
                         </button>
                     </div>
                 </motion.div>
@@ -550,7 +555,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                             className="flex-1 py-4 bg-accent text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
                                         >
                                             <ShoppingCart size={20} />
-                                            THÊM GIỎ HÀNG
+                                            {product.stockQuantity <= 0 ? 'Hết hàng' : 'THÊM GIỎ HÀNG'}
                                         </button>
                                     </div>
                                 </div>

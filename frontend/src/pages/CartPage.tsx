@@ -17,6 +17,7 @@ export const CartPage = () => {
         removeCoupon,
         subtotal,
         tax,
+        shippingAmount,
         total
     } = useCart();
     const navigate = useNavigate();
@@ -101,7 +102,9 @@ export const CartPage = () => {
                                                 <span className="text-gray-900 font-bold w-8 text-center text-sm">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-accent transition shadow-sm font-bold"
+                                                    disabled={item.quantity >= item.stockQuantity}
+                                                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md text-gray-500 hover:text-accent transition shadow-sm disabled:opacity-30 disabled:cursor-not-allowed font-bold"
+                                                    title={item.quantity >= item.stockQuantity ? `Kho chỉ còn ${item.stockQuantity}` : 'Tăng số lượng'}
                                                 >
                                                     <Plus size={14} />
                                                 </button>
@@ -123,7 +126,11 @@ export const CartPage = () => {
                             </div>
                             <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
                                 <button
-                                    onClick={clearCart}
+                                    onClick={() => {
+                                        if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng không?')) {
+                                            clearCart();
+                                        }
+                                    }}
                                     className="flex items-center gap-2 text-gray-500 hover:text-red-500 font-semibold text-sm transition-colors"
                                 >
                                     <RotateCcw size={16} />
@@ -221,7 +228,11 @@ export const CartPage = () => {
                                 </div>
                                 <div className="flex justify-between text-gray-600 text-sm font-medium pb-4 border-b border-gray-100">
                                     <span>Vận chuyển</span>
-                                    <span className="text-emerald-600 font-semibold">Miễn phí</span>
+                                    {shippingAmount === 0 ? (
+                                        <span className="text-emerald-600 font-semibold">Miễn phí</span>
+                                    ) : (
+                                        <span className="text-gray-900 font-semibold">{formatCurrency(shippingAmount)}</span>
+                                    )}
                                 </div>
                                 <div className="flex justify-between items-end pt-2">
                                     <span className="text-base font-bold text-gray-900">Tổng cộng</span>
