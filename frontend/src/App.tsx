@@ -134,6 +134,7 @@ const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/Review
 const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
 const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
+const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -215,6 +216,16 @@ function App() {
                         <Route path="terms" element={<TermsPage />} />
                         <Route path="privacy" element={<PrivacyPage />} />
                         <Route path="about" element={<AboutPage />} />
+
+                        {/* Redirects for convenience URLs */}
+                        <Route path="promotion" element={<Navigate to="/policy/promotions" replace />} />
+                        <Route path="promotions" element={<Navigate to="/policy/promotions" replace />} />
+                        <Route path="news" element={<Navigate to="/policy/news" replace />} />
+
+                        {/* Payment Callback routes */}
+                        <Route path="payment/vnpay-return" element={<PaymentCallbackPage />} />
+                        <Route path="payment/momo-return" element={<PaymentCallbackPage />} />
+                        <Route path="payment/zalopay-return" element={<PaymentCallbackPage />} />
                       </Route>
 
                       {/* Backoffice Routes */}
@@ -259,6 +270,7 @@ function App() {
                           <Route path="menus" element={<MenuManager />} />
                           <Route path="homepage-builder" element={<HomepageBuilder />} />
                           <Route path="flash-sales" element={<FlashSalesPage />} />
+                          <Route path="payments/sepay" element={<SePayAdminPage />} />
                           
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />

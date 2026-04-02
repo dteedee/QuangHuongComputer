@@ -30,7 +30,7 @@ const getCategoryIcon = (type: string) => {
 export const PromotionSection = () => {
     const { data: posts = [], isLoading } = useQuery({
         queryKey: ['public-posts'],
-        queryFn: contentApi.getPosts,
+        queryFn: () => contentApi.getPosts(),
     });
 
     const newsItems = posts
@@ -137,7 +137,7 @@ export const PromotionSection = () => {
                                         {featuredPost.title}
                                     </h3>
                                     <p className="text-white/80 text-sm line-clamp-2">
-                                        {stripHtml(featuredPost.content).substring(0, 150)}...
+                                        {stripHtml(featuredPost.content || '').substring(0, 150)}...
                                     </p>
                                     <div className="mt-4 flex items-center gap-2 text-accent font-bold text-sm group-hover:gap-3 transition-all">
                                         Đọc ngay <ArrowRight size={16} />

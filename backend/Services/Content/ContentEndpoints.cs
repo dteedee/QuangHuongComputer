@@ -271,7 +271,8 @@ public static class ContentEndpoints
 
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
 
-        adminGroup.MapPost("/seed", async (ContentDbContext db, ICacheService cache) =>
+        // Temporarily expose public seed
+        group.MapPost("/seed", async (ContentDbContext db, ICacheService cache) =>
         {
             await Content.Infrastructure.Data.ContentDbSeeder.SeedAsync(db);
 

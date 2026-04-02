@@ -5,7 +5,8 @@ export interface Post {
     title: string;
     slug: string;
     content: string;
-    featuredImage?: string;
+    thumbnailUrl?: string;
+    summary?: string;
     category?: string;
     tags?: string[];
     type: 'Article' | 'News' | 'Promotion' | 'Banner' | 'Ad';
@@ -20,6 +21,7 @@ export interface Page {
     title: string;
     slug: string;
     content: string;
+    summary?: string;
     type: 'Custom' | 'About' | 'Contact' | 'FAQ' | 'Terms' | 'Privacy' | 'Shipping' | 'Returns' | 'Warranty';
     isPublished: boolean;
     publishedAt?: string;

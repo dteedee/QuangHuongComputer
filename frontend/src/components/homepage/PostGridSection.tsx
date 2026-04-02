@@ -46,7 +46,23 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                 </Link>
             </div>
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-6`}>
-                {posts.map((post, i) => (
+                {posts.map((post, i) => {
+                    const promoFallbacks = [
+                        '/images/placeholders/promo-1.png',
+                        '/images/placeholders/promo-2.png',
+                        '/images/placeholders/promo-3.png',
+                        '/images/placeholders/promo-4.png',
+                        '/images/placeholders/promo-5.png',
+                        '/images/placeholders/promo-6.png',
+                    ];
+                    const newsFallbacks = [
+                        '/images/placeholders/news-1.png',
+                        '/images/placeholders/news-2.png',
+                    ];
+                    const pool = postType === 'Promotion' ? promoFallbacks : newsFallbacks;
+                    const fallback = pool[((post.slug.length + (post.title.codePointAt(0) || 0)) % pool.length)];
+
+                    return (
                     <motion.div
                         key={post.id}
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -55,22 +71,19 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                         transition={{ delay: i * 0.1 }}
                         className="group"
                     >
-                        <Link to={`/posts/${post.slug}`} className="block h-full bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-gray-100 h-full">
-                            <div className="aspect-video overflow-hidden bg-gray-50 flex items-center justify-center">
-                                {post.featuredImage ? (
-                                    <img 
-                                        src={post.featuredImage} 
-                                        alt={post.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                ) : (
-                                    <span className="text-4xl font-black text-gray-300 uppercase">{post?.title?.charAt(0) || '?'}</span>
-                                )}
+                        <Link to={`/post/${post.slug}`} className="block h-full bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-gray-100">
+                            <div className="aspect-video overflow-hidden bg-gray-50">
+                                <img
+                                    src={post.thumbnailUrl || fallback}
+                                    alt={post.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    onError={(e) => { (e.target as HTMLImageElement).src = fallback; }}
+                                />
                             </div>
                             <div className="p-6">
                                 <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase mb-3">
                                     <Calendar size={14} />
-                                    {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Dec 24, 2025'}
+                                    {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('vi-VN') : 'Mới nhất'}
                                 </div>
                                 <h3 className="font-black text-gray-800 text-lg group-hover:text-accent transition-colors line-clamp-2 leading-tight">
                                     {post.title}
@@ -78,7 +91,8 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                             </div>
                         </Link>
                     </motion.div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

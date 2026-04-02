@@ -128,30 +128,47 @@ export const PolicyPage = () => {
 
                             {posts && posts.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {posts.map((post: any) => (
+                                    {posts.map((post: any, index: number) => {
+                                        // Fallback images per category
+                                        const promoImages = [
+                                            '/images/placeholders/promo-1.png',
+                                            '/images/placeholders/promo-2.png',
+                                            '/images/placeholders/promo-3.png',
+                                            '/images/placeholders/promo-4.png',
+                                            '/images/placeholders/promo-5.png',
+                                            '/images/placeholders/promo-6.png',
+                                        ];
+                                        const newsImages = [
+                                            '/images/placeholders/news-1.png',
+                                            '/images/placeholders/news-2.png',
+                                        ];
+                                        const fallbackPool = currentType === 'promotions' ? promoImages : newsImages;
+                                        const fallbackImage = fallbackPool[((post.slug.length + (post.title.codePointAt(0) || 0)) % fallbackPool.length)];
+
+                                        return (
                                         <div key={post.id} className="group border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all bg-white hover:-translate-y-1">
-                                            {/* Fallback image or featured image */}
+                                            {/* Featured image or styled fallback */}
                                             <div className="h-48 bg-gray-100 overflow-hidden relative">
-                                                {post.featuredImage ? (
-                                                    <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
-                                                        <FileText size={48} />
-                                                    </div>
-                                                )}
+                                                <img
+                                                    src={post.thumbnailUrl || fallbackImage}
+                                                    alt={post.title}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                    onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage; }}
+                                                />
                                                 <div className="absolute top-3 left-3 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                                     {post.type}
                                                 </div>
                                             </div>
                                             <div className="p-5">
                                                 <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-accent transition-colors">{post.title}</h3>
-                                                <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.summary || post.content?.replace(/<[^>]*>?/gm, '').substring(0, 100)}...</p>
+                                                <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.summary || (post.content || '').replace(/<[^>]*>?/gm, '').substring(0, 100)}...</p>
                                                 <Link to={`/post/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-1 hover:gap-2 transition-all">
                                                     Xem chi tiết <ChevronRight size={12} />
                                                 </Link>
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-20 bg-gray-50 rounded-2xl">

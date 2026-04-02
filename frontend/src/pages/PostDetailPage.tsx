@@ -42,8 +42,8 @@ export const PostDetailPage = () => {
         <div className="bg-gray-50 min-h-screen pb-20 font-sans">
             <SEO
                 title={post.title}
-                description={post.summary || post.content?.replace(/<[^>]*>?/gm, '').substring(0, 150)}
-                image={post.featuredImage}
+                description={post.summary || (post.content || '').replace(/<[^>]*>?/gm, '').substring(0, 150)}
+                image={post.thumbnailUrl}
                 type="article"
             />
             {/* Breadcrumb */}
@@ -64,9 +64,22 @@ export const PostDetailPage = () => {
                 <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
 
                     {/* Featured Image */}
-                    {post.featuredImage && (
+                    {post.thumbnailUrl ? (
                         <div className="w-full h-64 md:h-96 bg-gray-100 relative">
-                            <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
+                            <img src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover" />
+                            <div className="absolute top-4 left-4">
+                                <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                                    {post.type}
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full h-64 md:h-96 bg-gray-100 relative">
+                            <img 
+                                src={`/images/placeholders/${post.type === 'Promotion' ? 'promo' : 'news'}-${((post.slug.length + (post.title.codePointAt(0) || 0)) % (post.type === 'Promotion' ? 6 : 2)) + 1}.png`} 
+                                alt={post.title} 
+                                className="w-full h-full object-cover" 
+                            />
                             <div className="absolute top-4 left-4">
                                 <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
                                     {post.type}
@@ -78,14 +91,6 @@ export const PostDetailPage = () => {
                     <div className="p-6 md:p-12">
                         {/* Header */}
                         <div className="mb-10 border-b border-gray-100 pb-8">
-                            {!post.featuredImage && (
-                                <div className="mb-4">
-                                    <span className="bg-red-50 text-accent text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                        {post.type}
-                                    </span>
-                                </div>
-                            )}
-
                             <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
                                 {post.title}
                             </h1>
@@ -132,9 +137,9 @@ export const PostDetailPage = () => {
 
                 {/* Back Button */}
                 <div className="max-w-4xl mx-auto mt-8 mb-12">
-                    <Link to="/policy/news" className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold transition-colors group">
+                    <Link to={post.type === 'Promotion' ? '/policy/promotions' : '/policy/news'} className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold transition-colors group">
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                        Quay lại danh sách tin tức
+                        Quay lại danh sách {post.type === 'Promotion' ? 'khuyến mãi' : 'tin tức'}
                     </Link>
                 </div>
             </div>

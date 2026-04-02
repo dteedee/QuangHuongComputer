@@ -69,7 +69,7 @@ export const JobDetailPage = () => {
         <div className="bg-gray-50 min-h-screen pb-20">
             <SEO
                 title={job.title}
-                description={job.description.substring(0, 160)}
+                description={(job.description || '').substring(0, 160)}
             />
 
             {/* Breadcrumb */}

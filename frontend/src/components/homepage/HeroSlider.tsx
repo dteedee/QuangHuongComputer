@@ -114,7 +114,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                                 <div className="relative w-full h-full">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${slide.image.startsWith('/uploads') ? `http://localhost:5000${slide.image}` : slide.image})` }}
+                                        style={{ backgroundImage: `url(${slide.image && slide.image.startsWith('/uploads') ? `http://localhost:5000${slide.image}` : slide.image})` }}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-red-700 to-amber-600 opacity-80" />
                                     </div>

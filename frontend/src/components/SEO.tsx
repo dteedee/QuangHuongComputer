@@ -28,10 +28,11 @@ const SEO: React.FC<SEOProps> = ({
   const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
   const canonical = canonicalUrl || currentUrl;
 
-  // Ensure image is absolute URL
-  const absoluteImage = image.startsWith('http')
-    ? image
-    : `${typeof window !== 'undefined' ? window.location.origin : ''}${image}`;
+  // Ensure image is absolute URL, gracefully handling null
+  const safeImage = image || '/logo.png';
+  const absoluteImage = safeImage.startsWith('http')
+    ? safeImage
+    : `${typeof window !== 'undefined' ? window.location.origin : ''}${safeImage}`;
 
   return (
     <Helmet>

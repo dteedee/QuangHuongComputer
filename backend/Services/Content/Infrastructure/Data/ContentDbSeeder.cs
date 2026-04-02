@@ -160,13 +160,191 @@ public static class ContentDbSeeder
 
         foreach (var post in posts)
         {
-            if (!await context.Posts.AnyAsync(p => p.Slug == post.Slug))
+            var existingPost = await context.Posts.FirstOrDefaultAsync(p => p.Slug == post.Slug);
+            if (existingPost == null)
             {
                 post.Publish();
                 context.Posts.Add(post);
             }
+            else
+            {
+                existingPost.UpdateDetails(post.Title, post.Content, post.Category, post.ThumbnailUrl);
+                existingPost.UpdateTags(post.Tags);
+            }
         }
         
+        await context.SaveChangesAsync();
+
+        // 2.5 Fill Mock/Empty Posts with generic rich content template
+        var emptyPosts = await context.Posts.Where(p => p.Content.Length < 100).ToListAsync();
+        var promoImagesArray = new[] {
+            "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80",  // original red bag
+            "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&q=80",  // yellow sale
+            "https://images.unsplash.com/photo-1481437156560-3205f6a55735?w=800&q=80",  // store
+            "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=800&q=80",  // tags
+            "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",     // cart
+            "https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=800&q=80"   // bags
+        };
+        var articleImagesArray = new[] {
+            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80", // code
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80", // chip
+            "https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=800&q=80",    // cpu
+            "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&q=80", // gpu
+            "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&q=80"  // setup
+        };
+
+        foreach (var p in emptyPosts)
+        {
+            var hashValue = Math.Abs((p.Slug + p.Title).GetHashCode());
+            if (p.Type == PostType.Promotion || p.Category == "Khuyến mãi")
+            {
+                var promoHtml = @"<div class='not-prose space-y-6'>
+    <div style='background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%); color: white; padding: 2rem; border-radius: 1rem; text-align: center; box-shadow: 0 10px 25px -5px rgba(255, 65, 108, 0.4);'>
+        <h2 style='font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);'>🚀 SIÊU ƯU ĐÃI ĐẶC BIỆT</h2>
+        <p style='font-size: 1.25rem; opacity: 0.9; margin: 0;'>Chào đón chương trình khuyến mãi lớn nhất trong năm!</p>
+    </div>
+    
+    <div style='background-color: white; border: 1px solid #fee2e2; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+        <p style='font-size: 1.125rem; color: #4b5563; line-height: 1.7;'>Chương trình <strong>" + p.Title + @"</strong> chính thức khởi động với hàng ngàn ưu đãi cực khủng. Cơ hội sở hữu các sản phẩm công nghệ đỉnh cao với mức giá chưa từng có.</p>
+        
+        <h3 style='font-size: 1.5rem; font-weight: 800; color: #111827; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid #fecaca; padding-bottom: 0.5rem;'>🎁 Thông tin chi tiết</h3>
+        
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;'>
+            <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #3b82f6;'>
+                <h4 style='font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;'>Thời gian áp dụng</h4>
+                <p style='color: #475569; margin: 0;'>Từ ngày hôm nay cho đến khi có thông báo mới hoặc hết bộ quà tặng.</p>
+            </div>
+            <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #10b981;'>
+                <h4 style='font-weight: 700; color: #064e3b; margin-bottom: 0.5rem;'>Đối tượng áp dụng</h4>
+                <p style='color: #475569; margin: 0;'>Dành cho tất cả khách hàng mua sắm trực tiếp tại showroom và qua website trực tuyến.</p>
+            </div>
+        </div>
+        
+        <div style='margin-top: 2rem; background: #fffbeb; padding: 1.5rem; border-radius: 0.75rem; border: 1px dashed #f59e0b; text-align: center;'>
+            <p style='font-weight: 700; color: #b45309; margin: 0; font-size: 1.125rem;'>⚡ Nhanh tay lên! Số lượng quà tặng có hạn!</p>
+        </div>
+    </div>
+</div>";
+                var chosenPromoImg = promoImagesArray[hashValue % promoImagesArray.Length];
+                p.UpdateDetails(p.Title, promoHtml, p.Category, string.IsNullOrEmpty(p.ThumbnailUrl) ? chosenPromoImg : p.ThumbnailUrl);
+            }
+            else
+            {
+                var articleHtml = @"<div class='not-prose space-y-6'>
+    <div style='background: #f0f9ff; padding: 2rem; border-radius: 1rem; border-bottom: 5px solid #0ea5e9;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #0369a1; margin-bottom: 1rem;'>" + p.Title + @"</h2>
+        <p style='font-size: 1.125rem; color: #334155; margin: 0; font-style: italic;'>Cùng Quang Hưởng Computer tìm hiểu chi tiết về chủ đề này.</p>
+    </div>
+    
+    <div style='color: #334155; line-height: 1.8; font-size: 1.125rem;'>
+        <p style='margin-bottom: 1.5rem;'>Nội dung chi tiết cho bài viết <strong>" + p.Title + @"</strong> đang được chúng tôi cập nhật. Đây là những thông tin quan trọng nhất giúp bạn có cái nhìn tổng quan và sâu sắc hơn về thế giới công nghệ.</p>
+        
+        <h3 style='font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 2rem; margin-bottom: 1rem;'>📌 Điểm nổi bật</h3>
+        <ul style='list-style-type: none; padding-left: 0; margin-bottom: 2rem; color: #475569;'>
+            <li style='margin-bottom: 0.5rem;'>✓ Thông tin chuẩn xác và được cập nhật mới nhất.</li>
+            <li style='margin-bottom: 0.5rem;'>✓ Đánh giá khách quan dựa trên trải nghiệm thực tế.</li>
+            <li>✓ Tham khảo ý kiến từ các chuyên gia hàng đầu.</li>
+        </ul>
+        
+        <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid #cbd5e1;'>
+            <p style='margin: 0; color: #64748b;'><em>Đội ngũ biên tập viên của chúng tôi đang hoàn thiện nội dung này để mang đến cho bạn trải nghiệm đọc tốt nhất. Vui lòng quay lại sau!</em></p>
+        </div>
+    </div>
+</div>";
+                var chosenArticleImg = articleImagesArray[hashValue % articleImagesArray.Length];
+                p.UpdateDetails(p.Title, articleHtml, p.Category, string.IsNullOrEmpty(p.ThumbnailUrl) ? chosenArticleImg : p.ThumbnailUrl);
+            }
+        }
+        await context.SaveChangesAsync();
+
+        // 2.7 Fix identical generic contents
+        var promoIntros = new[] {
+            "🚀 SIÊU ƯU ĐÃI ĐẶC BIỆT",
+            "🔥 SĂN SALE CỰC ĐỈNH",
+            "🎁 QUÀ TẶNG BẤT TẬN",
+            "⭐ DEAL HOT TRONG TUẦN",
+            "🎉 BÙNG NỔ ƯU ĐÃI"
+        };
+        var promoSubtitles = new[] {
+            "Chào đón chương trình khuyến mãi lớn nhất trong năm!",
+            "Cơ hội sắm đồ công nghệ với mức giá hủy diệt.",
+            "Tri ân đặc biệt với hàng ngàn phần quà giá trị.",
+            "Tiết kiệm tối đa - Nâng cấp tối ưu.",
+            "Thời điểm vàng để sở hữu sản phẩm bạn yêu thích."
+        };
+        var articleIntros = new[] {
+            "Cùng Quang Hưởng Computer tìm hiểu chi tiết về chủ đề này.",
+            "Khám phá ngay những thông tin chuẩn xác và hấp dẫn nhất.",
+            "Góc nhìn chuyên sâu và khách quan nhất về vấn đề này.",
+            "Tất tần tật những điều bạn cần biết sẽ được bật mí.",
+            "Những phân tích đáng giá nhất dành riêng cho bạn."
+        };
+
+        var genericPromoPosts = await context.Posts.Where(p => p.Content.Contains("🚀 SIÊU ƯU ĐÃI ĐẶC BIỆT") || p.Content.Contains("🔥 SĂN SALE CỰC ĐỈNH")).ToListAsync();
+        foreach (var p in genericPromoPosts)
+        {
+            var hashValue = Math.Abs((p.Slug + p.Title).GetHashCode());
+            var intro = promoIntros[hashValue % promoIntros.Length];
+            var sub = promoSubtitles[(hashValue + 1) % promoSubtitles.Length];
+            
+            var newPromoHtml = @"<div class='not-prose space-y-6'>
+    <div style='background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%); color: white; padding: 2rem; border-radius: 1rem; text-align: center; box-shadow: 0 10px 25px -5px rgba(255, 65, 108, 0.4);'>
+        <h2 style='font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);'>" + intro + @"</h2>
+        <p style='font-size: 1.25rem; opacity: 0.9; margin: 0;'>" + sub + @"</p>
+    </div>
+    
+    <div style='background-color: white; border: 1px solid #fee2e2; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+        <p style='font-size: 1.125rem; color: #4b5563; line-height: 1.7;'>Chương trình <strong>" + p.Title + @"</strong> chính thức khởi động với hàng ngàn ưu đãi cực khủng. Cơ hội sở hữu các sản phẩm công nghệ đỉnh cao với mức giá chưa từng có.</p>
+        
+        <h3 style='font-size: 1.5rem; font-weight: 800; color: #111827; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid #fecaca; padding-bottom: 0.5rem;'>🎁 Thông tin chi tiết</h3>
+        
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;'>
+            <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #3b82f6;'>
+                <h4 style='font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;'>Thời gian áp dụng</h4>
+                <p style='color: #475569; margin: 0;'>Từ ngày hôm nay cho đến khi có thông báo mới hoặc hết bộ quà tặng.</p>
+            </div>
+            <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #10b981;'>
+                <h4 style='font-weight: 700; color: #064e3b; margin-bottom: 0.5rem;'>Đối tượng áp dụng</h4>
+                <p style='color: #475569; margin: 0;'>Dành cho tất cả khách hàng mua sắm trực tiếp tại showroom và qua website trực tuyến.</p>
+            </div>
+        </div>
+        
+        <div style='margin-top: 2rem; background: #fffbeb; padding: 1.5rem; border-radius: 0.75rem; border: 1px dashed #f59e0b; text-align: center;'>
+            <p style='font-weight: 700; color: #b45309; margin: 0; font-size: 1.125rem;'>⚡ Nhanh tay lên! Số lượng quà tặng có hạn!</p>
+        </div>
+    </div>
+</div>";
+            p.UpdateDetails(p.Title, newPromoHtml, p.Category, p.ThumbnailUrl);
+        }
+
+        var genericArticlePosts = await context.Posts.Where(p => p.Content.Contains("📌 Điểm nổi bật")).ToListAsync();
+        foreach (var p in genericArticlePosts)
+        {
+            var hashValue = Math.Abs((p.Slug + p.Title).GetHashCode());
+            var intro = articleIntros[hashValue % articleIntros.Length];
+            var newArticleHtml = @"<div class='not-prose space-y-6'>
+    <div style='background: #f0f9ff; padding: 2rem; border-radius: 1rem; border-bottom: 5px solid #0ea5e9;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #0369a1; margin-bottom: 1rem;'>" + p.Title + @"</h2>
+        <p style='font-size: 1.125rem; color: #334155; margin: 0; font-style: italic;'>" + intro + @"</p>
+    </div>
+    
+    <div style='color: #334155; line-height: 1.8; font-size: 1.125rem;'>
+        <p style='margin-bottom: 1.5rem;'>Nội dung chi tiết cho bài viết <strong>" + p.Title + @"</strong> đang được chúng tôi cập nhật. Đây là những thông tin quan trọng nhất giúp bạn có cái nhìn tổng quan và sâu sắc hơn về thế giới công nghệ.</p>
+        
+        <h3 style='font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 2rem; margin-bottom: 1rem;'>📌 Điểm nổi bật</h3>
+        <ul style='list-style-type: none; padding-left: 0; margin-bottom: 2rem; color: #475569;'>
+            <li style='margin-bottom: 0.5rem;'>✓ Thông tin chuẩn xác và được cập nhật mới nhất.</li>
+            <li style='margin-bottom: 0.5rem;'>✓ Đánh giá khách quan dựa trên trải nghiệm thực tế.</li>
+            <li>✓ Tham khảo ý kiến từ các chuyên gia hàng đầu.</li>
+        </ul>
+        
+        <div style='background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid #cbd5e1;'>
+            <p style='margin: 0; color: #64748b;'><em>Đội ngũ biên tập viên của chúng tôi đang hoàn thiện nội dung này để mang đến cho bạn trải nghiệm đọc tốt nhất. Vui lòng quay lại sau!</em></p>
+        </div>
+    </div>
+</div>";
+            p.UpdateDetails(p.Title, newArticleHtml, p.Category, p.ThumbnailUrl);
+        }
         await context.SaveChangesAsync();
 
         // 3. Menus Upsert
@@ -539,224 +717,224 @@ public static class ContentDbSeeder
 
     // ==================== PROMOTION CONTENTS ====================
     private const string PromotionFlashSale = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-red-600 to-orange-500 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>🔥 FLASH SALE CUỐI TUẦN</h2>
-        <p class='text-xl'>Chỉ còn 48 giờ! Giảm đến 50% toàn bộ linh kiện PC</p>
-        <p class='text-sm mt-2 opacity-90'>Áp dụng: Thứ 7 - Chủ Nhật hàng tuần | Số lượng có hạn</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #dc2626, #f97316); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem;'>🔥 FLASH SALE CUỐI TUẦN</h2>
+        <p style='font-size: 1.25rem;'>Chỉ còn 48 giờ! Giảm đến 50% toàn bộ linh kiện PC</p>
+        <p style='font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.9;'>Áp dụng: Thứ 7 - Chủ Nhật hàng tuần | Số lượng có hạn</p>
     </div>
 
     <div class='grid md:grid-cols-2 gap-4'>
-        <div class='bg-gray-50 p-5 rounded-xl border-l-4 border-red-500'>
-            <h3 class='font-bold text-lg text-gray-900 mb-3'>🎮 VGA Gaming</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>✓ RTX 4070 Super - Giảm <strong class='text-red-600'>3.000.000đ</strong></li>
-                <li>✓ RTX 4080 Super - Giảm <strong class='text-red-600'>4.500.000đ</strong></li>
-                <li>✓ RX 7900 XTX - Giảm <strong class='text-red-600'>5.000.000đ</strong></li>
+        <div style='background-color: #f9fafb; padding: 1.25rem; border-radius: 0.75rem; border-left: 4px solid #ef4444;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; color: #111827; margin-bottom: 0.75rem;'>🎮 VGA Gaming</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem;'>
+                <li style='margin-bottom: 0.5rem; color: #374151;'>✓ RTX 4070 Super - Giảm <strong style='color: #dc2626;'>3.000.000đ</strong></li>
+                <li style='margin-bottom: 0.5rem; color: #374151;'>✓ RTX 4080 Super - Giảm <strong style='color: #dc2626;'>4.500.000đ</strong></li>
+                <li style='color: #374151;'>✓ RX 7900 XTX - Giảm <strong style='color: #dc2626;'>5.000.000đ</strong></li>
             </ul>
         </div>
-        <div class='bg-gray-50 p-5 rounded-xl border-l-4 border-blue-500'>
-            <h3 class='font-bold text-lg text-gray-900 mb-3'>💻 CPU & Mainboard</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>✓ Intel Core i7-14700K - Giảm <strong class='text-red-600'>1.500.000đ</strong></li>
-                <li>✓ AMD Ryzen 7 7800X3D - Giảm <strong class='text-red-600'>2.000.000đ</strong></li>
-                <li>✓ Combo Main + CPU - Giảm thêm <strong class='text-red-600'>500.000đ</strong></li>
+        <div style='background-color: #f9fafb; padding: 1.25rem; border-radius: 0.75rem; border-left: 4px solid #3b82f6;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; color: #111827; margin-bottom: 0.75rem;'>💻 CPU & Mainboard</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem;'>
+                <li style='margin-bottom: 0.5rem; color: #374151;'>✓ Intel Core i7-14700K - Giảm <strong style='color: #dc2626;'>1.500.000đ</strong></li>
+                <li style='margin-bottom: 0.5rem; color: #374151;'>✓ AMD Ryzen 7 7800X3D - Giảm <strong style='color: #dc2626;'>2.000.000đ</strong></li>
+                <li style='color: #374151;'>✓ Combo Main + CPU - Giảm thêm <strong style='color: #dc2626;'>500.000đ</strong></li>
             </ul>
         </div>
     </div>
 
-    <div class='bg-yellow-50 border border-yellow-200 p-4 rounded-xl'>
-        <p class='font-bold text-yellow-800'>⚡ LƯU Ý: Ưu đãi không áp dụng cùng các chương trình khuyến mãi khác. Số lượng có hạn, áp dụng theo thứ tự đặt hàng.</p>
+    <div style='background-color: #fefce8; border: 1px solid #fef08a; padding: 1rem; border-radius: 0.75rem;'>
+        <p style='font-weight: 700; color: #854d0e; margin: 0;'>⚡ LƯU Ý: Ưu đãi không áp dụng cùng các chương trình khuyến mãi khác. Số lượng có hạn, áp dụng theo thứ tự đặt hàng.</p>
     </div>
 </div>";
 
     private const string PromotionLaptopGift = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>🎁 MUA LAPTOP - NHẬN QUÀ KHỦNG</h2>
-        <p class='text-xl'>Tặng ngay combo Balo + Chuột Gaming trị giá 1.500.000đ</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #2563eb, #9333ea); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem; color: white;'>🎁 MUA LAPTOP - NHẬN QUÀ KHỦNG</h2>
+        <p style='font-size: 1.25rem; margin: 0; color: white;'>Tặng ngay combo Balo + Chuột Gaming trị giá 1.500.000đ</p>
     </div>
 
     <div class='space-y-4'>
-        <h3 class='text-xl font-bold'>📦 Quà tặng bao gồm:</h3>
-        <div class='grid md:grid-cols-3 gap-4'>
-            <div class='bg-white shadow-lg rounded-xl p-4 text-center'>
-                <div class='text-4xl mb-2'>🎒</div>
-                <p class='font-bold'>Balo Laptop Gaming</p>
-                <p class='text-sm text-gray-500'>Trị giá 800.000đ</p>
+        <h3 style='font-size: 1.25rem; font-weight: 700; color: #111827;'>📦 Quà tặng bao gồm:</h3>
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;'>
+            <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1rem; text-align: center; border: 1px solid #f3f4f6;'>
+                <div style='font-size: 2.25rem; margin-bottom: 0.5rem;'>🎒</div>
+                <p style='font-weight: 700; margin: 0; color: #111827;'>Balo Laptop Gaming</p>
+                <p style='font-size: 0.875rem; color: #6b7280; margin: 0;'>Trị giá 800.000đ</p>
             </div>
-            <div class='bg-white shadow-lg rounded-xl p-4 text-center'>
-                <div class='text-4xl mb-2'>🖱️</div>
-                <p class='font-bold'>Chuột Gaming RGB</p>
-                <p class='text-sm text-gray-500'>Trị giá 500.000đ</p>
+            <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1rem; text-align: center; border: 1px solid #f3f4f6;'>
+                <div style='font-size: 2.25rem; margin-bottom: 0.5rem;'>🖱️</div>
+                <p style='font-weight: 700; margin: 0; color: #111827;'>Chuột Gaming RGB</p>
+                <p style='font-size: 0.875rem; color: #6b7280; margin: 0;'>Trị giá 500.000đ</p>
             </div>
-            <div class='bg-white shadow-lg rounded-xl p-4 text-center'>
-                <div class='text-4xl mb-2'>🎧</div>
-                <p class='font-bold'>Tai nghe Gaming</p>
-                <p class='text-sm text-gray-500'>Trị giá 200.000đ</p>
+            <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1rem; text-align: center; border: 1px solid #f3f4f6;'>
+                <div style='font-size: 2.25rem; margin-bottom: 0.5rem;'>🎧</div>
+                <p style='font-weight: 700; margin: 0;'>Tai nghe Gaming</p>
+                <p style='font-size: 0.875rem; color: #6b7280; margin: 0;'>Trị giá 200.000đ</p>
             </div>
         </div>
     </div>
 
-    <div class='bg-green-50 p-5 rounded-xl'>
-        <h3 class='font-bold text-green-800 mb-3'>✅ Điều kiện áp dụng:</h3>
-        <ul class='space-y-2 text-sm'>
-            <li>• Áp dụng cho đơn hàng Laptop từ <strong>15.000.000đ</strong> trở lên</li>
-            <li>• Khách hàng mới được tặng thêm voucher <strong>200.000đ</strong> cho lần mua tiếp theo</li>
+    <div style='background-color: #f0fdf4; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #dcfce7;'>
+        <h3 style='font-weight: 700; color: #166534; margin-bottom: 0.75rem;'>✅ Điều kiện áp dụng:</h3>
+        <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem;'>
+            <li style='margin-bottom: 0.5rem;'>• Áp dụng cho đơn hàng Laptop từ <strong style='font-weight: 700;'>15.000.000đ</strong> trở lên</li>
+            <li style='margin-bottom: 0.5rem;'>• Khách hàng mới được tặng thêm voucher <strong style='font-weight: 700;'>200.000đ</strong> cho lần mua tiếp theo</li>
             <li>• Miễn phí vận chuyển toàn quốc</li>
         </ul>
     </div>
 </div>";
 
     private const string PromotionTradeIn = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-green-600 to-teal-500 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>♻️ TRADE-IN VGA CŨ</h2>
-        <p class='text-xl'>Thu cũ giá cao - Lên đời RTX 50 Series giảm thêm 2.000.000đ</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #16a34a, #14b8a6); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem; color: white;'>♻️ TRADE-IN VGA CŨ</h2>
+        <p style='font-size: 1.25rem; margin: 0; color: white;'>Thu cũ giá cao - Lên đời RTX 50 Series giảm thêm 2.000.000đ</p>
     </div>
 
-    <div class='overflow-x-auto'>
-        <table class='w-full border-collapse'>
-            <thead class='bg-gray-100'>
+    <div style='overflow-x: auto;'>
+        <table style='width: 100%; border-collapse: collapse;'>
+            <thead style='background-color: #f3f4f6;'>
                 <tr>
-                    <th class='p-4 text-left font-bold'>VGA Cũ</th>
-                    <th class='p-4 text-left font-bold'>Giá Thu</th>
-                    <th class='p-4 text-left font-bold'>Đổi Lên</th>
-                    <th class='p-4 text-left font-bold'>Bù Thêm</th>
+                    <th style='padding: 1rem; text-align: left; font-weight: 700; color: #111827;'>VGA Cũ</th>
+                    <th style='padding: 1rem; text-align: left; font-weight: 700; color: #111827;'>Giá Thu</th>
+                    <th style='padding: 1rem; text-align: left; font-weight: 700; color: #111827;'>Đổi Lên</th>
+                    <th style='padding: 1rem; text-align: left; font-weight: 700; color: #111827;'>Bù Thêm</th>
                 </tr>
             </thead>
             <tbody>
-                <tr class='border-b'>
-                    <td class='p-4'>RTX 3070/3070 Ti</td>
-                    <td class='p-4 text-green-600 font-bold'>5.000.000đ</td>
-                    <td class='p-4'>RTX 5070</td>
-                    <td class='p-4 text-red-600 font-bold'>Từ 10.990.000đ</td>
+                <tr style='border-bottom: 1px solid #e5e7eb;'>
+                    <td style='padding: 1rem; color: #374151;'>RTX 3070/3070 Ti</td>
+                    <td style='padding: 1rem; color: #16a34a; font-weight: 700;'>5.000.000đ</td>
+                    <td style='padding: 1rem; color: #374151;'>RTX 5070</td>
+                    <td style='padding: 1rem; color: #dc2626; font-weight: 700;'>Từ 10.990.000đ</td>
                 </tr>
-                <tr class='border-b'>
-                    <td class='p-4'>RTX 3080/3080 Ti</td>
-                    <td class='p-4 text-green-600 font-bold'>7.000.000đ</td>
-                    <td class='p-4'>RTX 5080</td>
-                    <td class='p-4 text-red-600 font-bold'>Từ 18.990.000đ</td>
+                <tr style='border-bottom: 1px solid #e5e7eb;'>
+                    <td style='padding: 1rem; color: #374151;'>RTX 3080/3080 Ti</td>
+                    <td style='padding: 1rem; color: #16a34a; font-weight: 700;'>7.000.000đ</td>
+                    <td style='padding: 1rem; color: #374151;'>RTX 5080</td>
+                    <td style='padding: 1rem; color: #dc2626; font-weight: 700;'>Từ 18.990.000đ</td>
                 </tr>
-                <tr class='border-b'>
-                    <td class='p-4'>RTX 4070 Super</td>
-                    <td class='p-4 text-green-600 font-bold'>10.000.000đ</td>
-                    <td class='p-4'>RTX 5080</td>
-                    <td class='p-4 text-red-600 font-bold'>Từ 15.990.000đ</td>
+                <tr style='border-bottom: 1px solid #e5e7eb;'>
+                    <td style='padding: 1rem; color: #374151;'>RTX 4070 Super</td>
+                    <td style='padding: 1rem; color: #16a34a; font-weight: 700;'>10.000.000đ</td>
+                    <td style='padding: 1rem; color: #374151;'>RTX 5080</td>
+                    <td style='padding: 1rem; color: #dc2626; font-weight: 700;'>Từ 15.990.000đ</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <div class='bg-blue-50 p-5 rounded-xl'>
-        <p class='font-bold text-blue-800'>💡 Lưu ý: VGA cần còn hoạt động tốt, không lỗi phần cứng. Giá thu có thể thay đổi tùy tình trạng sản phẩm.</p>
+    <div style='background-color: #eff6ff; padding: 1.25rem; border-radius: 0.75rem;'>
+        <p style='font-weight: 700; color: #1e40af; margin: 0;'>💡 Lưu ý: VGA cần còn hoạt động tốt, không lỗi phần cứng. Giá thu có thể thay đổi tùy tình trạng sản phẩm.</p>
     </div>
 </div>";
 
     private const string PromotionBackToSchool = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-indigo-600 to-pink-500 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>📚 BACK TO SCHOOL 2026</h2>
-        <p class='text-xl'>Sinh viên giảm ngay 10% - Tối đa 3.000.000đ khi mua PC/Laptop</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #4f46e5, #ec4899); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem; color: white;'>📚 BACK TO SCHOOL 2026</h2>
+        <p style='font-size: 1.25rem; margin: 0; color: white;'>Sinh viên giảm ngay 10% - Tối đa 3.000.000đ khi mua PC/Laptop</p>
     </div>
 
-    <div class='grid md:grid-cols-2 gap-6'>
-        <div class='bg-white shadow-lg rounded-xl p-5'>
-            <h3 class='font-bold text-lg mb-3'>🎓 Đối tượng áp dụng</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>✓ Học sinh THPT (có thẻ học sinh)</li>
-                <li>✓ Sinh viên Đại học/Cao đẳng (có thẻ SV)</li>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;'>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1.25rem;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; margin-bottom: 0.75rem; color: #111827;'>🎓 Đối tượng áp dụng</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                <li style='margin-bottom: 0.5rem;'>✓ Học sinh THPT (có thẻ học sinh)</li>
+                <li style='margin-bottom: 0.5rem;'>✓ Sinh viên Đại học/Cao đẳng (có thẻ SV)</li>
                 <li>✓ Học viên các trung tâm đào tạo IT</li>
             </ul>
         </div>
-        <div class='bg-white shadow-lg rounded-xl p-5'>
-            <h3 class='font-bold text-lg mb-3'>🎁 Ưu đãi thêm</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>✓ Trả góp 0% lãi suất 12 tháng</li>
-                <li>✓ Tặng phần mềm Office 365 bản quyền</li>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1.25rem;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; margin-bottom: 0.75rem; color: #111827;'>🎁 Ưu đãi thêm</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                <li style='margin-bottom: 0.5rem;'>✓ Trả góp 0% lãi suất 12 tháng</li>
+                <li style='margin-bottom: 0.5rem;'>✓ Tặng phần mềm Office 365 bản quyền</li>
                 <li>✓ Miễn phí cài đặt phần mềm học tập</li>
             </ul>
         </div>
     </div>
 
-    <div class='bg-gradient-to-r from-yellow-100 to-orange-100 p-5 rounded-xl'>
-        <p class='font-bold text-orange-800'>📅 Thời gian: 15/08 - 30/09/2026 | Chỉ cần xuất trình thẻ HSSV khi mua hàng</p>
+    <div style='background: linear-gradient(to right, #fefce8, #ffedd5); padding: 1.25rem; border-radius: 0.75rem;'>
+        <p style='font-weight: 700; color: #c2410c; margin: 0;'>📅 Thời gian: 15/08 - 30/09/2026 | Chỉ cần xuất trình thẻ HSSV khi mua hàng</p>
     </div>
 </div>";
 
     private const string PromotionComboPC = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-gray-900 to-gray-700 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>🖥️ COMBO BUILD PC GAMING</h2>
-        <p class='text-xl'>Mua theo combo - Tiết kiệm đến 5.000.000đ so với mua lẻ</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #111827, #374151); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem; color: white;'>🖥️ COMBO BUILD PC GAMING</h2>
+        <p style='font-size: 1.25rem; margin: 0; color: white;'>Mua theo combo - Tiết kiệm đến 5.000.000đ so với mua lẻ</p>
     </div>
 
-    <div class='grid md:grid-cols-3 gap-4'>
-        <div class='bg-white shadow-xl rounded-xl overflow-hidden'>
-            <div class='bg-blue-500 text-white p-3 text-center font-bold'>COMBO ENTRY</div>
-            <div class='p-5'>
-                <p class='text-2xl font-black text-center mb-4'>15.990.000đ</p>
-                <ul class='space-y-2 text-sm'>
-                    <li>• CPU: Intel i5-14400F</li>
-                    <li>• VGA: RTX 4060</li>
-                    <li>• RAM: 16GB DDR5</li>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;'>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; overflow: hidden;'>
+            <div style='background-color: #3b82f6; color: white; padding: 0.75rem; text-align: center; font-weight: 700;'>COMBO ENTRY</div>
+            <div style='padding: 1.25rem;'>
+                <p style='font-size: 1.5rem; font-weight: 900; text-align: center; margin-bottom: 1rem; color: #111827;'>15.990.000đ</p>
+                <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                    <li style='margin-bottom: 0.5rem;'>• CPU: Intel i5-14400F</li>
+                    <li style='margin-bottom: 0.5rem;'>• VGA: RTX 4060</li>
+                    <li style='margin-bottom: 0.5rem;'>• RAM: 16GB DDR5</li>
                     <li>• SSD: 512GB NVMe</li>
                 </ul>
-                <p class='text-green-600 font-bold text-center mt-4'>Tiết kiệm 2.000.000đ</p>
+                <p style='color: #16a34a; font-weight: 700; text-align: center; margin-top: 1rem;'>Tiết kiệm 2.000.000đ</p>
             </div>
         </div>
-        <div class='bg-white shadow-xl rounded-xl overflow-hidden border-2 border-red-500'>
-            <div class='bg-red-500 text-white p-3 text-center font-bold'>COMBO HOT 🔥</div>
-            <div class='p-5'>
-                <p class='text-2xl font-black text-center mb-4'>25.990.000đ</p>
-                <ul class='space-y-2 text-sm'>
-                    <li>• CPU: Intel i7-14700KF</li>
-                    <li>• VGA: RTX 4070 Super</li>
-                    <li>• RAM: 32GB DDR5</li>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; overflow: hidden; border: 2px solid #ef4444;'>
+            <div style='background-color: #ef4444; color: white; padding: 0.75rem; text-align: center; font-weight: 700;'>COMBO HOT 🔥</div>
+            <div style='padding: 1.25rem;'>
+                <p style='font-size: 1.5rem; font-weight: 900; text-align: center; margin-bottom: 1rem; color: #111827;'>25.990.000đ</p>
+                <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                    <li style='margin-bottom: 0.5rem;'>• CPU: Intel i7-14700KF</li>
+                    <li style='margin-bottom: 0.5rem;'>• VGA: RTX 4070 Super</li>
+                    <li style='margin-bottom: 0.5rem;'>• RAM: 32GB DDR5</li>
                     <li>• SSD: 1TB NVMe</li>
                 </ul>
-                <p class='text-green-600 font-bold text-center mt-4'>Tiết kiệm 3.500.000đ</p>
+                <p style='color: #16a34a; font-weight: 700; text-align: center; margin-top: 1rem;'>Tiết kiệm 3.500.000đ</p>
             </div>
         </div>
-        <div class='bg-white shadow-xl rounded-xl overflow-hidden'>
-            <div class='bg-purple-500 text-white p-3 text-center font-bold'>COMBO ULTRA</div>
-            <div class='p-5'>
-                <p class='text-2xl font-black text-center mb-4'>45.990.000đ</p>
-                <ul class='space-y-2 text-sm'>
-                    <li>• CPU: Intel i9-14900K</li>
-                    <li>• VGA: RTX 4080 Super</li>
-                    <li>• RAM: 64GB DDR5</li>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; overflow: hidden;'>
+            <div style='background-color: #a855f7; color: white; padding: 0.75rem; text-align: center; font-weight: 700;'>COMBO ULTRA</div>
+            <div style='padding: 1.25rem;'>
+                <p style='font-size: 1.5rem; font-weight: 900; text-align: center; margin-bottom: 1rem; color: #111827;'>45.990.000đ</p>
+                <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                    <li style='margin-bottom: 0.5rem;'>• CPU: Intel i9-14900K</li>
+                    <li style='margin-bottom: 0.5rem;'>• VGA: RTX 4080 Super</li>
+                    <li style='margin-bottom: 0.5rem;'>• RAM: 64GB DDR5</li>
                     <li>• SSD: 2TB NVMe</li>
                 </ul>
-                <p class='text-green-600 font-bold text-center mt-4'>Tiết kiệm 5.000.000đ</p>
+                <p style='color: #16a34a; font-weight: 700; text-align: center; margin-top: 1rem;'>Tiết kiệm 5.000.000đ</p>
             </div>
         </div>
     </div>
 </div>";
 
     private const string PromotionMBBank = @"
-<div class='space-y-6'>
-    <div class='bg-gradient-to-r from-purple-700 to-blue-600 text-white p-6 rounded-2xl'>
-        <h2 class='text-3xl font-black mb-2'>💳 MỞ THẺ MB BANK</h2>
-        <p class='text-xl'>Giảm thêm 500.000đ cho đơn hàng từ 10.000.000đ</p>
+<div class='space-y-6 not-prose'>
+    <div style='background: linear-gradient(to right, #7e22ce, #2563eb); color: white; padding: 1.5rem; border-radius: 1rem;'>
+        <h2 style='font-size: 1.875rem; font-weight: 900; margin-bottom: 0.5rem; color: white;'>💳 MỞ THẺ MB BANK</h2>
+        <p style='font-size: 1.25rem; margin: 0; color: white;'>Giảm thêm 500.000đ cho đơn hàng từ 10.000.000đ</p>
     </div>
 
-    <div class='grid md:grid-cols-2 gap-6'>
-        <div class='bg-white shadow-lg rounded-xl p-5'>
-            <h3 class='font-bold text-lg mb-3'>🎯 Ưu đãi khi mở thẻ</h3>
-            <ul class='space-y-2'>
-                <li class='flex items-center gap-2'><span class='text-green-500'>✓</span> Giảm ngay 500.000đ</li>
-                <li class='flex items-center gap-2'><span class='text-green-500'>✓</span> Hoàn tiền 1% mọi giao dịch</li>
-                <li class='flex items-center gap-2'><span class='text-green-500'>✓</span> Trả góp 0% lãi suất 6 tháng</li>
-                <li class='flex items-center gap-2'><span class='text-green-500'>✓</span> Miễn phí thường niên năm đầu</li>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;'>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1.25rem;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; margin-bottom: 0.75rem; color: #111827;'>🎯 Ưu đãi khi mở thẻ</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; color: #374151;'>
+                <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Giảm ngay 500.000đ</li>
+                <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Hoàn tiền 1% mọi giao dịch</li>
+                <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Trả góp 0% lãi suất 6 tháng</li>
+                <li><span style='color: #22c55e;'>✓</span> Miễn phí thường niên năm đầu</li>
             </ul>
         </div>
-        <div class='bg-white shadow-lg rounded-xl p-5'>
-            <h3 class='font-bold text-lg mb-3'>📝 Điều kiện</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>• Công dân Việt Nam từ 18 tuổi</li>
-                <li>• Có thu nhập ổn định từ 5 triệu/tháng</li>
-                <li>• Chỉ cần CCCD gắn chip</li>
+        <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1.25rem;'>
+            <h3 style='font-weight: 700; font-size: 1.125rem; margin-bottom: 0.75rem; color: #111827;'>📝 Điều kiện</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
+                <li style='margin-bottom: 0.5rem;'>• Công dân Việt Nam từ 18 tuổi</li>
+                <li style='margin-bottom: 0.5rem;'>• Có thu nhập ổn định từ 5 triệu/tháng</li>
+                <li style='margin-bottom: 0.5rem;'>• Chỉ cần CCCD gắn chip</li>
                 <li>• Duyệt nhanh trong 15 phút</li>
             </ul>
         </div>
@@ -766,73 +944,73 @@ public static class ContentDbSeeder
     // ==================== NEWS CONTENTS ====================
     private const string NewsKhaiTruong = @"
 <div class='space-y-6'>
-    <p class='text-lg'>Quang Hưởng Computer chính thức khai trương chi nhánh thứ 3 tại số 123 Cầu Giấy, Hà Nội. Đây là showroom lớn nhất của chúng tôi với diện tích hơn 500m², trưng bày đầy đủ các sản phẩm từ PC Gaming, Laptop, đến linh kiện cao cấp.</p>
+    <p style='font-size: 1.125rem;'>Quang Hưởng Computer chính thức khai trương chi nhánh thứ 3 tại số 123 Cầu Giấy, Hà Nội. Đây là showroom lớn nhất của chúng tôi với diện tích hơn 500m², trưng bày đầy đủ các sản phẩm từ PC Gaming, Laptop, đến linh kiện cao cấp.</p>
 
-    <div class='bg-red-50 p-5 rounded-xl'>
-        <h3 class='font-bold text-red-800 text-lg mb-3'>🎉 Ưu đãi khai trương (Chỉ trong 7 ngày đầu)</h3>
-        <ul class='space-y-2'>
-            <li>✓ Giảm ngay 10% tất cả sản phẩm</li>
-            <li>✓ Tặng voucher 500.000đ cho 100 khách đầu tiên mỗi ngày</li>
-            <li>✓ Quay số trúng thưởng VGA RTX 4070 mỗi ngày</li>
+    <div style='background-color: #fef2f2; padding: 1.25rem; border-radius: 0.75rem;'>
+        <h3 style='font-weight: 700; color: #991b1b; font-size: 1.125rem; margin-bottom: 0.75rem;'>🎉 Ưu đãi khai trương (Chỉ trong 7 ngày đầu)</h3>
+        <ul style='list-style: none; padding: 0; margin: 0; color: #111827;'>
+            <li style='margin-bottom: 0.5rem;'>✓ Giảm ngay 10% tất cả sản phẩm</li>
+            <li style='margin-bottom: 0.5rem;'>✓ Tặng voucher 500.000đ cho 100 khách đầu tiên mỗi ngày</li>
+            <li style='margin-bottom: 0.5rem;'>✓ Quay số trúng thưởng VGA RTX 4070 mỗi ngày</li>
             <li>✓ Miễn phí lắp ráp và cài đặt tại chỗ</li>
         </ul>
     </div>
 
-    <div class='grid md:grid-cols-2 gap-4'>
-        <div class='bg-gray-50 p-4 rounded-xl'>
-            <h4 class='font-bold mb-2'>📍 Địa chỉ mới</h4>
-            <p>123 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội</p>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;'>
+        <div style='background-color: #f9fafb; padding: 1rem; border-radius: 0.75rem;'>
+            <h4 style='font-weight: 700; margin-bottom: 0.5rem; color: #111827;'>📍 Địa chỉ mới</h4>
+            <p style='margin: 0; color: #374151;'>123 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội</p>
         </div>
-        <div class='bg-gray-50 p-4 rounded-xl'>
-            <h4 class='font-bold mb-2'>🕐 Giờ mở cửa</h4>
-            <p>8:30 - 21:30 (Tất cả các ngày trong tuần)</p>
+        <div style='background-color: #f9fafb; padding: 1rem; border-radius: 0.75rem;'>
+            <h4 style='font-weight: 700; margin-bottom: 0.5rem; color: #111827;'>🕐 Giờ mở cửa</h4>
+            <p style='margin: 0; color: #374151;'>8:30 - 21:30 (Tất cả các ngày trong tuần)</p>
         </div>
     </div>
 </div>";
 
     private const string NewsRTX5090 = @"
 <div class='space-y-6'>
-    <p class='text-lg'>NVIDIA vừa chính thức công bố dòng card đồ họa GeForce RTX 5090 với hiệu năng được cho là gấp đôi thế hệ RTX 4090 trước đó, mở ra kỷ nguyên mới cho gaming và AI.</p>
+    <p style='font-size: 1.125rem;'>NVIDIA vừa chính thức công bố dòng card đồ họa GeForce RTX 5090 với hiệu năng được cho là gấp đôi thế hệ RTX 4090 trước đó, mở ra kỷ nguyên mới cho gaming và AI.</p>
 
-    <div class='bg-green-50 p-5 rounded-xl'>
-        <h3 class='font-bold text-green-800 text-lg mb-3'>📊 Thông số kỹ thuật RTX 5090</h3>
-        <div class='grid md:grid-cols-2 gap-4 text-sm'>
-            <div>
-                <p><strong>GPU:</strong> Blackwell GB202</p>
-                <p><strong>CUDA Cores:</strong> 21,760 cores</p>
-                <p><strong>Boost Clock:</strong> 2.9 GHz</p>
+    <div style='background-color: #f0fdf4; padding: 1.25rem; border-radius: 0.75rem;'>
+        <h3 style='font-weight: 700; color: #166534; font-size: 1.125rem; margin-bottom: 0.75rem;'>📊 Thông số kỹ thuật RTX 5090</h3>
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.875rem;'>
+            <div style='color: #111827;'>
+                <p style='margin-bottom: 0.25rem;'><strong style='font-weight: 700;'>GPU:</strong> Blackwell GB202</p>
+                <p style='margin-bottom: 0.25rem;'><strong style='font-weight: 700;'>CUDA Cores:</strong> 21,760 cores</p>
+                <p style='margin: 0;'><strong style='font-weight: 700;'>Boost Clock:</strong> 2.9 GHz</p>
             </div>
-            <div>
-                <p><strong>VRAM:</strong> 32GB GDDR7</p>
-                <p><strong>TDP:</strong> 575W</p>
-                <p><strong>Giá dự kiến:</strong> Từ 49.990.000đ</p>
+            <div style='color: #111827;'>
+                <p style='margin-bottom: 0.25rem;'><strong style='font-weight: 700;'>VRAM:</strong> 32GB GDDR7</p>
+                <p style='margin-bottom: 0.25rem;'><strong style='font-weight: 700;'>TDP:</strong> 575W</p>
+                <p style='margin: 0;'><strong style='font-weight: 700;'>Giá dự kiến:</strong> Từ 49.990.000đ</p>
             </div>
         </div>
     </div>
 
-    <p>RTX 5090 hứa hẹn sẽ là lựa chọn hàng đầu cho các game thủ và nhà sáng tạo nội dung yêu cầu hiệu năng cực cao. Quang Hưởng Computer hiện đang nhận đặt trước với ưu đãi giảm 2 triệu cho 50 khách hàng đầu tiên.</p>
+    <p style='color: #374151;'>RTX 5090 hứa hẹn sẽ là lựa chọn hàng đầu cho các game thủ và nhà sáng tạo nội dung yêu cầu hiệu năng cực cao. Quang Hưởng Computer hiện đang nhận đặt trước với ưu đãi giảm 2 triệu cho 50 khách hàng đầu tiên.</p>
 </div>";
 
     private const string NewsAMDZen5 = @"
 <div class='space-y-6'>
-    <p class='text-lg'>AMD chính thức giới thiệu kiến trúc Zen 5 với dòng CPU Ryzen 9000 Series, hứa hẹn hiệu năng IPC tăng 15-20% so với Zen 4, cạnh tranh trực tiếp với Intel Core Ultra.</p>
+    <p style='font-size: 1.125rem;'>AMD chính thức giới thiệu kiến trúc Zen 5 với dòng CPU Ryzen 9000 Series, hứa hẹn hiệu năng IPC tăng 15-20% so với Zen 4, cạnh tranh trực tiếp với Intel Core Ultra.</p>
 
-    <div class='grid md:grid-cols-2 gap-6'>
-        <div class='bg-orange-50 p-5 rounded-xl'>
-            <h3 class='font-bold text-orange-800 mb-3'>🔥 Điểm nổi bật Zen 5</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>✓ Tiến trình 4nm TSMC</li>
-                <li>✓ IPC tăng 15-20%</li>
-                <li>✓ Hỗ trợ DDR5-6400</li>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;'>
+        <div style='background-color: #fff7ed; padding: 1.25rem; border-radius: 0.75rem;'>
+            <h3 style='font-weight: 700; color: #9a3412; margin-bottom: 0.75rem;'>🔥 Điểm nổi bật Zen 5</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #111827;'>
+                <li style='margin-bottom: 0.5rem;'>✓ Tiến trình 4nm TSMC</li>
+                <li style='margin-bottom: 0.5rem;'>✓ IPC tăng 15-20%</li>
+                <li style='margin-bottom: 0.5rem;'>✓ Hỗ trợ DDR5-6400</li>
                 <li>✓ PCIe 5.0 x24 lanes</li>
             </ul>
         </div>
-        <div class='bg-blue-50 p-5 rounded-xl'>
-            <h3 class='font-bold text-blue-800 mb-3'>💰 Giá dự kiến tại VN</h3>
-            <ul class='space-y-2 text-sm'>
-                <li>Ryzen 5 9600X: ~6.500.000đ</li>
-                <li>Ryzen 7 9700X: ~9.500.000đ</li>
-                <li>Ryzen 9 9900X: ~13.500.000đ</li>
+        <div style='background-color: #eff6ff; padding: 1.25rem; border-radius: 0.75rem;'>
+            <h3 style='font-weight: 700; color: #1e40af; margin-bottom: 0.75rem;'>💰 Giá dự kiến tại VN</h3>
+            <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #111827;'>
+                <li style='margin-bottom: 0.5rem;'>Ryzen 5 9600X: ~6.500.000đ</li>
+                <li style='margin-bottom: 0.5rem;'>Ryzen 7 9700X: ~9.500.000đ</li>
+                <li style='margin-bottom: 0.5rem;'>Ryzen 9 9900X: ~13.500.000đ</li>
                 <li>Ryzen 9 9950X: ~18.500.000đ</li>
             </ul>
         </div>
@@ -841,7 +1019,7 @@ public static class ContentDbSeeder
 
     private const string NewsCanhBao = @"
 <div class='space-y-6'>
-    <div class='bg-red-100 border-l-4 border-red-500 p-5'>
+    <div style='background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 1.25rem;'>
         <h2 class='text-xl font-bold text-red-800 mb-2'>⚠️ CẢNH BÁO KHẨN CẤP</h2>
         <p>Gần đây xuất hiện nhiều trang web và fanpage giả mạo Quang Hưởng Computer để lừa đảo khách hàng.</p>
     </div>

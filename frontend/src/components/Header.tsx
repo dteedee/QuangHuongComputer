@@ -401,7 +401,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Link to="/promotion" className="text-xs font-bold text-accent animate-pulse flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
+                            <Link to="/policy/promotions" className="text-xs font-bold text-accent animate-pulse flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
                                 <Zap size={14} className="fill-accent" />
                                 SIÊU SALE
                             </Link>
