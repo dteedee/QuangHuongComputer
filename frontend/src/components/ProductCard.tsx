@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, PackageCheck, MapPin, Cpu, Minus, Plus } from 'lucide-react';
+import { ShoppingCart, Star, PackageCheck, MapPin, Cpu, Minus, Plus, Heart, X as CloseIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../utils/format';
 
@@ -213,11 +213,43 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [showPopup, setShowPopup] = useState(false);
+    const [showQuickView, setShowQuickView] = useState(false);
     const [imgError, setImgError] = useState(false);
     const [cardRect, setCardRect] = useState<DOMRect | null>(null);
+    const [isWishlisted, setIsWishlisted] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const isHovering = useRef(false);
     const timeoutRef = useRef<number | null>(null);
+
+    // Initialize Wishlist State
+    useEffect(() => {
+        const stored = localStorage.getItem('qh_wishlist');
+        if (stored) {
+            try {
+                const list = JSON.parse(stored);
+                setIsWishlisted(list.includes(product.id));
+            } catch (e) {}
+        }
+    }, [product.id]);
+
+    const toggleWishlist = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const stored = localStorage.getItem('qh_wishlist');
+        let list: string[] = [];
+        if (stored) {
+            try { list = JSON.parse(stored); } catch (e) {}
+        }
+        
+        if (isWishlisted) {
+            list = list.filter(id => id !== product.id);
+        } else {
+            list.push(product.id);
+        }
+        
+        localStorage.setItem('qh_wishlist', JSON.stringify(list));
+        setIsWishlisted(!isWishlisted);
+    };
 
     // Detect touch device — disable hover popup on mobile
     const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -318,6 +350,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         </div>
                     )}
 
+                    {/* Wishlist Button */}
+                    <button 
+                        onClick={toggleWishlist}
+                        className={`absolute z-20 ${product.soldCount > 10 ? 'top-10' : 'top-3'} right-3 p-2 rounded-full backdrop-blur-md bg-white/70 shadow-sm border border-white/50 transition-all hover:scale-110 active:scale-95 ${isWishlisted ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        title={isWishlisted ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+                    >
+                        <Heart size={18} className={isWishlisted ? 'fill-red-500' : ''} />
+                    </button>
+
                     {/* Product Image Area */}
                     <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                         <div className="absolute inset-0 flex items-center justify-center p-1">
@@ -411,15 +452,114 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
                     {/* Quick view overlay on hover */}
                     <div className="absolute inset-x-0 top-[40%] flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-300 pointer-events-none">
-                        <Link
-                            to={`/product/${product.id}`}
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                closePopup();
+                                setShowQuickView(true);
+                            }}
                             className="pointer-events-auto bg-white/90 backdrop-blur-md text-xs font-bold uppercase text-accent px-6 py-2.5 rounded-full shadow-xl border border-white/50 hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95"
                         >
                             Xem nhanh
-                        </Link>
+                        </button>
                     </div>
                 </motion.div>
             </div>
+
+            {/* Quick View Modal Overlay (Portal) */}
+            <AnimatePresence>
+                {showQuickView && createPortal(
+                    <div className="fixed inset-0 z-[200000] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setShowQuickView(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col md:flex-row z-10"
+                        >
+                            <button 
+                                onClick={() => setShowQuickView(false)}
+                                className="absolute top-4 right-4 z-20 p-2 bg-gray-100/80 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors backdrop-blur-sm"
+                            >
+                                <CloseIcon size={20} />
+                            </button>
+                            
+                            {/* Image Half */}
+                            <div className="md:w-1/2 bg-gray-50 flex items-center justify-center p-8 relative">
+                                <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
+                                    Giảm {discount}%
+                                </div>
+                                {product.imageUrl && !imgError ? (
+                                    <img 
+                                        src={product.imageUrl} 
+                                        alt={product.name} 
+                                        className="w-full max-h-[400px] object-contain mix-blend-multiply"
+                                        onError={() => setImgError(true)}
+                                    />
+                                ) : (
+                                    <span className="text-8xl font-black text-gray-200">{product?.name?.charAt(0) || '?'}</span>
+                                )}
+                            </div>
+
+                            {/* Details Half */}
+                            <div className="md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">SKU: {product.sku || product.id.substring(0,8)}</span>
+                                <h2 className="text-2xl font-black text-gray-900 leading-tight mb-4">{product.name}</h2>
+                                
+                                <div className="flex flex-wrap items-baseline gap-3 mb-6">
+                                    <span className="text-3xl font-black text-accent">{formatCurrency(product.price)}</span>
+                                    <span className="text-lg text-gray-400 line-through font-medium">{formatCurrency(oldPrice)}</span>
+                                </div>
+
+                                <div className="space-y-4 mb-8 flex-1">
+                                    <div className="flex items-center gap-2 p-3 bg-emerald-50 rounded-xl text-emerald-700 border border-emerald-100">
+                                        <PackageCheck size={20} />
+                                        <span className="font-bold text-sm">Trạng thái: {product.stockQuantity > 0 ? `Còn ${product.stockQuantity} sản phẩm` : 'Hết hàng'}</span>
+                                    </div>
+
+                                    {/* Brief Specs */}
+                                    <h4 className="font-bold text-gray-900 border-b pb-2">Đặc điểm nổi bật</h4>
+                                    <ul className="text-sm text-gray-600 space-y-2">
+                                        <li>• Bảo hành chính hãng: {product.warrantyInfo || '12 tháng'}</li>
+                                        {parseSpecifications(product.specifications) && Object.entries(parseSpecifications(product.specifications)!).slice(0, 4).map(([key, value]) => (
+                                            <li key={key}>• {key}: <span className="font-medium text-gray-900">{String(value)}</span></li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Cart CTA */}
+                                <div className="pt-6 border-t border-gray-100">
+                                    <div className="flex gap-4">
+                                        <Link 
+                                            to={`/product/${product.id}`}
+                                            className="flex-1 py-4 border-2 border-gray-200 text-gray-700 text-center rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                                        >
+                                            Xem chi tiết đầy đủ
+                                        </Link>
+                                        <button 
+                                            onClick={() => {
+                                                addToCart(product, 1);
+                                                setShowQuickView(false);
+                                            }}
+                                            disabled={product.stockQuantity <= 0}
+                                            className="flex-1 py-4 bg-accent text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
+                                        >
+                                            <ShoppingCart size={20} />
+                                            THÊM GIỎ HÀNG
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>,
+                    document.body
+                )}
+            </AnimatePresence>
 
             {/* Hover Popup - Rendered via Portal by itself, controlled via isVisible prop */}
             {cardRect && (

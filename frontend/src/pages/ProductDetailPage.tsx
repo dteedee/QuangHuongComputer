@@ -6,6 +6,7 @@ import { aiApi, type AiRecommendation } from '../api/ai';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import client from '../api/client';
 import { WriteReviewModal, RatingBreakdown, ReviewItem } from '../components/reviews';
@@ -44,7 +45,16 @@ export default function ProductDetailPage() {
   const [reviewSort, setReviewSort] = useState<ReviewSortOption>('newest');
   const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
   const [checkingPurchase, setCheckingPurchase] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
   const { addToRecentlyViewed } = useRecentlyViewed();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyBar(window.scrollY > 800);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Calculate rating breakdown from reviews
   const ratingCounts = useMemo(() => {
@@ -862,6 +872,49 @@ export default function ProductDetailPage() {
           onReviewSubmitted={handleReviewSubmitted}
         />
       )}
+
+      {/* Sticky Bottom Actions */}
+      <AnimatePresence>
+        {showStickyBar && product && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] pb-6 pt-4 px-4 sm:pb-4"
+          >
+            <div className="container mx-auto max-w-5xl flex items-center justify-between gap-4">
+              <div className="hidden md:flex items-center gap-4 flex-1">
+                <div className="w-12 h-12 bg-gray-50 rounded-lg p-1">
+                    {productImages[0] && (
+                        <img src={productImages[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                    )}
+                </div>
+                <div>
+                   <h3 className="font-bold text-gray-900 line-clamp-1">{product.name}</h3>
+                   <div className="text-accent font-bold">{formatPrice(product.price)}</div>
+                </div>
+              </div>
+              <div className="flex gap-3 w-full md:w-auto">
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={product.stockQuantity === 0}
+                    className="flex-1 md:flex-none px-6 py-3.5 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-bold text-sm shadow-sm whitespace-nowrap active:scale-95"
+                  >
+                    MUA NGAY
+                  </button>
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={product.stockQuantity === 0 || addingToCart}
+                    className="flex-1 md:flex-none px-6 py-3.5 bg-white border-2 border-accent text-accent rounded-xl hover:bg-red-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:border-transparent disabled:cursor-not-allowed transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-sm whitespace-nowrap active:scale-95"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="hidden sm:inline">{addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}</span>
+                  </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

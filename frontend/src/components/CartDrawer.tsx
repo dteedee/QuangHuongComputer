@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/format';
-import { X, Trash2, ShoppingBag, ArrowRight, Minus, Plus } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Minus, Plus, Truck } from 'lucide-react';
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -76,6 +76,31 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                         </div>
                     ) : (
                         <div className="space-y-4">
+                            {/* Free Shipping Progress */}
+                            {(() => {
+                                const threshold = 500000;
+                                const progress = Math.min((total / threshold) * 100, 100);
+                                const remaining = Math.max(0, threshold - total);
+                                return (
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm animate-fade-in">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Truck className={progress === 100 ? "text-emerald-500" : "text-accent"} size={18} />
+                                            <span className="text-sm font-bold text-gray-800">
+                                                {progress === 100 
+                                                    ? <span className="text-emerald-600">Tuyệt vời! Đơn hàng được Miễn phí giao hàng</span> 
+                                                    : <span>Mua thêm <span className="text-accent">{formatCurrency(remaining)}</span> để miễn phí giao hàng</span>}
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className={`h-full transition-all duration-700 ease-out rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-accent'}`}
+                                                style={{ width: `${progress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             {items.map(item => (
                                 <div key={item.id} className="group bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex gap-3">
                                     {/* Image */}
