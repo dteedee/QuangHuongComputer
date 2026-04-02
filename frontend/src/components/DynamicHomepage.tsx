@@ -27,7 +27,7 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
 
 export const DynamicHomepage: React.FC<DynamicHomepageProps> = ({ sections }) => {
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-16 md:space-y-24 pb-24 max-w-[1400px] mx-auto px-4 mt-8">
             {sections.map((section, index) => {
                 const Component = SECTION_COMPONENTS[section.sectionType];
                 if (!Component) {
@@ -49,7 +49,7 @@ export const DynamicHomepage: React.FC<DynamicHomepageProps> = ({ sections }) =>
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.6, delay: index * 0.1 }}
-                        className={section.cssClass}
+                        className={section.cssClass || undefined}
                     >
                         <Component 
                             title={section.title}

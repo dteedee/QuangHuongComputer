@@ -189,8 +189,14 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
           <span className="text-gray-900 font-medium">Sản phẩm</span>
         </nav>
         <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          {currentCategoryName}
-          {currentBrandName && <span className="text-gray-400 font-normal">/ {currentBrandName}</span>}
+          {searchQuery ? (
+            <span>Kết quả tìm kiếm cho <span className="text-accent">"{searchQuery}"</span></span>
+          ) : (
+            <>
+              {currentCategoryName}
+              {currentBrandName && <span className="text-gray-400 font-normal">/ {currentBrandName}</span>}
+            </>
+          )}
         </h1>
 
         {/* Mobile Filter Toggle */}

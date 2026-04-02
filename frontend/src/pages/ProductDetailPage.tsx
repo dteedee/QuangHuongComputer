@@ -467,17 +467,33 @@ export default function ProductDetailPage() {
                 <p className="text-xs text-gray-500 mt-2">Giá đã bao gồm VAT</p>
               </div>
 
-              {/* Stock Status */}
-              <div className={`flex items-center gap-2 px-4 py-3 rounded-lg border ${product.stockQuantity > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                product.stockQuantity > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                  'bg-red-50 text-red-700 border-red-100'
-                }`}>
-                {product.stockQuantity > 10 && <Check className="w-5 h-5" />}
-                <span className="font-bold text-sm">
-                  {product.stockQuantity > 10 ? 'Còn hàng (Sẵn sàng giao ngay)' :
-                    product.stockQuantity > 0 ? `Chỉ còn ${product.stockQuantity} sản phẩm` :
-                      'Hết hàng'}
-                </span>
+              {/* Stock Status Box */}
+              <div>
+                <p className="block text-xs font-bold text-gray-700 uppercase mb-2 tracking-wide">Trạng thái kho</p>
+                <div className={`flex flex-col gap-2 px-5 py-4 rounded-xl border ${product.stockQuantity > 10 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                  product.stockQuantity > 0 ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                    'bg-red-50 text-red-700 border-red-100'
+                  }`}>
+                  <div className="flex items-center gap-2">
+                    {product.stockQuantity > 10 && <Check className="w-5 h-5 text-emerald-600" />}
+                    <span className="font-bold text-sm">
+                      {product.stockQuantity > 10 ? 'Còn hàng (Sẵn sàng giao ngay)' :
+                        product.stockQuantity > 0 ? `Chỉ còn ${product.stockQuantity} sản phẩm` :
+                          'Hết hàng'}
+                    </span>
+                  </div>
+                  {/* Progress Meter for low stock */}
+                  {(product.stockQuantity > 0 && product.stockQuantity <= 10) && (
+                    <div className="w-full bg-amber-200/50 rounded-full h-1.5 mt-1 overflow-hidden shadow-inner">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(product.stockQuantity / 10) * 100}%` }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className="bg-gradient-to-r from-amber-400 to-amber-500 h-1.5 rounded-full"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Quantity Selector */}
@@ -515,18 +531,19 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
                   <button
                     onClick={handleBuyNow}
                     disabled={product.stockQuantity === 0}
-                    className="flex-1 py-3.5 bg-accent text-white rounded-xl hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-bold text-sm shadow-sm active:scale-[0.98]"
+                    className="flex-[2] py-4 bg-gradient-to-r from-accent to-[#b91c1c] text-white rounded-xl hover:shadow-lg hover:shadow-red-500/30 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all uppercase tracking-widest font-black text-sm flex items-center justify-center gap-2 group active:scale-[0.98]"
                   >
-                    MUA NGAY
+                    <ShoppingBag className="w-5 h-5 transition-transform group-hover:-translate-y-1" />
+                    Mua Ngay
                   </button>
                   <button
                     onClick={handleAddToCart}
                     disabled={product.stockQuantity === 0 || addingToCart}
-                    className="flex-1 py-3.5 bg-white border border-gray-200 text-gray-900 rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:text-accent disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
+                    className="flex-1 py-4 bg-white border-2 border-gray-200 text-gray-900 rounded-xl hover:bg-gray-50 hover:border-accent hover:text-accent disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed transition-all uppercase tracking-widest font-bold text-sm flex items-center justify-center gap-2 shadow-sm active:scale-[0.98]"
                   >
                     <ShoppingCart className="w-5 h-5" />
                     {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}

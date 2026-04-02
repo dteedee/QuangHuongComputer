@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
 import { useConfirm } from '../../context/ConfirmContext';
 import client from '../../api/client';
+import { motion } from 'framer-motion';
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -153,44 +154,53 @@ export const OrderDetailPage = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="relative">
+                                <div className="relative mt-8">
                                     {timelineSteps.map((step, index) => (
-                                        <div key={step.status} className="flex gap-4 pb-8 last:pb-0">
+                                        <motion.div 
+                                            key={step.status} 
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: index * 0.1 }}
+                                            className="flex gap-6 pb-10 last:pb-0 relative group"
+                                        >
                                             {/* Timeline Line */}
                                             {index < timelineSteps.length - 1 && (
-                                                <div className="absolute left-[18px] top-[40px] bottom-0 w-0.5 bg-gray-200">
-                                                    <div
-                                                        className={`w-full transition-all duration-500 ${step.completed ? 'bg-emerald-500 h-full' : 'bg-gray-200 h-0'
-                                                            }`}
+                                                <div className="absolute left-[24px] top-[48px] bottom-0 w-[3px] bg-gray-100 rounded-full">
+                                                    <motion.div
+                                                        initial={{ height: 0 }}
+                                                        animate={{ height: step.completed ? '100%' : '0%' }}
+                                                        transition={{ duration: 1, delay: 0.5 + (index * 0.2) }}
+                                                        className="w-full bg-gradient-to-b from-emerald-500 to-emerald-400 rounded-full"
                                                     />
                                                 </div>
                                             )}
 
                                             {/* Icon */}
                                             <div
-                                                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${step.completed
-                                                        ? 'bg-emerald-500 text-white'
-                                                        : 'bg-gray-100 text-gray-400'
+                                                className={`relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110 shadow-sm ${step.completed
+                                                        ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30'
+                                                        : 'bg-white border-2 border-gray-100 text-gray-300'
                                                     }`}
                                             >
                                                 {step.icon}
                                             </div>
 
                                             {/* Content */}
-                                            <div className="flex-1 pt-1">
+                                            <div className="flex-1 pt-2">
                                                 <h4
-                                                    className={`font-black uppercase text-sm tracking-wide ${step.completed ? 'text-gray-900' : 'text-gray-400'
+                                                    className={`font-black uppercase tracking-wide text-base ${step.completed ? 'text-gray-900' : 'text-gray-400'
                                                         }`}
                                                 >
                                                     {step.label}
                                                 </h4>
                                                 {step.date && (
-                                                    <p className="text-gray-500 text-xs mt-1">
+                                                    <p className="text-gray-500 text-xs mt-1.5 font-medium flex items-center gap-1.5">
+                                                        <Clock className="w-3.5 h-3.5" />
                                                         {new Date(step.date).toLocaleString('vi-VN')}
                                                     </p>
                                                 )}
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
                             )}

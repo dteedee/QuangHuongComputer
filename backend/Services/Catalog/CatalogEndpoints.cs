@@ -52,12 +52,17 @@ public static class CatalogEndpoints
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                // Case-insensitive search using optimized LIKE
-                var searchPattern = $"%{searchTerm}%";
-                query = query.Where(p =>
-                    EF.Functions.Like(p.Name, searchPattern) ||
-                    EF.Functions.Like(p.Description, searchPattern) ||
-                    EF.Functions.Like(p.Sku, searchPattern));
+                var searchTerms = searchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var term in searchTerms)
+                {
+                    var searchPattern = $"%{term}%";
+                    query = query.Where(p =>
+                        EF.Functions.Like(p.Name, searchPattern) ||
+                        EF.Functions.Like(p.Description, searchPattern) ||
+                        EF.Functions.Like(p.Sku, searchPattern) ||
+                        EF.Functions.Like(p.Category.Name, searchPattern) ||
+                        EF.Functions.Like(p.Brand.Name, searchPattern));
+                }
             }
 
             var total = await query.CountAsync();
@@ -281,12 +286,17 @@ public static class CatalogEndpoints
 
             if (!string.IsNullOrWhiteSpace(query))
             {
-                // Case-insensitive search using optimized LIKE
-                var searchPattern = $"%{query}%";
-                productsQuery = productsQuery.Where(p =>
-                    EF.Functions.Like(p.Name, searchPattern) ||
-                    EF.Functions.Like(p.Description, searchPattern) ||
-                    EF.Functions.Like(p.Sku, searchPattern));
+                var searchTerms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var term in searchTerms)
+                {
+                    var searchPattern = $"%{term}%";
+                    productsQuery = productsQuery.Where(p =>
+                        EF.Functions.Like(p.Name, searchPattern) ||
+                        EF.Functions.Like(p.Description, searchPattern) ||
+                        EF.Functions.Like(p.Sku, searchPattern) ||
+                        EF.Functions.Like(p.Category.Name, searchPattern) ||
+                        EF.Functions.Like(p.Brand.Name, searchPattern));
+                }
             }
 
             if (categoryId.HasValue)
