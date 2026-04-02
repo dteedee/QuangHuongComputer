@@ -382,7 +382,8 @@ export const AdminPortal = () => {
 
                 <motion.div
                     whileHover={{ y: -2 }}
-                    className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
+                    onClick={() => navigate('/backoffice/system-health')}
+                    className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm cursor-pointer hover:border-emerald-200 transition-colors"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">Sức khỏe hệ thống</h3>
@@ -485,7 +486,15 @@ export const AdminPortal = () => {
 
                 {/* System Status */}
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <h3 className="font-semibold text-gray-900 mb-4">Trạng thái hệ thống</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Trạng thái hệ thống</h3>
+                        <button 
+                            onClick={() => navigate('/backoffice/system-health')}
+                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                            Xem chi tiết
+                        </button>
+                    </div>
                     <div className="space-y-1">
                         <SystemStatus name="API Server" status={systemLatency < 500 ? 'healthy' : 'warning'} value={`${systemLatency}ms`} icon={Server} />
                         <SystemStatus name="Cơ sở dữ liệu" status="healthy" value="Đã kết nối" icon={Database} />

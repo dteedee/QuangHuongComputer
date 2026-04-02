@@ -7,7 +7,7 @@ import {
     Clock, TrendingUp, Sparkles, Star,
     CreditCard, Check, PanelLeftClose, PanelLeft, Wallet, Calculator,
     UserCheck, Briefcase, ClipboardList, AlertCircle, RefreshCw, Loader2,
-    ShoppingCart, Truck, Building2, Activity
+    ShoppingCart, Truck, Building2, Activity, Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, accentColors, type AccentColor, type ThemeMode } from '../context/ThemeContext';
@@ -16,6 +16,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '../api/sales';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
+import { AdminGlobalSearch } from '../components/backoffice/AdminGlobalSearch';
+import { AdminFAB } from '../components/backoffice/AdminFAB';
+import { AdminShortcutsModal } from '../components/backoffice/AdminShortcutsModal';
 
 // Keyboard shortcut hook
 const useKeyboardShortcut = (key: string, callback: () => void, ctrl = false, shift = false) => {
@@ -82,7 +85,8 @@ export const BackofficeLayout = () => {
                 { title: 'Bán hàng (POS)', icon: <Store size={20} />, path: '/backoffice/pos', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Quầy thu ngân' },
                 { title: 'Đơn hàng', icon: <Receipt size={20} />, path: '/backoffice/orders', allowedRoles: ['Admin', 'Manager', 'Sale'], badge: pendingCount > 0 ? pendingCount : 0, description: 'Quản lý đơn hàng' },
                 { title: 'Sản phẩm', icon: <Package size={20} />, path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'], description: 'Danh sách sản phẩm' },
-                { title: 'Danh mục & Hãng', icon: <Archive size={20} />, path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại sản phẩm' },
+                { title: 'Danh mục', icon: <Archive size={20} />, path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại sản phẩm' },
+                { title: 'Thương hiệu', icon: <Tag size={20} />, path: '/backoffice/brands', allowedRoles: ['Admin', 'Manager'], description: 'Hãng sản xuất' },
                 { title: 'Kho hàng', icon: <Box size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'Supplier'], description: 'Quản lý tồn kho' },
                 { title: 'Nhà cung cấp', icon: <Building2 size={20} />, path: '/backoffice/inventory/suppliers', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý NCC' },
                 { title: 'Đơn mua hàng', icon: <ShoppingCart size={20} />, path: '/backoffice/inventory/purchase-orders', allowedRoles: ['Admin', 'Manager'], description: 'Đặt hàng NCC' },
@@ -116,7 +120,9 @@ export const BackofficeLayout = () => {
             color: 'text-pink-500',
             items: [
                 { title: 'Quản lý Nội dung', icon: <FileText size={20} />, path: '/backoffice/cms', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Bài viết & trang' },
-                { title: 'Flash Sales', icon: <Zap size={20} />, path: '/admin/flash-sales', allowedRoles: ['Admin', 'Manager'], description: 'Giảm giá chớp nhoáng' },
+                { title: 'Homepage Builder', icon: <Sparkles size={20} />, path: '/backoffice/homepage-builder', allowedRoles: ['Admin', 'Manager'], description: 'Xây dựng trang chủ' },
+                { title: 'Menu Manager', icon: <Menu size={20} />, path: '/backoffice/menus', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý menu' },
+                { title: 'Flash Sales', icon: <Zap size={20} />, path: '/backoffice/flash-sales', allowedRoles: ['Admin', 'Manager'], description: 'Giảm giá chớp nhoáng' },
                 { title: 'Mã giảm giá', icon: <Ticket size={20} />, path: '/backoffice/coupons', allowedRoles: ['Admin', 'Manager'], description: 'Voucher & coupon' },
                 { title: 'Đánh giá', icon: <Star size={20} />, path: '/backoffice/reviews', allowedRoles: ['Admin', 'Manager'], description: 'Review sản phẩm' },
             ]
@@ -144,6 +150,7 @@ export const BackofficeLayout = () => {
                 { title: 'Người dùng', icon: <Users size={20} />, path: '/backoffice/users', allowedRoles: ['Admin'], description: 'Quản lý tài khoản' },
                 { title: 'Vai trò & Quyền', icon: <Lock size={20} />, path: '/backoffice/roles', allowedRoles: ['Admin'], description: 'Phân quyền' },
                 { title: 'Cấu hình', icon: <Settings size={20} />, path: '/backoffice/config', allowedRoles: ['Admin'], description: 'Cài đặt hệ thống' },
+                { title: 'Trạng thái', icon: <Activity size={20} />, path: '/backoffice/system-health', allowedRoles: ['Admin'], description: 'Health & Monitor' },
                 { title: 'Thanh toán SePay', icon: <CreditCard size={20} />, path: '/backoffice/payments/sepay', allowedRoles: ['Admin'], description: 'Cấu hình & Giao dịch' },
                 { title: 'Báo cáo', icon: <BarChart3 size={20} />, path: '/backoffice/reports', allowedRoles: ['Admin', 'Manager'], description: 'Thống kê & báo cáo' },
                 { title: 'Nhật ký & Backup', icon: <Activity size={20} />, path: '/backoffice/audit-logs', allowedRoles: ['Admin'], description: 'Log hoạt động & sao lưu' },
@@ -533,6 +540,20 @@ export const BackofficeLayout = () => {
                             {sidebarCollapsed ? <PanelLeft size={20} /> : <PanelLeftClose size={20} />}
                         </button>
 
+                        {/* Breadcrumbs */}
+                        <div className="hidden md:flex items-center gap-2 px-2 text-sm">
+                            <span className={`font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quản trị</span>
+                            {location.pathname !== '/backoffice' && (
+                                <>
+                                    <ChevronRight size={14} className={isDark ? 'text-gray-600' : 'text-gray-400'} />
+                                    <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {filteredGroups.flatMap(g => g.items).find(i => isActive(i.path) && i.path !== '/backoffice')?.title || 
+                                         location.pathname.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
                         {/* Search */}
                         <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border ${isDark
                             ? 'bg-gray-800 border-gray-700'
@@ -746,9 +767,14 @@ export const BackofficeLayout = () => {
                                         {/* Footer */}
                                         {notifications.length > 0 && (
                                             <div className={`p-3 border-t text-center ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    Hiển thị {notifications.length} thông báo mới nhất
-                                                </p>
+                                                <Link 
+                                                    to="/backoffice/notifications"
+                                                    onClick={() => setShowNotifications(false)}
+                                                    className="text-sm font-bold hover:underline"
+                                                    style={{ color: colors.primary }}
+                                                >
+                                                    Xem tất cả thông báo →
+                                                </Link>
                                             </div>
                                         )}
                                     </motion.div>
@@ -867,96 +893,16 @@ export const BackofficeLayout = () => {
             </div>
 
             {/* Command Palette */}
-            <AnimatePresence>
-                {showCommandPalette && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowCommandPalette(false)}
-                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                            className={`fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-xl rounded-2xl shadow-2xl border z-[101] overflow-hidden ${isDark
-                                ? 'bg-gray-900 border-gray-800'
-                                : 'bg-white border-gray-200'
-                                }`}
-                        >
-                            <div className={`flex items-center gap-3 px-4 py-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                                <Search size={20} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
-                                <input
-                                    type="text"
-                                    placeholder="Tìm kiếm chức năng..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className={`flex-1 bg-transparent border-none outline-none text-lg ${isDark
-                                        ? 'text-white placeholder:text-gray-500'
-                                        : 'text-gray-900 placeholder:text-gray-400'
-                                        }`}
-                                    autoFocus
-                                />
-                                <kbd className={`px-2 py-1 text-xs font-bold rounded ${isDark ? 'bg-gray-800 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-                                    ESC
-                                </kbd>
-                            </div>
+            <AdminGlobalSearch
+                isOpen={showCommandPalette}
+                onClose={() => setShowCommandPalette(false)}
+                items={allItems}
+                isDark={isDark}
+            />
 
-                            <div className="max-h-80 overflow-y-auto p-2">
-                                {filteredItems.length === 0 ? (
-                                    <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        Không tìm thấy kết quả
-                                    </div>
-                                ) : (
-                                    filteredItems.map((item, i) => (
-                                        <Link
-                                            key={i}
-                                            to={item.path}
-                                            onClick={() => {
-                                                setShowCommandPalette(false);
-                                                setSearchQuery('');
-                                            }}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isDark
-                                                ? 'hover:bg-gray-800 text-gray-300'
-                                                : 'hover:bg-gray-50 text-gray-700'
-                                                }`}
-                                        >
-                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{item.icon}</span>
-                                            <div className="flex-1">
-                                                <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</p>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.description}</p>
-                                            </div>
-                                            <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{item.group}</span>
-                                        </Link>
-                                    ))
-                                )}
-                            </div>
-
-                            <div className={`flex items-center justify-between px-4 py-3 border-t text-xs ${isDark
-                                ? 'border-gray-800 text-gray-500'
-                                : 'border-gray-100 text-gray-400'
-                                }`}>
-                                <div className="flex items-center gap-4">
-                                    <span className="flex items-center gap-1">
-                                        <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>↑↓</kbd>
-                                        Di chuyển
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <kbd className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>↵</kbd>
-                                        Chọn
-                                    </span>
-                                </div>
-                                <span className="flex items-center gap-1">
-                                    <Command size={12} />
-                                    Ctrl + K
-                                </span>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            {/* Power User Features */}
+            <AdminFAB />
+            <AdminShortcutsModal />
 
             {/* Click outside to close dropdowns */}
             {(showNotifications || showSettings || showQuickActions) && (

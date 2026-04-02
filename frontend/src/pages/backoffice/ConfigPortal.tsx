@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Settings, Save, RefreshCw, Info,
     Globe, Shield, MessageCircle, Truck,
     AlertTriangle, Bell, Zap, Database, Building2,
     DollarSign, Users, Clock, Percent, Phone,
     Mail, MapPin, Award, ShoppingBag, Wrench,
-    CheckCircle, XCircle, ToggleLeft, ToggleRight
+    CheckCircle, XCircle, ToggleLeft, ToggleRight,
+    Download, Upload, History
 } from 'lucide-react';
 import { systemConfigApi } from '../../api/systemConfig';
 import type { ConfigurationEntry } from '../../api/systemConfig';
@@ -177,6 +178,44 @@ export const ConfigPortal = () => {
     const [hasChanges, setHasChanges] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
     const [searchQuery, setSearchQuery] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleExport = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configs, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `qhc-config-${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        toast.success('Đã xuất file cấu hình JSON thành công');
+    };
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const imported = JSON.parse(event.target?.result as string);
+                if (Array.isArray(imported)) {
+                    // Simple validation: Ensure keys exist
+                    const validImport = imported.filter(i => i.key && typeof i.value !== 'undefined');
+                    setConfigs(validImport);
+                    setHasChanges(true);
+                    toast.success('Đã nạp file cấu hình. Vui lòng kiểm tra và lưu lại.');
+                }
+            } catch (err) {
+                toast.error('File JSON không hợp lệ');
+            }
+        };
+        reader.readAsText(file);
+        // Reset input so the same file can be selected again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     useEffect(() => {
         const fetchConfigs = async () => {
@@ -351,6 +390,37 @@ export const ConfigPortal = () => {
                                     />
                                     <Database size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 </div>
+                                
+                                {/* Export / Import */}
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center justify-center p-3 text-gray-500 bg-gray-50 border-2 border-gray-100 rounded-xl hover:bg-gray-100 hover:text-gray-700 transition-all tooltip-trigger"
+                                    title="Xuất cấu hình JSON"
+                                >
+                                    <Download size={18} />
+                                </button>
+                                
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex items-center justify-center p-3 text-gray-500 bg-gray-50 border-2 border-gray-100 rounded-xl hover:bg-gray-100 hover:text-gray-700 transition-all tooltip-trigger"
+                                    title="Nhập cấu hình JSON"
+                                >
+                                    <Upload size={18} />
+                                </button>
+                                <input 
+                                    type="file" 
+                                    accept=".json" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    onChange={handleImport} 
+                                />
+
+                                <button
+                                    className="flex items-center justify-center p-3 text-blue-500 bg-blue-50 border-2 border-blue-100 rounded-xl hover:bg-blue-100 hover:text-blue-700 transition-all tooltip-trigger"
+                                    title="Lịch sử thay đổi"
+                                >
+                                    <History size={18} />
+                                </button>
 
                                 {/* Save Button */}
                                 <button

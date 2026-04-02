@@ -1,7 +1,7 @@
 
 import { Suspense, lazy } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ComparisonProvider } from './context/ComparisonContext';
@@ -48,7 +48,6 @@ const PageLoader = () => (
 // -- Layouts (small, keep eager for shells) --
 import { RootLayout } from './layouts/RootLayout';
 import { BackofficeLayout } from './layouts/BackofficeLayout';
-import { AdminLayout } from './layouts/AdminLayout';
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded pages — Store / Public
@@ -57,6 +56,7 @@ const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.H
 const RepairPage = lazy(() => import('./pages/RepairPage').then(m => ({ default: m.RepairPage })));
 const RepairDetailPage = lazy(() => import('./pages/RepairDetailPage').then(m => ({ default: m.RepairDetailPage })));
 const WarrantyPage = lazy(() => import('./pages/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
+const SystemHealthPage = lazy(() => import('./pages/backoffice/SystemHealthPage'));
 const ChatSupport = lazy(() => import('./components/ChatSupport').then(m => ({ default: m.ChatSupport })));
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
@@ -117,11 +117,13 @@ const WarrantyPortal = lazy(() => import('./pages/backoffice/WarrantyPortal').th
 const CMSPortal = lazy(() => import('./pages/backoffice/CMSPortal').then(m => ({ default: m.CMSPortal })));
 const ReportsPortal = lazy(() => import('./pages/backoffice/ReportsPortal').then(m => ({ default: m.ReportsPortal })));
 const ConfigPortal = lazy(() => import('./pages/backoffice/ConfigPortal').then(m => ({ default: m.ConfigPortal })));
+const NotificationCenter = lazy(() => import('./pages/backoffice/NotificationCenter'));
 
 // Admin pages
 const AdminProductsPage = lazy(() => import('./pages/admin/ProductsPage').then(m => ({ default: m.AdminProductsPage })));
 const AdminOrdersPage = lazy(() => import('./pages/admin/OrdersPage').then(m => ({ default: m.AdminOrdersPage })));
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
+const BrandsPage = lazy(() => import('./pages/admin/BrandsPage'));
 const MenuManager = lazy(() => import('./pages/admin/MenuManager').then(m => ({ default: m.MenuManager })));
 const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(m => ({ default: m.HomepageBuilder })));
 
@@ -131,6 +133,7 @@ const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').t
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
 const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
+const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -237,11 +240,13 @@ function App() {
                           <Route path="hr/recruitment" element={<RecruitmentManagement />} />
                           <Route path="warranty" element={<WarrantyPortal />} />
                           <Route path="cms" element={<CMSPortal />} />
+                          {/* Admin & Report Routes */}
                           <Route path="reports" element={<ReportsPortal />} />
                           <Route path="users" element={<AdminUsersPage />} />
                           <Route path="roles" element={<RolesPage />} />
                           <Route path="products" element={<AdminProductsPage />} />
                           <Route path="categories" element={<CategoriesPage />} />
+                          <Route path="brands" element={<BrandsPage />} />
                           <Route path="orders" element={<AdminOrdersPage />} />
                           <Route path="reviews" element={<ReviewsManagementPage />} />
                           <Route path="coupons" element={<CouponsPage />} />
@@ -249,6 +254,12 @@ function App() {
                           <Route path="admin" element={<AdminPortal />} />
                           <Route path="audit-logs" element={<AuditLogsPage />} />
                           <Route path="manager" element={<ManagerPortal />} />
+                          <Route path="notifications" element={<NotificationCenter />} />
+                          <Route path="system-health" element={<SystemHealthPage />} />
+                          <Route path="menus" element={<MenuManager />} />
+                          <Route path="homepage-builder" element={<HomepageBuilder />} />
+                          <Route path="flash-sales" element={<FlashSalesPage />} />
+                          
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />
                           <Route path="crm/customers" element={<CrmCustomersPage />} />
@@ -259,13 +270,12 @@ function App() {
                         </Route>
                       </Route>
 
-                      {/* Admin Routes — CMS-specific only */}
-                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
-                        <Route path="/admin" element={<AdminPortal />} />
-                        <Route element={<AdminLayout />}>
-                          <Route path="/admin/menus" element={<MenuManager />} />
-                          <Route path="/admin/homepage-builder" element={<HomepageBuilder />} />
-                        </Route>
+                      {/* Admin Redirects for backward compatibility */}
+                      <Route path="/admin/*" element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                          <Route path="*" element={<Navigate to="/backoffice/admin" replace />} />
+                          <Route path="menus" element={<Navigate to="/backoffice/menus" replace />} />
+                          <Route path="homepage-builder" element={<Navigate to="/backoffice/homepage-builder" replace />} />
+                          <Route path="flash-sales" element={<Navigate to="/backoffice/flash-sales" replace />} />
                       </Route>
 
                       {/* Auth Pages (Standalone) */}

@@ -6,8 +6,69 @@ using SystemConfig.Infrastructure;
 using SystemConfig.Domain;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+using System.Text.RegularExpressions;
 
 namespace SystemConfig;
+
+public static class ConfigValidator
+{
+    public static (bool IsValid, string? ErrorMessage) Validate(string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) && value != "0")
+            return (false, "Giá trị không được để trống");
+
+        string k = key.ToUpperInvariant();
+
+        // Boolean
+        if (k.Contains("ENABLED") || k.Contains("REQUIRE_") || k.Contains("_NOTIFICATIONS") || k.Contains("CONFIRMATION"))
+        {
+            if (value?.ToLower() != "true" && value?.ToLower() != "false")
+                return (false, "Chỉ chấp nhận true hoặc false");
+            return (true, null);
+        }
+
+        // Percentage
+        if (k.Contains("RATE") || k.Contains("PERCENT"))
+        {
+            if (!double.TryParse(value, out var pct))
+                return (false, "Phải là số thập phân (VD: 0.08)");
+            if (pct < 0 || pct > 1)
+                return (false, "Tỷ lệ phải từ 0 đến 1");
+            return (true, null);
+        }
+
+        // URL
+        if (k.Contains("_URL") || k.Contains("WEBSITE"))
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !value.StartsWith("http://") && !value.StartsWith("https://"))
+                return (false, "URL phải bắt đầu bằng http:// hoặc https://");
+            return (true, null);
+        }
+
+        // Email
+        if (k.Contains("EMAIL") && !k.Contains("NOTIFICATION"))
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !value.Contains("@"))
+                return (false, "Email không hợp lệ");
+            return (true, null);
+        }
+
+        // Number/Currency
+        if (k.Contains("SALARY") || k.Contains("FEE") || k.Contains("AMOUNT") || k.Contains("THRESHOLD") ||
+            k.Contains("DAYS") || k.Contains("HOURS") || k.Contains("MONTHS") || k.Contains("TIMEOUT") ||
+            k.Contains("ATTEMPTS") || k.Contains("LENGTH") || k.Contains("MAX_") || k.Contains("MIN_") ||
+            k.Contains("DELAY") || k.Contains("PERIOD") || k.Contains("PER_"))
+        {
+            if (!double.TryParse(value, out var num))
+                return (false, "Phải là số hợp lệ");
+            if (num < 0)
+                return (false, "Giá trị tối thiểu là 0");
+            return (true, null);
+        }
+
+        return (true, null);
+    }
+}
 
 public static class SystemConfigEndpoints
 {
@@ -84,6 +145,12 @@ public static class SystemConfigEndpoints
         // Upsert a configuration entry (create or update)
         group.MapPost("/", async (ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
+            var (isValid, errorMessage) = ConfigValidator.Validate(entry.Key, entry.Value);
+            if (!isValid)
+            {
+                return Results.BadRequest(new { error = errorMessage });
+            }
+
             entry.LastUpdated = DateTime.UtcNow;
             var existing = await db.Configurations.FindAsync(entry.Key);
             var action = existing != null ? "Update" : "Create";
@@ -113,6 +180,12 @@ public static class SystemConfigEndpoints
         // Lightweight update using route key (used by frontend)
         group.MapPost("/{key}", async (string key, ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
+            var (isValid, errorMessage) = ConfigValidator.Validate(key, entry.Value);
+            if (!isValid)
+            {
+                return Results.BadRequest(new { error = errorMessage });
+            }
+
             var existing = await db.Configurations.FindAsync(key);
             var action = existing != null ? "Update" : "Create";
 
