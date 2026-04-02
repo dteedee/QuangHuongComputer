@@ -4,13 +4,87 @@ import {
     Wrench, Clock, CheckCircle2, AlertCircle,
     Play, CheckSquare, Search, Filter,
     Loader2, Calendar, Smartphone, MoreVertical, Eye,
-    ArrowUpDown, ChevronDown, X
+    ArrowUpDown, ChevronDown, X, LayoutList, KanbanSquare
 } from 'lucide-react';
 import { repairApi, type WorkOrder, type WorkOrderStatus } from '../../../api/repair';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { DndContext, DragOverlay, useSensors, useSensor, PointerSensor, closestCorners, useDraggable, useDroppable } from '@dnd-kit/core';
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 
 type FilterStatus = 'all' | WorkOrderStatus;
+
+// Kanban Stages Configuration
+const KANBAN_STAGES = [
+    { id: 'Requested', label: 'Chờ tiếp nhận', color: '#f59e0b', bg: 'bg-amber-50' },
+    { id: 'Assigned', label: 'Được giao', color: '#f97316', bg: 'bg-orange-50' },
+    { id: 'InProgress', label: 'Đang xử lý', color: '#3b82f6', bg: 'bg-blue-50' },
+    { id: 'Completed', label: 'Hoàn thành', color: '#10b981', bg: 'bg-emerald-50' }
+];
+
+// Kanban Droppable Column
+const DroppableColumn = ({ stage, children, count }: { stage: any, children: React.ReactNode, count: number }) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: stage.id,
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`w-[300px] flex-shrink-0 bg-gray-50 rounded-2xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
+        >
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: stage.color }} />
+                    <h3 className="font-bold text-gray-800 uppercase tracking-tight text-sm flex items-center gap-2">
+                        {stage.label}
+                    </h3>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 bg-white text-gray-600 rounded-full font-black drop-shadow-sm border border-gray-100">
+                    {count}
+                </span>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-[150px] custom-scrollbar pb-2 pr-1">
+                {children}
+            </div>
+        </div>
+    );
+};
+
+// Kanban Draggable Card
+const DraggableWorkOrderCard = ({ order, onClick }: { order: WorkOrder, onClick: () => void }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: order.id,
+        data: { order },
+    });
+
+    const style = transform ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: isDragging ? 999 : undefined,
+        opacity: isDragging ? 0.3 : 1,
+    } : undefined;
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing">
+            <div 
+                className={`bg-white rounded-xl p-4 border transition-all ${isDragging ? 'shadow-2xl ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 hover:border-gray-300 hover:shadow-md'}`}
+                onClick={onClick}
+            >
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-black text-gray-900 uppercase">#{order.ticketNumber?.split('-')[1] || order.ticketNumber}</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <p className="text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5 line-clamp-1">
+                    <Smartphone size={12} className="text-gray-400" />
+                    {order.deviceModel}
+                </p>
+                <p className="text-[10px] font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 p-2 rounded border border-gray-100">
+                    {order.description}
+                </p>
+            </div>
+        </div>
+    );
+};
 
 export const TechPortal = () => {
     const navigate = useNavigate();
@@ -23,8 +97,18 @@ export const TechPortal = () => {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
     const [highlightedWorkOrderId, setHighlightedWorkOrderId] = useState<string | null>(urlWorkOrderId);
     const highlightedRowRef = useRef<HTMLTableRowElement>(null);
+    const [activeWorkOrder, setActiveWorkOrder] = useState<WorkOrder | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
 
     // Handle workOrderId from URL - highlight the work order
     useEffect(() => {
@@ -108,6 +192,53 @@ export const TechPortal = () => {
         return filtered;
     }, [rawWorkOrders, searchTerm, filterStatus, sortBy, sortOrder]);
 
+    // Local optimistic state for Kanban
+    const [localWorkOrders, setLocalWorkOrders] = useState<WorkOrder[]>([]);
+    useEffect(() => {
+        setLocalWorkOrders(workOrders);
+    }, [workOrders]);
+
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        const order = active.data.current?.order as WorkOrder;
+        if (order) setActiveWorkOrder(order);
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        setActiveWorkOrder(null);
+        const { active, over } = event;
+        if (!over) return;
+
+        const orderId = String(active.id);
+        const newStatus = String(over.id) as WorkOrderStatus;
+
+        const currentOrder = localWorkOrders.find(o => o.id === orderId);
+        if (!currentOrder || currentOrder.status === newStatus) return;
+
+        // Validation Rules Custom for Tech Workflow
+        if (newStatus === 'InProgress') {
+            if (!['Requested', 'Assigned'].includes(currentOrder.status)) {
+                toast.error('Chỉ có thể "Bắt đầu sửa" đối với phiếu Chờ hoặc Được giao.');
+                return;
+            }
+            setLocalWorkOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+            startRepairMutation.mutate(orderId);
+        } else if (newStatus === 'Completed') {
+            if (currentOrder.status !== 'InProgress') {
+                toast.error('Chỉ có thể "Hoàn thành" đối với phiếu Đang xử lý.');
+                return;
+            }
+            // Ask for Notes locally before fulfilling the pipeline jump
+            const notes = window.prompt('Ghi chú hoàn thành:');
+            if (notes !== null) {
+                setLocalWorkOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+                completeRepairMutation.mutate({ id: orderId, partsCost: 0, laborCost: 0, notes: notes || undefined });
+            }
+        } else {
+            toast.error('Kanban Kỹ thuật viên chỉ hỗ trợ tự động [Bắt đầu] & [Hoàn thành]');
+        }
+    };
+
     // Calculate stats from my work orders only
     const stats = useMemo(() => {
         return {
@@ -170,6 +301,25 @@ export const TechPortal = () => {
                     <p className="text-gray-600 font-medium">
                         Quản lý các phiếu sửa chữa được giao cho bạn
                     </p>
+                </div>
+                {/* View Toggle */}
+                <div className="flex items-center bg-gray-100 p-1.5 rounded-2xl shadow-inner border border-gray-200">
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                            viewMode === 'list' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        <LayoutList size={16} /> Bảng
+                    </button>
+                    <button
+                        onClick={() => setViewMode('kanban')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                            viewMode === 'kanban' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        <KanbanSquare size={16} /> Kanban
+                    </button>
                 </div>
             </div>
 
@@ -308,145 +458,200 @@ export const TechPortal = () => {
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4">Thông tin phiếu</th>
-                                <th className="px-6 py-4">Thiết bị</th>
-                                <th className="px-6 py-4">Mô tả</th>
-                                <th className="px-6 py-4">Trạng thái</th>
-                                <th className="px-6 py-4 text-right">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={5} className="py-20 text-center">
-                                        <Loader2 className="animate-spin mx-auto text-accent mb-3" size={40} />
-                                        <p className="text-gray-500 font-semibold text-sm">Đang tải dữ liệu...</p>
-                                    </td>
-                                </tr>
-                            ) : workOrders.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="py-20 text-center">
-                                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                                            <Wrench size={32} className="text-gray-300" />
-                                        </div>
-                                        <p className="text-gray-500 font-semibold">Không tìm thấy phiếu sửa chữa nào</p>
-                                        {(searchTerm || filterStatus !== 'all') && (
-                                            <button
-                                                onClick={() => {
-                                                    setSearchTerm('');
-                                                    setFilterStatus('all');
-                                                }}
-                                                className="mt-3 text-sm text-accent font-semibold hover:underline"
-                                            >
-                                                Xóa bộ lọc
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ) : workOrders.map((order) => {
-                                const isHighlighted = order.id === highlightedWorkOrderId;
-                                return (
-                                <tr
-                                    key={order.id}
-                                    ref={isHighlighted ? highlightedRowRef : undefined}
-                                    className={`hover:bg-gray-50/80 transition-all group cursor-pointer ${
-                                        isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 animate-pulse' : ''
-                                    }`}
-                                    onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
-                                >
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-11 h-11 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold text-xs shadow">
-                                                #{order.ticketNumber?.split('-')[1] || '??'}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900">{order.ticketNumber}</p>
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
-                                                    <Calendar size={12} />
-                                                    {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                {viewMode === 'list' ? (
+                    <>
+                        {/* Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4">Thông tin phiếu</th>
+                                        <th className="px-6 py-4">Thiết bị</th>
+                                        <th className="px-6 py-4">Mô tả</th>
+                                        <th className="px-6 py-4">Trạng thái</th>
+                                        <th className="px-6 py-4 text-right">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={5} className="py-20 text-center">
+                                                <Loader2 className="animate-spin mx-auto text-accent mb-3" size={40} />
+                                                <p className="text-gray-500 font-semibold text-sm">Đang tải dữ liệu...</p>
+                                            </td>
+                                        </tr>
+                                    ) : workOrders.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="py-20 text-center">
+                                                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                                                    <Wrench size={32} className="text-gray-300" />
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div>
-                                            <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                                                <Smartphone size={14} className="text-gray-400" />
-                                                {order.deviceModel}
-                                            </p>
-                                            <p className="text-xs text-gray-400 mt-1 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit">
-                                                SN: {order.serialNumber}
-                                            </p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="text-sm text-gray-600 max-w-xs truncate" title={order.description}>
-                                            {order.description}
-                                        </p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${getStatusColor(order.status)}`}>
-                                            {getStatusIcon(order.status)}
-                                            {translateStatus(order.status)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-5 text-right">
-                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate(`/backoffice/tech/work-orders/${order.id}`);
-                                                }}
-                                                className="p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-900 hover:text-white transition-all"
-                                                title="Xem chi tiết"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
-                                            {(order.status === 'Requested' || order.status === 'Assigned') && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        startRepairMutation.mutate(order.id);
-                                                    }}
-                                                    className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                                                    title="Bắt đầu sửa chữa"
-                                                >
-                                                    <Play size={16} className="fill-current" />
-                                                </button>
-                                            )}
-                                            {order.status === 'InProgress' && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const notes = window.prompt('Ghi chú hoàn thành:');
-                                                        if (notes !== null) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes: notes || undefined });
-                                                    }}
-                                                    className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
-                                                    title="Hoàn tất"
-                                                >
-                                                    <CheckSquare size={16} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                                <p className="text-gray-500 font-semibold">Không tìm thấy phiếu sửa chữa nào</p>
+                                                {(searchTerm || filterStatus !== 'all') && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSearchTerm('');
+                                                            setFilterStatus('all');
+                                                        }}
+                                                        className="mt-3 text-sm text-accent font-semibold hover:underline"
+                                                    >
+                                                        Xóa bộ lọc
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ) : workOrders.map((order) => {
+                                        const isHighlighted = order.id === highlightedWorkOrderId;
+                                        return (
+                                        <tr
+                                            key={order.id}
+                                            ref={isHighlighted ? highlightedRowRef : undefined}
+                                            className={`hover:bg-gray-50/80 transition-all group cursor-pointer ${
+                                                isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 animate-pulse' : ''
+                                            }`}
+                                            onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
+                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-11 h-11 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold text-xs shadow">
+                                                        #{order.ticketNumber?.split('-')[1] || '??'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">{order.ticketNumber}</p>
+                                                        <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+                                                            <Calendar size={12} />
+                                                            {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                                                        <Smartphone size={14} className="text-gray-400" />
+                                                        {order.deviceModel}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1 font-mono bg-gray-100 px-2 py-0.5 rounded w-fit">
+                                                        SN: {order.serialNumber}
+                                                    </p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <p className="text-sm text-gray-600 max-w-xs truncate" title={order.description}>
+                                                    {order.description}
+                                                </p>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${getStatusColor(order.status)}`}>
+                                                    {getStatusIcon(order.status)}
+                                                    {translateStatus(order.status)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/backoffice/tech/work-orders/${order.id}`);
+                                                        }}
+                                                        className="p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-900 hover:text-white transition-all"
+                                                        title="Xem chi tiết"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    {(order.status === 'Requested' || order.status === 'Assigned') && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                startRepairMutation.mutate(order.id);
+                                                            }}
+                                                            className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                                                            title="Bắt đầu sửa chữa"
+                                                        >
+                                                            <Play size={16} className="fill-current" />
+                                                        </button>
+                                                    )}
+                                                    {order.status === 'InProgress' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const notes = window.prompt('Ghi chú hoàn thành:');
+                                                                if (notes !== null) completeRepairMutation.mutate({ id: order.id, partsCost: 0, laborCost: 0, notes: notes || undefined });
+                                                            }}
+                                                            className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                                                            title="Hoàn tất"
+                                                        >
+                                                            <CheckSquare size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
-                {/* Footer */}
-                {workOrders.length > 0 && (
-                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
-                        <p className="text-gray-500">
-                            Hiển thị <span className="font-semibold text-gray-900">{workOrders.length}</span> phiếu
-                        </p>
+                        {/* Footer */}
+                        {workOrders.length > 0 && (
+                            <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
+                                <p className="text-gray-500">
+                                    Hiển thị <span className="font-semibold text-gray-900">{workOrders.length}</span> phiếu
+                                </p>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="flex-1 overflow-x-auto p-6 bg-gray-50/50 custom-scrollbar">
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCorners}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <div className="flex gap-6 min-w-max items-start h-[calc(100vh-380px)]">
+                                {KANBAN_STAGES.map((stage) => {
+                                    const columnOrders = localWorkOrders.filter(o => o.status === stage.id);
+                                    return (
+                                        <DroppableColumn key={stage.id} stage={stage} count={columnOrders.length}>
+                                            {columnOrders.map((order) => (
+                                                <DraggableWorkOrderCard
+                                                    key={order.id}
+                                                    order={order}
+                                                    onClick={() => navigate(`/backoffice/tech/work-orders/${order.id}`)}
+                                                />
+                                            ))}
+                                            {columnOrders.length === 0 && (
+                                                <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Trống</p>
+                                                </div>
+                                            )}
+                                        </DroppableColumn>
+                                    );
+                                })}
+                            </div>
+
+                            <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
+                                {activeWorkOrder ? (
+                                    <div className="transform scale-105 rotate-3 shadow-2xl opacity-90 cursor-grabbing pointer-events-none">
+                                        <div className="bg-white rounded-xl p-4 border border-accent shadow-xl ring-2 ring-accent">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-sm font-black text-gray-900 uppercase">#{activeWorkOrder.ticketNumber?.split('-')[1] || activeWorkOrder.ticketNumber}</span>
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(activeWorkOrder.createdAt).toLocaleDateString('vi-VN')}</span>
+                                            </div>
+                                            <p className="text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5 line-clamp-1">
+                                                <Smartphone size={12} className="text-gray-400" />
+                                                {activeWorkOrder.deviceModel}
+                                            </p>
+                                            <p className="text-[10px] font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 p-2 rounded border border-gray-100">
+                                                {activeWorkOrder.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </DragOverlay>
+                        </DndContext>
                     </div>
                 )}
             </div>
