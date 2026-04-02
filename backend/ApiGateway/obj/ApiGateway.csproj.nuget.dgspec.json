@@ -1,0 +1,1685 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/teedee/Pictures/QuangHuongComputer/backend/ApiGateway/ApiGateway.csproj": {}
+  },
+  "projects": {
+    "/home/teedee/Pictures/QuangHuongComputer/backend/ApiGateway/ApiGateway.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/ApiGateway/ApiGateway.csproj",
+        "projectName": "ApiGateway",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/ApiGateway/ApiGateway.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/ApiGateway/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/Ai.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/Ai.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/CRM.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/CRM.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/Communication.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/Communication.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/HR.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/HR.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/Reporting.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/Reporting.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/SystemConfig.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/SystemConfig.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/Warranty.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/Warranty.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "AspNetCore.HealthChecks.NpgSql": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "AspNetCore.HealthChecks.Rabbitmq": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "AspNetCore.HealthChecks.Redis": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.104.1, )"
+            },
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Caching.StackExchangeRedis": {
+              "target": "Package",
+              "version": "[10.0.2, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.5.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[8.0.25, 8.0.25]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj",
+        "projectName": "BuildingBlocks",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.0, )"
+            },
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.9.0, )"
+            },
+            "MassTransit.RabbitMQ": {
+              "target": "Package",
+              "version": "[8.1.3, )"
+            },
+            "Microsoft.AspNetCore.Authorization": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.InMemory": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Serilog": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.8.10, )"
+            },
+            "System.ComponentModel.Annotations": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.6.6, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.6, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj",
+        "projectName": "Accounting",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/Ai.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/Ai.csproj",
+        "projectName": "Ai",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/Ai.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Ai/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/CRM.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/CRM.csproj",
+        "projectName": "CRM",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/CRM.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/CRM/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj",
+        "projectName": "Catalog",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/Communication.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/Communication.csproj",
+        "projectName": "Communication",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/Communication.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Communication/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.14.1, )"
+            },
+            "Microsoft.AspNetCore.SignalR": {
+              "target": "Package",
+              "version": "[1.1.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj",
+        "projectName": "Content",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/HR.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/HR.csproj",
+        "projectName": "HR",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/HR.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/HR/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj",
+        "projectName": "Identity",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.73.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj",
+        "projectName": "Inventory",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj",
+        "projectName": "Payments",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj",
+        "projectName": "Repair",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/Reporting.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/Reporting.csproj",
+        "projectName": "Reporting",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/Reporting.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Reporting/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Accounting/Accounting.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Identity/Identity.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Repair/Repair.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.104.1, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj",
+        "projectName": "Sales",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/Sales.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Sales/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Content/Content.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Inventory/Inventory.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Payments/Payments.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/SystemConfig.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/SystemConfig.csproj",
+        "projectName": "SystemConfig",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/SystemConfig.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/SystemConfig/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/Warranty.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/Warranty.csproj",
+        "projectName": "Warranty",
+        "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/Warranty.csproj",
+        "packagesPath": "/home/teedee/.nuget/packages/",
+        "outputPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Warranty/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teedee/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/BuildingBlocks/BuildingBlocks.csproj"
+              },
+              "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj": {
+                "projectPath": "/home/teedee/Pictures/QuangHuongComputer/backend/Services/Catalog/Catalog.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "noWarn": [
+            "NU1603",
+            "NU1605"
+          ],
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

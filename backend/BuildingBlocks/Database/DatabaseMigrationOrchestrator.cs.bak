@@ -1,0 +1,213 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace BuildingBlocks.Database;
+
+/// <summary>
+/// Database migration orchestrator - Chạy tất cả migrations cùng lúc
+/// </summary>
+public class DatabaseMigrationOrchestrator
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<DatabaseMigrationOrchestrator> _logger;
+
+    public DatabaseMigrationOrchestrator(
+        IServiceProvider serviceProvider,
+        ILogger<DatabaseMigrationOrchestrator> logger)
+    {
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Migrate tất cả databases/schemas cùng lúc
+    /// </summary>
+    public async Task MigrateAllAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("🚀 Starting database migration for ALL modules...");
+
+        var migrations = new List<(string Name, Func<Task> MigrateFunc)>
+        {
+            ("Identity", () => MigrateDbContext<Identity.Infrastructure.IdentityDbContext>()),
+            ("Catalog", () => MigrateDbContext<Catalog.Infrastructure.CatalogDbContext>()),
+            ("Sales", () => MigrateDbContext<Sales.Infrastructure.SalesDbContext>()),
+            ("Inventory", () => MigrateDbContext<InventoryModule.Infrastructure.InventoryDbContext>()),
+            ("Repair", () => MigrateDbContext<Repair.Infrastructure.RepairDbContext>()),
+            ("Warranty", () => MigrateDbContext<Warranty.Infrastructure.WarrantyDbContext>()),
+            ("Accounting", () => MigrateDbContext<Accounting.Infrastructure.AccountingDbContext>()),
+            ("HR", () => MigrateDbContext<HR.Infrastructure.HRDbContext>()),
+            ("Content", () => MigrateDbContext<Content.Infrastructure.ContentDbContext>()),
+            ("Communication", () => MigrateDbContext<Communication.Infrastructure.CommunicationDbContext>()),
+            ("Payments", () => MigrateDbContext<Payments.Infrastructure.PaymentsDbContext>()),
+            ("SystemConfig", () => MigrateDbContext<SystemConfig.Infrastructure.SystemConfigDbContext>()),
+            ("AI", () => MigrateDbContext<Ai.Infrastructure.AiDbContext>()),
+        };
+
+        var tasks = new List<Task>();
+        var startTime = DateTime.UtcNow;
+
+        foreach (var (name, migrateFunc) in migrations)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                try
+                {
+                    _logger.LogInformation("  ⏳ Migrating {Module}...", name);
+                    await migrateFunc();
+                    _logger.LogInformation("  ✅ {Module} migration completed", name);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "  ❌ {Module} migration failed: {Error}", name, ex.Message);
+                    throw;
+                }
+            }, cancellationToken));
+        }
+
+        await Task.WhenAll(tasks);
+
+        var duration = DateTime.UtcNow - startTime;
+        _logger.LogInformation("🎉 All migrations completed in {Duration:0.00}s", duration.TotalSeconds);
+    }
+
+    /// <summary>
+    /// Migrate một DbContext cụ thể
+    /// </summary>
+    private async Task MigrateDbContext<TContext>() where TContext : DbContext
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<TContext>();
+
+        // Check nếu database đã tồn tại
+        var canConnect = await context.Database.CanConnectAsync();
+
+        if (!canConnect)
+        {
+            _logger.LogWarning("Creating database for {Context}...", typeof(TContext).Name);
+            await context.Database.EnsureCreatedAsync();
+        }
+
+        // Apply pending migrations
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        if (pendingMigrations.Any())
+        {
+            _logger.LogInformation("Applying {Count} pending migrations for {Context}",
+                pendingMigrations.Count(), typeof(TContext).Name);
+            await context.Database.MigrateAsync();
+        }
+        else
+        {
+            _logger.LogInformation("No pending migrations for {Context}", typeof(TContext).Name);
+        }
+    }
+
+    /// <summary>
+    /// Seed data cho tất cả modules
+    /// </summary>
+    public async Task SeedAllAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("🌱 Starting data seeding for ALL modules...");
+
+        var seeders = new List<(string Name, Func<Task> SeedFunc)>
+        {
+            ("Identity", SeedIdentityAsync),
+            ("Catalog", SeedCatalogAsync),
+            ("Content", SeedContentAsync),
+            // Add more seeders as needed
+        };
+
+        foreach (var (name, seedFunc) in seeders)
+        {
+            try
+            {
+                _logger.LogInformation("  ⏳ Seeding {Module}...", name);
+                await seedFunc();
+                _logger.LogInformation("  ✅ {Module} seeding completed", name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "  ⚠️ {Module} seeding failed (non-critical): {Error}", name, ex.Message);
+            }
+        }
+
+        _logger.LogInformation("🎉 All seeding completed");
+    }
+
+    private async Task SeedIdentityAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Identity.Infrastructure.IdentityDbContext>();
+
+        // Check if already seeded
+        if (await context.Users.AnyAsync())
+        {
+            _logger.LogInformation("Identity data already exists, skipping seed");
+            return;
+        }
+
+        // Seed logic here (will be implemented in Identity module)
+    }
+
+    private async Task SeedCatalogAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Catalog.Infrastructure.CatalogDbContext>();
+
+        if (await context.Products.AnyAsync())
+        {
+            _logger.LogInformation("Catalog data already exists, skipping seed");
+            return;
+        }
+
+        // Seed logic here
+    }
+
+    private async Task SeedContentAsync()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Content.Infrastructure.ContentDbContext>();
+
+        // Seed logic here
+        await Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Extension methods for database migration
+/// </summary>
+public static class DatabaseMigrationExtensions
+{
+    /// <summary>
+    /// Thêm Database Migration Orchestrator vào DI container
+    /// </summary>
+    public static IServiceCollection AddDatabaseMigration(this IServiceCollection services)
+    {
+        services.AddSingleton<DatabaseMigrationOrchestrator>();
+        return services;
+    }
+
+    /// <summary>
+    /// Auto-migrate tất cả databases khi app start (Development only)
+    /// </summary>
+    public static async Task<IHost> MigrateAllDatabasesAsync(this IHost host)
+    {
+        using var scope = host.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrationOrchestrator>();
+        await orchestrator.MigrateAllAsync();
+        return host;
+    }
+
+    /// <summary>
+    /// Auto-seed tất cả data khi app start (Development only)
+    /// </summary>
+    public static async Task<IHost> SeedAllDataAsync(this IHost host)
+    {
+        using var scope = host.Services.CreateScope();
+        var orchestrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrationOrchestrator>();
+        await orchestrator.SeedAllAsync();
+        return host;
+    }
+}

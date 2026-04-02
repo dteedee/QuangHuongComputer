@@ -1,183 +1,86 @@
-# ========================================
-# .gitignore - Quang Huong Computer
-# Files and directories to ignore
-# ========================================
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# ========================================
-# Dependencies
-# ========================================
-node_modules/
-jspm_packages/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# ========================================
-# Build outputs
-# ========================================
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
 dist/
-build/
-out/
-*.log
-
-# Backend builds
 bin/
-obj/
-*.dll
-*.exe
-*.pdb
 
-# ========================================
-# Environment files (NEVER commit these!)
-# ========================================
-.env
-.env.local
-.env.production
-.env.*.local
-.env.docker
-.env.test
-.env.uat
-.env.staging
-frontend/.env
-backend/.env
+# production
+/build
 
-# ========================================
-# Sensitive Configuration Files (IMPORTANT!)
-# ========================================
-# DO NOT commit these files - they contain secrets!
-appsettings.Development.json
-appsettings.Production.json
-appsettings.*.json
-!appsettings.json
-backend/**/appsettings.Development.json
-backend/**/appsettings.Production.json
-
-# User Secrets
-**/secrets.json
-**/*.secrets.json
-
-# ========================================
-# IDE & Editor files
-# ========================================
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# misc
 .DS_Store
+*.pem
 
-# ========================================
-# Testing
-# ========================================
-coverage/
-.nyc_output/
-test-results/
-
-# ========================================
-# Debug files
-# ========================================
-*.log
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# ========================================
-# Temporary files
-# ========================================
-*.tmp
-*.temp
-.cache/
+# package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# ========================================
-# OS files
-# ========================================
-.DS_Store
-Thumbs.db
-desktop.ini
+# semantic-release
+.nyc_output
 
-# ========================================
-# Docker
-# ========================================
-docker-compose.override.yml
-.env.docker
-.env.test
-.env.uat
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
 
-# SSL certificates
-nginx/ssl/
+# vercel
+.vercel
 
-# ========================================
-# Generated files
-# ========================================
-*.generated.cs
-*.min.js
-*.min.css
-*.map
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-# ========================================
-# .NET specific
-# ========================================
-.vs/
-*.user
-*.suo
-*.userosscache
-project.lock.json
-project.fragment.lock.json
+# flutter
+.dart_tool
+build
+GoogleService-Info.plist
 
-# ========================================
-# Documentation
-# ========================================
-audit-report-*.txt
-build-report-*.txt
+repomix-output.xml
+.serena/cache
+plans/**/*
+!plans/templates/*
+screenshots/*
+docs/screenshots/*
+logs.txt
+test-ck
+__pycache__
 
-# ========================================
-# Database
-# ========================================
-*.db
-*.sqlite
-*.sqlite3
+# CK meta commands
+prompt.md
+ck.md
 
-# ========================================
-# Certificates & Keys
-# ========================================
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
+# Agent memory (project scope)
+.claude/agent-memory/
 
-# ========================================
-# Backups
-# ========================================
-*.bak
-*.backup
-*_backup.*
-backups/
+# Hook diagnostics logs
+.claude/hooks/.logs/
 
-# ========================================
-# Logs
-# ========================================
-logs/
-*.log
+# Gemini CLI settings (symlink to .claude/.mcp.json)
+.gemini/settings.json
+.claude/settings.bak.json
+# External repos for study/reference
+external/
 
-# ========================================
-# User uploads (development)
-# ========================================
-uploads/
-public/uploads/
-
-# ========================================
-# Cache
-# ========================================
-.eslintcache
-.stylelintcache
-*.cache
-
-# ========================================
-# Misc
-# ========================================
-.wslignore
-
-# ========================================
-# Temporary Documentation (Do not commit)
-# ========================================
-CONFIG-COMPARISON.md
-URGENT-ACTION-REQUIRED.md
+# Git worktrees (local development only)
+worktrees/
