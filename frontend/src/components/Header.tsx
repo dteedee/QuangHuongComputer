@@ -2,12 +2,13 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     Search, ShoppingCart, Menu as MenuIcon, Phone,
     Wrench, Monitor, ChevronDown,
     LogOut, Settings, Laptop, Cpu, Zap,
     Briefcase, MessageCircle, User, Package, FileText,
-    X, Home, ArrowRight
+    X, Home, ArrowRight, Sun, Moon
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
@@ -39,6 +40,7 @@ const IconMap: Record<string, any> = {
 export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const { isAuthenticated, user, logout } = useAuth();
     const { itemCount } = useCart();
+    const { isDark, toggleMode } = useTheme();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -170,6 +172,10 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                             <Link to="/policy/news" className="hover:underline flex items-center gap-1.5"><Monitor size={12} /> Tin công nghệ</Link>
                             <Link to="/recruitment" className="hover:underline flex items-center gap-1.5"><Briefcase size={12} /> Tuyển dụng</Link>
                             <Link to="/contact" className="hover:underline flex items-center gap-1.5"><Phone size={12} /> Liên hệ</Link>
+
+                            <button onClick={toggleMode} className="hover:text-amber-300 transition-colors flex items-center gap-1.5 ml-1" title="Giao diện Sáng/Tối">
+                                {isDark ? <Sun size={14} /> : <Moon size={14} />} 
+                            </button>
 
                             <div className="h-4 w-[1px] bg-white/30" />
 

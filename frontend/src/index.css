@@ -79,8 +79,7 @@ html {
 }
 
 body {
-  background-color: #F9FAFB;
-  color: #1A1A1A;
+  @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -90,14 +89,14 @@ a, button, input, select, textarea {
   transition: all 0.2s ease-in-out;
 }
 
-/* Input text color - đen cho giá trị nhập, xám cho placeholder */
+/* Input text color - responsive to dark mode */
 input, select, textarea {
-  color: #111827; /* gray-900 */
+  @apply text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #9CA3AF; /* gray-400 */
+  @apply text-gray-400 dark:text-gray-500;
 }
 
 /* Smooth hover effects */
@@ -585,40 +584,23 @@ img[loaded] {
 
 /* Backoffice Branding & High Contrast */
 .premium-card {
-    background: white;
-    border: 1px solid #e5e7eb; /* gray-200 */
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s ease;
+    @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300 rounded-2xl;
 }
-
 
 .premium-card:hover {
-    border-color: #d1d5db; /* gray-300 */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    @apply border-gray-300 dark:border-gray-700 shadow-md;
 }
-
 
 .admin-title {
-    font-weight: 900;
-    letter-spacing: -0.025em;
-    color: #111827; /* gray-900 */
-    text-transform: uppercase;
+    @apply text-gray-900 dark:text-gray-100 font-black uppercase tracking-tight;
 }
-
 
 .admin-label {
-    font-weight: 700;
-    color: #374151; /* gray-700 */
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: 0.875rem; /* 14px */
+    @apply text-gray-700 dark:text-gray-400 font-bold uppercase tracking-wide text-sm;
 }
 
-
 .admin-value {
-    font-weight: 800;
-    color: #111827; /* gray-900 */
+    @apply text-gray-900 dark:text-gray-100 font-extrabold;
 }
 
 
@@ -628,8 +610,11 @@ img[loaded] {
 .admin-area .text-\[11px\] { font-size: 0.8125rem !important; } /* force to 13px */
 
 /* High-contrast colors - scoped to admin area only */
-.admin-area .text-gray-400 { color: #6b7280; } /* gray-500 for better admin readability */
-.admin-area .text-gray-500 { color: #374151; } /* gray-700 for better admin readability */
+.admin-area .text-gray-400 { color: #6b7280; /* Tailwind gray-500 */ }
+.dark .admin-area .text-gray-400 { color: #9ca3af; /* Tailwind gray-400 */ }
+
+.admin-area .text-gray-500 { color: #374151; /* Tailwind gray-700 */ }
+.dark .admin-area .text-gray-500 { color: #d1d5db; /* Tailwind gray-300 */ }
 
 
 /* Branding overrides */

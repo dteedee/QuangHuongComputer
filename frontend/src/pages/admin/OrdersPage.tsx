@@ -43,16 +43,16 @@ const DroppableColumn = ({ stage, children, count }: { stage: any, children: Rea
     return (
         <div
             ref={setNodeRef}
-            className={`w-80 flex-shrink-0 bg-gray-50 rounded-2xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
+            className={`w-80 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
         >
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: stage.color }} />
-                    <h3 className="font-bold text-gray-800 uppercase tracking-tight text-sm flex items-center gap-2">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-200 uppercase tracking-tight text-sm flex items-center gap-2">
                         {stage.label}
                     </h3>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-white text-gray-600 rounded-full font-black drop-shadow-sm border border-gray-100">
+                <span className="text-[10px] px-2 py-0.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full font-black drop-shadow-sm border border-gray-100 dark:border-gray-700">
                     {count}
                 </span>
             </div>
@@ -79,19 +79,19 @@ const DraggableOrderCard = ({ order, onClick }: { order: Order, onClick: () => v
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing">
             <div 
-                className={`bg-white rounded-xl p-4 border transition-all ${isDragging ? 'shadow-2xl ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 hover:border-gray-300 hover:shadow-md'}`}
+                className={`bg-white dark:bg-gray-900 rounded-xl p-4 border transition-all ${isDragging ? 'shadow-2xl ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'}`}
                 onClick={onClick}
             >
                 <div className="flex justify-between items-start mb-2">
                     <span className="text-sm font-black text-gray-900 data-card-id uppercase">#{order.orderNumber}</span>
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
                 </div>
-                <p className="text-xs font-bold text-gray-800 line-clamp-1 mb-1">{order.items?.[0]?.productName || 'N/A'}</p>
+                <p className="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-1 mb-1">{order.items?.[0]?.productName || 'N/A'}</p>
                 {order.items?.length > 1 && (
-                    <p className="text-[10px] font-black text-accent uppercase bg-red-50 w-fit px-1.5 py-0.5 rounded italic mb-2">+{order.items.length - 1} sp</p>
+                    <p className="text-[10px] font-black text-accent uppercase bg-red-50 dark:bg-red-500/10 w-fit px-1.5 py-0.5 rounded italic mb-2">+{order.items.length - 1} sp</p>
                 )}
-                <div className="mt-3 pt-3 border-t border-gray-50 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded">
+                <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
                         {order.paymentStatus === 'Paid' ? 'Đã T.Toán' : 'Chưa T.Toán'}
                     </span>
                     <span className="text-sm font-black text-accent italic">{formatCurrency(order.totalAmount)}</span>

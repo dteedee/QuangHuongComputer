@@ -581,6 +581,15 @@ export const BackofficeLayout = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleMode}
+                            className={`p-2 rounded-lg transition-colors mr-1 ${isDark ? 'hover:bg-gray-800 text-gray-400 hover:text-amber-300' : 'hover:bg-gray-100 text-gray-600 hover:text-amber-500'}`}
+                            title="Chuyển Sáng/Tối"
+                        >
+                            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
+
                         {/* Quick Actions */}
                         <div className="relative">
                             <button

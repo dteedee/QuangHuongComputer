@@ -331,8 +331,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     whileInView={{ opacity: 1, scale: 1 }}
                     whileHover={{ y: -4 }}
                     transition={{ duration: 0.2 }}
-                    className={`group relative bg-white border rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300
-                        ${showPopup ? 'border-accent shadow-xl ring-1 ring-accent/20 z-30' : 'border-gray-100 hover:border-accent/40 shadow-sm hover:shadow-xl'}`}
+                    className={`group relative bg-white dark:bg-gray-900 border rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300
+                        ${showPopup ? 'border-accent shadow-xl ring-1 ring-accent/20 z-30' : 'border-gray-100 dark:border-gray-800 hover:border-accent/40 shadow-sm hover:shadow-xl'}`}
                 >
                     {/* Discount Badge */}
                     <div className="absolute top-3 left-3 z-20">
@@ -353,14 +353,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     {/* Wishlist Button */}
                     <button 
                         onClick={toggleWishlist}
-                        className={`absolute z-20 ${product.soldCount > 10 ? 'top-10' : 'top-3'} right-3 p-2 rounded-full backdrop-blur-md bg-white/70 shadow-sm border border-white/50 transition-all hover:scale-110 active:scale-95 ${isWishlisted ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`absolute z-20 ${product.soldCount > 10 ? 'top-10' : 'top-3'} right-3 p-2 rounded-full backdrop-blur-md bg-white/70 dark:bg-gray-800/70 shadow-sm border border-white/50 dark:border-gray-700 transition-all hover:scale-110 active:scale-95 ${isWishlisted ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
                         title={isWishlisted ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
                     >
                         <Heart size={18} className={isWishlisted ? 'fill-red-500' : ''} />
                     </button>
 
                     {/* Product Image Area */}
-                    <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                    <Link to={`/product/${product.id}`} className="block relative pt-[100%] bg-white dark:bg-gray-900 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                         <div className="absolute inset-0 flex items-center justify-center p-1">
                             {product.imageUrl && !imgError ? (
                                 <img
@@ -370,7 +370,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                     onError={() => setImgError(true)}
                                 />
                             ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center text-gray-300 border border-gray-100">
+                                <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg flex items-center justify-center text-gray-300 border border-gray-100 dark:border-gray-800">
                                     <span className="text-5xl font-black">{product?.name?.charAt(0) || '?'}</span>
                                 </div>
                             )}
@@ -378,7 +378,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </Link>
 
                     {/* Info Area */}
-                    <div className="p-4 flex flex-col flex-1 border-t border-gray-50 bg-white group-hover:bg-red-50/10 transition-colors">
+                    <div className="p-4 flex flex-col flex-1 border-t border-gray-50 dark:border-gray-800 bg-white dark:bg-gray-900 group-hover:bg-red-50/10 dark:group-hover:bg-red-900/10 transition-colors">
                         <div className="mb-2 flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map(i => (
                                 <Star
@@ -391,7 +391,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         </div>
 
                         <Link to={`/product/${product.id}`} className="mb-3 block">
-                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-accent transition-colors line-clamp-2 min-h-[40px] leading-relaxed group-hover:underline">
+                            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 group-hover:text-accent transition-colors line-clamp-2 min-h-[40px] leading-relaxed group-hover:underline">
                                 {product.name}
                             </h3>
                         </Link>
@@ -402,7 +402,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                 <span className="text-lg font-bold text-accent">{formatCurrency(product.price)}</span>
                             </div>
 
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
                                 <span className={`flex items-center gap-1 text-xs font-semibold ${product.stockQuantity > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                                     <PackageCheck size={14} />
                                     {product.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'}
@@ -412,19 +412,19 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                     {/* Quantity Selector */}
                                     <div
                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                        className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-0.5 mr-1"
+                                        className="flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-0.5 mr-1"
                                     >
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all disabled:opacity-50"
                                             disabled={quantity <= 1}
                                         >
                                             <Minus size={14} />
                                         </button>
-                                        <span className="w-6 text-center text-sm font-semibold text-gray-800">{quantity}</span>
+                                        <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-200">{quantity}</span>
                                         <button
                                             onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
-                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white rounded-md transition-all disabled:opacity-50"
+                                            className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-accent hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all disabled:opacity-50"
                                             disabled={quantity >= product.stockQuantity}
                                         >
                                             <Plus size={14} />
@@ -459,7 +459,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                                 closePopup();
                                 setShowQuickView(true);
                             }}
-                            className="pointer-events-auto bg-white/90 backdrop-blur-md text-xs font-bold uppercase text-accent px-6 py-2.5 rounded-full shadow-xl border border-white/50 hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95"
+                            className="pointer-events-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-md text-xs font-bold uppercase text-accent px-6 py-2.5 rounded-full shadow-xl border border-white/50 dark:border-gray-700 hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95"
                         >
                             Xem nhanh
                         </button>
@@ -480,17 +480,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col md:flex-row z-10"
+                            className="relative bg-white dark:bg-gray-900 w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col md:flex-row z-10"
                         >
                             <button 
                                 onClick={() => setShowQuickView(false)}
-                                className="absolute top-4 right-4 z-20 p-2 bg-gray-100/80 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors backdrop-blur-sm"
+                                className="absolute top-4 right-4 z-20 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors backdrop-blur-sm"
                             >
                                 <CloseIcon size={20} />
                             </button>
                             
                             {/* Image Half */}
-                            <div className="md:w-1/2 bg-gray-50 flex items-center justify-center p-8 relative">
+                            <div className="md:w-1/2 bg-gray-50 dark:bg-gray-800 flex items-center justify-center p-8 relative">
                                 <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">
                                     Giảm {discount}%
                                 </div>
