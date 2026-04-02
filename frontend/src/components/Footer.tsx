@@ -103,24 +103,27 @@ export const Footer = () => {
             </div>
 
             {/* Main Footer Links */}
-            <div className="max-w-[1400px] mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div className="max-w-[1400px] mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-10">
                 {/* Brand Column */}
-                <div className="space-y-6">
+                <div className="space-y-6 xl:col-span-2">
                     <Link to="/" className="flex flex-col group">
-                        <span className="text-2xl font-black text-accent uppercase tracking-tighter leading-none">{companyBrand1}</span>
-                        <span className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase mt-1">{companyBrand2}</span>
+                        <span className="text-3xl font-black text-accent uppercase tracking-tighter leading-none">{companyBrand1}</span>
+                        <span className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase mt-1">{companyBrand2}</span>
                     </Link>
-                    <div className="space-y-4 text-gray-600">
-                        <div className="flex gap-3">
-                            <MapPin size={20} className="text-accent flex-shrink-0" />
-                            <p className="text-sm">Công ty: {companyAddress}</p>
+                    <p className="text-gray-500 text-sm leading-relaxed pr-4">
+                        Hệ thống bán lẻ máy tính, linh kiện, và các thiết bị IT tin cậy. Cam kết chất lượng dịch vụ chuyên nghiệp, sản phẩm chính hãng, bảo hành tận tâm.
+                    </p>
+                    <div className="space-y-3 text-gray-600">
+                        <div className="flex gap-3 items-start">
+                            <MapPin size={18} className="text-accent flex-shrink-0 mt-0.5" />
+                            <p className="text-sm">{companyAddress}</p>
                         </div>
                         <div className="flex gap-3">
-                            <Phone size={20} className="text-accent flex-shrink-0" />
-                            <p className="text-sm font-black text-nowrap">{companyPhone2} - {companyPhone}</p>
+                            <Phone size={18} className="text-accent flex-shrink-0" />
+                            <p className="text-sm font-black">{companyPhone2} - {companyPhone}</p>
                         </div>
                         <div className="flex gap-3">
-                            <Mail size={20} className="text-accent flex-shrink-0" />
+                            <Mail size={18} className="text-accent flex-shrink-0" />
                             <p className="text-sm">{companyEmail}</p>
                         </div>
                         <div className="flex gap-3">
@@ -129,22 +132,44 @@ export const Footer = () => {
                             </div>
                         </div>
                     </div>
+
+                    <div className="pt-2 flex gap-3">
+                        <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:-translate-y-1 transition-all shadow-lg shadow-blue-600/30"><Facebook size={20} /></a>
+                        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:-translate-y-1 transition-all shadow-lg shadow-red-500/30"><Youtube size={20} /></a>
+                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white hover:-translate-y-1 transition-all shadow-lg shadow-pink-500/30"><Instagram size={20} /></a>
+                    </div>
+                </div>
+
+                {/* Về chúng tôi */}
+                <div className="space-y-6">
+                    <h4 className="text-sm font-black text-gray-800 uppercase border-b-2 border-red-100 w-fit pb-1">Về Quang Hưởng</h4>
+                    <ul className="space-y-3 text-gray-500 text-sm font-medium">
+                        <li><Link to="/about" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Giới thiệu chung</Link></li>
+                        <li><Link to="/policy/news" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Tin tức công nghệ</Link></li>
+                        <li><Link to="/policy/promotions" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Tin khuyến mãi</Link></li>
+                        <li><Link to="/recruitment" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Tuyển dụng</Link></li>
+                        <li><Link to="/contact" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Liên hệ</Link></li>
+                    </ul>
                 </div>
 
                 {/* Categories Column */}
                 <div className="space-y-6">
-                    <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">{categoryMenu?.name || 'Danh mục sản phẩm'}</h4>
+                    <h4 className="text-sm font-black text-gray-800 uppercase border-b-2 border-red-100 w-fit pb-1">{categoryMenu?.name || 'Sản phẩm kinh doanh'}</h4>
                     <ul className="space-y-3 text-gray-500 text-sm font-medium">
                         {categoryMenu?.items?.map(item => (
                             <li key={item.id}>
-                                <Link to={item.url || '/'} className="hover:text-accent transition-colors flex items-center gap-1">
+                                <Link to={item.url || '/'} className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1">
                                     <ChevronRight size={14} /> {item.label}
                                 </Link>
                             </li>
                         )) || (
                             <>
-                                <li><Link to="/laptop" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Laptop</Link></li>
-                                <li><Link to="/pc" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> PC Gaming</Link></li>
+                                <li><Link to="/laptop" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Máy tính xách tay (Laptop)</Link></li>
+                                <li><Link to="/pc-gaming" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Máy tính bộ (PC Gaming)</Link></li>
+                                <li><Link to="/workstation" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Máy trạm (Workstation)</Link></li>
+                                <li><Link to="/components" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Linh kiện máy tính</Link></li>
+                                <li><Link to="/screens" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Màn hình máy tính</Link></li>
+                                <li><Link to="/office" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Thiết bị văn phòng</Link></li>
                             </>
                         )}
                     </ul>
@@ -152,39 +177,43 @@ export const Footer = () => {
 
                 {/* Support Column */}
                 <div className="space-y-6">
-                    <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">{supportMenu?.name || 'Chính sách & Hỗ trợ'}</h4>
+                    <h4 className="text-sm font-black text-gray-800 uppercase border-b-2 border-red-100 w-fit pb-1">{supportMenu?.name || 'Chính sách'}</h4>
                     <ul className="space-y-3 text-gray-500 text-sm font-medium">
                         {supportMenu?.items?.map(item => (
                             <li key={item.id}>
-                                <Link to={item.url || '/'} className="hover:text-accent transition-colors flex items-center gap-1">
+                                <Link to={item.url || '/'} className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1">
                                     <ChevronRight size={14} /> {item.label}
                                 </Link>
                             </li>
                         )) || (
                             <>
-                                <li><Link to="/policy/warranty" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
-                                <li><Link to="/contact" className="hover:text-accent transition-colors flex items-center gap-1"><ChevronRight size={14} /> Liên hệ</Link></li>
+                                <li><Link to="/policy/warranty" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo hành</Link></li>
+                                <li><Link to="/policy/return" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Chính sách đổi trả</Link></li>
+                                <li><Link to="/policy/shipping" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Chính sách vận chuyển</Link></li>
+                                <li><Link to="/policy/payment" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Hướng dẫn thanh toán</Link></li>
+                                <li><Link to="/terms" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Điều khoản dịch vụ</Link></li>
+                                <li><Link to="/privacy" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Chính sách bảo mật</Link></li>
                             </>
                         )}
                     </ul>
                 </div>
 
-                {/* Social & Payments */}
+                {/* Info & Payments */}
                 <div className="space-y-6">
-                    <h4 className="text-sm font-black text-gray-800 uppercase border-b border-gray-100 pb-2">Kết nối với chúng tôi</h4>
-                    <div className="flex gap-3">
-                        <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-blue-600/20"><Facebook size={20} /></a>
-                        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-red-500/20"><Youtube size={20} /></a>
-                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-lg shadow-pink-500/20"><Instagram size={20} /></a>
-                    </div>
-                    <div className="pt-4">
+                    <h4 className="text-sm font-black text-gray-800 uppercase border-b-2 border-red-100 w-fit pb-1">Hỗ trợ khách hàng</h4>
+                    <ul className="space-y-3 text-gray-500 text-sm font-medium">
+                        <li><Link to="/repairs" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Gửi yêu cầu sửa chữa</Link></li>
+                        <li><Link to="/warranty" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Tra cứu bảo hành</Link></li>
+                        <li><Link to="/account?tab=orders" className="hover:text-accent hover:pl-2 transition-all flex items-center gap-1"><ChevronRight size={14} /> Theo dõi & quản lý đơn hàng</Link></li>
+                    </ul>
+                    <div className="pt-6">
                         <p className="text-xs font-black text-gray-400 uppercase mb-3">Chấp nhận thanh toán</p>
                         <div className="flex flex-wrap gap-2 text-gray-500">
-                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors"><CreditCard size={20} /></span>
-                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">VISA</span>
-                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">MC</span>
-                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">NAPAS</span>
-                            <span className="p-2 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px]">COD</span>
+                            <span className="px-3 py-1.5 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px] text-blue-800 bg-white shadow-sm">VISA</span>
+                            <span className="px-3 py-1.5 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px] text-red-600 bg-white shadow-sm">MASTER</span>
+                            <span className="px-3 py-1.5 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px] text-green-700 bg-white shadow-sm">NAPAS</span>
+                            <span className="px-3 py-1.5 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px] text-purple-600 bg-white shadow-sm">VNPAY</span>
+                            <span className="px-3 py-1.5 border border-gray-200 rounded-lg hover:border-accent transition-colors font-bold text-[10px] text-gray-700 bg-white shadow-sm">COD</span>
                         </div>
                     </div>
                 </div>
