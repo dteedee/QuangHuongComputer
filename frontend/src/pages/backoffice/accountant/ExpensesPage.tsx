@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Wallet, Clock, CheckCircle, CreditCard, Plus, X, Filter } from 'lucide-react';
@@ -92,16 +93,12 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Danh mục *</label>
-                                    <select
-                                        {...register('categoryId')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
+                                    <SearchableSelect
                                         disabled={isSubmitting}
-                                    >
-                                        <option value="">Chọn danh mục</option>
-                                        {categories.filter(c => c.isActive).map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name} ({cat.code})</option>
-                                        ))}
-                                    </select>
+                                        placeholder="Chọn danh mục"
+                                        onChange={(val: string) => register('categoryId').onChange({ target: { name: 'categoryId', value: val } })}
+                                        options={categories.filter(c => c.isActive).map((cat) => ({ value: cat.id, label: `${cat.name} (${cat.code})` }))}
+                                    />
                                     {errors.categoryId && <p className="mt-1 text-xs text-red-500">{errors.categoryId.message}</p>}
                                 </div>
 
@@ -152,14 +149,14 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
 
                                 <div>
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Tiền tệ</label>
-                                    <select
-                                        {...register('currency')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
+                                    <SearchableSelect
                                         disabled={isSubmitting}
-                                    >
-                                        <option value="VND">VND</option>
-                                        <option value="USD">USD</option>
-                                    </select>
+                                        onChange={(val: string) => register('currency').onChange({ target: { name: 'currency', value: val } })}
+                                        options={[
+                                            { value: 'VND', label: 'VND' },
+                                            { value: 'USD', label: 'USD' },
+                                        ]}
+                                    />
                                 </div>
 
                                 <div className="col-span-2">
@@ -464,16 +461,14 @@ export const ExpensesPage = () => {
                             </button>
                         ))}
                     </div>
-                    <select
+                    <SearchableSelect
                         value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold border-2 border-gray-100 focus:border-accent focus:ring-0"
-                    >
-                        <option value="all">Tất cả danh mục</option>
-                        {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
+                        onChange={(val: string) => setCategoryFilter(val)}
+                        options={[
+                            { value: 'all', label: 'Tất cả danh mục' },
+                            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+                        ]}
+                    />
                 </div>
             </div>
 

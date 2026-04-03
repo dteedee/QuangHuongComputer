@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useNavigate } from 'react-router-dom';
 import { catalogApi, type Product } from '../../../api/catalog';
 import { adminApi } from '../../../api/admin';
@@ -771,18 +772,15 @@ export default function POSPage() {
                   </button>
                 )}
               </div>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent focus:border-transparent outline-none min-w-[150px]"
-              >
-                <option value="">Tất cả</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <SearchableSelect
+                  value={selectedCategory}
+                  onChange={(val: string) => setSelectedCategory(val)}
+                  placeholder="Tất cả"
+                  options={[
+                      { value: '', label: 'Tất cả' },
+                      ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+                  ]}
+              />
             </div>
           </div>
 
@@ -952,14 +950,14 @@ export default function POSPage() {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none"
                 />
               </div>
-              <select
-                value={discountType}
-                onChange={(e) => setDiscountType(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none"
-              >
-                <option value="percentage">%</option>
-                <option value="fixed">VND</option>
-              </select>
+              <SearchableSelect
+                  value={discountType}
+                  onChange={(val: string) => setDiscountType(val as 'percentage' | 'fixed')}
+                  options={[
+                      { value: 'percentage', label: '%' },
+                      { value: 'fixed', label: 'VND' },
+                  ]}
+              />
             </div>
             <textarea
               value={notes}

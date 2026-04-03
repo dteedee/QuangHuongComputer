@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import {
     ShoppingCart, Plus, Package, Truck, CheckCircle, XCircle,
     Clock, Search, RefreshCw, X, Trash2, AlertCircle, FileText
@@ -153,17 +154,12 @@ const CreatePOModal = ({
                     {/* Supplier select */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Nhà cung cấp *</label>
-                        <select
+                        <SearchableSelect
                             value={supplierId}
-                            onChange={e => setSupplierId(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent bg-white"
-                            required
-                        >
-                            <option value="">-- Chọn nhà cung cấp --</option>
-                            {suppliers.map(s => (
-                                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-                            ))}
-                        </select>
+                            onChange={(val: string) => setSupplierId(val)}
+                            placeholder="-- Chọn nhà cung cấp --"
+                            options={suppliers.map((s) => ({ value: s.id, label: `${s.name} (${s.code})` }))}
+                        />
                     </div>
 
                     {/* Product search */}
@@ -456,18 +452,18 @@ export default function PurchaseOrdersPage() {
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent"
                     />
                 </div>
-                <select
+                <SearchableSelect
                     value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value as POStatus | 'all')}
-                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent bg-white min-w-[160px]"
-                >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="Draft">Nháp</option>
-                    <option value="Sent">Đã gửi</option>
-                    <option value="PartialReceived">Nhận 1 phần</option>
-                    <option value="Received">Đã nhận</option>
-                    <option value="Cancelled">Đã hủy</option>
-                </select>
+                    onChange={(val: string) => setStatusFilter(val as POStatus | 'all')}
+                    options={[
+                        { value: 'all', label: 'Tất cả trạng thái' },
+                        { value: 'Draft', label: 'Nháp' },
+                        { value: 'Sent', label: 'Đã gửi' },
+                        { value: 'PartialReceived', label: 'Nhận 1 phần' },
+                        { value: 'Received', label: 'Đã nhận' },
+                        { value: 'Cancelled', label: 'Đã hủy' },
+                    ]}
+                />
                 <button onClick={fetchData} className="p-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors" title="Làm mới">
                     <RefreshCw size={16} className="text-gray-500" />
                 </button>

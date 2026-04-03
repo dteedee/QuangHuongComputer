@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { warrantyApi, ResolutionPreference } from '../api/warranty';
@@ -287,15 +288,16 @@ export const WarrantyPage = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Phương thức xử lý mong muốn</label>
-                            <select
+                            <SearchableSelect
                                 value={preferredResolution}
-                                onChange={e => setPreferredResolution(e.target.value as ResolutionPreference)}
-                                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-gray-900 transition-all outline-none"
-                            >
-                                <option value={ResolutionPreference.Repair}>Sửa chữa</option>
-                                <option value={ResolutionPreference.Replace}>Đổi mới</option>
-                                <option value={ResolutionPreference.Refund}>Hoàn tiền</option>
-                            </select>
+                                onChange={(val) => setPreferredResolution(val as ResolutionPreference)}
+                                options={[
+                                    { value: ResolutionPreference.Repair, label: 'Sửa chữa' },
+                                    { value: ResolutionPreference.Replace, label: 'Đổi mới' },
+                                    { value: ResolutionPreference.Refund, label: 'Hoàn tiền' },
+                                ]}
+                                placeholder="Chọn phương thức"
+                            />
                         </div>
                         {success && <p className="text-emerald-600 text-sm font-medium">Đã gửi yêu cầu thành công!</p>}
                         {errorMessage && !success && (

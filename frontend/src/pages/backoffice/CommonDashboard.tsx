@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import {
     ArrowUpRight, ArrowDownRight, Package,
     ShoppingCart, Users, DollarSign, TrendingUp,
@@ -174,10 +175,9 @@ export const CommonDashboard = () => {
                             <h3 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic">Hiệu suất <span className="text-accent">Doanh thu</span></h3>
                             <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-2">Phân tích dòng tiền theo chu kỳ kinh doanh {new Date().getFullYear()}</p>
                         </div>
-                        <select className="bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-xs font-black text-gray-950 outline-none focus:border-accent shadow-sm uppercase tracking-widest italic cursor-pointer">
-                            <option>Năm hiện tại: {new Date().getFullYear()}</option>
-                            <option>Năm trước: {new Date().getFullYear() - 1}</option>
-                        </select>
+                        <SearchableSelect
+                            options={[]}
+                        />
                     </div>
 
                     <div className="flex-1 flex items-end gap-3 md:gap-4 px-2 relative h-full">

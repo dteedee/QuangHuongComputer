@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Calculator, FileText, Download, Building2, Calendar, LayoutList } from 'lucide-react';
@@ -47,15 +48,13 @@ export function TaxReportsPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <select
+                    <SearchableSelect
                         value={month}
-                        onChange={(e) => setMonth(Number(e.target.value))}
-                        className="px-4 py-2 border-2 border-gray-200 rounded-xl font-bold outline-none focus:border-accent"
-                    >
-                        {Array.from({ length: 12 }).map((_, i) => (
-                            <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
-                        ))}
-                    </select>
+                        onChange={null}
+                        options={[
+                            { value: i + 1, label: 'Tháng {i + 1}' },
+                        ]}
+                    />
                     <input
                         type="number"
                         value={year}

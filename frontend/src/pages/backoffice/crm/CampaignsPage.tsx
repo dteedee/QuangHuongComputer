@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { motion } from 'framer-motion';
 import {
   Mail, Plus, Search, Filter, ChevronLeft, ChevronRight,
@@ -126,21 +127,18 @@ export default function CampaignsPage() {
             />
           </div>
 
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as CampaignStatus | '');
-              setPage(1);
-            }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Draft">Bản nháp</option>
-            <option value="Scheduled">Đã lên lịch</option>
-            <option value="Sending">Đang gửi</option>
-            <option value="Sent">Đã gửi</option>
-            <option value="Paused">Tạm dừng</option>
-          </select>
+          <SearchableSelect
+              value={status}
+              onChange={null}
+              placeholder="Tất cả trạng thái"
+              options={[
+                  { value: 'Draft', label: 'Bản nháp' },
+                  { value: 'Scheduled', label: 'Đã lên lịch' },
+                  { value: 'Sending', label: 'Đang gửi' },
+                  { value: 'Sent', label: 'Đã gửi' },
+                  { value: 'Paused', label: 'Tạm dừng' },
+              ]}
+          />
 
           <button
             type="submit"

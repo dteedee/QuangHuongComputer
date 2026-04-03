@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useSearchParams } from 'react-router-dom';
 import {
     Package, TrendingDown, AlertTriangle, ShoppingCart, Plus, Search,
@@ -314,30 +315,24 @@ export const InventoryPortal = () => {
                     />
                 </div>
                 <div className="flex items-center gap-3 w-full lg:w-auto flex-wrap">
-                    <select
+                    <SearchableSelect
                         value={categoryFilter}
-                        onChange={(e) => {
-                            setCategoryFilter(e.target.value);
-                            setPage(1);
-                        }}
-                        className="flex-1 lg:w-44 px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-700 outline-none"
-                    >
-                        <option value="all">Tất cả danh mục</option>
-                        {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                    <select
+                        onChange={(val: string) => { setCategoryFilter(val); setPage(1); }}
+                        options={[
+                            { value: 'all', label: 'Tất cả danh mục' },
+                            ...(categories?.map((c) => ({ value: c.id, label: c.name })) || []),
+                        ]}
+                    />
+                    <SearchableSelect
                         value={stockFilter}
-                        onChange={(e) => {
-                            setStockFilter(e.target.value as StockFilter);
-                            setPage(1);
-                        }}
-                        className="flex-1 lg:w-40 px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-700 outline-none"
-                    >
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="in_stock">Còn hàng</option>
-                        <option value="low_stock">Sắp hết</option>
-                        <option value="out_of_stock">Hết hàng</option>
-                    </select>
+                        onChange={(val: string) => { setStockFilter(val as StockFilter); setPage(1); }}
+                        options={[
+                            { value: 'all', label: 'Tất cả trạng thái' },
+                            { value: 'in_stock', label: 'Còn hàng' },
+                            { value: 'low_stock', label: 'Sắp hết' },
+                            { value: 'out_of_stock', label: 'Hết hàng' },
+                        ]}
+                    />
                 </div>
             </div>
 

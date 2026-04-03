@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { motion } from 'framer-motion';
 import {
   UserPlus, Search, Filter, Plus, ChevronLeft, ChevronRight,
@@ -131,41 +132,35 @@ export default function LeadsPage() {
             />
           </div>
 
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as LeadStatus | '');
-              setPage(1);
-            }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="New">Mới</option>
-            <option value="Contacted">Đã liên hệ</option>
-            <option value="Qualified">Đủ điều kiện</option>
-            <option value="Proposal">Đề xuất</option>
-            <option value="Negotiation">Đàm phán</option>
-            <option value="Won">Thành công</option>
-            <option value="Lost">Thất bại</option>
-          </select>
+          <SearchableSelect
+              value={status}
+              onChange={null}
+              placeholder="Tất cả trạng thái"
+              options={[
+                  { value: 'New', label: 'Mới' },
+                  { value: 'Contacted', label: 'Đã liên hệ' },
+                  { value: 'Qualified', label: 'Đủ điều kiện' },
+                  { value: 'Proposal', label: 'Đề xuất' },
+                  { value: 'Negotiation', label: 'Đàm phán' },
+                  { value: 'Won', label: 'Thành công' },
+                  { value: 'Lost', label: 'Thất bại' },
+              ]}
+          />
 
-          <select
-            value={source}
-            onChange={(e) => {
-              setSource(e.target.value as LeadSource | '');
-              setPage(1);
-            }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Tất cả nguồn</option>
-            <option value="Website">Website</option>
-            <option value="Referral">Giới thiệu</option>
-            <option value="Advertisement">Quảng cáo</option>
-            <option value="SocialMedia">Mạng xã hội</option>
-            <option value="Event">Sự kiện</option>
-            <option value="ColdCall">Cold Call</option>
-            <option value="Email">Email</option>
-          </select>
+          <SearchableSelect
+              value={source}
+              onChange={null}
+              placeholder="Tất cả nguồn"
+              options={[
+                  { value: 'Website', label: 'Website' },
+                  { value: 'Referral', label: 'Giới thiệu' },
+                  { value: 'Advertisement', label: 'Quảng cáo' },
+                  { value: 'SocialMedia', label: 'Mạng xã hội' },
+                  { value: 'Event', label: 'Sự kiện' },
+                  { value: 'ColdCall', label: 'Cold Call' },
+                  { value: 'Email', label: 'Email' },
+              ]}
+          />
 
           <button
             type="submit"
@@ -457,19 +452,19 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nguồn
             </label>
-            <select
-              value={form.source}
-              onChange={(e) => setForm({ ...form, source: e.target.value as LeadSource })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-            >
-              <option value="Website">Website</option>
-              <option value="Referral">Giới thiệu</option>
-              <option value="Advertisement">Quảng cáo</option>
-              <option value="SocialMedia">Mạng xã hội</option>
-              <option value="Event">Sự kiện</option>
-              <option value="ColdCall">Cold Call</option>
-              <option value="Email">Email</option>
-            </select>
+            <SearchableSelect
+                value={form.source}
+                onChange={null}
+                options={[
+                    { value: 'Website', label: 'Website' },
+                    { value: 'Referral', label: 'Giới thiệu' },
+                    { value: 'Advertisement', label: 'Quảng cáo' },
+                    { value: 'SocialMedia', label: 'Mạng xã hội' },
+                    { value: 'Event', label: 'Sự kiện' },
+                    { value: 'ColdCall', label: 'Cold Call' },
+                    { value: 'Email', label: 'Email' },
+                ]}
+            />
           </div>
 
           <div>

@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2,
     Image as ImageIcon, Layout, Settings, Share2, DollarSign, Package,
@@ -335,55 +336,49 @@ export const AdminProductsPage = () => {
                         {/* Filters Row */}
                         <div className="flex flex-wrap items-center gap-3">
                             {/* Category Filter */}
-                            <select
+                            <SearchableSelect
                                 value={filters.categoryId}
-                                onChange={(e) => handleFilterChange('categoryId', e.target.value)}
-                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.categoryId ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                            >
-                                <option value="">Tất cả danh mục</option>
-                                {uniqueCategories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                                onChange={(val: string) => handleFilterChange('categoryId', val)}
+                                placeholder="Tất cả danh mục"
+                                options={[
+                                    { value: '', label: 'Tất cả danh mục' },
+                                    ...(uniqueCategories?.map(c => ({ value: c.id, label: c.name })) || []),
+                                ]}
+                            />
 
                             {/* Brand Filter */}
-                            <select
+                            <SearchableSelect
                                 value={filters.brandId}
-                                onChange={(e) => handleFilterChange('brandId', e.target.value)}
-                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.brandId ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                            >
-                                <option value="">Tất cả thương hiệu</option>
-                                {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </select>
+                                onChange={(val: string) => handleFilterChange('brandId', val)}
+                                placeholder="Tất cả thương hiệu"
+                                options={[
+                                    { value: '', label: 'Tất cả thương hiệu' },
+                                    ...(brands?.map(b => ({ value: b.id, label: b.name })) || []),
+                                ]}
+                            />
 
                             {/* Stock Filter */}
-                            <select
+                            <SearchableSelect
                                 value={filters.stockFilter}
-                                onChange={(e) => handleFilterChange('stockFilter', e.target.value)}
-                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.stockFilter !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                            >
-                                <option value="all">Tất cả tồn kho</option>
-                                <option value="in_stock">Còn hàng (&gt;5)</option>
-                                <option value="low_stock">Sắp hết (1-5)</option>
-                                <option value="out_of_stock">Hết hàng (0)</option>
-                            </select>
+                                onChange={(val: string) => handleFilterChange('stockFilter', val)}
+                                options={[
+                                    { value: 'all', label: 'Tất cả tồn kho' },
+                                    { value: 'in_stock', label: 'Còn hàng (>5)' },
+                                    { value: 'low_stock', label: 'Sắp hết (1-5)' },
+                                    { value: 'out_of_stock', label: 'Hết hàng (0)' },
+                                ]}
+                            />
 
                             {/* Status Filter */}
-                            <select
+                            <SearchableSelect
                                 value={filters.status}
-                                onChange={(e) => handleFilterChange('status', e.target.value)}
-                                className={`px-5 py-4 border rounded-2xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    filters.status !== 'active' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                            >
-                                <option value="active">Đang hiển thị</option>
-                                <option value="inactive">Đã ẩn</option>
-                                <option value="all">Tất cả trạng thái</option>
-                            </select>
+                                onChange={(val: string) => handleFilterChange('status', val)}
+                                options={[
+                                    { value: 'active', label: 'Đang hiển thị' },
+                                    { value: 'inactive', label: 'Đã ẩn' },
+                                    { value: 'all', label: 'Tất cả trạng thái' },
+                                ]}
+                            />
 
                             {/* Reset Button */}
                             {(filters.search || filters.categoryId || filters.brandId || filters.stockFilter !== 'all' || filters.status !== 'active') && (
@@ -578,15 +573,19 @@ export const AdminProductsPage = () => {
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Danh mục</label>
-                                            <select name="categoryId" defaultValue={editingProduct?.categoryId} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold outline-none appearance-none cursor-pointer">
-                                                {uniqueCategories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
+                                            <SearchableSelect
+                                                name="categoryId"
+                                                value={editingProduct?.categoryId}
+                                                options={uniqueCategories?.map(c => ({ value: c.id, label: c.name })) || []}
+                                            />
                                         </div>
                                         <div className="space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Thương hiệu</label>
-                                            <select name="brandId" defaultValue={editingProduct?.brandId} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold outline-none appearance-none cursor-pointer">
-                                                {brands?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                            </select>
+                                            <SearchableSelect
+                                                name="brandId"
+                                                value={editingProduct?.brandId}
+                                                options={brands?.map(b => ({ value: b.id, label: b.name })) || []}
+                                            />
                                         </div>
                                         <div className="md:col-span-2 space-y-3">
                                             <label className="text-sm font-bold text-gray-700">Mô tả chi tiết</label>

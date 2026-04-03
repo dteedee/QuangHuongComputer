@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import { type ReactNode, Children, isValidElement } from 'react';
+import { SearchableSelect, type SearchableSelectOption } from '../ui/SearchableSelect';
 
 export interface FormFieldProps {
   label: string;
@@ -11,6 +12,21 @@ export interface FormFieldProps {
   as?: 'input' | 'textarea' | 'select';
   rows?: number;
   className?: string;
+}
+
+// Extract options from <option> children for backward compatibility
+function extractOptionsFromChildren(children: ReactNode): SearchableSelectOption[] {
+  const options: SearchableSelectOption[] = [];
+  Children.forEach(children, (child) => {
+    if (isValidElement(child) && child.type === 'option') {
+      const props = child.props as { value?: string; children?: ReactNode };
+      options.push({
+        value: String(props.value ?? ''),
+        label: String(props.children ?? ''),
+      });
+    }
+  });
+  return options;
 }
 
 export function FormField({
@@ -56,9 +72,16 @@ export function FormField({
         />
       )}
       {as === 'select' && (
-        <select name={name} id={name} required={required} className={baseClassName}>
-          {children}
-        </select>
+        <div className="mt-1">
+          <SearchableSelect
+            name={name}
+            id={name}
+            options={extractOptionsFromChildren(children)}
+            placeholder={placeholder || 'Chọn...'}
+            error={!!error}
+            className={className}
+          />
+        </div>
       )}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>

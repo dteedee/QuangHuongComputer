@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Brand, type Category } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
@@ -295,16 +296,17 @@ export const CategoryPage = () => {
                         {/* Sort Bar */}
                         <div className="bg-white p-2 rounded-md shadow-sm mb-4 flex justify-end items-center gap-2">
                             <span className="text-sm text-gray-500">Sắp xếp theo:</span>
-                            <select
+                            <SearchableSelect
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="flex items-center gap-1 border border-gray-300 px-3 py-1.5 rounded text-sm cursor-pointer hover:border-accent bg-white"
-                            >
-                                <option value="newest">Mới nhất</option>
-                                <option value="price_asc">Giá tăng dần</option>
-                                <option value="price_desc">Giá giảm dần</option>
-                                <option value="name">Tên A-Z</option>
-                            </select>
+                                onChange={(val) => setSortBy(val)}
+                                options={[
+                                    { value: 'newest', label: 'Mới nhất' },
+                                    { value: 'price_asc', label: 'Giá tăng dần' },
+                                    { value: 'price_desc', label: 'Giá giảm dần' },
+                                    { value: 'name', label: 'Tên A-Z' },
+                                ]}
+                                className="w-48"
+                            />
                         </div>
 
                         {isLoading ? (

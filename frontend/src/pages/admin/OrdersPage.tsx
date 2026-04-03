@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { useSearchParams } from 'react-router-dom';
 import { Eye, Filter, Loader2, Search, ArrowRight, Clock, CheckCircle2, Package, XCircle, Truck, Plus, X, Check, ShoppingCart, User, MapPin, FileText, Calendar, RefreshCw, CreditCard, DollarSign, LayoutList, KanbanSquare } from 'lucide-react';
 import { salesApi, type Order, type OrderStatus } from '../../api/sales';
@@ -213,25 +214,28 @@ export const AdminOrdersPage = () => {
     const rawOrders = response?.orders || [];
 
     // Apply client-side filters for payment status and date range
-    const orders = rawOrders.filter(order => {
-        // Payment status filter
-        if (filters.paymentStatus !== 'all' && order.paymentStatus !== filters.paymentStatus) return false;
+    const orders = useMemo(() => {
+        return rawOrders.filter(order => {
+            // Payment status filter
+            if (filters.paymentStatus !== 'all' && order.paymentStatus !== filters.paymentStatus) return false;
 
-        // Date range filter
-        if (filters.dateRange.from) {
-            const orderDate = new Date(order.orderDate);
-            const fromDate = new Date(filters.dateRange.from);
-            if (orderDate < fromDate) return false;
-        }
-        if (filters.dateRange.to) {
-            const orderDate = new Date(order.orderDate);
-            const toDate = new Date(filters.dateRange.to);
-            toDate.setHours(23, 59, 59, 999);
-            if (orderDate > toDate) return false;
-        }
+            // Date range filter
+            if (filters.dateRange.from) {
+                const orderDate = new Date(order.orderDate);
+                const fromDate = new Date(filters.dateRange.from);
+                if (orderDate < fromDate) return false;
+            }
+            if (filters.dateRange.to) {
+                const orderDate = new Date(order.orderDate);
+                const toDate = new Date(filters.dateRange.to);
+                toDate.setHours(23, 59, 59, 999);
+                if (orderDate > toDate) return false;
+            }
 
-        return true;
-    });
+            return true;
+        });
+    }, [rawOrders, filters.paymentStatus, filters.dateRange.from, filters.dateRange.to]);
+    
     
     // Local optimistic state for Kanban
     const [localOrders, setLocalOrders] = useState<Order[]>([]);
@@ -377,37 +381,33 @@ export const AdminOrdersPage = () => {
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Status Filter */}
-                        <select
+                        <SearchableSelect
                             value={filters.status}
-                            onChange={(e) => handleFilterChange('status', e.target.value)}
-                            className={`px-4 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.status !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                            }`}
-                        >
-                            <option value="all">Tất cả trạng thái</option>
-                            <option value="Draft">Bản nháp</option>
-                            <option value="Pending">Chờ xác nhận</option>
-                            <option value="Confirmed">Đã xác nhận</option>
-                            <option value="Shipped">Đang giao</option>
-                            <option value="Delivered">Đã giao</option>
-                            <option value="Completed">Hoàn tất</option>
-                            <option value="Cancelled">Đã hủy</option>
-                        </select>
+                            onChange={(val: string) => handleFilterChange('status', val)}
+                            options={[
+                                { value: 'all', label: 'Tất cả trạng thái' },
+                                { value: 'Draft', label: 'Bản nháp' },
+                                { value: 'Pending', label: 'Chờ xác nhận' },
+                                { value: 'Confirmed', label: 'Đã xác nhận' },
+                                { value: 'Shipped', label: 'Đang giao' },
+                                { value: 'Delivered', label: 'Đã giao' },
+                                { value: 'Completed', label: 'Hoàn tất' },
+                                { value: 'Cancelled', label: 'Đã hủy' },
+                            ]}
+                        />
 
                         {/* Payment Status Filter */}
-                        <select
+                        <SearchableSelect
                             value={filters.paymentStatus}
-                            onChange={(e) => handleFilterChange('paymentStatus', e.target.value)}
-                            className={`px-4 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.paymentStatus !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                            }`}
-                        >
-                            <option value="all">Thanh toán</option>
-                            <option value="Pending">Chờ thanh toán</option>
-                            <option value="Paid">Đã thanh toán</option>
-                            <option value="Failed">Thất bại</option>
-                            <option value="Refunded">Hoàn tiền</option>
-                        </select>
+                            onChange={(val: string) => handleFilterChange('paymentStatus', val)}
+                            options={[
+                                { value: 'all', label: 'Thanh toán' },
+                                { value: 'Pending', label: 'Chờ thanh toán' },
+                                { value: 'Paid', label: 'Đã thanh toán' },
+                                { value: 'Failed', label: 'Thất bại' },
+                                { value: 'Refunded', label: 'Hoàn tiền' },
+                            ]}
+                        />
 
                         {/* Date Range */}
                         <div className="flex items-center gap-2">
@@ -511,21 +511,21 @@ export const AdminOrdersPage = () => {
                                                         <span className="text-lg font-black text-gray-950 tracking-tighter italic">{formatCurrency(order.totalAmount)}</span>
                                                     </td>
                                                     <td className="px-8 py-6">
-                                                        <select
+                                                        <SearchableSelect
                                                             value={order.status}
+                                                            onChange={(val: string) => updateStatusMutation.mutate({ id: order.id, status: val })}
                                                             disabled={updateStatusMutation.isPending}
-                                                            onChange={(e) => updateStatusMutation.mutate({ id: order.id, status: e.target.value })}
-                                                            className={`items-center gap-2 px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest italic border ${status.bg} ${status.color} border-transparent hover:border-current transition-all appearance-none cursor-pointer focus:outline-none`}
-                                                        >
-                                                            <option value="Draft">Bản nháp</option>
-                                                            <option value="Pending">Chờ xác nhận</option>
-                                                            <option value="Confirmed">Đã xác nhận</option>
-                                                            <option value="Paid">Đã thanh toán (Chờ giao)</option>
-                                                            <option value="Shipped">Đang giao</option>
-                                                            <option value="Delivered">Đã giao</option>
-                                                            <option value="Completed">Hoàn tất</option>
-                                                            <option value="Cancelled">Đã hủy</option>
-                                                        </select>
+                                                            options={[
+                                                                { value: 'Draft', label: 'Bản nháp' },
+                                                                { value: 'Pending', label: 'Chờ xác nhận' },
+                                                                { value: 'Confirmed', label: 'Đã xác nhận' },
+                                                                { value: 'Paid', label: 'Đã thanh toán (Chờ giao)' },
+                                                                { value: 'Shipped', label: 'Đang giao' },
+                                                                { value: 'Delivered', label: 'Đã giao' },
+                                                                { value: 'Completed', label: 'Hoàn tất' },
+                                                                { value: 'Cancelled', label: 'Đã hủy' },
+                                                            ]}
+                                                        />
                                                     </td>
                                                     <td className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase">
                                                         {new Date(order.orderDate).toLocaleDateString('vi-VN')}
@@ -656,23 +656,20 @@ export const AdminOrdersPage = () => {
                                 <div className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl">
                                     <div>
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Trạng thái đơn hàng</p>
-                                        <select
+                                        <SearchableSelect
                                             value={selectedOrder.status}
-                                            onChange={(e) => {
-                                                updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value });
-                                                setSelectedOrder({ ...selectedOrder, status: e.target.value as OrderStatus });
-                                            }}
-                                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-accent/20"
-                                        >
-                                            <option value="Draft">Bản nháp</option>
-                                            <option value="Pending">Chờ xác nhận</option>
-                                            <option value="Confirmed">Đã xác nhận</option>
-                                            <option value="Paid">Đã thanh toán</option>
-                                            <option value="Shipped">Đang giao</option>
-                                            <option value="Delivered">Đã giao</option>
-                                            <option value="Completed">Hoàn tất</option>
-                                            <option value="Cancelled">Đã hủy</option>
-                                        </select>
+                                            onChange={(val: string) => updateStatusMutation.mutate({ id: selectedOrder.id, status: val })}
+                                            options={[
+                                                { value: 'Draft', label: 'Bản nháp' },
+                                                { value: 'Pending', label: 'Chờ xác nhận' },
+                                                { value: 'Confirmed', label: 'Đã xác nhận' },
+                                                { value: 'Paid', label: 'Đã thanh toán' },
+                                                { value: 'Shipped', label: 'Đang giao' },
+                                                { value: 'Delivered', label: 'Đã giao' },
+                                                { value: 'Completed', label: 'Hoàn tất' },
+                                                { value: 'Cancelled', label: 'Đã hủy' },
+                                            ]}
+                                        />
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tổng giá trị</p>
@@ -784,11 +781,11 @@ export const AdminOrdersPage = () => {
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="col-span-2 space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Chọn sản phẩm</label>
-                                                <select name="productId" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 appearance-none">
-                                                    {productsData?.products.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} - {formatCurrency(p.price)}</option>
-                                                    ))}
-                                                </select>
+                                                <SearchableSelect
+                                                    name="productId"
+                                                    placeholder="Chọn sản phẩm"
+                                                    options={(productsData?.products || []).map((p) => ({ value: p.id, label: `${p.name} - ${formatCurrency(p.price)}` }))}
+                                                />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Số lượng</label>

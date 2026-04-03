@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { useNavigate } from 'react-router-dom';
 import {
     Layout, Image as ImageIcon, FileText, Share2,
@@ -265,23 +266,20 @@ export const CMSPortal = () => {
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Phân loại</label>
-                                        <select name="type" defaultValue={editingItem?.type || (activeTab === 'Pages' ? 'Custom' : 'Article')} className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-black text-gray-950 focus:outline-none focus:border-accent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%207L10%2012L15%207%22%20stroke%3D%22%23000000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:24px] bg-[right_1.5rem_center] bg-no-repeat shadow-sm">
-                                            {activeTab === 'Pages' ? (
-                                                <>
-                                                    <option value="Custom">Trang tùy chỉnh</option>
-                                                    <option value="About">Chính sách chung</option>
-                                                    <option value="Warranty">Bảo hành</option>
-                                                    <option value="Returns">Đổi trả</option>
-                                                    <option value="Shipping">Vận chuyển</option>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <option value="Article">Bài viết Blog</option>
-                                                    <option value="Promotion">Khuyến mãi</option>
-                                                    <option value="Banner">Banner quảng cáo</option>
-                                                </>
-                                            )}
-                                        </select>
+                                        <SearchableSelect
+                                            name="type"
+                                            value={editingItem?.type || (activeTab === 'Pages' ? 'Custom' : 'Article')}
+                                            options={[
+                                                { value: 'Custom', label: 'Trang tùy chỉnh' },
+                                                { value: 'About', label: 'Chính sách chung' },
+                                                { value: 'Warranty', label: 'Bảo hành' },
+                                                { value: 'Returns', label: 'Đổi trả' },
+                                                { value: 'Shipping', label: 'Vận chuyển' },
+                                                { value: 'Article', label: 'Bài viết Blog' },
+                                                { value: 'Promotion', label: 'Khuyến mãi' },
+                                                { value: 'Banner', label: 'Banner quảng cáo' },
+                                            ]}
+                                        />
                                     </div>
                                     <div className="col-span-2 space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Nội dung chi tiết (Markdown / HTML)</label>
@@ -309,10 +307,14 @@ export const CMSPortal = () => {
                                             <span className="text-xs font-black text-gray-900 uppercase tracking-widest">Trạng thái xuất bản</span>
                                             <span className="text-[10px] font-bold text-gray-500 uppercase mt-1 italic">Nội dung sẽ được hiển thị ngay nếu chọn "Đã xuất bản"</span>
                                         </div>
-                                        <select name="isPublished" defaultValue={editingItem?.isPublished ? 'true' : 'false'} className="px-8 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-gray-950 focus:border-accent outline-none shadow-sm">
-                                            <option value="true">ĐÃ XUẤT BẢN</option>
-                                            <option value="false">BẢN NHÁP</option>
-                                        </select>
+                                        <SearchableSelect
+                                            name="isPublished"
+                                            value={editingItem?.isPublished ? 'true' : 'false'}
+                                            options={[
+                                                { value: 'true', label: 'ĐÃ XUẤT BẢN' },
+                                                { value: 'false', label: 'BẢN NHÁP' },
+                                            ]}
+                                        />
                                     </div>
                                 </div>
                                 <div className="flex gap-6 pt-6 sticky bottom-0 bg-white">

@@ -83,26 +83,25 @@ export const useRealtimeNotifications = (
     useEffect(() => {
         if (!connection) return;
 
+        // Register event handlers BEFORE starting connection to avoid missing events
+        connection.on('ReceiveNotification', (notification: NotificationDto) => {
+            optionsRef.current.onNotification?.(notification);
+        });
+
+        connection.on('NotificationRead', (notificationId: string) => {
+            optionsRef.current.onNotificationRead?.(notificationId);
+        });
+
+        connection.on('AllNotificationsRead', () => {
+            optionsRef.current.onAllNotificationsRead?.();
+        });
+
         const startConnection = async () => {
             try {
                 setConnectionStatus('connecting');
                 await connection.start();
                 setConnectionStatus('connected');
                 reconnectAttemptsRef.current = 0;
-
-                // Setup notification handlers
-                connection.on('ReceiveNotification', (notification: NotificationDto) => {
-                    optionsRef.current.onNotification?.(notification);
-                });
-
-                connection.on('NotificationRead', (notificationId: string) => {
-                    optionsRef.current.onNotificationRead?.(notificationId);
-                });
-
-                connection.on('AllNotificationsRead', () => {
-                    optionsRef.current.onAllNotificationsRead?.();
-                });
-
             } catch (error) {
                 console.error('Notification connection failed:', error);
                 setConnectionStatus('failed');
@@ -110,6 +109,12 @@ export const useRealtimeNotifications = (
         };
 
         startConnection();
+
+        return () => {
+            connection.off('ReceiveNotification');
+            connection.off('NotificationRead');
+            connection.off('AllNotificationsRead');
+        };
     }, [connection]);
 
     // Mark notification as read via SignalR

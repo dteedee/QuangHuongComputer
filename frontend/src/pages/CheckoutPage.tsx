@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import toast from 'react-hot-toast';
 import { salesApi } from '../api/sales';
 import { paymentApi } from '../api/payment';
@@ -564,54 +565,42 @@ export function CheckoutPage() {
                               <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Tỉnh / Thành <span className="text-accent">*</span>
                               </label>
-                              <select
-                                required
+                              <SearchableSelect
                                 value={formData.province}
-                                onChange={(e) => handleProvinceChange(e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.province ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
-                                  }`}
-                              >
-                                <option value="">Chọn tỉnh/thành</option>
-                                {dbProvinces.map((p) => (
-                                  <option key={p.code} value={p.name}>{p.name}</option>
-                                ))}
-                              </select>
+                                onChange={(val) => handleProvinceChange(val)}
+                                options={dbProvinces.map((p: any) => ({ value: p.name, label: p.name }))}
+                                placeholder="Chọn tỉnh/thành"
+                                error={!!errors.province}
+                                searchPlaceholder="Tìm tỉnh/thành..."
+                              />
                             </div>
                             <div className="space-y-2">
                               <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Quận / Huyện <span className="text-accent">*</span>
                               </label>
-                              <select
-                                required
+                              <SearchableSelect
                                 value={formData.district}
+                                onChange={(val) => handleDistrictChange(val)}
                                 disabled={!formData.province || dbDistricts.length === 0}
-                                onChange={(e) => handleDistrictChange(e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.district ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
-                                  } disabled:opacity-50`}
-                              >
-                                <option value="">Chọn quận/huyện</option>
-                                {dbDistricts.map((d) => (
-                                  <option key={d.code} value={d.name}>{d.name}</option>
-                                ))}
-                              </select>
+                                options={dbDistricts.map((d: any) => ({ value: d.name, label: d.name }))}
+                                placeholder="Chọn quận/huyện"
+                                error={!!errors.district}
+                                searchPlaceholder="Tìm quận/huyện..."
+                              />
                             </div>
                             <div className="space-y-2">
                               <label className="text-xs font-semibold text-slate-500 mb-1 block">
                                 Phường / Xã <span className="text-accent">*</span>
                               </label>
-                              <select
-                                required
+                              <SearchableSelect
                                 value={formData.ward}
+                                onChange={(val) => handleInputChange('ward', val)}
                                 disabled={!formData.district || dbWards.length === 0}
-                                onChange={(e) => handleInputChange('ward', e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all appearance-none outline-none text-slate-900 font-bold ${errors.ward ? 'border-red-500' : 'border-transparent focus:border-accent focus:bg-white'
-                                  } disabled:opacity-50`}
-                              >
-                                <option value="">Chọn phường/xã</option>
-                                {dbWards.map((w) => (
-                                  <option key={w.code} value={w.name}>{w.name}</option>
-                                ))}
-                              </select>
+                                options={dbWards.map((w: any) => ({ value: w.name, label: w.name }))}
+                                placeholder="Chọn phường/xã"
+                                error={!!errors.ward}
+                                searchPlaceholder="Tìm phường/xã..."
+                              />
                             </div>
                           </div>
 

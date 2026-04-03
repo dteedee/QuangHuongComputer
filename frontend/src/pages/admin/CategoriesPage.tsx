@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2, MoreVertical,
     Layout, Settings, Tag, Bookmark, Info, ChevronRight, ChevronLeft,
@@ -300,19 +301,15 @@ export const CategoriesPage = () => {
                         {/* Filters */}
                         <div className="flex items-center gap-3 shrink-0">
                             {/* Status Filter */}
-                            <select
+                            <SearchableSelect
                                 value={statusFilter}
-                                onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
-                                className={`px-4 py-4 border rounded-xl text-sm font-semibold outline-none cursor-pointer transition-all ${
-                                    statusFilter !== 'all'
-                                        ? 'bg-accent/5 border-accent/20 text-accent'
-                                        : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                            >
-                                <option value="all">Tất cả trạng thái</option>
-                                <option value="active">Đang hoạt động</option>
-                                <option value="inactive">Tạm dừng</option>
-                            </select>
+                                onChange={(val: string) => { setStatusFilter(val as any); setCurrentPage(1); }}
+                                options={[
+                                    { value: 'all', label: 'Tất cả trạng thái' },
+                                    { value: 'active', label: 'Đang hoạt động' },
+                                    { value: 'inactive', label: 'Tạm dừng' },
+                                ]}
+                            />
 
                             {/* Reset Button */}
                             {hasActiveFilters && (
@@ -602,14 +599,14 @@ export const CategoriesPage = () => {
                                         <p className="text-xs font-bold text-gray-900 uppercase">Trạng thái hoạt động</p>
                                         <p className="text-[10px] text-gray-500 font-medium">Nếu tắt, mục này sẽ không hiển thị trên trang chủ.</p>
                                     </div>
-                                    <select
+                                    <SearchableSelect
                                         name="isActive"
-                                        defaultValue={editingItem ? (editingItem.isActive ? 'true' : 'false') : 'true'}
-                                        className="px-4 py-2 bg-white border-none rounded-xl text-xs font-bold shadow-sm outline-none cursor-pointer"
-                                    >
-                                        <option value="true">HOẠT ĐỘNG</option>
-                                        <option value="false">TẠM DỪNG</option>
-                                    </select>
+                                        value={editingItem ? (editingItem.isActive ? 'true' : 'false') : 'true'}
+                                        options={[
+                                            { value: 'true', label: 'HOẠT ĐỘNG' },
+                                            { value: 'false', label: 'TẠM DỪNG' },
+                                        ]}
+                                    />
                                 </div>
 
                                 {editingItem && (

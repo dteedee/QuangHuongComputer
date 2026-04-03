@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -273,20 +274,21 @@ export const ContactPage = () => {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 mb-1 px-1">Tiêu đề *</label>
-                                    <select
+                                    <SearchableSelect
                                         name="subject"
                                         value={formData.subject}
-                                        onChange={handleInputChange}
-                                        className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-bold outline-none transition-all focus:ring-4 focus:ring-accent/5 ${errors.subject ? 'border-red-500 focus:border-accent' : 'border-gray-200 focus:border-accent'}`}
-                                    >
-                                        <option value="">-- Chọn chủ đề --</option>
-                                        <option value="Tư vấn mua hàng">Tư vấn mua hàng</option>
-                                        <option value="Hỗ trợ kỹ thuật">Hỗ trợ kỹ thuật</option>
-                                        <option value="Bảo hành sản phẩm">Bảo hành sản phẩm</option>
-                                        <option value="Khiếu nại">Khiếu nại</option>
-                                        <option value="Hợp tác kinh doanh">Hợp tác kinh doanh</option>
-                                        <option value="Khác">Khác</option>
-                                    </select>
+                                        onChange={(val) => handleInputChange({ target: { name: 'subject', value: val } } as any)}
+                                        error={!!errors.subject}
+                                        placeholder="-- Chọn chủ đề --"
+                                        options={[
+                                            { value: 'Tư vấn mua hàng', label: 'Tư vấn mua hàng' },
+                                            { value: 'Hỗ trợ kỹ thuật', label: 'Hỗ trợ kỹ thuật' },
+                                            { value: 'Bảo hành sản phẩm', label: 'Bảo hành sản phẩm' },
+                                            { value: 'Khiếu nại', label: 'Khiếu nại' },
+                                            { value: 'Hợp tác kinh doanh', label: 'Hợp tác kinh doanh' },
+                                            { value: 'Khác', label: 'Khác' },
+                                        ]}
+                                    />
                                     {errors.subject && <p className="text-red-500 text-xs mt-1 px-1">{errors.subject}</p>}
                                 </div>
                                 <div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     inventoryApi,
@@ -190,15 +191,11 @@ const SupplierForm = ({
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
                                     Loại nhà cung cấp <span className="text-red-500">*</span>
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={formData.supplierType}
-                                    onChange={e => handleChange('supplierType', e.target.value as SupplierType)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
-                                >
-                                    {Object.entries(supplierTypeLabels).map(([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
-                                    ))}
-                                </select>
+                                    onChange={(val: string) => handleChange('supplierType', val)}
+                                    options={Object.entries(supplierTypeLabels).map(([value, label]) => ({ value, label }))}
+                                />
                             </div>
                         </div>
                         <div>
@@ -261,15 +258,11 @@ const SupplierForm = ({
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
                                     Điều khoản thanh toán <span className="text-red-500">*</span>
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={formData.paymentTerms}
-                                    onChange={e => handleChange('paymentTerms', e.target.value as PaymentTermType)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
-                                >
-                                    {Object.entries(paymentTermLabels).map(([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
-                                    ))}
-                                </select>
+                                    onChange={(val: string) => handleChange('paymentTerms', val)}
+                                    options={Object.entries(paymentTermLabels).map(([value, label]) => ({ value, label }))}
+                                />
                             </div>
                         </div>
                         {formData.paymentTerms === 'Custom' && (
@@ -975,16 +968,15 @@ export function SuppliersPage() {
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
                     />
                 </div>
-                <select
+                <SearchableSelect
                     value={filterType}
-                    onChange={e => setFilterType(e.target.value)}
-                    className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-w-[200px]"
-                >
-                    <option value="">Tất cả loại</option>
-                    {Object.entries(supplierTypeLabels).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                    ))}
-                </select>
+                    onChange={(val: string) => setFilterType(val)}
+                    placeholder="Tất cả loại"
+                    options={[
+                        { value: '', label: 'Tất cả loại' },
+                        ...Object.entries(supplierTypeLabels).map(([value, label]) => ({ value, label })),
+                    ]}
+                />
                 <label className="flex items-center gap-2 cursor-pointer px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all">
                     <input
                         type="checkbox"

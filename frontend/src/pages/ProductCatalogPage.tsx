@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { useSearchParams, Link } from 'react-router-dom';
 import { catalogApi, type Product, type Category, type Brand } from '../api/catalog';
 import { aiApi } from '../api/ai';
@@ -321,22 +322,23 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
               </div>
 
               <div className="flex items-center gap-3 ml-auto w-full md:w-auto">
-                <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
+                <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500 whitespace-nowrap">Sắp xếp:</span>
-                  <select
+                  <SearchableSelect
                     value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(e.target.value);
+                    onChange={(val) => {
+                      setSortBy(val);
                       setPage(1);
-                      updateURL({ sortBy: e.target.value });
+                      updateURL({ sortBy: val });
                     }}
-                    className="bg-transparent border-none text-sm font-medium text-gray-900 focus:ring-0 cursor-pointer py-0 pl-1 pr-6"
-                  >
-                    <option value="newest">Mới nhất</option>
-                    <option value="price_asc">Giá tăng dần</option>
-                    <option value="price_desc">Giá giảm dần</option>
-                    <option value="name">Tên A-Z</option>
-                  </select>
+                    options={[
+                      { value: 'newest', label: 'Mới nhất' },
+                      { value: 'price_asc', label: 'Giá tăng dần' },
+                      { value: 'price_desc', label: 'Giá giảm dần' },
+                      { value: 'name', label: 'Tên A-Z' },
+                    ]}
+                    className="w-44"
+                  />
                 </div>
 
                 <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">

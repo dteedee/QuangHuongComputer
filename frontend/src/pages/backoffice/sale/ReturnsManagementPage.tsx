@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { salesApi } from '../../../api/sales';
 import type { ReturnRequest, ReturnStatus } from '../../../api/sales';
 import {
@@ -483,17 +484,17 @@ export const ReturnsManagementPage = () => {
         </div>
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent outline-none"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Pending">Chờ duyệt</option>
-            <option value="Approved">Đã duyệt</option>
-            <option value="Rejected">Từ chối</option>
-            <option value="Refunded">Đã hoàn tiền</option>
-          </select>
+          <SearchableSelect
+              value={statusFilter}
+              onChange={null}
+              placeholder="Tất cả trạng thái"
+              options={[
+                  { value: 'Pending', label: 'Chờ duyệt' },
+                  { value: 'Approved', label: 'Đã duyệt' },
+                  { value: 'Rejected', label: 'Từ chối' },
+                  { value: 'Refunded', label: 'Đã hoàn tiền' },
+              ]}
+          />
         </div>
       </div>
 

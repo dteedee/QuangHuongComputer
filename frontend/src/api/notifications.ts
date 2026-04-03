@@ -1,6 +1,11 @@
 import { client } from './client';
 
 /**
+ * @deprecated Use `./notification.ts` instead.
+ * This module uses incorrect URL paths (/communication/notifications) and HTTP methods (PUT).
+ * The correct endpoints are defined in `./notification.ts` using /api/notifications with POST.
+ * Only the templates and admin send functions here may still be valid.
+ *
  * Notification API
  * Frontend module for notification management
  * Phase 2.4

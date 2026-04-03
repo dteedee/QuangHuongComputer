@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -375,24 +376,16 @@ export const TechDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                            {monthNames.map((name, index) => (
-                                <option key={index} value={index}>{name}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                            {[2024, 2025, 2026].map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
+                        <SearchableSelect
+                            value={String(selectedMonth)}
+                            onChange={(val: string) => setSelectedMonth(Number(val))}
+                            options={monthNames.map((name, index) => ({ value: String(index), label: name }))}
+                        />
+                        <SearchableSelect
+                            value={String(selectedYear)}
+                            onChange={(val: string) => setSelectedYear(Number(val))}
+                            options={[2024, 2025, 2026].map((year) => ({ value: String(year), label: String(year) }))}
+                        />
                     </div>
                 </div>
 

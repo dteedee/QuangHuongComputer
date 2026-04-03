@@ -518,7 +518,7 @@ export const BackofficeLayout = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className={`h-16 flex items-center justify-between px-4 lg:px-6 border-b transition-colors duration-300 ${isDark
+                <header className={`h-16 relative z-50 flex items-center justify-between px-4 lg:px-6 border-b transition-colors duration-300 ${isDark
                     ? 'bg-gray-900/80 border-gray-800 backdrop-blur-xl'
                     : 'bg-white/80 border-gray-200 backdrop-blur-xl'
                     }`}>
@@ -593,7 +593,11 @@ export const BackofficeLayout = () => {
                         {/* Quick Actions */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowQuickActions(!showQuickActions)}
+                                onClick={() => {
+                                    setShowQuickActions(!showQuickActions);
+                                    setShowNotifications(false);
+                                    setShowSettings(false);
+                                }}
                                 className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}
                                 title="Quick Actions"
                             >
@@ -640,7 +644,11 @@ export const BackofficeLayout = () => {
                         {/* Notifications */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowNotifications(!showNotifications)}
+                                onClick={() => {
+                                    setShowNotifications(!showNotifications);
+                                    setShowSettings(false);
+                                    setShowQuickActions(false);
+                                }}
                                 className={`p-2 rounded-lg relative transition-colors ${isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}
                             >
                                 <Bell size={20} />
@@ -660,6 +668,7 @@ export const BackofficeLayout = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        onClick={(e) => e.stopPropagation()}
                                         className={`absolute right-0 mt-2 w-96 rounded-xl shadow-xl border z-50 overflow-hidden ${isDark
                                             ? 'bg-gray-900 border-gray-800'
                                             : 'bg-white border-gray-200'
@@ -716,11 +725,11 @@ export const BackofficeLayout = () => {
                                                 notifications.map((notif) => (
                                                     <div
                                                         key={notif.id}
-                                                        onClick={() => {
+                                                        onClick={(e) => {
                                                             markAsRead(notif.id);
+                                                            setShowNotifications(false);
                                                             if (notif.link) {
                                                                 navigate(notif.link);
-                                                                setShowNotifications(false);
                                                             }
                                                         }}
                                                         className={`p-4 border-l-4 border-b last:border-b-0 transition-colors cursor-pointer ${getPriorityColor(notif.priority)} ${isDark
@@ -775,15 +784,17 @@ export const BackofficeLayout = () => {
 
                                         {/* Footer */}
                                         {notifications.length > 0 && (
-                                            <div className={`p-3 border-t text-center ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                                                <Link 
-                                                    to="/backoffice/notifications"
-                                                    onClick={() => setShowNotifications(false)}
-                                                    className="text-sm font-bold hover:underline"
-                                                    style={{ color: colors.primary }}
+                                            <div className={`p-3 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                                                <button 
+                                                    onClick={() => {
+                                                        setShowNotifications(false);
+                                                        navigate('/backoffice/notifications');
+                                                    }}
+                                                    className="flex items-center justify-center w-full py-2.5 px-4 text-sm font-bold text-white rounded-xl transition-all hover:opacity-90 active:scale-[0.98]"
+                                                    style={{ backgroundColor: colors.primary }}
                                                 >
-                                                    Xem tất cả thông báo →
-                                                </Link>
+                                                    Xem tất cả thông báo
+                                                </button>
                                             </div>
                                         )}
                                     </motion.div>
@@ -803,7 +814,11 @@ export const BackofficeLayout = () => {
                         {/* Settings */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowSettings(!showSettings)}
+                                onClick={() => {
+                                    setShowSettings(!showSettings);
+                                    setShowNotifications(false);
+                                    setShowQuickActions(false);
+                                }}
                                 className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}
                             >
                                 <Palette size={20} />

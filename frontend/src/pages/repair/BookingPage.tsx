@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { repairApi, getTimeSlotLabel } from '../../api/repair';
 import type { ServiceType, TimeSlot, ServiceLocation } from '../../api/repair';
 import { useAuth } from '../../context/AuthContext';
@@ -274,17 +275,17 @@ export const BookingPage: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Time Slot *</label>
-                            <select
+                            <SearchableSelect
                                 name="timeSlot"
                                 value={formData.timeSlot}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
-                            >
-                                <option value="Morning">{getTimeSlotLabel('Morning')}</option>
-                                <option value="Afternoon">{getTimeSlotLabel('Afternoon')}</option>
-                                <option value="Evening">{getTimeSlotLabel('Evening')}</option>
-                            </select>
+                                onChange={(val) => setFormData(prev => ({ ...prev, timeSlot: val as TimeSlot }))}
+                                options={[
+                                    { value: 'Morning', label: getTimeSlotLabel('Morning') },
+                                    { value: 'Afternoon', label: getTimeSlotLabel('Afternoon') },
+                                    { value: 'Evening', label: getTimeSlotLabel('Evening') },
+                                ]}
+                                placeholder="Chọn khung giờ"
+                            />
                         </div>
                     </div>
                 </div>
@@ -308,19 +309,19 @@ export const BookingPage: React.FC = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Location Type *</label>
-                                <select
+                                <SearchableSelect
                                     name="locationType"
                                     value={formData.locationType}
-                                    onChange={handleInputChange}
-                                    required={serviceType === 'OnSite'}
-                                    className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
-                                >
-                                    <option value="CustomerHome">Home</option>
-                                    <option value="CustomerOffice">Office</option>
-                                    <option value="School">School</option>
-                                    <option value="Government">Government/UBND</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                    onChange={(val) => setFormData(prev => ({ ...prev, locationType: val as ServiceLocation }))}
+                                    options={[
+                                        { value: 'CustomerHome', label: 'Home' },
+                                        { value: 'CustomerOffice', label: 'Office' },
+                                        { value: 'School', label: 'School' },
+                                        { value: 'Government', label: 'Government/UBND' },
+                                        { value: 'Other', label: 'Other' },
+                                    ]}
+                                    placeholder="Chọn loại địa điểm"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Additional Notes</label>

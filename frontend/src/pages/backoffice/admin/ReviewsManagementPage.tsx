@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Star, Check, X, Search, RefreshCw, Filter, ChevronLeft, ChevronRight,
@@ -199,15 +200,15 @@ export function ReviewsManagementPage() {
           {/* Status Filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
-            >
-              <option value="pending">Chờ duyệt</option>
-              <option value="approved">Đã duyệt</option>
-              <option value="all">Tất cả</option>
-            </select>
+            <SearchableSelect
+                value={statusFilter}
+                onChange={null}
+                options={[
+                    { value: 'pending', label: 'Chờ duyệt' },
+                    { value: 'approved', label: 'Đã duyệt' },
+                    { value: 'all', label: 'Tất cả' },
+                ]}
+            />
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { FileText, DollarSign, Clock, CheckCircle, X, Plus } from 'lucide-react';
@@ -85,16 +86,15 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
                                     Phương thức thanh toán
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={paymentMethod}
-                                    onChange={(e) => setPaymentMethod(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
-                                    disabled={isSubmitting}
-                                >
-                                    <option value="BankTransfer">Chuyển khoản</option>
-                                    <option value="Cash">Tiền mặt</option>
-                                    <option value="Card">Thẻ</option>
-                                </select>
+                                    onChange={(val: string) => setPaymentMethod(val)}
+                                    options={[
+                                        { value: 'BankTransfer', label: 'Chuyển khoản' },
+                                        { value: 'Cash', label: 'Tiền mặt' },
+                                        { value: 'Card', label: 'Thẻ' },
+                                    ]}
+                                />
                             </div>
 
                             <div>
@@ -252,14 +252,14 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
 
                                 <div>
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Tiền tệ</label>
-                                    <select
-                                        {...register('currency')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
+                                    <SearchableSelect
                                         disabled={isSubmitting}
-                                    >
-                                        <option value="VND">VND</option>
-                                        <option value="USD">USD</option>
-                                    </select>
+                                        onChange={(val: string) => register('currency').onChange({ target: { name: 'currency', value: val } })}
+                                        options={[
+                                            { value: 'VND', label: 'VND' },
+                                            { value: 'USD', label: 'USD' },
+                                        ]}
+                                    />
                                 </div>
                             </div>
 

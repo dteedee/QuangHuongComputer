@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useNotifications, type Notification } from '../../hooks/useNotifications';
+import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-    Bell, Check, Trash2, Filter, Search, X, 
+    Bell, Check, Search, X, 
     ShoppingCart, Wrench, ShieldCheck, Box, Settings, Users,
     AlertCircle, Clock
 } from 'lucide-react';
@@ -26,34 +26,32 @@ export default function NotificationCenter() {
         showToastOnNewNotification: false
     });
     
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<TabType>('all');
     const [searchTerm, setSearchTerm] = useState('');
     const confirm = useConfirm();
 
     const tabs: { id: TabType; label: string; icon?: React.ReactNode }[] = [
-        { id: 'all', label: 'Tất cả' },
+        { id: 'all', label: 'Tất cả thông báo' },
         { id: 'unread', label: 'Chưa đọc' },
-        { id: 'order', label: 'Đơn hàng', icon: <ShoppingCart size={14} /> },
-        { id: 'repair', label: 'Sửa chữa', icon: <Wrench size={14} /> },
-        { id: 'warranty', label: 'Bảo hành', icon: <ShieldCheck size={14} /> },
-        { id: 'inventory', label: 'Kho hàng', icon: <Box size={14} /> },
-        { id: 'system', label: 'Hệ thống', icon: <Settings size={14} /> },
-        { id: 'crm', label: 'CRM', icon: <Users size={14} /> },
+        { id: 'order', label: 'Đơn hàng', icon: <ShoppingCart size={16} /> },
+        { id: 'repair', label: 'Sửa chữa', icon: <Wrench size={16} /> },
+        { id: 'warranty', label: 'Bảo hành', icon: <ShieldCheck size={16} /> },
+        { id: 'inventory', label: 'Kho hàng', icon: <Box size={16} /> },
+        { id: 'crm', label: 'CRM', icon: <Users size={16} /> },
+        { id: 'system', label: 'Hệ thống', icon: <Settings size={16} /> },
     ];
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter(notif => {
-            // Tab filter
             if (activeTab === 'unread' && notif.read) return false;
             if (activeTab !== 'all' && activeTab !== 'unread' && notif.type !== activeTab) return false;
             
-            // Search filter
             if (searchTerm) {
                 const searchLower = searchTerm.toLowerCase();
                 return notif.title.toLowerCase().includes(searchLower) || 
                        notif.message.toLowerCase().includes(searchLower);
             }
-            
             return true;
         });
     }, [notifications, activeTab, searchTerm]);
@@ -61,7 +59,7 @@ export default function NotificationCenter() {
     const handleMarkAllAsRead = async () => {
         const ok = await confirm({ 
             title: 'Đánh dấu tất cả đã đọc',
-            message: 'Bạn có chắc chắn muốn đánh dấu tất cả thông báo là đã đọc?' 
+            message: 'Bạn có chắc chắn muốn đánh dấu toàn bộ thông báo là đã đọc?' 
         });
         if (!ok) return;
         
@@ -71,75 +69,78 @@ export default function NotificationCenter() {
 
     const getIcon = (type: string, priority?: string) => {
         if (priority === 'high') {
-            return <div className="p-2 bg-red-100 text-red-600 rounded-lg"><AlertCircle size={20} /></div>;
+            return <div className="p-3 bg-red-100 text-red-600 rounded-2xl shadow-sm"><AlertCircle size={22} strokeWidth={2.5} /></div>;
         }
         switch (type) {
-            case 'order': return <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><ShoppingCart size={20} /></div>;
-            case 'repair': return <div className="p-2 bg-orange-100 text-orange-600 rounded-lg"><Wrench size={20} /></div>;
-            case 'warranty': return <div className="p-2 bg-green-100 text-green-600 rounded-lg"><ShieldCheck size={20} /></div>;
-            case 'inventory': return <div className="p-2 bg-purple-100 text-purple-600 rounded-lg"><Box size={20} /></div>;
-            case 'crm': return <div className="p-2 bg-violet-100 text-violet-600 rounded-lg"><Users size={20} /></div>;
-            default: return <div className="p-2 bg-gray-100 text-gray-600 rounded-lg"><Settings size={20} /></div>;
+            case 'order': return <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl shadow-sm"><ShoppingCart size={22} /></div>;
+            case 'repair': return <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl shadow-sm"><Wrench size={22} /></div>;
+            case 'warranty': return <div className="p-3 bg-green-100 text-green-600 rounded-2xl shadow-sm"><ShieldCheck size={22} /></div>;
+            case 'inventory': return <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl shadow-sm"><Box size={22} /></div>;
+            case 'crm': return <div className="p-3 bg-violet-100 text-violet-600 rounded-2xl shadow-sm"><Users size={22} /></div>;
+            default: return <div className="p-3 bg-gray-100 text-gray-600 rounded-2xl shadow-sm"><Settings size={22} /></div>;
         }
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="p-4 lg:p-8 max-w-[1400px] mx-auto h-[calc(100vh-64px)] flex flex-col">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 shrink-0">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <Bell className="w-7 h-7 text-accent" />
+                    <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
+                        <div className="p-2 bg-accent/10 rounded-xl">
+                            <Bell className="w-8 h-8 text-accent" />
+                        </div>
                         Trung tâm Thông báo
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">
-                        Quản lý tất cả thông báo và cảnh báo từ hệ thống
+                    <p className="text-gray-500 text-base mt-2 ml-1">
+                        Quản lý toàn bộ cập nhật, nhắc nhở và cảnh báo từ hệ thống Backoffice
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={refresh}
-                        className="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center gap-2"
+                        className="px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all active:scale-95"
                     >
-                        Tải lại
+                        Khôi phục
                     </button>
                     <button
                         onClick={handleMarkAllAsRead}
                         disabled={notifications.every(n => n.read)}
-                        className="px-4 py-2 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-5 py-2.5 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-all active:scale-95 border-2 border-transparent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm shadow-accent/20"
                     >
-                        <Check size={18} />
+                        <Check size={18} strokeWidth={2.5} />
                         Đánh dấu tất cả đã đọc
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row h-[700px]">
-                {/* Sidebar / Filters */}
-                <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50/50 flex flex-col">
-                    <div className="p-4 border-b border-gray-100">
+            {/* Main Application Area */}
+            <div className="flex-1 bg-white border flex flex-col md:flex-row rounded-3xl shadow-xl shadow-gray-200/40 overflow-hidden min-h-0">
+                {/* Sidebar Navigation */}
+                <div className="w-full md:w-72 bg-gray-50/80 border-r border-gray-100 flex flex-col shrink-0">
+                    <div className="p-5 border-b border-gray-100 bg-white">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
                                 type="text"
-                                placeholder="Tìm thông báo..."
+                                placeholder="Tìm kiếm nội dung..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:border-accent outline-none transition-colors"
+                                className="w-full pl-10 pr-10 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition-all"
                             />
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 text-gray-500 rounded-full hover:bg-gray-300 transition-colors"
                                 >
-                                    <X size={14} />
+                                    <X size={12} strokeWidth={3} />
                                 </button>
                             )}
                         </div>
                     </div>
                     
-                    <div className="p-2 flex-grow overflow-y-auto">
-                        <div className="space-y-1">
+                    <div className="p-3 overflow-y-auto flex-1 custom-scrollbar">
+                        <div className="space-y-1.5">
                             {tabs.map((tab) => {
                                 const count = notifications.filter(n => {
                                     if (tab.id === 'all') return true;
@@ -148,7 +149,7 @@ export default function NotificationCenter() {
                                 }).length;
                                 
                                 const unreadInTab = notifications.filter(n => {
-                                    if (tab.id === 'unread') return false; // not applicable
+                                    if (tab.id === 'unread') return false; 
                                     if (tab.id === 'all') return !n.read;
                                     return n.type === tab.id && !n.read;
                                 }).length;
@@ -157,22 +158,28 @@ export default function NotificationCenter() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                                        className={`w-full group flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all ${
                                             activeTab === tab.id 
-                                                ? 'bg-accent/10 text-accent font-bold' 
-                                                : 'text-gray-600 hover:bg-gray-100'
+                                                ? 'bg-white text-accent shadow-sm ring-1 ring-gray-100' 
+                                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-2">
-                                            {tab.icon && <span className={activeTab === tab.id ? 'text-accent' : 'text-gray-400'}>{tab.icon}</span>}
+                                        <div className="flex items-center gap-3">
+                                            {tab.icon && (
+                                                <span className={`${activeTab === tab.id ? 'text-accent' : 'text-gray-400 group-hover:text-gray-600'} transition-colors`}>
+                                                    {tab.icon}
+                                                </span>
+                                            )}
                                             {tab.label}
                                         </div>
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-2">
                                             {unreadInTab > 0 && tab.id !== 'unread' && (
-                                                <span className="w-2 h-2 rounded-full bg-accent"></span>
+                                                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                                             )}
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                activeTab === tab.id ? 'bg-accent/20 text-accent' : 'bg-gray-200 text-gray-500'
+                                            <span className={`text-[11px] px-2.5 py-1 rounded-lg font-bold min-w-[28px] text-center ${
+                                                activeTab === tab.id 
+                                                    ? 'bg-accent/10 text-accent' 
+                                                    : 'bg-gray-200/70 text-gray-500 group-hover:bg-gray-200'
                                             }`}>
                                                 {count}
                                             </span>
@@ -184,86 +191,107 @@ export default function NotificationCenter() {
                     </div>
                 </div>
 
-                {/* Main Content Component List */}
-                <div className="flex-1 overflow-y-auto bg-white p-4">
+                {/* Notifications Feed */}
+                <div className="flex-1 overflow-y-auto bg-gray-50/30 relative">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                            <div className="w-8 h-8 border-4 border-gray-200 border-t-accent rounded-full animate-spin mb-4" />
-                            Đang tải thông báo...
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                            <div className="w-10 h-10 border-4 border-gray-200 border-t-accent rounded-full animate-spin mb-4" />
+                            <p className="font-bold">Đang đồng bộ dữ liệu...</p>
                         </div>
                     ) : filteredNotifications.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                            <Bell className="w-16 h-16 mb-4 text-gray-200" />
-                            <p className="font-medium text-lg text-gray-500">Trống</p>
-                            <p className="text-sm">Không có thông báo nào thỏa mãn bộ lọc</p>
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 bg-white">
+                            <div className="p-6 bg-gray-50 rounded-full mb-6">
+                                <Bell className="w-16 h-16 text-gray-300" />
+                            </div>
+                            <h3 className="font-black text-xl text-gray-900 mb-2">Hộp thư trống</h3>
+                            <p className="text-gray-500 font-medium text-center max-w-sm">
+                                Hiện không có thông báo nào trong danh mục này. Hãy thử chọn Tab khác.
+                            </p>
                             {searchTerm && (
                                 <button 
                                     onClick={() => setSearchTerm('')}
-                                    className="mt-4 text-accent text-sm font-bold hover:underline"
+                                    className="mt-6 px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
                                 >
                                     Xóa bộ lọc tìm kiếm
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="p-4 lg:p-6 space-y-4 max-w-4xl mx-auto">
                             {filteredNotifications.map((notification) => (
                                 <div 
                                     key={notification.id} 
-                                    className={`relative p-4 rounded-xl border transition-all ${
-                                        !notification.read 
-                                            ? 'bg-blue-50/50 border-blue-100 shadow-sm' 
-                                            : 'bg-white border-gray-100 hover:border-gray-200'
+                                    className={`group relative p-5 bg-white rounded-3xl border transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-200 flex gap-5 ${
+                                        !notification.read ? 'border-accent/30 ring-4 ring-accent/5' : 'border-gray-100'
                                     }`}
                                 >
-                                    {!notification.read && (
-                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-accent" />
+                                    {/* Invisible Overlay Div for making the whole card route without breaking nested buttons */}
+                                    {notification.link && (
+                                        <div 
+                                            className="absolute inset-0 z-0 rounded-3xl cursor-pointer"
+                                            onClick={() => {
+                                                if (!notification.read) markAsRead(notification.id);
+                                                navigate(notification.link!);
+                                            }}
+                                            title="Xem chi tiết"
+                                        />
                                     )}
-                                    <div className="flex gap-4">
-                                        <div className="flex-shrink-0 mt-1">
-                                            {getIcon(notification.type, notification.priority)}
+
+                                    {/* Unread dot */}
+                                    {!notification.read && (
+                                        <div className="absolute top-6 right-6 w-3 h-3 rounded-full bg-accent ring-4 ring-accent/20" />
+                                    )}
+
+                                    {/* Icon */}
+                                    <div className="flex-shrink-0 z-10">
+                                        {getIcon(notification.type, notification.priority)}
+                                    </div>
+
+                                    {/* Content Info */}
+                                    <div className="flex-1 min-w-0 py-1 pr-8">
+                                        <div className="flex items-center gap-3 mb-1.5">
+                                            <h3 className={`font-bold text-[17px] truncate ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
+                                                {notification.title}
+                                            </h3>
+                                            {notification.priority === 'high' && (
+                                                <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] uppercase font-black tracking-wider rounded-md shrink-0">
+                                                    Khẩn cấp
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="flex-1 pr-6">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                                                <h3 className={`font-bold text-base ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                                                    {notification.title}
-                                                </h3>
-                                                <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
-                                                    <Clock size={12} />
-                                                    {notification.time}
-                                                </div>
+                                        <p className={`text-[15px] leading-relaxed mb-4 ${!notification.read ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
+                                            {notification.message}
+                                        </p>
+                                        
+                                        <div className="flex items-center justify-between z-10 relative">
+                                            <div className="flex items-center gap-2 text-[13px] font-semibold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                <Clock size={14} />
+                                                {notification.time}
                                             </div>
-                                            <p className={`text-sm mb-3 line-clamp-2 ${!notification.read ? 'text-gray-700' : 'text-gray-500'}`}>
-                                                {notification.message}
-                                            </p>
                                             
-                                            <div className="flex items-center justify-between">
-                                                {notification.link ? (
-                                                    <Link 
-                                                        to={notification.link}
-                                                        className="text-accent text-sm font-bold hover:underline inline-flex items-center gap-1"
-                                                        onClick={() => !notification.read && markAsRead(notification.id)}
+                                            <div className="flex gap-2">
+                                                {!notification.read && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            markAsRead(notification.id);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-50 text-accent font-bold text-sm rounded-xl hover:bg-blue-100 hover:text-blue-700 transition-colors"
                                                     >
-                                                        Xem chi tiết
-                                                    </Link>
-                                                ) : (
-                                                    <div />
+                                                        Đã đọc
+                                                    </button>
                                                 )}
-                                                
-                                                <div className="flex items-center gap-2">
-                                                    {!notification.read && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                markAsRead(notification.id);
-                                                            }}
-                                                            className="text-xs font-bold text-gray-500 hover:text-accent bg-gray-100 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
-                                                        >
-                                                            Đánh dấu đã đọc
-                                                        </button>
-                                                    )}
-                                                </div>
+                                                {notification.link && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!notification.read) markAsRead(notification.id);
+                                                            navigate(notification.link!);
+                                                        }}
+                                                        className="px-4 py-2 border-2 border-gray-100 bg-white text-gray-700 font-bold text-sm rounded-xl hover:border-gray-200 hover:bg-gray-50 transition-colors z-10 relative"
+                                                    >
+                                                        Chi tiết
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -273,6 +301,22 @@ export default function NotificationCenter() {
                     )}
                 </div>
             </div>
+            
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: #e5e7eb;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+                    background-color: #d1d5db;
+                }
+            `}</style>
         </div>
     );
 }

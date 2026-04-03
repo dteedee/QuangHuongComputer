@@ -86,9 +86,55 @@ export const useNotifications = ({
     const [error, setError] = useState<string | null>(null);
     const lastFetchRef = useRef<Date | null>(null);
 
+    // ── Read state tracking ──────────────────────────────────────────────
+    // Load initial read state from localStorage
+    const getInitialReadIds = () => {
+        try {
+            const stored = localStorage.getItem('qh_notif_read_ids');
+            return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+        } catch {
+            return new Set<string>();
+        }
+    };
+
+    const getInitialAllRead = () => {
+        try {
+            const stored = localStorage.getItem('qh_notif_all_read');
+            return stored ? parseInt(stored, 10) : null;
+        } catch {
+            return null;
+        }
+    };
+
+    // Track which polled notification IDs have been manually marked as read
+    const readIdsRef = useRef<Set<string>>(getInitialReadIds());
+    // When "mark all as read" is invoked, record timestamp
+    const allReadTimestampRef = useRef<number | null>(getInitialAllRead());
+
+    // Helper to persist state
+    const persistReadState = useCallback(() => {
+        try {
+            localStorage.setItem('qh_notif_read_ids', JSON.stringify(Array.from(readIdsRef.current)));
+            if (allReadTimestampRef.current !== null) {
+                localStorage.setItem('qh_notif_all_read', allReadTimestampRef.current.toString());
+            }
+        } catch (e) {
+            console.error('Failed to persist read state', e);
+        }
+    }, []);
+
     const hasRole = useCallback((allowedRoles: string[]) => {
         return allowedRoles.some(r => roles.includes(r));
     }, [roles]);
+
+    // Helper: check if a polled notification should be considered read
+    const isPolledNotifRead = useCallback((notifId: string): boolean => {
+        // Explicitly marked as read
+        if (readIdsRef.current.has(notifId)) return true;
+        // "Mark all" was invoked — all existing polled notifs are read
+        if (allReadTimestampRef.current !== null) return true;
+        return false;
+    }, []);
 
     // Handle new realtime notification
     const handleRealtimeNotification = useCallback((apiNotif: NotificationDto) => {
@@ -116,17 +162,21 @@ export const useNotifications = ({
 
     // Handle notification read via realtime
     const handleRealtimeNotificationRead = useCallback((notificationId: string) => {
+        readIdsRef.current.add(notificationId);
+        persistReadState();
         setNotifications(prev =>
             prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
         );
-    }, []);
+    }, [persistReadState]);
 
     // Handle all notifications read via realtime
     const handleRealtimeAllNotificationsRead = useCallback(() => {
+        allReadTimestampRef.current = Date.now();
+        persistReadState();
         setNotifications(prev =>
             prev.map(n => ({ ...n, read: true }))
         );
-    }, []);
+    }, [persistReadState]);
 
     // Setup realtime notifications
     const {
@@ -171,7 +221,7 @@ export const useNotifications = ({
                                 title: 'Đơn hàng mới chờ xử lý',
                                 message: `Đơn ${order.orderNumber} - ${order.totalAmount.toLocaleString('vi-VN')}đ`,
                                 time: formatTimeAgo(new Date(order.orderDate)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/orders?search=${order.orderNumber}`,
                                 priority: 'high',
                                 metadata: { orderId: order.id, orderNumber: order.orderNumber }
@@ -190,7 +240,7 @@ export const useNotifications = ({
                                 title: 'Đơn hàng đã xác nhận',
                                 message: `Đơn ${order.orderNumber} sẵn sàng xử lý`,
                                 time: formatTimeAgo(new Date(order.confirmedAt || order.orderDate)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/orders?search=${order.orderNumber}`,
                                 priority: 'medium',
                                 metadata: { orderId: order.id, orderNumber: order.orderNumber }
@@ -209,7 +259,7 @@ export const useNotifications = ({
                                 title: 'Chờ thanh toán',
                                 message: `Đơn ${order.orderNumber} chưa thanh toán`,
                                 time: formatTimeAgo(new Date(order.orderDate)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/orders?search=${order.orderNumber}`,
                                 priority: 'medium',
                                 metadata: { orderId: order.id, orderNumber: order.orderNumber }
@@ -238,7 +288,7 @@ export const useNotifications = ({
                                 title: 'Yêu cầu sửa chữa mới',
                                 message: `${wo.deviceType} - ${wo.issueDescription?.slice(0, 50)}...`,
                                 time: formatTimeAgo(new Date(wo.createdAt)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/tech?workOrderId=${wo.id}`,
                                 priority: 'high',
                                 metadata: { workOrderId: wo.id }
@@ -257,7 +307,7 @@ export const useNotifications = ({
                                 title: 'Đơn được giao cho bạn',
                                 message: `${wo.deviceType} - Cần bắt đầu chẩn đoán`,
                                 time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/tech?workOrderId=${wo.id}`,
                                 priority: 'high',
                                 metadata: { workOrderId: wo.id }
@@ -276,7 +326,7 @@ export const useNotifications = ({
                                 title: 'Chờ khách hàng duyệt',
                                 message: `${wo.deviceType} - Báo giá đã gửi`,
                                 time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/tech?workOrderId=${wo.id}`,
                                 priority: 'medium',
                                 metadata: { workOrderId: wo.id }
@@ -295,7 +345,7 @@ export const useNotifications = ({
                                 title: 'Khách hàng đã duyệt',
                                 message: `${wo.deviceType} - Bắt đầu sửa chữa`,
                                 time: formatTimeAgo(new Date(wo.updatedAt || wo.createdAt)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/tech?workOrderId=${wo.id}`,
                                 priority: 'high',
                                 metadata: { workOrderId: wo.id }
@@ -322,7 +372,7 @@ export const useNotifications = ({
                                 title: 'Yêu cầu bảo hành mới',
                                 message: `SN: ${claim.serialNumber} - ${claim.issueDescription?.slice(0, 40)}...`,
                                 time: formatTimeAgo(new Date(claim.filedDate)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/warranty?claimId=${claim.id}`,
                                 priority: 'high',
                                 metadata: { claimId: claim.id }
@@ -341,7 +391,7 @@ export const useNotifications = ({
                                 title: 'Bảo hành đã duyệt',
                                 message: `SN: ${claim.serialNumber} - Cần xử lý`,
                                 time: formatTimeAgo(new Date(claim.filedDate)),
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/warranty?claimId=${claim.id}`,
                                 priority: 'medium',
                                 metadata: { claimId: claim.id }
@@ -375,7 +425,7 @@ export const useNotifications = ({
                                 title: 'Cảnh báo tồn kho thấp',
                                 message: `${item.name} - Còn ${item.stockQuantity} sản phẩm`,
                                 time: 'Cập nhật',
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/inventory?productId=${item.id}`,
                                 priority: item.stockQuantity <= 5 ? 'high' : 'medium',
                                 metadata: { productId: item.id }
@@ -394,7 +444,7 @@ export const useNotifications = ({
                                 title: 'Hết hàng',
                                 message: `${item.name} - Cần nhập thêm`,
                                 time: 'Cập nhật',
-                                read: false,
+                                read: isPolledNotifRead(notifId),
                                 link: `/backoffice/inventory?productId=${item.id}`,
                                 priority: 'high',
                                 metadata: { productId: item.id }
@@ -423,7 +473,7 @@ export const useNotifications = ({
         } finally {
             setLoading(false);
         }
-    }, [hasRole]);
+    }, [hasRole, isPolledNotifRead]);
 
     // Initial fetch
     useEffect(() => {
@@ -440,6 +490,10 @@ export const useNotifications = ({
     }, [fetchNotifications, refreshInterval, isConnected]);
 
     const markAsRead = useCallback(async (id: string) => {
+        // Track in local read state
+        readIdsRef.current.add(id);
+        persistReadState();
+
         // Update local state immediately
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
@@ -461,12 +515,22 @@ export const useNotifications = ({
     }, [isConnected, markAsReadRealtime]);
 
     const markAllAsRead = useCallback(async () => {
+        // Record timestamp — all polled notifications are now considered read
+        allReadTimestampRef.current = Date.now();
+
+        // Add all current notification IDs to readIds
+        notifications.forEach(n => {
+            readIdsRef.current.add(n.id);
+        });
+        
+        persistReadState();
+
         // Update local state immediately
         setNotifications(prev =>
             prev.map(n => ({ ...n, read: true }))
         );
 
-        // Call API to mark all as read
+        // Call API to mark all persistent notifications as read
         try {
             await notificationApi.markAllAsRead();
             // Also notify via SignalR if connected
@@ -476,7 +540,7 @@ export const useNotifications = ({
         } catch (e) {
             console.error('Failed to mark all notifications as read:', e);
         }
-    }, [isConnected, markAllAsReadRealtime]);
+    }, [notifications, isConnected, markAllAsReadRealtime]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 

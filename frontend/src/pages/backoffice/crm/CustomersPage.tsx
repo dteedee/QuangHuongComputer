@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { motion } from 'framer-motion';
 import {
   Users, Search, Filter, Download, ChevronLeft, ChevronRight,
@@ -99,36 +100,30 @@ export default function CustomersPage() {
             />
           </div>
 
-          <select
-            value={lifecycleStage}
-            onChange={(e) => {
-              setLifecycleStage(e.target.value as LifecycleStage | '');
-              setPage(1);
-            }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Tất cả Lifecycle</option>
-            <option value="New">Mới</option>
-            <option value="Active">Hoạt động</option>
-            <option value="VIP">VIP</option>
-            <option value="Champion">Champion</option>
-            <option value="AtRisk">Cần chăm sóc</option>
-            <option value="Churned">Đã rời bỏ</option>
-          </select>
+          <SearchableSelect
+              value={lifecycleStage}
+              onChange={(val: string) => { setLifecycleStage(val as typeof lifecycleStage); setPage(1); }}
+              placeholder="Tất cả Lifecycle"
+              options={[
+                  { value: '', label: 'Tất cả Lifecycle' },
+                  { value: 'New', label: 'Mới' },
+                  { value: 'Active', label: 'Hoạt động' },
+                  { value: 'VIP', label: 'VIP' },
+                  { value: 'Champion', label: 'Champion' },
+                  { value: 'AtRisk', label: 'Cần chăm sóc' },
+                  { value: 'Churned', label: 'Đã rời bỏ' },
+              ]}
+          />
 
-          <select
-            value={segmentId}
-            onChange={(e) => {
-              setSegmentId(e.target.value);
-              setPage(1);
-            }}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Tất cả phân nhóm</option>
-            {segments.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+          <SearchableSelect
+              value={segmentId}
+              onChange={(val: string) => { setSegmentId(val); setPage(1); }}
+              placeholder="Tất cả phân nhóm"
+              options={[
+                  { value: '', label: 'Tất cả phân nhóm' },
+                  ...(segments.map((s) => ({ value: s.id, label: s.name }))),
+              ]}
+          />
 
           <button
             type="submit"

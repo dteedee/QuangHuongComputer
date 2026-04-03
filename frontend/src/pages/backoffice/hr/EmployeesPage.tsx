@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { UserPlus, Mail, Phone, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -199,26 +200,26 @@ export const EmployeesPage = () => {
                         className="w-full pl-12 pr-5 py-4 bg-white border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-accent/5 focus:border-red-100 transition-all shadow-sm"
                     />
                 </div>
-                <select
+                <SearchableSelect
                     value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                    className="px-6 py-4 bg-white border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-accent/5 focus:border-red-100 transition-all shadow-sm"
-                >
-                    <option value="">Tất cả phòng ban</option>
-                    {departments.map(dept => (
-                        <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                </select>
-                <select
+                    onChange={(val: string) => { setDepartmentFilter(val); setPage(1); }}
+                    placeholder="Tất cả phòng ban"
+                    options={[
+                        { value: '', label: 'Tất cả phòng ban' },
+                        ...departments.map((dept) => ({ value: dept, label: dept })),
+                    ]}
+                />
+                <SearchableSelect
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-6 py-4 bg-white border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-accent/5 focus:border-red-100 transition-all shadow-sm"
-                >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Active">Đang làm việc</option>
-                    <option value="OnLeave">Nghỉ phép</option>
-                    <option value="Inactive">Đã nghỉ việc</option>
-                </select>
+                    onChange={(val: string) => { setStatusFilter(val); setPage(1); }}
+                    placeholder="Tất cả trạng thái"
+                    options={[
+                        { value: '', label: 'Tất cả trạng thái' },
+                        { value: 'Active', label: 'Đang làm việc' },
+                        { value: 'OnLeave', label: 'Nghỉ phép' },
+                        { value: 'Inactive', label: 'Đã nghỉ việc' },
+                    ]}
+                />
                 {(departmentFilter || statusFilter) && (
                     <button
                         onClick={() => { setDepartmentFilter(''); setStatusFilter(''); }}

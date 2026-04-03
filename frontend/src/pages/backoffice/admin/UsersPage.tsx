@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useConfirm } from '@context/ConfirmContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -276,26 +277,25 @@ export function UsersPage() {
         </div>
 
         <div className="flex gap-3 w-full md:w-auto">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-gray-50 border-none rounded-xl text-sm font-medium px-4 py-3 focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[150px]"
-          >
-            <option value="">Tất cả Vai trò</option>
-            {roles?.map(role => (
-              <option key={role.id} value={role.name}>{role.name}</option>
-            ))}
-          </select>
+          <SearchableSelect
+              value={roleFilter}
+              onChange={(val: string) => { setRoleFilter(val); setPage(1); }}
+              placeholder="Tất cả Vai trò"
+              options={[
+                  { value: '', label: 'Tất cả Vai trò' },
+                  ...(roles?.map((role) => ({ value: role.name, label: role.name })) || []),
+              ]}
+          />
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="bg-gray-50 border-none rounded-xl text-sm font-medium px-4 py-3 focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[150px]"
-          >
-            <option value="all">Tất cả Trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Đã khóa</option>
-          </select>
+          <SearchableSelect
+              value={statusFilter}
+              onChange={(val: string) => { setStatusFilter(val as 'all' | 'active' | 'inactive'); setPage(1); }}
+              options={[
+                  { value: 'all', label: 'Tất cả Trạng thái' },
+                  { value: 'active', label: 'Đang hoạt động' },
+                  { value: 'inactive', label: 'Đã khóa' },
+              ]}
+          />
 
           <button
             onClick={() => refetch()}

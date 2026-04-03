@@ -102,12 +102,15 @@ const SelectDropdown = ({
     onChange: (value: string) => void;
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setSearchTerm('');
             }
         };
 
@@ -115,14 +118,27 @@ const SelectDropdown = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => searchInputRef.current?.focus(), 50);
+        }
+    }, [isOpen]);
+
     const selectedOption = config.options?.find(opt => opt.value === value);
     const hasValue = value && value !== '' && value !== 'all';
+
+    const filteredOptions = (config.options || []).filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="relative" ref={dropdownRef}>
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    if (isOpen) setSearchTerm('');
+                }}
                 className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
                     hasValue
                         ? 'bg-accent/5 border-accent/20 text-accent'
@@ -141,24 +157,53 @@ const SelectDropdown = ({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-50 top-full left-0 mt-2 w-full min-w-[180px] bg-white rounded-xl shadow-xl border border-gray-100 py-2 max-h-[300px] overflow-y-auto"
+                        className="absolute z-50 top-full left-0 mt-2 w-full min-w-[220px] bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
                     >
-                        {config.options?.map((option) => (
-                            <button
-                                key={option.value}
-                                onClick={() => {
-                                    onChange(option.value);
-                                    setIsOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                                    value === option.value
-                                        ? 'bg-accent/5 text-accent'
-                                        : 'text-gray-700 hover:bg-gray-50'
-                                }`}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
+                        {/* Search input */}
+                        <div className="p-2 border-b border-gray-100">
+                            <div className="relative">
+                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Tìm kiếm..."
+                                    className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-accent/20 placeholder:text-gray-400"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Escape') {
+                                            setIsOpen(false);
+                                            setSearchTerm('');
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div className="max-h-[250px] overflow-y-auto py-1">
+                            {filteredOptions.length === 0 ? (
+                                <div className="px-4 py-4 text-center text-xs text-gray-400 font-medium">
+                                    Không tìm thấy
+                                </div>
+                            ) : (
+                                filteredOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => {
+                                            onChange(option.value);
+                                            setIsOpen(false);
+                                            setSearchTerm('');
+                                        }}
+                                        className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                                            value === option.value
+                                                ? 'bg-accent/5 text-accent'
+                                                : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

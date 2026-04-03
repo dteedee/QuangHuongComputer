@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { contentApi, type FlashSale, type CreateFlashSaleDto } from '../../api/content';
 import {
     Zap, Plus, Edit2, Trash2, Play, Pause, Clock,
@@ -584,19 +585,14 @@ export default function FlashSalesPage() {
                                     <label className="block text-sm font-bold text-gray-700 mb-1">
                                         Loại giảm giá *
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         value={formData.discountType}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                discountType: e.target.value as 'Percentage' | 'FixedAmount',
-                                            })
-                                        }
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
-                                    >
-                                        <option value="Percentage">Phần trăm (%)</option>
-                                        <option value="FixedAmount">Số tiền cố định (đ)</option>
-                                    </select>
+                                        onChange={null}
+                                        options={[
+                                            { value: 'Percentage', label: 'Phần trăm (%)' },
+                                            { value: 'FixedAmount', label: 'Số tiền cố định (đ)' },
+                                        ]}
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -613,38 +614,35 @@ export const AuditLogsPage = () => {
                   className="overflow-hidden"
                 >
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 mt-4 border-t border-gray-100">
-                    <select
-                      value={queryParams.action || ''}
-                      onChange={(e) => handleFilterChange('action', e.target.value)}
-                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <option value="">Tất cả hành động</option>
-                      {filtersData?.actions?.map((a) => (
-                        <option key={a} value={a}>{a}</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                        value={queryParams.action || ''}
+                        onChange={(val: string) => handleFilterChange('action', val)}
+                        placeholder="Tất cả hành động"
+                        options={[
+                            { value: '', label: 'Tất cả hành động' },
+                            ...(filtersData?.actions?.map((a) => ({ value: a, label: a })) || []),
+                        ]}
+                    />
 
-                    <select
-                      value={queryParams.entityName || ''}
-                      onChange={(e) => handleFilterChange('entityName', e.target.value)}
-                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <option value="">Tất cả đối tượng</option>
-                      {filtersData?.entityNames?.map((e) => (
-                        <option key={e} value={e}>{e}</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                        value={queryParams.entityName || ''}
+                        onChange={(val: string) => handleFilterChange('entityName', val)}
+                        placeholder="Tất cả đối tượng"
+                        options={[
+                            { value: '', label: 'Tất cả đối tượng' },
+                            ...(filtersData?.entityNames?.map((e) => ({ value: e, label: e })) || []),
+                        ]}
+                    />
 
-                    <select
-                      value={queryParams.module || ''}
-                      onChange={(e) => handleFilterChange('module', e.target.value)}
-                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <option value="">Tất cả module</option>
-                      {filtersData?.modules?.map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                        value={queryParams.module || ''}
+                        onChange={(val: string) => handleFilterChange('module', val)}
+                        placeholder="Tất cả module"
+                        options={[
+                            { value: '', label: 'Tất cả module' },
+                            ...(filtersData?.modules?.map((m) => ({ value: m, label: m })) || []),
+                        ]}
+                    />
 
                     <input
                       type="date"

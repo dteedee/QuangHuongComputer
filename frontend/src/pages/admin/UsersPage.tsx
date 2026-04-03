@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { UserPlus, Mail, Shield, Search, MoreHorizontal, Filter, X, Check, Loader2, Power, PowerOff, ToggleLeft, ToggleRight, RefreshCw, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -158,31 +159,25 @@ export const AdminUsersPage = () => {
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Role Filter */}
-                        <select
+                        <SearchableSelect
                             value={filters.role}
-                            onChange={(e) => handleFilterChange('role', e.target.value)}
-                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.role !== 'all' ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                            }`}
-                        >
-                            <option value="all">Tất cả vai trò</option>
-                            {allRoles.map(role => (
-                                <option key={role.id} value={role.name}>{role.name}</option>
-                            ))}
-                        </select>
+                            onChange={(val: string) => handleFilterChange('role', val)}
+                            options={[
+                                { value: 'all', label: 'Tất cả vai trò' },
+                                ...(allRoles.map((role) => ({ value: role.name, label: role.name }))),
+                            ]}
+                        />
 
                         {/* Status Filter */}
-                        <select
+                        <SearchableSelect
                             value={filters.status}
-                            onChange={(e) => handleFilterChange('status', e.target.value)}
-                            className={`px-5 py-4 border rounded-2xl text-xs font-black uppercase tracking-wider outline-none cursor-pointer transition-all ${
-                                filters.status !== 'all' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-transparent text-gray-700'
-                            }`}
-                        >
-                            <option value="all">Tất cả trạng thái</option>
-                            <option value="active">Đang hoạt động</option>
-                            <option value="inactive">Đã khóa</option>
-                        </select>
+                            onChange={(val: string) => handleFilterChange('status', val)}
+                            options={[
+                                { value: 'all', label: 'Tất cả trạng thái' },
+                                { value: 'active', label: 'Đang hoạt động' },
+                                { value: 'inactive', label: 'Đã khóa' },
+                            ]}
+                        />
 
                         {/* Reset Button */}
                         {hasActiveFilters && (

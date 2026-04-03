@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Edit, Trash2, Search, RefreshCw, Filter, Tag,
@@ -392,15 +393,15 @@ export function CouponsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
-            >
-              <option value="all">Tất cả</option>
-              <option value="active">Đang hoạt động</option>
-              <option value="expired">Hết hạn</option>
-            </select>
+            <SearchableSelect
+                value={statusFilter}
+                onChange={null}
+                options={[
+                    { value: 'all', label: 'Tất cả' },
+                    { value: 'active', label: 'Đang hoạt động' },
+                    { value: 'expired', label: 'Hết hạn' },
+                ]}
+            />
           </div>
         </div>
       </div>
@@ -589,14 +590,14 @@ export function CouponsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Loại giảm giá</label>
-                  <select
-                    value={formData.discountType}
-                    onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white"
-                  >
-                    <option value="Percentage">Phần trăm (%)</option>
-                    <option value="FixedAmount">Số tiền cố định</option>
-                  </select>
+                  <SearchableSelect
+                      value={formData.discountType}
+                      onChange={null}
+                      options={[
+                          { value: 'Percentage', label: 'Phần trăm (%)' },
+                          { value: 'FixedAmount', label: 'Số tiền cố định' },
+                      ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -750,14 +751,14 @@ export function CouponsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Loại giảm giá</label>
-                  <select
-                    value={formData.discountType}
-                    onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
-                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500 font-bold text-gray-700 outline-none"
-                  >
-                    <option value="Percentage">Phần trăm (%)</option>
-                    <option value="FixedAmount">Số tiền cố định</option>
-                  </select>
+                  <SearchableSelect
+                      value={formData.discountType}
+                      onChange={null}
+                      options={[
+                          { value: 'Percentage', label: 'Phần trăm (%)' },
+                          { value: 'FixedAmount', label: 'Số tiền cố định' },
+                      ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">

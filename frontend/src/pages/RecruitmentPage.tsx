@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { Link } from 'react-router-dom';
 import {
     ChevronRight,
@@ -110,17 +111,16 @@ export const RecruitmentPage = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                        <select
-                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all appearance-none"
+                    <div>
+                        <SearchableSelect
                             value={selectedDepartment}
-                            onChange={(e) => setSelectedDepartment(e.target.value)}
-                        >
-                            {departments.map(dept => (
-                                <option key={dept} value={dept}>{dept === 'All' ? 'Tất cả phòng ban' : dept}</option>
-                            ))}
-                        </select>
+                            onChange={(val) => setSelectedDepartment(val)}
+                            options={departments.map(dept => ({
+                                value: dept,
+                                label: dept === 'All' ? 'Tất cả phòng ban' : dept,
+                            }))}
+                            placeholder="Chọn phòng ban"
+                        />
                     </div>
                     <div className="flex items-center justify-center bg-gray-50 rounded-xl px-4 py-2 text-sm text-gray-500 font-medium">
                         Tìm thấy {filteredJobs.length} vị trí đang tuyển
