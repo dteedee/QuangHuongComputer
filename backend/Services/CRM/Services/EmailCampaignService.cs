@@ -28,9 +28,9 @@ public partial class EmailCampaignService : IEmailCampaignService
             .AsNoTracking()
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(queryParams.Search))
+        if (!string.IsNullOrWhiteSpace(queryParams.SearchText))
         {
-            var search = queryParams.Search.ToLower();
+            var search = queryParams.SearchText.ToLower();
             query = query.Where(c =>
                 c.Name.ToLower().Contains(search) ||
                 c.Subject.ToLower().Contains(search));
@@ -57,7 +57,7 @@ public partial class EmailCampaignService : IEmailCampaignService
             .Take(queryParams.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<EmailCampaign>(items, total, queryParams.Page, queryParams.PageSize);
+        return new PagedResult<EmailCampaign>(items, total, queryParams.PageNumber < 1 ? 1 : queryParams.PageNumber, queryParams.PageSize);
     }
 
     public async Task<EmailCampaign?> GetCampaignByIdAsync(Guid campaignId, CancellationToken cancellationToken = default)

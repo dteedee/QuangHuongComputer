@@ -160,10 +160,10 @@ public static class CrmEndpoints
             var query = db.CustomerAnalytics.AsNoTracking();
 
             // Apply filters
-            if (!string.IsNullOrWhiteSpace(queryParams.Search))
+            if (!string.IsNullOrWhiteSpace(queryParams.SearchText))
             {
                 // Note: In real implementation, would join with Identity to search by name/email
-                query = query.Where(c => c.UserId.ToString().Contains(queryParams.Search));
+                query = query.Where(c => c.UserId.ToString().Contains(queryParams.SearchText));
             }
 
             if (queryParams.LifecycleStage.HasValue)
@@ -256,7 +256,7 @@ public static class CrmEndpoints
                 );
             }).ToList();
 
-            return Results.Ok(new { items = dtos, total, page = queryParams.Page, pageSize = queryParams.PageSize });
+            return Results.Ok(new { items = dtos, total, page = queryParams.PageNumber, pageSize = queryParams.PageSize });
         });
 
         group.MapGet("/customers/{id:guid}", async (

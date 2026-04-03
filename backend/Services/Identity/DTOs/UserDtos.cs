@@ -36,17 +36,14 @@ public record UserDto
     public DateTime CreatedAt { get; set; }
 }
 
-public record UserQueryParams
+public class UserQueryParams : HC.CORE.Base.BaseSearchParam
 {
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public string? Search { get; set; }
     public string? Role { get; set; }
     public string? SortBy { get; set; } = "Email";
     public bool? SortDescending { get; set; } = false;
     public bool? IncludeInactive { get; set; } = false;
 
-    public int Skip => (Page - 1) * PageSize;
+    public int Skip => (PageNumber - 1) * PageSize;
     public int Take => PageSize;
     public bool SortDesc => SortDescending ?? false;
     public bool ShowInactive => IncludeInactive ?? false;

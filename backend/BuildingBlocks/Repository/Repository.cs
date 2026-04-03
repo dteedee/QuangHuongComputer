@@ -34,7 +34,7 @@ public class Repository<TEntity, TId, TDbContext> : IRepository<TEntity, TId>
         }
 
         // Apply search if provided (override in derived class for entity-specific search)
-        query = ApplySearch(query, queryParams.Search);
+        query = ApplySearch(query, queryParams.SearchText);
 
         // Get total count before pagination
         var total = await query.CountAsync(cancellationToken);
@@ -48,7 +48,7 @@ public class Repository<TEntity, TId, TDbContext> : IRepository<TEntity, TId>
             .Take(queryParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<TEntity>(items, total, queryParams.Page ?? 1, queryParams.PageSize ?? 20);
+        return new PagedResult<TEntity>(items, total, queryParams.PageNumber < 1 ? 1 : queryParams.PageNumber, queryParams.PageSize < 1 ? 20 : queryParams.PageSize);
     }
 
     public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)

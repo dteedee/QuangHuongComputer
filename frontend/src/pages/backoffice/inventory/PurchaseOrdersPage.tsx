@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
+import { AsyncSearchableSelect } from '../../../components/ui/AsyncSearchableSelect';
 import {
     ShoppingCart, Plus, Package, Truck, CheckCircle, XCircle,
     Clock, Search, RefreshCw, X, Trash2, AlertCircle, FileText
@@ -154,11 +155,21 @@ const CreatePOModal = ({
                     {/* Supplier select */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Nhà cung cấp *</label>
-                        <SearchableSelect
+                        <AsyncSearchableSelect
                             value={supplierId}
                             onChange={(val: string) => setSupplierId(val)}
                             placeholder="-- Chọn nhà cung cấp --"
-                            options={suppliers.map((s) => ({ value: s.id, label: `${s.name} (${s.code})` }))}
+                            loadOptions={async (search: string, page: number) => {
+                                try {
+                                    const data = await inventoryApi.getSuppliers({ search, page, pageSize: 20 });
+                                    return {
+                                        options: data.items.map(s => ({ value: s.id, label: `${s.name} (${s.code})` })),
+                                        hasMore: data.page < data.totalPages
+                                    };
+                                } catch (err) {
+                                    return { options: [], hasMore: false };
+                                }
+                            }}
                         />
                     </div>
 

@@ -253,9 +253,9 @@ public static class IdentityEndpoints
             }
 
             // Search by email, name
-            if (!string.IsNullOrWhiteSpace(queryParams.Search))
+            if (!string.IsNullOrWhiteSpace(queryParams.SearchText))
             {
-                var searchTerm = queryParams.Search.ToLower();
+                var searchTerm = queryParams.SearchText.ToLower();
                 query = query.Where(u =>
                     u.Email!.ToLower().Contains(searchTerm) ||
                     u.FullName.ToLower().Contains(searchTerm));
@@ -312,7 +312,7 @@ public static class IdentityEndpoints
             {
                 Items = userDtos,
                 Total = total,
-                Page = queryParams.Page,
+                Page = queryParams.PageNumber,
                 PageSize = queryParams.PageSize
             };
 

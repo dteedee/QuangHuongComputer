@@ -27,9 +27,9 @@ public class LeadManagementService : ILeadManagementService
             .AsQueryable();
 
         // Apply filters
-        if (!string.IsNullOrWhiteSpace(queryParams.Search))
+        if (!string.IsNullOrWhiteSpace(queryParams.SearchText))
         {
-            var search = queryParams.Search.ToLower();
+            var search = queryParams.SearchText.ToLower();
             query = query.Where(l =>
                 l.FullName.ToLower().Contains(search) ||
                 l.Email.ToLower().Contains(search) ||
@@ -84,7 +84,7 @@ public class LeadManagementService : ILeadManagementService
             .Take(queryParams.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<Lead>(items, total, queryParams.Page, queryParams.PageSize);
+        return new PagedResult<Lead>(items, total, queryParams.PageNumber < 1 ? 1 : queryParams.PageNumber, queryParams.PageSize);
     }
 
     public async Task<Lead?> GetLeadByIdAsync(Guid leadId, CancellationToken cancellationToken = default)

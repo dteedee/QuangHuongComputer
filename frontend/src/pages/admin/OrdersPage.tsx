@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { SearchableSelect } from '../../components/ui/SearchableSelect';
+import { AsyncSearchableSelect } from '../../components/ui/AsyncSearchableSelect';
 import { useSearchParams } from 'react-router-dom';
 import { Eye, Filter, Loader2, Search, ArrowRight, Clock, CheckCircle2, Package, XCircle, Truck, Plus, X, Check, ShoppingCart, User, MapPin, FileText, Calendar, RefreshCw, CreditCard, DollarSign, LayoutList, KanbanSquare } from 'lucide-react';
 import { salesApi, type Order, type OrderStatus } from '../../api/sales';
@@ -187,11 +188,6 @@ export const AdminOrdersPage = () => {
         queryFn: () => salesApi.admin.getOrders(page, 20, debouncedSearch || undefined, filters.status !== 'all' ? filters.status : undefined),
     });
 
-    const { data: productsData } = useQuery({
-        queryKey: ['products-list'],
-        queryFn: () => catalogApi.getProducts({ pageSize: 100 }),
-    });
-
     const updateStatusMutation = useMutation({
         mutationFn: ({ id, status }: { id: string, status: string }) => salesApi.orders.updateStatus(id, status as any),
         onSuccess: () => {
@@ -291,26 +287,48 @@ export const AdminOrdersPage = () => {
         }
     };
 
-    const handleCreateOrder = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleCreateOrder = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const productId = formData.get('productId') as string;
-        const product = productsData?.products.find(p => p.id === productId);
+        
+        if (!productId) {
+            toast.error("Vui lòng chọn sản phẩm");
+            return;
+        }
 
-        if (!product) return;
+        try {
+            const product = await catalogApi.getProduct(productId);
+            if (!product) return;
 
-        const data = {
-            items: [{
-                productId: product.id,
-                productName: product.name,
-                unitPrice: product.price,
-                quantity: Number(formData.get('quantity'))
-            }],
-            shippingAddress: formData.get('address') as string,
-            notes: formData.get('notes') as string
-        };
+            const data = {
+                items: [{
+                    productId: product.id,
+                    productName: product.name,
+                    unitPrice: product.price,
+                    quantity: Number(formData.get('quantity'))
+                }],
+                shippingAddress: formData.get('address') as string,
+                notes: formData.get('notes') as string
+            };
 
-        createOrderMutation.mutate(data);
+            createOrderMutation.mutate(data);
+        } catch (error) {
+            toast.error("Lỗi khi tải thông tin sản phẩm");
+        }
+    };
+    
+    const loadProductOptions = async (search: string, page: number) => {
+        try {
+            const data = await catalogApi.searchProducts({ query: search, page, pageSize: 20 });
+            return {
+                options: data.products.map(p => ({ value: p.id, label: `${p.name} - ${formatCurrency(p.price)}` })),
+                hasMore: data.products.length === 20
+            };
+        } catch (err) {
+            console.error('Error loading product options:', err);
+            return { options: [], hasMore: false };
+        }
     };
 
     return (
@@ -781,10 +799,10 @@ export const AdminOrdersPage = () => {
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="col-span-2 space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Chọn sản phẩm</label>
-                                                <SearchableSelect
+                                                <AsyncSearchableSelect
                                                     name="productId"
-                                                    placeholder="Chọn sản phẩm"
-                                                    options={(productsData?.products || []).map((p) => ({ value: p.id, label: `${p.name} - ${formatCurrency(p.price)}` }))}
+                                                    placeholder="Chọn sản phẩm (có thể tìm kiếm...)"
+                                                    loadOptions={loadProductOptions}
                                                 />
                                             </div>
                                             <div className="space-y-2">

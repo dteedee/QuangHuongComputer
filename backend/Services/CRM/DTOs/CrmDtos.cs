@@ -1,4 +1,5 @@
 using CRM.Domain;
+using HC.CORE.Base;
 
 namespace CRM.DTOs;
 
@@ -384,25 +385,19 @@ public record RfmSegmentCountDto(int Score, int Count);
 public record LifecycleStageCountDto(LifecycleStage Stage, string StageName, int Count);
 
 // Query Parameters
-public class CustomerQueryParams
+public class CustomerQueryParams : BaseSearchParam
 {
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public string? Search { get; set; }
     public LifecycleStage? LifecycleStage { get; set; }
     public Guid? SegmentId { get; set; }
     public int? MinRfmScore { get; set; }
     public int? MaxRfmScore { get; set; }
     public string? SortBy { get; set; } = "createdAt";
     public bool SortDesc { get; set; } = true;
-    public int Skip => (Page - 1) * PageSize;
+    public int Skip => (PageNumber - 1) * PageSize;
 }
 
-public class LeadQueryParams
+public class LeadQueryParams : BaseSearchParam
 {
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public string? Search { get; set; }
     public LeadStatus? Status { get; set; }
     public LeadSource? Source { get; set; }
     public Guid? PipelineStageId { get; set; }
@@ -410,18 +405,15 @@ public class LeadQueryParams
     public bool? HasFollowUpToday { get; set; }
     public string? SortBy { get; set; } = "createdAt";
     public bool SortDesc { get; set; } = true;
-    public int Skip => (Page - 1) * PageSize;
+    public int Skip => (PageNumber - 1) * PageSize;
 }
 
-public class CampaignQueryParams
+public class CampaignQueryParams : BaseSearchParam
 {
-    public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public string? Search { get; set; }
     public CampaignStatus? Status { get; set; }
     public string? SortBy { get; set; } = "createdAt";
     public bool SortDesc { get; set; } = true;
-    public int Skip => (Page - 1) * PageSize;
+    public int Skip => (PageNumber - 1) * PageSize;
 }
 
 // Paged Result
