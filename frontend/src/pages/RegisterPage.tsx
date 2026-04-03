@@ -9,6 +9,8 @@ import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import confetti from 'canvas-confetti';
+import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 
 export const RegisterPage = () => {
     const { register: signup } = useAuth();
@@ -19,6 +21,7 @@ export const RegisterPage = () => {
     const [fullName, setFullName] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -55,25 +58,33 @@ export const RegisterPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
+        const schema = z.object({
+            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+            email: z.string().min(1, msg.requireInput('Email')).email(msg.email),
+            password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+            confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu')),
+            acceptTerms: z.literal(true, {
+                errorMap: () => ({ message: 'Vui lòng đồng ý với điều khoản sử dụng' })
+            })
+        }).refine((data) => data.password === data.confirmPassword, {
+            message: 'Mật khẩu xác nhận không khớp',
+            path: ['confirmPassword']
+        });
 
-        if (!acceptTerms) {
-            setError('Vui lòng đồng ý với điều khoản sử dụng');
+        const result = schema.safeParse({ fullName, email, password, confirmPassword, acceptTerms });
+        
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
             setLoading(false);
             return;
         }
-
-        if (password !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp');
-            setLoading(false);
-            return;
-        }
-
-        if (password.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
-            setLoading(false);
-            return;
-        }
+        
+        setErrors({});
 
         try {
             // Get reCAPTCHA token
@@ -284,7 +295,7 @@ export const RegisterPage = () => {
                                             placeholder="Nhập họ và tên của bạn"
                                             value={fullName}
                                             onChange={e => setFullName(e.target.value)}
-                                            required
+                                            error={errors.fullName}
                                         />
                                     </motion.div>
 
@@ -300,7 +311,7 @@ export const RegisterPage = () => {
                                             placeholder="name@gmail.com"
                                             value={email}
                                             onChange={e => setEmail(e.target.value)}
-                                            required
+                                            error={errors.email}
                                         />
                                     </motion.div>
 
@@ -316,7 +327,7 @@ export const RegisterPage = () => {
                                             placeholder="Tối thiểu 6 ký tự"
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            required
+                                            error={errors.password}
                                             hint="Mật khẩu cần ít nhất 6 ký tự"
                                             suffix={
                                                 <button
@@ -342,8 +353,7 @@ export const RegisterPage = () => {
                                             placeholder="Nhập lại mật khẩu"
                                             value={confirmPassword}
                                             onChange={e => setConfirmPassword(e.target.value)}
-                                            required
-                                            error={confirmPassword && password !== confirmPassword ? 'Mật khẩu không khớp' : undefined}
+                                            error={errors.confirmPassword}
                                             suffix={
                                                 <button
                                                     type="button"
@@ -394,6 +404,7 @@ export const RegisterPage = () => {
                                             {' '}của Quang Hưởng Computer
                                         </label>
                                     </motion.div>
+                                    {errors.acceptTerms && <p className="text-red-500 text-sm italic font-medium ml-8 -mt-2">{errors.acceptTerms}</p>}
 
                                     <AnimatePresence>
                                         {error && (

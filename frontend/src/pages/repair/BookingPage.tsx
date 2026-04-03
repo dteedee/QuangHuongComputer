@@ -3,6 +3,8 @@ import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import { repairApi, getTimeSlotLabel } from '../../api/repair';
 import type { ServiceType, TimeSlot, ServiceLocation } from '../../api/repair';
 import { useAuth } from '../../context/AuthContext';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 export const BookingPage: React.FC = () => {
     const { user } = useAuth();
@@ -28,6 +30,7 @@ export const BookingPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -57,26 +60,29 @@ export const BookingPage: React.FC = () => {
         setSubmitError('');
 
         try {
-            // Validation
-            if (!formData.deviceModel || !formData.issueDescription) {
-                throw new Error('Device model and issue description are required');
-            }
+            const schema = z.object({
+                deviceModel: z.string().min(1, msg.requireInput('Device Model')),
+                issueDescription: z.string().min(1, msg.requireInput('Issue Description')),
+                preferredDate: z.string().min(1, msg.requireInput('Date')),
+                customerName: z.string().min(1, msg.requireInput('Full Name')),
+                customerPhone: z.string().min(1, msg.requireInput('Phone Number')),
+                customerEmail: z.string().min(1, msg.requireInput('Email')),
+                acceptedTerms: z.literal(true, { errorMap: () => ({ message: msg.requireInput('Terms and Conditions') }) }),
+                serviceAddress: serviceType === 'OnSite' ? z.string().min(1, msg.requireInput('Address')) : z.string().optional()
+            });
 
-            if (!formData.preferredDate) {
-                throw new Error('Preferred date is required');
-            }
+            const result = schema.safeParse(formData);
 
-            if (!formData.customerName || !formData.customerPhone) {
-                throw new Error('Contact information is required');
+            if (!result.success) {
+                const fieldErrors: Record<string, string> = {};
+                result.error.issues.forEach(issue => {
+                    const path = issue.path[0]?.toString();
+                    if (path) fieldErrors[path] = issue.message;
+                });
+                setErrors(fieldErrors);
+                return;
             }
-
-            if (serviceType === 'OnSite' && !formData.serviceAddress) {
-                throw new Error('Service address is required for on-site service');
-            }
-
-            if (!formData.acceptedTerms) {
-                throw new Error('You must accept the terms and conditions');
-            }
+            setErrors({});
 
             // For demo purposes, we'll create the booking without actual file uploads
             // In production, you would upload files to a storage service first
@@ -189,10 +195,10 @@ export const BookingPage: React.FC = () => {
                                 name="deviceModel"
                                 value={formData.deviceModel}
                                 onChange={handleInputChange}
-                                required
                                 placeholder="e.g., iPhone 14 Pro, Dell XPS 15"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.deviceModel ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.deviceModel && <p className="mt-1 text-xs text-red-500">{errors.deviceModel}</p>}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Serial Number (optional)</label>
@@ -211,11 +217,11 @@ export const BookingPage: React.FC = () => {
                                 name="issueDescription"
                                 value={formData.issueDescription}
                                 onChange={handleInputChange}
-                                required
                                 rows={4}
                                 placeholder="Please describe the issue in detail..."
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.issueDescription ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.issueDescription && <p className="mt-1 text-xs text-red-500">{errors.issueDescription}</p>}
                         </div>
                     </div>
                 </div>
@@ -268,10 +274,10 @@ export const BookingPage: React.FC = () => {
                                 name="preferredDate"
                                 value={formData.preferredDate}
                                 onChange={handleInputChange}
-                                required
                                 min={minDate}
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.preferredDate ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.preferredDate && <p className="mt-1 text-xs text-red-500">{errors.preferredDate}</p>}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Time Slot *</label>
@@ -302,10 +308,10 @@ export const BookingPage: React.FC = () => {
                                     name="serviceAddress"
                                     value={formData.serviceAddress}
                                     onChange={handleInputChange}
-                                    required={serviceType === 'OnSite'}
                                     placeholder="Full address"
-                                    className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                    className={`w-full border ${errors.serviceAddress ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                                 />
+                                {errors.serviceAddress && <p className="mt-1 text-xs text-red-500">{errors.serviceAddress}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Location Type *</label>
@@ -349,9 +355,9 @@ export const BookingPage: React.FC = () => {
                                 name="customerName"
                                 value={formData.customerName}
                                 onChange={handleInputChange}
-                                required
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.customerName ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.customerName && <p className="mt-1 text-xs text-red-500">{errors.customerName}</p>}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Phone Number *</label>
@@ -360,10 +366,10 @@ export const BookingPage: React.FC = () => {
                                 name="customerPhone"
                                 value={formData.customerPhone}
                                 onChange={handleInputChange}
-                                required
                                 placeholder="0123456789"
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.customerPhone ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.customerPhone && <p className="mt-1 text-xs text-red-500">{errors.customerPhone}</p>}
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium mb-1">Email *</label>
@@ -372,9 +378,9 @@ export const BookingPage: React.FC = () => {
                                 name="customerEmail"
                                 value={formData.customerEmail}
                                 onChange={handleInputChange}
-                                required
-                                className="w-full border rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400"
+                                className={`w-full border ${errors.customerEmail ? 'border-red-400 focus:border-red-500' : 'border-gray-200'} rounded-lg px-3 py-2 text-gray-900 placeholder:text-gray-400`}
                             />
+                            {errors.customerEmail && <p className="mt-1 text-xs text-red-500">{errors.customerEmail}</p>}
                         </div>
                     </div>
                 </div>
@@ -388,7 +394,6 @@ export const BookingPage: React.FC = () => {
                                 name="acceptedTerms"
                                 checked={formData.acceptedTerms}
                                 onChange={handleInputChange}
-                                required
                                 className="mt-1 mr-2"
                             />
                             <span className="text-sm">
@@ -403,6 +408,7 @@ export const BookingPage: React.FC = () => {
                                 for repair service *
                             </span>
                         </label>
+                        {errors.acceptedTerms && <p className="mt-1 text-xs text-red-500 ml-5">{errors.acceptedTerms}</p>}
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg mb-4">

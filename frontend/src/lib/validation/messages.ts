@@ -4,6 +4,8 @@
 
 export const validationMessages = {
   required: (field: string) => `${field} là bắt buộc`,
+  requireInput: (field: string) => `Vui lòng nhập ${field.toLowerCase()}`,
+  requireSelect: (field: string) => `${field} là bắt buộc`,
   email: 'Email không hợp lệ',
   minLength: (field: string, min: number) =>
     `${field} phải có ít nhất ${min} ký tự`,

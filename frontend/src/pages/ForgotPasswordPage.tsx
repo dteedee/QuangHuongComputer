@@ -3,14 +3,33 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 
 export const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const schema = z.object({
+            email: z.string().min(1, msg.requireInput('Email')).email(msg.email)
+        });
+        
+        const result = schema.safeParse({ email });
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+        setErrors({});
         setIsLoading(true);
 
         try {
@@ -52,11 +71,11 @@ export const ForgotPasswordPage = () => {
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all placeholder:text-gray-400"
+                                        className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${errors.email ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-gray-400`}
                                         placeholder="name@gmail.com"
-                                        required
                                     />
                                 </div>
+                                {errors.email && <p className="text-red-500 text-sm font-medium animate-fade-in-up mt-1">{errors.email}</p>}
                             </div>
 
                             <button

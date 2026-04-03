@@ -7,11 +7,10 @@ import {
   Edit, Trash2, ArrowRight, X
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  crmApi, type Lead, type LeadSource, type LeadStatus,
-  formatCurrency, formatDate, getLeadStatusColor
-} from '../../../api/crm';
+import { crmApi, type Lead, type LeadSource, type LeadStatus, formatCurrency, formatDate, getLeadStatusColor } from '../../../api/crm';
 import { useConfirm } from '../../../context/ConfirmContext';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../../lib/validation/messages';
 
 export default function LeadsPage() {
   const navigate = useNavigate();
@@ -350,6 +349,7 @@ export default function LeadsPage() {
 // Simple Create Lead Modal
 function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -362,7 +362,23 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName || !form.email) return;
+
+    const schema = z.object({
+        fullName: z.string().min(1, msg.requireInput('Họ tên')),
+        email: z.string().min(1, msg.requireInput('Email')).email('Email không hợp lệ')
+    });
+
+    const result = schema.safeParse(form);
+    if (!result.success) {
+        const fieldErrors: Record<string, string> = {};
+        result.error.issues.forEach(issue => {
+            const path = issue.path[0]?.toString();
+            if (path) fieldErrors[path] = issue.message;
+        });
+        setErrors(fieldErrors);
+        return;
+    }
+    setErrors({});
 
     try {
       setLoading(true);
@@ -404,11 +420,11 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </label>
             <input
               type="text"
-              required
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-accent ${errors.fullName ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-gray-200'}`}
             />
+            {errors.fullName && <p className="text-red-500 text-xs font-medium mt-1">{errors.fullName}</p>}
           </div>
 
           <div>
@@ -417,11 +433,11 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </label>
             <input
               type="email"
-              required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-accent ${errors.email ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-gray-200'}`}
             />
+            {errors.email && <p className="text-red-500 text-xs font-medium mt-1">{errors.email}</p>}
           </div>
 
           <div>

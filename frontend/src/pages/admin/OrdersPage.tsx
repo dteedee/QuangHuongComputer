@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
 import { DndContext, DragOverlay, useSensors, useSensor, PointerSensor, closestCorners, useDraggable, useDroppable } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 // Filter state interface
 interface OrderFilters {
@@ -114,6 +116,7 @@ export const AdminOrdersPage = () => {
     });
     const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [page, setPage] = useState(1);
@@ -291,11 +294,33 @@ export const AdminOrdersPage = () => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const productId = formData.get('productId') as string;
-        
-        if (!productId) {
-            toast.error("Vui lòng chọn sản phẩm");
+        const quantityStr = formData.get('quantity') as string;
+        const address = formData.get('address') as string;
+
+        const schema = z.object({
+            productId: z.string().min(1, msg.requireSelect('Sản phẩm')),
+            quantity: z.number().min(1, msg.min('Số lượng', 1)),
+            address: z.string().min(1, msg.requireInput('Địa chỉ giao hàng')),
+        });
+
+        const result = schema.safeParse({
+            productId,
+            quantity: quantityStr ? Number(quantityStr) : 0,
+            address: address?.trim() || ''
+        });
+
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            toast.error('Vui lòng kiểm tra lại thông tin!');
             return;
         }
+
+        setErrors({});
 
         try {
             const product = await catalogApi.getProduct(productId);
@@ -799,15 +824,19 @@ export const AdminOrdersPage = () => {
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="col-span-2 space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Chọn sản phẩm</label>
-                                                <AsyncSearchableSelect
-                                                    name="productId"
-                                                    placeholder="Chọn sản phẩm (có thể tìm kiếm...)"
-                                                    loadOptions={loadProductOptions}
-                                                />
+                                                <div className={errors.productId ? 'ring-1 ring-red-400 rounded-2xl' : ''}>
+                                                    <AsyncSearchableSelect
+                                                        name="productId"
+                                                        placeholder="Chọn sản phẩm (có thể tìm kiếm...)"
+                                                        loadOptions={loadProductOptions}
+                                                    />
+                                                </div>
+                                                {errors.productId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.productId}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Số lượng</label>
-                                                <input name="quantity" type="number" defaultValue={1} min={1} required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400" />
+                                                <input name="quantity" type="number" defaultValue={1} min={1} className={`w-full px-5 py-4 bg-gray-50 border ${errors.quantity ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400`} />
+                                                {errors.quantity && <p className="mt-1 text-xs text-red-500 font-medium">{errors.quantity}</p>}
                                             </div>
                                         </div>
                                     </div>
@@ -820,7 +849,8 @@ export const AdminOrdersPage = () => {
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Địa chỉ giao hàng</label>
-                                                <input name="address" required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400" placeholder="Số nhà, tên đường, phường/xã..." />
+                                                <input name="address" className={`w-full px-5 py-4 bg-gray-50 border ${errors.address ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400`} placeholder="Số nhà, tên đường, phường/xã..." />
+                                                {errors.address && <p className="mt-1 text-xs text-red-500 font-medium">{errors.address}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Ghi chú đơn hàng</label>

@@ -8,6 +8,8 @@ import {
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../context/ConfirmContext';
 import FlashSaleCountdown from '../../components/FlashSaleCountdown';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 type ModalMode = 'create' | 'edit' | null;
 
@@ -60,6 +62,7 @@ export default function FlashSalesPage() {
     const [filter, setFilter] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const confirm = useConfirm();
 
     // Debounce search
@@ -113,6 +116,7 @@ export default function FlashSalesPage() {
             endTime: tomorrow.toISOString().slice(0, 16),
         });
         setEditingId(null);
+        setErrors({});
         setModalMode('create');
     };
 
@@ -137,6 +141,7 @@ export default function FlashSalesPage() {
             badgeColor: flashSale.badgeColor,
         });
         setEditingId(flashSale.id);
+        setErrors({});
         setModalMode('edit');
     };
 
@@ -148,6 +153,27 @@ export default function FlashSalesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const schema = z.object({
+            name: z.string().min(1, msg.requireInput('Tên Flash Sale')),
+            discountValue: z.number().min(1, msg.requireInput('Giá trị giảm')),
+            startTime: z.string().min(1, msg.requireInput('Thời gian bắt đầu')),
+            endTime: z.string().min(1, msg.requireInput('Thời gian kết thúc')),
+        });
+
+        const result = schema.safeParse(formData);
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
+
         setSubmitting(true);
 
         try {
@@ -551,7 +577,7 @@ export default function FlashSalesPage() {
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)]">
                             {/* Name */}
-                            <div>
+                            <div className="flex flex-col">
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
                                     Tên Flash Sale *
                                 </label>
@@ -559,10 +585,10 @@ export default function FlashSalesPage() {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required
                                     placeholder="VD: Flash Sale Tết 2026"
                                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                 />
+                                {errors.name && <p className="text-red-500 text-xs font-medium mt-1">{errors.name}</p>}
                             </div>
 
                             {/* Description */}
@@ -594,7 +620,7 @@ export default function FlashSalesPage() {
                                         ]}
                                     />
                                 </div>
-                                <div>
+                                <div className="flex flex-col">
                                     <label className="block text-sm font-bold text-gray-700 mb-1">
                                         Giá trị giảm *
                                     </label>
@@ -604,17 +630,17 @@ export default function FlashSalesPage() {
                                         onChange={(e) =>
                                             setFormData({ ...formData, discountValue: Number(e.target.value) })
                                         }
-                                        required
                                         min={1}
                                         max={formData.discountType === 'Percentage' ? 100 : undefined}
                                         className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
+                                    {errors.discountValue && <p className="text-red-500 text-xs font-medium mt-1">{errors.discountValue}</p>}
                                 </div>
                             </div>
 
                             {/* Time Settings */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className="flex flex-col">
                                     <label className="block text-sm font-bold text-gray-700 mb-1">
                                         Thời gian bắt đầu *
                                     </label>
@@ -622,11 +648,11 @@ export default function FlashSalesPage() {
                                         type="datetime-local"
                                         value={formData.startTime}
                                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                        required
                                         className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
+                                    {errors.startTime && <p className="text-red-500 text-xs font-medium mt-1">{errors.startTime}</p>}
                                 </div>
-                                <div>
+                                <div className="flex flex-col">
                                     <label className="block text-sm font-bold text-gray-700 mb-1">
                                         Thời gian kết thúc *
                                     </label>
@@ -634,9 +660,9 @@ export default function FlashSalesPage() {
                                         type="datetime-local"
                                         value={formData.endTime}
                                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                        required
                                         className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-accent outline-none placeholder:text-gray-400"
                                     />
+                                    {errors.endTime && <p className="text-red-500 text-xs font-medium mt-1">{errors.endTime}</p>}
                                 </div>
                             </div>
 

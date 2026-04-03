@@ -11,6 +11,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../../lib/validation/messages';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +21,7 @@ export const EmployeesPage = () => {
     const [page, setPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const pageSize = 15;
     const queryClient = useQueryClient();
     const confirm = useConfirm();
@@ -38,6 +41,7 @@ export const EmployeesPage = () => {
             toast.success('Thêm nhân viên thành công!');
             setIsModalOpen(false);
             setEditingEmployee(null);
+            setErrors({});
         },
         onError: () => toast.error('Lỗi khi thêm nhân viên!')
     });
@@ -50,6 +54,7 @@ export const EmployeesPage = () => {
             toast.success('Cập nhật nhân viên thành công!');
             setIsModalOpen(false);
             setEditingEmployee(null);
+            setErrors({});
         },
         onError: () => toast.error('Lỗi khi cập nhật nhân viên!')
     });
@@ -88,6 +93,28 @@ export const EmployeesPage = () => {
             emergencyContact: formData.get('emergencyContact') as string,
         };
 
+        const schema = z.object({
+            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+            email: z.string().min(1, msg.requireInput('Email')).email('Email không hợp lệ'),
+            department: z.string().min(1, msg.requireSelect('Phòng ban')),
+            position: z.string().min(1, msg.requireInput('Vị trí')),
+            baseSalary: z.number().min(1, msg.requireInput('Lương cơ bản (VND)')),
+            hireDate: z.string().min(1, msg.requireInput('Ngày vào làm'))
+        });
+
+        const result = schema.safeParse(data);
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
+
         if (editingEmployee) {
             updateMutation.mutate({ id: editingEmployee.id, data });
         } else {
@@ -97,11 +124,13 @@ export const EmployeesPage = () => {
 
     const openEditModal = (employee: Employee) => {
         setEditingEmployee(employee);
+        setErrors({});
         setIsModalOpen(true);
     };
 
     const openAddModal = () => {
         setEditingEmployee(null);
+        setErrors({});
         setIsModalOpen(true);
     };
 
@@ -357,74 +386,89 @@ export const EmployeesPage = () => {
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Họ và tên *"
-                            name="fullName"
-                            required
-                            defaultValue={editingEmployee?.fullName}
-                        />
-                        <Input
-                            label="Email *"
-                            name="email"
-                            type="email"
-                            required
-                            defaultValue={editingEmployee?.email}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Họ và tên *"
+                                name="fullName"
+                                defaultValue={editingEmployee?.fullName}
+                            />
+                            {errors.fullName && <p className="text-red-500 text-xs font-medium mt-1">{errors.fullName}</p>}
+                        </div>
+                        <div className="flex flex-col">
+                            <Input
+                                label="Email *"
+                                name="email"
+                                type="email"
+                                defaultValue={editingEmployee?.email}
+                            />
+                            {errors.email && <p className="text-red-500 text-xs font-medium mt-1">{errors.email}</p>}
+                        </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Số điện thoại"
-                            name="phone"
-                            defaultValue={editingEmployee?.phone}
-                        />
-                        <Select
-                            label="Phòng ban *"
-                            name="department"
-                            required
-                            defaultValue={editingEmployee?.department || ''}
-                            options={[
-                                { label: 'Chọn phòng ban', value: '' },
-                                ...departments.map(dept => ({ label: dept, value: dept }))
-                            ]}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Số điện thoại"
+                                name="phone"
+                                defaultValue={editingEmployee?.phone}
+                            />
+                        </div>
+                        <div className="flex flex-col">
+                            <Select
+                                label="Phòng ban *"
+                                name="department"
+                                defaultValue={editingEmployee?.department || ''}
+                                options={[
+                                    { label: 'Chọn phòng ban', value: '' },
+                                    ...departments.map(dept => ({ label: dept, value: dept }))
+                                ]}
+                            />
+                            {errors.department && <p className="text-red-500 text-xs font-medium mt-1">{errors.department}</p>}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Vị trí *"
-                            name="position"
-                            required
-                            defaultValue={editingEmployee?.position}
-                        />
-                        <Input
-                            label="Lương cơ bản (VND) *"
-                            name="baseSalary"
-                            type="number"
-                            required
-                            defaultValue={editingEmployee?.baseSalary || 10000000}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Vị trí *"
+                                name="position"
+                                defaultValue={editingEmployee?.position}
+                            />
+                            {errors.position && <p className="text-red-500 text-xs font-medium mt-1">{errors.position}</p>}
+                        </div>
+                        <div className="flex flex-col">
+                            <Input
+                                label="Lương cơ bản (VND) *"
+                                name="baseSalary"
+                                type="number"
+                                defaultValue={editingEmployee?.baseSalary || 10000000}
+                            />
+                            {errors.baseSalary && <p className="text-red-500 text-xs font-medium mt-1">{errors.baseSalary}</p>}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Ngày vào làm *"
-                            name="hireDate"
-                            type="date"
-                            required
-                            defaultValue={editingEmployee?.hireDate?.split('T')[0]}
-                        />
-                        <Select
-                            label="Trạng thái *"
-                            name="status"
-                            required
-                            defaultValue={editingEmployee?.status || 'Active'}
-                            options={[
-                                { label: 'Đang làm việc', value: 'Active' },
-                                { label: 'Nghỉ phép', value: 'OnLeave' },
-                                { label: 'Đã nghỉ việc', value: 'Inactive' }
-                            ]}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Ngày vào làm *"
+                                name="hireDate"
+                                type="date"
+                                defaultValue={editingEmployee?.hireDate?.split('T')[0]}
+                            />
+                            {errors.hireDate && <p className="text-red-500 text-xs font-medium mt-1">{errors.hireDate}</p>}
+                        </div>
+                        <div className="flex flex-col">
+                            <Select
+                                label="Trạng thái *"
+                                name="status"
+                                defaultValue={editingEmployee?.status || 'Active'}
+                                options={[
+                                    { label: 'Đang làm việc', value: 'Active' },
+                                    { label: 'Nghỉ phép', value: 'OnLeave' },
+                                    { label: 'Đã nghỉ việc', value: 'Inactive' }
+                                ]}
+                            />
+                        </div>
                     </div>
 
                     <Input

@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 
 export const ResetPasswordPage = () => {
     const [searchParams] = useSearchParams();
@@ -14,26 +16,32 @@ export const ResetPasswordPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        if (!token || token.length < 6) {
-            setError('Vui lòng nhập mã xác nhận (6 chữ số)');
+        const schema = z.object({
+            token: z.string().min(1, msg.requireInput('Mã xác nhận')),
+            newPassword: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+            confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu')),
+        }).refine((data) => data.newPassword === data.confirmPassword, {
+            message: 'Mật khẩu xác nhận không khớp',
+            path: ['confirmPassword']
+        });
+
+        const result = schema.safeParse({ token, newPassword, confirmPassword });
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
             return;
         }
-
-        if (newPassword.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp');
-            return;
-        }
-
+        setErrors({});
         setIsLoading(true);
 
         try {
@@ -79,12 +87,12 @@ export const ResetPasswordPage = () => {
                                     type="text"
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-bold tracking-[0.5em] focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                                    className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${errors.token ? 'border-red-400 bg-red-50/50' : 'border-gray-200 focus:border-accent'} rounded-xl text-gray-900 font-bold tracking-[0.5em] focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 transition-all`}
                                     placeholder="000000"
-                                    required
                                     maxLength={20}
                                 />
                             </div>
+                            {errors.token && <p className="text-red-500 text-sm font-medium animate-fade-in-up mt-1">{errors.token}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -97,12 +105,11 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                                    className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${errors.newPassword ? 'border-red-400 bg-red-50/50' : 'border-gray-200 focus:border-accent'} rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 transition-all`}
                                     placeholder="Tối thiểu 6 ký tự"
-                                    required
-                                    minLength={6}
                                 />
                             </div>
+                            {errors.newPassword && <p className="text-red-500 text-sm font-medium animate-fade-in-up mt-1">{errors.newPassword}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -115,12 +122,11 @@ export const ResetPasswordPage = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                                    className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${errors.confirmPassword ? 'border-red-400 bg-red-50/50' : 'border-gray-200 focus:border-accent'} rounded-xl text-gray-900 focus:outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-accent/20 transition-all`}
                                     placeholder="Nhập lại mật khẩu"
-                                    required
-                                    minLength={6}
                                 />
                             </div>
+                            {errors.confirmPassword && <p className="text-red-500 text-sm font-medium animate-fade-in-up mt-1">{errors.confirmPassword}</p>}
                         </div>
 
                         {error && (

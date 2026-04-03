@@ -1,47 +1,74 @@
 import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 
 // Phone regex for Vietnamese phone numbers (flexible to support various formats)
 const phoneRegex = /^(\+84|84|0)(3|5|7|8|9)[0-9]{8}$/;
 
 // Email validation
 const emailSchema = z.string()
-  .min(1, 'Email is required')
-  .email('Invalid email format')
-  .max(255, 'Email must be less than 255 characters');
+  .min(1, msg.requireInput('Email'))
+  .email(msg.email)
+  .max(255, msg.maxLength('Email', 255));
 
 // Phone validation
 const phoneSchema = z.string()
-  .min(1, 'Phone is required')
-  .regex(phoneRegex, 'Invalid phone number format. Use format: 0XXXXXXXXX or +84XXXXXXXXX')
-  .max(20, 'Phone must be less than 20 characters');
+  .min(1, msg.requireInput('Số điện thoại'))
+  .regex(phoneRegex, msg.phone)
+  .max(20, msg.maxLength('Số điện thoại', 20));
 
 // Name validation
 const nameSchema = z.string()
-  .min(1, 'Name is required')
-  .min(2, 'Name must be at least 2 characters')
-  .max(255, 'Name must be less than 255 characters')
+  .min(1, msg.requireInput('Tên nhà cung cấp'))
+  .min(2, msg.minLength('Tên nhà cung cấp', 2))
+  .max(255, msg.maxLength('Tên nhà cung cấp', 255))
   .trim();
 
 // Contact person validation
 const contactPersonSchema = z.string()
-  .min(1, 'Contact person is required')
-  .min(2, 'Contact person must be at least 2 characters')
-  .max(255, 'Contact person must be less than 255 characters')
+  .min(1, msg.requireInput('Người liên hệ'))
+  .min(2, msg.minLength('Người liên hệ', 2))
+  .max(255, msg.maxLength('Người liên hệ', 255))
   .trim();
 
 // Address validation (optional)
 const addressSchema = z.string()
-  .max(500, 'Address must be less than 500 characters')
+  .min(1, msg.requireInput('Địa chỉ'))
+  .max(500, msg.maxLength('Địa chỉ', 500))
   .optional()
   .or(z.literal(''));
 
 // Create Supplier Schema
 export const createSupplierSchema = z.object({
   name: nameSchema,
+  supplierType: z.string().min(1, msg.requireSelect('Loại nhà cung cấp')),
+  paymentTerms: z.string().min(1, msg.requireSelect('Điều khoản thanh toán')),
   contactPerson: contactPersonSchema,
   email: emailSchema,
   phone: phoneSchema,
   address: addressSchema,
+  
+  // additional optional fields
+  shortName: z.string().optional(),
+  description: z.string().optional(),
+  website: z.string().optional(),
+  logoUrl: z.string().optional(),
+  taxCode: z.string().optional(),
+  bankAccount: z.string().optional(),
+  bankName: z.string().optional(),
+  bankBranch: z.string().optional(),
+  paymentDays: z.number().optional(),
+  creditLimit: z.number().optional(),
+  contactTitle: z.string().optional(),
+  fax: z.string().optional(),
+  ward: z.string().optional(),
+  district: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  postalCode: z.string().optional(),
+  rating: z.number().optional(),
+  notes: z.string().optional(),
+  categories: z.string().optional(),
+  brands: z.string().optional(),
 });
 
 // Update Supplier Schema (all fields optional)

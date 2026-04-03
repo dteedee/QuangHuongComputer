@@ -12,6 +12,7 @@ import {
     paymentTermLabels,
     formatCurrency
 } from '../../../api/inventory';
+import { createSupplierSchema, updateSupplierSchema } from '../../../schemas/supplierSchema';
 import {
     Building2, Plus, Search, Filter, Eye, Edit2, Power, PowerOff,
     Phone, Mail, MapPin, Globe, CreditCard, Landmark, FileText,
@@ -120,12 +121,31 @@ const SupplierForm = ({
         brands: initialData?.brands || ''
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
     const handleChange = (field: keyof CreateSupplierDto, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        // Clear error when typing
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: undefined } as any));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const schema = initialData ? updateSupplierSchema : createSupplierSchema;
+        const result = schema.safeParse(formData);
+        
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            toast.error('Vui lòng kiểm tra lại thông tin!');
+            return;
+        }
         onSubmit(formData);
     };
 
@@ -170,10 +190,10 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.name}
                                     onChange={e => handleChange('name', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
+                                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.name ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-accent'} rounded-xl focus:outline-none focus:bg-white transition-all`}
                                     placeholder="VD: Công ty TNHH ABC"
-                                    required
                                 />
+                                {errors.name && <p className="mt-1 text-xs text-red-500 font-medium">{errors.name}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -191,11 +211,14 @@ const SupplierForm = ({
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
                                     Loại nhà cung cấp <span className="text-red-500">*</span>
                                 </label>
-                                <SearchableSelect
-                                    value={formData.supplierType}
-                                    onChange={(val: string) => handleChange('supplierType', val)}
-                                    options={Object.entries(supplierTypeLabels).map(([value, label]) => ({ value, label }))}
-                                />
+                                <div className={errors.supplierType ? 'ring-1 ring-red-400 rounded-xl' : ''}>
+                                    <SearchableSelect
+                                        value={formData.supplierType}
+                                        onChange={(val: string) => handleChange('supplierType', val)}
+                                        options={Object.entries(supplierTypeLabels).map(([value, label]) => ({ value, label }))}
+                                    />
+                                </div>
+                                {errors.supplierType && <p className="mt-1 text-xs text-red-500 font-medium">{errors.supplierType}</p>}
                             </div>
                         </div>
                         <div>
@@ -258,11 +281,14 @@ const SupplierForm = ({
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
                                     Điều khoản thanh toán <span className="text-red-500">*</span>
                                 </label>
-                                <SearchableSelect
-                                    value={formData.paymentTerms}
-                                    onChange={(val: string) => handleChange('paymentTerms', val)}
-                                    options={Object.entries(paymentTermLabels).map(([value, label]) => ({ value, label }))}
-                                />
+                                <div className={errors.paymentTerms ? 'ring-1 ring-red-400 rounded-xl' : ''}>
+                                    <SearchableSelect
+                                        value={formData.paymentTerms}
+                                        onChange={(val: string) => handleChange('paymentTerms', val)}
+                                        options={Object.entries(paymentTermLabels).map(([value, label]) => ({ value, label }))}
+                                    />
+                                </div>
+                                {errors.paymentTerms && <p className="mt-1 text-xs text-red-500 font-medium">{errors.paymentTerms}</p>}
                             </div>
                         </div>
                         {formData.paymentTerms === 'Custom' && (
@@ -352,10 +378,10 @@ const SupplierForm = ({
                                     type="text"
                                     value={formData.contactPerson}
                                     onChange={e => handleChange('contactPerson', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
+                                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.contactPerson ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-accent'} rounded-xl focus:outline-none focus:bg-white transition-all`}
                                     placeholder="Nguyễn Văn A"
-                                    required
                                 />
+                                {errors.contactPerson && <p className="mt-1 text-xs text-red-500 font-medium">{errors.contactPerson}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -377,10 +403,10 @@ const SupplierForm = ({
                                     type="tel"
                                     value={formData.phone}
                                     onChange={e => handleChange('phone', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
+                                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.phone ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-accent'} rounded-xl focus:outline-none focus:bg-white transition-all`}
                                     placeholder="0901234567"
-                                    required
                                 />
+                                {errors.phone && <p className="mt-1 text-xs text-red-500 font-medium">{errors.phone}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -390,10 +416,10 @@ const SupplierForm = ({
                                     type="email"
                                     value={formData.email}
                                     onChange={e => handleChange('email', e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
+                                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-accent'} rounded-xl focus:outline-none focus:bg-white transition-all`}
                                     placeholder="contact@example.com"
-                                    required
                                 />
+                                {errors.email && <p className="mt-1 text-xs text-red-500 font-medium">{errors.email}</p>}
                             </div>
                             <div className="col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -421,12 +447,12 @@ const SupplierForm = ({
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.address}
+                                        value={formData.address || ''}
                                         onChange={e => handleChange('address', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-accent focus:bg-white transition-all"
+                                        className={`w-full px-4 py-3 bg-gray-50 border ${errors.address ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-accent'} rounded-xl focus:outline-none focus:bg-white transition-all`}
                                         placeholder="Số nhà, tên đường"
-                                        required
                                     />
+                                    {errors.address && <p className="mt-1 text-xs text-red-500 font-medium">{errors.address}</p>}
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>

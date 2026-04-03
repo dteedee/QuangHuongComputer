@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Save, User, Mail, Shield, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type User as UserType } from '../../api/admin';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 interface UserFormModalProps {
     user: UserType | null;
@@ -18,6 +20,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
         roles: [] as string[],
         isActive: true
     });
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (user) {
@@ -27,11 +30,30 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                 roles: user.roles,
                 isActive: user.isActive
             });
+            setErrors({});
         }
     }, [user]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const schema = z.object({
+            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+            email: z.string().min(1, msg.requireInput('Email')).email('Email không hợp lệ'),
+        });
+
+        const result = schema.safeParse(formData);
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
         onSubmit(formData);
     };
 
@@ -59,7 +81,6 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                             <div className="relative">
                                 <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
-                                    required
                                     type="text"
                                     value={formData.fullName}
                                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -67,6 +88,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                                     placeholder="Nguyễn Văn A"
                                 />
                             </div>
+                            {errors.fullName && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.fullName}</p>}
                         </div>
 
                         <div>
@@ -74,7 +96,6 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                             <div className="relative">
                                 <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
-                                    required
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -82,6 +103,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                                     placeholder="example@gmail.com"
                                 />
                             </div>
+                            {errors.email && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.email}</p>}
                         </div>
 
                         <div>

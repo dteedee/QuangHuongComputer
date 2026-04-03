@@ -25,6 +25,8 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Button } from '../../../components/ui/Button';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../../lib/validation/messages';
 
 export const RecruitmentManagement = () => {
     const [jobs, setJobs] = useState<JobListing[]>([]);
@@ -32,6 +34,7 @@ export const RecruitmentManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingJob, setEditingJob] = useState<Partial<JobListing> | null>(null);
     const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const confirm = useConfirm();
 
     const fetchJobs = async () => {
@@ -69,12 +72,33 @@ export const RecruitmentManagement = () => {
                 salaryRangeMax: 0
             });
         }
+        setErrors({});
         setIsModalOpen(true);
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingJob) return;
+
+        const schema = z.object({
+            title: z.string().min(1, msg.requireInput('Tiêu đề vị trí')),
+            department: z.string().min(1, msg.requireInput('Phòng ban')),
+            location: z.string().min(1, msg.requireInput('Địa điểm')),
+            expiryDate: z.string().min(1, msg.requireInput('Hạn nộp hồ sơ'))
+        });
+
+        const result = schema.safeParse(editingJob);
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
 
         setSaving(true);
         try {
@@ -229,30 +253,34 @@ export const RecruitmentManagement = () => {
             >
                 <form onSubmit={handleSave} className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar p-1">
                     <div className="grid md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-2 flex flex-col">
                             <Input
                                 label="Tiêu đề vị trí *"
-                                required
                                 value={editingJob?.title}
                                 onChange={e => setEditingJob({ ...editingJob!, title: e.target.value })}
                                 placeholder="VD: Kỹ thuật viên phần cứng..."
                             />
+                            {errors.title && <p className="text-red-500 text-xs font-medium mt-1">{errors.title}</p>}
                         </div>
 
-                        <Input
-                            label="Phòng ban *"
-                            required
-                            value={editingJob?.department}
-                            onChange={e => setEditingJob({ ...editingJob!, department: e.target.value })}
-                            placeholder="VD: Kỹ thuật, Kinh doanh..."
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Phòng ban *"
+                                value={editingJob?.department}
+                                onChange={e => setEditingJob({ ...editingJob!, department: e.target.value })}
+                                placeholder="VD: Kỹ thuật, Kinh doanh..."
+                            />
+                            {errors.department && <p className="text-red-500 text-xs font-medium mt-1">{errors.department}</p>}
+                        </div>
 
-                        <Input
-                            label="Địa điểm *"
-                            required
-                            value={editingJob?.location}
-                            onChange={e => setEditingJob({ ...editingJob!, location: e.target.value })}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Địa điểm *"
+                                value={editingJob?.location}
+                                onChange={e => setEditingJob({ ...editingJob!, location: e.target.value })}
+                            />
+                            {errors.location && <p className="text-red-500 text-xs font-medium mt-1">{errors.location}</p>}
+                        </div>
 
                         <Select
                             label="Loại hình *"
@@ -266,13 +294,15 @@ export const RecruitmentManagement = () => {
                             ]}
                         />
 
-                        <Input
-                            label="Hạn nộp hồ sơ *"
-                            required
-                            type="date"
-                            value={editingJob?.expiryDate?.split('T')[0] || ''}
-                            onChange={e => setEditingJob({ ...editingJob!, expiryDate: e.target.value })}
-                        />
+                        <div className="flex flex-col">
+                            <Input
+                                label="Hạn nộp hồ sơ *"
+                                type="date"
+                                value={editingJob?.expiryDate?.split('T')[0] || ''}
+                                onChange={e => setEditingJob({ ...editingJob!, expiryDate: e.target.value })}
+                            />
+                            {errors.expiryDate && <p className="text-red-500 text-xs font-medium mt-1">{errors.expiryDate}</p>}
+                        </div>
 
                         <Input
                             label="Lương tối thiểu (VNĐ)"

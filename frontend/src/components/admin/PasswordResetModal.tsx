@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { X, Key, Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { type User } from '../../api/admin';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 interface PasswordResetModalProps {
     user: User;
@@ -14,21 +16,31 @@ export function PasswordResetModal({ user, onClose, onSubmit, isLoading }: Passw
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
 
-        if (password.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự.');
+        const schema = z.object({
+            password: z.string().min(1, msg.requireInput('Mật khẩu mới')).min(6, 'Mật khẩu phải có ít nhất 6 ký tự.'),
+            confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu'))
+        }).refine(data => data.password === data.confirmPassword, {
+            message: 'Mật khẩu xác nhận không khớp.',
+            path: ['confirmPassword']
+        });
+
+        const result = schema.safeParse({ password, confirmPassword });
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
             return;
         }
 
-        if (password !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp.');
-            return;
-        }
+        setErrors({});
 
         onSubmit(password);
     };
@@ -66,7 +78,6 @@ export function PasswordResetModal({ user, onClose, onSubmit, isLoading }: Passw
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Mật khẩu mới</label>
                             <div className="relative">
                                 <input
-                                    required
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -81,30 +92,20 @@ export function PasswordResetModal({ user, onClose, onSubmit, isLoading }: Passw
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
+                            {errors.password && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.password}</p>}
                         </div>
 
                         <div>
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Xác nhận mật khẩu</label>
                             <input
-                                required
                                 type={showPassword ? 'text' : 'password'}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
                                 placeholder="Nhập lại mật khẩu..."
                             />
+                            {errors.confirmPassword && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.confirmPassword}</p>}
                         </div>
-
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex items-center gap-2 text-red-500 text-xs font-bold p-3 bg-red-50 rounded-xl"
-                            >
-                                <AlertCircle size={14} />
-                                <span>{error}</span>
-                            </motion.div>
-                        )}
                     </div>
 
                     <div className="flex gap-4 pt-4">

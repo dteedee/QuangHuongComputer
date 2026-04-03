@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { crmApi, type Segment, type CreateSegmentDto } from '../../../api/crm';
 import { useConfirm } from '../../../context/ConfirmContext';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../../lib/validation/messages';
 
 export default function SegmentsPage() {
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -218,6 +220,7 @@ function SegmentModal({
   onSaved: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: segment?.name || '',
     code: segment?.code || '',
@@ -228,7 +231,23 @@ function SegmentModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.code) return;
+    
+    const schema = z.object({
+        name: z.string().min(1, msg.requireInput('Tên phân nhóm')),
+        code: z.string().min(1, msg.requireInput('Mã phân nhóm'))
+    });
+
+    const result = schema.safeParse(form);
+    if (!result.success) {
+        const fieldErrors: Record<string, string> = {};
+        result.error.issues.forEach(issue => {
+            const path = issue.path[0]?.toString();
+            if (path) fieldErrors[path] = issue.message;
+        });
+        setErrors(fieldErrors);
+        return;
+    }
+    setErrors({});
 
     try {
       setLoading(true);
@@ -279,11 +298,11 @@ function SegmentModal({
             </label>
             <input
               type="text"
-              required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent"
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-accent ${errors.name ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-gray-200'}`}
             />
+            {errors.name && <p className="text-red-500 text-xs font-medium mt-1">{errors.name}</p>}
           </div>
 
           <div>
@@ -292,12 +311,12 @@ function SegmentModal({
             </label>
             <input
               type="text"
-              required
               disabled={!!segment}
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent disabled:bg-gray-50"
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-accent disabled:bg-gray-50 ${errors.code ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-gray-200'}`}
             />
+            {errors.code && <p className="text-red-500 text-xs font-medium mt-1">{errors.code}</p>}
           </div>
 
           <div>

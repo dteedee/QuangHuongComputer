@@ -14,6 +14,8 @@ import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../lib/validation/messages';
 
 export const CMSPortal = () => {
     const navigate = useNavigate();
@@ -21,6 +23,7 @@ export const CMSPortal = () => {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Post | Page | null>(null);
     const [editorContent, setEditorContent] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const queryClient = useQueryClient();
     const confirm = useConfirm();
 
@@ -74,12 +77,33 @@ export const CMSPortal = () => {
     const handleOpenModal = (item: Post | Page | null = null) => {
         setEditingItem(item);
         setEditorContent(item?.content || (item as Post)?.content || '');
+        setErrors({});
         setIsPostModalOpen(true);
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+        const title = formData.get('title') as string;
+        const slug = formData.get('slug') as string;
+
+        const schema = z.object({
+            title: z.string().min(1, msg.requireInput('Tiêu đề')),
+            slug: z.string().min(1, msg.requireInput('Slug')),
+        });
+
+        const result = schema.safeParse({ title, slug });
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            toast.error('Vui lòng kiểm tra lại thông tin!');
+            return;
+        }
+        setErrors({});
 
         let data: any = {
             title: formData.get('title'),
@@ -258,11 +282,13 @@ export const CMSPortal = () => {
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="col-span-2 space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Tiêu đề bài viết / trang</label>
-                                        <input name="title" defaultValue={editingItem?.title} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-base font-bold text-gray-950 focus:outline-none focus:border-accent shadow-sm transition-all placeholder:text-gray-400" placeholder="Nhập tiêu đề hấp dẫn..." />
+                                        <input name="title" defaultValue={editingItem?.title} className={`w-full px-6 py-5 bg-white border-2 ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-base font-bold text-gray-950 focus:outline-none shadow-sm transition-all placeholder:text-gray-400`} placeholder="Nhập tiêu đề hấp dẫn..." />
+                                        {errors.title && <p className="mt-1 text-xs text-red-500 font-medium">{errors.title}</p>}
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Đường dẫn tĩnh (Slug)</label>
-                                        <input name="slug" defaultValue={editingItem?.slug} required className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-2xl text-sm font-black text-accent focus:outline-none focus:border-accent shadow-sm font-mono placeholder:text-gray-400" placeholder="my-awesome-post" />
+                                        <input name="slug" defaultValue={editingItem?.slug} className={`w-full px-6 py-5 bg-white border-2 ${errors.slug ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-sm font-black text-accent focus:outline-none shadow-sm font-mono placeholder:text-gray-400`} placeholder="my-awesome-post" />
+                                        {errors.slug && <p className="mt-1 text-xs text-red-500 font-medium">{errors.slug}</p>}
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Phân loại</label>

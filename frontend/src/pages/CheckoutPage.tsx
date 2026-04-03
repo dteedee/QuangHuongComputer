@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 import { salesApi } from '../api/sales';
 import { paymentApi } from '../api/payment';
 
@@ -85,41 +87,34 @@ export function CheckoutPage() {
   }
 
   const validateForm = () => {
-    const newErrors: Partial<Record<keyof CheckoutForm, string>> = {};
+    const schema = z.object({
+        fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+        phone: z.string().min(1, msg.requireInput('Số điện thoại')).regex(/^[0-9]{10,11}$/, 'Số điện thoại không hợp lệ'),
+        email: formData.deliveryMethod === 'delivery' 
+            ? z.string().min(1, msg.requireInput('Email')).email('Email không hợp lệ')
+            : z.string().optional(),
+        address: step === 1 && formData.deliveryMethod === 'delivery' ? z.string().min(1, msg.requireInput('Địa chỉ chi tiết')) : z.string().optional(),
+        ward: step === 1 && formData.deliveryMethod === 'delivery' ? z.string().min(1, 'Vui lòng chọn phường/xã') : z.string().optional(),
+        district: step === 1 && formData.deliveryMethod === 'delivery' ? z.string().min(1, 'Vui lòng chọn quận/huyện') : z.string().optional(),
+        province: step === 1 && formData.deliveryMethod === 'delivery' ? z.string().min(1, 'Vui lòng chọn tỉnh/thành') : z.string().optional(),
+        cardNumber: step === 2 && formData.paymentMethod === 'credit_card' ? z.string().min(1, msg.requireInput('Số thẻ')) : z.string().optional(),
+        cardExpiry: step === 2 && formData.paymentMethod === 'credit_card' ? z.string().min(1, msg.requireInput('Ngày hết hạn')) : z.string().optional(),
+        cardCvv: step === 2 && formData.paymentMethod === 'credit_card' ? z.string().min(1, msg.requireInput('CVV')) : z.string().optional()
+    });
 
-    if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
-
-    // Chỉ validate email khi giao hàng tận nơi
-    if (formData.deliveryMethod === 'delivery') {
-      if (!formData.email.trim()) {
-        newErrors.email = 'Vui lòng nhập email';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Email không hợp lệ';
-      }
+    const result = schema.safeParse(formData);
+    if (!result.success) {
+        const fieldErrors: Partial<Record<keyof CheckoutForm, string>> = {};
+        result.error.issues.forEach(issue => {
+            const path = issue.path[0] as keyof CheckoutForm;
+            if (path) fieldErrors[path] = issue.message;
+        });
+        setErrors(fieldErrors);
+        return false;
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Vui lòng nhập số điện thoại';
-    } else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
-    }
-
-    // Chỉ validate địa chỉ khi giao hàng tận nơi
-    if (step === 1 && formData.deliveryMethod === 'delivery') {
-      if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ';
-      if (!formData.ward.trim()) newErrors.ward = 'Vui lòng chọn phường/xã';
-      if (!formData.district.trim()) newErrors.district = 'Vui lòng chọn quận/huyện';
-      if (!formData.province.trim()) newErrors.province = 'Vui lòng chọn tỉnh/thành';
-    }
-
-    if (step === 2 && formData.paymentMethod === 'credit_card') {
-      if (!formData.cardNumber?.trim()) newErrors.cardNumber = 'Vui lòng nhập số thẻ';
-      if (!formData.cardExpiry?.trim()) newErrors.cardExpiry = 'Vui lòng nhập ngày hết hạn';
-      if (!formData.cardCvv?.trim()) newErrors.cardCvv = 'Vui lòng nhập CVV';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleInputChange = (field: keyof CheckoutForm, value: string) => {
@@ -481,9 +476,10 @@ export function CheckoutPage() {
                               type="text"
                               value={formData.fullName}
                               onChange={(e) => handleInputChange('fullName', e.target.value)}
-                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.fullName ? 'border-red-500' : 'border-transparent focus:border-accent'}`}
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.fullName ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-transparent focus:border-accent'}`}
                               placeholder="Nguyễn Văn A"
                             />
+                            {errors.fullName && <p className="text-red-500 text-xs font-medium mt-1">{errors.fullName}</p>}
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-slate-500 mb-1 block">
@@ -493,9 +489,10 @@ export function CheckoutPage() {
                               type="tel"
                               value={formData.phone}
                               onChange={(e) => handleInputChange('phone', e.target.value)}
-                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.phone ? 'border-red-500' : 'border-transparent focus:border-accent'}`}
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all outline-none font-bold ${errors.phone ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-transparent focus:border-accent'}`}
                               placeholder="09xx xxx xxx"
                             />
+                            {errors.phone && <p className="text-red-500 text-xs font-medium mt-1">{errors.phone}</p>}
                           </div>
                         </div>
                       </div>
@@ -509,14 +506,13 @@ export function CheckoutPage() {
                             <div className="relative">
                               <input
                                 type="text"
-                                required
                                 value={formData.fullName}
                                 onChange={(e) => handleInputChange('fullName', e.target.value)}
-                                className={`w-full pl-4 pr-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.fullName ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-accent focus:ring-red-50'
+                                className={`w-full pl-4 pr-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.fullName ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-transparent focus:border-accent focus:ring-red-50'
                                   }`}
                                 placeholder="Nguyễn Văn A"
                               />
-                              {errors.fullName && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.fullName}</p>}
+                              {errors.fullName && <p className="text-red-500 text-xs font-medium mt-1 ml-4">{errors.fullName}</p>}
                             </div>
                           </div>
 
@@ -527,14 +523,13 @@ export function CheckoutPage() {
                             <div className="relative">
                               <input
                                 type="tel"
-                                required
                                 value={formData.phone}
                                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.phone ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-accent focus:ring-red-50'
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.phone ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-transparent focus:border-accent focus:ring-red-50'
                                   }`}
                                 placeholder="09xx xxx xxx"
                               />
-                              {errors.phone && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.phone}</p>}
+                              {errors.phone && <p className="text-red-500 text-xs font-medium mt-1 ml-4">{errors.phone}</p>}
                             </div>
                           </div>
 
@@ -545,14 +540,13 @@ export function CheckoutPage() {
                             <div className="relative">
                               <input
                                 type="email"
-                                required
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
-                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.email ? 'border-red-500 focus:ring-red-100' : 'border-transparent focus:border-accent focus:ring-red-50'
+                                className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none text-slate-900 font-bold ${errors.email ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-transparent focus:border-accent focus:ring-red-50'
                                   }`}
                                 placeholder="email@example.com"
                               />
-                              {errors.email && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 underline underline-offset-4 decoration-red-200">{errors.email}</p>}
+                              {errors.email && <p className="text-red-500 text-xs font-medium mt-1 ml-4">{errors.email}</p>}
                             </div>
                           </div>
                         </div>
@@ -609,14 +603,14 @@ export function CheckoutPage() {
                               Địa chỉ chi tiết <span className="text-accent">*</span>
                             </label>
                             <textarea
-                              required
                               value={formData.address}
                               onChange={(e) => handleInputChange('address', e.target.value)}
                               rows={2}
-                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none resize-none text-slate-900 font-bold ${errors.address ? 'border-red-500' : 'border-transparent focus:border-accent'
+                              className={`w-full px-4 py-4 bg-slate-50 border-2 rounded-2xl transition-all focus:bg-white outline-none resize-none text-slate-900 font-bold ${errors.address ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-transparent focus:border-accent'
                                 }`}
                               placeholder="Số nhà, tên đường..."
                             />
+                            {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
                           </div>
                         </div>
                       </>
@@ -700,12 +694,12 @@ export function CheckoutPage() {
                         </label>
                         <input
                           type="text"
-                          required
                           value={formData.cardNumber}
                           onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                          className="w-full px-4 py-4 bg-white border-2 border-transparent focus:border-accent rounded-2xl outline-none text-slate-900 font-bold"
+                          className={`w-full px-4 py-4 bg-white border-2 rounded-2xl outline-none text-slate-900 font-bold transition-all ${errors.cardNumber ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-transparent focus:border-accent'}`}
                           placeholder="0000 0000 0000 0000"
                         />
+                        {errors.cardNumber && <p className="text-red-500 text-xs font-medium mt-1">{errors.cardNumber}</p>}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -714,12 +708,12 @@ export function CheckoutPage() {
                           </label>
                           <input
                             type="text"
-                            required
                             placeholder="MM/YY"
                             value={formData.cardExpiry}
                             onChange={(e) => handleInputChange('cardExpiry', e.target.value)}
-                            className="w-full px-4 py-4 bg-white border-2 border-transparent focus:border-accent rounded-2xl outline-none text-slate-900 font-bold"
+                            className={`w-full px-4 py-4 bg-white border-2 rounded-2xl outline-none text-slate-900 font-bold transition-all ${errors.cardExpiry ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-transparent focus:border-accent'}`}
                           />
+                          {errors.cardExpiry && <p className="text-red-500 text-xs font-medium mt-1">{errors.cardExpiry}</p>}
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-slate-500 mb-1 block">
@@ -727,12 +721,12 @@ export function CheckoutPage() {
                           </label>
                           <input
                             type="password"
-                            required
                             placeholder="***"
                             value={formData.cardCvv}
                             onChange={(e) => handleInputChange('cardCvv', e.target.value)}
-                            className="w-full px-4 py-4 bg-white border-2 border-transparent focus:border-accent rounded-2xl outline-none text-slate-900 font-bold"
+                            className={`w-full px-4 py-4 bg-white border-2 rounded-2xl outline-none text-slate-900 font-bold transition-all ${errors.cardCvv ? 'border-red-400 bg-red-50/50 focus:border-red-500' : 'border-transparent focus:border-accent'}`}
                           />
+                          {errors.cardCvv && <p className="text-red-500 text-xs font-medium mt-1">{errors.cardCvv}</p>}
                         </div>
                       </div>
                     </motion.div>

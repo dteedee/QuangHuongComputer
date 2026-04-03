@@ -13,9 +13,12 @@ import { formatCurrency } from '../../../utils/format';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { z } from 'zod';
+import { validationMessages as msg } from '../../../lib/validation/messages';
 
 export const HRPortal = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const queryClient = useQueryClient();
 
     const now = new Date();
@@ -55,16 +58,40 @@ export const HRPortal = () => {
     const handleAddEmployee = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = {
-            fullName: formData.get('fullName') as string,
-            email: formData.get('email') as string,
-            position: formData.get('position') as string,
-            baseSalary: Number(formData.get('baseSalary')),
+        const fullName = formData.get('fullName') as string;
+        const email = formData.get('email') as string;
+        const position = formData.get('position') as string;
+        const baseSalary = Number(formData.get('baseSalary'));
+
+        const schema = z.object({
+            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+            email: z.string().min(1, msg.requireInput('Email')).email(msg.email),
+            position: z.string().min(1, msg.requireInput('Vị trí')),
+            baseSalary: z.number().min(0, 'Lương không được âm')
+        });
+
+        const result = schema.safeParse({ fullName, email, position, baseSalary });
+
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
+        createEmployeeMutation.mutate({
+            fullName,
+            email,
+            position,
+            baseSalary,
             department: 'IT',
             hireDate: new Date().toISOString(),
             status: 'Active' as const,
-        };
-        createEmployeeMutation.mutate(data);
+        });
     };
 
     return (
@@ -189,21 +216,21 @@ export const HRPortal = () => {
                     <Input 
                         label="Họ và tên" 
                         name="fullName" 
-                        required 
+                        error={errors.fullName}
                         placeholder="Nhập họ và tên nhân viên" 
                     />
                     <div className="grid grid-cols-2 gap-4">
                         <Input 
                             label="Vị trí" 
                             name="position" 
-                            required 
+                            error={errors.position}
                             placeholder="VD: Kỹ thuật viên" 
                         />
                         <Input 
                             label="Lương cơ bản" 
                             name="baseSalary" 
                             type="number" 
-                            required 
+                            error={errors.baseSalary}
                             defaultValue={10000000} 
                         />
                     </div>
@@ -211,7 +238,7 @@ export const HRPortal = () => {
                         label="Email liên hệ" 
                         name="email" 
                         type="email" 
-                        required 
+                        error={errors.email}
                         placeholder="email@example.com" 
                     />
                     <div className="flex gap-4 pt-4">

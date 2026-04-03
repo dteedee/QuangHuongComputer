@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { repairApi, type WorkOrder, type WorkOrderStatus, getStatusColor } from '../api/repair';
 import { formatCurrency } from '../utils/format';
 import { Clock, CheckCircle, XCircle, Play, AlertCircle, FileText, Wrench, ChevronRight } from 'lucide-react';
+import { z } from 'zod';
+import { validationMessages as msg } from '../lib/validation/messages';
 
 const translateStatus = (status: WorkOrderStatus): string => {
     const map: Record<WorkOrderStatus, string> = {
@@ -57,6 +59,7 @@ export const RepairPage = () => {
     const [serialNumber, setSerialNumber] = useState('');
     const [issueDescription, setIssueDescription] = useState('');
     const [success, setSuccess] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Get work orders
     const { data: workOrders, isLoading: loadingWorkOrders } = useQuery<WorkOrder[]>({
@@ -87,6 +90,25 @@ export const RepairPage = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const schema = z.object({
+            deviceModel: z.string().min(1, msg.requireInput('Tên thiết bị / Model')),
+            serialNumber: z.string().min(1, msg.requireInput('Số Serial (S/N)')),
+            issueDescription: z.string().min(1, msg.requireInput('Mô tả tình trạng'))
+        });
+
+        const result = schema.safeParse({ deviceModel, serialNumber, issueDescription });
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const path = issue.path[0]?.toString();
+                if (path) fieldErrors[path] = issue.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
+
+        setErrors({});
         createRepair.mutate({ deviceModel, serialNumber, description: issueDescription });
     };
 
@@ -136,10 +158,10 @@ export const RepairPage = () => {
                                 <input
                                     value={deviceModel}
                                     onChange={e => setDeviceModel(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none"
+                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.deviceModel ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none`}
                                     placeholder="Ví dụ: Dell XPS 15"
-                                    required
                                 />
+                                {errors.deviceModel && <p className="text-red-500 text-xs font-medium mt-1">{errors.deviceModel}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -148,10 +170,10 @@ export const RepairPage = () => {
                                 <input
                                     value={serialNumber}
                                     onChange={e => setSerialNumber(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none"
+                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.serialNumber ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none`}
                                     placeholder="Ví dụ: SN123456"
-                                    required
                                 />
+                                {errors.serialNumber && <p className="text-red-500 text-xs font-medium mt-1">{errors.serialNumber}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -160,10 +182,10 @@ export const RepairPage = () => {
                                 <textarea
                                     value={issueDescription}
                                     onChange={e => setIssueDescription(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none min-h-[100px] resize-none"
+                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.issueDescription ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none min-h-[100px] resize-none`}
                                     placeholder="Thiết bị của bạn đang gặp vấn đề gì?"
-                                    required
                                 />
+                                {errors.issueDescription && <p className="text-red-500 text-xs font-medium mt-1">{errors.issueDescription}</p>}
                             </div>
                             {success && (
                                 <p className="text-emerald-600 text-sm font-medium">
