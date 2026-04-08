@@ -787,22 +787,22 @@ export default function ProductDetailPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {aiRecommendations.map((rec) => (
-                  <div key={rec.id} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center">
+                  <div key={rec.id} onClick={() => navigate(`/product/${rec.id}`)} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center cursor-pointer group">
                     <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2">
                       {rec?.imageUrl ? (
-                        <img src={rec.imageUrl} alt={rec?.name} className="w-full h-full object-contain mix-blend-multiply" />
+                        <img src={rec.imageUrl} alt={rec?.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform" />
                       ) : (
                         <span className="text-2xl font-black text-gray-300 uppercase">{rec?.name?.charAt(0) || '?'}</span>
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1 leading-tight">{rec.name}</h3>
+                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1 leading-tight group-hover:text-accent transition-colors">{rec.name}</h3>
                       <div className="text-accent font-bold text-sm">{formatPrice(rec.price)}</div>
                       <div className="text-[10px] text-gray-500 mt-1 uppercase font-semibold tracking-wider">Độ tương thích {Math.round(rec.similarityScore * 100)}%</div>
                     </div>
-                    <button onClick={() => navigate(`/product/${rec.id}`)} className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center hover:bg-accent hover:text-white transition-colors">
-                      <Plus size={16} />
-                    </button>
+                    <div className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
+                      <ChevronRight size={16} />
+                    </div>
                   </div>
                 ))}
               </div>
