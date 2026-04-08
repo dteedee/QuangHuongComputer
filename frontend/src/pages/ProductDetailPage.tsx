@@ -191,7 +191,10 @@ export default function ProductDetailPage() {
     setLoadingRelated(true);
     try {
       const response = await client.get(`/catalog/products/${productId}/related`);
-      setRelatedProducts(response.data);
+      const validProducts = Array.isArray(response.data) 
+        ? response.data.filter((p: any) => p && p.id && p.name && typeof p.price === 'number' && !Number.isNaN(p.price)) 
+        : [];
+      setRelatedProducts(validProducts);
     } catch (error) {
       console.error('Failed to load related products:', error);
     } finally {
@@ -203,7 +206,10 @@ export default function ProductDetailPage() {
     setLoadingAi(true);
     try {
       const { recommendations } = await aiApi.getRecommendations(productId);
-      setAiRecommendations(recommendations);
+      const validRecs = Array.isArray(recommendations)
+        ? recommendations.filter((r: any) => r && r.id && r.name && typeof r.price === 'number' && !Number.isNaN(r.price))
+        : [];
+      setAiRecommendations(validRecs);
     } catch (error) {
       console.error('Failed to load AI recommendations:', error);
     } finally {

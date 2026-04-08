@@ -127,10 +127,12 @@ public class RequestResponseLoggingMiddleware
 public class SecurityHeadersMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly Microsoft.AspNetCore.Hosting.IWebHostEnvironment _env;
 
-    public SecurityHeadersMiddleware(RequestDelegate next)
+    public SecurityHeadersMiddleware(RequestDelegate next, Microsoft.AspNetCore.Hosting.IWebHostEnvironment env)
     {
         _next = next;
+        _env = env;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -176,10 +178,15 @@ public class SecurityHeadersMiddleware
                 // Base URI restriction
                 "base-uri 'self'",
                 // Form action restriction
-                "form-action 'self' https://accounts.google.com https://www.facebook.com",
-                // Upgrade insecure requests in production
-                "upgrade-insecure-requests"
-            };
+                "form-action 'self' https://accounts.google.com https://www.facebook.com"
+            }.ToList();
+
+            // Only upgrade insecure requests in production
+            // This prevents browsers from upgrading HTTP requests in local development environments
+            if (!_env.IsDevelopment())
+            {
+                cspDirectives.Add("upgrade-insecure-requests");
+            }
 
             context.Response.Headers.TryAdd("Content-Security-Policy", string.Join("; ", cspDirectives));
         }

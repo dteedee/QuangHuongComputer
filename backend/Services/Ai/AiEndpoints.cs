@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Ai.Application;
 using System.Text.Json;
-
+using Microsoft.EntityFrameworkCore;
 namespace Ai;
 
 public static class AiEndpoints
@@ -26,18 +26,51 @@ public static class AiEndpoints
         });
 
         // 2. Collaborative Filtering Recommendations (Mocked AI Logic for Phase 4.2)
-        group.MapGet("/recommendations/{productId:guid}", (Guid productId) =>
+        group.MapGet("/recommendations/{productId:guid}", async (Guid productId, Ai.Infrastructure.AiDbContext db) =>
         {
-            // In a real system, this would query a matrix factorization model or neo4j DB
-            // "Customers who bought this also bought..."
-            var mockRecommendations = new[]
+            var recommendations = new List<object>();
+            var connection = db.Database.GetDbConnection();
+            
+            bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
+            if (wasClosed) await connection.OpenAsync();
+            try
             {
-                new { Id = Guid.NewGuid(), Name = "Bàn phím cơ Logitech G Pro X", Price = 2500000, SimilarityScore = 0.95 },
-                new { Id = Guid.NewGuid(), Name = "Chuột Logitech G502 Hero", Price = 1100000, SimilarityScore = 0.88 },
-                new { Id = Guid.NewGuid(), Name = "Tai nghe Razer BlackShark V2", Price = 1800000, SimilarityScore = 0.82 }
-            };
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT ""Id"", ""Name"", ""Price"", ""ImageUrl""
+                    FROM public.""Products""
+                    WHERE ""CategoryId"" = (SELECT ""CategoryId"" FROM public.""Products"" WHERE ""Id"" = @productId LIMIT 1)
+                    AND ""Id"" != @productId
+                    AND ""IsActive"" = true
+                    ORDER BY random()
+                    LIMIT 4;
+                ";
+                
+                var param = command.CreateParameter();
+                param.ParameterName = "@productId";
+                param.Value = productId;
+                command.Parameters.Add(param);
 
-            return Results.Ok(new { recommendations = mockRecommendations, baseProductId = productId });
+                using var reader = await command.ExecuteReaderAsync();
+                var random = new Random();
+                while (await reader.ReadAsync())
+                {
+                    recommendations.Add(new
+                    {
+                        id = reader.GetGuid(0),
+                        name = reader.GetString(1),
+                        price = reader.GetDecimal(2),
+                        imageUrl = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        similarityScore = Math.Round(0.80 + (random.NextDouble() * 0.15), 2)
+                    });
+                }
+            }
+            finally
+            {
+                if (wasClosed) await connection.CloseAsync();
+            }
+
+            return Results.Ok(new { recommendations, baseProductId = productId });
         });
 
         // 3. Natural Language Search

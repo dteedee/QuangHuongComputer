@@ -379,12 +379,6 @@ if (app.Environment.IsDevelopment())
                             WHEN undefined_table THEN NULL;
                         END;
                         BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
                             ALTER TABLE ""OrderItem"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
                         EXCEPTION
                             WHEN duplicate_column THEN NULL;
@@ -418,12 +412,6 @@ if (app.Environment.IsDevelopment())
                         END;
                         BEGIN
                             ALTER TABLE ""OrderItems"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsDeleted"" boolean DEFAULT false;
                         EXCEPTION
                             WHEN duplicate_column THEN NULL;
                             WHEN undefined_table THEN NULL;

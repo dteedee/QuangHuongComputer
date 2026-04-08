@@ -1277,15 +1277,15 @@ public static class CatalogEndpoints
                 .Take(limit)
                 .Select(p => new
                 {
-                    p.Id,
-                    p.Name,
-                    p.Description,
-                    p.Price,
-                    p.OldPrice,
-                    p.ImageUrl,
-                    p.StockQuantity,
-                    Category = new { p.Category.Id, p.Category.Name },
-                    Brand = new { p.Brand.Id, p.Brand.Name }
+                    id = p.Id,
+                    name = p.Name,
+                    description = p.Description,
+                    price = p.Price,
+                    oldPrice = p.OldPrice,
+                    imageUrl = p.ImageUrl,
+                    stockQuantity = p.StockQuantity,
+                    category = new { id = p.Category.Id, name = p.Category.Name },
+                    brand = new { id = p.Brand.Id, name = p.Brand.Name }
                 })
                 .ToListAsync<object>();
 
