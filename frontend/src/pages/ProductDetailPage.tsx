@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { catalogApi, type Product, type ProductReview } from '../api/catalog';
 import { salesApi } from '../api/sales';
-import { aiApi, type AiRecommendation } from '../api/ai';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag, Sparkles } from 'lucide-react';
+import { ChevronRight, Minus, Plus, ShoppingCart, Check, Truck, Shield, HeadphonesIcon, Star, Filter, ShoppingBag } from 'lucide-react';
+import RecommendationCarousel from '../components/recommendation-carousel';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import client from '../api/client';
@@ -39,9 +39,7 @@ export default function ProductDetailPage() {
   const [showAddedNotification, setShowAddedNotification] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
-  const [aiRecommendations, setAiRecommendations] = useState<AiRecommendation[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
-  const [loadingAi, setLoadingAi] = useState(false);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSort, setReviewSort] = useState<ReviewSortOption>('newest');
@@ -196,22 +194,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const loadAiRecommendations = async (productId: string) => {
-    setLoadingAi(true);
-    try {
-      const { recommendations } = await aiApi.getRecommendations(productId);
-      const validRecs = Array.isArray(recommendations)
-        ? recommendations.filter((r: any) => r && r.id && r.name && typeof r.price === 'number' && !Number.isNaN(r.price))
-        : [];
-      setAiRecommendations(validRecs);
-    } catch (error) {
-      console.error('Failed to load AI recommendations:', error);
-    } finally {
-      setLoadingAi(false);
-    }
-  };
-
-  const loadReviews = async (productId: string) => {
+const loadReviews = async (productId: string) => {
     setLoadingReviews(true);
     try {
       const response = await client.get(`/catalog/products/${productId}/reviews`);
@@ -237,7 +220,6 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (product?.id) {
       loadRelatedProducts(product.id);
-      loadAiRecommendations(product.id);
       loadReviews(product.id);
       checkPurchaseStatus(product.id);
     }
@@ -796,38 +778,8 @@ export default function ProductDetailPage() {
         </div>
 
         {/* AI Recommendations */}
-        {aiRecommendations.length > 0 && !loadingAi && (
-          <div className="mt-12 mb-8 bg-gradient-to-r from-red-50 to-white p-6 sm:p-8 rounded-3xl border border-red-100 shadow-sm relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-6 text-accent">
-                <Sparkles className="w-6 h-6" />
-                <h2 className="text-xl font-bold tracking-tight">Thường được mua kèm</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {aiRecommendations.map((rec) => (
-                  <div key={rec.id} onClick={() => navigate(`/san-pham/${rec.slug || rec.id}`)} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center cursor-pointer group">
-                    <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2">
-                      {rec?.imageUrl ? (
-                        <img src={rec.imageUrl} alt={rec?.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform" />
-                      ) : (
-                        <span className="text-2xl font-black text-gray-300 uppercase">{rec?.name?.charAt(0) || '?'}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1 leading-tight group-hover:text-accent transition-colors">{rec.name}</h3>
-                      <div className="text-accent font-bold text-sm">{formatPrice(rec.price)}</div>
-                      <div className="text-[10px] text-gray-500 mt-1 uppercase font-semibold tracking-wider">Độ tương thích {Math.round(rec.similarityScore * 100)}%</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-red-50 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
-                      <ChevronRight size={16} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Decorative blob */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-100/40 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          </div>
+        {product?.id && (
+          <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />
         )}
 
         {/* Related Products */}

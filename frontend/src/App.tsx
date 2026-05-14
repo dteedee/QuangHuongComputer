@@ -12,6 +12,7 @@ import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ScrollToTop } from './components/ScrollToTop';
+import AiChatWidget from './components/ai-chat-widget';
 
 // ---------------------------------------------------------------------------
 // Loading fallback
@@ -89,6 +90,7 @@ const OrdersPage = lazy(() => import('./pages/account/OrdersPage').then(m => ({ 
 const OrderDetailPage = lazy(() => import('./pages/account/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
 const NewReturnRequestPage = lazy(() => import('./pages/account/NewReturnRequestPage').then(m => ({ default: m.NewReturnRequestPage })));
 const LoyaltyPage = lazy(() => import('./pages/account/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
+const AddressBookPage = lazy(() => import('./pages/account/address-book-page'));
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded pages — Backoffice
@@ -208,6 +210,7 @@ function App() {
                         <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
                         <Route path="account/returns/new" element={<NewReturnRequestPage />} />
                         <Route path="account/loyalty" element={<LoyaltyPage />} />
+                        <Route path="account/addresses" element={<AddressBookPage />} />
 
                         {/* Category Routes */}
                         <Route path="laptop" element={<CategoryPage />} />
@@ -322,6 +325,7 @@ function App() {
             </ThemeProvider>
           </AuthProvider>
           </ConfirmProvider>
+          <AiChatWidget />
         </BrowserRouter>
       </QueryClientProvider>
     </GoogleOAuthProvider>

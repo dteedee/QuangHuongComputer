@@ -17,6 +17,7 @@ import { validationMessages as msg } from '../lib/validation/messages';
 import { salesApi } from '../api/sales';
 import { paymentApi, initiateMoMoPayment } from '../api/payment';
 import ShippingFeeCalculator from '../components/shipping-fee-calculator';
+import AddressBookSelector from '../components/address-book-selector';
 
 interface CheckoutForm {
   // Customer Info
@@ -532,6 +533,18 @@ export function CheckoutPage() {
                       </div>
                     ) : (
                       <>
+                        {isAuthenticated && (
+                          <AddressBookSelector
+                            onSelect={(addr) => {
+                              if (addr.fullName) handleInputChange('fullName', addr.fullName);
+                              if (addr.phone) handleInputChange('phone', addr.phone);
+                              if (addr.streetAddress) handleInputChange('address', addr.streetAddress);
+                              if (addr.ward) handleInputChange('ward', addr.ward);
+                              if (addr.district) handleInputChange('district', addr.district);
+                              if (addr.province) handleInputChange('province', addr.province);
+                            }}
+                          />
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-slate-500 mb-1 block">

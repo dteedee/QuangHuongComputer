@@ -642,12 +642,16 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 app.MapSitemapEndpoints();
 app.MapCatalogEndpoints();
 app.MapAiEndpoints();
+app.MapRecommendationEndpoints();
+app.MapSemanticSearchEndpoints();
+app.MapAiPCBuilderEndpoints();
 app.MapCatalogPCBuilderEndpoints();
 app.MapCatalogBundleEndpoints();
 app.MapIdentityEndpoints();
 app.MapTwoFactorEndpoints();
 app.MapSessionEndpoints();
 app.MapSalesEndpoints();
+app.MapAddressBookEndpoints();
 app.MapShippingEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();

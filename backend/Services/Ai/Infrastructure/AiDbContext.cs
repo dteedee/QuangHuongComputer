@@ -10,6 +10,7 @@ public class AiDbContext : DbContext
     }
 
     public DbSet<SearchEntry> SearchEntries { get; set; }
+    public DbSet<ProductEmbedding> ProductEmbeddings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,8 +22,15 @@ public class AiDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Price).HasPrecision(18, 2);
             entity.HasIndex(e => e.ExternalId);
-            
-            // Full text search could be configured here for Postgres
+        });
+
+        modelBuilder.Entity<ProductEmbedding>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Price).HasPrecision(18, 2);
+            entity.Property(e => e.SearchText).HasColumnType("text");
+            entity.Property(e => e.EmbeddingJson).HasColumnType("text");
+            entity.HasIndex(e => e.ProductId).IsUnique();
         });
     }
 }

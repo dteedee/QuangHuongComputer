@@ -17,6 +17,7 @@ public class SalesDbContext : DbContext
     public DbSet<WishlistItem> WishlistItems { get; set; }
     public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
     public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
+    public DbSet<CustomerAddress> CustomerAddresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -157,6 +158,23 @@ public class SalesDbContext : DbContext
                 .HasDatabaseName("ix_loyalty_transactions_order_id");
             entity.HasIndex(t => t.Type)
                 .HasDatabaseName("ix_loyalty_transactions_type");
+        });
+
+        // CustomerAddress configuration
+        modelBuilder.Entity<CustomerAddress>(entity =>
+        {
+            entity.ToTable("CustomerAddresses");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Label).HasMaxLength(50);
+            entity.Property(a => a.FullName).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.Phone).IsRequired().HasMaxLength(20);
+            entity.Property(a => a.Province).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.District).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.Ward).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.StreetAddress).IsRequired().HasMaxLength(300);
+            entity.HasIndex(a => new { a.UserId, a.IsDefault })
+                .HasDatabaseName("ix_customer_addresses_user_default");
+            entity.HasQueryFilter(a => a.IsActive);
         });
     }
 }
