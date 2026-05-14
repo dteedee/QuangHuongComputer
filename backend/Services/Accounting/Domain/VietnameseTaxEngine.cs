@@ -185,6 +185,16 @@ public static class VietnameseTaxEngine
     public const decimal VatExport = 0.00m;       // 0% for export
     public const decimal VatExempt = -1m;         // Exempt flag
 
+    /// <summary>
+    /// Returns the appropriate VAT rate for a product category slug.
+    /// Computer hardware uses 8% reduced rate; telecom/finance/real-estate use 10%.
+    /// </summary>
+    public static decimal VatRateForCategory(string? categorySlug) => categorySlug switch
+    {
+        "vien-thong" or "tai-chinh" or "bat-dong-san" => VatTelecom,
+        _ => VatStandard
+    };
+
     public static VatCalculationResult CalculateVat(decimal priceBeforeVat, decimal vatRate = 0.08m)
     {
         if (vatRate < 0) // Exempt

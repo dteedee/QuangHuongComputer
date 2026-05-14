@@ -39,7 +39,14 @@ public class Invoice : AggregateRoot<Guid>
     
     public Currency Currency { get; private set; }
     public string? Notes { get; private set; }
-    
+
+    // E-Invoice tracking fields
+    public string? EInvoiceId { get; private set; }
+    public string? EInvoiceNumber { get; private set; }
+    public string? EInvoiceLookupCode { get; private set; }
+    public string? EInvoiceStatus { get; private set; } // Draft, Issued, SignedByCQT, Cancelled
+    public DateTime? EInvoiceIssuedAt { get; private set; }
+
     private readonly List<InvoiceLine> _lines = new();
     public IReadOnlyCollection<InvoiceLine> Lines => _lines.AsReadOnly();
     
@@ -247,6 +254,15 @@ public class Invoice : AggregateRoot<Guid>
             Status = InvoiceStatus.Overdue;
             RaiseDomainEvent(new InvoiceOverdueEvent(Id, InvoiceNumber, DueDate, RemainingAmount));
         }
+    }
+
+    public void UpdateEInvoice(string invoiceId, string invoiceNumber, string lookupCode, string status)
+    {
+        EInvoiceId = invoiceId;
+        EInvoiceNumber = invoiceNumber;
+        EInvoiceLookupCode = lookupCode;
+        EInvoiceStatus = status;
+        EInvoiceIssuedAt = DateTime.UtcNow;
     }
 
     public void Cancel(string reason)

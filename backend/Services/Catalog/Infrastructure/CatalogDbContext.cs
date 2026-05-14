@@ -114,6 +114,8 @@ public class CatalogDbContext : DbContext
                 .IsUnique()
                 .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''")
                 .HasDatabaseName("uq_categories_slug");
+
+            entity.Property(c => c.VatRate).HasPrecision(5, 2).HasDefaultValue(0.10m);
         });
 
         // Brand configurations

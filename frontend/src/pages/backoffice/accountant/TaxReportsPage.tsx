@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Calculator, FileText, Download, Building2, Calendar, LayoutList } from 'lucide-react';
-import { taxApi } from '../../../api/tax';
+import { Calculator, FileText, Download, Building2, LayoutList } from 'lucide-react';
+import { taxApi, getVatDeclaration, exportTaxReport } from '../../../api/tax';
 import { formatCurrency } from '../../../utils/format';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,10 @@ export function TaxReportsPage() {
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
     const [vatType, setVatType] = useState<'in' | 'out'>('out');
+    const [periodType, setPeriodType] = useState<'monthly' | 'quarterly'>('monthly');
+
+    // period string for new API: "YYYY-MM"
+    const period = `${year}-${String(month).padStart(2, '0')}`;
 
     // 1. VAT Ledger
     const { data: vatLedger, isLoading: isLoadingLedger } = useQuery({
@@ -18,11 +22,10 @@ export function TaxReportsPage() {
         queryFn: () => taxApi.getVatLedger(month, year, vatType),
     });
 
-    // 2. VAT Declaration (Tờ khai TTGT/01)
-    const currentQuarter = Math.ceil(month / 3);
+    // 2. VAT Declaration — uses new standalone fn with period/type params
     const { data: vatDeclaration, isLoading: isLoadingDeclaration } = useQuery({
-        queryKey: ['vat-declaration', currentQuarter, year],
-        queryFn: () => taxApi.getVatDeclaration(currentQuarter, year),
+        queryKey: ['vat-declaration-v2', period, periodType],
+        queryFn: () => getVatDeclaration(period, periodType),
     });
 
     // 3. CIT Report (Thuế TNDN)
@@ -31,8 +34,19 @@ export function TaxReportsPage() {
         queryFn: () => taxApi.getCitReport(year),
     });
 
-    const handleExport = () => {
-        toast.success(`Đã xuất báo cáo thuế tháng ${month}/${year}`);
+    const handleExport = async () => {
+        try {
+            const blob = await exportTaxReport(period, periodType);
+            const url = window.URL.createObjectURL(new Blob([blob]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bao-cao-thue-${period}.xlsx`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success(`Đã xuất báo cáo thuế ${period}`);
+        } catch {
+            toast.error('Không thể xuất báo cáo. Vui lòng thử lại.');
+        }
     };
 
     return (
@@ -47,13 +61,26 @@ export function TaxReportsPage() {
                         Quản lý tờ khai GTGT, bảng kê hóa đơn và thuế TNDN (Chuẩn pháp luật VN)
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <button
+                            onClick={() => setPeriodType('monthly')}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${periodType === 'monthly' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Theo tháng
+                        </button>
+                        <button
+                            onClick={() => setPeriodType('quarterly')}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${periodType === 'quarterly' ? 'bg-white text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Theo quý
+                        </button>
+                    </div>
                     <SearchableSelect
                         value={month}
-                        onChange={null}
-                        options={[
-                            { value: i + 1, label: 'Tháng {i + 1}' },
-                        ]}
+                        onChange={(val) => setMonth(Number(val))}
+                        options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }))}
+                        placeholder="Chọn tháng"
                     />
                     <input
                         type="number"
@@ -66,7 +93,7 @@ export function TaxReportsPage() {
                         className="flex items-center gap-3 px-6 py-3 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
                     >
                         <Download size={16} />
-                        Xuất HTKK
+                        Xuất Excel
                     </button>
                 </div>
             </div>
@@ -86,7 +113,11 @@ export function TaxReportsPage() {
                             <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-200">
                                 <div>
                                     <span className="text-xs font-bold text-gray-500 uppercase">Kỳ tính thuế</span>
-                                    <p className="font-black text-gray-900">Quý {vatDeclaration?.quarter} Năm {vatDeclaration?.year}</p>
+                                    <p className="font-black text-gray-900">
+                                        {periodType === 'quarterly'
+                                            ? `Quý ${vatDeclaration?.quarter || Math.ceil(month / 3)} Năm ${year}`
+                                            : `Tháng ${month}/${year}`}
+                                    </p>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-xs font-bold text-gray-500 uppercase">Trạng thái</span>
@@ -94,30 +125,55 @@ export function TaxReportsPage() {
                                 </div>
                             </div>
 
+                            {/* VAT Summary Cards */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-green-50 p-3 rounded-xl text-center">
+                                    <p className="text-xs text-gray-600 font-semibold mb-1">Thuế đầu ra</p>
+                                    <p className="text-lg font-black text-green-700">{formatCurrency(vatDeclaration?.outputVat?.vatAmount ?? vatDeclaration?.indicator28 ?? 0)}</p>
+                                    {vatDeclaration?.outputVat?.invoiceCount != null && (
+                                        <p className="text-xs text-gray-500">{vatDeclaration.outputVat.invoiceCount} hóa đơn</p>
+                                    )}
+                                </div>
+                                <div className="bg-orange-50 p-3 rounded-xl text-center">
+                                    <p className="text-xs text-gray-600 font-semibold mb-1">Thuế đầu vào</p>
+                                    <p className="text-lg font-black text-orange-600">{formatCurrency(vatDeclaration?.inputVat?.vatAmount ?? vatDeclaration?.indicator25 ?? 0)}</p>
+                                    {vatDeclaration?.inputVat?.invoiceCount != null && (
+                                        <p className="text-xs text-gray-500">{vatDeclaration.inputVat.invoiceCount} hóa đơn</p>
+                                    )}
+                                </div>
+                                <div className="bg-blue-50 p-3 rounded-xl text-center">
+                                    <p className="text-xs text-gray-600 font-semibold mb-1">Phải nộp</p>
+                                    <p className="text-lg font-black text-blue-700">{formatCurrency(vatDeclaration?.vatPayable ?? vatDeclaration?.indicator40 ?? 0)}</p>
+                                    {vatDeclaration?.vatRefundable > 0 && (
+                                        <p className="text-xs text-red-500">Hoàn: {formatCurrency(vatDeclaration.vatRefundable)}</p>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <div className="flex justify-between p-3 bg-red-50 rounded-lg">
                                     <span className="font-bold text-sm text-red-800">[26] HHDV bán ra chịu thuế</span>
-                                    <span className="font-black text-red-700">{formatCurrency(vatDeclaration?.indicator26 || 0)}</span>
+                                    <span className="font-black text-red-700">{formatCurrency(vatDeclaration?.indicator26 ?? vatDeclaration?.outputVat?.taxableAmount ?? 0)}</span>
                                 </div>
                                 <div className="flex justify-between p-3 bg-red-100 rounded-lg border border-red-200">
                                     <span className="font-bold text-sm text-red-900">[28] Thuế GTGT đầu ra</span>
-                                    <span className="font-black text-red-800">{formatCurrency(vatDeclaration?.indicator28 || 0)}</span>
+                                    <span className="font-black text-red-800">{formatCurrency(vatDeclaration?.indicator28 ?? vatDeclaration?.outputVat?.vatAmount ?? 0)}</span>
                                 </div>
                                 <div className="h-px bg-gray-200 my-2"></div>
                                 <div className="flex justify-between p-3 bg-emerald-50 rounded-lg">
                                     <span className="font-bold text-sm text-emerald-800">[23] Giá trị HHDV mua vào</span>
-                                    <span className="font-black text-emerald-700">{formatCurrency(vatDeclaration?.indicator23 || 0)}</span>
+                                    <span className="font-black text-emerald-700">{formatCurrency(vatDeclaration?.indicator23 ?? vatDeclaration?.inputVat?.taxableAmount ?? 0)}</span>
                                 </div>
                                 <div className="flex justify-between p-3 bg-emerald-100 rounded-lg border border-emerald-200">
                                     <span className="font-bold text-sm text-emerald-900">[25] Thuế GTGT đầu vào được khấu trừ</span>
-                                    <span className="font-black text-emerald-800">{formatCurrency(vatDeclaration?.indicator25 || 0)}</span>
+                                    <span className="font-black text-emerald-800">{formatCurrency(vatDeclaration?.indicator25 ?? vatDeclaration?.inputVat?.vatAmount ?? 0)}</span>
                                 </div>
                             </div>
 
                             <div className="mt-6 p-6 bg-blue-600 rounded-2xl text-white shadow-lg flex items-center justify-between">
                                 <div>
                                     <span className="text-xs font-black text-blue-200 uppercase tracking-widest">[40] Thuế GTGT phải nộp</span>
-                                    <p className="text-3xl font-black mt-1">{formatCurrency(vatDeclaration?.indicator40 || 0)}</p>
+                                    <p className="text-3xl font-black mt-1">{formatCurrency(vatDeclaration?.indicator40 ?? vatDeclaration?.vatPayable ?? 0)}</p>
                                 </div>
                                 <Calculator className="w-12 h-12 text-blue-400 opacity-50" />
                             </div>

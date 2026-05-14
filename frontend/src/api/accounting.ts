@@ -485,3 +485,37 @@ export const expenseApi = {
         return response.data;
     },
 };
+
+// ============================================
+// E-Invoice Standalone Functions
+// ============================================
+
+export async function issueEInvoice(
+    orderId: string,
+    buyerInfo: { taxCode: string; name: string; address: string; email: string }
+) {
+    const { data } = await client.post(`/accounting/einvoice/issue/${orderId}`, {
+        provider: 'Mock',
+        ...buyerInfo,
+    });
+    return data;
+}
+
+export async function getEInvoiceStatus(invoiceId: string) {
+    const { data } = await client.get(`/accounting/einvoice/status/${invoiceId}`);
+    return data;
+}
+
+export async function cancelEInvoice(invoiceId: string, reason: string) {
+    const { data } = await client.post(`/accounting/einvoice/cancel/${invoiceId}`, { reason });
+    return data;
+}
+
+export async function downloadEInvoicePdf(invoiceId: string) {
+    const response = await client.get(`/accounting/einvoice/pdf/${invoiceId}`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice-${invoiceId}.pdf`;
+    a.click();
+}

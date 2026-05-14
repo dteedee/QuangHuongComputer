@@ -7,6 +7,7 @@ public class Category : Entity<Guid>
     public string Name { get; private set; }
     public string Description { get; private set; }
     public string Slug { get; set; } = string.Empty;
+    public decimal VatRate { get; set; } = 0.10m; // Default 10% for computer hardware
     public bool IsActive { get; private set; }
     public DateTime? DeactivatedAt { get; private set; }
     public string? DeactivatedBy { get; private set; }

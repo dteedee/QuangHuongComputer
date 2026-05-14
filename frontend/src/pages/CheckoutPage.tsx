@@ -1002,8 +1002,8 @@ export function CheckoutPage() {
                     </div>
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Thuế (VAT)</span>
-                      <span className="font-bold text-slate-700">{formatPrice(tax)}</span>
+                      <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Thuế GTGT (10%)</span>
+                      <span className="font-bold text-slate-700">{formatPrice(tax || Math.round(subtotal * 0.1))}</span>
                     </div>
 
                     <div className="pt-4 border-t-2 border-slate-100">

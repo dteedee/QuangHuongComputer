@@ -192,6 +192,27 @@ export const taxApi = {
 };
 
 // ============================================
+// STANDALONE TAX REPORT FUNCTIONS
+// ============================================
+
+/** Get VAT declaration by period string (e.g. "2025-01") and type (monthly/quarterly) */
+export async function getVatDeclaration(period: string, type: string = 'monthly') {
+    const { data } = await client.get('/accounting/tax-reports/vat-declaration', {
+        params: { period, type }
+    });
+    return data;
+}
+
+/** Export VAT report as blob (Excel) */
+export async function exportTaxReport(period: string, type: string = 'monthly') {
+    const response = await client.get('/accounting/tax-reports/export/vat', {
+        params: { period, type },
+        responseType: 'blob'
+    });
+    return response.data;
+}
+
+// ============================================
 // LABELS & CONSTANTS
 // ============================================
 
