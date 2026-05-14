@@ -42,6 +42,9 @@ public class Order : Entity<Guid>
     public string? DiscountReason { get; private set; }
     public string? DeliveryTrackingNumber { get; private set; }
     public string? DeliveryCarrier { get; private set; }
+    public decimal ShippingFee { get; private set; }
+    public string? TrackingNumber { get; private set; }
+    public string? ShippingProvider { get; private set; }
     public int RetryCount { get; private set; }
     public string? FailureReason { get; private set; }
     
@@ -205,6 +208,16 @@ public class Order : Entity<Guid>
         TryComplete();
     }
     
+    public void SetShippingTracking(decimal shippingFee, string trackingNumber, string shippingProvider)
+    {
+        ShippingFee = shippingFee;
+        TrackingNumber = trackingNumber;
+        ShippingProvider = shippingProvider;
+        DeliveryTrackingNumber = trackingNumber;
+        DeliveryCarrier = shippingProvider;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void MarkAsShipped(string trackingNumber, string carrier)
     {
         if (Status == OrderStatus.Cancelled)

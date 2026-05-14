@@ -136,6 +136,25 @@ export interface PaymentConfig {
     isSecret: boolean;
 }
 
+// ============================================
+// Convenience Payment Initiators
+// ============================================
+export async function initiateCODPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
+    const response = await client.post('/payments/initiate', { orderId, amount, provider: 3 }); // 3=COD
+    return response.data;
+}
+
+export async function initiateMoMoPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
+    const response = await client.post('/payments/initiate', { orderId, amount, provider: 2 }); // 2=Momo
+    return response.data;
+}
+
+export async function initiateZaloPayPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
+    // ZaloPay uses provider string; extend PaymentProvider if backend supports it
+    const response = await client.post('/payments/initiate', { orderId, amount, provider: 'ZaloPay' });
+    return response.data;
+}
+
 // Helper to get payment provider label
 export const getPaymentProviderLabel = (provider: PaymentProvider): string => {
     const labels: Record<PaymentProvider, string> = {

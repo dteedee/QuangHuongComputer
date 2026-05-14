@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import PosReceiptTemplate from '../../../components/pos-receipt-template';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useNavigate } from 'react-router-dom';
 import { catalogApi, type Product } from '../../../api/catalog';
@@ -381,6 +382,9 @@ export default function POSPage() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [barcodeMode, setBarcodeMode] = useState(false);
 
+  // Receipt print ref
+  const receiptRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     loadCategories();
     // Load held orders from localStorage
@@ -590,78 +594,43 @@ export default function POSPage() {
     }
   };
 
-  const handlePrintReceipt = () => {
-    // Create print window
-    const printContent = `
-      <html>
-        <head>
-          <title>Hóa đơn - ${completedOrder?.orderNumber}</title>
-          <style>
-            body { font-family: monospace; font-size: 12px; width: 300px; margin: 0 auto; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .header h1 { font-size: 18px; margin: 0; }
-            .divider { border-top: 1px dashed #000; margin: 10px 0; }
-            .item { display: flex; justify-content: space-between; margin: 5px 0; }
-            .total { font-weight: bold; font-size: 14px; }
-            .footer { text-align: center; margin-top: 20px; font-size: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>QUANG HUONG COMPUTER</h1>
-            <p>Hóa đơn bán hàng</p>
-            <p>${completedOrder?.orderNumber}</p>
-            <p>${new Date().toLocaleString('vi-VN')}</p>
-          </div>
-          <div class="divider"></div>
-          ${completedOrder?.customer?.name ? `<p>Khách hàng: ${completedOrder.customer.name}</p>` : ''}
-          <div class="divider"></div>
-          ${completedOrder?.items?.map((item: any) => `
-            <div class="item">
-              <span>${item.name}</span>
-            </div>
-            <div class="item">
-              <span>${item.quantity} x ${formatCurrency(item.price)}</span>
-              <span>${formatCurrency(item.price * item.quantity)}</span>
-            </div>
-          `).join('')}
-          <div class="divider"></div>
-          <div class="item">
-            <span>Tạm tính:</span>
-            <span>${formatCurrency(completedOrder?.subtotal || 0)}</span>
-          </div>
-          <div class="item">
-            <span>VAT (10%):</span>
-            <span>${formatCurrency(completedOrder?.tax || 0)}</span>
-          </div>
-          ${completedOrder?.discount > 0 ? `
-            <div class="item">
-              <span>Giảm giá:</span>
-              <span>-${formatCurrency(completedOrder.discount)}</span>
-            </div>
-          ` : ''}
-          <div class="divider"></div>
-          <div class="item total">
-            <span>TỔNG CỘNG:</span>
-            <span>${formatCurrency(completedOrder?.total || 0)}</span>
-          </div>
-          <div class="divider"></div>
-          <p>Thanh toán: ${completedOrder?.paymentMethod === 'cash' ? 'Tiền mặt' : completedOrder?.paymentMethod === 'card' ? 'Thẻ' : 'Chuyển khoản'}</p>
-          <div class="footer">
-            <p>Cảm ơn quý khách!</p>
-            <p>Hotline: 0904.235.090</p>
-          </div>
-        </body>
-      </html>
-    `;
+  const handlePrintReceipt = useCallback(() => {
+    const receiptHtml = receiptRef.current?.innerHTML;
+    if (!receiptHtml) return;
 
     const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Hóa đơn - ${completedOrder?.orderNumber || ''}</title>
+          <style>
+            body { font-family: monospace; font-size: 12px; width: 80mm; margin: 0 auto; }
+            .flex { display: flex; }
+            .justify-between { justify-content: space-between; }
+            .font-bold { font-weight: bold; }
+            .text-sm { font-size: 14px; }
+            .text-center { text-align: center; }
+            .border-t { border-top: 1px dashed #000; }
+            .pt-1 { padding-top: 4px; }
+            .pt-2 { padding-top: 8px; }
+            .mt-1 { margin-top: 4px; }
+            .mt-2 { margin-top: 8px; }
+            .mt-3 { margin-top: 12px; }
+            .mb-1 { margin-bottom: 4px; }
+            .mb-2 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 12px; }
+            .truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            .text-\\[10px\\] { font-size: 10px; }
+          </style>
+        </head>
+        <body>${receiptHtml}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }, [completedOrder]);
 
   const calculateFinalTotal = () => {
     const discountAmount = discountType === 'percentage' ? (total * discount) / 100 : discount;
@@ -1068,11 +1037,43 @@ export default function POSPage() {
       )}
 
       {completedOrder && (
-        <ReceiptModal
-          order={completedOrder}
-          onClose={() => setCompletedOrder(null)}
-          onPrint={handlePrintReceipt}
-        />
+        <>
+          <ReceiptModal
+            order={completedOrder}
+            onClose={() => setCompletedOrder(null)}
+            onPrint={handlePrintReceipt}
+          />
+          {/* Hidden receipt template used for printing */}
+          <div className="hidden print:block">
+            <PosReceiptTemplate
+              ref={receiptRef}
+              order={{
+                orderNumber: completedOrder.orderNumber,
+                orderDate: new Date().toISOString(),
+                items: completedOrder.items.map((item: any) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  unitPrice: item.price,
+                })),
+                subtotal: completedOrder.subtotal,
+                discount: completedOrder.discount,
+                tax: completedOrder.tax,
+                shippingFee: 0,
+                total: completedOrder.total,
+                paymentMethod:
+                  completedOrder.paymentMethod === 'cash'
+                    ? 'Tiền mặt'
+                    : completedOrder.paymentMethod === 'card'
+                    ? 'Thẻ'
+                    : 'Chuyển khoản',
+                customerName: completedOrder.customer?.id !== 'walk-in'
+                  ? completedOrder.customer?.name
+                  : undefined,
+                customerPhone: completedOrder.customer?.phone || undefined,
+              }}
+            />
+          </div>
+        </>
       )}
 
       {/* Loading overlay */}

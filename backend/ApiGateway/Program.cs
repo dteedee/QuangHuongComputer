@@ -17,6 +17,7 @@ using CRM;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Data;
 using Sales.Infrastructure;
+using Sales.Infrastructure.Shipping;
 using Repair.Infrastructure;
 using Accounting.Infrastructure;
 
@@ -645,6 +646,7 @@ app.MapCatalogPCBuilderEndpoints();
 app.MapCatalogBundleEndpoints();
 app.MapIdentityEndpoints();
 app.MapSalesEndpoints();
+app.MapShippingEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();

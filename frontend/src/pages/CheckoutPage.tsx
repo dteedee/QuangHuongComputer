@@ -15,7 +15,8 @@ import toast from 'react-hot-toast';
 import { z } from 'zod';
 import { validationMessages as msg } from '../lib/validation/messages';
 import { salesApi } from '../api/sales';
-import { paymentApi } from '../api/payment';
+import { paymentApi, initiateMoMoPayment } from '../api/payment';
+import ShippingFeeCalculator from '../components/shipping-fee-calculator';
 
 interface CheckoutForm {
   // Customer Info
@@ -31,7 +32,7 @@ interface CheckoutForm {
   postalCode: string;
 
   // Payment
-  paymentMethod: 'cod' | 'bank_transfer' | 'credit_card';
+  paymentMethod: 'cod' | 'bank_transfer' | 'credit_card' | 'momo';
   cardNumber?: string;
   cardExpiry?: string;
   cardCvv?: string;
@@ -230,6 +231,27 @@ export function CheckoutPage() {
               state: { error: 'Không thể kết nối cổng thanh toán. Vui lòng thanh toán thủ công.' }
             });
           }
+        } else if (formData.paymentMethod === 'momo') {
+          // MoMo payment
+          try {
+            const momoResponse = await initiateMoMoPayment(response.orderId, response.totalAmount);
+            if (momoResponse.paymentUrl) {
+              clearCart();
+              toast.success('Đang chuyển đến ví MoMo...');
+              window.location.href = momoResponse.paymentUrl;
+            } else {
+              clearCart();
+              navigate(`/payment/${response.orderId}`, {
+                state: { error: 'Không thể kết nối MoMo. Vui lòng thanh toán thủ công.' }
+              });
+            }
+          } catch (momoError) {
+            console.error('MoMo payment failed:', momoError);
+            clearCart();
+            navigate(`/payment/${response.orderId}`, {
+              state: { error: 'Lỗi khởi tạo thanh toán MoMo.' }
+            });
+          }
         } else if (formData.paymentMethod === 'bank_transfer') {
           // SePay (Bank Transfer)
           try {
@@ -291,6 +313,9 @@ export function CheckoutPage() {
   const [dbProvinces, setDbProvinces] = useState<any[]>([]);
   const [dbDistricts, setDbDistricts] = useState<any[]>([]);
   const [dbWards, setDbWards] = useState<any[]>([]);
+  const [ghnDistrictId, setGhnDistrictId] = useState<number>(0);
+  const [ghnWardCode, setGhnWardCode] = useState<string>('');
+  const [calculatedShippingFee, setCalculatedShippingFee] = useState<number>(0);
 
   // Fetch provinces on mount
   useEffect(() => {
@@ -313,8 +338,17 @@ export function CheckoutPage() {
   const handleDistrictChange = (districtName: string) => {
     handleInputChange('district', districtName);
     handleInputChange('ward', '');
+    setGhnWardCode('');
     const districtData = dbDistricts.find(d => d.name === districtName);
     setDbWards(districtData ? districtData.wards : []);
+    // GHN district code stored in district.code field if available
+    setGhnDistrictId(districtData?.code ? Number(districtData.code) : 0);
+  };
+
+  const handleWardChange = (wardName: string) => {
+    handleInputChange('ward', wardName);
+    const wardData = dbWards.find(w => w.name === wardName);
+    setGhnWardCode(wardData?.code ? String(wardData.code) : '');
   };
 
   const steps = [
@@ -588,7 +622,7 @@ export function CheckoutPage() {
                               </label>
                               <SearchableSelect
                                 value={formData.ward}
-                                onChange={(val) => handleInputChange('ward', val)}
+                                onChange={(val) => handleWardChange(val)}
                                 disabled={!formData.district || dbWards.length === 0}
                                 options={dbWards.map((w: any) => ({ value: w.name, label: w.name }))}
                                 placeholder="Chọn phường/xã"
@@ -612,6 +646,15 @@ export function CheckoutPage() {
                             />
                             {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
                           </div>
+
+                          {/* Shipping Fee Calculator */}
+                          {ghnDistrictId > 0 && ghnWardCode && (
+                            <ShippingFeeCalculator
+                              districtId={ghnDistrictId}
+                              wardCode={ghnWardCode}
+                              onFeeCalculated={(fee) => setCalculatedShippingFee(fee)}
+                            />
+                          )}
                         </div>
                       </>
                     )}
@@ -648,9 +691,10 @@ export function CheckoutPage() {
 
                   <div className="grid grid-cols-1 gap-4 mb-8">
                     {[
-                      { id: 'cod', title: 'Thanh toán khi nhận hàng', desc: 'Sử dụng tiền mặt khi shipper giao tới', icon: Truck },
-                      { id: 'bank_transfer', title: 'Chuyển khoản (VietQR)', desc: 'Thanh toán tự động 24/7 với SePay', icon: CardIcon },
-                      { id: 'credit_card', title: 'Thẻ tín dụng / Ghi nợ', desc: 'Hỗ trợ Visa, Master, JCB, Napas', icon: Lock },
+                      { id: 'cod', title: 'Thanh toán khi nhận hàng (COD)', desc: 'Sử dụng tiền mặt khi shipper giao tới', icon: Truck },
+                      { id: 'bank_transfer', title: 'Chuyển khoản ngân hàng (QR)', desc: 'Thanh toán tự động 24/7 với SePay', icon: CardIcon },
+                      { id: 'credit_card', title: 'VNPay (ATM/Visa/Master)', desc: 'Hỗ trợ Visa, Master, JCB, Napas', icon: Lock },
+                      { id: 'momo', title: 'Ví MoMo', desc: 'Thanh toán qua ứng dụng MoMo', icon: CreditCard },
                     ].map((method) => (
                       <label
                         key={method.id}
@@ -815,7 +859,8 @@ export function CheckoutPage() {
                         <p className="text-sm font-bold text-slate-700">
                           {formData.paymentMethod === 'cod' && 'Thanh toán tiền mặt khi nhận hàng (COD)'}
                           {formData.paymentMethod === 'bank_transfer' && 'Chuyển khoản ngân hàng (Chờ xác nhận)'}
-                          {formData.paymentMethod === 'credit_card' && 'Thanh toán qua thẻ Online'}
+                          {formData.paymentMethod === 'credit_card' && 'Thanh toán qua VNPay'}
+                          {formData.paymentMethod === 'momo' && 'Thanh toán qua ví MoMo'}
                         </p>
                         {formData.paymentMethod === 'cod' && (
                           <p className="text-[10px] text-slate-400 mt-1 italic">Vui lòng chuẩn bị số tiền {formatPrice(total)} khi shipper giao sản phẩm</p>

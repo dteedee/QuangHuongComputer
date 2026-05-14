@@ -491,6 +491,18 @@ export const salesApi = {
     },
 };
 
+// ============================================
+// Shipping Fee API
+// ============================================
+export async function calculateShippingFee(
+    toDistrictId: number,
+    toWardCode: string,
+    weight: number = 500
+): Promise<{ fee: number; expectedDeliveryDays: string }> {
+    const response = await client.post('/shipping/calculate-fee', { toDistrictId, toWardCode, weight });
+    return response.data;
+}
+
 // Loyalty Types
 export interface LoyaltyAccount {
     id: string;

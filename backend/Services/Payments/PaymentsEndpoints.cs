@@ -6,6 +6,7 @@ using Payments.Domain;
 using Payments.Infrastructure;
 using Payments.Infrastructure.VNPay;
 using Payments.Infrastructure.SePay;
+using Payments.Infrastructure.MoMo;
 using System.Security.Claims;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
@@ -97,9 +98,43 @@ public static class PaymentsEndpoints
                 payment.SetExternalId($"SEPAY-{payment.Id}", description); // Use payment.Description for content
                 await db.SaveChangesAsync();
             }
+            else if (model.Provider == PaymentProvider.COD)
+            {
+                // COD: no payment URL needed, order goes directly to Confirmed
+                payment.SetExternalId($"COD-{payment.Id}", "");
+                await db.SaveChangesAsync();
+                paymentUrl = ""; // No redirect needed
+            }
+            else if (model.Provider == PaymentProvider.Momo)
+            {
+                var baseUrl = config["BaseUrl"] ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+                var frontendUrl = config["Frontend:Url"] ?? config["Cors:AllowedOrigins:0"] ?? "http://localhost:3000";
+                var momoConfig = new MoMoConfig
+                {
+                    PartnerCode = config["Payment:MoMo:PartnerCode"] ?? "MOMO",
+                    AccessKey = config["Payment:MoMo:AccessKey"] ?? "",
+                    SecretKey = config["Payment:MoMo:SecretKey"] ?? "",
+                    Endpoint = config["Payment:MoMo:Endpoint"] ?? "https://test-payment.momo.vn/v2/gateway/api/create",
+                    ReturnUrl = config["Payment:MoMo:ReturnUrl"] ?? $"{frontendUrl}/payment/callback?provider=momo",
+                    IpnUrl = config["Payment:MoMo:IpnUrl"] ?? $"{baseUrl}/api/payments/momo/callback"
+                };
+                var momoService = new MoMoService(momoConfig, new HttpClient());
+                var momoResult = await momoService.CreatePayment(model.Amount, payment.Id.ToString(), $"Thanh toan don hang {model.OrderId}");
+
+                if (momoResult.ResultCode == 0)
+                {
+                    payment.SetExternalId($"MOMO-{payment.Id}", "");
+                    paymentUrl = momoResult.PayUrl;
+                }
+                else
+                {
+                    payment.Fail(momoResult.Message);
+                }
+                await db.SaveChangesAsync();
+            }
             else
             {
-                // Mock for other providers
+                // Fallback for other providers
                 payment.SetExternalId($"EXT-{Guid.NewGuid()}", $"secret_{Guid.NewGuid()}");
                 await db.SaveChangesAsync();
                 paymentUrl = $"/payment/mock/{payment.Id}";
@@ -113,6 +148,20 @@ public static class PaymentsEndpoints
                 PaymentUrl = paymentUrl
             });
         });
+
+        // COD confirmation endpoint (for delivery staff)
+        group.MapPost("/cod/confirm/{orderId:guid}", async (Guid orderId, PaymentsDbContext db, IPublishEndpoint publishEndpoint) =>
+        {
+            var payment = await db.PaymentIntents
+                .FirstOrDefaultAsync(p => p.OrderId == orderId && p.Provider == PaymentProvider.COD && p.Status == PaymentStatus.Pending);
+            if (payment == null) return Results.NotFound(new { error = "No pending COD payment found" });
+
+            payment.Succeed();
+            await publishEndpoint.Publish(new PaymentSucceededEvent(payment.Id, payment.OrderId, payment.Amount, DateTime.UtcNow));
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "COD payment confirmed", orderId });
+        }).RequireAuthorization();
 
         // VNPay callback endpoint (Public)
         app.MapGet("/api/payments/vnpay/callback", async (
@@ -260,6 +309,40 @@ public static class PaymentsEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { success = true });
+        }).AllowAnonymous();
+
+        // MoMo IPN callback endpoint (Anonymous)
+        app.MapPost("/api/payments/momo/callback", async (HttpContext httpContext, PaymentsDbContext db, IPublishEndpoint publishEndpoint) =>
+        {
+            string body;
+            using (var reader = new System.IO.StreamReader(httpContext.Request.Body))
+                body = await reader.ReadToEndAsync();
+
+            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(body);
+            if (data == null) return Results.BadRequest();
+
+            if (!data.TryGetValue("orderId", out var orderIdEl)) return Results.BadRequest();
+            var orderId = orderIdEl.GetString() ?? "";
+            var resultCode = data.TryGetValue("resultCode", out var rcEl) ? rcEl.GetInt32() : -1;
+
+            if (!Guid.TryParse(orderId, out var paymentId)) return Results.BadRequest();
+
+            var payment = await db.PaymentIntents.FirstOrDefaultAsync(p => p.Id == paymentId);
+            if (payment == null) return Results.NotFound();
+
+            if (resultCode == 0)
+            {
+                payment.Succeed();
+                await publishEndpoint.Publish(new PaymentSucceededEvent(payment.Id, payment.OrderId, payment.Amount, DateTime.UtcNow));
+            }
+            else
+            {
+                var message = data.TryGetValue("message", out var msgEl) ? msgEl.GetString() ?? "Unknown" : "Unknown";
+                payment.Fail($"MoMo error: {message}");
+            }
+
+            await db.SaveChangesAsync();
+            return Results.NoContent();
         }).AllowAnonymous();
 
         // ==================== ADMIN ENDPOINTS ====================
