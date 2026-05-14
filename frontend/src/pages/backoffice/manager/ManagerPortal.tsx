@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { reportingApi, type BusinessOverview } from '../../../api/reporting';
 import { hrApi } from '../../../api/hr';
 import { formatCurrency } from '../../../utils/format';
+import KpiDashboardWidgets from '../../../components/kpi-dashboard-widgets';
 
 export const ManagerPortal = () => {
     const navigate = useNavigate();
@@ -90,6 +91,7 @@ export const ManagerPortal = () => {
 
     return (
         <div className="space-y-10 pb-20 animate-fade-in">
+            <KpiDashboardWidgets />
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">

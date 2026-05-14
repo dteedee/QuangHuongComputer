@@ -187,6 +187,21 @@ export const reportingApi = {
     }
 };
 
+export async function getProfitMarginReport(startDate?: string, endDate?: string) {
+    const { data } = await client.get('/reports/profit-margin', { params: { startDate, endDate } });
+    return data;
+}
+
+export async function getCustomerLTV(top = 50) {
+    const { data } = await client.get('/reports/customer-ltv', { params: { top } });
+    return data;
+}
+
+export async function getDashboardKPIs() {
+    const { data } = await client.get('/reports/dashboard-kpis');
+    return data;
+}
+
 // Helper functions
 function downloadBlob(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);

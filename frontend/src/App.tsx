@@ -13,6 +13,7 @@ import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ScrollToTop } from './components/ScrollToTop';
 import AiChatWidget from './components/ai-chat-widget';
+import { useAnalyticsTracking } from './hooks/use-analytics-tracking';
 
 // ---------------------------------------------------------------------------
 // Loading fallback
@@ -156,6 +157,14 @@ const CrmSegmentsPage = lazy(() => import('./pages/backoffice/crm/SegmentsPage')
 const CrmCampaignsPage = lazy(() => import('./pages/backoffice/crm/CampaignsPage'));
 
 // ---------------------------------------------------------------------------
+// Analytics tracker (must be inside BrowserRouter for useLocation)
+// ---------------------------------------------------------------------------
+function AnalyticsTracker() {
+  useAnalyticsTracking();
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
 const queryClient = new QueryClient();
@@ -171,6 +180,7 @@ function App() {
         <Toaster position="top-right" reverseOrder={false} />
 
         <BrowserRouter>
+          <AnalyticsTracker />
           <ScrollToTop />
           <ConfirmProvider>
           <AuthProvider>
