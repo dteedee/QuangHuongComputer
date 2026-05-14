@@ -114,6 +114,10 @@ const DeliveryNotesPage = lazy(() => import('./pages/backoffice/inventory/delive
 const InventoryCountPage = lazy(() => import('./pages/backoffice/inventory/inventory-count-page'));
 const HRPortal = lazy(() => import('./pages/backoffice/hr/HRPortal').then(m => ({ default: m.HRPortal })));
 const RecruitmentManagement = lazy(() => import('./pages/backoffice/hr/RecruitmentManagement').then(m => ({ default: m.RecruitmentManagement })));
+const AttendancePage = lazy(() => import('./pages/backoffice/hr/attendance-page'));
+const LeaveApprovalPage = lazy(() => import('./pages/backoffice/hr/leave-approval-page'));
+const EmployeeSelfServicePage = lazy(() => import('./pages/backoffice/hr/employee-self-service-page'));
+const InternalChatPage = lazy(() => import('./pages/backoffice/hr/internal-chat-page'));
 const ManagerPortal = lazy(() => import('./pages/backoffice/manager/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
 const AdminPortal = lazy(() => import('./pages/backoffice/admin/AdminPortal').then(m => ({ default: m.AdminPortal })));
 const WarrantyPortal = lazy(() => import('./pages/backoffice/WarrantyPortal').then(m => ({ default: m.WarrantyPortal })));
@@ -257,6 +261,10 @@ function App() {
                           <Route path="accounting/tax-reports" element={<TaxReportsPage />} />
                           <Route path="hr" element={<HRPortal />} />
                           <Route path="hr/recruitment" element={<RecruitmentManagement />} />
+                          <Route path="hr/attendance" element={<AttendancePage />} />
+                          <Route path="hr/approvals" element={<LeaveApprovalPage />} />
+                          <Route path="hr/self-service" element={<EmployeeSelfServicePage />} />
+                          <Route path="hr/chat" element={<InternalChatPage />} />
                           <Route path="warranty" element={<WarrantyPortal />} />
                           <Route path="cms" element={<CMSPortal />} />
                           {/* Admin & Report Routes */}

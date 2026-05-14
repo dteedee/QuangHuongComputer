@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
     Users2, CreditCard, Calendar, BarChart,
     UserPlus, CheckCircle,
-    UserCheck, Loader2, X, Check, Briefcase
+    UserCheck, Loader2, X, Check, Briefcase,
+    ClipboardCheck, MessageSquare, UserCog
 } from 'lucide-react';
 import { hrApi, type Employee, type Payroll } from '../../../api/hr';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -136,6 +137,30 @@ export const HRPortal = () => {
                         <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">{stat.label}</p>
                         <h3 className="text-2xl font-black text-gray-900 tracking-tighter">{stat.value}</h3>
                     </motion.div>
+                ))}
+            </div>
+
+            {/* Quick Nav Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                    { label: 'Chấm Công', desc: 'Check-in / check-out', to: '/backoffice/hr/attendance', icon: <Calendar size={24} />, color: 'text-green-600 bg-green-50' },
+                    { label: 'Duyệt Phép', desc: 'Quản lý nghỉ phép', to: '/backoffice/hr/approvals', icon: <ClipboardCheck size={24} />, color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Tự Phục Vụ', desc: 'Hồ sơ & phiếu lương', to: '/backoffice/hr/self-service', icon: <UserCog size={24} />, color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Chat Nội Bộ', desc: 'Nhắn tin nội bộ', to: '/backoffice/hr/chat', icon: <MessageSquare size={24} />, color: 'text-purple-600 bg-purple-50' },
+                ].map(card => (
+                    <Link
+                        key={card.to}
+                        to={card.to}
+                        className="premium-card p-6 flex flex-col gap-3 hover:shadow-lg transition-all active:scale-95 group"
+                    >
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
+                            {card.icon}
+                        </div>
+                        <div>
+                            <p className="font-black text-sm uppercase italic tracking-tight text-gray-900">{card.label}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{card.desc}</p>
+                        </div>
+                    </Link>
                 ))}
             </div>
 

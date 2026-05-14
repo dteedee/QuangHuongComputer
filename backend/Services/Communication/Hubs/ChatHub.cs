@@ -164,6 +164,19 @@ public class ChatHub : Hub
         await Clients.Group($"conversation_{conversation.Id}").SendAsync("Notify", $"{userName} đã tham gia hỗ trợ");
     }
 
+    public async Task JoinChannel(string channelId) =>
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"channel_{channelId}");
+
+    public async Task LeaveChannel(string channelId) =>
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"channel_{channelId}");
+
+    public async Task SendChannelMessage(string channelId, string message) =>
+        await Clients.Group($"channel_{channelId}").SendAsync(
+            "ReceiveChannelMessage",
+            Context.UserIdentifier,
+            message,
+            DateTime.UtcNow);
+
     public async Task MarkAsRead(string messageId)
     {
         // Implementation for marking messages as read

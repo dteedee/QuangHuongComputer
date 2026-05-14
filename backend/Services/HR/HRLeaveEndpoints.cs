@@ -133,6 +133,23 @@ public static class HRLeaveEndpoints
             );
 
             db.LeaveRequests.Add(leave);
+
+            // Auto-create approval request
+            if (Guid.TryParse(dto.EmployeeId.ToString(), out _))
+            {
+                var approval = new ApprovalRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Type = ApprovalType.LeaveRequest,
+                    ReferenceId = leave.Id,
+                    RequesterId = dto.EmployeeId,
+                    RequesterName = employee.FullName,
+                    SubmittedAt = DateTime.UtcNow,
+                    Status = ApprovalStatus.Pending
+                };
+                db.ApprovalRequests.Add(approval);
+            }
+
             await db.SaveChangesAsync();
 
             return Results.Created($"/api/hr/leaves/{leave.Id}", new { leave.Id, Status = leave.Status.ToString() });

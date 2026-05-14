@@ -14,6 +14,8 @@ public class HRDbContext : DbContext
     public DbSet<ShiftAssignment> ShiftAssignments => Set<ShiftAssignment>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<JobListing> JobListings => Set<JobListing>();
+    public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +74,24 @@ public class HRDbContext : DbContext
             entity.HasIndex(e => new { e.EmployeeId, e.StartDate });
             entity.HasIndex(e => new { e.Status, e.StartDate });
             entity.HasIndex(e => new { e.StartDate, e.EndDate });
+        });
+
+        // ApprovalRequest configuration
+        modelBuilder.Entity<ApprovalRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Status, e.SubmittedAt });
+            entity.HasIndex(e => e.RequesterId);
+        });
+
+        // AttendanceRecord configuration
+        modelBuilder.Entity<AttendanceRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.WorkHours).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHours).HasPrecision(8, 2);
+            entity.HasIndex(e => new { e.EmployeeId, e.Date }).IsUnique();
+            entity.HasIndex(e => e.Date);
         });
 
         // JobListing configuration

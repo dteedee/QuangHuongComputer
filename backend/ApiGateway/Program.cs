@@ -655,6 +655,9 @@ app.MapContentEndpoints();
 app.MapCommunicationEndpoints(); // Added Communication Endpoints
 app.MapHREndpoints();
 app.MapHRLeaveEndpoints();
+app.MapAttendanceEndpoints();
+app.MapApprovalEndpoints();
+app.MapSelfServiceEndpoints();
 app.MapSystemConfigEndpoints();
 app.MapInventoryEndpoints();
 app.MapGoodsReceivedNoteEndpoints();

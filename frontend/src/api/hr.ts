@@ -413,6 +413,95 @@ const _cancelShiftAssignment = async (id: string) => {
     return response.data;
 };
 
+// --- Attendance APIs ---
+const _checkIn = async () => {
+    const { data } = await client.post('/api/hr/attendance/check-in');
+    return data;
+};
+
+const _checkOut = async () => {
+    const { data } = await client.post('/api/hr/attendance/check-out');
+    return data;
+};
+
+const _getAttendanceToday = async () => {
+    const { data } = await client.get('/api/hr/attendance/today');
+    return data;
+};
+
+const _getAttendanceReport = async (month: string) => {
+    const { data } = await client.get('/api/hr/attendance/report', { params: { month } });
+    return data;
+};
+
+const _getMyAttendanceReport = async (month: string) => {
+    const { data } = await client.get('/api/hr/attendance/my-report', { params: { month } });
+    return data;
+};
+
+// --- Approval APIs ---
+const _getPendingApprovals = async () => {
+    const { data } = await client.get('/api/hr/approvals/pending');
+    return data;
+};
+
+const _getMyApprovalRequests = async () => {
+    const { data } = await client.get('/api/hr/approvals/my-requests');
+    return data;
+};
+
+const _approveRequest = async (id: string, comments?: string) => {
+    const { data } = await client.post(`/api/hr/approvals/${id}/approve`, { comments });
+    return data;
+};
+
+const _rejectRequest = async (id: string, reason: string) => {
+    const { data } = await client.post(`/api/hr/approvals/${id}/reject`, { reason });
+    return data;
+};
+
+// --- Self-service APIs ---
+const _getMyProfile = async () => {
+    const { data } = await client.get('/api/hr/self-service/profile');
+    return data;
+};
+
+const _updateMyProfile = async (profile: any) => {
+    const { data } = await client.put('/api/hr/self-service/profile', profile);
+    return data;
+};
+
+const _getLeaveBalance = async () => {
+    const { data } = await client.get('/api/hr/self-service/leave-balance');
+    return data;
+};
+
+const _getMyPayslips = async () => {
+    const { data } = await client.get('/api/hr/self-service/payslips');
+    return data;
+};
+
+const _getHolidays = async (year: number) => {
+    const { data } = await client.get('/api/hr/self-service/holidays', { params: { year } });
+    return data;
+};
+
+// Named exports for direct import
+export const checkIn = _checkIn;
+export const checkOut = _checkOut;
+export const getAttendanceToday = _getAttendanceToday;
+export const getAttendanceReport = _getAttendanceReport;
+export const getMyAttendanceReport = _getMyAttendanceReport;
+export const getPendingApprovals = _getPendingApprovals;
+export const getMyApprovalRequests = _getMyApprovalRequests;
+export const approveRequest = _approveRequest;
+export const rejectRequest = _rejectRequest;
+export const getMyProfile = _getMyProfile;
+export const updateMyProfile = _updateMyProfile;
+export const getLeaveBalance = _getLeaveBalance;
+export const getMyPayslips = _getMyPayslips;
+export const getHolidays = _getHolidays;
+
 // ============================================
 // Public API Export
 // ============================================
