@@ -145,7 +145,7 @@ public static class SalesEndpointsFastCheckout
                 }
                 else
                 {
-                    order.SetShippingAmount(30000); // Default shipping
+                    order.SetShippingAmount(model.ShippingFee > 0 ? model.ShippingFee : 30000);
                 }
 
                 // Apply manual discount if any
@@ -170,7 +170,7 @@ public static class SalesEndpointsFastCheckout
                             "SAVE20" => subtotal * 0.2m,
                             "SAVE15" => subtotal * 0.15m,
                             "FREESHIP" => order.ShippingAmount,
-                            _ => subtotal * 0.05m
+                            _ => 0m // Unknown coupon codes are rejected
                         };
                     }
 
@@ -192,12 +192,16 @@ public static class SalesEndpointsFastCheckout
                 await salesDb.Orders.AddAsync(order, cts.Token);
                 await salesDb.SaveChangesAsync(cts.Token);
 
-                // Update product stock (simple update using raw SQL - no SaveChanges needed)
+                // Update BOTH Catalog and Inventory stock atomically
                 foreach (var item in orderItems)
                 {
-                    // Use parameterized query to prevent SQL injection
+                    // 1. Update Catalog.Products.StockQuantity
                     await catalogDb.Database.ExecuteSqlAsync(
                         $"UPDATE \"Products\" SET \"StockQuantity\" = \"StockQuantity\" - {item.Quantity} WHERE \"Id\" = {item.ProductId}", cts.Token);
+
+                    // 2. Update Inventory.InventoryItems — reserve stock
+                    await inventoryDb.Database.ExecuteSqlAsync(
+                        $"UPDATE \"InventoryItems\" SET \"QuantityOnHand\" = \"QuantityOnHand\" - {item.Quantity}, \"ReservedQuantity\" = GREATEST(\"ReservedQuantity\" - {item.Quantity}, 0) WHERE \"ProductId\" = {item.ProductId}", cts.Token);
                 }
 
                 // Publish event (fire and forget)

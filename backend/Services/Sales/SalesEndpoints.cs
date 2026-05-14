@@ -2076,7 +2076,8 @@ public record CheckoutDto(
     bool IsPickup = false,
     string? PickupStoreId = null,
     string? PickupStoreName = null,
-    string? CouponCode = null
+    string? CouponCode = null,
+    decimal ShippingFee = 0
 );
 public record CheckoutItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
 public record UpdateOrderStatusDto(string Status);

@@ -171,7 +171,8 @@ export function CheckoutPage() {
           isPickup: formData.deliveryMethod === 'pickup',
           pickupStoreId: formData.deliveryMethod === 'pickup' ? formData.pickupStoreId : undefined,
           pickupStoreName: formData.deliveryMethod === 'pickup' ? 'Quang Hưởng Computer - Trụ sở chính' : undefined,
-          customerId: user.id
+          customerId: user.id,
+          shippingFee: calculatedShippingFee > 0 ? calculatedShippingFee : 0
         };
         response = await salesApi.orders.create(checkoutData);
       } else {
