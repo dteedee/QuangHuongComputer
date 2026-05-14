@@ -20,6 +20,8 @@ public class InventoryItem : Entity<Guid>
     public DateTime? LastStockUpdate { get; private set; }
     public int LowStockThreshold { get; private set; } = 5;
     public string? InternalNotes { get; private set; }
+    public int ReorderPoint { get; set; } = 5;
+    public int ReorderQuantity { get; set; } = 20;
     
     public int AvailableQuantity => QuantityOnHand - ReservedQuantity;
 

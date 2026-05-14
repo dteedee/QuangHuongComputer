@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import {
     Package, TrendingDown, AlertTriangle, ShoppingCart, Plus, Search,
     Box, Filter, ArrowUpDown, Edit2, Check, X, RefreshCw, Layers,
-    ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Clock
+    ChevronLeft, ChevronRight, AlertCircle, CheckCircle, Clock,
+    FileText, Truck, ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -209,6 +210,46 @@ export const InventoryPortal = () => {
                     <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                     Làm mới
                 </button>
+            </div>
+
+            {/* Workflow Navigation Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Link
+                    to="/backoffice/inventory/grn"
+                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/40 transition-all group"
+                >
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-200 group-hover:scale-105 transition-transform">
+                        <FileText size={22} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-gray-900 text-sm">Phiếu Nhập Kho</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">Quản lý GRN</p>
+                    </div>
+                </Link>
+                <Link
+                    to="/backoffice/inventory/dn"
+                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-all group"
+                >
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
+                        <Truck size={22} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-gray-900 text-sm">Phiếu Xuất Kho</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">Quản lý DN</p>
+                    </div>
+                </Link>
+                <Link
+                    to="/backoffice/inventory/count"
+                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50/40 transition-all group"
+                >
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200 group-hover:scale-105 transition-transform">
+                        <ClipboardList size={22} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-gray-900 text-sm">Kiểm Kê Kho</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">Phiên kiểm kê</p>
+                    </div>
+                </Link>
             </div>
 
             {/* Stats Cards */}

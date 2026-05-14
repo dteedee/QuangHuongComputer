@@ -18,6 +18,7 @@ public class StockMovement : Entity<Guid>
     public DateTime MovementDate { get; private set; }
     public string? PerformedBy { get; private set; }
     public string? Notes { get; private set; }
+    public string? DocumentReference { get; private set; } // GRN number, DN number, etc.
 
     protected StockMovement() { }
 

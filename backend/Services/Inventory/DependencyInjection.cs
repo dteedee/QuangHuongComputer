@@ -34,6 +34,9 @@ public static class DependencyInjection
         // Register background service để tự động release expired reservations
         services.AddHostedService<ExpiredReservationCleanupService>();
 
+        // Auto-reorder background service
+        services.AddHostedService<AutoReorderService>();
+
         return services;
     }
 }

@@ -109,6 +109,9 @@ const TaxReportsPage = lazy(() => import('./pages/backoffice/accountant/TaxRepor
 const InventoryPortal = lazy(() => import('./pages/backoffice/inventory/InventoryPortal').then(m => ({ default: m.InventoryPortal })));
 const SuppliersPage = lazy(() => import('./pages/backoffice/inventory/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
 const PurchaseOrdersPage = lazy(() => import('./pages/backoffice/inventory/PurchaseOrdersPage'));
+const GoodsReceivedNotesPage = lazy(() => import('./pages/backoffice/inventory/goods-received-notes-page'));
+const DeliveryNotesPage = lazy(() => import('./pages/backoffice/inventory/delivery-notes-page'));
+const InventoryCountPage = lazy(() => import('./pages/backoffice/inventory/inventory-count-page'));
 const HRPortal = lazy(() => import('./pages/backoffice/hr/HRPortal').then(m => ({ default: m.HRPortal })));
 const RecruitmentManagement = lazy(() => import('./pages/backoffice/hr/RecruitmentManagement').then(m => ({ default: m.RecruitmentManagement })));
 const ManagerPortal = lazy(() => import('./pages/backoffice/manager/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
@@ -242,6 +245,9 @@ function App() {
                           <Route path="inventory" element={<InventoryPortal />} />
                           <Route path="inventory/suppliers" element={<SuppliersPage />} />
                           <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
+                          <Route path="inventory/grn" element={<GoodsReceivedNotesPage />} />
+                          <Route path="inventory/dn" element={<DeliveryNotesPage />} />
+                          <Route path="inventory/count" element={<InventoryCountPage />} />
                           <Route path="accounting" element={<AccountingPortal />} />
                           <Route path="accounting/ar" element={<ARPage />} />
                           <Route path="accounting/ap" element={<APPage />} />

@@ -18,6 +18,12 @@ public class InventoryDbContext : DbContext
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<SerialNumber> SerialNumbers { get; set; }
     public DbSet<StockMovement> StockMovements { get; set; }
+    public DbSet<GoodsReceivedNote> GoodsReceivedNotes { get; set; }
+    public DbSet<GRNItem> GRNItems { get; set; }
+    public DbSet<DeliveryNote> DeliveryNotes { get; set; }
+    public DbSet<DNItem> DNItems { get; set; }
+    public DbSet<InventoryCountSession> InventoryCountSessions { get; set; }
+    public DbSet<InventoryCountItem> InventoryCountItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -203,9 +209,67 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.ReferenceType).HasMaxLength(50);
             entity.Property(e => e.PerformedBy).HasMaxLength(100);
             entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.DocumentReference).HasMaxLength(50);
             entity.HasIndex(e => new { e.ProductId, e.MovementDate }).HasDatabaseName("IX_StockMovement_Product_Date");
             entity.HasIndex(e => e.Type).HasDatabaseName("IX_StockMovement_Type");
             entity.HasIndex(e => e.ReferenceId).HasDatabaseName("IX_StockMovement_Reference");
+        });
+
+        modelBuilder.Entity<GoodsReceivedNote>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.ReceivedBy).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.HasIndex(e => e.DocumentNumber).IsUnique().HasDatabaseName("IX_GRN_DocumentNumber");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_GRN_Status");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.GoodsReceivedNoteId);
+        });
+
+        modelBuilder.Entity<GRNItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductName).HasMaxLength(300);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 2);
+            entity.Property(e => e.SerialNumbers).HasMaxLength(2000);
+        });
+
+        modelBuilder.Entity<DeliveryNote>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.DeliveredBy).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.HasIndex(e => e.DocumentNumber).IsUnique().HasDatabaseName("IX_DN_DocumentNumber");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_DN_Status");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.DeliveryNoteId);
+        });
+
+        modelBuilder.Entity<DNItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductName).HasMaxLength(300);
+            entity.Property(e => e.SerialNumbers).HasMaxLength(2000);
+        });
+
+        modelBuilder.Entity<InventoryCountSession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.ApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.HasIndex(e => e.DocumentNumber).IsUnique().HasDatabaseName("IX_CountSession_DocumentNumber");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_CountSession_Status");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.CountSessionId);
+        });
+
+        modelBuilder.Entity<InventoryCountItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductName).HasMaxLength(300);
+            entity.Property(e => e.CountedBy).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Ignore(e => e.Variance); // Computed property
         });
     }
 }
