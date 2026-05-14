@@ -79,6 +79,22 @@ services:
     restart: unless-stopped
 
   # ============================================
+  # SEO - Prerender
+  # ============================================
+  prerender:
+    image: tvanro/prerender-alpine:6.4.1
+    container_name: quanghuong-prerender
+    ports:
+      - "3033:3000"
+    environment:
+      - CACHE_MAXSIZE=500
+      - CACHE_TTL=86400
+      - CHROME_FLAGS=--no-sandbox,--headless,--disable-gpu,--disable-dev-shm-usage
+    networks:
+      - quanghuong-network
+    restart: unless-stopped
+
+  # ============================================
   # DATABASE UI - Adminer
   # ============================================
   adminer:

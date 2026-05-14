@@ -101,7 +101,8 @@ public static class CatalogEndpoints
                 categoryName = p.Category?.Name,
                 brandId = p.BrandId.ToString(),
                 brandName = p.Brand?.Name,
-                galleryImages = p.GalleryImages
+                galleryImages = p.GalleryImages,
+                slug = p.Slug
             });
 
             var result = new
@@ -167,13 +168,48 @@ public static class CatalogEndpoints
                 categoryName = product.Category?.Name,
                 brandId = product.BrandId.ToString(),
                 brandName = product.Brand?.Name,
-                galleryImages = product.GalleryImages
+                galleryImages = product.GalleryImages,
+                slug = product.Slug
             };
 
             // Cache for 30 minutes
             await cache.SetAsync(cacheKey, (object)result, TimeSpan.FromMinutes(30));
 
             return Results.Ok(result);
+        });
+
+        // Get product by slug
+        group.MapGet("/products/by-slug/{slug}", async (string slug, CatalogDbContext db) =>
+        {
+            var product = await db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+            if (product is null) return Results.NotFound();
+            return Results.Ok(new
+            {
+                id = product.Id, name = product.Name, sku = product.Sku,
+                price = product.Price, oldPrice = product.OldPrice,
+                description = product.Description, specifications = product.Specifications,
+                warrantyInfo = product.WarrantyInfo, stockLocations = product.StockLocations,
+                stockQuantity = product.StockQuantity, status = product.Status,
+                viewCount = product.ViewCount, soldCount = product.SoldCount,
+                averageRating = product.AverageRating, reviewCount = product.ReviewCount,
+                imageUrl = product.ImageUrl, lowStockThreshold = product.LowStockThreshold,
+                isActive = product.IsActive, createdAt = product.CreatedAt, updatedAt = product.UpdatedAt,
+                categoryId = product.CategoryId.ToString(), categoryName = product.Category?.Name,
+                brandId = product.BrandId.ToString(), brandName = product.Brand?.Name,
+                galleryImages = product.GalleryImages, slug = product.Slug
+            });
+        });
+
+        // Get category by slug
+        group.MapGet("/categories/by-slug/{slug}", async (string slug, CatalogDbContext db) =>
+        {
+            var category = await db.Categories
+                .FirstOrDefaultAsync(c => c.Slug == slug);
+            return category is null ? Results.NotFound() : Results.Ok(category);
         });
 
         group.MapGet("/categories", async (CatalogDbContext db, ICacheService cache) =>
@@ -209,7 +245,8 @@ public static class CatalogEndpoints
                 isActive = c.IsActive,
                 createdAt = c.CreatedAt,
                 updatedAt = c.UpdatedAt,
-                productCount = productCounts.GetValueOrDefault(c.Id, 0)
+                productCount = productCounts.GetValueOrDefault(c.Id, 0),
+                slug = c.Slug
             }).ToList<object>();
 
             await cache.SetAsync(cacheKey, categories, TimeSpan.FromHours(1));
@@ -370,7 +407,8 @@ public static class CatalogEndpoints
                 categoryName = p.Category?.Name,
                 brandId = p.BrandId.ToString(),
                 brandName = p.Brand?.Name,
-                galleryImages = p.GalleryImages
+                galleryImages = p.GalleryImages,
+                slug = p.Slug
             });
 
             var result = new {
@@ -408,6 +446,9 @@ public static class CatalogEndpoints
                 imageUrl: model.ImageUrl,
                 galleryImages: model.GalleryImages
             );
+
+            if (string.IsNullOrWhiteSpace(product.Slug))
+                product.Slug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s));
 
             db.Products.Add(product);
             await db.SaveChangesAsync();
@@ -451,6 +492,10 @@ public static class CatalogEndpoints
         group.MapPost("/categories", async (CreateCategoryDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var category = new Category(model.Name, model.Description);
+
+            if (string.IsNullOrWhiteSpace(category.Slug))
+                category.Slug = SlugGenerator.GenerateUnique(category.Name, s => db.Categories.Any(c => c.Slug == s));
+
             db.Categories.Add(category);
             await db.SaveChangesAsync();
 
@@ -526,6 +571,9 @@ public static class CatalogEndpoints
             if (!string.IsNullOrEmpty(model.Sku)) product.UpdateSku(model.Sku);
 
             product.UpdateSeo(model.MetaTitle, model.MetaDescription, model.MetaKeywords);
+
+            if (string.IsNullOrWhiteSpace(product.Slug))
+                product.Slug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s && p.Id != id));
 
             await db.SaveChangesAsync();
 
@@ -644,7 +692,10 @@ public static class CatalogEndpoints
 
             category.UpdateDetails(model.Name, model.Description);
             if (model.IsActive.HasValue) { if (model.IsActive.Value) category.Activate(); else category.Deactivate(); }
-            
+
+            if (string.IsNullOrWhiteSpace(category.Slug))
+                category.Slug = SlugGenerator.GenerateUnique(category.Name, s => db.Categories.Any(c => c.Slug == s && c.Id != id));
+
             await db.SaveChangesAsync();
 
             // Invalidate caches

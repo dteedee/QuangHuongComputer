@@ -277,6 +277,33 @@ services:
         max-file: "3"
 
   # ============================================
+  # SEO - Prerender (Production)
+  # ============================================
+  prerender:
+    image: tvanro/prerender-alpine:6.4.1
+    container_name: qhc-prerender
+    environment:
+      - CACHE_MAXSIZE=500
+      - CACHE_TTL=86400
+      - CHROME_FLAGS=--no-sandbox,--headless,--disable-gpu,--disable-dev-shm-usage
+    networks:
+      - qhc-internal
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ============================================
   # REVERSE PROXY - Nginx (Production)
   # ============================================
   nginx:
@@ -291,6 +318,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - prerender
     networks:
       - qhc-internal
     restart: always

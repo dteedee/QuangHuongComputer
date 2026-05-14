@@ -73,6 +73,12 @@ public class CatalogDbContext : DbContext
                 .IsUnique()
                 .HasFilter("\"IsActive\" = true")
                 .HasDatabaseName("uq_products_sku");
+
+            entity.Property(p => p.Slug).HasMaxLength(300);
+            entity.HasIndex(p => p.Slug)
+                .IsUnique()
+                .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''")
+                .HasDatabaseName("uq_products_slug");
             
             // Indexes for common queries
             entity.HasIndex(p => new { p.Name, p.IsActive })
@@ -102,6 +108,12 @@ public class CatalogDbContext : DbContext
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
             entity.Property(c => c.Description).HasColumnType("text");
+
+            entity.Property(c => c.Slug).HasMaxLength(300);
+            entity.HasIndex(c => c.Slug)
+                .IsUnique()
+                .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''")
+                .HasDatabaseName("uq_categories_slug");
         });
 
         // Brand configurations

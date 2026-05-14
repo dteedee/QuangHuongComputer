@@ -23,7 +23,9 @@ interface Specification {
 type ReviewSortOption = 'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful';
 
 export default function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  // Support both /san-pham/:slug and /product/:id routes
+  const { slug, id } = useParams<{ slug?: string; id?: string }>();
+  const param = slug || id || '';
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
@@ -118,7 +120,7 @@ export default function ProductDetailPage() {
         icon: '🔐',
         duration: 3000
       });
-      navigate('/login', { state: { from: `/product/${id}` } });
+      navigate('/login', { state: { from: `/san-pham/${param}` } });
       return;
     }
 
@@ -135,8 +137,8 @@ export default function ProductDetailPage() {
 
   const handleReviewSubmitted = () => {
     // Reload reviews after submitting
-    if (id) {
-      loadReviews(id);
+    if (product?.id) {
+      loadReviews(product.id);
     }
   };
 
@@ -156,28 +158,20 @@ export default function ProductDetailPage() {
     }
   };
 
-  useEffect(() => {
-    if (id) {
-      loadProduct(id);
-      loadRelatedProducts(id);
-      loadAiRecommendations(id);
-      loadReviews(id);
-      checkPurchaseStatus(id);
-    }
-    window.scrollTo(0, 0);
-  }, [id, isAuthenticated]);
+  // UUID regex to detect if param is an ID vs slug
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  // Track recently viewed products
-  useEffect(() => {
-    if (product && id) {
-      addToRecentlyViewed(id);
-    }
-  }, [product, id, addToRecentlyViewed]);
-
-  const loadProduct = async (productId: string) => {
+  const loadProduct = async (productParam: string) => {
     setLoading(true);
     try {
-      const data = await catalogApi.getProduct(productId);
+      let data: Product;
+      if (UUID_REGEX.test(productParam)) {
+        // Looks like a UUID — fetch by ID (legacy route)
+        data = await catalogApi.getProduct(productParam);
+      } else {
+        // Looks like a slug
+        data = await catalogApi.getProductBySlug(productParam);
+      }
       setProduct(data);
     } catch (error) {
       console.error('Failed to load product:', error);
@@ -231,6 +225,30 @@ export default function ProductDetailPage() {
       setLoadingReviews(false);
     }
   };
+
+  useEffect(() => {
+    if (param) {
+      loadProduct(param);
+    }
+    window.scrollTo(0, 0);
+  }, [param]);
+
+  // Load related data once product.id is available
+  useEffect(() => {
+    if (product?.id) {
+      loadRelatedProducts(product.id);
+      loadAiRecommendations(product.id);
+      loadReviews(product.id);
+      checkPurchaseStatus(product.id);
+    }
+  }, [product?.id, isAuthenticated]);
+
+  // Track recently viewed products
+  useEffect(() => {
+    if (product?.id) {
+      addToRecentlyViewed(product.id);
+    }
+  }, [product?.id, addToRecentlyViewed]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -351,7 +369,7 @@ export default function ProductDetailPage() {
         keywords={product.metaKeywords || `${product.name}, mua ${product.name}, ${product.sku}`}
         image={product.imageUrl || '/logo.png'}
         type="product"
-        canonicalUrl={product.canonicalUrl}
+        canonicalUrl={product.canonicalUrl || `/san-pham/${product.slug || product.id}`}
         structuredData={[
           generateProductSchema(product),
           generateBreadcrumbSchema([
@@ -787,7 +805,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {aiRecommendations.map((rec) => (
-                  <div key={rec.id} onClick={() => navigate(`/product/${rec.id}`)} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center cursor-pointer group">
+                  <div key={rec.id} onClick={() => navigate(`/san-pham/${rec.slug || rec.id}`)} className="bg-white p-4 rounded-2xl border border-red-50 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-center cursor-pointer group">
                     <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center p-2">
                       {rec?.imageUrl ? (
                         <img src={rec.imageUrl} alt={rec?.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform" />
@@ -835,7 +853,7 @@ export default function ProductDetailPage() {
               {relatedProducts.map((p) => (
                 <div
                   key={p.id}
-                  onClick={() => navigate(`/product/${p.id}`)}
+                  onClick={() => navigate(`/san-pham/${p.slug || p.id}`)}
                   className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer"
                 >
                   <div className="aspect-square bg-white p-6 flex items-center justify-center relative overflow-hidden">
@@ -881,7 +899,7 @@ export default function ProductDetailPage() {
 
         {/* Recently Viewed Products */}
         <div className="mt-8">
-          <RecentlyViewedProducts currentProductId={id} title="Bạn đã xem gần đây" />
+          <RecentlyViewedProducts currentProductId={product?.id} title="Bạn đã xem gần đây" />
         </div>
       </div>
 

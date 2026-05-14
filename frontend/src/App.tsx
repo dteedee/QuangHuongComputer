@@ -183,6 +183,7 @@ function App() {
                         <Route path="payment/callback" element={<PaymentCallbackPage />} />
                         <Route path="payment/success" element={<PaymentResultPage />} />
                         <Route path="payment/failed" element={<PaymentResultPage />} />
+                        <Route path="san-pham/:slug" element={<ProductDetailPage />} />
                         <Route path="product/:id" element={<ProductDetailPage />} />
                         <Route path="products" element={<ProductCatalogPage />} />
                         <Route path="products/:id" element={<ProductDetailPage />} />
@@ -207,6 +208,7 @@ function App() {
                         <Route path="components" element={<CategoryPage />} />
                         <Route path="screens" element={<CategoryPage />} />
                         <Route path="search" element={<CategoryPage />} />
+                        <Route path="danh-muc/:slug" element={<CategoryPage />} />
                         <Route path="category/:slug" element={<CategoryPage />} />
 
                         {/* Content Pages */}

@@ -3,6 +3,7 @@ import client from './client';
 // Types - Updated to match backend entities
 export interface Product {
     id: string;
+    slug?: string;
     name: string;
     sku: string;
     description: string;
@@ -75,6 +76,7 @@ export interface ProductAttribute {
 
 export interface Category {
     id: string;
+    slug?: string;
     name: string;
     description: string;
     isActive: boolean;
@@ -184,6 +186,16 @@ export const catalogApi = {
 
     getProduct: async (id: string) => {
         const response = await client.get<Product>(`/catalog/products/${id}`);
+        return response.data;
+    },
+
+    getProductBySlug: async (slug: string) => {
+        const response = await client.get<Product>(`/catalog/products/by-slug/${slug}`);
+        return response.data;
+    },
+
+    getCategoryBySlug: async (slug: string) => {
+        const response = await client.get<Category>(`/catalog/categories/by-slug/${slug}`);
         return response.data;
     },
 

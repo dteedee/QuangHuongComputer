@@ -36,6 +36,7 @@ public class Product : Entity<Guid>
     public Guid? UpdatedByUserId { get; private set; }
     
     // SEO fields
+    public string Slug { get; set; } = string.Empty;
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public string? MetaKeywords { get; private set; }

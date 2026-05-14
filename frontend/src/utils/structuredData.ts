@@ -85,7 +85,7 @@ export function generateProductSchema(product: Product) {
     },
     offers: {
       '@type': 'Offer',
-      url: `${SITE_URL}/san-pham/${product.id}`,
+      url: `${SITE_URL}/san-pham/${product.slug || product.id}`,
       priceCurrency: 'VND',
       price: product.price,
       availability,
@@ -130,7 +130,7 @@ export function generateItemListSchema(
     itemListElement: products.slice(0, 20).map((product, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${SITE_URL}/san-pham/${product.id}`,
+      url: `${SITE_URL}/san-pham/${product.slug || product.id}`,
       name: product.name,
     })),
   };

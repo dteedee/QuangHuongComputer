@@ -638,6 +638,7 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
 });
 
 // Map Endpoints
+app.MapSitemapEndpoints();
 app.MapCatalogEndpoints();
 app.MapAiEndpoints();
 app.MapCatalogPCBuilderEndpoints();
