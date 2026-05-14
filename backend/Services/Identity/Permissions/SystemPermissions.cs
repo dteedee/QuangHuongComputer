@@ -81,6 +81,38 @@ public static class SystemPermissions
         public const string Config = "Permissions.System.Config";
     }
 
+    public static class HR
+    {
+        public const string ViewEmployees = "Permissions.HR.ViewEmployees";
+        public const string ManageEmployees = "Permissions.HR.ManageEmployees";
+        public const string ManagePayroll = "Permissions.HR.ManagePayroll";
+        public const string ApproveLeave = "Permissions.HR.ApproveLeave";
+        public const string ManageTimesheet = "Permissions.HR.ManageTimesheet";
+    }
+
+    public static class CRM
+    {
+        public const string ViewLeads = "Permissions.CRM.ViewLeads";
+        public const string ManageLeads = "Permissions.CRM.ManageLeads";
+        public const string ManageCampaigns = "Permissions.CRM.ManageCampaigns";
+        public const string ViewAnalytics = "Permissions.CRM.ViewAnalytics";
+    }
+
+    public static class Content
+    {
+        public const string ManageBanners = "Permissions.Content.ManageBanners";
+        public const string ManagePosts = "Permissions.Content.ManagePosts";
+        public const string ManagePages = "Permissions.Content.ManagePages";
+        public const string ManageMenus = "Permissions.Content.ManageMenus";
+    }
+
+    public static class Warranty
+    {
+        public const string View = "Permissions.Warranty.View";
+        public const string Process = "Permissions.Warranty.Process";
+        public const string ManagePolicies = "Permissions.Warranty.ManagePolicies";
+    }
+
     public static List<string> GetAllPermissions()
     {
         var permissions = new List<string>();

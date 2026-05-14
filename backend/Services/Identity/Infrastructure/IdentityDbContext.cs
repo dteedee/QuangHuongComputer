@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Identity.Domain;
 
 namespace Identity.Infrastructure;
 
@@ -117,6 +118,8 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+    public DbSet<TwoFactorConfig> TwoFactorConfigs { get; set; }
+    public DbSet<UserSession> UserSessions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -193,6 +196,26 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasIndex(e => e.JwtId);
             entity.HasIndex(e => new { e.UserId, e.IsRevoked, e.ExpiresAt });
+        });
+
+        builder.Entity<TwoFactorConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.TotpSecret).HasMaxLength(500);
+            entity.Property(e => e.BackupCodes).HasMaxLength(2000);
+            entity.HasIndex(e => e.UserId).IsUnique();
+        });
+
+        builder.Entity<UserSession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.DeviceInfo).HasMaxLength(500);
+            entity.Property(e => e.UserAgent).HasMaxLength(1000);
+            entity.Property(e => e.RefreshTokenId).HasMaxLength(500);
+            entity.HasIndex(e => new { e.UserId, e.IsRevoked });
         });
     }
 }

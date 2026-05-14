@@ -135,6 +135,8 @@ const MenuManager = lazy(() => import('./pages/admin/MenuManager').then(m => ({ 
 const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(m => ({ default: m.HomepageBuilder })));
 
 // Backoffice admin pages
+const TwoFactorSetupPage = lazy(() => import('./pages/backoffice/admin/two-factor-setup-page'));
+const SessionsPage = lazy(() => import('./pages/backoffice/admin/sessions-page'));
 const RolesPage = lazy(() => import('./pages/backoffice/admin/PermissionsPage').then(m => ({ default: m.PermissionsPage })));
 const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').then(m => ({ default: m.UsersPage })));
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
@@ -279,6 +281,8 @@ function App() {
                           <Route path="coupons" element={<CouponsPage />} />
                           <Route path="config" element={<ConfigPortal />} />
                           <Route path="admin" element={<AdminPortal />} />
+                          <Route path="admin/2fa" element={<TwoFactorSetupPage />} />
+                          <Route path="admin/sessions" element={<SessionsPage />} />
                           <Route path="audit-logs" element={<AuditLogsPage />} />
                           <Route path="manager" element={<ManagerPortal />} />
                           <Route path="notifications" element={<NotificationCenter />} />

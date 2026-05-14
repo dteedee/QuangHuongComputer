@@ -360,6 +360,47 @@ export const authApi = {
 };
 
 // ========================================
+// 2FA API
+// ========================================
+export async function setup2FA() {
+    const { data } = await client.post('/api/identity/2fa/setup');
+    return data as { secret: string; qrUri: string };
+}
+
+export async function verify2FASetup(code: string) {
+    const { data } = await client.post('/api/identity/2fa/verify-setup', { code });
+    return data as { enabled: boolean; backupCodes: string[] };
+}
+
+export async function disable2FA() {
+    const { data } = await client.post('/api/identity/2fa/disable');
+    return data;
+}
+
+export async function get2FAStatus() {
+    const { data } = await client.get('/api/identity/2fa/status');
+    return data as { isEnabled: boolean; enabledDate?: string };
+}
+
+// ========================================
+// Sessions API
+// ========================================
+export async function getActiveSessions() {
+    const { data } = await client.get('/api/identity/sessions');
+    return data as Array<{ id: string; deviceInfo: string; ipAddress: string; userAgent: string; lastActiveAt: string; createdAt: string }>;
+}
+
+export async function revokeSession(sessionId: string) {
+    const { data } = await client.delete(`/api/identity/sessions/${sessionId}`);
+    return data;
+}
+
+export async function revokeAllOtherSessions() {
+    const { data } = await client.delete('/api/identity/sessions/all-others');
+    return data;
+}
+
+// ========================================
 // Token Refresh Utilities (Simplified)
 // ========================================
 let isRefreshing = false;

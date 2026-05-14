@@ -645,6 +645,8 @@ app.MapAiEndpoints();
 app.MapCatalogPCBuilderEndpoints();
 app.MapCatalogBundleEndpoints();
 app.MapIdentityEndpoints();
+app.MapTwoFactorEndpoints();
+app.MapSessionEndpoints();
 app.MapSalesEndpoints();
 app.MapShippingEndpoints();
 app.MapRepairEndpoints();
