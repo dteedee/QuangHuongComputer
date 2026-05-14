@@ -13,7 +13,7 @@ public static class EInvoiceEndpoints
 {
     public static void MapEInvoiceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/accounting/einvoice").RequireAuthorization("RequireAccountantRole");
+        var group = app.MapGroup("/api/accounting/einvoice").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
 
         // 1. Issue an E-Invoice (Phát hành HĐĐT)
         group.MapPost("/issue/{invoiceId:guid}", async (

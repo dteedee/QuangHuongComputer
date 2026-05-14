@@ -11,7 +11,7 @@ public static class DeliveryNoteEndpoints
 {
     public static void MapDeliveryNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/dn").RequireAuthorization();
+        var group = app.MapGroup("/api/inventory/dn").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
 
         // POST /api/inventory/dn — create DN
         group.MapPost("", async (CreateDNDto dto, InventoryDbContext db) =>

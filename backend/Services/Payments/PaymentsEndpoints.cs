@@ -161,7 +161,7 @@ public static class PaymentsEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "COD payment confirmed", orderId });
-        }).RequireAuthorization();
+        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
 
         // VNPay callback endpoint (Public)
         app.MapGet("/api/payments/vnpay/callback", async (
@@ -311,8 +311,8 @@ public static class PaymentsEndpoints
             return Results.Ok(new { success = true });
         }).AllowAnonymous();
 
-        // MoMo IPN callback endpoint (Anonymous)
-        app.MapPost("/api/payments/momo/callback", async (HttpContext httpContext, PaymentsDbContext db, IPublishEndpoint publishEndpoint) =>
+        // MoMo IPN callback endpoint (Anonymous — signature verified)
+        app.MapPost("/api/payments/momo/callback", async (HttpContext httpContext, PaymentsDbContext db, IPublishEndpoint publishEndpoint, IConfiguration config) =>
         {
             string body;
             using (var reader = new System.IO.StreamReader(httpContext.Request.Body))
@@ -320,6 +320,18 @@ public static class PaymentsEndpoints
 
             var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(body);
             if (data == null) return Results.BadRequest();
+
+            // Verify MoMo signature
+            var secretKey = config["Payment:MoMo:SecretKey"] ?? "";
+            if (!string.IsNullOrEmpty(secretKey) && data.TryGetValue("signature", out var sigEl))
+            {
+                var receivedSig = sigEl.GetString() ?? "";
+                var dataForSign = data.ToDictionary(k => k.Key, k => k.Value.ToString());
+                var momoConfig = new Payments.Infrastructure.MoMo.MoMoConfig { AccessKey = config["Payment:MoMo:AccessKey"] ?? "", SecretKey = secretKey, PartnerCode = config["Payment:MoMo:PartnerCode"] ?? "" };
+                var momoService = new Payments.Infrastructure.MoMo.MoMoService(momoConfig, new HttpClient());
+                if (!momoService.VerifySignature(dataForSign, receivedSig))
+                    return Results.Unauthorized();
+            }
 
             if (!data.TryGetValue("orderId", out var orderIdEl)) return Results.BadRequest();
             var orderId = orderIdEl.GetString() ?? "";
@@ -408,10 +420,11 @@ public static class PaymentsEndpoints
             return Results.Ok(config);
         });
 
-        // Mock Webhook (for testing without VNPay)
+        // Mock Webhook — DEVELOPMENT ONLY
+        #if DEBUG
         app.MapPost("/api/payments/webhook/mock", async (
-            WebhookDto model, 
-            PaymentsDbContext db, 
+            WebhookDto model,
+            PaymentsDbContext db,
             IPublishEndpoint publishEndpoint) =>
         {
             var payment = await db.PaymentIntents.FirstOrDefaultAsync(p => p.Id == model.PaymentId);
@@ -420,25 +433,18 @@ public static class PaymentsEndpoints
             if (model.Success)
             {
                 payment.Succeed();
-                await publishEndpoint.Publish(new PaymentSucceededEvent(
-                    payment.Id, 
-                    payment.OrderId, 
-                    payment.Amount, 
-                    DateTime.UtcNow));
+                await publishEndpoint.Publish(new PaymentSucceededEvent(payment.Id, payment.OrderId, payment.Amount, DateTime.UtcNow));
             }
             else
             {
                 payment.Fail("Webhook reported failure");
-                await publishEndpoint.Publish(new PaymentFailedEvent(
-                    payment.Id, 
-                    payment.OrderId, 
-                    "Webhook reported failure", 
-                    DateTime.UtcNow));
+                await publishEndpoint.Publish(new PaymentFailedEvent(payment.Id, payment.OrderId, "Webhook reported failure", DateTime.UtcNow));
             }
 
             await db.SaveChangesAsync();
             return Results.Ok();
         }).AllowAnonymous();
+        #endif
 
         // Get payment status
         group.MapGet("/{id:guid}", async (Guid id, PaymentsDbContext db) =>

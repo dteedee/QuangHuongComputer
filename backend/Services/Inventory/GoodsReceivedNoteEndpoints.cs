@@ -11,7 +11,7 @@ public static class GoodsReceivedNoteEndpoints
 {
     public static void MapGoodsReceivedNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/grn").RequireAuthorization();
+        var group = app.MapGroup("/api/inventory/grn").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
 
         // POST /api/inventory/grn — create GRN
         group.MapPost("", async (CreateGRNDto dto, InventoryDbContext db) =>

@@ -121,7 +121,7 @@ public static class SalesEndpointsFastCheckout
                         return Results.BadRequest(new { Error = $"Sản phẩm không tìm thấy: {cartItem.ProductId}" });
 
                     var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
-                    if (inventoryItem != null && inventoryItem.AvailableQuantity + inventoryItem.ReservedQuantity < cartItem.Quantity)
+                    if (inventoryItem != null && inventoryItem.AvailableQuantity < cartItem.Quantity)
                         return Results.BadRequest(new { Error = $"Không đủ hàng cho {product.Name}" });
 
                     orderItems.Add(new OrderItem(product.Id, product.Name, product.Price, cartItem.Quantity));
@@ -227,13 +227,7 @@ public static class SalesEndpointsFastCheckout
                 if (ex is OperationCanceledException)
                     return Results.BadRequest(new { Error = "Timeout khi đặt hàng" });
 
-                // Return more specific error for debugging
-                var innerMessage = ex.InnerException?.Message;
-                var errorMessage = !string.IsNullOrEmpty(innerMessage)
-                    ? $"Lỗi: {ex.Message} - {innerMessage}"
-                    : $"Lỗi: {ex.Message}";
-
-                return Results.BadRequest(new { Error = errorMessage });
+                return Results.BadRequest(new { Error = "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại." });
             }
             finally
             {

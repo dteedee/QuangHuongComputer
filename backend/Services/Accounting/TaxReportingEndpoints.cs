@@ -11,7 +11,7 @@ public static class TaxReportingEndpoints
 {
     public static void MapTaxReportingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/accounting/tax-reports").RequireAuthorization("RequireAccountantRole");
+        var group = app.MapGroup("/api/accounting/tax-reports").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
 
         // 1. VAT Ledger (Bảng kê thuế GTGT mua vào / bán ra)
         group.MapGet("/vat-ledger", (int month, int year, string type = "out") =>
