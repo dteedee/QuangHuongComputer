@@ -5,13 +5,38 @@ import {
     Download, Calendar, ArrowUpRight, ArrowDownRight,
     Package, Users, Wrench, DollarSign, AlertTriangle,
     FileSpreadsheet, Trophy, Star, ShoppingCart,
-    Filter, RefreshCw, Clock
+    Filter, RefreshCw, Clock, Shield, Megaphone,
+    Calculator, GitCompareArrows, UserCheck
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { reportingApi } from '../../api/reporting';
 import type { TopProduct, TopCustomer, TopTechnician } from '../../api/reporting';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/format';
 import toast from 'react-hot-toast';
+
+const reportGroups = [
+    { path: '/backoffice/hr/reports', label: 'Nhân sự', icon: UserCheck, color: 'bg-indigo-600' },
+    { path: '/backoffice/warranty/reports', label: 'Bảo hành', icon: Shield, color: 'bg-amber-600' },
+    { path: '/backoffice/crm/reports', label: 'CRM', icon: Megaphone, color: 'bg-teal-600' },
+    { path: '/backoffice/accounting/tax-reports', label: 'Thuế', icon: Calculator, color: 'bg-rose-600' },
+    { path: '/backoffice/reports/comparison', label: 'So sánh kỳ', icon: GitCompareArrows, color: 'bg-violet-600' },
+];
+
+function ReportGroupNav() {
+    const navigate = useNavigate();
+    return (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {reportGroups.map(g => (
+                <button key={g.path} onClick={() => navigate(g.path)}
+                    className={`${g.color} p-4 rounded-xl text-white hover:opacity-90 transition-all active:scale-95 flex items-center gap-3`}>
+                    <g.icon size={20} />
+                    <span className="text-xs font-black uppercase tracking-widest">{g.label}</span>
+                </button>
+            ))}
+        </div>
+    );
+}
 
 // Date range helpers
 type DatePreset = 'today' | '7d' | '30d' | '90d' | 'year' | 'custom';
@@ -282,6 +307,9 @@ export const ReportsPortal = () => {
                     </p>
                 </motion.div>
             </div>
+
+            {/* Report Groups Navigation */}
+            <ReportGroupNav />
 
             {/* Tabs */}
             <div className="flex gap-2 border-b border-gray-100 pb-4">

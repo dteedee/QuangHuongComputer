@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Calculator, FileText, Download, Building2, LayoutList } from 'lucide-react';
+import { Calculator, FileText, Download, Building2, LayoutList, Users } from 'lucide-react';
 import { taxApi, getVatDeclaration, exportTaxReport } from '../../../api/tax';
+import { taxReportsApi } from '../../../api/tax-reports';
 import { formatCurrency } from '../../../utils/format';
 import toast from 'react-hot-toast';
 
+type MainTab = 'existing' | 'tt133';
+type TT133Tab = 'b01' | 'b02' | 'b09' | 'vat' | 'pit';
+
 export function TaxReportsPage() {
+    const [mainTab, setMainTab] = useState<MainTab>('existing');
+    const [tt133Tab, setTT133Tab] = useState<TT133Tab>('b01');
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
     const [vatType, setVatType] = useState<'in' | 'out'>('out');
@@ -34,6 +40,50 @@ export function TaxReportsPage() {
         queryFn: () => taxApi.getCitReport(year),
     });
 
+    // TT133 queries
+    const { data: balanceSheet, isLoading: isLoadingBS } = useQuery({
+        queryKey: ['tt133-balance-sheet', year],
+        queryFn: () => taxReportsApi.getBalanceSheet(year),
+        enabled: mainTab === 'tt133' && tt133Tab === 'b01',
+    });
+    const { data: incomeStatement, isLoading: isLoadingIS } = useQuery({
+        queryKey: ['tt133-income-statement', year, month],
+        queryFn: () => taxReportsApi.getIncomeStatement(year, undefined, month),
+        enabled: mainTab === 'tt133' && tt133Tab === 'b02',
+    });
+    const { data: financialNotes, isLoading: isLoadingNotes } = useQuery({
+        queryKey: ['tt133-financial-notes', year],
+        queryFn: () => taxReportsApi.getFinancialNotes(year),
+        enabled: mainTab === 'tt133' && tt133Tab === 'b09',
+    });
+    const { data: vatTT133, isLoading: isLoadingVatTT133 } = useQuery({
+        queryKey: ['tt133-vat', month, year],
+        queryFn: () => taxReportsApi.getVatDeclarationTT133(month, year),
+        enabled: mainTab === 'tt133' && tt133Tab === 'vat',
+    });
+    const { data: pitSettlement, isLoading: isLoadingPIT } = useQuery({
+        queryKey: ['tt133-pit', year],
+        queryFn: () => taxReportsApi.getPitSettlement(year),
+        enabled: mainTab === 'tt133' && tt133Tab === 'pit',
+    });
+
+    const handleExportPdf = async (type: 'balance-sheet' | 'income-statement') => {
+        try {
+            const blob = type === 'balance-sheet'
+                ? await taxReportsApi.exportBalanceSheetPdf(year)
+                : await taxReportsApi.exportIncomeStatementPdf(year, undefined, month);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}-${year}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success('Đã xuất PDF thành công');
+        } catch {
+            toast.error('Không thể xuất PDF. Vui lòng thử lại.');
+        }
+    };
+
     const handleExport = async () => {
         try {
             const blob = await exportTaxReport(period, periodType);
@@ -53,6 +103,7 @@ export function TaxReportsPage() {
         <div className="space-y-10 pb-20">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
                         Báo Cáo <span className="text-accent">Thuế</span>
@@ -98,7 +149,30 @@ export function TaxReportsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Main Tab Bar */}
+            <div className="flex gap-1 border-b-2 border-gray-200">
+                {([['existing', 'Khai thuế & Sổ kê'], ['tt133', 'TT133 — BCTC']] as [MainTab, string][]).map(([key, label]) => (
+                    <button key={key} onClick={() => setMainTab(key)}
+                        className={`px-5 py-2.5 text-sm font-bold rounded-t-lg border-b-2 -mb-0.5 transition-colors ${mainTab === key ? 'border-accent text-accent bg-accent/5' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            {mainTab === 'tt133' && (
+                <TT133Section
+                    tab={tt133Tab} setTab={setTT133Tab}
+                    month={month} year={year}
+                    balanceSheet={balanceSheet} isLoadingBS={isLoadingBS}
+                    incomeStatement={incomeStatement} isLoadingIS={isLoadingIS}
+                    financialNotes={financialNotes} isLoadingNotes={isLoadingNotes}
+                    vatTT133={vatTT133} isLoadingVatTT133={isLoadingVatTT133}
+                    pitSettlement={pitSettlement} isLoadingPIT={isLoadingPIT}
+                    onExportPdf={handleExportPdf}
+                />
+            )}
+
+            {mainTab === 'existing' && <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* VAT Declaration Form 01/GTGT */}
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="premium-card p-8 border-2 border-blue-100">
                     <h2 className="text-xl font-black text-blue-900 uppercase italic flex items-center gap-2 mb-6">
@@ -228,7 +302,6 @@ export function TaxReportsPage() {
                         </div>
                     )}
                 </motion.div>
-            </div>
 
             {/* VAT Ledger Table */}
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="premium-card overflow-hidden border-2">
@@ -305,6 +378,237 @@ export function TaxReportsPage() {
                     </table>
                 </div>
             </motion.div>
+            </div>}
+        </div>
+    );
+}
+
+// ============================================
+// TT133 SECTION COMPONENT
+// ============================================
+
+const TT133_TABS: { key: TT133Tab; label: string }[] = [
+    { key: 'b01', label: 'B01-BCTC' },
+    { key: 'b02', label: 'B02-KQKD' },
+    { key: 'b09', label: 'B09-TMBC' },
+    { key: 'vat', label: 'VAT-TT133' },
+    { key: 'pit', label: 'PIT-TT133' },
+];
+
+function LoadingSpinner() {
+    return <div className="h-40 flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-gray-200 border-t-accent rounded-full"></div></div>;
+}
+
+function ReportRow({ label, code, value, bold }: { label: string; code?: string; value: string; bold?: boolean }) {
+    return (
+        <div className={`flex justify-between items-center py-2.5 px-3 rounded-lg ${bold ? 'bg-accent/5 font-black' : 'hover:bg-gray-50'}`}>
+            <div className="flex gap-3 items-center">
+                {code && <span className="text-xs font-mono text-gray-400 w-8">{code}</span>}
+                <span className={`text-sm ${bold ? 'text-gray-900' : 'text-gray-700'}`}>{label}</span>
+            </div>
+            <span className={`text-sm font-bold ${bold ? 'text-accent' : 'text-gray-900'}`}>{value}</span>
+        </div>
+    );
+}
+
+interface TT133SectionProps {
+    tab: TT133Tab; setTab: (t: TT133Tab) => void;
+    month: number; year: number;
+    balanceSheet: any; isLoadingBS: boolean;
+    incomeStatement: any; isLoadingIS: boolean;
+    financialNotes: any; isLoadingNotes: boolean;
+    vatTT133: any; isLoadingVatTT133: boolean;
+    pitSettlement: any; isLoadingPIT: boolean;
+    onExportPdf: (type: 'balance-sheet' | 'income-statement') => void;
+}
+
+function TT133Section({ tab, setTab, month, year, balanceSheet, isLoadingBS, incomeStatement, isLoadingIS, financialNotes, isLoadingNotes, vatTT133, isLoadingVatTT133, pitSettlement, isLoadingPIT, onExportPdf }: TT133SectionProps) {
+    return (
+        <div className="space-y-6">
+            {/* TT133 Tab Bar */}
+            <div className="flex gap-1 flex-wrap">
+                {TT133_TABS.map(({ key, label }) => (
+                    <button key={key} onClick={() => setTab(key)}
+                        className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg border-2 transition-colors ${tab === key ? 'border-accent bg-accent text-white' : 'border-gray-200 text-gray-600 hover:border-accent hover:text-accent'}`}>
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            {/* B01: Balance Sheet */}
+            {tab === 'b01' && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="premium-card p-8 border-2 border-emerald-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-black text-emerald-900 uppercase italic">B01-DNN — Báo Cáo Tình Hình Tài Chính</h2>
+                        <button onClick={() => onExportPdf('balance-sheet')} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">
+                            <Download size={14} /> PDF
+                        </button>
+                    </div>
+                    {isLoadingBS ? <LoadingSpinner /> : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div>
+                                <p className="text-xs font-black text-gray-500 uppercase mb-3">I. Tài Sản</p>
+                                <div className="space-y-1">
+                                    <ReportRow label="Tiền và tương đương tiền" code="110" value={formatCurrency(balanceSheet?.assets?.shortTerm?.cash ?? 0)} />
+                                    <ReportRow label="Phải thu ngắn hạn" code="130" value={formatCurrency(balanceSheet?.assets?.shortTerm?.accountsReceivable ?? 0)} />
+                                    <ReportRow label="Hàng tồn kho" code="140" value={formatCurrency(balanceSheet?.assets?.shortTerm?.inventory ?? 0)} />
+                                    <ReportRow label="TỔNG CỘNG TÀI SẢN" code="270" value={formatCurrency(balanceSheet?.assets?.total ?? 0)} bold />
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-gray-500 uppercase mb-3">II. Nguồn Vốn</p>
+                                <div className="space-y-1">
+                                    <ReportRow label="Phải trả người bán" code="311" value={formatCurrency(balanceSheet?.liabilities?.accountsPayable ?? 0)} />
+                                    <ReportRow label="Chi phí phải trả" code="315" value={formatCurrency(balanceSheet?.liabilities?.pendingExpenses ?? 0)} />
+                                    <ReportRow label="Tổng Nợ Phải Trả" code="300" value={formatCurrency(balanceSheet?.liabilities?.total ?? 0)} bold />
+                                    <ReportRow label="Vốn Chủ Sở Hữu" code="400" value={formatCurrency(balanceSheet?.equity?.total ?? 0)} />
+                                    <ReportRow label="TỔNG NGUỒN VỐN" code="440" value={formatCurrency(balanceSheet?.totalLiabilitiesAndEquity ?? 0)} bold />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* B02: Income Statement */}
+            {tab === 'b02' && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="premium-card p-8 border-2 border-blue-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-black text-blue-900 uppercase italic">B02-DNN — Kết Quả HĐKD — {month}/{year}</h2>
+                        <button onClick={() => onExportPdf('income-statement')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">
+                            <Download size={14} /> PDF
+                        </button>
+                    </div>
+                    {isLoadingIS ? <LoadingSpinner /> : (
+                        <div className="space-y-1 max-w-lg">
+                            <ReportRow label="Doanh thu bán hàng" code="01" value={formatCurrency(incomeStatement?.revenue?.goodsAndServices ?? 0)} />
+                            <ReportRow label="Giá vốn hàng bán" code="11" value={formatCurrency(incomeStatement?.cogs ?? 0)} />
+                            <ReportRow label="Lợi nhuận gộp" code="20" value={formatCurrency(incomeStatement?.grossProfit ?? 0)} bold />
+                            <ReportRow label="Chi phí quản lý" code="25" value={formatCurrency(incomeStatement?.operatingExpenses ?? 0)} />
+                            <ReportRow label="Lợi nhuận trước thuế" code="50" value={formatCurrency(incomeStatement?.profitBeforeTax ?? 0)} bold />
+                            <ReportRow label="Thuế TNDN (20%)" code="51" value={formatCurrency(incomeStatement?.incomeTax ?? 0)} />
+                            <ReportRow label="LỢI NHUẬN SAU THUẾ" code="60" value={formatCurrency(incomeStatement?.netProfit ?? 0)} bold />
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                                Biên lợi nhuận: <strong>{incomeStatement?.profitMargin ?? 0}%</strong>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* B09: Financial Notes */}
+            {tab === 'b09' && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="premium-card p-8 border-2 border-purple-100">
+                    <h2 className="text-xl font-black text-purple-900 uppercase italic mb-6">B09-DNN — Thuyết Minh BCTC — {year}</h2>
+                    {isLoadingNotes ? <LoadingSpinner /> : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <p className="text-xs font-black text-gray-500 uppercase">Thông tin công ty</p>
+                                {financialNotes?.company && Object.entries(financialNotes.company).map(([k, v]) => (
+                                    <div key={k} className="flex justify-between text-sm"><span className="text-gray-600 capitalize">{k}</span><span className="font-bold">{String(v)}</span></div>
+                                ))}
+                            </div>
+                            <div className="space-y-4">
+                                <p className="text-xs font-black text-gray-500 uppercase">Chính sách kế toán</p>
+                                <div className="text-sm space-y-2 text-gray-700">
+                                    <p><strong>Doanh thu:</strong> {financialNotes?.accountingPolicies?.revenueRecognition}</p>
+                                    <p><strong>HTK:</strong> {financialNotes?.accountingPolicies?.inventoryValuation}</p>
+                                </div>
+                                <p className="text-xs font-black text-gray-500 uppercase mt-4">Ghi chú HTK</p>
+                                <ReportRow label="Giá trị tồn kho" value={formatCurrency(financialNotes?.notes?.inventory?.totalValue ?? 0)} />
+                                <ReportRow label="Số mặt hàng" value={`${financialNotes?.notes?.inventory?.itemCount ?? 0} SKU`} />
+                                <ReportRow label="Phải thu còn lại" value={formatCurrency(financialNotes?.notes?.accountsReceivable?.outstanding ?? 0)} />
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* VAT TT133 */}
+            {tab === 'vat' && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="premium-card p-8 border-2 border-orange-100">
+                    <h2 className="text-xl font-black text-orange-900 uppercase italic mb-6">Mẫu 01/GTGT — Tờ Khai Thuế GTGT — {month}/{year}</h2>
+                    {isLoadingVatTT133 ? <LoadingSpinner /> : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div>
+                                <p className="text-xs font-black text-red-600 uppercase mb-3">Thuế Đầu Ra</p>
+                                <div className="space-y-1">
+                                    <ReportRow label="[26] HHDV bán ra chịu thuế" code="26" value={formatCurrency(vatTT133?.outputVAT?.indicator26 ?? 0)} />
+                                    <ReportRow label="[28] Thuế GTGT đầu ra" code="28" value={formatCurrency(vatTT133?.outputVAT?.indicator28 ?? 0)} bold />
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-emerald-600 uppercase mb-3">Thuế Đầu Vào</p>
+                                <div className="space-y-1">
+                                    <ReportRow label="[23] Giá trị HHDV mua vào" code="23" value={formatCurrency(vatTT133?.inputVAT?.indicator23 ?? 0)} />
+                                    <ReportRow label="[25] Thuế GTGT được khấu trừ" code="25" value={formatCurrency(vatTT133?.inputVAT?.indicator25 ?? 0)} bold />
+                                </div>
+                            </div>
+                            <div className="lg:col-span-2 p-6 bg-orange-600 rounded-2xl text-white flex justify-between items-center">
+                                <div>
+                                    <p className="text-xs font-black text-orange-200 uppercase tracking-widest">[40] Thuế GTGT phải nộp</p>
+                                    <p className="text-3xl font-black mt-1">{formatCurrency(vatTT133?.indicator40 ?? 0)}</p>
+                                    {(vatTT133?.carryForward ?? 0) > 0 && <p className="text-sm text-orange-200 mt-1">Số dư khấu trừ kỳ sau: {formatCurrency(vatTT133.carryForward)}</p>}
+                                </div>
+                                <Calculator className="w-12 h-12 text-orange-300 opacity-50" />
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
+            {/* PIT TT133 */}
+            {tab === 'pit' && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="premium-card border-2 border-indigo-100">
+                    <div className="p-8 pb-4">
+                        <h2 className="text-xl font-black text-indigo-900 uppercase italic mb-2">Mẫu 05/KK-TNCN — Quyết Toán Thuế TNCN — {year}</h2>
+                        {!isLoadingPIT && pitSettlement?.summary && (
+                            <div className="grid grid-cols-3 gap-4 mt-4">
+                                <div className="bg-indigo-50 p-4 rounded-xl text-center">
+                                    <p className="text-xs text-gray-500 font-semibold">Nhân viên</p>
+                                    <p className="text-2xl font-black text-indigo-700">{pitSettlement.summary.totalEmployees}</p>
+                                </div>
+                                <div className="bg-indigo-50 p-4 rounded-xl text-center">
+                                    <p className="text-xs text-gray-500 font-semibold">Tổng thu nhập</p>
+                                    <p className="text-xl font-black text-indigo-700">{formatCurrency(pitSettlement.summary.totalGrossIncome)}</p>
+                                </div>
+                                <div className="bg-indigo-900 p-4 rounded-xl text-center">
+                                    <p className="text-xs text-indigo-300 font-semibold">Tổng thuế TNCN</p>
+                                    <p className="text-xl font-black text-white">{formatCurrency(pitSettlement.summary.totalPitTax)}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {isLoadingPIT ? <div className="p-8"><LoadingSpinner /></div> : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-gray-50 text-xs font-black text-gray-500 uppercase">
+                                    <tr>
+                                        <th className="px-5 py-3 text-left">Họ tên</th>
+                                        <th className="px-5 py-3 text-left">MST</th>
+                                        <th className="px-5 py-3 text-left">Phòng ban</th>
+                                        <th className="px-5 py-3 text-right">Thu nhập gộp</th>
+                                        <th className="px-5 py-3 text-right">Thu nhập chịu thuế</th>
+                                        <th className="px-5 py-3 text-right">Thuế TNCN</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {pitSettlement?.employees?.map((emp: any) => (
+                                        <tr key={emp.employeeId} className="hover:bg-gray-50">
+                                            <td className="px-5 py-3 font-bold flex items-center gap-2"><Users size={14} className="text-gray-400" />{emp.fullName}</td>
+                                            <td className="px-5 py-3 text-gray-500 font-mono text-xs">{emp.taxCode}</td>
+                                            <td className="px-5 py-3 text-gray-600">{emp.department}</td>
+                                            <td className="px-5 py-3 text-right">{formatCurrency(emp.totalGrossIncome)}</td>
+                                            <td className="px-5 py-3 text-right">{formatCurrency(emp.taxableIncome)}</td>
+                                            <td className="px-5 py-3 text-right font-black text-indigo-700">{formatCurrency(emp.pitTax)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </motion.div>
+            )}
         </div>
     );
 }

@@ -121,11 +121,15 @@ const AttendancePage = lazy(() => import('./pages/backoffice/hr/attendance-page'
 const LeaveApprovalPage = lazy(() => import('./pages/backoffice/hr/leave-approval-page'));
 const EmployeeSelfServicePage = lazy(() => import('./pages/backoffice/hr/employee-self-service-page'));
 const InternalChatPage = lazy(() => import('./pages/backoffice/hr/internal-chat-page'));
+const HRReportsPage = lazy(() => import('./pages/backoffice/hr/HRReportsPage').then(m => ({ default: m.HRReportsPage })));
 const ManagerPortal = lazy(() => import('./pages/backoffice/manager/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
 const AdminPortal = lazy(() => import('./pages/backoffice/admin/AdminPortal').then(m => ({ default: m.AdminPortal })));
 const WarrantyPortal = lazy(() => import('./pages/backoffice/WarrantyPortal').then(m => ({ default: m.WarrantyPortal })));
+const WarrantyReportsPage = lazy(() => import('./pages/backoffice/warranty/WarrantyReportsPage').then(m => ({ default: m.WarrantyReportsPage })));
+const CRMReportsPage = lazy(() => import('./pages/backoffice/crm/CRMReportsPage').then(m => ({ default: m.CRMReportsPage })));
 const CMSPortal = lazy(() => import('./pages/backoffice/CMSPortal').then(m => ({ default: m.CMSPortal })));
 const ReportsPortal = lazy(() => import('./pages/backoffice/ReportsPortal').then(m => ({ default: m.ReportsPortal })));
+const ComparisonPage = lazy(() => import('./pages/backoffice/reports/ComparisonPage').then(m => ({ default: m.ComparisonPage })));
 const ConfigPortal = lazy(() => import('./pages/backoffice/ConfigPortal').then(m => ({ default: m.ConfigPortal })));
 const NotificationCenter = lazy(() => import('./pages/backoffice/NotificationCenter'));
 
@@ -280,10 +284,14 @@ function App() {
                           <Route path="hr/approvals" element={<LeaveApprovalPage />} />
                           <Route path="hr/self-service" element={<EmployeeSelfServicePage />} />
                           <Route path="hr/chat" element={<InternalChatPage />} />
+                          <Route path="hr/reports" element={<HRReportsPage />} />
                           <Route path="warranty" element={<WarrantyPortal />} />
+                          <Route path="warranty/reports" element={<WarrantyReportsPage />} />
+                          <Route path="crm/reports" element={<CRMReportsPage />} />
                           <Route path="cms" element={<CMSPortal />} />
                           {/* Admin & Report Routes */}
                           <Route path="reports" element={<ReportsPortal />} />
+                          <Route path="reports/comparison" element={<ComparisonPage />} />
                           <Route path="users" element={<AdminUsersPage />} />
                           <Route path="roles" element={<RolesPage />} />
                           <Route path="products" element={<AdminProductsPage />} />
