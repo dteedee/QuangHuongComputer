@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using InventoryModule.Infrastructure;
 using InventoryModule.Domain;
+using Catalog.Infrastructure;
 
 namespace InventoryModule;
 
@@ -14,13 +15,19 @@ public static class InventoryCountEndpoints
         var group = app.MapGroup("/api/inventory/count").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
 
         // POST /api/inventory/count — create session, populate items from current inventory
-        group.MapPost("", async (CreateCountSessionDto dto, InventoryDbContext db) =>
+        group.MapPost("", async (CreateCountSessionDto dto, InventoryDbContext db, CatalogDbContext catalogDb) =>
         {
             var query = db.InventoryItems.AsQueryable();
             if (dto.WarehouseId.HasValue)
                 query = query.Where(i => i.WarehouseId == dto.WarehouseId);
 
             var inventoryItems = await query.ToListAsync();
+
+            var productIds = inventoryItems.Select(i => i.ProductId).Distinct().ToList();
+            var productNames = await catalogDb.Products
+                .Where(p => productIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.Name })
+                .ToDictionaryAsync(p => p.Id, p => p.Name);
 
             var session = new InventoryCountSession
             {
@@ -34,7 +41,7 @@ public static class InventoryCountEndpoints
                 Items = inventoryItems.Select(i => new InventoryCountItem
                 {
                     ProductId = i.ProductId,
-                    ProductName = i.ProductId.ToString(), // Product name resolved from catalog
+                    ProductName = productNames.GetValueOrDefault(i.ProductId, $"SP-{i.ProductId.ToString()[..8]}"),
                     SystemQuantity = i.QuantityOnHand,
                     CountedQuantity = null
                 }).ToList()

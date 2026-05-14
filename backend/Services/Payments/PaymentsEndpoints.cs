@@ -276,18 +276,31 @@ public static class PaymentsEndpoints
                 .Where(p => p.Status == PaymentStatus.Pending && p.Provider == PaymentProvider.SePay)
                 .ToListAsync();
 
-            // Find the payment where the payload content contains the tracking code we generated
-            // We generated: "Thanh toan {OrderId_substring}" and stored it in ExternalId suffix or ClientSecret
-            
-            // NOTE: SePay content is user-entered, might be cleaner. 
-            // We use the short OrderId to match.
-            var matchedPayment = pendingPayments.FirstOrDefault(p => 
-                payload.Content.Contains(p.OrderId.ToString().Substring(0, 8).ToUpper(), StringComparison.OrdinalIgnoreCase)
-                && p.Amount <= payload.TransferAmount); // Check amount too (allowing overpayment)
+            // Multi-strategy matching (most specific → least specific)
+            var content = (payload.Content ?? "").ToUpper().Trim();
+            var code = (payload.Code ?? "").ToUpper().Trim();
+            var description = (payload.Description ?? "").ToUpper().Trim();
+            var searchText = $"{content} {code} {description}";
+
+            // Strategy 1: exact amount + content contains order ID prefix (8 chars)
+            var matchedPayment = pendingPayments.FirstOrDefault(p =>
+                p.Amount == payload.TransferAmount
+                && searchText.Contains(p.OrderId.ToString()[..8].ToUpper()));
+
+            // Strategy 2: amount match + ClientSecret (generated description) found in transfer content
+            matchedPayment ??= pendingPayments.FirstOrDefault(p =>
+                p.Amount == payload.TransferAmount
+                && !string.IsNullOrEmpty(p.ClientSecret)
+                && searchText.Contains(p.ClientSecret.ToUpper()));
+
+            // Strategy 3: exact amount match with single pending payment (unambiguous)
+            matchedPayment ??= pendingPayments.Count(p => p.Amount == payload.TransferAmount) == 1
+                ? pendingPayments.First(p => p.Amount == payload.TransferAmount)
+                : null;
 
             if (matchedPayment == null)
             {
-                transaction.ProcessingError = "No matching pending payment found for content: " + payload.Content;
+                transaction.ProcessingError = $"No match. Content: {content}, Amount: {payload.TransferAmount}, Pending count: {pendingPayments.Count}";
                 await db.SaveChangesAsync();
                 return Results.Ok(new { success = false, message = "No matching pending payment found" });
             }

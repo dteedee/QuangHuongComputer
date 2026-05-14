@@ -15,11 +15,16 @@
     <ProjectReference Include="..\Repair\Repair.csproj" />
     <ProjectReference Include="..\Catalog\Catalog.csproj" />
     <ProjectReference Include="..\Identity\Identity.csproj" />
+    <ProjectReference Include="..\HR\HR.csproj" />
+    <ProjectReference Include="..\Warranty\Warranty.csproj" />
+    <ProjectReference Include="..\CRM\CRM.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="ClosedXML" Version="0.104.1" />
+    <PackageReference Include="QuestPDF" Version="2024.10.2" />
+    <PackageReference Include="ScottPlot" Version="5.0.39" />
   </ItemGroup>
 
 </Project>
