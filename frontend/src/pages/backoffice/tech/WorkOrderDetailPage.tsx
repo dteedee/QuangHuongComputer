@@ -274,7 +274,7 @@ export const WorkOrderDetailPage = () => {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Device Info */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                             <Smartphone size={20} className="text-accent" />
                             Thông tin thiết bị
                         </h2>
@@ -305,7 +305,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Parts Section */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <Package size={20} className="text-accent" />
                                 Linh kiện sử dụng
                             </h2>
@@ -362,7 +362,7 @@ export const WorkOrderDetailPage = () => {
                     {canCreateQuote && (
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                     <FileText size={20} className="text-blue-600" />
                                     Tạo báo giá
                                 </h2>
@@ -383,7 +383,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Activity Log */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <MessageSquare size={20} className="text-accent" />
                                 Lịch sử hoạt động
                             </h2>
@@ -445,7 +445,7 @@ export const WorkOrderDetailPage = () => {
 
                     {/* Timeline */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                             <Calendar size={20} className="text-accent" />
                             Timeline
                         </h2>

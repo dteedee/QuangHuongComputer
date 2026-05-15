@@ -86,7 +86,7 @@ export default function NotificationCenter() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-semibold text-gray-900 flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-semibold text-slate-900 flex items-center gap-3 tracking-tight">
                         <div className="p-2 bg-accent/10 rounded-xl">
                             <Bell className="w-8 h-8 text-accent" />
                         </div>

@@ -608,7 +608,7 @@ const SupplierDetailDrawer = ({
                     {supplier.logoUrl ? (
                         <img src={supplier.logoUrl} alt={supplier.name} className="w-16 h-16 rounded-xl object-cover" />
                     ) : (
-                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-semibold">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent to-blue-700 flex items-center justify-center text-white text-2xl font-semibold">
                             {supplier.name.charAt(0)}
                         </div>
                     )}
@@ -931,7 +931,7 @@ export function SuppliersPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight  leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-tight mb-3">
                         Nhà <span className="text-accent">Cung Cấp</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
@@ -1051,7 +1051,7 @@ export function SuppliersPage() {
                                     >
                                         <td className="py-4 px-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white font-bold text-sm">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-blue-700 flex items-center justify-center text-white font-bold text-sm">
                                                     {supplier.name.charAt(0)}
                                                 </div>
                                                 <div>
@@ -1185,7 +1185,7 @@ export function SuppliersPage() {
                             className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-xl shadow-md overflow-hidden flex flex-col"
                         >
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">
+                                <h2 className="text-2xl font-semibold text-slate-900">
                                     {editingSupplier ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">

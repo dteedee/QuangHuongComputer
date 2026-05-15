@@ -295,7 +295,7 @@ export const SalePortal = () => {
             <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
                     <Calendar size={20} className="text-gray-500" />
-                    <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Tổng kết hôm nay</h2>
+                    <h2 className="text-lg font-semibold text-slate-900">Tổng kết hôm nay</h2>
                     <span className="text-sm text-gray-500">
                         {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </span>

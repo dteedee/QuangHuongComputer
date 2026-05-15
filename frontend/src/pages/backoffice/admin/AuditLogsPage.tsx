@@ -488,7 +488,7 @@ export const AuditLogsPage = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
+          <h1 className="text-2xl font-semibold text-slate-900 mb-1">
             <span className="text-indigo-600">Nhật ký</span> Hệ thống
           </h1>
           <p className="text-sm text-gray-500 font-medium">

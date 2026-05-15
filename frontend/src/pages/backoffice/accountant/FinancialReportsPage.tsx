@@ -160,7 +160,7 @@ export function FinancialReportsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight  leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-tight mb-3">
                         Báo Cáo <span className="text-accent">Tài Chính</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">

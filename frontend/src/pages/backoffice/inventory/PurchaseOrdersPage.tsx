@@ -425,7 +425,7 @@ export default function PurchaseOrdersPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-accent to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                             <ShoppingCart size={22} className="text-white" />
                         </div>

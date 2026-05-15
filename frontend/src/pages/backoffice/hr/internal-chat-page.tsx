@@ -76,7 +76,7 @@ export default function InternalChatPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Chat Nội Bộ</h1>
+            <h1 className="text-2xl font-bold text-slate-900 mb-6">Chat Nội Bộ</h1>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex" style={{ height: '70vh' }}>
                 {/* Sidebar */}

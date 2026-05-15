@@ -119,7 +119,7 @@ export default function LeaveApprovalPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Duyệt Nghỉ Phép</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Duyệt Nghỉ Phép</h1>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex border-b border-gray-100">

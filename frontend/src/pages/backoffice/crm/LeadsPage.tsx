@@ -97,7 +97,7 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
           <p className="text-gray-500">{total} leads</p>
         </div>
         <div className="flex items-center gap-3">

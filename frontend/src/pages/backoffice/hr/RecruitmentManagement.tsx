@@ -137,7 +137,7 @@ export const RecruitmentManagement = () => {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-semibold  text-gray-900 leading-none">Quản lý tuyển dụng</h1>
+                    <h1 className="text-2xl font-semibold  text-slate-900 leading-none">Quản lý tuyển dụng</h1>
                     <p className="text-gray-500 text-sm mt-1 uppercase font-bold">Quản lý tin đăng và ứng viên</p>
                 </div>
                 <button

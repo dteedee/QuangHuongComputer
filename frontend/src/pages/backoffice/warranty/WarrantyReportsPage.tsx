@@ -71,7 +71,7 @@ export function WarrantyReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Báo Cáo Bảo Hành</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Báo Cáo Bảo Hành</h1>
           <p className="text-sm text-gray-500 mt-1">Tổng quan khiếu nại và chi phí bảo hành</p>
         </div>
         <div className="flex items-center gap-3">

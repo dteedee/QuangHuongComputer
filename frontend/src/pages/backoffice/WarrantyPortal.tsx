@@ -43,7 +43,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-semibold text-white uppercase tracking-tight">Chi tiết yêu cầu bảo hành</h2>
+                            <h2 className="text-xl font-semibold text-white">Chi tiết yêu cầu bảo hành</h2>
                             <p className="text-gray-400 text-sm mt-1">ID: {claim.id.substring(0, 8)}...</p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">

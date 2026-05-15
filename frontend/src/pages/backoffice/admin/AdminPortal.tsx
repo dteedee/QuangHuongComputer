@@ -294,7 +294,7 @@ export const AdminPortal = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 mb-2">
                         Trung tâm <span className="text-accent">Điều hành</span>
                     </h1>
                     <p className="text-sm text-gray-500 font-medium">
@@ -365,7 +365,7 @@ export const AdminPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <motion.div
                     whileHover={{ y: -2 }}
-                    className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white relative overflow-hidden"
+                    className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 opacity-10">
                         <DollarSign size={120} />

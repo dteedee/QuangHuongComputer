@@ -62,7 +62,7 @@ export default function AttendancePage() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Chấm Công</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Chấm Công</h1>
 
             {/* Today Status */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

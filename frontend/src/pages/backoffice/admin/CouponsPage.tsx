@@ -281,7 +281,7 @@ export function CouponsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý mã giảm giá</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Quản lý mã giảm giá</h1>
           <p className="text-gray-500 text-sm mt-1">
             Tạo và quản lý các mã khuyến mãi cho khách hàng
           </p>
@@ -707,7 +707,7 @@ export function CouponsPage() {
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-white uppercase tracking-tight flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                     <PackagePlus className="w-5 h-5" /> 
                     Phát hành mã hàng loạt
                   </h2>

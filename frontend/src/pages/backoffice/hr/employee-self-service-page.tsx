@@ -185,7 +185,7 @@ export default function EmployeeSelfServicePage() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Tự Phục Vụ Nhân Viên</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Tự Phục Vụ Nhân Viên</h1>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="flex border-b border-gray-100 overflow-x-auto">

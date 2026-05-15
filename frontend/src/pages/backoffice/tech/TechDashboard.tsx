@@ -149,7 +149,7 @@ export const TechDashboard: React.FC = () => {
                             {user?.fullName?.charAt(0) || 'T'}
                         </div>
                         <div>
-                            <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">
+                            <h1 className="text-2xl font-semibold text-slate-900">
                                 Xin chào, <span className="text-accent">{user?.fullName || 'Kỹ thuật viên'}</span>
                             </h1>
                             <p className="text-gray-600 font-semibold flex items-center gap-2 mt-1">

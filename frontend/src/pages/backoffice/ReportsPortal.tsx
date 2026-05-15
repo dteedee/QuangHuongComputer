@@ -339,7 +339,7 @@ export const ReportsPortal = () => {
                     {/* Revenue Chart */}
                     <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Doanh thu 12 tháng</h3>
+                            <h3 className="text-lg font-semibold text-slate-900">Doanh thu 12 tháng</h3>
                             <button
                                 onClick={() => handleExport('sales')}
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-xs font-bold text-gray-600 transition-all"
@@ -373,7 +373,7 @@ export const ReportsPortal = () => {
                     {/* Low Stock Alert */}
                     <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                                 <AlertTriangle className="text-amber-500" size={20} />
                                 Sản phẩm sắp hết hàng
                             </h3>
@@ -409,7 +409,7 @@ export const ReportsPortal = () => {
             {activeTab === 'products' && (
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                             <Trophy className="text-amber-500" size={20} />
                             Top 10 sản phẩm bán chạy
                         </h3>
@@ -461,7 +461,7 @@ export const ReportsPortal = () => {
             {activeTab === 'customers' && (
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                             <Star className="text-amber-500" size={20} />
                             Top 10 khách hàng VIP
                         </h3>
@@ -509,7 +509,7 @@ export const ReportsPortal = () => {
             {activeTab === 'technicians' && (
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                             <Wrench className="text-blue-500" size={20} />
                             Top kỹ thuật viên xuất sắc
                         </h3>
@@ -570,7 +570,7 @@ export const ReportsPortal = () => {
 
             {/* Export Options */}
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-xl">
-                <h3 className="text-xl font-semibold text-white uppercase tracking-tight mb-6">Xuất báo cáo Excel</h3>
+                <h3 className="text-xl font-semibold text-white mb-6">Xuất báo cáo Excel</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     {[
                         { id: 'full', label: 'Báo cáo tổng hợp', icon: BarChart3, color: 'bg-accent' },

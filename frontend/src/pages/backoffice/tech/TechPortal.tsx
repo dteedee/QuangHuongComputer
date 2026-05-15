@@ -295,7 +295,7 @@ export const TechPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 mb-2">
                         Phiếu sửa chữa <span className="text-accent">của tôi</span>
                     </h1>
                     <p className="text-gray-600 font-medium">

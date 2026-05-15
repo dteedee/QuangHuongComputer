@@ -66,7 +66,7 @@ export function CRMReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Báo Cáo CRM</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Báo Cáo CRM</h1>
           <p className="text-sm text-gray-500 mt-1">Leads, chiến dịch email và phân khúc khách hàng</p>
         </div>
         <button
