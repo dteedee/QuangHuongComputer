@@ -14,8 +14,8 @@ public static class HRReportEndpoints
             HRDbContext hrDb, string? startDate, string? endDate, Guid? departmentId) =>
         {
             var today = DateTime.UtcNow.Date;
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : today.AddMonths(-1);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate).AddDays(1) : today.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : today.AddMonths(-1);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1).AddDays(1) : today.AddDays(1);
 
             var empQuery = hrDb.Employees.Where(e => e.Status == EmployeeStatus.Active);
             var employees = await empQuery.Select(e => new { e.Id, e.FullName, e.Department }).ToListAsync();
@@ -64,8 +64,9 @@ public static class HRReportEndpoints
             HRDbContext hrDb, string? startDate, string? endDate, int top = 20) =>
         {
             var today = DateTime.UtcNow;
-            var targetMonth = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate).Month : today.Month;
-            var targetYear = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate).Year : today.Year;
+            var parsedDate = DateTime.TryParse(startDate, out var sd) ? sd : today;
+            var targetMonth = parsedDate.Month;
+            var targetYear = parsedDate.Year;
 
             var payrolls = await hrDb.Payrolls
                 .Include(p => p.Employee)
@@ -225,8 +226,8 @@ public static class HRReportEndpoints
             HRDbContext hrDb, string? startDate, string? endDate, int top = 20) =>
         {
             var today = DateTime.UtcNow;
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : today.AddMonths(-1);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate).AddDays(1) : today.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : today.AddMonths(-1);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1).AddDays(1) : today.AddDays(1);
             var targetMonth = start.Month;
             var targetYear = start.Year;
 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using SystemConfig.Domain;
 using SystemConfig.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace SystemConfig;
 
@@ -157,13 +158,18 @@ public static class BackofficeMenuEndpoints
         return Results.Ok(group);
     }
 
-    private static async Task<IResult> DeleteGroup(Guid id, SystemConfigDbContext db)
+    private static async Task<IResult> DeleteGroup(Guid id, SystemConfigDbContext db, HttpContext httpContext)
     {
-        var group = await db.BackofficeMenuGroups.FindAsync(id);
+        var group = await db.BackofficeMenuGroups.Include(g => g.Items).FirstOrDefaultAsync(g => g.Id == id);
         if (group is null) return Results.NotFound();
+
+        var itemCount = group.Items?.Count ?? 0;
+        if (itemCount > 0)
+            return Results.BadRequest(new { error = $"Không thể xóa nhóm đang có {itemCount} mục. Hãy xóa hoặc di chuyển các mục trước." });
 
         db.BackofficeMenuGroups.Remove(group);
         await db.SaveChangesAsync();
+        await httpContext.LogAuditAsync("Delete", "BackofficeMenuGroup", id.ToString(), $"Deleted group: {group.Title}");
         return Results.NoContent();
     }
 

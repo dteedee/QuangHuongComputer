@@ -14,8 +14,8 @@ public static class SalesReportEndpoints
         group.MapGet("/sales-summary", async (SalesDbContext salesDb, string? startDate, string? endDate) =>
         {
             var today = DateTime.UtcNow.Date;
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : today.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : today.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : today.AddMonths(-12);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : today.AddDays(1);
             var thisMonth = new DateTime(today.Year, today.Month, 1);
 
             var ordersQuery = salesDb.Orders.Where(o => o.OrderDate >= start && o.OrderDate < end);
@@ -59,8 +59,8 @@ public static class SalesReportEndpoints
 
         group.MapGet("/top-products", async (SalesDbContext salesDb, int top = 10, string? startDate = null, string? endDate = null) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-3);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-3);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
             var topProducts = await salesDb.Orders
                 .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled)

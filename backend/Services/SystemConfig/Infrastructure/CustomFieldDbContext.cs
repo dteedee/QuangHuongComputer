@@ -42,7 +42,7 @@ public class CustomFieldDbContext : DbContext
             e.Property(f => f.Name).HasMaxLength(200).IsRequired();
             e.Property(f => f.Description).HasMaxLength(500);
             e.Property(f => f.EntityType).HasMaxLength(50);
-            e.Property(f => f.FieldsSchema).HasColumnType("jsonb").HasDefaultValueSql("'[]'");
+            e.Property(f => f.FieldsSchema).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
             e.Property(f => f.IsActive).HasDefaultValue(true);
             e.Property(f => f.CreatedAt).HasDefaultValueSql("now()");
             e.HasIndex(f => f.Code).IsUnique();
@@ -55,9 +55,9 @@ public class CustomFieldDbContext : DbContext
             e.Property(r => r.EntityType).HasMaxLength(50).IsRequired();
             e.Property(r => r.TriggerEvent).HasMaxLength(50).IsRequired();
             e.Property(r => r.TriggerField).HasMaxLength(50);
-            e.Property(r => r.ConditionJson).HasColumnType("jsonb").HasDefaultValueSql("'{}'");
+            e.Property(r => r.ConditionJson).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
             e.Property(r => r.ActionType).HasMaxLength(50).IsRequired();
-            e.Property(r => r.ActionConfig).HasColumnType("jsonb").HasDefaultValueSql("'{}'");
+            e.Property(r => r.ActionConfig).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
             e.Property(r => r.IsActive).HasDefaultValue(true);
             e.Property(r => r.ExecutionOrder).HasDefaultValue(0);
             e.Property(r => r.CreatedAt).HasDefaultValueSql("now()");

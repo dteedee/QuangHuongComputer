@@ -17,8 +17,8 @@ public static class WarrantyReportEndpoints
             WarrantyDbContext warrantyDb,
             string? startDate = null, string? endDate = null) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-12);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
             var claims = await warrantyDb.Claims
                 .Where(c => c.FiledDate >= start && c.FiledDate < end)
@@ -71,8 +71,8 @@ public static class WarrantyReportEndpoints
             CatalogDbContext catalogDb,
             string? startDate = null, string? endDate = null) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-12);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
             var claims = await warrantyDb.Claims
                 .Where(c => c.FiledDate >= start && c.FiledDate < end)
@@ -116,8 +116,8 @@ public static class WarrantyReportEndpoints
             RepairDbContext repairDb,
             string? startDate = null, string? endDate = null) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-12);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
             var resolvedClaims = await warrantyDb.Claims
                 .Where(c => c.Status == ClaimStatus.Resolved && c.FiledDate >= start && c.FiledDate < end)

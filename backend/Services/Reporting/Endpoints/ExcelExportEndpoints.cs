@@ -19,8 +19,8 @@ public static class ExcelExportEndpoints
     {
         group.MapGet("/export/sales", async (SalesDbContext salesDb, string? startDate, string? endDate) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-1);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-1);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
             var orders = await salesDb.Orders.Include(o => o.Items)
                 .Where(o => o.OrderDate >= start && o.OrderDate < end)
@@ -181,8 +181,8 @@ public static class ExcelExportEndpoints
 
         group.MapGet("/export/financial", async (SalesDbContext salesDb, AccountingDbContext accDb, InventoryDbContext invDb, string? startDate = null, string? endDate = null) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.Parse(startDate) : DateTime.UtcNow.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.Parse(endDate) : DateTime.UtcNow.AddDays(1);
+            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-12);
+            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
             using var workbook = new XLWorkbook();
 
             var summary = workbook.Worksheets.Add("Tổng quan tài chính");
