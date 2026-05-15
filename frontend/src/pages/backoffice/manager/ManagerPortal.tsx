@@ -134,7 +134,7 @@ export const ManagerPortal = () => {
                     <div className="absolute top-0 right-0 p-10 text-gray-50 pointer-events-none group-hover:scale-125 transition-transform">
                         <BarChart3 size={150} />
                     </div>
-                    <h3 className="text-2xl font-semibold text-gray-900  tracking-tighter mb-4">Phân tích Hiệu suất</h3>
+                    <h3 className="text-2xl font-semibold text-gray-900  mb-4">Phân tích Hiệu suất</h3>
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Theo dõi sát sao các chỉ số tăng trưởng, hiệu quả marketing và tối ưu hóa quy trình vận hành cửa hàng.</p>
                     <div className="flex gap-4">
                         <button
@@ -160,7 +160,7 @@ export const ManagerPortal = () => {
                     <div className="absolute top-0 right-0 p-10 text-white/5 pointer-events-none group-hover:scale-125 transition-transform">
                         <Briefcase size={150} />
                     </div>
-                    <h3 className="text-2xl font-semibold text-white  tracking-tighter mb-4">Quản lý Đội ngũ</h3>
+                    <h3 className="text-2xl font-semibold text-white  mb-4">Quản lý Đội ngũ</h3>
                     <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8 max-w-sm">Điều phối tài nguyên nhân sự, phân bổ ca trực và giải quyết các khiếu nại khách hàng cấp quản lý.</p>
                     <button
                         onClick={() => navigate('/backoffice/hr')}

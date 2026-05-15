@@ -301,7 +301,7 @@ export const InventoryPortal = () => {
                             <CheckCircle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-semibold text-emerald-600 tracking-tighter tabular-nums">{stats.inStock}</h3>
+                    <h3 className="text-2xl font-semibold text-emerald-600 tabular-nums">{stats.inStock}</h3>
                     <p className="text-xs text-slate-500 font-medium mt-1">Còn hàng</p>
                 </motion.div>
 
@@ -318,7 +318,7 @@ export const InventoryPortal = () => {
                             <AlertTriangle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-semibold text-amber-600 tracking-tighter tabular-nums">{stats.lowStock}</h3>
+                    <h3 className="text-2xl font-semibold text-amber-600 tabular-nums">{stats.lowStock}</h3>
                     <p className="text-xs text-slate-500 font-medium mt-1">Sắp hết</p>
                 </motion.div>
 
@@ -335,7 +335,7 @@ export const InventoryPortal = () => {
                             <AlertCircle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-semibold text-red-600 tracking-tighter tabular-nums">{stats.outOfStock}</h3>
+                    <h3 className="text-2xl font-semibold text-red-600 tabular-nums">{stats.outOfStock}</h3>
                     <p className="text-xs text-slate-500 font-medium mt-1">Hết hàng</p>
                 </motion.div>
             </div>

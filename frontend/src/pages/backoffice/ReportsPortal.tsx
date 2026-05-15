@@ -152,7 +152,7 @@ export const ReportsPortal = () => {
                     <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Báo cáo & <span className="text-accent">Phân tích</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-xs">
+                    <p className="text-sm text-slate-500">
                         Dữ liệu kinh doanh thời gian thực
                     </p>
                 </div>

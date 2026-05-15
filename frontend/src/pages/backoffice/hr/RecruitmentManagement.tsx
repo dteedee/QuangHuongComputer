@@ -137,7 +137,7 @@ export const RecruitmentManagement = () => {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-semibold  tracking-tighter text-gray-900 leading-none">Quản lý tuyển dụng</h1>
+                    <h1 className="text-2xl font-semibold  text-gray-900 leading-none">Quản lý tuyển dụng</h1>
                     <p className="text-gray-500 text-sm mt-1 uppercase font-bold">Quản lý tin đăng và ứng viên</p>
                 </div>
                 <button
@@ -184,7 +184,7 @@ export const RecruitmentManagement = () => {
                                     <tr key={job.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-gray-900 group-hover:text-accent transition-colors">{job.title}</div>
-                                            <div className="text-xs text-slate-500 font-medium tracking-tighter">{job.department}</div>
+                                            <div className="text-xs text-slate-500 font-medium">{job.department}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1 font-medium text-gray-700">

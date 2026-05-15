@@ -265,7 +265,7 @@ export function FinancialReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Revenue vs Expense Chart */}
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
                                 <BarChart3 size={20} className="text-accent" />
                                 Doanh thu vs Chi phí
                             </h3>
@@ -276,7 +276,7 @@ export function FinancialReportsPage() {
 
                         {/* Profit Trend Chart */}
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
                                 <TrendingUp size={20} className="text-accent" />
                                 Xu hướng lợi nhuận
                             </h3>
@@ -289,7 +289,7 @@ export function FinancialReportsPage() {
                     {/* Cash Flow Trend Chart */}
                     {cashFlow?.monthlyInflows && cashFlow.monthlyInflows.length > 0 && (
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
                                 <Wallet size={20} className="text-purple-600" />
                                 Xu hướng dòng tiền
                             </h3>
@@ -299,11 +299,11 @@ export function FinancialReportsPage() {
                             <div className="mt-6 grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-green-50 rounded-xl border border-green-100 flex items-center justify-between">
                                     <span className="text-xs font-semibold text-green-700 uppercase">Tổng thu vào</span>
-                                    <span className="font-semibold text-green-700 tracking-tighter">{formatCurrency(cashFlow.totalInflows)}</span>
+                                    <span className="font-semibold text-green-700">{formatCurrency(cashFlow.totalInflows)}</span>
                                 </div>
                                 <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex items-center justify-between">
                                     <span className="text-xs font-semibold text-red-700 uppercase">Tổng chi ra</span>
-                                    <span className="font-semibold text-red-700 tracking-tighter">{formatCurrency(cashFlow.totalOutflows)}</span>
+                                    <span className="font-semibold text-red-700">{formatCurrency(cashFlow.totalOutflows)}</span>
                                 </div>
                             </div>
                         </div>
@@ -313,7 +313,7 @@ export function FinancialReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Assets */}
                         <div className="premium-card p-8 border-2 border-green-50">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
                                 <Package size={20} className="text-green-600" />
                                 Tài sản
                             </h3>
@@ -356,7 +356,7 @@ export function FinancialReportsPage() {
 
                         {/* Liabilities */}
                         <div className="premium-card p-8 border-2 border-red-50">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
                                 <CreditCard size={20} className="text-red-600" />
                                 Nợ phải trả
                             </h3>
@@ -424,7 +424,7 @@ export function FinancialReportsPage() {
                     {/* Expense by Category */}
                     {revenueExpense?.expenseByCategory && revenueExpense.expenseByCategory.length > 0 && (
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900  mb-6">
                                 Chi phí theo danh mục
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -434,7 +434,7 @@ export function FinancialReportsPage() {
                                             <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
                                             <span className="text-[9px] font-bold text-gray-400">{cat.count} khoản</span>
                                         </div>
-                                        <p className="text-xl font-semibold text-accent tracking-tighter">{formatCurrency(cat.total)}</p>
+                                        <p className="text-xl font-semibold text-accent">{formatCurrency(cat.total)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -443,25 +443,25 @@ export function FinancialReportsPage() {
 
                     {/* Cash Flow Breakdown */}
                     <div className="premium-card p-8 border-2">
-                        <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900  mb-6">
                             Chi tiết dòng tiền
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="p-6 bg-green-50 rounded-xl border border-green-100">
                                 <p className="text-xs font-semibold text-green-600 uppercase mb-2">Thu từ AR</p>
-                                <p className="text-2xl font-semibold text-green-700 tracking-tighter">
+                                <p className="text-2xl font-semibold text-green-700">
                                     {formatCurrency(cashFlow?.breakdown.arCollected || 0)}
                                 </p>
                             </div>
                             <div className="p-6 bg-red-50 rounded-xl border border-red-100">
                                 <p className="text-xs font-semibold text-red-600 uppercase mb-2">Trả cho AP</p>
-                                <p className="text-2xl font-semibold text-red-700 tracking-tighter">
+                                <p className="text-2xl font-semibold text-red-700">
                                     {formatCurrency(cashFlow?.breakdown.apPaid || 0)}
                                 </p>
                             </div>
                             <div className="p-6 bg-amber-50 rounded-xl border border-amber-100">
                                 <p className="text-xs font-semibold text-amber-600 uppercase mb-2">Chi phí đã trả</p>
-                                <p className="text-2xl font-semibold text-amber-700 tracking-tighter">
+                                <p className="text-2xl font-semibold text-amber-700">
                                     {formatCurrency(cashFlow?.breakdown.expensesPaid || 0)}
                                 </p>
                             </div>

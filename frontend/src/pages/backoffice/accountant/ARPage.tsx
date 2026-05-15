@@ -80,7 +80,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
               <div className="bg-gray-50 p-6 rounded-xl space-y-3 border-2 border-gray-100">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium text-xs">Mã hóa đơn</span>
-                  <span className="font-semibold text-gray-950 font-mono tracking-tighter">{invoice.invoiceNumber}</span>
+                  <span className="font-semibold text-gray-950 font-mono">{invoice.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium text-xs">Khách hàng</span>
@@ -88,7 +88,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                 </div>
                 <div className="flex justify-between text-sm border-t-2 border-dashed border-gray-200 pt-3">
                   <span className="text-gray-500 font-medium text-xs">Dư nợ hiện tại</span>
-                  <span className="font-semibold text-accent text-xl tracking-tighter">
+                  <span className="font-semibold text-accent text-xl">
                     {formatCurrency(invoice.outstandingAmount)}
                   </span>
                 </div>
@@ -102,7 +102,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   <input
                     type="number"
                     {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-2xl italic text-accent placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
@@ -235,7 +235,7 @@ export const ARPage = () => {
       label: 'Mã hóa đơn',
       sortable: true,
       render: (item) => (
-        <span className="font-semibold text-accent font-mono tracking-tighter">{item.invoiceNumber}</span>
+        <span className="font-semibold text-accent font-mono">{item.invoiceNumber}</span>
       ),
     },
     {
@@ -249,7 +249,7 @@ export const ARPage = () => {
       label: 'Tổng tiền',
       sortable: true,
       render: (item) => (
-        <span className="font-semibold text-gray-900 tracking-tighter">{formatCurrency(item.totalAmount)}</span>
+        <span className="font-semibold text-gray-900">{formatCurrency(item.totalAmount)}</span>
       ),
     },
     {
@@ -257,7 +257,7 @@ export const ARPage = () => {
       label: 'Còn nợ',
       sortable: true,
       render: (item) => (
-        <span className="font-semibold text-accent tracking-tighter">{formatCurrency(item.outstandingAmount)}</span>
+        <span className="font-semibold text-accent">{formatCurrency(item.outstandingAmount)}</span>
       ),
     },
     {
@@ -307,7 +307,7 @@ export const ARPage = () => {
             <DollarSign size={120} />
           </div>
           <p className="text-gray-400 text-xs text-slate-500 mb-3">Tổng nợ chưa thu</p>
-          <h3 className="text-4xl font-semibold text-accent tracking-tighter">
+          <h3 className="text-4xl font-semibold text-accent">
             {formatCurrency(agingSummary?.totalOutstanding ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50 flex items-center gap-3">
@@ -320,7 +320,7 @@ export const ARPage = () => {
             <Clock size={120} />
           </div>
           <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ quá hạn</p>
-          <h3 className="text-4xl font-semibold text-amber-600 tracking-tighter">
+          <h3 className="text-4xl font-semibold text-amber-600">
             {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0) + (agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">
@@ -333,7 +333,7 @@ export const ARPage = () => {
             <AlertCircle size={120} />
           </div>
           <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ trong hạn</p>
-          <h3 className="text-4xl font-semibold text-blue-600 tracking-tighter">
+          <h3 className="text-4xl font-semibold text-blue-600">
             {formatCurrency(agingSummary?.current ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">

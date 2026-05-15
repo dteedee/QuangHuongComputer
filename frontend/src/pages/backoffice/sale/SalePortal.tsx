@@ -198,7 +198,7 @@ export const SalePortal = () => {
                                                     {status.label}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-6 text-right font-semibold text-gray-950 text-lg tracking-tighter">
+                                            <td className="px-8 py-6 text-right font-semibold text-gray-950 text-lg">
                                                 {formatCurrency(order.totalAmount)}
                                             </td>
                                         </tr>
@@ -213,7 +213,7 @@ export const SalePortal = () => {
                 <div className="space-y-8">
                     <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-8 text-white relative overflow-hidden shadow-md border-4 border-gray-100">
                         <div className="relative z-10">
-                            <h3 className="text-2xl font-semibold mb-2  tracking-tighter">Tạo khuyến mãi</h3>
+                            <h3 className="text-2xl font-semibold mb-2 ">Tạo khuyến mãi</h3>
                             <p className="text-gray-400 text-sm font-bold mb-8 uppercase tracking-wide">Tăng doanh số với các chương trình Hot Sale</p>
                             <button className="w-full bg-accent text-white px-6 py-4 rounded-lg text-sm font-medium shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95">
                                 Tạo chiến dịch ngay

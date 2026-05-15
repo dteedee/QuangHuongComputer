@@ -82,7 +82,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
 
                 <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-md transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                     <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Tạo chi phí mới</h3>
+                        <h3 className="text-xl font-semibold text-gray-950 ">Tạo chi phí mới</h3>
                         <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
                             <X size={24} />
                         </button>
@@ -341,7 +341,7 @@ export const ExpensesPage = () => {
             key: 'totalAmount',
             label: 'Tổng tiền',
             sortable: true,
-            render: (item) => <span className="font-semibold text-gray-950 tracking-tighter">{formatCurrency(item.totalAmount)}</span>,
+            render: (item) => <span className="font-semibold text-gray-950">{formatCurrency(item.totalAmount)}</span>,
         },
         {
             key: 'expenseDate',
@@ -412,7 +412,7 @@ export const ExpensesPage = () => {
                         </div>
                         <span className="text-xs font-semibold text-amber-500 uppercase">Chờ duyệt</span>
                     </div>
-                    <h3 className="text-2xl font-semibold text-amber-600 tracking-tighter">{summary?.pendingCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-amber-600">{summary?.pendingCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.pendingAmount || 0)}</p>
                 </motion.div>
 
@@ -423,7 +423,7 @@ export const ExpensesPage = () => {
                         </div>
                         <span className="text-xs font-semibold text-blue-500 uppercase">Đã duyệt</span>
                     </div>
-                    <h3 className="text-2xl font-semibold text-blue-600 tracking-tighter">{summary?.approvedCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-blue-600">{summary?.approvedCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.approvedAmount || 0)}</p>
                 </motion.div>
 
@@ -434,7 +434,7 @@ export const ExpensesPage = () => {
                         </div>
                         <span className="text-xs font-semibold text-green-500 uppercase">Đã chi</span>
                     </div>
-                    <h3 className="text-2xl font-semibold text-green-600 tracking-tighter">{summary?.paidCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-green-600">{summary?.paidCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.paidAmount || 0)}</p>
                 </motion.div>
             </div>
@@ -523,7 +523,7 @@ export const ExpensesPage = () => {
             {/* Category Breakdown */}
             {summary?.byCategory && summary.byCategory.length > 0 && (
                 <div className="premium-card p-8 border-2">
-                    <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">Chi phí theo danh mục</h3>
+                    <h3 className="text-lg font-semibold text-gray-900  mb-6">Chi phí theo danh mục</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {summary.byCategory.map((cat) => (
                             <div key={cat.categoryId} className="p-6 bg-gray-50 rounded-xl border border-gray-100">
@@ -531,7 +531,7 @@ export const ExpensesPage = () => {
                                     <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
                                     <span className="text-[9px] font-bold text-gray-400 uppercase">{cat.categoryCode}</span>
                                 </div>
-                                <p className="text-xl font-semibold text-accent tracking-tighter">{formatCurrency(cat.totalAmount)}</p>
+                                <p className="text-xl font-semibold text-accent">{formatCurrency(cat.totalAmount)}</p>
                                 <p className="text-xs text-gray-400 mt-1">{cat.expenseCount} khoản chi</p>
                             </div>
                         ))}

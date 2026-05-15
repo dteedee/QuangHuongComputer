@@ -369,7 +369,7 @@ export const ConfigPortal = () => {
                                     <span className={categories.find(c => c.name === activeCategory)?.color || 'text-gray-600'}>
                                         {categories.find(c => c.name === activeCategory)?.icon}
                                     </span>
-                                    <h3 className="text-3xl font-semibold text-gray-950  tracking-tighter">
+                                    <h3 className="text-3xl font-semibold text-gray-950 ">
                                         {categories.find(c => c.name === activeCategory)?.label || activeCategory}
                                     </h3>
                                 </div>

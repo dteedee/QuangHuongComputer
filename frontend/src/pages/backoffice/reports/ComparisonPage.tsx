@@ -81,7 +81,7 @@ export function ComparisonPage() {
                 <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                     So sánh <span className="text-accent">kỳ</span>
                 </h1>
-                <p className="text-gray-500 font-bold uppercase text-xs">So sánh chỉ số giữa hai khoảng thời gian</p>
+                <p className="text-sm text-slate-500">So sánh chỉ số giữa hai khoảng thời gian</p>
             </div>
 
             {/* Presets */}

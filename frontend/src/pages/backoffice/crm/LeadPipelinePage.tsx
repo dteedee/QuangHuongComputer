@@ -75,7 +75,7 @@ const DroppableColumn = ({ column, children }: { column: PipelineView, children:
         </div>
         <div className="text-right">
           <p className="text-xs font-bold text-gray-400">{column.stage.winProbability}% THẮNG</p>
-          <p className="text-sm font-semibold text-emerald-600 tracking-tighter">
+          <p className="text-sm font-semibold text-emerald-600">
             {formatCurrency(column.stage.totalEstimatedValue)}
           </p>
         </div>

@@ -138,7 +138,7 @@ export const AccountingPortal = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Công nợ</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">
+                    <h3 className="text-3xl font-semibold text-gray-900">
                         {formatCurrency(stats?.totalReceivables || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Phải thu khách hàng</p>
@@ -151,7 +151,7 @@ export const AccountingPortal = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Doanh thu</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">
+                    <h3 className="text-3xl font-semibold text-gray-900">
                         {formatCurrency(stats?.revenueToday || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Hôm nay</p>
@@ -164,7 +164,7 @@ export const AccountingPortal = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Hóa đơn</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">{stats?.totalInvoices || 0}</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900">{stats?.totalInvoices || 0}</h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Tổng số hóa đơn</p>
                 </motion.div>
 
@@ -175,7 +175,7 @@ export const AccountingPortal = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Tài khoản</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">{stats?.activeAccounts || 0}</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900">{stats?.activeAccounts || 0}</h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Đang hoạt động</p>
                 </motion.div>
             </div>

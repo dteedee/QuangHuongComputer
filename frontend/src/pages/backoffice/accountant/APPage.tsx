@@ -209,7 +209,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
 
                 <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-md transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                     <div className="flex items-center justify-between px-8 py-6 border-b bg-gray-50">
-                        <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Tạo hóa đơn NCC</h3>
+                        <h3 className="text-xl font-semibold text-gray-950 ">Tạo hóa đơn NCC</h3>
                         <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
                             <X size={24} />
                         </button>
@@ -546,7 +546,7 @@ export const APPage = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Tổng số tiền nợ</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">{formatCurrency(agingSummary?.totalPayable ?? 0)}</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900">{formatCurrency(agingSummary?.totalPayable ?? 0)}</h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Dư nợ trên toàn hệ thống</p>
                 </motion.div>
 
@@ -557,7 +557,7 @@ export const APPage = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Trong khoảng 60 ngày</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">
+                    <h3 className="text-3xl font-semibold text-gray-900">
                         {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0))}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Hóa đơn chờ thanh toán sớm</p>
@@ -570,7 +570,7 @@ export const APPage = () => {
                         </div>
                         <span className="text-sm font-medium text-slate-400">Quá hạn thanh toán (60+ ng)</span>
                     </div>
-                    <h3 className="text-3xl font-semibold text-red-600 tracking-tighter">{formatCurrency((agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}</h3>
+                    <h3 className="text-3xl font-semibold text-red-600">{formatCurrency((agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}</h3>
                     <p className="text-xs text-red-400 font-bold mt-2">Cần ưu tiên xử lý dài hạn</p>
                 </motion.div>
             </div>

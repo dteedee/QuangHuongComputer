@@ -210,7 +210,7 @@ export const CMSPortal = () => {
                 <div className="lg:col-span-3 space-y-8">
                     <div className="premium-card overflow-hidden border-2 bg-white">
                         <div className="p-10 border-b-2 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/30">
-                            <h3 className="text-3xl font-semibold text-gray-950  tracking-tighter">
+                            <h3 className="text-3xl font-semibold text-gray-950 ">
                                 Danh sách: <span className="text-accent">
                                     {{
                                         Pages: 'Trang tĩnh',
@@ -271,7 +271,7 @@ export const CMSPortal = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-md overflow-hidden border-4 border-gray-100">
                             <div className="p-10 border-b-2 border-gray-50 flex items-center justify-between bg-gray-50/30">
                                 <div>
-                                    <h2 className="text-3xl font-semibold text-gray-950  tracking-tighter">
+                                    <h2 className="text-3xl font-semibold text-gray-950 ">
                                         {editingItem ? 'Cấu hình' : 'Thiết kế'} <span className="text-accent">Nội dung</span>
                                     </h2>
                                     <p className="text-sm font-medium text-slate-500 mt-1">Hệ thống quản trị nội dung CMS</p>

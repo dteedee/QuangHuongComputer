@@ -167,7 +167,7 @@ export const HRPortal = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="premium-card overflow-hidden">
                     <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-sm flex justify-between items-center">
-                        <h3 className="text-xl font-semibold text-gray-900  tracking-tighter">Danh bạ nhân viên</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 ">Danh bạ nhân viên</h3>
                     </div>
                     <div className="divide-y divide-gray-50">
                         {empLoading ? (
@@ -186,7 +186,7 @@ export const HRPortal = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-base font-semibold text-gray-900 tracking-tighter">{formatCurrency(emp.baseSalary)}</p>
+                                    <p className="text-base font-semibold text-gray-900">{formatCurrency(emp.baseSalary)}</p>
                                     <p className="text-[9px] text-gray-400 uppercase font-semibold italic mt-1">{emp.status === 'Active' ? 'Đang làm việc' : 'Nghỉ việc/Vắng mặt'}</p>
                                 </div>
                             </div>
@@ -196,7 +196,7 @@ export const HRPortal = () => {
 
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="premium-card p-8 flex flex-col">
                     <div className="flex justify-between items-center mb-8 border-b border-gray-50 pb-6">
-                        <h3 className="text-xl font-semibold text-gray-900  tracking-tighter">Bảng lương tháng {currentMonth}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 ">Bảng lương tháng {currentMonth}</h3>
                         <button
                             onClick={() => generatePayrollMutation.mutate({ month: currentMonth, year: currentYear })}
                             className="text-xs font-semibold text-accent uppercase hover:underline"
