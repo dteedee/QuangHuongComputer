@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 using BuildingBlocks.Repository;
+using BuildingBlocks.Security;
 
 namespace Identity;
 
@@ -611,6 +612,25 @@ public static class IdentityEndpoints
             return Results.Ok(SystemPermissions.GetAllPermissions());
         }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.View));
 
+        // GET /api/auth/permissions/registry — return full permission metadata grouped by module
+        group.MapGet("/permissions/registry", () =>
+        {
+            var grouped = PermissionRegistry.GetGroupedByModule();
+            var result = grouped.Select(g => new
+            {
+                module = g.Key,
+                permissions = g.Value.Select(p => new
+                {
+                    key = p.Key,
+                    displayName = p.DisplayName,
+                    description = p.Description,
+                    type = p.Type.ToString(),
+                    dependsOn = p.DependsOn
+                })
+            });
+            return Results.Ok(result);
+        }).RequireAuthorization();
+
         group.MapGet("/roles/{id}/permissions", async (string id, RoleManager<IdentityRole> roleManager) =>
         {
             var role = await roleManager.FindByIdAsync(id);
@@ -630,6 +650,9 @@ public static class IdentityEndpoints
             var role = await roleManager.FindByIdAsync(id);
             if (role == null) return Results.NotFound("Role not found");
 
+            // Validate: remove action permissions whose View dependency is missing
+            var validated = PermissionRegistry.ValidatePermissions(permissions.ToList());
+
             var currentClaims = await roleManager.GetClaimsAsync(role);
             var currentPermissions = currentClaims.Where(c => c.Type == SystemPermissions.PermissionType).ToList();
 
@@ -638,7 +661,7 @@ public static class IdentityEndpoints
                 await roleManager.RemoveClaimAsync(role, claim);
             }
 
-            foreach (var permission in permissions)
+            foreach (var permission in validated)
             {
                 await roleManager.AddClaimAsync(role, new Claim(SystemPermissions.PermissionType, permission));
             }

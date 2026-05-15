@@ -18,6 +18,7 @@
     <ProjectReference Include="..\HR\HR.csproj" />
     <ProjectReference Include="..\Warranty\Warranty.csproj" />
     <ProjectReference Include="..\CRM\CRM.csproj" />
+    <ProjectReference Include="..\SystemConfig\SystemConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>

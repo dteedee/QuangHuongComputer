@@ -23,5 +23,6 @@ public static class ReportingEndpoints
         group.MapCRMReportEndpoints();
         group.MapTaxReportEndpoints();
         group.MapComparisonEndpoints();
+        group.MapReportCustomizationEndpoints();
     }
 }

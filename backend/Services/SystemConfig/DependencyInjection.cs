@@ -29,6 +29,17 @@ public static class DependencyInjection
                 options.AddInterceptors(interceptor);
         });
 
+        services.AddDbContext<CustomFieldDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.CommandTimeout(30);
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+            });
+        });
+
         return services;
     }
 }

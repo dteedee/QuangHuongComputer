@@ -5,11 +5,18 @@ import client from './client';
 // System Config API Types
 // ============================================
 
+export type ConfigValueType = 'String' | 'Number' | 'Boolean' | 'Json' | 'Secret' | 'Url' | 'Email' | 'Percentage';
+
 export interface ConfigurationEntry {
     key: string;
     value: string;
     description: string;
     category: string;
+    module: string;
+    valueType: ConfigValueType;
+    jsonValue?: string | null;
+    isSystem: boolean;
+    sortOrder: number;
     lastUpdated: string;
 }
 
@@ -66,6 +73,77 @@ export interface PagedResult<T> {
 }
 
 // ============================================
+// Backoffice Menu Types
+// ============================================
+
+export interface BackofficeMenuItemDto {
+    id: string;
+    groupId: string;
+    title: string;
+    description?: string;
+    iconName: string;
+    path: string;
+    allowedRoles: string[];
+    displayOrder: number;
+    isActive: boolean;
+    badgeSource?: string;
+    openInNewTab: boolean;
+}
+
+export interface BackofficeMenuGroupDto {
+    id: string;
+    title: string;
+    iconName: string;
+    colorClass: string;
+    displayOrder: number;
+    isActive: boolean;
+    items: BackofficeMenuItemDto[];
+}
+
+export interface CreateMenuGroupRequest {
+    title: string;
+    iconName?: string;
+    colorClass?: string;
+    isActive?: boolean;
+}
+
+export interface UpdateMenuGroupRequest {
+    title?: string;
+    iconName?: string;
+    colorClass?: string;
+    isActive?: boolean;
+}
+
+export interface CreateMenuItemRequest {
+    groupId: string;
+    title: string;
+    path: string;
+    description?: string;
+    iconName?: string;
+    allowedRoles?: string[];
+    isActive?: boolean;
+    badgeSource?: string;
+    openInNewTab?: boolean;
+}
+
+export interface UpdateMenuItemRequest {
+    title?: string;
+    path?: string;
+    description?: string;
+    iconName?: string;
+    allowedRoles?: string[];
+    isActive?: boolean;
+    badgeSource?: string;
+    openInNewTab?: boolean;
+}
+
+export interface ReorderRequest {
+    id: string;
+    order: number;
+    groupId?: string;
+}
+
+// ============================================
 // System Config API Functions
 // ============================================
 
@@ -77,8 +155,13 @@ export const systemConfigApi = {
             return response.data;
         },
 
-        getAll: async (category?: string): Promise<ConfigurationEntry[]> => {
-            const response = await client.get('/config', { params: { category } });
+        getAll: async (category?: string, module?: string): Promise<ConfigurationEntry[]> => {
+            const response = await client.get('/config', { params: { category, module } });
+            return response.data;
+        },
+
+        getModules: async (): Promise<string[]> => {
+            const response = await client.get('/config/modules');
             return response.data;
         },
 
@@ -99,6 +182,57 @@ export const systemConfigApi = {
 
         delete: async (key: string): Promise<void> => {
             await client.delete(`/config/${key}`);
+        },
+    },
+
+    // ============ Backoffice Menu ============
+    backofficeMenu: {
+        getForUser: async (): Promise<BackofficeMenuGroupDto[]> => {
+            const response = await client.get('/config/backoffice-menu');
+            return response.data;
+        },
+
+        admin: {
+            getAll: async (): Promise<BackofficeMenuGroupDto[]> => {
+                const response = await client.get('/config/admin/backoffice-menu');
+                return response.data;
+            },
+
+            createGroup: async (data: CreateMenuGroupRequest): Promise<BackofficeMenuGroupDto> => {
+                const response = await client.post('/config/admin/backoffice-menu/groups', data);
+                return response.data;
+            },
+
+            updateGroup: async (id: string, data: UpdateMenuGroupRequest): Promise<BackofficeMenuGroupDto> => {
+                const response = await client.put(`/config/admin/backoffice-menu/groups/${id}`, data);
+                return response.data;
+            },
+
+            deleteGroup: async (id: string): Promise<void> => {
+                await client.delete(`/config/admin/backoffice-menu/groups/${id}`);
+            },
+
+            reorderGroups: async (items: ReorderRequest[]): Promise<void> => {
+                await client.put('/config/admin/backoffice-menu/groups/reorder', items);
+            },
+
+            createItem: async (data: CreateMenuItemRequest): Promise<BackofficeMenuItemDto> => {
+                const response = await client.post('/config/admin/backoffice-menu/items', data);
+                return response.data;
+            },
+
+            updateItem: async (id: string, data: UpdateMenuItemRequest): Promise<BackofficeMenuItemDto> => {
+                const response = await client.put(`/config/admin/backoffice-menu/items/${id}`, data);
+                return response.data;
+            },
+
+            deleteItem: async (id: string): Promise<void> => {
+                await client.delete(`/config/admin/backoffice-menu/items/${id}`);
+            },
+
+            reorderItems: async (items: ReorderRequest[]): Promise<void> => {
+                await client.put('/config/admin/backoffice-menu/items/reorder', items);
+            },
         },
     },
 

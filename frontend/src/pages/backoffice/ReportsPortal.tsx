@@ -14,6 +14,9 @@ import type { TopProduct, TopCustomer, TopTechnician } from '../../api/reporting
 import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/format';
 import toast from 'react-hot-toast';
+import { reportCustomizationApi, parseColumns, parseVisibleColumns, type ReportPreset } from '../../api/report-customization';
+import { ReportColumnSelector } from '../../components/backoffice/report-column-selector';
+import { ReportPresetManager } from '../../components/backoffice/report-preset-manager';
 
 const reportGroups = [
     { path: '/backoffice/hr/reports', label: 'Nhân sự', icon: UserCheck, color: 'bg-indigo-600' },
@@ -67,12 +70,53 @@ const presetLabels: Record<DatePreset, string> = {
     custom: 'Tùy chọn'
 };
 
+// Map tab ID → report definition code for column/preset customization
+const TAB_REPORT_CODE: Record<string, string> = {
+    products: 'top_products',
+    customers: 'top_customers',
+    technicians: 'tech_performance',
+};
+
 export const ReportsPortal = () => {
     const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'customers' | 'technicians'>('overview');
     const [isExporting, setIsExporting] = useState(false);
     const [datePreset, setDatePreset] = useState<DatePreset>('30d');
     const [customStart, setCustomStart] = useState('');
     const [customEnd, setCustomEnd] = useState('');
+
+    // Column visibility state keyed by report code
+    const [visibleColumnsMap, setVisibleColumnsMap] = useState<Record<string, string[]>>({});
+
+    const activeReportCode = TAB_REPORT_CODE[activeTab] ?? null;
+
+    const { data: activeDefinition } = useQuery({
+        queryKey: ['report-definition', activeReportCode],
+        queryFn: () => reportCustomizationApi.getDefinition(activeReportCode!),
+        enabled: !!activeReportCode,
+    });
+
+    const availableColumns = activeDefinition ? parseColumns(activeDefinition.availableColumns) : [];
+
+    const visibleColumns = useMemo(() => {
+        if (!activeReportCode) return [];
+        if (visibleColumnsMap[activeReportCode]) return visibleColumnsMap[activeReportCode];
+        // Default: columns marked defaultVisible
+        return availableColumns.filter(c => c.defaultVisible).map(c => c.key);
+    }, [activeReportCode, visibleColumnsMap, availableColumns]);
+
+    const setVisibleColumns = (keys: string[]) => {
+        if (!activeReportCode) return;
+        setVisibleColumnsMap(prev => ({ ...prev, [activeReportCode]: keys }));
+    };
+
+    const handlePresetLoad = (preset: ReportPreset) => {
+        if (!activeReportCode) return;
+        const cols = parseVisibleColumns(preset.visibleColumns);
+        if (cols.length > 0) setVisibleColumnsMap(prev => ({ ...prev, [activeReportCode]: cols }));
+    };
+
+    const isColVisible = (key: string) =>
+        visibleColumns.length === 0 || visibleColumns.includes(key);
 
     const dateRange = useMemo(() => {
         if (datePreset === 'custom' && customStart && customEnd) {
@@ -310,6 +354,29 @@ export const ReportsPortal = () => {
 
             {/* Report Groups Navigation */}
             <ReportGroupNav />
+
+            {/* Report Config Bar — column toggle + presets for tabbed reports */}
+            {activeReportCode && availableColumns.length > 0 && (
+                <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+                    <span className="text-xs font-medium text-gray-400">
+                        Tuỳ chỉnh báo cáo:{' '}
+                        <span className="text-gray-600">{activeDefinition?.name}</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <ReportPresetManager
+                            reportCode={activeReportCode}
+                            visibleColumns={visibleColumns}
+                            filterValues={{}}
+                            onLoad={handlePresetLoad}
+                        />
+                        <ReportColumnSelector
+                            columns={availableColumns}
+                            visibleKeys={visibleColumns}
+                            onChange={setVisibleColumns}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="flex gap-2 border-b border-gray-100 pb-4">

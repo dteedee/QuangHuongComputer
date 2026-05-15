@@ -144,6 +144,7 @@ const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(
 // Backoffice admin pages
 const TwoFactorSetupPage = lazy(() => import('./pages/backoffice/admin/two-factor-setup-page'));
 const SessionsPage = lazy(() => import('./pages/backoffice/admin/sessions-page'));
+const DynamicPermissionsPage = lazy(() => import('./pages/backoffice/admin/dynamic-permissions-page'));
 const RolesPage = lazy(() => import('./pages/backoffice/admin/PermissionsPage').then(m => ({ default: m.PermissionsPage })));
 const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').then(m => ({ default: m.UsersPage })));
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
@@ -151,6 +152,7 @@ const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').th
 const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
 const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
 const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
+const CustomFieldsManager = lazy(() => import('./pages/admin/CustomFieldsManager'));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -304,6 +306,7 @@ function App() {
                           <Route path="admin" element={<AdminPortal />} />
                           <Route path="admin/2fa" element={<TwoFactorSetupPage />} />
                           <Route path="admin/sessions" element={<SessionsPage />} />
+                          <Route path="admin/dynamic-permissions" element={<DynamicPermissionsPage />} />
                           <Route path="audit-logs" element={<AuditLogsPage />} />
                           <Route path="manager" element={<ManagerPortal />} />
                           <Route path="notifications" element={<NotificationCenter />} />
@@ -312,7 +315,8 @@ function App() {
                           <Route path="homepage-builder" element={<HomepageBuilder />} />
                           <Route path="flash-sales" element={<FlashSalesPage />} />
                           <Route path="payments/sepay" element={<SePayAdminPage />} />
-                          
+                          <Route path="custom-fields" element={<CustomFieldsManager />} />
+
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />
                           <Route path="crm/customers" element={<CrmCustomersPage />} />

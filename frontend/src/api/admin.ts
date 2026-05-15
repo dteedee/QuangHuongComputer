@@ -30,6 +30,19 @@ export interface Permission {
   category: string;
 }
 
+export interface PermissionDefinition {
+  key: string;
+  displayName: string;
+  description: string;
+  type: 'View' | 'Create' | 'Edit' | 'Delete' | 'Approve' | 'Export' | 'Manage';
+  dependsOn: string | null;
+}
+
+export interface PermissionModule {
+  module: string;
+  permissions: PermissionDefinition[];
+}
+
 export interface PagedResult<T> {
   items: T[];
   total: number;
@@ -122,6 +135,12 @@ export const adminApi = {
       return response.data;
     },
 
+    // Alias used by DynamicPermissionsPage (returns minimal shape)
+    getAll: async (): Promise<{ id: string; name: string }[]> => {
+      const response = await client.get<{ id: string; name: string }[]>('/auth/roles');
+      return response.data;
+    },
+
     create: async (name: string): Promise<{ message: string }> => {
       const response = await client.post<{ message: string }>('/auth/roles', name, {
         headers: { 'Content-Type': 'text/plain' }
@@ -153,6 +172,11 @@ export const adminApi = {
     },
   },
 };
+
+export async function getPermissionRegistry(): Promise<PermissionModule[]> {
+  const { data } = await client.get<PermissionModule[]>('/auth/permissions/registry');
+  return data;
+}
 
 // ============================================
 // Helper Functions
