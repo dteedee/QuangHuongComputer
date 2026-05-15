@@ -30,24 +30,24 @@ const getStatusIcon = (status: WorkOrderStatus) => {
     switch (status) {
         case 'Requested':
         case 'Assigned':
-            return <Clock size={16} />;
+            return <Clock size={15} />;
         case 'InProgress':
         case 'Diagnosed':
-            return <Play size={16} />;
+            return <Play size={15} />;
         case 'Completed':
         case 'Approved':
-            return <CheckCircle size={16} />;
+            return <CheckCircle size={15} />;
         case 'Cancelled':
         case 'Rejected':
         case 'Declined':
-            return <XCircle size={16} />;
+            return <XCircle size={15} />;
         case 'AwaitingApproval':
         case 'Quoted':
-            return <FileText size={16} />;
+            return <FileText size={15} />;
         case 'OnHold':
-            return <AlertCircle size={16} />;
+            return <AlertCircle size={15} />;
         default:
-            return <Wrench size={16} />;
+            return <Wrench size={15} />;
     }
 };
 
@@ -61,14 +61,12 @@ export const RepairPage = () => {
     const [success, setSuccess] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Get work orders
     const { data: workOrders, isLoading: loadingWorkOrders } = useQuery<WorkOrder[]>({
         queryKey: ['my-work-orders'],
         queryFn: repairApi.workOrders.getMyWorkOrders,
         enabled: isAuthenticated
     });
 
-    // Get bookings
     const { data: bookings, isLoading: loadingBookings } = useQuery({
         queryKey: ['my-bookings'],
         queryFn: repairApi.booking.getMyBookings,
@@ -114,17 +112,23 @@ export const RepairPage = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="container mx-auto px-4 py-32 text-center animate-fade-in font-sans">
-                <div className="bg-white p-12 max-w-lg mx-auto rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100/50">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">
-                        Vui lòng <span className="text-accent">Đăng nhập</span>
-                    </h2>
-                    <p className="text-gray-500 mb-10 text-lg">
-                        Bạn cần đăng nhập để đặt lịch sửa chữa và theo dõi tiến độ.
-                    </p>
-                    <Link to="/login" className="inline-block px-10 py-3.5 bg-accent text-white font-semibold rounded-xl hover:bg-[#b00014] transition shadow-lg shadow-red-600/20 active:scale-95 text-lg">
-                        Đăng nhập ngay
-                    </Link>
+            <div className="bg-gray-50 min-h-screen py-8 font-sans">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="max-w-md mx-auto bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
+                        <div className="w-14 h-14 bg-red-50 text-accent rounded-xl flex items-center justify-center mx-auto mb-5">
+                            <Wrench size={28} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Vui lòng đăng nhập</h2>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Bạn cần đăng nhập để đặt lịch sửa chữa và theo dõi tiến độ.
+                        </p>
+                        <Link
+                            to="/login"
+                            className="inline-block px-8 py-2.5 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
+                        >
+                            Đăng nhập ngay
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -137,217 +141,201 @@ export const RepairPage = () => {
     ].sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
 
     return (
-        <div className="container mx-auto px-4 py-12 max-w-6xl font-sans">
-            <h2 className="text-3xl font-bold text-gray-900 mb-10 tracking-tight">
-                Dịch vụ <span className="text-accent">Sửa chữa</span>
-            </h2>
+        <div className="bg-gray-50 min-h-screen py-8 font-sans">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">Dịch vụ sửa chữa</h1>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Options */}
-                <div className="space-y-6">
-                    {/* Quick Create Form */}
-                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6 tracking-tight">
-                            Gửi yêu cầu nhanh
-                        </h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tên thiết bị / Model
-                                </label>
-                                <input
-                                    value={deviceModel}
-                                    onChange={e => setDeviceModel(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.deviceModel ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none`}
-                                    placeholder="Ví dụ: Dell XPS 15"
-                                />
-                                {errors.deviceModel && <p className="text-red-500 text-xs font-medium mt-1">{errors.deviceModel}</p>}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left: Form + Book button */}
+                    <div className="space-y-4">
+                        {/* Quick Create Form */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                            <h3 className="font-bold text-gray-900 mb-4">Gửi yêu cầu nhanh</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Tên thiết bị / Model
+                                    </label>
+                                    <input
+                                        value={deviceModel}
+                                        onChange={e => setDeviceModel(e.target.value)}
+                                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm ${errors.deviceModel ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
+                                        placeholder="Ví dụ: Dell XPS 15"
+                                    />
+                                    {errors.deviceModel && <p className="text-red-500 text-xs mt-1">{errors.deviceModel}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Số Serial (S/N)
+                                    </label>
+                                    <input
+                                        value={serialNumber}
+                                        onChange={e => setSerialNumber(e.target.value)}
+                                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm ${errors.serialNumber ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
+                                        placeholder="Ví dụ: SN123456"
+                                    />
+                                    {errors.serialNumber && <p className="text-red-500 text-xs mt-1">{errors.serialNumber}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Mô tả tình trạng
+                                    </label>
+                                    <textarea
+                                        value={issueDescription}
+                                        onChange={e => setIssueDescription(e.target.value)}
+                                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-sm min-h-[100px] resize-none ${errors.issueDescription ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
+                                        placeholder="Thiết bị của bạn đang gặp vấn đề gì?"
+                                    />
+                                    {errors.issueDescription && <p className="text-red-500 text-xs mt-1">{errors.issueDescription}</p>}
+                                </div>
+                                {success && (
+                                    <p className="text-emerald-600 text-sm font-medium">Đã gửi yêu cầu thành công!</p>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={createRepair.isPending}
+                                    className="w-full py-2.5 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {createRepair.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Book Service */}
+                        <Link
+                            to="/booking"
+                            className="block bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:border-gray-300 transition-all group cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-bold text-gray-900 mb-1">Đặt lịch dịch vụ</h3>
+                                    <p className="text-gray-500 text-sm">
+                                        Sửa tại cửa hàng hoặc tại nhà
+                                    </p>
+                                </div>
+                                <ChevronRight size={20} className="text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                             </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Số Serial (S/N)
-                                </label>
-                                <input
-                                    value={serialNumber}
-                                    onChange={e => setSerialNumber(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.serialNumber ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none`}
-                                    placeholder="Ví dụ: SN123456"
-                                />
-                                {errors.serialNumber && <p className="text-red-500 text-xs font-medium mt-1">{errors.serialNumber}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Mô tả tình trạng
-                                </label>
-                                <textarea
-                                    value={issueDescription}
-                                    onChange={e => setIssueDescription(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl bg-gray-50 border ${errors.issueDescription ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} focus:ring-2 focus:ring-accent/20 text-gray-900 transition-all outline-none min-h-[100px] resize-none`}
-                                    placeholder="Thiết bị của bạn đang gặp vấn đề gì?"
-                                />
-                                {errors.issueDescription && <p className="text-red-500 text-xs font-medium mt-1">{errors.issueDescription}</p>}
-                            </div>
-                            {success && (
-                                <p className="text-emerald-600 text-sm font-medium">
-                                    Đã gửi yêu cầu thành công!
-                                </p>
-                            )}
-                            <button
-                                type="submit"
-                                disabled={createRepair.isPending}
-                                className="w-full py-3.5 bg-accent text-white font-semibold rounded-xl hover:bg-[#b00014] transition-all shadow-md shadow-accent/20 active:scale-95 disabled:opacity-50"
-                            >
-                                {createRepair.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
-                            </button>
-                        </form>
+                        </Link>
                     </div>
 
-                    {/* Book Service Button */}
-                    <Link
-                        to="/booking"
-                        className="block bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-3xl shadow-lg text-white hover:shadow-xl hover:from-gray-800 hover:to-gray-700 transition-all group"
-                    >
-                        <h3 className="text-xl font-bold mb-2 tracking-tight flex items-center gap-2">
-                            Đặt lịch dịch vụ
-                            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                        </h3>
-                        <p className="text-gray-300 text-sm">
-                            Đặt lịch sửa chữa tại cửa hàng hoặc tại nhà với nhiều tùy chọn.
-                        </p>
-                    </Link>
-                </div>
+                    {/* Right: Repair History */}
+                    <div className="lg:col-span-2">
+                        <h3 className="font-bold text-gray-900 mb-4">Lịch sử sửa chữa</h3>
 
-                {/* Repair History */}
-                <div className="lg:col-span-2">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">
-                        Lịch sử sửa chữa
-                    </h3>
+                        {isLoading ? (
+                            <div className="text-center text-gray-500 py-10 text-sm">Đang tải dữ liệu...</div>
+                        ) : allItems.length === 0 ? (
+                            <div className="bg-white py-10 px-6 rounded-xl border border-gray-100 shadow-sm text-center text-gray-500 text-sm">
+                                Chưa có dữ liệu sửa chữa.
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {allItems.map(item => {
+                                    if (item.type === 'workorder') {
+                                        const repair = item.data as WorkOrder;
+                                        const needsAction = repair.status === 'AwaitingApproval' || repair.status === 'Quoted';
 
-                    {isLoading ? (
-                        <div className="text-center text-gray-500 py-10">
-                            Đang tải dữ liệu...
-                        </div>
-                    ) : allItems.length === 0 ? (
-                        <div className="bg-white py-12 px-6 rounded-3xl border border-gray-100 shadow-sm text-center text-gray-500">
-                            Chưa có dữ liệu sửa chữa.
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {allItems.map(item => {
-                                if (item.type === 'workorder') {
-                                    const repair = item.data as WorkOrder;
-                                    const needsAction = repair.status === 'AwaitingApproval' || repair.status === 'Quoted';
-
-                                    return (
-                                        <div
-                                            key={`wo-${repair.id}`}
-                                            className={`bg-white p-6 rounded-2xl border transition-all shadow-sm hover:shadow-md cursor-pointer ${needsAction ? 'border-amber-300 ring-1 ring-amber-100' : 'border-gray-100 hover:border-accent/30'
-                                                }`}
-                                            onClick={() => navigate(`/repair/${repair.id}`)}
-                                        >
-                                            {needsAction && (
-                                                <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-2">
-                                                    <AlertCircle size={16} className="text-amber-600" />
-                                                    <span className="text-amber-700 text-xs font-semibold">
-                                                        Cần xác nhận báo giá
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
-                                                <div>
-                                                    <div className="flex items-center gap-3">
-                                                        <h4 className="text-lg font-bold text-gray-900 tracking-tight">
-                                                            {repair.deviceModel}
-                                                        </h4>
-                                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-md">
-                                                            {repair.ticketNumber}
-                                                        </span>
+                                        return (
+                                            <div
+                                                key={`wo-${repair.id}`}
+                                                className={`bg-white rounded-xl border shadow-sm p-5 transition-all cursor-pointer hover:shadow-md ${needsAction ? 'border-amber-300 ring-1 ring-amber-100' : 'border-gray-100 hover:border-gray-200'}`}
+                                                onClick={() => navigate(`/repair/${repair.id}`)}
+                                            >
+                                                {needsAction && (
+                                                    <div className="mb-3 p-2.5 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-2">
+                                                        <AlertCircle size={15} className="text-amber-600 flex-shrink-0" />
+                                                        <span className="text-amber-700 text-xs font-semibold">Cần xác nhận báo giá</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-500 mt-1">
-                                                        S/N: {repair.serialNumber || 'N/A'}
-                                                    </p>
-                                                </div>
-                                                <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${getStatusColor(repair.status)}`}>
-                                                    {getStatusIcon(repair.status)}
-                                                    {translateStatus(repair.status)}
-                                                </span>
-                                            </div>
+                                                )}
 
-                                            <p className="text-gray-600 text-sm mb-6 leading-relaxed line-clamp-2">
-                                                {repair.description}
-                                            </p>
-
-                                            <div className="flex justify-between items-center text-sm text-gray-500 pt-4 border-t border-gray-50">
-                                                <span>Ngày đặt: {new Date(repair.createdAt).toLocaleDateString('vi-VN')}</span>
-                                                {repair.totalCost > 0 && (
-                                                    <span className="text-accent font-bold">
-                                                        {formatCurrency(repair.totalCost)}
+                                                <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
+                                                    <div>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <h4 className="font-bold text-gray-900">{repair.deviceModel}</h4>
+                                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded">
+                                                                {repair.ticketNumber}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 mt-0.5">S/N: {repair.serialNumber || 'N/A'}</p>
+                                                    </div>
+                                                    <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(repair.status)}`}>
+                                                        {getStatusIcon(repair.status)}
+                                                        {translateStatus(repair.status)}
                                                     </span>
+                                                </div>
+
+                                                <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">
+                                                    {repair.description}
+                                                </p>
+
+                                                <div className="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-50">
+                                                    <span>Ngày đặt: {new Date(repair.createdAt).toLocaleDateString('vi-VN')}</span>
+                                                    {repair.totalCost > 0 && (
+                                                        <span className="text-accent font-bold text-sm">
+                                                            {formatCurrency(repair.totalCost)}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {repair.technicalNotes && (
+                                                    <div className="mt-3 p-3 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-100">
+                                                        <strong className="text-gray-900 block mb-1">Ghi chú kỹ thuật:</strong>
+                                                        {repair.technicalNotes}
+                                                    </div>
                                                 )}
                                             </div>
-
-                                            {repair.technicalNotes && (
-                                                <div className="mt-4 p-4 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-100">
-                                                    <strong className="text-gray-900 block mb-1">
-                                                        Ghi chú kỹ thuật:
-                                                    </strong>
-                                                    {repair.technicalNotes}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                } else {
-                                    const booking = item.data;
-                                    return (
-                                        <div
-                                            key={`booking-${booking.id}`}
-                                            className="bg-white p-6 rounded-2xl border border-gray-200 hover:border-purple-300 transition-all shadow-sm"
-                                        >
-                                            <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
-                                                <div>
-                                                    <div className="flex items-center gap-3">
-                                                        <h4 className="text-lg font-bold text-gray-900 tracking-tight">
-                                                            {booking.deviceModel}
-                                                        </h4>
-                                                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-md">
-                                                            Đặt lịch
-                                                        </span>
+                                        );
+                                    } else {
+                                        const booking = item.data;
+                                        return (
+                                            <div
+                                                key={`booking-${booking.id}`}
+                                                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:border-gray-200 transition-all"
+                                            >
+                                                <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
+                                                    <div>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <h4 className="font-bold text-gray-900">{booking.deviceModel}</h4>
+                                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">
+                                                                Đặt lịch
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 mt-0.5">
+                                                            {booking.serviceType === 'OnSite' ? 'Sửa tại nhà' : 'Sửa tại cửa hàng'}
+                                                        </p>
                                                     </div>
-                                                    <p className="text-sm text-gray-500 mt-1">
-                                                        {booking.serviceType === 'OnSite' ? 'Sửa tại nhà' : 'Sửa tại cửa hàng'}
-                                                    </p>
-                                                </div>
-                                                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${booking.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                    booking.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                                                        booking.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                        booking.status === 'Approved' ? 'bg-green-50 text-green-700 border-green-200' :
                                                         booking.status === 'Converted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                            'bg-red-50 text-red-700 border-red-200'
+                                                        'bg-red-50 text-red-700 border-red-200'
                                                     }`}>
-                                                    {booking.status === 'Pending' ? 'Chờ xác nhận' :
-                                                        booking.status === 'Approved' ? 'Đã xác nhận' :
-                                                            booking.status === 'Converted' ? 'Đã chuyển thành phiếu' :
-                                                                'Đã từ chối'}
-                                                </span>
-                                            </div>
-
-                                            <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">
-                                                {booking.issueDescription}
-                                            </p>
-
-                                            <div className="flex justify-between items-center text-sm text-gray-500">
-                                                <span>Ngày hẹn: {new Date(booking.preferredDate).toLocaleDateString('vi-VN')}</span>
-                                                {booking.onSiteFee > 0 && (
-                                                    <span className="text-purple-600 font-semibold">
-                                                        Phí dịch vụ: {formatCurrency(booking.onSiteFee)}
+                                                        {booking.status === 'Pending' ? 'Chờ xác nhận' :
+                                                         booking.status === 'Approved' ? 'Đã xác nhận' :
+                                                         booking.status === 'Converted' ? 'Đã chuyển thành phiếu' :
+                                                         'Đã từ chối'}
                                                     </span>
-                                                )}
+                                                </div>
+
+                                                <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                                                    {booking.issueDescription}
+                                                </p>
+
+                                                <div className="flex justify-between items-center text-xs text-gray-500">
+                                                    <span>Ngày hẹn: {new Date(booking.preferredDate).toLocaleDateString('vi-VN')}</span>
+                                                    {booking.onSiteFee > 0 && (
+                                                        <span className="text-purple-600 font-semibold text-sm">
+                                                            Phí dịch vụ: {formatCurrency(booking.onSiteFee)}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                }
-                            })}
-                        </div>
-                    )}
+                                        );
+                                    }
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

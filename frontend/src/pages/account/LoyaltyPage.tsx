@@ -1,10 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoyaltyCard, LoyaltyHistory, RedeemPointsModal } from '../../components/loyalty';
 import { salesApi } from '../../api/sales';
 import type { LoyaltyAccount } from '../../api/sales';
-import { useEffect } from 'react';
 import { ArrowLeft, Coins, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const tierLevels = [
+  { name: 'Bronze',   color: 'text-amber-700',  range: '0 - 4,999 điểm' },
+  { name: 'Silver',   color: 'text-gray-500',   range: '5,000 - 19,999 điểm' },
+  { name: 'Gold',     color: 'text-yellow-600', range: '20,000 - 49,999 điểm' },
+  { name: 'Platinum', color: 'text-blue-400',   range: '50,000 - 99,999 điểm' },
+  { name: 'Diamond',  color: 'text-purple-500', range: '100,000+ điểm' },
+];
+
+const earnSteps = [
+  'Mua sắm để tích điểm: 10.000đ = 1 điểm',
+  'Hạng càng cao, hệ số điểm càng lớn (lên đến 2x)',
+  'Đổi điểm: 1 điểm = 100đ giảm giá',
+  'Điểm thưởng thêm vào sinh nhật, sự kiện đặc biệt',
+];
 
 export function LoyaltyPage() {
   const [showRedeemModal, setShowRedeemModal] = useState(false);
@@ -28,93 +42,72 @@ export function LoyaltyPage() {
   };
 
   const handleRedeemSuccess = () => {
-    loadAccount(); // Refresh account after redemption
+    loadAccount();
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="mb-6">
-          <Link
-            to="/profile"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-red-600 transition mb-4"
-          >
-            <ArrowLeft />
-            Quay lại tài khoản
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-            <Coins className="text-yellow-500" />
-            Điểm thưởng của tôi
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Tích điểm khi mua sắm, đổi điểm lấy ưu đãi
-          </p>
+        <Link
+          to="/profile"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-accent transition-colors mb-4 text-sm cursor-pointer"
+        >
+          <ArrowLeft size={16} />
+          Quay lại tài khoản
+        </Link>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 bg-yellow-50 rounded-xl text-yellow-500">
+            <Coins size={22} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Điểm thưởng của tôi</h1>
+            <p className="text-gray-500 text-sm">Tích điểm khi mua sắm, đổi điểm lấy ưu đãi</p>
+          </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Loyalty Card */}
           <div className="lg:col-span-2">
             <LoyaltyCard onRedeemClick={() => setShowRedeemModal(true)} />
           </div>
 
           {/* Quick Info */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Info className="text-blue-500" />
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
+              <Info size={16} className="text-blue-500" />
               Cách tích điểm
             </h3>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li className="flex items-start gap-2">
-                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
-                <span>Mua sắm để tích điểm: 10.000đ = 1 điểm</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
-                <span>Hạng càng cao, hệ số điểm càng lớn (lên đến 2x)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
-                <span>Đổi điểm: 1 điểm = 100đ giảm giá</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">4</span>
-                <span>Điểm thưởng thêm vào sinh nhật, sự kiện đặc biệt</span>
-              </li>
+            <ul className="space-y-3">
+              {earnSteps.map((step, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+                  <span className="w-5 h-5 bg-red-50 text-accent rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
             </ul>
 
             {/* Tier Levels */}
-            <div className="mt-6 pt-6 border-t">
-              <h4 className="font-medium text-gray-800 mb-3">Các hạng thành viên</h4>
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <h4 className="font-bold text-gray-900 text-sm mb-3">Các hạng thành viên</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-amber-700">Bronze</span>
-                  <span className="text-gray-500">0 - 4,999 điểm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Silver</span>
-                  <span className="text-gray-500">5,000 - 19,999 điểm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-yellow-600">Gold</span>
-                  <span className="text-gray-500">20,000 - 49,999 điểm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-400">Platinum</span>
-                  <span className="text-gray-500">50,000 - 99,999 điểm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-purple-500">Diamond</span>
-                  <span className="text-gray-500">100,000+ điểm</span>
-                </div>
+                {tierLevels.map((tier) => (
+                  <div key={tier.name} className="flex justify-between items-center">
+                    <span className={`font-semibold ${tier.color}`}>{tier.name}</span>
+                    <span className="text-gray-500 text-xs">{tier.range}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
         {/* Transaction History */}
-        <div className="mt-6">
+        <div className="mt-5">
           <LoyaltyHistory />
         </div>
 

@@ -12,63 +12,75 @@ export const PaymentResultPage = () => {
 
     useEffect(() => {
         if (success) {
-            toast.success('Payment completed successfully!');
+            toast.success('Thanh toán thành công!');
         } else {
-            toast.error(`Payment failed. Error code: ${errorCode || 'Unknown'}`);
+            toast.error(`Thanh toán thất bại. Mã lỗi: ${errorCode || 'Không xác định'}`);
         }
     }, [success, errorCode]);
 
     return (
-        <div className="container mx-auto px-4 py-24 flex items-center justify-center animate-fade-in">
-            <div className="glass p-12 max-w-lg w-full rounded-[40px] premium-shadow border-white/5 text-center">
-                {success ? (
-                    <>
-                        <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-8 text-emerald-400">
-                            <CheckCircle size={48} className="animate-bounce" />
-                        </div>
-                        <h2 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Payment Successful!</h2>
-                        <p className="text-slate-400 text-lg mb-10">
-                            Your order <span className="text-white font-mono">#{orderId?.substring(0, 8)}</span> has been paid and is being processed.
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <div className="w-24 h-24 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-8 text-rose-400">
-                            <XCircle size={48} />
-                        </div>
-                        <h2 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Payment Failed</h2>
-                        <p className="text-slate-400 text-lg mb-10">
-                            We couldn't process your payment. Please try again or use a different method.
-                        </p>
-                    </>
-                )}
-
-                <div className="flex flex-col gap-4">
-                    {success ? (
-                        <Link
-                            to="/profile"
-                            className="flex items-center justify-center px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-500/25 active:scale-95"
-                        >
-                            View Order Details
-                            <ArrowRight className="ml-2 w-5 h-5" />
-                        </Link>
-                    ) : (
-                        <Link
-                            to={orderId ? `/payment/${orderId}` : '/cart'}
-                            className="flex items-center justify-center px-10 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-all border border-white/5 active:scale-95"
-                        >
-                            Retry Payment
-                            <ArrowRight className="ml-2 w-5 h-5" />
-                        </Link>
-                    )}
-
-                    <Link
-                        to="/"
-                        className="flex items-center justify-center gap-2 text-slate-500 hover:text-white font-bold transition-colors py-2"
-                    >
-                        <ShoppingBag size={18} />
-                        Back to Shop
-                    </Link>
+        <div className="bg-gray-50 min-h-screen py-8 font-sans">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="max-w-md mx-auto">
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
+                        {success ? (
+                            <>
+                                {/* Success */}
+                                <div className="w-20 h-20 bg-green-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+                                    <CheckCircle size={40} className="text-green-500" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-3">Thanh toán thành công!</h2>
+                                <p className="text-gray-500 text-sm mb-8">
+                                    Đơn hàng{' '}
+                                    <span className="text-gray-900 font-mono font-semibold">#{orderId?.substring(0, 8)}</span>
+                                    {' '}đã được thanh toán và đang được xử lý.
+                                </p>
+                                <div className="flex flex-col gap-3">
+                                    <Link
+                                        to="/profile"
+                                        className="flex items-center justify-center gap-2 py-3 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
+                                    >
+                                        Xem chi tiết đơn hàng
+                                        <ArrowRight size={18} />
+                                    </Link>
+                                    <Link
+                                        to="/"
+                                        className="flex items-center justify-center gap-2 py-3 text-gray-500 hover:text-gray-800 font-medium transition-colors cursor-pointer"
+                                    >
+                                        <ShoppingBag size={18} />
+                                        Tiếp tục mua sắm
+                                    </Link>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* Failure */}
+                                <div className="w-20 h-20 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+                                    <XCircle size={40} className="text-accent" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-3">Thanh toán thất bại</h2>
+                                <p className="text-gray-500 text-sm mb-8">
+                                    Không thể xử lý thanh toán của bạn. Vui lòng thử lại hoặc chọn phương thức khác.
+                                </p>
+                                <div className="flex flex-col gap-3">
+                                    <Link
+                                        to={orderId ? `/payment/${orderId}` : '/cart'}
+                                        className="flex items-center justify-center gap-2 py-3 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
+                                    >
+                                        Thử lại
+                                        <ArrowRight size={18} />
+                                    </Link>
+                                    <Link
+                                        to="/"
+                                        className="flex items-center justify-center gap-2 py-3 text-gray-500 hover:text-gray-800 font-medium transition-colors cursor-pointer"
+                                    >
+                                        <ShoppingBag size={18} />
+                                        Về trang chủ
+                                    </Link>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

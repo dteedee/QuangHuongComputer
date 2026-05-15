@@ -19,6 +19,15 @@ interface Order {
     items: OrderItem[];
 }
 
+const RETURN_REASONS = [
+    'Sản phẩm bị lỗi/hỏng',
+    'Sản phẩm không đúng mô tả',
+    'Nhận sai sản phẩm',
+    'Sản phẩm không hoạt động',
+    'Đổi ý không muốn mua',
+    'Khác',
+];
+
 export const NewReturnRequestPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -45,7 +54,7 @@ export const NewReturnRequestPage = () => {
             setIsLoading(true);
             const response = await client.get(`/sales/orders/${id}`);
             setOrder(response.data);
-        } catch (error) {
+        } catch {
             toast.error('Không thể tải thông tin đơn hàng');
             navigate('/account/orders');
         } finally {
@@ -60,7 +69,6 @@ export const NewReturnRequestPage = () => {
             toast.error('Vui lòng chọn sản phẩm cần đổi trả');
             return;
         }
-
         if (!reason.trim()) {
             toast.error('Vui lòng nhập lý do đổi trả');
             return;
@@ -72,14 +80,12 @@ export const NewReturnRequestPage = () => {
                 orderId,
                 orderItemId: selectedItem,
                 reason: reason.trim(),
-                description: description.trim() || undefined
+                description: description.trim() || undefined,
             });
-
             toast.success('Yêu cầu đổi trả đã được gửi thành công!');
             navigate('/account/orders');
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.Error || 'Không thể gửi yêu cầu đổi trả';
-            toast.error(errorMessage);
+            toast.error(error?.response?.data?.Error || 'Không thể gửi yêu cầu đổi trả');
         } finally {
             setIsSubmitting(false);
         }
@@ -87,56 +93,41 @@ export const NewReturnRequestPage = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
             </div>
         );
     }
 
     if (!order) return null;
 
-    const reasons = [
-        'Sản phẩm bị lỗi/hỏng',
-        'Sản phẩm không đúng mô tả',
-        'Nhận sai sản phẩm',
-        'Sản phẩm không hoạt động',
-        'Đổi ý không muốn mua',
-        'Khác'
-    ];
-
     return (
-        <div className="bg-gray-50 min-h-screen py-10 font-sans">
-            <div className="max-w-2xl mx-auto px-4">
-                {/* Header */}
+        <div className="bg-gray-50 min-h-screen py-8">
+            <div className="max-w-2xl mx-auto px-4 sm:px-6">
+                {/* Back link */}
                 <Link
                     to={`/account/orders/${orderId}`}
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-bold mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-500 hover:text-accent text-sm font-medium mb-5 transition-colors cursor-pointer"
                 >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-4 h-4" />
                     Quay lại chi tiết đơn hàng
                 </Link>
 
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 bg-amber-100 rounded-2xl text-amber-600">
-                        <RotateCcw size={28} />
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2.5 bg-amber-50 rounded-xl text-amber-600">
+                        <RotateCcw size={22} />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
-                            Yêu cầu đổi trả
-                        </h2>
-                        <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-                            Đơn hàng {order.orderNumber}
-                        </p>
+                        <h1 className="text-2xl font-bold text-gray-900">Yêu cầu đổi trả</h1>
+                        <p className="text-gray-500 text-sm">Đơn hàng {order.orderNumber}</p>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Select Product */}
-                    <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-                        <h3 className="text-lg font-black text-gray-900 mb-4 uppercase tracking-tight">
-                            Chọn sản phẩm cần đổi trả
-                        </h3>
-
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-4">Chọn sản phẩm cần đổi trả</h2>
                         <div className="space-y-3">
                             {order.items.map((item) => (
                                 <label
@@ -153,14 +144,14 @@ export const NewReturnRequestPage = () => {
                                         value={item.id}
                                         checked={selectedItem === item.id}
                                         onChange={(e) => setSelectedItem(e.target.value)}
-                                        className="w-5 h-5 text-accent focus:ring-accent"
+                                        className="w-4 h-4 text-accent focus:ring-accent"
                                     />
-                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        <Package className="w-6 h-6 text-gray-400" />
+                                    <div className="w-11 h-11 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Package className="w-5 h-5 text-gray-400" />
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="font-bold text-gray-900">{item.productName}</p>
-                                        <p className="text-sm text-gray-500">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-gray-900 text-sm truncate">{item.productName}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">
                                             {formatCurrency(item.unitPrice)} x {item.quantity}
                                         </p>
                                     </div>
@@ -170,16 +161,13 @@ export const NewReturnRequestPage = () => {
                     </div>
 
                     {/* Reason */}
-                    <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-                        <h3 className="text-lg font-black text-gray-900 mb-4 uppercase tracking-tight">
-                            Lý do đổi trả
-                        </h3>
-
-                        <div className="space-y-3">
-                            {reasons.map((r) => (
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-4">Lý do đổi trả</h2>
+                        <div className="space-y-2">
+                            {RETURN_REASONS.map((r) => (
                                 <label
                                     key={r}
-                                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                                    className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                                         reason === r
                                             ? 'border-accent bg-red-50'
                                             : 'border-gray-200 hover:border-gray-300'
@@ -193,33 +181,32 @@ export const NewReturnRequestPage = () => {
                                         onChange={(e) => setReason(e.target.value)}
                                         className="w-4 h-4 text-accent focus:ring-accent"
                                     />
-                                    <span className="font-medium text-gray-700">{r}</span>
+                                    <span className="text-sm font-medium text-gray-700">{r}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
 
                     {/* Description */}
-                    <div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-                        <h3 className="text-lg font-black text-gray-900 mb-4 uppercase tracking-tight">
-                            Mô tả chi tiết (tùy chọn)
-                        </h3>
-
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-4">
+                            Mô tả chi tiết <span className="text-gray-400 font-normal text-sm">(tùy chọn)</span>
+                        </h2>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Mô tả thêm về vấn đề của sản phẩm..."
                             rows={4}
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none resize-none text-sm"
                         />
                     </div>
 
                     {/* Notice */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
+                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div className="text-sm text-amber-800">
-                            <p className="font-bold mb-1">Lưu ý:</p>
-                            <ul className="list-disc list-inside space-y-1">
+                            <p className="font-semibold mb-1">Lưu ý:</p>
+                            <ul className="list-disc list-inside space-y-1 text-xs">
                                 <li>Yêu cầu đổi trả sẽ được xử lý trong 1-3 ngày làm việc</li>
                                 <li>Sản phẩm cần được giữ nguyên trạng thái và đầy đủ phụ kiện</li>
                                 <li>Hoàn tiền sẽ được thực hiện sau khi kiểm tra sản phẩm</li>
@@ -231,16 +218,16 @@ export const NewReturnRequestPage = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting || !selectedItem || !reason}
-                        className="w-full px-6 py-4 bg-accent hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
+                        className="w-full bg-accent hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {isSubmitting ? (
                             <>
-                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
                                 Đang gửi...
                             </>
                         ) : (
                             <>
-                                <RotateCcw className="w-5 h-5" />
+                                <RotateCcw className="w-4 h-4" />
                                 Gửi yêu cầu đổi trả
                             </>
                         )}

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Heart, ShoppingCart, Trash2, ArrowRight, Package } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, ArrowRight } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,12 +11,8 @@ export function WishlistPage() {
   const { items, loading, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
   const handleAddToCart = (item: typeof items[0]) => {
     if (item.product.stockQuantity > 0) {
@@ -35,21 +31,20 @@ export function WishlistPage() {
     await removeFromWishlist(productId);
   };
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart className="w-10 h-10 text-accent" />
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 max-w-sm w-full text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <Heart className="w-8 h-8 text-accent" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Đăng nhập để xem yêu thích</h2>
-          <p className="text-gray-500 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Đăng nhập để xem yêu thích</h2>
+          <p className="text-gray-500 text-sm mb-6">
             Vui lòng đăng nhập để xem và quản lý danh sách sản phẩm yêu thích của bạn.
           </p>
           <button
             onClick={() => navigate('/login', { state: { from: '/account/wishlist' } })}
-            className="w-full py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
+            className="w-full bg-accent hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
           >
             Đăng nhập ngay
           </button>
@@ -60,11 +55,11 @@ export function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="p-3 bg-red-100 rounded-2xl text-accent">
-            <Heart className="w-7 h-7" fill="currentColor" />
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 bg-red-50 rounded-xl text-accent">
+            <Heart className="w-6 h-6" fill="currentColor" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Sản phẩm yêu thích</h1>
@@ -73,33 +68,33 @@ export function WishlistPage() {
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <div className="animate-spin w-10 h-10 border-3 border-accent border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-gray-500 mt-4">Đang tải...</p>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto" />
+            <p className="text-gray-500 mt-3 text-sm">Đang tải...</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
-            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="w-12 h-12 text-gray-300" />
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-14 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Heart className="w-10 h-10 text-gray-300" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Chưa có sản phẩm yêu thích</h2>
-            <p className="text-gray-500 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Chưa có sản phẩm yêu thích</h2>
+            <p className="text-gray-500 text-sm mb-6">
               Hãy khám phá và thêm những sản phẩm bạn yêu thích!
             </p>
             <button
               onClick={() => navigate('/products')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 bg-accent hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
             >
               Khám phá sản phẩm
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl shadow-sm overflow-hidden group hover:shadow-lg transition-all duration-300"
+                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all duration-300"
               >
                 {/* Image */}
                 <div
@@ -110,28 +105,27 @@ export function WishlistPage() {
                     <img
                       src={item.product.imageUrl}
                       alt={item.product.name}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 font-black text-4xl uppercase group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl font-bold uppercase">
                       {item?.product?.name?.charAt(0) || '?'}
                     </div>
                   )}
+
+                  {/* Discount badge */}
                   {item.product.oldPrice && item.product.oldPrice > item.product.price && (
-                    <div className="absolute top-3 left-3 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent text-white">
                       -{Math.round(((item.product.oldPrice - item.product.price) / item.product.oldPrice) * 100)}%
                     </div>
                   )}
 
                   {/* Remove button */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemove(item.productId);
-                    }}
-                    className="absolute top-3 right-3 p-2 bg-white shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-gray-400 hover:text-red-500"
+                    onClick={(e) => { e.stopPropagation(); handleRemove(item.productId); }}
+                    className="absolute top-2 right-2 p-1.5 bg-white shadow-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-gray-400 hover:text-accent cursor-pointer"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
@@ -139,40 +133,32 @@ export function WishlistPage() {
                 <div className="p-4">
                   <h3
                     onClick={() => navigate(`/products/${item.productId}`)}
-                    className="font-bold text-gray-900 text-sm line-clamp-2 h-10 cursor-pointer hover:text-accent transition-colors"
+                    className="font-semibold text-gray-900 text-sm line-clamp-2 h-10 cursor-pointer hover:text-accent transition-colors"
                   >
                     {item.product.name}
                   </h3>
 
-                  <div className="mt-3 flex items-end justify-between">
-                    <div>
-                      <span className="text-lg font-black text-accent">
-                        {formatPrice(item.product.price)}
+                  <div className="mt-3">
+                    <span className="text-base font-bold text-accent">
+                      {formatPrice(item.product.price)}
+                    </span>
+                    {item.product.oldPrice && item.product.oldPrice > item.product.price && (
+                      <span className="text-xs text-gray-400 line-through ml-2">
+                        {formatPrice(item.product.oldPrice)}
                       </span>
-                      {item.product.oldPrice && item.product.oldPrice > item.product.price && (
-                        <span className="text-xs text-gray-400 line-through ml-2">
-                          {formatPrice(item.product.oldPrice)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Stock status */}
-                  <div className="mt-2">
-                    {item.product.stockQuantity > 0 ? (
-                      <span className="text-xs text-green-600 font-medium">
-                        Còn hàng ({item.product.stockQuantity})
-                      </span>
-                    ) : (
-                      <span className="text-xs text-red-500 font-medium">Hết hàng</span>
                     )}
                   </div>
 
-                  {/* Add to cart button */}
+                  <div className="mt-1.5">
+                    <span className={`text-xs font-medium ${item.product.stockQuantity > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {item.product.stockQuantity > 0 ? `Còn hàng (${item.product.stockQuantity})` : 'Hết hàng'}
+                    </span>
+                  </div>
+
                   <button
                     onClick={() => handleAddToCart(item)}
                     disabled={item.product.stockQuantity === 0}
-                    className="w-full mt-4 py-2.5 bg-accent hover:bg-accent-hover text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="w-full mt-3 bg-accent hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:bg-gray-200 disabled:cursor-not-allowed cursor-pointer text-sm"
                   >
                     <ShoppingCart className="w-4 h-4" />
                     {item.product.stockQuantity > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}

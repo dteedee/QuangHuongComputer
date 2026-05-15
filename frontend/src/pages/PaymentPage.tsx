@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { salesApi, type Order } from '../api/sales';
 import { paymentApi } from '../api/payment';
-import { CreditCard, Lock, CheckCircle, Loader2 } from 'lucide-react';
+import { CreditCard, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../utils/format';
 
@@ -13,6 +13,7 @@ export const PaymentPage = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentId, setPaymentId] = useState<string | null>(null);
     const [step, setStep] = useState<'review' | 'gateway' | 'success' | 'error'>('review');
+    const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (orderId) {
@@ -35,8 +36,6 @@ export const PaymentPage = () => {
             navigate('/profile');
         }
     };
-
-    const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
     const initiatePayment = async (orderData: Order) => {
         try {
@@ -82,79 +81,93 @@ export const PaymentPage = () => {
         setIsProcessing(false);
     };
 
-    if (!order) return <div className="p-12 text-center text-white">Loading order...</div>;
+    if (!order) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-gray-500">
+                    <Loader2 size={36} className="animate-spin text-accent" />
+                    <p className="text-sm font-medium">Đang tải thông tin đơn hàng...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto px-4 py-12 min-h-[60vh] flex items-center justify-center">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-2xl w-full max-w-md relative overflow-hidden">
-
-                {step === 'review' && (
-                    <>
-                        <div className="flex justify-center mb-6">
-                            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">
-                                <CreditCard size={32} />
+        <div className="bg-gray-50 min-h-screen py-8 font-sans">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="max-w-md mx-auto">
+                    {/* Review step */}
+                    {step === 'review' && (
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mb-4">
+                                    <CreditCard size={28} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900">Xác nhận thanh toán</h2>
+                                <p className="text-gray-500 text-sm mt-1">Thanh toán an toàn qua VNPay</p>
                             </div>
-                        </div>
 
-                        <h2 className="text-2xl font-bold text-center text-white mb-2">Confirm Payment</h2>
-                        <p className="text-center text-gray-400 mb-8">Thanh toán an toàn qua VNPay</p>
-
-                        <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-400">Order Ref</span>
-                                <span className="text-white font-mono">{order.orderNumber}</span>
+                            <div className="bg-gray-50 rounded-xl p-5 mb-6 space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Mã đơn hàng</span>
+                                    <span className="text-gray-900 font-mono font-semibold">{order.orderNumber}</span>
+                                </div>
+                                <div className="border-t border-gray-200 pt-3 flex justify-between">
+                                    <span className="text-gray-700 font-medium">Tổng thanh toán</span>
+                                    <span className="text-accent font-bold text-lg">{formatCurrency(order.totalAmount)}</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-lg font-bold">
-                                <span className="text-gray-300">Total</span>
-                                <span className="text-green-400">{formatCurrency(order.totalAmount)}</span>
+
+                            <button
+                                disabled
+                                className="w-full py-3 bg-gray-100 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
+                            >
+                                <Loader2 size={18} className="animate-spin" />
+                                Đang khởi tạo thanh toán...
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Error step */}
+                    {step === 'error' && (
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
+                            <div className="w-16 h-16 bg-red-50 text-accent rounded-xl flex items-center justify-center mx-auto mb-5">
+                                <AlertCircle size={32} />
                             </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Lỗi khởi tạo</h3>
+                            <p className="text-gray-500 text-sm mb-6">
+                                Không thể kết nối đến cổng thanh toán VNPay hiện tại.
+                            </p>
+                            <button
+                                onClick={() => navigate('/checkout')}
+                                className="w-full py-3 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
+                            >
+                                Quay lại chọn phương thức khác
+                            </button>
                         </div>
+                    )}
 
-                        <button
-                            disabled
-                            className="w-full py-4 bg-slate-800 text-slate-400 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
-                        >
-                            <Loader2 size={18} className="animate-spin" />
-                            Đang khởi tạo thanh toán...
-                        </button>
-                    </>
-                )}
-
-                {step === 'error' && (
-                    <div className="text-center py-8">
-                        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mx-auto mb-6">
-                            <Lock size={32} />
+                    {/* Gateway step */}
+                    {step === 'gateway' && (
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
+                            <Loader2 size={48} className="animate-spin text-accent mx-auto mb-5" />
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Đang xử lý thanh toán...</h3>
+                            <p className="text-gray-500 text-sm mb-1">Vui lòng không đóng cửa sổ này.</p>
+                            <p className="text-gray-400 text-xs">Đang kết nối tới VNPay...</p>
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Lỗi Khởi Tạo</h3>
-                        <p className="text-gray-400 mb-6">Không thể kết nối đến cổng thanh toán VNPay hiện tại.</p>
-                        <button
-                            onClick={() => navigate(`/checkout`)}
-                            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition shadow-lg shadow-red-600/20"
-                        >
-                            Quay lại Chọn phương thức khác
-                        </button>
-                    </div>
-                )}
+                    )}
 
-                {step === 'gateway' && (
-                    <div className="text-center py-8">
-                        <Loader2 size={48} className="animate-spin text-blue-500 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Processing Payment...</h3>
-                        <p className="text-gray-400">Please do not close this window.</p>
-                        <p className="text-xs text-gray-600 mt-4">Đang kết nối tới VNPay...</p>
-                    </div>
-                )}
-
-                {step === 'success' && (
-                    <div className="text-center py-8">
-                        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-green-500/30 animate-bounce">
-                            <CheckCircle size={40} />
+                    {/* Success step */}
+                    {step === 'success' && (
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
+                            <div className="w-16 h-16 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mx-auto mb-5">
+                                <CheckCircle size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Thanh toán thành công!</h3>
+                            <p className="text-gray-500 text-sm">Đang chuyển hướng đến đơn hàng của bạn...</p>
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">Payment Succeeded!</h3>
-                        <p className="text-gray-400">Redirecting to your orders...</p>
-                    </div>
-                )}
-
+                    )}
+                </div>
             </div>
         </div>
     );
