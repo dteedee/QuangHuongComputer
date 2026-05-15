@@ -492,31 +492,35 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Sản phẩm</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số lượng</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Đơn hàng</th>
+                                    {isColVisible('rank') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>}
+                                    {isColVisible('productName') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Sản phẩm</th>}
+                                    {isColVisible('totalQuantity') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số lượng</th>}
+                                    {isColVisible('totalRevenue') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>}
+                                    {isColVisible('orderCount') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Đơn hàng</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topProducts ?? []).map((product, i) => (
                                     <tr key={product.productId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
-                                                i === 1 ? 'bg-gray-200 text-gray-600' :
-                                                    i === 2 ? 'bg-orange-100 text-orange-600' :
-                                                        'bg-gray-50 text-gray-400'
-                                                }`}>
-                                                {i + 1}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-gray-900">{product.productName}</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-bold text-gray-900">{product.totalQuantity}</td>
-                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(product.totalRevenue)}</td>
-                                        <td className="px-6 py-4 text-right text-gray-500">{product.orderCount}</td>
+                                        {isColVisible('rank') && (
+                                            <td className="px-6 py-4">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                                    i === 1 ? 'bg-gray-200 text-gray-600' :
+                                                        i === 2 ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-gray-50 text-gray-400'
+                                                    }`}>
+                                                    {i + 1}
+                                                </div>
+                                            </td>
+                                        )}
+                                        {isColVisible('productName') && (
+                                            <td className="px-6 py-4">
+                                                <p className="font-bold text-gray-900">{product.productName}</p>
+                                            </td>
+                                        )}
+                                        {isColVisible('totalQuantity') && <td className="px-6 py-4 text-right font-bold text-gray-900">{product.totalQuantity}</td>}
+                                        {isColVisible('totalRevenue') && <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(product.totalRevenue)}</td>}
+                                        {isColVisible('orderCount') && <td className="px-6 py-4 text-right text-gray-500">{product.orderCount}</td>}
                                     </tr>
                                 ))}
                             </tbody>
@@ -537,34 +541,41 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Khách hàng</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Tổng chi tiêu</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số đơn</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Mua gần nhất</th>
+                                    {isColVisible('rank') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>}
+                                    {isColVisible('customerName') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Khách hàng</th>}
+                                    {isColVisible('email') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Email</th>}
+                                    {isColVisible('totalSpent') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Tổng chi tiêu</th>}
+                                    {isColVisible('orderCount') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số đơn</th>}
+                                    {isColVisible('lastOrderDate') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Mua gần nhất</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topCustomers ?? []).map((customer, i) => (
                                     <tr key={customer.customerId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
-                                                i === 1 ? 'bg-gray-200 text-gray-600' :
-                                                    i === 2 ? 'bg-orange-100 text-orange-600' :
-                                                        'bg-gray-50 text-gray-400'
-                                                }`}>
-                                                {i + 1}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-gray-900">{customer.customerName}</p>
-                                            <p className="text-xs text-gray-400">{customer.email}</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(customer.totalSpent)}</td>
-                                        <td className="px-6 py-4 text-right font-bold text-gray-900">{customer.orderCount}</td>
-                                        <td className="px-6 py-4 text-right text-gray-500 text-sm">
-                                            {new Date(customer.lastOrderDate).toLocaleDateString('vi-VN')}
-                                        </td>
+                                        {isColVisible('rank') && (
+                                            <td className="px-6 py-4">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                                    i === 1 ? 'bg-gray-200 text-gray-600' :
+                                                        i === 2 ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-gray-50 text-gray-400'
+                                                    }`}>
+                                                    {i + 1}
+                                                </div>
+                                            </td>
+                                        )}
+                                        {isColVisible('customerName') && (
+                                            <td className="px-6 py-4">
+                                                <p className="font-bold text-gray-900">{customer.customerName}</p>
+                                            </td>
+                                        )}
+                                        {isColVisible('email') && <td className="px-6 py-4 text-sm text-gray-400">{customer.email}</td>}
+                                        {isColVisible('totalSpent') && <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(customer.totalSpent)}</td>}
+                                        {isColVisible('orderCount') && <td className="px-6 py-4 text-right font-bold text-gray-900">{customer.orderCount}</td>}
+                                        {isColVisible('lastOrderDate') && (
+                                            <td className="px-6 py-4 text-right text-gray-500 text-sm">
+                                                {new Date(customer.lastOrderDate).toLocaleDateString('vi-VN')}
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>
@@ -592,41 +603,48 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Kỹ thuật viên</th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Công việc</th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Hoàn thành</th>
-                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Tỷ lệ</th>
-                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>
+                                    {isColVisible('rank') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>}
+                                    {isColVisible('technicianName') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Kỹ thuật viên</th>}
+                                    {isColVisible('specialty') && <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Chuyên môn</th>}
+                                    {isColVisible('totalJobs') && <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Công việc</th>}
+                                    {isColVisible('completedJobs') && <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Hoàn thành</th>}
+                                    {isColVisible('successRate') && <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Tỷ lệ</th>}
+                                    {isColVisible('totalRevenue') && <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topTechnicians ?? []).map((tech, i) => (
                                     <tr key={tech.technicianId} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
-                                                i === 1 ? 'bg-gray-200 text-gray-600' :
-                                                    i === 2 ? 'bg-orange-100 text-orange-600' :
-                                                        'bg-gray-50 text-gray-400'
-                                                }`}>
-                                                {i + 1}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-gray-900">{tech.technicianName}</p>
-                                            <p className="text-xs text-gray-400">{tech.specialty}</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-center font-bold text-gray-900">{tech.totalJobs}</td>
-                                        <td className="px-6 py-4 text-center font-bold text-emerald-600">{tech.completedJobs}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${tech.successRate >= 90 ? 'bg-emerald-100 text-emerald-700' :
-                                                tech.successRate >= 70 ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-red-100 text-red-700'
-                                                }`}>
-                                                {tech.successRate}%
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(tech.totalRevenue)}</td>
+                                        {isColVisible('rank') && (
+                                            <td className="px-6 py-4">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                                    i === 1 ? 'bg-gray-200 text-gray-600' :
+                                                        i === 2 ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-gray-50 text-gray-400'
+                                                    }`}>
+                                                    {i + 1}
+                                                </div>
+                                            </td>
+                                        )}
+                                        {isColVisible('technicianName') && (
+                                            <td className="px-6 py-4">
+                                                <p className="font-bold text-gray-900">{tech.technicianName}</p>
+                                            </td>
+                                        )}
+                                        {isColVisible('specialty') && <td className="px-6 py-4 text-sm text-gray-400">{tech.specialty}</td>}
+                                        {isColVisible('totalJobs') && <td className="px-6 py-4 text-center font-bold text-gray-900">{tech.totalJobs}</td>}
+                                        {isColVisible('completedJobs') && <td className="px-6 py-4 text-center font-bold text-emerald-600">{tech.completedJobs}</td>}
+                                        {isColVisible('successRate') && (
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${tech.successRate >= 90 ? 'bg-emerald-100 text-emerald-700' :
+                                                    tech.successRate >= 70 ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-red-100 text-red-700'
+                                                    }`}>
+                                                    {tech.successRate}%
+                                                </span>
+                                            </td>
+                                        )}
+                                        {isColVisible('totalRevenue') && <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(tech.totalRevenue)}</td>}
                                     </tr>
                                 ))}
                             </tbody>

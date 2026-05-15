@@ -141,93 +141,47 @@ export const BackofficeLayout = () => {
         staleTime: 60000
     });
 
+    // Fetch dynamic menu from DB; fall back to hardcoded if unavailable
+    const { data: dynamicMenu } = useQuery({
+        queryKey: ['backoffice-menu'],
+        queryFn: () => systemConfigApi.backofficeMenu.getForUser(),
+        staleTime: 5 * 60 * 1000, // 5 min — menu changes rarely
+        retry: 1,
+    });
+
     const pendingCount = salesStats?.pendingOrders || 0;
     const roles = user?.roles || [];
 
-    // Menu configuration with icons and colors
-    const menuGroups = [
-        {
-            id: 'sales',
-            title: 'Kinh doanh',
-            icon: <TrendingUp size={16} />,
-            color: 'text-blue-500',
-            items: [
-                { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/backoffice', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Tổng quan hệ thống' },
-                { title: 'Bán hàng (POS)', icon: <Store size={20} />, path: '/backoffice/pos', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Quầy thu ngân' },
-                { title: 'Đơn hàng', icon: <Receipt size={20} />, path: '/backoffice/orders', allowedRoles: ['Admin', 'Manager', 'Sale'], badge: pendingCount > 0 ? pendingCount : 0, description: 'Quản lý đơn hàng' },
-                { title: 'Sản phẩm', icon: <Package size={20} />, path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'], description: 'Danh sách sản phẩm' },
-                { title: 'Danh mục', icon: <Archive size={20} />, path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại sản phẩm' },
-                { title: 'Thương hiệu', icon: <Tag size={20} />, path: '/backoffice/brands', allowedRoles: ['Admin', 'Manager'], description: 'Hãng sản xuất' },
-                { title: 'Kho hàng', icon: <Box size={20} />, path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'Supplier'], description: 'Quản lý tồn kho' },
-                { title: 'Nhà cung cấp', icon: <Building2 size={20} />, path: '/backoffice/inventory/suppliers', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý NCC' },
-                { title: 'Đơn mua hàng', icon: <ShoppingCart size={20} />, path: '/backoffice/inventory/purchase-orders', allowedRoles: ['Admin', 'Manager'], description: 'Đặt hàng NCC' },
-            ]
-        },
-        {
-            id: 'service',
-            title: 'Dịch vụ & Kỹ thuật',
-            icon: <Wrench size={16} />,
-            color: 'text-orange-500',
-            items: [
-                { title: 'Sửa chữa', icon: <Hammer size={20} />, path: '/backoffice/tech', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite'], description: 'Quản lý sửa chữa' },
-                { title: 'Bảo hành', icon: <ShieldCheck size={20} />, path: '/backoffice/warranty', allowedRoles: ['Admin', 'Manager', 'TechnicianInShop'], description: 'Theo dõi bảo hành' },
-            ]
-        },
-        {
-            id: 'finance_hr',
-            title: 'Tài chính & Nhân sự',
-            icon: <Calculator size={16} />,
-            color: 'text-emerald-500',
-            items: [
-                { title: 'Tài chính', icon: <Wallet size={20} />, path: '/backoffice/accounting', allowedRoles: ['Admin', 'Manager', 'Accountant'], description: 'Kế toán tài chính' },
-                { title: 'Nhân sự', icon: <Briefcase size={20} />, path: '/backoffice/hr', allowedRoles: ['Admin', 'Manager', 'Accountant'], description: 'Quản lý nhân sự' },
-                { title: 'Tuyển dụng', icon: <UserCheck size={20} />, path: '/backoffice/hr/recruitment', allowedRoles: ['Admin', 'Manager'], description: 'Tuyển dụng nhân viên' },
-            ]
-        },
-        {
-            id: 'content',
-            title: 'Nội dung & Marketing',
-            icon: <Sparkles size={16} />,
-            color: 'text-pink-500',
-            items: [
-                { title: 'Quản lý Nội dung', icon: <FileText size={20} />, path: '/backoffice/cms', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Bài viết & trang' },
-                { title: 'Homepage Builder', icon: <Sparkles size={20} />, path: '/backoffice/homepage-builder', allowedRoles: ['Admin', 'Manager'], description: 'Xây dựng trang chủ' },
-                { title: 'Menu Manager', icon: <Menu size={20} />, path: '/backoffice/menus', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý menu' },
-                { title: 'Flash Sales', icon: <Zap size={20} />, path: '/backoffice/flash-sales', allowedRoles: ['Admin', 'Manager'], description: 'Giảm giá chớp nhoáng' },
-                { title: 'Mã giảm giá', icon: <Ticket size={20} />, path: '/backoffice/coupons', allowedRoles: ['Admin', 'Manager'], description: 'Voucher & coupon' },
-                { title: 'Đánh giá', icon: <Star size={20} />, path: '/backoffice/reviews', allowedRoles: ['Admin', 'Manager'], description: 'Review sản phẩm' },
-            ]
-        },
-        {
-            id: 'crm',
-            title: 'CRM',
-            icon: <Users size={16} />,
-            color: 'text-violet-500',
-            items: [
-                { title: 'Tổng quan CRM', icon: <LayoutDashboard size={20} />, path: '/backoffice/crm', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Dashboard CRM' },
-                { title: 'Khách hàng', icon: <Users size={20} />, path: '/backoffice/crm/customers', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Quản lý khách hàng' },
-                { title: 'Leads', icon: <UserPlus size={20} />, path: '/backoffice/crm/leads', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Khách tiềm năng' },
-                { title: 'Pipeline', icon: <Target size={20} />, path: '/backoffice/crm/leads/pipeline', allowedRoles: ['Admin', 'Manager', 'Sale'], description: 'Kanban leads' },
-                { title: 'Phân nhóm', icon: <ClipboardList size={20} />, path: '/backoffice/crm/segments', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại khách hàng' },
-                { title: 'Campaigns', icon: <Mail size={20} />, path: '/backoffice/crm/campaigns', allowedRoles: ['Admin', 'Manager'], description: 'Email marketing' },
-            ]
-        },
-        {
-            id: 'admin',
-            title: 'Hệ thống',
-            icon: <Settings size={16} />,
-            color: 'text-gray-500',
-            items: [
-                { title: 'Người dùng', icon: <Users size={20} />, path: '/backoffice/users', allowedRoles: ['Admin'], description: 'Quản lý tài khoản' },
-                { title: 'Vai trò & Quyền', icon: <Lock size={20} />, path: '/backoffice/roles', allowedRoles: ['Admin'], description: 'Phân quyền' },
-                { title: 'Cấu hình', icon: <Settings size={20} />, path: '/backoffice/config', allowedRoles: ['Admin'], description: 'Cài đặt hệ thống' },
-                { title: 'Trạng thái', icon: <Activity size={20} />, path: '/backoffice/system-health', allowedRoles: ['Admin'], description: 'Health & Monitor' },
-                { title: 'Thanh toán SePay', icon: <CreditCard size={20} />, path: '/backoffice/payments/sepay', allowedRoles: ['Admin'], description: 'Cấu hình & Giao dịch' },
-                { title: 'Báo cáo', icon: <BarChart3 size={20} />, path: '/backoffice/reports', allowedRoles: ['Admin', 'Manager'], description: 'Thống kê & báo cáo' },
-                { title: 'Nhật ký & Backup', icon: <Activity size={20} />, path: '/backoffice/audit-logs', allowedRoles: ['Admin'], description: 'Log hoạt động & sao lưu' },
-            ]
-        }
-    ];
+    // Transform API menu (iconName strings) or use hardcoded fallback
+    // Shape: { id, title, iconName, colorClass, items: [{ title, iconName, path, allowedRoles, description, badgeSource }] }
+    const rawMenuGroups = dynamicMenu
+        ? dynamicMenu.map(g => ({
+            id: g.id,
+            title: g.title,
+            iconName: g.iconName,
+            colorClass: g.colorClass,
+            items: g.items.map(i => ({
+                title: i.title,
+                iconName: i.iconName,
+                path: i.path,
+                allowedRoles: i.allowedRoles,
+                description: i.description,
+                badgeSource: i.badgeSource ?? null,
+            })),
+        }))
+        : FALLBACK_MENU;
+
+    // Build final menuGroups with resolved badge counts
+    const menuGroups = rawMenuGroups.map(g => ({
+        ...g,
+        icon: getIcon(g.iconName, 16),
+        color: g.colorClass,
+        items: g.items.map(i => ({
+            ...i,
+            icon: getIcon(i.iconName, 20),
+            badge: i.badgeSource === 'pendingOrders' && pendingCount > 0 ? pendingCount : undefined,
+        })),
+    }));
 
     const filteredGroups = menuGroups.map(g => ({
         ...g,

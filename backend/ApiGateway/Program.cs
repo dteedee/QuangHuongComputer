@@ -533,6 +533,17 @@ if (app.Environment.IsDevelopment())
             logger.LogError(ex, "BackofficeMenu seeding failed");
         }
 
+        // Add ReportDefinition Seeding
+        try
+        {
+            await ReportDefinitionSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
+            logger.LogInformation("ReportDefinition seeding completed.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "ReportDefinition seeding failed");
+        }
+
         // Add Identity Seeding
         try
         {
@@ -678,6 +689,8 @@ app.MapSelfServiceEndpoints();
 app.MapSystemConfigEndpoints();
 app.MapBackofficeMenuEndpoints();
 app.MapCustomFieldEndpoints();
+app.MapFormDefinitionEndpoints();
+app.MapAutomationRuleEndpoints();
 app.MapInventoryEndpoints();
 app.MapGoodsReceivedNoteEndpoints();
 app.MapDeliveryNoteEndpoints();

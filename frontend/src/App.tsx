@@ -142,6 +142,7 @@ const MenuManager = lazy(() => import('./pages/admin/MenuManager').then(m => ({ 
 const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(m => ({ default: m.HomepageBuilder })));
 
 // Backoffice admin pages
+const BackofficeMenuEditor = lazy(() => import('./pages/backoffice/admin/BackofficeMenuEditor').then(m => ({ default: m.BackofficeMenuEditor })));
 const TwoFactorSetupPage = lazy(() => import('./pages/backoffice/admin/two-factor-setup-page'));
 const SessionsPage = lazy(() => import('./pages/backoffice/admin/sessions-page'));
 const DynamicPermissionsPage = lazy(() => import('./pages/backoffice/admin/dynamic-permissions-page'));
@@ -307,6 +308,7 @@ function App() {
                           <Route path="admin/2fa" element={<TwoFactorSetupPage />} />
                           <Route path="admin/sessions" element={<SessionsPage />} />
                           <Route path="admin/dynamic-permissions" element={<DynamicPermissionsPage />} />
+                          <Route path="admin/menu-editor" element={<BackofficeMenuEditor />} />
                           <Route path="audit-logs" element={<AuditLogsPage />} />
                           <Route path="manager" element={<ManagerPortal />} />
                           <Route path="notifications" element={<NotificationCenter />} />

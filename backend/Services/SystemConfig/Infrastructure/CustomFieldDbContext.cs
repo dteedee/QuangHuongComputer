@@ -8,6 +8,8 @@ public class CustomFieldDbContext : DbContext
     public CustomFieldDbContext(DbContextOptions<CustomFieldDbContext> options) : base(options) { }
 
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<FormDefinition> FormDefinitions => Set<FormDefinition>();
+    public DbSet<AutomationRule> AutomationRules => Set<AutomationRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +33,35 @@ public class CustomFieldDbContext : DbContext
             e.Property(f => f.CreatedAt).HasDefaultValueSql("now()");
             e.HasIndex(f => new { f.EntityType, f.FieldKey }).IsUnique();
             e.HasIndex(f => new { f.EntityType, f.IsActive, f.DisplayOrder });
+        });
+
+        modelBuilder.Entity<FormDefinition>(e =>
+        {
+            e.HasKey(f => f.Id);
+            e.Property(f => f.Code).HasMaxLength(50).IsRequired();
+            e.Property(f => f.Name).HasMaxLength(200).IsRequired();
+            e.Property(f => f.Description).HasMaxLength(500);
+            e.Property(f => f.EntityType).HasMaxLength(50);
+            e.Property(f => f.FieldsSchema).HasColumnType("jsonb").HasDefaultValueSql("'[]'");
+            e.Property(f => f.IsActive).HasDefaultValue(true);
+            e.Property(f => f.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(f => f.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<AutomationRule>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Name).HasMaxLength(200).IsRequired();
+            e.Property(r => r.EntityType).HasMaxLength(50).IsRequired();
+            e.Property(r => r.TriggerEvent).HasMaxLength(50).IsRequired();
+            e.Property(r => r.TriggerField).HasMaxLength(50);
+            e.Property(r => r.ConditionJson).HasColumnType("jsonb").HasDefaultValueSql("'{}'");
+            e.Property(r => r.ActionType).HasMaxLength(50).IsRequired();
+            e.Property(r => r.ActionConfig).HasColumnType("jsonb").HasDefaultValueSql("'{}'");
+            e.Property(r => r.IsActive).HasDefaultValue(true);
+            e.Property(r => r.ExecutionOrder).HasDefaultValue(0);
+            e.Property(r => r.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(r => new { r.EntityType, r.IsActive, r.ExecutionOrder });
         });
 
         base.OnModelCreating(modelBuilder);
