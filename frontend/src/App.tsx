@@ -154,6 +154,8 @@ const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage'
 const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
 const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
 const CustomFieldsManager = lazy(() => import('./pages/admin/CustomFieldsManager'));
+const FormBuilderPage = lazy(() => import('./pages/admin/FormBuilderPage').then(m => ({ default: m.FormBuilderPage })));
+const AutomationRulesPage = lazy(() => import('./pages/admin/AutomationRulesPage').then(m => ({ default: m.AutomationRulesPage })));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -318,6 +320,8 @@ function App() {
                           <Route path="flash-sales" element={<FlashSalesPage />} />
                           <Route path="payments/sepay" element={<SePayAdminPage />} />
                           <Route path="custom-fields" element={<CustomFieldsManager />} />
+                          <Route path="form-builder" element={<FormBuilderPage />} />
+                          <Route path="automation-rules" element={<AutomationRulesPage />} />
 
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />
