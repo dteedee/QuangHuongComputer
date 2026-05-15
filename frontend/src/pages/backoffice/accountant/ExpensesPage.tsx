@@ -80,7 +80,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
             <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div className="fixed inset-0 transition-opacity bg-gray-950/50 backdrop-blur-sm" onClick={handleClose}></div>
 
-                <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
+                <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-md transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                     <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
                         <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Tạo chi phí mới</h3>
                         <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
@@ -171,7 +171,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             </div>
 
                             {/* Summary */}
-                            <div className="bg-gray-950 text-white p-6 rounded-2xl space-y-3">
+                            <div className="bg-gray-950 text-white p-6 rounded-xl space-y-3">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-400 uppercase text-xs font-semibold">Số tiền</span>
                                     <span className="font-semibold">{formatCurrency(amount || 0)}</span>
@@ -198,7 +198,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             </button>
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
+                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Đang tạo...' : 'Tạo chi phí'}
@@ -386,7 +386,7 @@ export const ExpensesPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-xs text-slate-500 hover:bg-accent transition-all shadow-xl flex items-center gap-3"
+                    className="px-8 py-4 bg-gray-950 text-white rounded-xl text-xs text-slate-500 hover:bg-accent transition-all shadow-sm flex items-center gap-3"
                 >
                     <Plus size={16} />
                     Tạo chi phí
@@ -397,7 +397,7 @@ export const ExpensesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-gray-50">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-gray-50 text-gray-600 rounded-2xl">
+                        <div className="p-3 bg-gray-50 text-gray-600 rounded-xl">
                             <Wallet size={24} />
                         </div>
                         <span className="text-xs text-slate-400">Tổng chi</span>
@@ -407,7 +407,7 @@ export const ExpensesPage = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-amber-50">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                        <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
                             <Clock size={24} />
                         </div>
                         <span className="text-xs font-semibold text-amber-500 uppercase">Chờ duyệt</span>
@@ -418,7 +418,7 @@ export const ExpensesPage = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-blue-50">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <CheckCircle size={24} />
                         </div>
                         <span className="text-xs font-semibold text-blue-500 uppercase">Đã duyệt</span>
@@ -429,7 +429,7 @@ export const ExpensesPage = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-green-50">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
                             <CreditCard size={24} />
                         </div>
                         <span className="text-xs font-semibold text-green-500 uppercase">Đã chi</span>
@@ -473,7 +473,7 @@ export const ExpensesPage = () => {
             </div>
 
             {/* Data Table */}
-            <div className="premium-card p-4 border-2 shadow-2xl shadow-gray-200/50">
+            <div className="premium-card p-4 border-2 shadow-md shadow-gray-200/50">
                 <div className="p-4">
                     <DataTable
                         columns={columns}
@@ -526,7 +526,7 @@ export const ExpensesPage = () => {
                     <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">Chi phí theo danh mục</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {summary.byCategory.map((cat) => (
-                            <div key={cat.categoryId} className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div key={cat.categoryId} className="p-6 bg-gray-50 rounded-xl border border-gray-100">
                                 <div className="flex justify-between items-start mb-3">
                                     <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
                                     <span className="text-[9px] font-bold text-gray-400 uppercase">{cat.categoryCode}</span>

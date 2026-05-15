@@ -204,7 +204,7 @@ export function FinancialReportsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-green-50">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                                <div className="p-3 bg-green-50 text-green-600 rounded-xl">
                                     <TrendingUp size={24} />
                                 </div>
                                 <span className="flex items-center text-green-600 text-xs font-semibold">
@@ -219,7 +219,7 @@ export function FinancialReportsPage() {
 
                         <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-red-50">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
+                                <div className="p-3 bg-red-50 text-red-600 rounded-xl">
                                     <TrendingDown size={24} />
                                 </div>
                                 <span className="flex items-center text-red-600 text-xs font-semibold">
@@ -234,7 +234,7 @@ export function FinancialReportsPage() {
 
                         <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-blue-50">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                                     <DollarSign size={24} />
                                 </div>
                                 <span className="text-blue-600 text-sm font-medium">Lợi nhuận</span>
@@ -249,7 +249,7 @@ export function FinancialReportsPage() {
 
                         <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-purple-50">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
+                                <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
                                     <Wallet size={24} />
                                 </div>
                                 <span className="text-purple-600 text-sm font-medium">Dòng tiền</span>
@@ -429,7 +429,7 @@ export function FinancialReportsPage() {
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {revenueExpense.expenseByCategory.map((cat, idx) => (
-                                    <div key={idx} className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <div key={idx} className="p-6 bg-gray-50 rounded-xl border border-gray-100">
                                         <div className="flex justify-between items-start mb-3">
                                             <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
                                             <span className="text-[9px] font-bold text-gray-400">{cat.count} khoản</span>
@@ -447,19 +447,19 @@ export function FinancialReportsPage() {
                             Chi tiết dòng tiền
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="p-6 bg-green-50 rounded-2xl border border-green-100">
+                            <div className="p-6 bg-green-50 rounded-xl border border-green-100">
                                 <p className="text-xs font-semibold text-green-600 uppercase mb-2">Thu từ AR</p>
                                 <p className="text-2xl font-semibold text-green-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.arCollected || 0)}
                                 </p>
                             </div>
-                            <div className="p-6 bg-red-50 rounded-2xl border border-red-100">
+                            <div className="p-6 bg-red-50 rounded-xl border border-red-100">
                                 <p className="text-xs font-semibold text-red-600 uppercase mb-2">Trả cho AP</p>
                                 <p className="text-2xl font-semibold text-red-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.apPaid || 0)}
                                 </p>
                             </div>
-                            <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                            <div className="p-6 bg-amber-50 rounded-xl border border-amber-100">
                                 <p className="text-xs font-semibold text-amber-600 uppercase mb-2">Chi phí đã trả</p>
                                 <p className="text-2xl font-semibold text-amber-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.expensesPaid || 0)}

@@ -55,7 +55,7 @@ const DroppableColumn = ({ column, children }: { column: PipelineView, children:
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`w-80 flex-shrink-0 rounded-2xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'bg-gray-100 border-accent/30 shadow-inner' : 'bg-gray-50 border-transparent'}`}
+      className={`w-80 flex-shrink-0 rounded-xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'bg-gray-100 border-accent/30 shadow-inner' : 'bg-gray-50 border-transparent'}`}
     >
       <div
         className="flex items-center justify-between mb-4 pb-3 border-b"
@@ -214,7 +214,7 @@ export default function LeadPipelinePage() {
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/leads?new=true')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl shadow-xl shadow-blue-600/15 hover:bg-accent-hover text-sm font-medium transition-transform hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl shadow-sm shadow-blue-600/15 hover:bg-accent-hover text-sm font-medium transition-transform hover:scale-105 active:scale-95"
           >
             <Plus size={18} />
             Thêm Lead
@@ -274,7 +274,7 @@ export default function LeadPipelinePage() {
 
           <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
             {activeLead ? (
-              <div className="transform scale-105 rotate-3 shadow-2xl opacity-90">
+              <div className="transform scale-105 rotate-3 shadow-md opacity-90">
                 <LeadCard lead={activeLead} isDragging={true} />
               </div>
             ) : null}

@@ -78,8 +78,8 @@ const PIE_COLORS = ['#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#06b
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-gray-950 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-700 text-xs font-black">
-      <p className="text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+    <div className="bg-gray-950 text-white px-5 py-3 rounded-xl shadow-md border border-gray-700 text-xs font-semibold">
+      <p className="text-gray-400 uppercase mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color || '#fff' }}>
           {entry.name}: {typeof entry.value === 'number' ? formatPrice(entry.value) : entry.value}
@@ -159,11 +159,11 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
-          <h1 className="text-5xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-3">
+          <h1 className="text-5xl font-semibold text-gray-950 tracking-tighter  leading-none mb-3">
             Trung tâm <span className="text-accent">Quản trị</span>
           </h1>
           <div className="flex items-center gap-4">
-            <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+            <p className="text-gray-700 font-semibold uppercase text-xs flex items-center gap-2">
               Báo cáo hiệu suất kinh doanh Quang Hưởng Computer
             </p>
             <span className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
@@ -173,14 +173,14 @@ export default function AdminDashboard() {
           <button
             onClick={handleExportExcel}
             disabled={exporting}
-            className="flex items-center gap-3 px-6 py-4 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest italic shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-3 px-6 py-4 bg-emerald-600 text-white rounded-xl text-xs font-semibold  shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
           >
             {exporting ? <Loader2 size={18} className="animate-spin" /> : <FileSpreadsheet size={18} />}
             Xuất Excel
           </button>
           <button
             onClick={loadDashboardData}
-            className="p-4 bg-gray-950 text-white rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-900/40 active:scale-95 group"
+            className="p-4 bg-gray-950 text-white rounded-xl hover:bg-black transition-all shadow-sm shadow-gray-900/40 active:scale-95 group"
             disabled={loading}
           >
             <RefreshCw size={24} className={`${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
@@ -224,11 +224,11 @@ export default function AdminDashboard() {
         ].map((item, i) => (
           <div key={i} className="premium-card p-10 border-2 transition-all hover:border-gray-950/10 group active:scale-95">
             <div className="flex justify-between items-start mb-8">
-              <div className={`p-5 ${item.color} text-white rounded-3xl shadow-2xl shadow-gray-200 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
+              <div className={`p-5 ${item.color} text-white rounded-3xl shadow-md shadow-gray-200 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
                 {item.icon}
               </div>
               {item.change !== 0 && (
-                <div className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-sm border ${item.change >= 0
+                <div className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold  shadow-sm border ${item.change >= 0
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                   : 'bg-red-50 text-red-700 border-red-100'
                   }`}>
@@ -237,8 +237,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 italic">{item.label}</p>
-            <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic leading-none">
+            <p className="text-gray-500 text-xs font-semibold uppercase mb-2 italic">{item.label}</p>
+            <h3 className="text-4xl font-semibold text-gray-950 tracking-tighter italic leading-none">
               {loading ? '—' : item.isPrice ? formatCompact(item.value) : item.value.toLocaleString()}
             </h3>
           </div>
@@ -248,34 +248,34 @@ export default function AdminDashboard() {
       {/* ========== Second Row KPIs ========== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="premium-card p-8 border-2 flex items-center gap-6 group hover:border-amber-200 transition-all">
-          <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl">
+          <div className="p-4 bg-amber-50 text-amber-600 rounded-xl">
             <AlertTriangle size={28} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sản phẩm sắp hết hàng</p>
-            <p className="text-3xl font-black text-gray-950 tracking-tighter italic">
+            <p className="text-xs font-semibold text-gray-400 uppercase">Sản phẩm sắp hết hàng</p>
+            <p className="text-3xl font-semibold text-gray-950 tracking-tighter italic">
               {loading ? '—' : overview?.inventory.lowStockCount || 0}
             </p>
           </div>
         </div>
         <div className="premium-card p-8 border-2 flex items-center gap-6 group hover:border-blue-200 transition-all">
-          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
             <Wrench size={28} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Doanh thu sửa chữa tháng</p>
-            <p className="text-3xl font-black text-gray-950 tracking-tighter italic">
+            <p className="text-xs font-semibold text-gray-400 uppercase">Doanh thu sửa chữa tháng</p>
+            <p className="text-3xl font-semibold text-gray-950 tracking-tighter italic">
               {loading ? '—' : formatCompact(overview?.repairs.thisMonthRevenue || 0)}
             </p>
           </div>
         </div>
         <div className="premium-card p-8 border-2 flex items-center gap-6 group hover:border-purple-200 transition-all">
-          <div className="p-4 bg-purple-50 text-purple-600 rounded-2xl">
+          <div className="p-4 bg-purple-50 text-purple-600 rounded-xl">
             <Wallet size={28} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Công nợ phải thu</p>
-            <p className="text-3xl font-black text-gray-950 tracking-tighter italic">
+            <p className="text-xs font-semibold text-gray-400 uppercase">Công nợ phải thu</p>
+            <p className="text-3xl font-semibold text-gray-950 tracking-tighter italic">
               {loading ? '—' : formatCompact(overview?.accounting.totalReceivables || 0)}
             </p>
           </div>
@@ -288,16 +288,16 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 premium-card p-12 border-2 bg-white flex flex-col min-h-[500px]">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic leading-none">
+              <h2 className="text-3xl font-semibold text-gray-950 tracking-tighter  leading-none">
                 Xu hướng <span className="text-accent">Tăng trưởng</span>
               </h2>
-              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase mt-2">
                 Doanh thu 12 tháng gần nhất
               </p>
             </div>
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-gray-950 hover:border-gray-900 transition-all shadow-sm"
+              className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-xs font-semibold uppercase text-gray-600 hover:text-gray-950 hover:border-gray-900 transition-all shadow-sm"
             >
               <Download size={16} /> Xuất Excel
             </button>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="h-full flex items-center justify-center text-gray-300">
                 <BarChart3 size={48} />
-                <p className="ml-4 font-black uppercase text-sm">Chưa có dữ liệu</p>
+                <p className="ml-4 font-semibold uppercase text-sm">Chưa có dữ liệu</p>
               </div>
             )}
           </div>
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
 
         {/* Order Status Pie */}
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
-          <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-6">
+          <h2 className="text-2xl font-semibold text-gray-950 tracking-tighter  leading-none mb-6">
             Phân bổ <span className="text-accent">Đơn hàng</span>
           </h2>
           <div className="flex-1 min-h-[250px]">
@@ -372,19 +372,19 @@ export default function AdminDashboard() {
                     verticalAlign="bottom"
                     iconType="circle"
                     iconSize={8}
-                    formatter={(value) => <span className="text-[10px] font-black uppercase tracking-widest text-gray-600">{value}</span>}
+                    formatter={(value) => <span className="text-xs font-semibold uppercase text-gray-600">{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-gray-300">
                 <ShoppingCart size={40} />
-                <p className="mt-2 font-black uppercase text-xs">Chưa có đơn hàng</p>
+                <p className="mt-2 font-semibold uppercase text-xs">Chưa có đơn hàng</p>
               </div>
             )}
           </div>
           <div className="mt-4 pt-4 border-t-2 border-gray-50">
-            <p className="text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <p className="text-center text-xs font-semibold text-gray-400 uppercase">
               Tổng: {salesSummary?.totalOrders?.toLocaleString() || 0} đơn hàng
             </p>
           </div>
@@ -396,7 +396,7 @@ export default function AdminDashboard() {
         {/* Top Products Bar Chart */}
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
           <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gray-50">
-            <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-gray-950 tracking-tighter  leading-none flex items-center gap-3">
               <Sparkles size={24} className="text-amber-500" /> TOP <span className="text-accent">Sản phẩm</span>
             </h2>
           </div>
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center py-12">
               <Package className="w-20 h-20 text-gray-100 mb-6" />
-              <p className="text-sm font-black text-gray-300 uppercase italic tracking-widest">Chưa có dữ liệu sản phẩm</p>
+              <p className="text-sm font-semibold text-gray-300 ">Chưa có dữ liệu sản phẩm</p>
             </div>
           )}
         </div>
@@ -431,12 +431,12 @@ export default function AdminDashboard() {
         {/* Low Stock Alerts */}
         <div className="premium-card p-10 border-2 bg-white flex flex-col">
           <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gray-50">
-            <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none flex items-center gap-3">
+            <h2 className="text-2xl font-semibold text-gray-950 tracking-tighter  leading-none flex items-center gap-3">
               <AlertTriangle size={24} className="text-amber-500" /> Cảnh báo <span className="text-accent">Tồn kho</span>
             </h2>
             <Link
               to="/backoffice/inventory"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-accent transition-colors flex items-center gap-1"
+              className="text-xs font-semibold uppercase text-gray-400 hover:text-accent transition-colors flex items-center gap-1"
             >
               Xem tất cả <ChevronRight size={14} />
             </Link>
@@ -448,22 +448,22 @@ export default function AdminDashboard() {
           ) : inventoryData?.lowStockItems && inventoryData.lowStockItems.length > 0 ? (
             <div className="space-y-5 flex-1 overflow-y-auto max-h-[320px]">
               {inventoryData.lowStockItems.map((item, index) => (
-                <div key={item.productId} className="flex items-center gap-5 group cursor-pointer transition-all hover:translate-x-2 p-3 rounded-xl hover:bg-red-50/50">
-                  <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-sm italic ${item.quantityOnHand === 0
+                <div key={item.productId} className="flex items-center gap-5 group cursor-pointer transition-all hover:translate-x-2 p-3 rounded-xl hover:bg-blue-50/50">
+                  <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-semibold text-sm italic ${item.quantityOnHand === 0
                     ? 'bg-accent text-white shadow-lg shadow-red-500/30'
                     : 'bg-amber-100 text-amber-700'
                     }`}>
                     {item.quantityOnHand}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-black text-gray-950 text-sm italic uppercase tracking-tight truncate leading-none group-hover:text-accent transition-colors">
+                    <h4 className="font-semibold text-gray-950 text-sm  tracking-tight truncate leading-none group-hover:text-accent transition-colors">
                       {item.productName}
                     </h4>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase mt-2">
                       Ngưỡng: {item.lowStockThreshold} • Giá vốn: {formatPrice(item.averageCost)}
                     </p>
                   </div>
-                  <div className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${item.quantityOnHand === 0
+                  <div className={`px-3 py-1 rounded-xl text-xs font-semibold uppercase ${item.quantityOnHand === 0
                     ? 'bg-red-100 text-red-600'
                     : 'bg-amber-50 text-amber-600 border border-amber-200'
                     }`}>
@@ -475,17 +475,17 @@ export default function AdminDashboard() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center py-12">
               <Package className="w-16 h-16 text-emerald-200 mb-4" />
-              <p className="text-sm font-black text-emerald-400 uppercase italic tracking-widest">Tồn kho ổn định 👍</p>
+              <p className="text-sm font-semibold text-emerald-400 ">Tồn kho ổn định 👍</p>
             </div>
           )}
           <div className="mt-6 pt-4 border-t-2 border-gray-50 grid grid-cols-2 gap-4">
             <div className="text-center">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tổng SKU</p>
-              <p className="text-xl font-black text-gray-950 tracking-tighter italic">{inventoryData?.itemCount?.toLocaleString() || '—'}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase">Tổng SKU</p>
+              <p className="text-xl font-semibold text-gray-950 tracking-tighter italic">{inventoryData?.itemCount?.toLocaleString() || '—'}</p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tổng tồn</p>
-              <p className="text-xl font-black text-gray-950 tracking-tighter italic">{inventoryData?.totalQuantity?.toLocaleString() || '—'}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase">Tổng tồn</p>
+              <p className="text-xl font-semibold text-gray-950 tracking-tighter italic">{inventoryData?.totalQuantity?.toLocaleString() || '—'}</p>
             </div>
           </div>
         </div>
@@ -494,25 +494,25 @@ export default function AdminDashboard() {
       {/* ========== Tech Performance Row ========== */}
       {techData && (
         <div className="premium-card p-10 border-2 bg-white">
-          <h2 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic leading-none mb-8 flex items-center gap-3">
+          <h2 className="text-2xl font-semibold text-gray-950 tracking-tighter  leading-none mb-8 flex items-center gap-3">
             <Wrench size={24} className="text-blue-600" /> Hiệu suất <span className="text-accent">Kỹ thuật</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center p-6 rounded-2xl bg-gray-50 border-2 border-gray-100">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tổng đơn sửa</p>
-              <p className="text-3xl font-black text-gray-950 tracking-tighter italic">{techData.totalJobs}</p>
+            <div className="text-center p-6 rounded-xl bg-gray-50 border-2 border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Tổng đơn sửa</p>
+              <p className="text-3xl font-semibold text-gray-950 tracking-tighter italic">{techData.totalJobs}</p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-100">
-              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Đã hoàn thành</p>
-              <p className="text-3xl font-black text-emerald-700 tracking-tighter italic">{techData.completedJobs}</p>
+            <div className="text-center p-6 rounded-xl bg-emerald-50 border-2 border-emerald-100">
+              <p className="text-xs font-semibold text-emerald-600 uppercase mb-2">Đã hoàn thành</p>
+              <p className="text-3xl font-semibold text-emerald-700 tracking-tighter italic">{techData.completedJobs}</p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-blue-50 border-2 border-blue-100">
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Tỉ lệ thành công</p>
-              <p className="text-3xl font-black text-blue-700 tracking-tighter italic">{techData.successRate.toFixed(1)}%</p>
+            <div className="text-center p-6 rounded-xl bg-blue-50 border-2 border-blue-100">
+              <p className="text-xs font-semibold text-blue-600 uppercase mb-2">Tỉ lệ thành công</p>
+              <p className="text-3xl font-semibold text-blue-700 tracking-tighter italic">{techData.successRate.toFixed(1)}%</p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-amber-50 border-2 border-amber-100">
-              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">Chi phí TB</p>
-              <p className="text-3xl font-black text-amber-700 tracking-tighter italic">{formatCompact(techData.averageRepairCost)}</p>
+            <div className="text-center p-6 rounded-xl bg-amber-50 border-2 border-amber-100">
+              <p className="text-xs font-semibold text-amber-600 uppercase mb-2">Chi phí TB</p>
+              <p className="text-3xl font-semibold text-amber-700 tracking-tighter italic">{formatCompact(techData.averageRepairCost)}</p>
             </div>
           </div>
         </div>
@@ -520,7 +520,7 @@ export default function AdminDashboard() {
 
       {/* ========== Quick Actions Portal ========== */}
       <div className="mt-16">
-        <h2 className="text-2xl font-black text-gray-950 mb-8 uppercase italic tracking-tighter">
+        <h2 className="text-2xl font-semibold text-gray-950 mb-8  tracking-tighter">
           Cổng tác vụ <span className="text-accent">Ưu tiên</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -538,8 +538,8 @@ export default function AdminDashboard() {
               <div className={`${action.color} mb-6 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 drop-shadow-sm`}>
                 {action.icon}
               </div>
-              <h3 className="font-black text-gray-950 uppercase italic tracking-tight text-lg leading-none">{action.title}</h3>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4 flex items-center gap-2">
+              <h3 className="font-semibold text-gray-950  tracking-tight text-lg leading-none">{action.title}</h3>
+              <p className="text-xs font-semibold text-gray-400 uppercase mt-4 flex items-center gap-2">
                 {action.desc} <ChevronRight size={14} className="text-accent" />
               </p>
             </Link>

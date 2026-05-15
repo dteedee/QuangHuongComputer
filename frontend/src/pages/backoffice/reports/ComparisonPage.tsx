@@ -47,7 +47,7 @@ function ChangeTag({ value, suffix = '%' }: { value: number; suffix?: string }) 
 function KpiCard({ label, value, change }: { label: string; value: string; change?: number }) {
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+            className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
             <p className="text-xs font-bold text-gray-400 uppercase mb-1">{label}</p>
             <p className="text-xl font-semibold text-gray-900">{value}</p>
             {change !== undefined && <div className="mt-2"><ChangeTag value={change} /></div>}
@@ -85,7 +85,7 @@ export function ComparisonPage() {
             </div>
 
             {/* Presets */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
                 <GitCompareArrows size={18} className="text-gray-400" />
                 {([['mom', 'Tháng/Tháng'], ['qoq', 'Quý/Quý'], ['yoy', 'Năm/Năm'], ['custom', 'Tùy chọn']] as [Preset, string][]).map(([id, label]) => (
                     <button key={id} onClick={() => setPreset(id)}
@@ -138,7 +138,7 @@ export function ComparisonPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     <KpiCard label="Chi phí Kỳ A" value={formatCurrency(expenses.period1.total)} />
                     <KpiCard label="Chi phí Kỳ B" value={formatCurrency(expenses.period2.total)} change={expenses.change.totalPercent} />
-                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm col-span-full">
+                    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm col-span-full">
                         <p className="text-xs font-bold text-gray-400 uppercase mb-3">Chi phí theo danh mục (Kỳ B)</p>
                         <div className="space-y-2">
                             {(expenses.period2.byCategory ?? []).map((c, i) => (

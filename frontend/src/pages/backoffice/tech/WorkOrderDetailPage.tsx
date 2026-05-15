@@ -273,7 +273,7 @@ export const WorkOrderDetailPage = () => {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Device Info */}
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
                             <Smartphone size={20} className="text-accent" />
                             Thông tin thiết bị
@@ -303,7 +303,7 @@ export const WorkOrderDetailPage = () => {
                     </div>
 
                     {/* Parts Section */}
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <Package size={20} className="text-accent" />
@@ -360,7 +360,7 @@ export const WorkOrderDetailPage = () => {
 
                     {/* Quote Section */}
                     {canCreateQuote && (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                     <FileText size={20} className="text-blue-600" />
@@ -381,7 +381,7 @@ export const WorkOrderDetailPage = () => {
                     )}
 
                     {/* Activity Log */}
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <MessageSquare size={20} className="text-accent" />
@@ -418,7 +418,7 @@ export const WorkOrderDetailPage = () => {
                 {/* Sidebar */}
                 <div className="space-y-6">
                     {/* Cost Summary */}
-                    <div className="bg-gray-900 rounded-2xl p-6 text-white">
+                    <div className="bg-gray-900 rounded-xl p-6 text-white">
                         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                             <DollarSign size={20} className="text-accent" />
                             Tổng chi phí
@@ -444,7 +444,7 @@ export const WorkOrderDetailPage = () => {
                     </div>
 
                     {/* Timeline */}
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
                             <Calendar size={20} className="text-accent" />
                             Timeline
@@ -501,7 +501,7 @@ export const WorkOrderDetailPage = () => {
             {/* Add Part Modal */}
             {showAddPartModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm linh kiện</h3>
                         <div className="space-y-4">
                             <div>
@@ -605,7 +605,7 @@ export const WorkOrderDetailPage = () => {
             {/* Create Quote Modal */}
             {showQuoteModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Tạo báo giá</h3>
                         <div className="space-y-4">
                             <div className="p-4 bg-gray-50 rounded-xl">
@@ -705,7 +705,7 @@ export const WorkOrderDetailPage = () => {
             {/* Add Note Modal */}
             {showNoteModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm ghi chú</h3>
                         <textarea
                             value={noteContent}

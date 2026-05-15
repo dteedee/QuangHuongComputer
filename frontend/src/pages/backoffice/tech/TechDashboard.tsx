@@ -145,7 +145,7 @@ export const TechDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-4 mb-3">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-semibold shadow-xl">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-semibold shadow-sm">
                             {user?.fullName?.charAt(0) || 'T'}
                         </div>
                         <div>
@@ -191,7 +191,7 @@ export const TechDashboard: React.FC = () => {
                                 <span className="text-gray-400">{stats.leaveDays} nghỉ phép</span>
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <CalendarDays size={28} />
                         </div>
                     </div>
@@ -207,7 +207,7 @@ export const TechDashboard: React.FC = () => {
                                 {myPayroll ? 'Từ bảng lương' : 'Chưa có dữ liệu bảng lương'}
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <DollarSign size={28} />
                         </div>
                     </div>
@@ -226,7 +226,7 @@ export const TechDashboard: React.FC = () => {
                                 Từ <span className="font-semibold">{stats.completedOrders}</span> khách hàng
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Award size={28} />
                         </div>
                     </div>
@@ -242,7 +242,7 @@ export const TechDashboard: React.FC = () => {
                                 <span className="font-semibold">{stats.completedOrders}</span>/{stats.totalOrders} đơn
                             </p>
                         </div>
-                        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Target size={28} />
                         </div>
                     </div>

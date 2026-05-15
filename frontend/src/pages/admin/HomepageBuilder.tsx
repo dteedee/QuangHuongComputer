@@ -55,7 +55,7 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
         <div 
             ref={setNodeRef} 
             style={style}
-            className={`flex items-center gap-6 bg-white p-5 rounded-2xl border-2 ${isDragging ? 'border-red-500 shadow-2xl' : 'border-gray-100'} mb-4 group transition-all`}
+            className={`flex items-center gap-6 bg-white p-5 rounded-xl border-2 ${isDragging ? 'border-red-500 shadow-md' : 'border-gray-100'} mb-4 group transition-all`}
         >
             <button 
                 {...attributes} 
@@ -67,14 +67,14 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
 
             <div className="flex-1">
                 <div className="flex items-center gap-3">
-                    <h3 className="font-black text-gray-800 uppercase tracking-tight text-lg">
+                    <h3 className="font-semibold text-gray-800 uppercase tracking-tight text-lg">
                         {section.title}
                     </h3>
-                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-gray-200">
+                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-xs font-bold uppercase border border-gray-200">
                         {section.sectionType}
                     </span>
                     {!section.isActive && (
-                        <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-red-100 flex items-center gap-1">
+                        <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded text-xs font-bold uppercase border border-red-100 flex items-center gap-1">
                             <XCircle size={10} /> Hidden
                         </span>
                     )}
@@ -102,7 +102,7 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
                 <button 
                     onClick={() => onDelete(section.id)}
                     disabled={isDeleting}
-                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                     title="Delete Section"
                 >
                     {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
@@ -272,7 +272,7 @@ export const HomepageBuilder = () => {
         return (
             <div className="max-w-6xl mx-auto p-8 flex flex-col items-center justify-center gap-4">
                 <Loader2 className="animate-spin text-red-500" size={48} />
-                <p className="text-gray-400 font-bold uppercase text-sm tracking-widest">Loading sections...</p>
+                <p className="text-gray-400 font-bold uppercase text-sm">Loading sections...</p>
             </div>
         );
     }
@@ -287,7 +287,7 @@ export const HomepageBuilder = () => {
         <div className="max-w-6xl mx-auto">
             <header className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-white uppercase tracking-wider">Homepage Builder</h1>
+                    <h1 className="text-3xl font-semibold text-white uppercase tracking-wider">Homepage Builder</h1>
                     <p className="text-gray-400 mt-1">Design and reorder sections of your homepage</p>
                 </div>
                 <div className="flex gap-4">
@@ -312,14 +312,14 @@ export const HomepageBuilder = () => {
             <div className="grid lg:grid-cols-4 gap-8">
                 {/* Available Sections */}
                 <div className="lg:col-span-1 border-r border-white/10 pr-8">
-                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6">Available Types</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-6">Available Types</h3>
                     <div className="space-y-4">
                         {SECTION_TYPES.map((type) => (
                             <button
                                 key={type}
                                 onClick={() => addSection(type)}
                                 disabled={isAdding}
-                                className="w-full bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-gray-400 p-4 rounded-2xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group disabled:opacity-50"
+                                className="w-full bg-white/5 hover:bg-blue-500/10 hover:text-red-400 text-gray-400 p-4 rounded-xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group disabled:opacity-50"
                             >
                                 <div className="flex items-center justify-between font-bold text-sm uppercase">
                                     {type.replace(/_/g, ' ')}
@@ -336,7 +336,7 @@ export const HomepageBuilder = () => {
 
                 {/* Layout Builder */}
                 <div className="lg:col-span-3">
-                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6">Current Layout</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-6">Current Layout</h3>
                     {sections.length === 0 ? (
                         <div className="text-center py-16 text-gray-500">
                             <p className="text-lg font-bold">No sections yet</p>
@@ -374,10 +374,10 @@ export const HomepageBuilder = () => {
             {/* Config Editor Modal Overlay */}
             {editingSection && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-slate-900/80 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-md overflow-hidden animate-in fade-in zoom-in duration-200">
                         <header className="p-6 bg-gray-50 border-b flex items-center justify-between">
                             <div>
-                                <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
+                                <h3 className="text-xl font-semibold text-gray-800 uppercase tracking-tight">
                                     Configure: {editingSection.title}
                                 </h3>
                                 <p className="text-sm text-gray-500">Edit the JSON configuration for this section</p>
@@ -387,7 +387,7 @@ export const HomepageBuilder = () => {
                             </button>
                         </header>
                         <div className="flex-1 p-6 overflow-hidden flex flex-col gap-4">
-                            <div className="flex-1 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-inner">
+                            <div className="flex-1 rounded-xl overflow-hidden border-2 border-gray-100 shadow-inner">
                                 <textarea 
                                     value={configText}
                                     onChange={(e) => setConfigText(e.target.value)}

@@ -31,7 +31,7 @@ const DroppableColumn = ({ stage, children, count }: { stage: any, children: Rea
     return (
         <div
             ref={setNodeRef}
-            className={`w-[300px] flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
+            className={`w-[300px] flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
         >
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                 <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ const DraggableWorkOrderCard = ({ order, onClick }: { order: WorkOrder, onClick:
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing">
             <div 
-                className={`bg-white dark:bg-gray-900 rounded-xl p-4 border transition-all ${isDragging ? 'shadow-2xl ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'}`}
+                className={`bg-white dark:bg-gray-900 rounded-xl p-4 border transition-all ${isDragging ? 'shadow-md ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'}`}
                 onClick={onClick}
             >
                 <div className="flex justify-between items-start mb-2">
@@ -303,7 +303,7 @@ export const TechPortal = () => {
                     </p>
                 </div>
                 {/* View Toggle */}
-                <div className="flex items-center bg-gray-100 p-1.5 rounded-2xl shadow-inner border border-gray-200">
+                <div className="flex items-center bg-gray-100 p-1.5 rounded-xl shadow-inner border border-gray-200">
                     <button
                         onClick={() => setViewMode('list')}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
@@ -422,7 +422,7 @@ export const TechPortal = () => {
                             {showFilterDropdown && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowFilterDropdown(false)} />
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2">
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-sm border border-gray-100 z-20 py-2">
                                         {statusOptions.map(option => (
                                             <button
                                                 key={option.value}
@@ -634,8 +634,8 @@ export const TechPortal = () => {
 
                             <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
                                 {activeWorkOrder ? (
-                                    <div className="transform scale-105 rotate-3 shadow-2xl opacity-90 cursor-grabbing pointer-events-none">
-                                        <div className="bg-white rounded-xl p-4 border border-accent shadow-xl ring-2 ring-accent">
+                                    <div className="transform scale-105 rotate-3 shadow-md opacity-90 cursor-grabbing pointer-events-none">
+                                        <div className="bg-white rounded-xl p-4 border border-accent shadow-sm ring-2 ring-accent">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-sm font-semibold text-gray-900 uppercase">#{activeWorkOrder.ticketNumber?.split('-')[1] || activeWorkOrder.ticketNumber}</span>
                                                 <span className="text-xs text-slate-400">{new Date(activeWorkOrder.createdAt).toLocaleDateString('vi-VN')}</span>

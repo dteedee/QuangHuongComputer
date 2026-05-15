@@ -1,229 +1,158 @@
 import { Link } from 'react-router-dom';
-import { Building2, ChevronRight, Target, Users, Award, TrendingUp } from 'lucide-react';
+import { ChevronRight, Target, TrendingUp, Award, Users, ShieldCheck, Clock, Headphones, Package } from 'lucide-react';
 import SEO from '../components/SEO';
+
+const stats = [
+    { value: '10+', label: 'Nam kinh nghiem' },
+    { value: '5000+', label: 'San pham da ban' },
+    { value: '3000+', label: 'Khach hang tin tuong' },
+    { value: '99%', label: 'Hai long' },
+];
+
+const values = [
+    { num: '1', title: 'Chat luong', desc: 'Cam ket cung cap san pham chinh hang, chat luong cao' },
+    { num: '2', title: 'Uy tin', desc: 'Minh bach trong gia ca va chinh sach bao hanh' },
+    { num: '3', title: 'Tan tam', desc: 'Luon lang nghe va ho tro khach hang tan tinh' },
+    { num: '4', title: 'Doi moi', desc: 'Cap nhat cong nghe moi nhat tren thi truong' },
+];
+
+const commitments = [
+    '100% san pham chinh hang, nguon goc ro rang',
+    'Gia ca canh tranh nhat thi truong',
+    'Bao hanh chinh hang, ho tro tan tam',
+    'Doi tra de dang trong 7 ngay',
+];
 
 export const AboutPage = () => {
     return (
-        <div className="bg-gray-50 min-h-screen pb-10">
-            <SEO
-                title="Giới thiệu"
-                description="Tìm hiểu về Quang Hưởng Computer - Đơn vị hàng đầu cung cấp giải pháp máy tính, linh kiện và dịch vụ sửa chữa chuyên nghiệp với hơn 10 năm kinh nghiệm."
-            />
+        <div className="bg-gray-50 min-h-screen pb-16">
+            <SEO title="Gioi thieu" description="Tim hieu ve Quang Huong Computer - Don vi hang dau cung cap giai phap may tinh, linh kien va dich vu sua chua chuyen nghiep voi hon 10 nam kinh nghiem." />
+
             {/* Breadcrumb */}
             <div className="bg-white py-3 border-b border-gray-200">
-                <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-accent font-medium">Trang chủ</Link>
+                <div className="max-w-7xl mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
+                    <Link to="/" className="hover:text-accent font-medium cursor-pointer">Trang chu</Link>
                     <ChevronRight size={14} className="text-gray-400" />
-                    <span className="text-gray-900 font-medium">Giới thiệu</span>
+                    <span className="text-gray-900 font-medium">Gioi thieu</span>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-8">
-                <div className="bg-white p-10 md:p-16 rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-50">
-                    <div className="flex items-center gap-5 mb-10 border-b border-gray-100 pb-8">
-                        <div className="p-5 bg-red-50 text-accent rounded-2xl shadow-inner">
-                            <Building2 size={40} />
+            <div className="max-w-7xl mx-auto px-4 mt-8 space-y-8">
+                {/* Hero */}
+                <div className="bg-gradient-to-br from-accent to-red-700 rounded-xl p-8 md:p-12 text-white">
+                    <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">Quang Huong Computer</h1>
+                    <p className="text-white/90 text-lg max-w-2xl leading-relaxed">
+                        Mot trong nhung don vi hang dau tai Viet Nam chuyen cung cap cac giai phap may tinh,
+                        linh kien va dich vu sua chua bao hanh chuyen nghiep. Voi hon 10 nam kinh nghiem,
+                        chung toi tu hao la doi tac tin cay cua hang ngan khach hang ca nhan va doanh nghiep.
+                    </p>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {stats.map((s) => (
+                        <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center">
+                            <div className="text-3xl font-black text-accent mb-1">{s.value}</div>
+                            <div className="text-sm text-gray-500 font-medium">{s.label}</div>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-none">
-                            Giới thiệu công ty
-                        </h1>
+                    ))}
+                </div>
+
+                {/* Mission & Vision */}
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2.5 bg-red-50 rounded-lg"><Target className="text-accent" size={22} /></div>
+                            <h2 className="text-xl font-bold text-gray-900">Su menh</h2>
+                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Mang den nhung san pham va dich vu cong nghe chat luong cao voi gia ca hop ly,
+                            giup khach hang nang cao hieu suat lam viec va trai nghiem giai tri.
+                        </p>
                     </div>
-
-                    <div className="space-y-8 text-gray-700">
-                        <section>
-                            <p className="text-lg leading-relaxed">
-                                <strong className="text-2xl text-accent">Quang Hưởng Computer</strong> là một trong những
-                                đơn vị hàng đầu tại Việt Nam chuyên cung cấp các giải pháp máy tính, linh kiện và dịch vụ
-                                sửa chữa bảo hành chuyên nghiệp. Với hơn 10 năm kinh nghiệm trong ngành, chúng tôi tự hào
-                                là đối tác tin cậy của hàng ngàn khách hàng cá nhân và doanh nghiệp.
-                            </p>
-                        </section>
-
-                        <section className="grid md:grid-cols-2 gap-6 my-8">
-                            <div className="bg-gradient-to-br from-red-50 to-white p-6 rounded-2xl border border-red-100">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 bg-accent rounded-lg">
-                                        <Target className="text-white" size={24} />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-900">Sứ mệnh</h2>
-                                </div>
-                                <p>
-                                    Mang đến những sản phẩm và dịch vụ công nghệ chất lượng cao với giá cả hợp lý,
-                                    giúp khách hàng nâng cao hiệu suất làm việc và trải nghiệm giải trí.
-                                </p>
-                            </div>
-
-                            <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl border border-blue-100">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-3 bg-blue-600 rounded-lg">
-                                        <TrendingUp className="text-white" size={24} />
-                                    </div>
-                                    <h2 className="text-xl font-bold text-gray-900">Tầm nhìn</h2>
-                                </div>
-                                <p>
-                                    Trở thành chuỗi cửa hàng máy tính hàng đầu tại Việt Nam, được công nhận
-                                    bởi chất lượng sản phẩm, dịch vụ xuất sắc và sự tin cậy của khách hàng.
-                                </p>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Award className="text-accent" size={28} />
-                                Giá trị cốt lõi
-                            </h2>
-                            <div className="grid md:grid-cols-2 gap-4">
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
-                                        1
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Chất lượng</h3>
-                                        <p className="text-sm">Cam kết cung cấp sản phẩm chính hãng, chất lượng cao</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
-                                        2
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Uy tín</h3>
-                                        <p className="text-sm">Minh bạch trong giá cả và chính sách bảo hành</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
-                                        3
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Tận tâm</h3>
-                                        <p className="text-sm">Luôn lắng nghe và hỗ trợ khách hàng tận tình</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold">
-                                        4
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 mb-1">Đổi mới</h3>
-                                        <p className="text-sm">Cập nhật công nghệ mới nhất trên thị trường</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Users className="text-accent" size={28} />
-                                Đội ngũ của chúng tôi
-                            </h2>
-                            <p className="mb-4">
-                                Quang Hưởng Computer tự hào có đội ngũ nhân viên chuyên nghiệp, được đào tạo bài bản
-                                và có kinh nghiệm nhiều năm trong ngành công nghệ:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2">
-                                <li>Đội ngũ kỹ thuật viên am hiểu sâu về phần cứng và phần mềm</li>
-                                <li>Nhân viên tư vấn nhiệt tình, chuyên nghiệp</li>
-                                <li>Bộ phận chăm sóc khách hàng luôn sẵn sàng hỗ trợ 24/7</li>
-                                <li>Chuyên gia xây dựng cấu hình PC tối ưu cho mọi nhu cầu</li>
-                            </ul>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Sản phẩm & Dịch vụ</h2>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <h3 className="font-bold text-gray-900 mb-2">Sản phẩm</h3>
-                                    <ul className="text-sm space-y-1">
-                                        <li>• Laptop, PC Gaming</li>
-                                        <li>• Linh kiện máy tính</li>
-                                        <li>• Màn hình, bàn phím</li>
-                                        <li>• Phụ kiện gaming</li>
-                                    </ul>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <h3 className="font-bold text-gray-900 mb-2">Dịch vụ</h3>
-                                    <ul className="text-sm space-y-1">
-                                        <li>• Xây dựng cấu hình PC</li>
-                                        <li>• Sửa chữa, bảo hành</li>
-                                        <li>• Nâng cấp máy tính</li>
-                                        <li>• Tư vấn giải pháp IT</li>
-                                    </ul>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <h3 className="font-bold text-gray-900 mb-2">Hỗ trợ</h3>
-                                    <ul className="text-sm space-y-1">
-                                        <li>• Tư vấn miễn phí</li>
-                                        <li>• Giao hàng toàn quốc</li>
-                                        <li>• Thanh toán linh hoạt</li>
-                                        <li>• Bảo hành uy tín</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Thông tin công ty</h2>
-                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="font-semibold mb-1">Tên công ty:</p>
-                                        <p>Công ty Cổ phần Máy tính Quang Hưởng</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1">Mã số thuế:</p>
-                                        <p>0123456789</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1">Địa chỉ:</p>
-                                        <p>Số 179, Thôn 3/2, xã Vĩnh Bảo, Hải Phòng</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1">Hotline:</p>
-                                        <p className="text-accent font-bold">0904.235.090</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1">Email:</p>
-                                        <p>quanghuongvbhp@gmail.com</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold mb-1">Giờ làm việc:</p>
-                                        <p>7:00 - 17h15 (Từ thứ 2 đến thứ 7)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <div className="bg-gradient-to-r from-accent to-red-600 text-white p-8 rounded-2xl mt-8">
-                            <h2 className="text-2xl font-bold mb-4">Cam kết của chúng tôi</h2>
-                            <div className="grid md:grid-cols-2 gap-4 text-sm">
-                                <div className="flex gap-2">
-                                    <span className="text-2xl">✓</span>
-                                    <p>100% sản phẩm chính hãng, nguồn gốc rõ ràng</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <span className="text-2xl">✓</span>
-                                    <p>Giá cả cạnh tranh nhất thị trường</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <span className="text-2xl">✓</span>
-                                    <p>Bảo hành chính hãng, hỗ trợ tận tâm</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <span className="text-2xl">✓</span>
-                                    <p>Đổi trả dễ dàng trong 7 ngày</p>
-                                </div>
-                            </div>
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2.5 bg-blue-50 rounded-lg"><TrendingUp className="text-blue-600" size={22} /></div>
+                            <h2 className="text-xl font-bold text-gray-900">Tam nhin</h2>
                         </div>
-
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-8">
-                            <p className="text-sm">
-                                <strong>Liên hệ với chúng tôi:</strong> Để biết thêm thông tin về sản phẩm và dịch vụ,
-                                vui lòng <Link to="/contact" className="text-accent font-bold">liên hệ tại đây</Link> hoặc
-                                gọi hotline <a href="tel:0904235090" className="text-accent font-bold">0904.235.090</a>
-                            </p>
-                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Tro thanh chuoi cua hang may tinh hang dau tai Viet Nam, duoc cong nhan boi
+                            chat luong san pham, dich vu xuat sac va su tin cay cua khach hang.
+                        </p>
                     </div>
+                </div>
+
+                {/* Core Values */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <Award className="text-accent" size={24} /> Gia tri cot loi
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {values.map((v) => (
+                            <div key={v.num} className="flex gap-3">
+                                <div className="flex-shrink-0 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center font-bold text-sm">{v.num}</div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900 mb-0.5">{v.title}</h3>
+                                    <p className="text-sm text-gray-600">{v.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Team */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Users className="text-accent" size={24} /> Doi ngu cua chung toi
+                    </h2>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { icon: Award, text: 'Ky thuat vien am hieu sau ve phan cung va phan mem' },
+                            { icon: Headphones, text: 'Nhan vien tu van nhiet tinh, chuyen nghiep' },
+                            { icon: Clock, text: 'Bo phan CSKH ho tro 24/7' },
+                            { icon: Package, text: 'Chuyen gia xay dung cau hinh PC toi uu' },
+                        ].map((item, i) => (
+                            <div key={i} className="flex gap-3 items-start">
+                                <item.icon size={18} className="text-accent mt-0.5 flex-shrink-0" />
+                                <p className="text-sm text-gray-600">{item.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Commitments */}
+                <div className="bg-gradient-to-r from-accent to-red-700 rounded-xl p-6 md:p-8 text-white">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <ShieldCheck size={22} /> Cam ket cua chung toi
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                        {commitments.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                                <ShieldCheck size={16} className="flex-shrink-0" /> {c}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Company Info */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Thong tin cong ty</h2>
+                    <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                        <div><span className="text-gray-500">Ten cong ty:</span> <span className="font-medium text-gray-900">Cong ty Co phan May tinh Quang Huong</span></div>
+                        <div><span className="text-gray-500">Dia chi:</span> <span className="font-medium text-gray-900">So 179, Thon 3/2, xa Vinh Bao, Hai Phong</span></div>
+                        <div><span className="text-gray-500">Hotline:</span> <span className="font-bold text-accent">0904.235.090</span></div>
+                        <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-900">quanghuongvbhp@gmail.com</span></div>
+                        <div><span className="text-gray-500">Gio lam viec:</span> <span className="font-medium text-gray-900">7:00 - 17h15 (Tu thu 2 den thu 7)</span></div>
+                    </div>
+                </div>
+
+                {/* CTA */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
+                    <p className="text-sm text-gray-700">
+                        <strong>Lien he voi chung toi:</strong> Vui long{' '}
+                        <Link to="/contact" className="text-accent font-bold hover:underline cursor-pointer">lien he tai day</Link> hoac
+                        goi hotline <a href="tel:0904235090" className="text-accent font-bold cursor-pointer">0904.235.090</a>
+                    </p>
                 </div>
             </div>
         </div>

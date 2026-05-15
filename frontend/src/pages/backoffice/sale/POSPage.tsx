@@ -62,7 +62,7 @@ const ReceiptModal = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
+      <div className="bg-white rounded-xl shadow-md w-full max-w-md overflow-hidden animate-scale-in">
         {/* Success Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-8 text-center text-white">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -649,7 +649,7 @@ export default function POSPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">POS Bán hàng</h1>
+            <h1 className="text-xl font-semibold text-slate-900">POS Bán hàng</h1>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
               Online
             </span>
@@ -1079,7 +1079,7 @@ export default function POSPage() {
       {/* Loading overlay */}
       {processingOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 text-center">
+          <div className="bg-white rounded-xl p-8 text-center">
             <div className="animate-spin w-12 h-12 border-4 border-accent border-t-transparent rounded-full mx-auto mb-4" />
             <p className="font-bold text-gray-900">Đang xử lý thanh toán...</p>
           </div>

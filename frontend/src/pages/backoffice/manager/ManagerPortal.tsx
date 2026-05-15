@@ -116,7 +116,7 @@ export const ManagerPortal = () => {
                         key={i}
                         className="premium-card p-8 group"
                     >
-                        <div className={`p-4 ${stat.bg} ${stat.color} rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+                        <div className={`p-4 ${stat.bg} ${stat.color} rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500`}>
                             {stat.icon}
                         </div>
                         <p className="text-gray-400 text-xs text-slate-500 mb-1">{stat.label}</p>
@@ -129,7 +129,7 @@ export const ManagerPortal = () => {
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="premium-card p-10 bg-white border-none shadow-xl shadow-gray-200/50 relative overflow-hidden group"
+                    className="premium-card p-10 bg-white border-none shadow-sm shadow-gray-200/50 relative overflow-hidden group"
                 >
                     <div className="absolute top-0 right-0 p-10 text-gray-50 pointer-events-none group-hover:scale-125 transition-transform">
                         <BarChart3 size={150} />
@@ -155,7 +155,7 @@ export const ManagerPortal = () => {
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="premium-card p-10 bg-gray-900 border-none shadow-2xl relative overflow-hidden group"
+                    className="premium-card p-10 bg-gray-900 border-none shadow-md relative overflow-hidden group"
                 >
                     <div className="absolute top-0 right-0 p-10 text-white/5 pointer-events-none group-hover:scale-125 transition-transform">
                         <Briefcase size={150} />

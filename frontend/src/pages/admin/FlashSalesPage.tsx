@@ -291,7 +291,7 @@ export default function FlashSalesPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
                         <Zap className="w-7 h-7 text-accent" />
                         Quản lý Flash Sales
                     </h1>
@@ -317,7 +317,7 @@ export default function FlashSalesPage() {
                                 <Package className="w-5 h-5 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-gray-900">{stats.total}</p>
+                                <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
                                 <p className="text-xs text-gray-500">Tổng cộng</p>
                             </div>
                         </div>
@@ -328,7 +328,7 @@ export default function FlashSalesPage() {
                                 <Play className="w-5 h-5 text-green-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-green-600">{stats.active}</p>
+                                <p className="text-2xl font-semibold text-green-600">{stats.active}</p>
                                 <p className="text-xs text-gray-500">Đang diễn ra</p>
                             </div>
                         </div>
@@ -339,7 +339,7 @@ export default function FlashSalesPage() {
                                 <Clock className="w-5 h-5 text-blue-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-blue-600">{stats.scheduled}</p>
+                                <p className="text-2xl font-semibold text-blue-600">{stats.scheduled}</p>
                                 <p className="text-xs text-gray-500">Sắp diễn ra</p>
                             </div>
                         </div>
@@ -350,7 +350,7 @@ export default function FlashSalesPage() {
                                 <Pause className="w-5 h-5 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-gray-600">{stats.ended}</p>
+                                <p className="text-2xl font-semibold text-gray-600">{stats.ended}</p>
                                 <p className="text-xs text-gray-500">Đã kết thúc</p>
                             </div>
                         </div>
@@ -361,7 +361,7 @@ export default function FlashSalesPage() {
                                 <TrendingUp className="w-5 h-5 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-black text-amber-600">{stats.totalSold}</p>
+                                <p className="text-2xl font-semibold text-amber-600">{stats.totalSold}</p>
                                 <p className="text-xs text-gray-500">Đã bán</p>
                             </div>
                         </div>
@@ -370,7 +370,7 @@ export default function FlashSalesPage() {
             )}
 
             {/* Search & Filter Bar */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-6">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm mb-6">
                 <div className="flex flex-col lg:flex-row items-stretch gap-4">
                     {/* Search */}
                     <div className="relative flex-1 group">
@@ -405,7 +405,7 @@ export default function FlashSalesPage() {
                                 onClick={() => setFilter(tab.value)}
                                 className={`px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                                     filter === tab.value
-                                        ? 'bg-accent text-white shadow-lg shadow-red-500/20'
+                                        ? 'bg-accent text-white shadow-lg shadow-blue-500/15'
                                         : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -417,7 +417,7 @@ export default function FlashSalesPage() {
                         {hasActiveFilters && (
                             <button
                                 onClick={resetFilters}
-                                className="flex items-center gap-1.5 px-4 py-3 text-sm font-bold text-gray-500 hover:text-accent hover:bg-red-50 rounded-xl transition-all"
+                                className="flex items-center gap-1.5 px-4 py-3 text-sm font-bold text-gray-500 hover:text-accent hover:bg-blue-50 rounded-xl transition-all"
                             >
                                 <RefreshCw size={14} />
                                 Đặt lại
@@ -445,7 +445,7 @@ export default function FlashSalesPage() {
 
                 if (filteredSales.length === 0) {
                     return (
-                        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Zap className="w-8 h-8 text-gray-400" />
                             </div>
@@ -473,7 +473,7 @@ export default function FlashSalesPage() {
                         {filteredSales.map((sale) => (
                         <div
                             key={sale.id}
-                            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
+                            className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
                         >
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex-1">
@@ -540,7 +540,7 @@ export default function FlashSalesPage() {
                                     </button>
                                     <button
                                         onClick={() => handleDelete(sale.id)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        className="p-2 text-red-600 hover:bg-blue-50 rounded-lg transition-colors"
                                         title="Xóa"
                                     >
                                         <Trash2 className="w-5 h-5" />
@@ -560,10 +560,10 @@ export default function FlashSalesPage() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         onClick={closeModal}
                     />
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                    <div className="relative bg-white rounded-xl shadow-md w-full max-w-2xl max-h-[90vh] overflow-hidden">
                         <div className="bg-gradient-to-r from-accent to-[#ff4d4d] px-6 py-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-black text-white">
+                                <h2 className="text-xl font-semibold text-white">
                                     {modalMode === 'create' ? 'Tạo Flash Sale mới' : 'Chỉnh sửa Flash Sale'}
                                 </h2>
                                 <button

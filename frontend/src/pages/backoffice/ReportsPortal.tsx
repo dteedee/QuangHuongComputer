@@ -177,7 +177,7 @@ export const ReportsPortal = () => {
             </div>
 
             {/* Date Range Filter */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex items-center gap-2 text-gray-500">
                         <Calendar size={18} />
@@ -227,7 +227,7 @@ export const ReportsPortal = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                    className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-emerald-50 rounded-xl">
@@ -248,7 +248,7 @@ export const ReportsPortal = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                    className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-blue-50 rounded-xl">
@@ -268,7 +268,7 @@ export const ReportsPortal = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                    className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-purple-50 rounded-xl">
@@ -291,7 +291,7 @@ export const ReportsPortal = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                    className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-orange-50 rounded-xl">
@@ -337,7 +337,7 @@ export const ReportsPortal = () => {
             {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Revenue Chart */}
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Doanh thu 12 tháng</h3>
                             <button
@@ -358,7 +358,7 @@ export const ReportsPortal = () => {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${heightPercent}%` }}
                                             transition={{ duration: 0.8, delay: i * 0.05 }}
-                                            className="bg-gradient-to-t from-accent to-red-400 rounded-t-lg hover:from-accent-hover transition-all cursor-pointer w-full"
+                                            className="bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg hover:from-blue-700 transition-all cursor-pointer w-full"
                                         />
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
                                             {formatCurrency(m.revenue)}
@@ -371,7 +371,7 @@ export const ReportsPortal = () => {
                     </div>
 
                     {/* Low Stock Alert */}
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <AlertTriangle className="text-amber-500" size={20} />
@@ -407,7 +407,7 @@ export const ReportsPortal = () => {
             )}
 
             {activeTab === 'products' && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Trophy className="text-amber-500" size={20} />
@@ -459,7 +459,7 @@ export const ReportsPortal = () => {
             )}
 
             {activeTab === 'customers' && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Star className="text-amber-500" size={20} />
@@ -507,7 +507,7 @@ export const ReportsPortal = () => {
             )}
 
             {activeTab === 'technicians' && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Wrench className="text-blue-500" size={20} />
@@ -569,7 +569,7 @@ export const ReportsPortal = () => {
             )}
 
             {/* Export Options */}
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl">
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-xl">
                 <h3 className="text-xl font-semibold text-white uppercase tracking-tight mb-6">Xuất báo cáo Excel</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     {[

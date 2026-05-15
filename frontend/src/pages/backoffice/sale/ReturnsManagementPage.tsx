@@ -395,7 +395,7 @@ export const ReturnsManagementPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">Quản lý đổi trả</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Quản lý đổi trả</h1>
           <p className="text-gray-500 text-sm">Xử lý yêu cầu đổi trả từ khách hàng</p>
         </div>
         <button

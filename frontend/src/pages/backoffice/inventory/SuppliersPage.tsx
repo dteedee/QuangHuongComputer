@@ -35,7 +35,7 @@ const StatCard = ({ icon: Icon, label, value, subValue, color, trend }: {
     color: string;
     trend?: 'up' | 'down' | 'neutral';
 }) => (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+    <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
         <div className="flex items-start justify-between">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
                 <Icon size={24} />
@@ -606,9 +606,9 @@ const SupplierDetailDrawer = ({
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                     {supplier.logoUrl ? (
-                        <img src={supplier.logoUrl} alt={supplier.name} className="w-16 h-16 rounded-2xl object-cover" />
+                        <img src={supplier.logoUrl} alt={supplier.name} className="w-16 h-16 rounded-xl object-cover" />
                     ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-semibold">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-semibold">
                             {supplier.name.charAt(0)}
                         </div>
                     )}
@@ -643,12 +643,12 @@ const SupplierDetailDrawer = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Statistics */}
             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
                     <Package size={20} className="text-blue-600" />
                     <p className="text-2xl font-semibold text-gray-900 mt-2">{supplier.totalOrders}</p>
                     <p className="text-xs text-gray-500">Đơn hàng</p>
                 </div>
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4">
                     <TrendingUp size={20} className="text-emerald-600" />
                     <p className="text-2xl font-semibold text-gray-900 mt-2">{formatCurrency(supplier.totalPurchaseAmount)}</p>
                     <p className="text-xs text-gray-500">Tổng mua hàng</p>
@@ -707,7 +707,7 @@ const SupplierDetailDrawer = ({
             {/* Business Info */}
             <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Thông tin kinh doanh</h3>
-                <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                     {supplier.taxCode && (
                         <div className="flex items-center justify-between">
                             <span className="text-gray-500">Mã số thuế</span>
@@ -745,7 +745,7 @@ const SupplierDetailDrawer = ({
             {supplier.bankAccount && (
                 <div>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Ngân hàng</h3>
-                    <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                         <div className="flex items-center justify-between">
                             <span className="text-gray-500">Số tài khoản</span>
                             <span className="font-mono font-semibold text-gray-900">{supplier.bankAccount}</span>
@@ -940,7 +940,7 @@ export function SuppliersPage() {
                 </div>
                 <button
                     onClick={() => { setEditingSupplier(null); setShowForm(true); }}
-                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium tracking-wide rounded-2xl transition-all shadow-lg shadow-blue-500/15 active:scale-95"
+                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium tracking-wide rounded-xl transition-all shadow-lg shadow-blue-500/15 active:scale-95"
                 >
                     <Plus size={20} />
                     Thêm nhà cung cấp
@@ -983,7 +983,7 @@ export function SuppliersPage() {
             )}
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-white rounded-xl p-4 border border-gray-100">
                 <div className="flex-1 relative">
                     <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -1015,7 +1015,7 @@ export function SuppliersPage() {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-10 h-10 animate-spin text-accent" />
@@ -1182,7 +1182,7 @@ export function SuppliersPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                            className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-xl shadow-md overflow-hidden flex flex-col"
                         >
                             <div className="p-6 border-b border-gray-200">
                                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">
@@ -1219,7 +1219,7 @@ export function SuppliersPage() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="relative w-full max-w-lg bg-white shadow-2xl"
+                            className="relative w-full max-w-lg bg-white shadow-md"
                         >
                             <SupplierDetailDrawer
                                 supplier={viewingSupplier}

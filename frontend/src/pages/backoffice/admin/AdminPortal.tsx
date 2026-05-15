@@ -49,7 +49,7 @@ const StatCard = ({
         <motion.div
             whileHover={{ y: -4, boxShadow: '0 20px 40px -12px rgba(0,0,0,0.1)' }}
             onClick={onClick}
-            className={`bg-white rounded-2xl p-6 border border-gray-100 shadow-sm cursor-pointer group relative overflow-hidden ${onClick ? 'hover:border-gray-200' : ''}`}
+            className={`bg-white rounded-xl p-6 border border-gray-100 shadow-sm cursor-pointer group relative overflow-hidden ${onClick ? 'hover:border-gray-200' : ''}`}
         >
             <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-xl ${colors.bg} ring-1 ${colors.ring}`}>
@@ -365,7 +365,7 @@ export const AdminPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <motion.div
                     whileHover={{ y: -2 }}
-                    className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white relative overflow-hidden"
+                    className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 opacity-10">
                         <DollarSign size={120} />
@@ -383,7 +383,7 @@ export const AdminPortal = () => {
                 <motion.div
                     whileHover={{ y: -2 }}
                     onClick={() => navigate('/backoffice/system-health')}
-                    className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm cursor-pointer hover:border-emerald-200 transition-colors"
+                    className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm cursor-pointer hover:border-emerald-200 transition-colors"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">Sức khỏe hệ thống</h3>
@@ -407,7 +407,7 @@ export const AdminPortal = () => {
 
                 <motion.div
                     whileHover={{ y: -2 }}
-                    className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
+                    className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">Người dùng hoạt động</h3>
@@ -433,7 +433,7 @@ export const AdminPortal = () => {
             {/* Quick Actions & System Status */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Quick Actions */}
-                <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <h3 className="font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <QuickActionButton
@@ -485,7 +485,7 @@ export const AdminPortal = () => {
                 </div>
 
                 {/* System Status */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">Trạng thái hệ thống</h3>
                         <button 
@@ -508,7 +508,7 @@ export const AdminPortal = () => {
             {/* Activity & Alerts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Activity */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900">Hoạt động gần đây</h3>
                         <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
@@ -529,7 +529,7 @@ export const AdminPortal = () => {
                 </div>
 
                 {/* Pending Alerts */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-gray-900">Cảnh báo</h3>
@@ -572,7 +572,7 @@ export const AdminPortal = () => {
             </div>
 
             {/* Management Modules */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-6">Quản trị hệ thống</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Users Management */}

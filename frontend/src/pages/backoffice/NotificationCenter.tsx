@@ -69,15 +69,15 @@ export default function NotificationCenter() {
 
     const getIcon = (type: string, priority?: string) => {
         if (priority === 'high') {
-            return <div className="p-3 bg-red-100 text-red-600 rounded-2xl shadow-sm"><AlertCircle size={22} strokeWidth={2.5} /></div>;
+            return <div className="p-3 bg-red-100 text-red-600 rounded-xl shadow-sm"><AlertCircle size={22} strokeWidth={2.5} /></div>;
         }
         switch (type) {
-            case 'order': return <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl shadow-sm"><ShoppingCart size={22} /></div>;
-            case 'repair': return <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl shadow-sm"><Wrench size={22} /></div>;
-            case 'warranty': return <div className="p-3 bg-green-100 text-green-600 rounded-2xl shadow-sm"><ShieldCheck size={22} /></div>;
-            case 'inventory': return <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl shadow-sm"><Box size={22} /></div>;
-            case 'crm': return <div className="p-3 bg-violet-100 text-violet-600 rounded-2xl shadow-sm"><Users size={22} /></div>;
-            default: return <div className="p-3 bg-gray-100 text-gray-600 rounded-2xl shadow-sm"><Settings size={22} /></div>;
+            case 'order': return <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-sm"><ShoppingCart size={22} /></div>;
+            case 'repair': return <div className="p-3 bg-orange-100 text-orange-600 rounded-xl shadow-sm"><Wrench size={22} /></div>;
+            case 'warranty': return <div className="p-3 bg-green-100 text-green-600 rounded-xl shadow-sm"><ShieldCheck size={22} /></div>;
+            case 'inventory': return <div className="p-3 bg-purple-100 text-purple-600 rounded-xl shadow-sm"><Box size={22} /></div>;
+            case 'crm': return <div className="p-3 bg-violet-100 text-violet-600 rounded-xl shadow-sm"><Users size={22} /></div>;
+            default: return <div className="p-3 bg-gray-100 text-gray-600 rounded-xl shadow-sm"><Settings size={22} /></div>;
         }
     };
 
@@ -115,7 +115,7 @@ export default function NotificationCenter() {
             </div>
 
             {/* Main Application Area */}
-            <div className="flex-1 bg-white border flex flex-col md:flex-row rounded-3xl shadow-xl shadow-gray-200/40 overflow-hidden min-h-0">
+            <div className="flex-1 bg-white border flex flex-col md:flex-row rounded-xl shadow-sm shadow-gray-200/40 overflow-hidden min-h-0">
                 {/* Sidebar Navigation */}
                 <div className="w-full md:w-72 bg-gray-50/80 border-r border-gray-100 flex flex-col shrink-0">
                     <div className="p-5 border-b border-gray-100 bg-white">
@@ -158,7 +158,7 @@ export default function NotificationCenter() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`w-full group flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all ${
+                                        className={`w-full group flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-semibold transition-all ${
                                             activeTab === tab.id 
                                                 ? 'bg-white text-accent shadow-sm ring-1 ring-gray-100' 
                                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -221,14 +221,14 @@ export default function NotificationCenter() {
                             {filteredNotifications.map((notification) => (
                                 <div 
                                     key={notification.id} 
-                                    className={`group relative p-5 bg-white rounded-3xl border transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-200 flex gap-5 ${
+                                    className={`group relative p-5 bg-white rounded-xl border transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-200 flex gap-5 ${
                                         !notification.read ? 'border-accent/30 ring-4 ring-accent/5' : 'border-gray-100'
                                     }`}
                                 >
                                     {/* Invisible Overlay Div for making the whole card route without breaking nested buttons */}
                                     {notification.link && (
                                         <div 
-                                            className="absolute inset-0 z-0 rounded-3xl cursor-pointer"
+                                            className="absolute inset-0 z-0 rounded-xl cursor-pointer"
                                             onClick={() => {
                                                 if (!notification.read) markAsRead(notification.id);
                                                 navigate(notification.link!);

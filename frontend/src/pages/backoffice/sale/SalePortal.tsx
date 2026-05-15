@@ -84,14 +84,14 @@ export const SalePortal = () => {
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
-                        className="flex items-center gap-3 px-6 py-4 bg-gray-950 text-white text-sm font-medium rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-900/20 active:scale-95 group"
+                        className="flex items-center gap-3 px-6 py-4 bg-gray-950 text-white text-sm font-medium rounded-xl hover:bg-black transition-all shadow-sm shadow-gray-900/20 active:scale-95 group"
                     >
                         <CreditCard size={18} className="group-hover:scale-110 transition-transform" />
                         POS Bán hàng
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
-                        className="flex items-center gap-3 px-6 py-4 bg-accent text-white text-sm font-medium rounded-2xl hover:bg-accent-hover transition-all shadow-xl shadow-blue-500/15 active:scale-95 group"
+                        className="flex items-center gap-3 px-6 py-4 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent-hover transition-all shadow-sm shadow-blue-500/15 active:scale-95 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo đơn hàng
@@ -103,7 +103,7 @@ export const SalePortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-gray-900">
                 <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-blue-500/20">
                     <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg">
+                        <div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg">
                             <Package size={28} />
                         </div>
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${(stats?.orderGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
@@ -118,7 +118,7 @@ export const SalePortal = () => {
 
                 <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-emerald-500/20">
                     <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-lg">
+                        <div className="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-lg">
                             <DollarSign size={28} />
                         </div>
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${(stats?.revenueGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
@@ -133,7 +133,7 @@ export const SalePortal = () => {
 
                 <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-amber-500/20">
                     <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-lg">
+                        <div className="w-14 h-14 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-lg">
                             <Clock size={28} />
                         </div>
                     </div>
@@ -145,7 +145,7 @@ export const SalePortal = () => {
 
                 <div className="premium-card p-6 border-2 border-gray-100 transition-all hover:border-purple-500/20">
                     <div className="flex items-start justify-between mb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-lg">
+                        <div className="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-lg">
                             <Star size={28} />
                         </div>
                     </div>
@@ -211,11 +211,11 @@ export const SalePortal = () => {
 
                 {/* Quick Actions & Promo */}
                 <div className="space-y-8">
-                    <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl border-4 border-gray-100">
+                    <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-8 text-white relative overflow-hidden shadow-md border-4 border-gray-100">
                         <div className="relative z-10">
                             <h3 className="text-2xl font-semibold mb-2  tracking-tighter">Tạo khuyến mãi</h3>
                             <p className="text-gray-400 text-sm font-bold mb-8 uppercase tracking-wide">Tăng doanh số với các chương trình Hot Sale</p>
-                            <button className="w-full bg-accent text-white px-6 py-4 rounded-lg text-sm font-medium shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95">
+                            <button className="w-full bg-accent text-white px-6 py-4 rounded-lg text-sm font-medium shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95">
                                 Tạo chiến dịch ngay
                             </button>
                         </div>
@@ -225,7 +225,7 @@ export const SalePortal = () => {
                     <div className="premium-card p-8 border-2">
                         <h3 className="text-lg font-semibold text-gray-950 mb-6  border-b-2 border-red-50 pb-2">Thao tác nhanh</h3>
                         <div className="space-y-4">
-                            <Link to="/backoffice/orders" className="w-full flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 hover:bg-blue-50 transition-all border-2 border-transparent hover:border-blue-100 group">
+                            <Link to="/backoffice/orders" className="w-full flex items-center justify-between p-4 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-all border-2 border-transparent hover:border-blue-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-blue-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <Package size={20} />
@@ -234,7 +234,7 @@ export const SalePortal = () => {
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                             </Link>
-                            <Link to="/backoffice/coupons" className="w-full flex items-center justify-between p-4 rounded-2xl bg-amber-50/50 hover:bg-amber-50 transition-all border-2 border-transparent hover:border-amber-100 group">
+                            <Link to="/backoffice/coupons" className="w-full flex items-center justify-between p-4 rounded-xl bg-amber-50/50 hover:bg-amber-50 transition-all border-2 border-transparent hover:border-amber-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-amber-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <Percent size={20} />
@@ -243,7 +243,7 @@ export const SalePortal = () => {
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
                             </Link>
-                            <Link to="/backoffice/products" className="w-full flex items-center justify-between p-4 rounded-2xl bg-purple-50/50 hover:bg-purple-50 transition-all border-2 border-transparent hover:border-purple-100 group">
+                            <Link to="/backoffice/products" className="w-full flex items-center justify-between p-4 rounded-xl bg-purple-50/50 hover:bg-purple-50 transition-all border-2 border-transparent hover:border-purple-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-purple-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <ShoppingBag size={20} />
@@ -252,7 +252,7 @@ export const SalePortal = () => {
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
                             </Link>
-                            <Link to="/backoffice/returns" className="w-full flex items-center justify-between p-4 rounded-2xl bg-rose-50/50 hover:bg-rose-50 transition-all border-2 border-transparent hover:border-rose-100 group">
+                            <Link to="/backoffice/returns" className="w-full flex items-center justify-between p-4 rounded-xl bg-rose-50/50 hover:bg-rose-50 transition-all border-2 border-transparent hover:border-rose-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-rose-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <RotateCcw size={20} />
@@ -268,7 +268,7 @@ export const SalePortal = () => {
 
             {/* Pending Orders Alert */}
             {(stats?.pendingOrders || 0) > 0 && (
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6">
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
                             <AlertCircle size={24} className="text-amber-600" />
@@ -292,7 +292,7 @@ export const SalePortal = () => {
             )}
 
             {/* Today's Summary */}
-            <div className="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
+            <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
                     <Calendar size={20} className="text-gray-500" />
                     <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Tổng kết hôm nay</h2>
@@ -301,15 +301,15 @@ export const SalePortal = () => {
                     </span>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                    <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
                         <p className="text-3xl font-semibold text-blue-600">{stats?.todayOrders || 0}</p>
                         <p className="text-sm text-gray-500 font-medium">Đơn hàng</p>
                     </div>
-                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                    <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
                         <p className="text-2xl font-semibold text-emerald-600">{formatCurrency(stats?.todayRevenue || stats?.monthRevenue || 0)}</p>
                         <p className="text-sm text-gray-500 font-medium">Doanh thu</p>
                     </div>
-                    <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
+                    <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
                         <p className="text-2xl font-semibold text-purple-600">
                             {formatCurrency(stats?.averageOrderValue || (stats?.totalRevenue || 0) / (stats?.totalOrders || 1))}
                         </p>

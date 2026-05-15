@@ -103,7 +103,7 @@ export default function SegmentsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-xl p-6 border border-gray-100 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -280,7 +280,7 @@ function SegmentModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+        className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">
@@ -427,7 +427,7 @@ function RulesModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+        className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">

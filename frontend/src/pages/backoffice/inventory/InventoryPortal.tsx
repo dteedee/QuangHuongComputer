@@ -216,7 +216,7 @@ export const InventoryPortal = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Link
                     to="/backoffice/inventory/grn"
-                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/40 transition-all group"
+                    className="flex items-center gap-4 p-5 bg-white rounded-xl border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/40 transition-all group"
                 >
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-200 group-hover:scale-105 transition-transform">
                         <FileText size={22} className="text-white" />
@@ -228,7 +228,7 @@ export const InventoryPortal = () => {
                 </Link>
                 <Link
                     to="/backoffice/inventory/dn"
-                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-all group"
+                    className="flex items-center gap-4 p-5 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-all group"
                 >
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
                         <Truck size={22} className="text-white" />
@@ -240,7 +240,7 @@ export const InventoryPortal = () => {
                 </Link>
                 <Link
                     to="/backoffice/inventory/count"
-                    className="flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50/40 transition-all group"
+                    className="flex items-center gap-4 p-5 bg-white rounded-xl border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50/40 transition-all group"
                 >
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200 group-hover:scale-105 transition-transform">
                         <ClipboardList size={22} className="text-white" />
@@ -257,7 +257,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     whileHover={{ y: -3 }}
                     onClick={() => setStockFilter('all')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${stockFilter === 'all'
+                    className={`cursor-pointer p-6 rounded-xl border-2 transition-all ${stockFilter === 'all'
                             ? 'bg-blue-50 border-blue-200'
                             : 'bg-white border-gray-100 hover:border-gray-200'
                         }`}
@@ -274,7 +274,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     whileHover={{ y: -3 }}
                     onClick={() => setStockFilter('all')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${stockFilter === 'all'
+                    className={`cursor-pointer p-6 rounded-xl border-2 transition-all ${stockFilter === 'all'
                             ? 'bg-purple-50 border-purple-200'
                             : 'bg-white border-gray-100 hover:border-gray-200'
                         }`}
@@ -291,7 +291,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     whileHover={{ y: -3 }}
                     onClick={() => setStockFilter('in_stock')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${stockFilter === 'in_stock'
+                    className={`cursor-pointer p-6 rounded-xl border-2 transition-all ${stockFilter === 'in_stock'
                             ? 'bg-emerald-50 border-emerald-200'
                             : 'bg-white border-gray-100 hover:border-gray-200'
                         }`}
@@ -308,7 +308,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     whileHover={{ y: -3 }}
                     onClick={() => setStockFilter('low_stock')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${stockFilter === 'low_stock'
+                    className={`cursor-pointer p-6 rounded-xl border-2 transition-all ${stockFilter === 'low_stock'
                             ? 'bg-amber-50 border-amber-200'
                             : 'bg-white border-gray-100 hover:border-gray-200'
                         }`}
@@ -325,7 +325,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     whileHover={{ y: -3 }}
                     onClick={() => setStockFilter('out_of_stock')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${stockFilter === 'out_of_stock'
+                    className={`cursor-pointer p-6 rounded-xl border-2 transition-all ${stockFilter === 'out_of_stock'
                             ? 'bg-red-50 border-red-200'
                             : 'bg-white border-gray-100 hover:border-gray-200'
                         }`}
@@ -341,7 +341,7 @@ export const InventoryPortal = () => {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col lg:flex-row items-center gap-4">
+            <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col lg:flex-row items-center gap-4">
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
@@ -378,7 +378,7 @@ export const InventoryPortal = () => {
             </div>
 
             {/* Products Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -596,7 +596,7 @@ export const InventoryPortal = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-r from-amber-50 to-red-50 rounded-2xl p-6 border border-amber-200"
+                    className="bg-gradient-to-r from-amber-50 to-red-50 rounded-xl p-6 border border-amber-200"
                 >
                     <div className="flex items-start gap-4">
                         <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">

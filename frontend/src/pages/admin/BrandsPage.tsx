@@ -148,7 +148,7 @@ export default function BrandsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
                         <Tag className="w-7 h-7 text-accent" />
                         Quản lý Thương hiệu
                     </h1>
@@ -167,37 +167,37 @@ export default function BrandsPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                         <Tag className="w-6 h-6" />
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 font-medium">Tổng số hãng</p>
-                        <p className="text-2xl font-black text-gray-900">{brands.length}</p>
+                        <p className="text-2xl font-semibold text-gray-900">{brands.length}</p>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
                         <Check className="w-6 h-6" />
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 font-medium">Đang hoạt động</p>
-                        <p className="text-2xl font-black text-gray-900">{activeBrands}</p>
+                        <p className="text-2xl font-semibold text-gray-900">{activeBrands}</p>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-gray-50 text-gray-600 rounded-xl flex items-center justify-center">
                         <AlertCircle className="w-6 h-6" />
                     </div>
                     <div>
                         <p className="text-sm text-gray-500 font-medium">Đã ẩn</p>
-                        <p className="text-2xl font-black text-gray-900">{brands.length - activeBrands}</p>
+                        <p className="text-2xl font-semibold text-gray-900">{brands.length - activeBrands}</p>
                     </div>
                 </div>
             </div>
 
             {/* Search Bar */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                 <div className="relative flex-1 group max-w-md">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={18} />
                     <input
@@ -224,7 +224,7 @@ export default function BrandsPage() {
                     <div className="w-10 h-10 border-4 border-gray-200 border-t-accent rounded-full animate-spin" />
                 </div>
             ) : filteredBrands.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Tag className="w-8 h-8 text-gray-400" />
                     </div>
@@ -247,10 +247,10 @@ export default function BrandsPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredBrands.map((brand) => (
-                        <div key={brand.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                        <div key={brand.id} className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                             {!brand.isActive && (
                                 <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-                                    <div className="absolute top-4 -right-6 w-24 bg-gray-500 text-white text-[10px] font-bold text-center py-1 opacity-90 transform rotate-45 shadow-sm">
+                                    <div className="absolute top-4 -right-6 w-24 bg-gray-500 text-white text-xs font-bold text-center py-1 opacity-90 transform rotate-45 shadow-sm">
                                         ĐÃ ẨN
                                     </div>
                                 </div>
@@ -295,7 +295,7 @@ export default function BrandsPage() {
                                 </button>
                                 <button
                                     onClick={() => handleDelete(brand.id)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    className="p-2 text-red-600 hover:bg-blue-50 rounded-lg transition-colors"
                                     title="Xóa"
                                 >
                                     <Trash2 className="w-5 h-5" />
@@ -313,9 +313,9 @@ export default function BrandsPage() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         onClick={closeModal}
                     />
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+                    <div className="relative bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden flex flex-col">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                            <h2 className="text-xl font-black text-gray-900">
+                            <h2 className="text-xl font-semibold text-gray-900">
                                 {modalMode === 'create' ? 'Thêm thương hiệu mới' : 'Chỉnh sửa thương hiệu'}
                             </h2>
                             <button

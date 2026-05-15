@@ -120,21 +120,21 @@ export const AdminUsersPage = () => {
         <div className="space-y-10 pb-20 animate-fade-in admin-area">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-3">
                         Quản trị <span className="text-accent">Người dùng</span>
                     </h1>
-                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                    <p className="text-sm text-slate-500 flex items-center gap-2">
                         Quản lý tài khoản, phân quyền và lịch sử hoạt động
                     </p>
                 </div>
-                <button className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 group">
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm active:scale-95 group">
                     <UserPlus size={20} className="group-hover:scale-110 transition-transform" />
                     Thêm thành viên
                 </button>
             </div>
 
             {/* Search & Filter Bar */}
-            <div className="bg-white rounded-2xl border-2 border-gray-100 p-4 shadow-sm">
+            <div className="bg-white rounded-xl border-2 border-gray-100 p-4 shadow-sm">
                 <div className="flex flex-col lg:flex-row items-stretch gap-4">
                     {/* Search */}
                     <div className="relative flex-1 group">
@@ -144,7 +144,7 @@ export const AdminUsersPage = () => {
                             placeholder="Tìm kiếm theo tên hoặc email người dùng..."
                             value={filters.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
-                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
+                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
                         />
                         {filters.search && (
                             <button
@@ -183,7 +183,7 @@ export const AdminUsersPage = () => {
                         {hasActiveFilters && (
                             <button
                                 onClick={resetFilters}
-                                className="flex items-center gap-2 px-5 py-4 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-accent hover:bg-red-50 rounded-2xl transition-all"
+                                className="flex items-center gap-2 px-5 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-accent hover:bg-blue-50 rounded-xl transition-all"
                             >
                                 <RefreshCw size={14} />
                                 Đặt lại
@@ -197,7 +197,7 @@ export const AdminUsersPage = () => {
             <div className="premium-card overflow-hidden border-2">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-900 text-white text-xs font-black uppercase tracking-widest">
+                        <thead className="bg-gray-900 text-white text-xs font-semibold uppercase">
                             <tr>
                                 <th className="px-8 py-5">Thành viên</th>
                                 <th className="px-8 py-5">Email liên hệ</th>
@@ -211,17 +211,17 @@ export const AdminUsersPage = () => {
                                 <tr>
                                     <td colSpan={5} className="px-8 py-24 text-center">
                                         <Loader2 className="mx-auto animate-spin text-accent" size={48} />
-                                        <p className="text-sm text-gray-900 font-black uppercase tracking-widest mt-4">Đang tải danh sách thành viên...</p>
+                                        <p className="text-sm text-gray-900 font-semibold uppercase mt-4">Đang tải danh sách thành viên...</p>
                                     </td>
                                 </tr>
                             ) : users.map((user: User) => (
                                 <tr key={user.id} className="hover:bg-gray-50/80 transition-all group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black text-sm shadow-lg group-hover:scale-110 transition-transform">
+                                            <div className="w-12 h-12 rounded-xl bg-gray-950 text-white flex items-center justify-center font-semibold text-sm shadow-lg group-hover:scale-110 transition-transform">
                                                 {user.fullName.charAt(0).toUpperCase()}
                                             </div>
-                                            <span className="text-base font-black text-gray-950 uppercase italic tracking-tight">{user.fullName}</span>
+                                            <span className="text-base font-semibold text-gray-950  tracking-tight">{user.fullName}</span>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
@@ -235,7 +235,7 @@ export const AdminUsersPage = () => {
                                             {user.roles?.map(role => {
                                                 const info = getRoleInfo(role);
                                                 return (
-                                                    <span key={role} className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest italic border shadow-sm ${info.bg} ${info.color} ${info.border}`}>
+                                                    <span key={role} className={`px-4 py-1.5 rounded-xl text-xs font-semibold  border shadow-sm ${info.bg} ${info.color} ${info.border}`}>
                                                         {role}
                                                     </span>
                                                 );
@@ -243,7 +243,7 @@ export const AdminUsersPage = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold uppercase ${
                                             user.isActive !== false
                                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                                 : 'bg-red-50 text-red-600 border border-red-200'
@@ -256,7 +256,7 @@ export const AdminUsersPage = () => {
                                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                                             <button
                                                 onClick={() => { setSelectedUser(user); setIsRoleModalOpen(true); }}
-                                                className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-accent hover:border-red-100 hover:bg-red-50 transition-all shadow-sm active:scale-95"
+                                                className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-100 rounded-xl text-xs font-semibold uppercase text-accent hover:border-red-100 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
                                             >
                                                 <Shield size={14} /> Cấp quyền
                                             </button>
@@ -286,21 +286,21 @@ export const AdminUsersPage = () => {
 
             {/* Pagination UI */}
             <div className="flex justify-between items-center premium-card p-6 border-2">
-                <p className="text-xs font-black text-gray-500 uppercase tracking-widest italic">
+                <p className="text-xs font-semibold text-gray-500 ">
                     Hiển thị <span className="text-gray-950 underline">{users.length}</span> / <span className="text-gray-950">{total}</span> người dùng hệ thống
                 </p>
                 <div className="flex gap-4">
                     <button
                         disabled={page === 1}
                         onClick={() => setPage(p => p - 1)}
-                        className="px-8 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 transition-all shadow-sm"
+                        className="px-8 py-3 bg-white border-2 border-gray-100 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 transition-all shadow-sm"
                     >
                         Trang trước
                     </button>
                     <button
                         disabled={page >= Math.ceil(total / pageSize)}
                         onClick={() => setPage(p => p + 1)}
-                        className="px-8 py-3 bg-white border-2 border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-gray-950 hover:text-white hover:bg-gray-950 transition-all shadow-sm"
+                        className="px-8 py-3 bg-white border-2 border-gray-200 rounded-xl text-xs font-semibold uppercase text-gray-950 hover:text-white hover:bg-gray-950 transition-all shadow-sm"
                     >
                         Trang kế tiếp
                     </button>
@@ -312,14 +312,14 @@ export const AdminUsersPage = () => {
                 {isRoleModalOpen && selectedUser && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsRoleModalOpen(false)} className="absolute inset-0 bg-gray-950/80 backdrop-blur-md" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-lg bg-white rounded-[2rem] p-10 shadow-2xl border-4 border-gray-100">
-                            <h2 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter mb-8">Phân quyền: <span className="text-accent">{selectedUser.fullName}</span></h2>
+                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-lg bg-white rounded-[2rem] p-10 shadow-md border-4 border-gray-100">
+                            <h2 className="text-3xl font-semibold text-gray-950  tracking-tighter mb-8">Phân quyền: <span className="text-accent">{selectedUser.fullName}</span></h2>
                             <div className="grid grid-cols-2 gap-5 mb-10">
                                 {allRoles.map(roleObj => (
                                     <button
                                         key={roleObj.id}
                                         onClick={() => handleToggleRole(roleObj.name)}
-                                        className={`p-5 rounded-[1.5rem] border-4 transition-all flex items-center justify-between font-black uppercase text-xs tracking-widest shadow-sm active:scale-95 ${selectedUser.roles?.includes(roleObj.name) ? 'border-accent bg-red-50 text-accent' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
+                                        className={`p-5 rounded-[1.5rem] border-4 transition-all flex items-center justify-between font-semibold uppercase text-xs shadow-sm active:scale-95 ${selectedUser.roles?.includes(roleObj.name) ? 'border-accent bg-red-50 text-accent' : 'border-gray-50 bg-gray-50 text-gray-400'}`}
                                     >
                                         {roleObj.name}
                                         {selectedUser.roles?.includes(roleObj.name) && <Check size={20} strokeWidth={4} />}
@@ -327,10 +327,10 @@ export const AdminUsersPage = () => {
                                 ))}
                             </div>
                             <div className="flex gap-6">
-                                <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 py-5 bg-gray-100 text-gray-500 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-gray-200 transition-all font-sans">Đóng</button>
+                                <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 py-5 bg-gray-100 text-gray-500 font-semibold uppercase text-xs rounded-xl hover:bg-gray-200 transition-all font-sans">Đóng</button>
                                 <button
                                     onClick={() => updateRolesMutation.mutate({ id: selectedUser.id, roles: selectedUser.roles })}
-                                    className="flex-[2] py-5 bg-accent text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95"
+                                    className="flex-[2] py-5 bg-accent text-white font-semibold uppercase text-xs rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95"
                                 >
                                     Lưu thay đổi
                                 </button>

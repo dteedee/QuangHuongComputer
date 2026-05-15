@@ -534,7 +534,7 @@ export function CouponsPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white rounded-xl shadow-md w-full max-w-lg max-h-[90vh] overflow-hidden">
             <div className="bg-gradient-to-r from-accent to-[#ff4d4d] px-6 py-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">
@@ -703,7 +703,7 @@ export function CouponsPage() {
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsBulkModalOpen(false)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white rounded-xl shadow-md w-full max-w-lg max-h-[90vh] overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -721,7 +721,7 @@ export function CouponsPage() {
 
             <form onSubmit={handleBulkSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-100px)]">
               
-              <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 flex gap-4 items-center">
+              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex gap-4 items-center">
                 <div className="flex-1">
                   <label className="block text-xs font-bold text-purple-900 uppercase mb-2">Số lượng mã</label>
                   <input
@@ -855,13 +855,13 @@ export function CouponsPage() {
                 <button
                   type="button"
                   onClick={() => setIsBulkModalOpen(false)}
-                  className="flex-1 px-4 py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-medium transition-colors"
+                  className="flex-1 px-4 py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl font-medium transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-medium transition-transform shadow-xl shadow-purple-500/30 hover:scale-105 active:scale-95 flex justify-center items-center gap-2"
+                  className="flex-1 px-4 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-transform shadow-sm shadow-purple-500/30 hover:scale-105 active:scale-95 flex justify-center items-center gap-2"
                 >
                   <PackagePlus size={18} />
                   Phát hành ngay

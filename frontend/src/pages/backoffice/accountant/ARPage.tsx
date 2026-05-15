@@ -63,7 +63,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
           onClick={handleClose}
         ></div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div className="flex items-center justify-between px-6 py-4 border-b">
             <h3 className="text-lg font-bold text-gray-900 ">Ghi nhận thanh toán</h3>
             <button
@@ -77,7 +77,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
 
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <div className="px-6 py-4 space-y-4">
-              <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border-2 border-gray-100">
+              <div className="bg-gray-50 p-6 rounded-xl space-y-3 border-2 border-gray-100">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500 font-medium text-xs">Mã hóa đơn</span>
                   <span className="font-semibold text-gray-950 font-mono tracking-tighter">{invoice.invoiceNumber}</span>
@@ -102,7 +102,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   <input
                     type="number"
                     {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-semibold text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
@@ -123,7 +123,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                   </label>
                   <textarea
                     {...register('notes')}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
                     placeholder="Nhập ghi chú thanh toán..."
                     disabled={isSubmitting}
                   />
@@ -142,7 +142,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
               </button>
               <button
                 type="submit"
-                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
+                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
                 disabled={isSubmitting || isOverLimit}
               >
                 {isSubmitting ? 'Đang xử lý...' : 'Xác nhận thu nợ'}
@@ -351,7 +351,7 @@ export const ARPage = () => {
               key={bucket.key}
               onClick={() => setSelectedAgingBucket(bucket.key)}
               className={`px-6 py-3 rounded-xl text-xs text-slate-500 transition-all border-2 ${selectedAgingBucket === bucket.key
-                  ? 'bg-gray-950 text-white border-gray-950 shadow-xl'
+                  ? 'bg-gray-950 text-white border-gray-950 shadow-sm'
                   : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
                 }`}
             >
@@ -362,7 +362,7 @@ export const ARPage = () => {
       </div>
 
       {/* Search & Table */}
-      <div className="premium-card p-4 border-2 shadow-2xl shadow-gray-200/50">
+      <div className="premium-card p-4 border-2 shadow-md shadow-gray-200/50">
         <div className="p-6 border-b border-gray-50 flex items-center gap-4">
           <div className="flex-1 relative">
             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -373,7 +373,7 @@ export const ARPage = () => {
               placeholder="Tìm kiếm theo mã hóa đơn, khách hàng..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
             />
           </div>
         </div>

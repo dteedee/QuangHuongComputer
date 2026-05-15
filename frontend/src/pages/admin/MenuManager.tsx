@@ -54,7 +54,7 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
         <div 
             ref={setNodeRef} 
             style={style}
-            className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 ${isDragging ? 'border-red-500 shadow-2xl' : 'border-gray-100'} mb-3 group transition-all`}
+            className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 ${isDragging ? 'border-red-500 shadow-md' : 'border-gray-100'} mb-3 group transition-all`}
         >
             <button 
                 {...attributes} 
@@ -256,7 +256,7 @@ export const MenuManager = () => {
         <div className="max-w-6xl mx-auto">
             <header className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-white">Menu Manager</h1>
+                    <h1 className="text-3xl font-semibold text-white">Menu Manager</h1>
                     <p className="text-gray-400 mt-1">Configure your site navigation menus</p>
                 </div>
                 <div className="flex gap-4">
@@ -289,7 +289,7 @@ export const MenuManager = () => {
                         <button
                             key={loc.key}
                             onClick={() => handleLocationChange(loc.key)}
-                            className={`w-full text-left p-4 rounded-2xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                            className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
                         >
                             <div className="font-bold flex items-center justify-between">
                                 {loc.label}
@@ -312,7 +312,7 @@ export const MenuManager = () => {
                     ) : (
                         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 min-h-[500px]">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-black text-white px-2 uppercase tracking-widest">
+                                <h2 className="text-xl font-semibold text-white px-2 uppercase">
                                     Editing: {selectedMenu.location}
                                 </h2>
                                 <button 

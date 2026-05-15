@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Lock, ArrowRight, ShieldCheck, Zap, Laptop, Eye, EyeOff, CheckCircle2, Gift, Headphones, Truck } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { User, Mail, Lock, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRecaptcha } from '../hooks/useRecaptcha';
 import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 import { Input } from '../components/ui/Input';
@@ -29,28 +28,11 @@ export const RegisterPage = () => {
     const { executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
     const triggerConfetti = () => {
-        const duration = 3 * 1000;
-        const end = Date.now() + duration;
-
+        const end = Date.now() + 3000;
         const frame = () => {
-            confetti({
-                particleCount: 3,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: [getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#D70018', '#ff4d6d', '#ffd700']
-            });
-            confetti({
-                particleCount: 3,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: [getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#D70018', '#ff4d6d', '#ffd700']
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
+            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#D70018', '#ff4d6d', '#ffd700'] });
+            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#D70018', '#ff4d6d', '#ffd700'] });
+            if (Date.now() < end) requestAnimationFrame(frame);
         };
         frame();
     };
@@ -59,20 +41,16 @@ export const RegisterPage = () => {
         e.preventDefault();
         setLoading(true);
         const schema = z.object({
-            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
+            fullName: z.string().min(1, msg.requireInput('Ho va ten')),
             email: z.string().min(1, msg.requireInput('Email')).email(msg.email),
-            password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-            confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu')),
-            acceptTerms: z.literal(true, {
-                errorMap: () => ({ message: 'Vui lòng đồng ý với điều khoản sử dụng' })
-            })
+            password: z.string().min(6, 'Mat khau phai co it nhat 6 ky tu'),
+            confirmPassword: z.string().min(1, msg.requireInput('Xac nhan mat khau')),
+            acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Vui long dong y voi dieu khoan su dung' }) })
         }).refine((data) => data.password === data.confirmPassword, {
-            message: 'Mật khẩu xác nhận không khớp',
-            path: ['confirmPassword']
+            message: 'Mat khau xac nhan khong khop', path: ['confirmPassword']
         });
 
         const result = schema.safeParse({ fullName, email, password, confirmPassword, acceptTerms });
-        
         if (!result.success) {
             const fieldErrors: Record<string, string> = {};
             result.error.issues.forEach(issue => {
@@ -83,373 +61,93 @@ export const RegisterPage = () => {
             setLoading(false);
             return;
         }
-        
         setErrors({});
 
         try {
-            // Get reCAPTCHA token
             const recaptchaToken = await executeRecaptcha(RECAPTCHA_ACTIONS.REGISTER);
-
             await signup(email, password, fullName, recaptchaToken);
-
-            // Show success animation
             setRegisterSuccess(true);
             triggerConfetti();
-
-            // Navigate after animation
-            setTimeout(() => {
-                navigate('/login');
-            }, 2500);
+            setTimeout(() => navigate('/login'), 2500);
         } catch (err: unknown) {
-            // Extract error message from backend response
             const axiosError = err as { response?: { data?: { message?: string; errors?: Array<{ description?: string }> } } };
-            const errors = axiosError.response?.data?.errors;
-            if (errors && errors.length > 0) {
-                // ASP.NET Identity returns errors array with description field
-                const errorMessages = errors.map(e => e.description).filter(Boolean).join('. ');
-                setError(errorMessages || 'Đăng ký thất bại. Vui lòng thử lại.');
+            const errs = axiosError.response?.data?.errors;
+            if (errs && errs.length > 0) {
+                setError(errs.map(e => e.description).filter(Boolean).join('. ') || 'Dang ky that bai. Vui long thu lai.');
             } else {
-                setError(axiosError.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+                setError(axiosError.response?.data?.message || 'Dang ky that bai. Vui long thu lai.');
             }
         } finally {
             setLoading(false);
         }
     };
 
+    const PasswordToggle = ({ show, onToggle }: { show: boolean; onToggle: () => void }) => (
+        <button type="button" onClick={onToggle} className="text-gray-400 hover:text-accent transition-colors p-1 cursor-pointer">
+            {show ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 flex items-center justify-center p-6 relative overflow-hidden font-sans">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <motion.div
-                    className="absolute -top-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                    className="absolute -bottom-40 -right-40 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
-                    animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                />
-            </div>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-md">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                    {/* Brand */}
+                    <Link to="/" className="flex items-center justify-center gap-2 mb-8 cursor-pointer">
+                        <div className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center font-black text-lg">QH</div>
+                        <span className="text-lg font-black text-gray-900 tracking-tight">QUANG HUONG</span>
+                    </Link>
 
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-[1100px] grid lg:grid-cols-2 gap-0 bg-white rounded-3xl overflow-hidden shadow-2xl relative z-10"
-            >
-
-                {/* Visual Side */}
-                <div className="hidden lg:flex bg-gradient-to-br from-accent via-[#c50016] to-[#a00012] p-12 flex-col justify-between relative overflow-hidden order-last">
-                    {/* Animated shapes */}
-                    <motion.div
-                        className="absolute top-20 left-20 w-32 h-32 border border-white/10 rounded-2xl"
-                        animate={{ rotate: -360 }}
-                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                    />
-                    <motion.div
-                        className="absolute bottom-32 right-10 w-20 h-20 border border-white/10 rounded-full"
-                        animate={{ y: [-10, 10, -10], x: [-5, 5, -5] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-
-                    <div className="relative z-10">
-                        <Link to="/" className="flex items-center gap-3 mb-16 group">
-                            <motion.div
-                                whileHover={{ rotate: -12, scale: 1.1 }}
-                                className="w-12 h-12 bg-white text-accent rounded-xl flex items-center justify-center font-black text-2xl shadow-lg"
-                            >
-                                QH
-                            </motion.div>
-                            <span className="text-xl font-black text-white tracking-tighter">QUANG HƯỞNG</span>
-                        </Link>
-
-                        <motion.h2
-                            initial={{ opacity: 0, x: 30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                            className="text-4xl md:text-5xl font-bold text-white leading-tight mb-8 tracking-tight"
-                        >
-                            Gia nhập<br />
-                            Cộng đồng<br />
-                            Công nghệ.
-                        </motion.h2>
-
-                        <motion.ul
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4, duration: 0.6 }}
-                            className="space-y-4 text-white/90"
-                        >
-                            {[
-                                { icon: Zap, text: 'Hỗ trợ & Bảo hành ưu việt', color: 'text-yellow-400' },
-                                { icon: Laptop, text: 'Ưu đãi phần cứng độc quyền', color: 'text-white' },
-                                { icon: Gift, text: 'Quà tặng chào mừng thành viên', color: 'text-pink-300' },
-                                { icon: Truck, text: 'Miễn phí vận chuyển', color: 'text-emerald-300' },
-                            ].map((item, index) => (
-                                <motion.li
-                                    key={index}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
-                                    className="flex items-center gap-4 group"
-                                >
-                                    <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
-                                        <item.icon className={item.color} size={22} />
-                                    </div>
-                                    <span className="font-bold">{item.text}</span>
-                                </motion.li>
-                            ))}
-                        </motion.ul>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8, duration: 0.6 }}
-                        className="relative z-10 p-6 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-sm"
-                    >
-                        <p className="text-white font-medium italic mb-2">"Dịch vụ tại Quang Hưởng thực sự đẳng cấp, đội ngũ kỹ thuật rất chuyên nghiệp."</p>
-                        <div className="flex items-center gap-2 mt-3">
-                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-sm font-bold">MA</div>
-                            <p className="text-white text-sm font-black uppercase opacity-80">Minh Anh, Gamer & Streamer</p>
-                        </div>
-                    </motion.div>
-
-                    {/* Decorative pattern */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/5 pointer-events-none">
-                        <User size={500} strokeWidth={0.5} />
-                    </div>
-                </div>
-
-                {/* Form Side */}
-                <div className="p-8 lg:p-12 flex flex-col justify-center bg-white relative overflow-y-auto max-h-screen">
                     <AnimatePresence mode="wait">
                         {registerSuccess ? (
-                            <motion.div
-                                key="success"
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="text-center py-16"
-                            >
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                                    className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6"
-                                >
-                                    <CheckCircle2 size={48} className="text-emerald-600" />
-                                </motion.div>
-                                <motion.h2
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="text-2xl font-bold text-gray-900 mb-2 tracking-tight"
-                                >
-                                    Đăng ký thành công!
-                                </motion.h2>
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="text-gray-500 mb-4"
-                                >
-                                    Chào mừng bạn đến với Quang Hưởng Computer
-                                </motion.p>
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="text-sm text-gray-400"
-                                >
-                                    Đang chuyển hướng đến trang đăng nhập...
-                                </motion.p>
+                            <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12">
+                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle2 size={32} className="text-emerald-600" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-900 mb-1">Dang ky thanh cong!</h2>
+                                <p className="text-sm text-gray-500">Dang chuyen huong den trang dang nhap...</p>
                             </motion.div>
                         ) : (
-                            <motion.div
-                                key="form"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0, x: 20 }}
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className="mb-8"
-                                >
-                                    <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Tạo tài khoản mới</h1>
-                                    <p className="text-gray-500 font-medium">Đăng ký để trở thành thành viên của gia đình Quang Hưởng.</p>
-                                </motion.div>
+                            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Tao tai khoan moi</h1>
+                                <p className="text-sm text-gray-500 text-center mb-8">Dang ky de tro thanh thanh vien cua Quang Huong.</p>
 
-                                <form onSubmit={handleSubmit} className="space-y-5">
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.2 }}
-                                    >
-                                        <Input
-                                            label="Họ và tên"
-                                            type="text"
-                                            icon={User}
-                                            placeholder="Nhập họ và tên của bạn"
-                                            value={fullName}
-                                            onChange={e => setFullName(e.target.value)}
-                                            error={errors.fullName}
-                                        />
-                                    </motion.div>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <Input label="Ho va ten" type="text" icon={User} placeholder="Nhap ho va ten cua ban" value={fullName} onChange={e => setFullName(e.target.value)} error={errors.fullName} />
+                                    <Input label="Dia chi Email" type="email" icon={Mail} placeholder="name@gmail.com" value={email} onChange={e => setEmail(e.target.value)} error={errors.email} />
+                                    <Input label="Mat khau" type={showPassword ? 'text' : 'password'} icon={Lock} placeholder="Toi thieu 6 ky tu" value={password} onChange={e => setPassword(e.target.value)} error={errors.password} hint="Mat khau can it nhat 6 ky tu" suffix={<PasswordToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+                                    <Input label="Xac nhan mat khau" type={showConfirmPassword ? 'text' : 'password'} icon={Lock} placeholder="Nhap lai mat khau" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} error={errors.confirmPassword} suffix={<PasswordToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
 
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.25 }}
-                                    >
-                                        <Input
-                                            label="Địa chỉ Email"
-                                            type="email"
-                                            icon={Mail}
-                                            placeholder="name@gmail.com"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            error={errors.email}
-                                        />
-                                    </motion.div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.3 }}
-                                    >
-                                        <Input
-                                            label="Mật khẩu"
-                                            type={showPassword ? 'text' : 'password'}
-                                            icon={Lock}
-                                            placeholder="Tối thiểu 6 ký tự"
-                                            value={password}
-                                            onChange={e => setPassword(e.target.value)}
-                                            error={errors.password}
-                                            hint="Mật khẩu cần ít nhất 6 ký tự"
-                                            suffix={
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="text-gray-400 hover:text-accent focus:outline-none transition-colors p-1"
-                                                >
-                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            }
-                                        />
-                                    </motion.div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.35 }}
-                                    >
-                                        <Input
-                                            label="Xác nhận mật khẩu"
-                                            type={showConfirmPassword ? 'text' : 'password'}
-                                            icon={Lock}
-                                            placeholder="Nhập lại mật khẩu"
-                                            value={confirmPassword}
-                                            onChange={e => setConfirmPassword(e.target.value)}
-                                            error={errors.confirmPassword}
-                                            suffix={
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="text-gray-400 hover:text-accent focus:outline-none transition-colors p-1"
-                                                >
-                                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            }
-                                        />
-                                    </motion.div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4 }}
-                                        className="flex items-start gap-3"
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                type="checkbox"
-                                                id="acceptTerms"
-                                                checked={acceptTerms}
-                                                onChange={(e) => setAcceptTerms(e.target.checked)}
-                                                className="peer sr-only"
-                                            />
-                                            <label
-                                                htmlFor="acceptTerms"
-                                                className="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center cursor-pointer transition-all peer-checked:bg-accent peer-checked:border-accent hover:border-accent"
-                                            >
-                                                {acceptTerms && (
-                                                    <motion.svg
-                                                        initial={{ scale: 0 }}
-                                                        animate={{ scale: 1 }}
-                                                        className="w-3 h-3 text-white"
-                                                        viewBox="0 0 12 10"
-                                                    >
-                                                        <path fill="currentColor" d="M10.28.72a1 1 0 0 1 0 1.41l-5.5 5.5a1 1 0 0 1-1.41 0l-2.5-2.5a1 1 0 1 1 1.41-1.41L4.5 6.54l4.78-4.82a1 1 0 0 1 1.41 0z" />
-                                                    </motion.svg>
-                                                )}
-                                            </label>
-                                        </div>
-                                        <label htmlFor="acceptTerms" className="text-sm text-gray-600 font-medium cursor-pointer">
-                                            Tôi đồng ý với{' '}
-                                            <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold">
-                                                Điều khoản sử dụng
-                                            </Link>
-                                            {' '}của Quang Hưởng Computer
+                                    {/* Terms checkbox */}
+                                    <div className="flex items-start gap-3">
+                                        <input type="checkbox" id="acceptTerms" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)}
+                                            className="mt-1 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent cursor-pointer" />
+                                        <label htmlFor="acceptTerms" className="text-sm text-gray-600 cursor-pointer">
+                                            Toi dong y voi{' '}
+                                            <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Dieu khoan su dung</Link>
+                                            {' '}cua Quang Huong Computer
                                         </label>
-                                    </motion.div>
-                                    {errors.acceptTerms && <p className="text-red-500 text-sm italic font-medium ml-8 -mt-2">{errors.acceptTerms}</p>}
+                                    </div>
+                                    {errors.acceptTerms && <p className="text-red-500 text-sm ml-7 -mt-2">{errors.acceptTerms}</p>}
 
                                     <AnimatePresence>
                                         {error && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -10, height: 0 }}
-                                                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                                exit={{ opacity: 0, y: -10, height: 0 }}
-                                                className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-bold flex items-center gap-3"
-                                            >
-                                                <ShieldCheck size={18} />
-                                                {error}
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                                                className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2">
+                                                <AlertCircle size={16} /> {error}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
 
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.45 }}
-                                    >
-                                        <Button
-                                            type="submit"
-                                            variant="primary"
-                                            size="lg"
-                                            loading={loading}
-                                            icon={ArrowRight}
-                                            iconPosition="right"
-                                            className="w-full group"
-                                        >
-                                            Đăng ký tài khoản
-                                        </Button>
-                                    </motion.div>
+                                    <Button type="submit" variant="primary" size="lg" loading={loading} icon={ArrowRight} iconPosition="right" className="w-full cursor-pointer">
+                                        Dang ky tai khoan
+                                    </Button>
                                 </form>
 
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.5 }}
-                                    className="mt-8 text-center text-gray-500 text-sm font-medium italic"
-                                >
-                                    Đã có tài khoản?{' '}
-                                    <Link to="/login" className="text-accent hover:underline font-black not-italic transition-colors hover:text-accent-hover">
-                                        Đăng nhập ngay
-                                    </Link>
-                                </motion.div>
+                                <p className="mt-8 text-center text-sm text-gray-500">
+                                    Da co tai khoan?{' '}
+                                    <Link to="/login" className="text-accent font-bold hover:underline cursor-pointer">Dang nhap ngay</Link>
+                                </p>
                             </motion.div>
                         )}
                     </AnimatePresence>

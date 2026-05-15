@@ -151,14 +151,14 @@ export const CMSPortal = () => {
                 <div className="flex gap-4">
                     <button
                         onClick={() => seedMutation.mutate()}
-                        className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-2xl transition-all shadow-xl active:scale-95"
+                        className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-xl transition-all shadow-sm active:scale-95"
                     >
                         <RefreshCcw size={20} className={seedMutation.isPending ? 'animate-spin' : ''} />
                         Khởi tạo dữ liệu
                     </button>
                     <button
                         onClick={() => handleOpenModal()}
-                        className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-2xl transition-all shadow-xl shadow-blue-500/15 active:scale-95 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-all shadow-sm shadow-blue-500/15 active:scale-95 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo nội dung mới
@@ -179,8 +179,8 @@ export const CMSPortal = () => {
                         <button
                             key={tab.name}
                             onClick={() => setActiveTab(tab.name)}
-                            className={`w-full flex justify-between items-center px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 shadow-sm ${activeTab === tab.name
-                                ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-xl'
+                            className={`w-full flex justify-between items-center px-6 py-5 rounded-xl transition-all border-2 duration-300 shadow-sm ${activeTab === tab.name
+                                ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-sm'
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
                         >
@@ -195,7 +195,7 @@ export const CMSPortal = () => {
                     <div className="mt-6 pt-6 border-t-2 border-gray-100">
                         <button
                             onClick={() => navigate('/admin/homepage-builder')}
-                            className="w-full flex justify-between items-center px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 shadow-sm bg-gradient-to-r from-blue-50 to-white border-blue-100 text-blue-600 hover:border-blue-300 hover:shadow-md group"
+                            className="w-full flex justify-between items-center px-6 py-5 rounded-xl transition-all border-2 duration-300 shadow-sm bg-gradient-to-r from-blue-50 to-white border-blue-100 text-blue-600 hover:border-blue-300 hover:shadow-md group"
                         >
                             <span className="flex items-center gap-5 font-semibold text-xs tracking-tight">
                                 <Home size={20} />
@@ -236,7 +236,7 @@ export const CMSPortal = () => {
                             ) : filteredContent.map((item) => (
                                 <div key={item.id} className="p-10 flex items-start md:items-center justify-between hover:bg-gray-50 transition-all group cursor-pointer">
                                     <div className="flex items-start md:items-center gap-8">
-                                        <div className="w-20 h-20 rounded-[1.5rem] bg-gray-950 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <div className="w-20 h-20 rounded-xl bg-gray-950 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                                             {item.type === 'Article' ? <FileText size={32} /> : <Layout size={32} />}
                                         </div>
                                         <div className="max-w-xl">
@@ -248,12 +248,12 @@ export const CMSPortal = () => {
                                         </div>
                                     </div>
                                     <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
-                                        <span className={`px-5 py-2 rounded-2xl text-xs text-slate-500 italic border-2 shadow-sm ${item.isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                        <span className={`px-5 py-2 rounded-xl text-xs text-slate-500 italic border-2 shadow-sm ${item.isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                                             {item.isPublished ? 'Đã xuất bản' : 'Bản nháp'}
                                         </span>
                                         <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                                            <button onClick={() => handleOpenModal(item)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-md active:scale-90"><Edit3 size={20} /></button>
-                                            <button onClick={async () => { const ok = await confirm({ message: 'Xác nhận xóa nội dung này?', variant: 'danger' }); if (ok) deleteMutation.mutate(item.id) }} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:text-red-600 hover:border-red-200 transition-all shadow-md active:scale-90"><Trash2 size={20} /></button>
+                                            <button onClick={() => handleOpenModal(item)} className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-gray-100 text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-md active:scale-90"><Edit3 size={20} /></button>
+                                            <button onClick={async () => { const ok = await confirm({ message: 'Xác nhận xóa nội dung này?', variant: 'danger' }); if (ok) deleteMutation.mutate(item.id) }} className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-gray-100 text-gray-400 hover:text-red-600 hover:border-red-200 transition-all shadow-md active:scale-90"><Trash2 size={20} /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -268,7 +268,7 @@ export const CMSPortal = () => {
                 {isPostModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsPostModalOpen(false)} className="absolute inset-0 bg-gray-950/80 backdrop-blur-md" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden border-4 border-gray-100">
+                        <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-md overflow-hidden border-4 border-gray-100">
                             <div className="p-10 border-b-2 border-gray-50 flex items-center justify-between bg-gray-50/30">
                                 <div>
                                     <h2 className="text-3xl font-semibold text-gray-950  tracking-tighter">
@@ -276,18 +276,18 @@ export const CMSPortal = () => {
                                     </h2>
                                     <p className="text-sm font-medium text-slate-500 mt-1">Hệ thống quản trị nội dung CMS</p>
                                 </div>
-                                <button onClick={() => setIsPostModalOpen(false)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:bg-blue-50 hover:text-accent hover:border-blue-100 transition-all shadow-sm"><X size={24} /></button>
+                                <button onClick={() => setIsPostModalOpen(false)} className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-gray-100 text-gray-400 hover:bg-blue-50 hover:text-accent hover:border-blue-100 transition-all shadow-sm"><X size={24} /></button>
                             </div>
                             <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="col-span-2 space-y-3">
                                         <label className="text-sm font-medium text-slate-700 ml-1">Tiêu đề bài viết / trang</label>
-                                        <input name="title" defaultValue={editingItem?.title} className={`w-full px-6 py-5 bg-white border-2 ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-base font-bold text-gray-950 focus:outline-none shadow-sm transition-all placeholder:text-gray-400`} placeholder="Nhập tiêu đề hấp dẫn..." />
+                                        <input name="title" defaultValue={editingItem?.title} className={`w-full px-6 py-5 bg-white border-2 ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-xl text-base font-bold text-gray-950 focus:outline-none shadow-sm transition-all placeholder:text-gray-400`} placeholder="Nhập tiêu đề hấp dẫn..." />
                                         {errors.title && <p className="mt-1 text-xs text-red-500 font-medium">{errors.title}</p>}
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-sm font-medium text-slate-700 ml-1">Đường dẫn tĩnh (Slug)</label>
-                                        <input name="slug" defaultValue={editingItem?.slug} className={`w-full px-6 py-5 bg-white border-2 ${errors.slug ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-sm font-semibold text-accent focus:outline-none shadow-sm font-mono placeholder:text-gray-400`} placeholder="my-awesome-post" />
+                                        <input name="slug" defaultValue={editingItem?.slug} className={`w-full px-6 py-5 bg-white border-2 ${errors.slug ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-xl text-sm font-semibold text-accent focus:outline-none shadow-sm font-mono placeholder:text-gray-400`} placeholder="my-awesome-post" />
                                         {errors.slug && <p className="mt-1 text-xs text-red-500 font-medium">{errors.slug}</p>}
                                     </div>
                                     <div className="space-y-3">
@@ -309,7 +309,7 @@ export const CMSPortal = () => {
                                     </div>
                                     <div className="col-span-2 space-y-3">
                                         <label className="text-sm font-medium text-slate-700 ml-1">Nội dung chi tiết (Markdown / HTML)</label>
-                                        <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-sm focus-within:border-accent transition-all">
+                                        <div className="bg-white rounded-xl border-2 border-gray-100 overflow-hidden shadow-sm focus-within:border-accent transition-all">
                                             <ReactQuill
                                                 theme="snow"
                                                 value={editorContent}
@@ -328,7 +328,7 @@ export const CMSPortal = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="col-span-2 p-6 bg-gray-50 rounded-2xl border-2 border-gray-100 flex items-center justify-between">
+                                    <div className="col-span-2 p-6 bg-gray-50 rounded-xl border-2 border-gray-100 flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-sm font-medium text-slate-800">Trạng thái xuất bản</span>
                                             <span className="text-xs font-bold text-gray-500 uppercase mt-1">Nội dung sẽ được hiển thị ngay nếu chọn "Đã xuất bản"</span>
@@ -344,8 +344,8 @@ export const CMSPortal = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-6 pt-6 sticky bottom-0 bg-white">
-                                    <button type="button" onClick={() => setIsPostModalOpen(false)} className="flex-1 py-5 text-sm font-medium bg-gray-100 text-gray-500 rounded-2xl hover:bg-gray-200 transition-all font-sans">Hủy thao tác</button>
-                                    <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] flex items-center justify-center gap-4 py-5 text-sm font-medium bg-accent text-white rounded-2xl shadow-2xl shadow-blue-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50">
+                                    <button type="button" onClick={() => setIsPostModalOpen(false)} className="flex-1 py-5 text-sm font-medium bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all font-sans">Hủy thao tác</button>
+                                    <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] flex items-center justify-center gap-4 py-5 text-sm font-medium bg-accent text-white rounded-xl shadow-md shadow-blue-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50">
                                         {createMutation.isPending || updateMutation.isPending ? <Loader2 size={24} className="animate-spin" /> : <Check size={24} />}
                                         Xác nhận lưu nội dung
                                     </button>

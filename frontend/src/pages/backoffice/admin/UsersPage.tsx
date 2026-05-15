@@ -264,7 +264,7 @@ export function UsersPage() {
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
@@ -308,7 +308,7 @@ export function UsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -438,7 +438,7 @@ export function UsersPage() {
               {isLoading && [...Array(5)].map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   <td colSpan={6} className="px-10 py-6">
-                    <div className="h-12 bg-gray-100 rounded-2xl w-full"></div>
+                    <div className="h-12 bg-gray-100 rounded-xl w-full"></div>
                   </td>
                 </tr>
               ))}
@@ -539,7 +539,7 @@ export function UsersPage() {
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
           >
-            <div className="bg-gray-900 text-white rounded-2xl shadow-2xl shadow-black/30 px-6 py-4 flex items-center gap-5 min-w-[500px] border border-gray-700">
+            <div className="bg-gray-900 text-white rounded-xl shadow-md shadow-black/30 px-6 py-4 flex items-center gap-5 min-w-[500px] border border-gray-700">
               {/* Selection Count */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-semibold text-lg">

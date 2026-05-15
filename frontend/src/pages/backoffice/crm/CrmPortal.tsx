@@ -111,7 +111,7 @@ export default function CrmPortal() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white"
+          className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold opacity-90">Tổng doanh thu</h3>
@@ -130,7 +130,7 @@ export default function CrmPortal() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white"
+          className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold opacity-90">Giá trị Pipeline</h3>
@@ -187,7 +187,7 @@ export default function CrmPortal() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 border border-gray-100"
+          className="bg-white rounded-xl p-6 border border-gray-100"
         >
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Phân bổ Lifecycle</h3>
           <div className="space-y-3">
@@ -222,7 +222,7 @@ export default function CrmPortal() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl p-6 border border-gray-100"
+          className="bg-white rounded-xl p-6 border border-gray-100"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Công việc</h3>

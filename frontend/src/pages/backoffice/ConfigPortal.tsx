@@ -342,8 +342,8 @@ export const ConfigPortal = () => {
                         <button
                             key={i}
                             onClick={() => setActiveCategory(cat.name)}
-                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 font-semibold text-xs tracking-tight shadow-sm ${activeCategory === cat.name
-                                ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-xl'
+                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-xl transition-all border-2 duration-300 font-semibold text-xs tracking-tight shadow-sm ${activeCategory === cat.name
+                                ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-sm'
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
                         >
@@ -444,7 +444,7 @@ export const ConfigPortal = () => {
                                 const hasError = !!error;
 
                                 return (
-                                <div key={config.key} className={`space-y-3 group border-2 rounded-2xl p-6 transition-all bg-gradient-to-r from-gray-50/50 to-white ${hasError ? 'border-red-200 bg-red-50/30' : 'border-gray-50 hover:border-accent/20'}`}>
+                                <div key={config.key} className={`space-y-3 group border-2 rounded-xl p-6 transition-all bg-gradient-to-r from-gray-50/50 to-white ${hasError ? 'border-red-200 bg-red-50/30' : 'border-gray-50 hover:border-accent/20'}`}>
                                     <div className="flex justify-between items-center">
                                         <label className="text-sm font-medium text-slate-700 flex items-center gap-3">
                                             <span className="bg-gray-900 text-white p-2 rounded-lg">
@@ -569,17 +569,17 @@ export const ConfigPortal = () => {
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
                             <Database className="text-blue-600 mb-3" size={32} />
                             <h4 className="text-2xl font-semibold text-blue-900">{configs.length}</h4>
                             <p className="text-xs font-bold text-blue-700 uppercase">Tổng số cấu hình</p>
                         </div>
-                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border-2 border-emerald-200">
+                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
                             <Award className="text-emerald-600 mb-3" size={32} />
                             <h4 className="text-2xl font-semibold text-emerald-900">{categories.length}</h4>
                             <p className="text-xs font-bold text-emerald-700 uppercase">Danh mục</p>
                         </div>
-                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border-2 border-amber-200">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-amber-200">
                             <Clock className="text-amber-600 mb-3" size={32} />
                             <h4 className="text-2xl font-semibold text-amber-900">
                                 {configs.length > 0 ? new Date(Math.max(...configs.map(c => new Date(c.lastUpdated).getTime()))).toLocaleDateString('vi-VN') : '-'}

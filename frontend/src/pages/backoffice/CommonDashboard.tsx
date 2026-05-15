@@ -151,11 +151,11 @@ export const CommonDashboard = () => {
                         className="premium-card p-10 group cursor-pointer border-2 transition-all hover:border-gray-950/10 active:scale-95"
                     >
                         <div className="flex justify-between items-start mb-8">
-                            <div className={`p-5 ${stat.color} text-white rounded-3xl shadow-2xl shadow-gray-200 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
+                            <div className={`p-5 ${stat.color} text-white rounded-xl shadow-md shadow-gray-200 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
                                 {stat.icon}
                             </div>
                             {stat.trend !== 'none' && (
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs text-slate-500 shadow-sm border ${stat.trend === 'up' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs text-slate-500 shadow-sm border ${stat.trend === 'up' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                                     {stat.trend === 'up' ? <ArrowUpRight size={14} strokeWidth={3} /> : <ArrowDownRight size={14} strokeWidth={3} />}
                                     {stat.change}
                                 </div>
@@ -192,9 +192,9 @@ export const CommonDashboard = () => {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${Math.max(heightPercent, 2)}%` }} // Ensure at least a tiny visible bar
                                             transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-2xl' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
+                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-md' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
                                         >
-                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
+                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-md z-20">
                                                 {formatCurrency(data.revenue)}
                                             </div>
                                         </motion.div>
@@ -209,9 +209,9 @@ export const CommonDashboard = () => {
                                         initial={{ height: 0 }}
                                         animate={{ height: `${h}%` }}
                                         transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-2xl' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
+                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-md' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
                                     >
-                                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
+                                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-md z-20">
                                             {h}%
                                         </div>
                                     </motion.div>
@@ -234,7 +234,7 @@ export const CommonDashboard = () => {
                     <div className="space-y-10 flex-1">
                         {activities.map((act, i) => (
                             <div key={i} className="flex gap-6 group cursor-pointer items-start transition-all hover:translate-x-2">
-                                <div className={`w-14 h-14 rounded-2xl ${act.color} flex-shrink-0 flex items-center justify-center text-white shadow-xl shadow-gray-200 group-hover:rotate-12 group-hover:scale-110 transition-all`}>
+                                <div className={`w-14 h-14 rounded-xl ${act.color} flex-shrink-0 flex items-center justify-center text-white shadow-sm shadow-gray-200 group-hover:rotate-12 group-hover:scale-110 transition-all`}>
                                     {act.icon}
                                 </div>
                                 <div className="flex-1 min-w-0 pt-1">

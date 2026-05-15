@@ -81,7 +81,7 @@ export default function SystemHealthPage() {
         const isDanger = value > 90;
         
         return (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-gray-500 font-medium">
                         {icon}
@@ -147,7 +147,7 @@ export default function SystemHealthPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Services Status */}
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Globe className="w-5 h-5 text-gray-500" />
@@ -197,7 +197,7 @@ export default function SystemHealthPage() {
                 {/* System Info & Logs */}
                 <div className="space-y-6">
                     {/* Environment Info */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-gray-500" />
                             Thông tin Hệ thống
@@ -227,7 +227,7 @@ export default function SystemHealthPage() {
                     </div>
 
                     {/* Quick Logs */}
-                    <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm overflow-hidden">
+                    <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
                             <h2 className="text-sm font-bold text-white flex items-center gap-2">
                                 <Terminal className="w-4 h-4 text-gray-400" />

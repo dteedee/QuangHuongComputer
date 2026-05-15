@@ -244,7 +244,7 @@ export const CategoriesPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleOpenModal()}
-                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/15 hover:bg-accent-hover transition-all"
                     >
                         <PlusCircle size={20} />
                         Thêm {activeType === 'categories' ? 'Danh mục' : 'Thương hiệu'}
@@ -255,7 +255,7 @@ export const CategoriesPage = () => {
                 <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100">
                     <div className="flex flex-col lg:flex-row items-stretch gap-4">
                         {/* Type Switcher */}
-                        <div className="bg-gray-50 p-1.5 rounded-2xl flex items-center gap-1.5 shrink-0">
+                        <div className="bg-gray-50 p-1.5 rounded-xl flex items-center gap-1.5 shrink-0">
                             <button
                                 onClick={() => { setActiveType('categories'); setCurrentPage(1); }}
                                 className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${
@@ -315,7 +315,7 @@ export const CategoriesPage = () => {
                             {hasActiveFilters && (
                                 <button
                                     onClick={resetFilters}
-                                    className="flex items-center gap-2 px-4 py-4 text-sm font-semibold text-gray-500 hover:text-accent hover:bg-red-50 rounded-xl transition-all"
+                                    className="flex items-center gap-2 px-4 py-4 text-sm font-semibold text-gray-500 hover:text-accent hover:bg-blue-50 rounded-xl transition-all"
                                 >
                                     <RotateCcw size={14} />
                                     Đặt lại
@@ -327,7 +327,7 @@ export const CategoriesPage = () => {
 
                 {/* List Content - Table View */}
                 {isLoading ? (
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <div className="animate-pulse">
                             <div className="h-12 bg-gray-100 border-b border-gray-200"></div>
                             {[1, 2, 3, 4, 5].map(i => (
@@ -339,14 +339,14 @@ export const CategoriesPage = () => {
                     <>
                         {/* Bulk Actions */}
                         {selectedIds.length > 0 && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex items-center justify-between">
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm font-bold text-blue-800">
                                         {selectedIds.length} mục được chọn
                                     </span>
                                     <button
                                         onClick={handleBulkDelete}
-                                        className="text-sm font-bold text-red-600 hover:text-red-700 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors"
+                                        className="text-sm font-bold text-red-600 hover:text-red-700 px-4 py-2 rounded-xl hover:bg-blue-50 transition-colors"
                                     >
                                         Vô hiệu hóa đã chọn
                                     </button>
@@ -361,7 +361,7 @@ export const CategoriesPage = () => {
                         )}
 
                         {/* Data Table */}
-                        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                             {/* Table Header */}
                             <div className="border-b border-gray-200 bg-gray-50">
                                 <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
@@ -439,7 +439,7 @@ export const CategoriesPage = () => {
 
                                             {/* Status */}
                                             <div className="col-span-2 flex items-center">
-                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
                                                     item.isActive 
                                                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                                                         : 'bg-red-100 text-red-700 border border-red-200'
@@ -557,7 +557,7 @@ export const CategoriesPage = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                            className="relative w-full max-w-xl bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
+                            className="relative w-full max-w-xl bg-white rounded-[3rem] shadow-md overflow-hidden flex flex-col"
                         >
                             <div className="px-10 py-8 border-b border-gray-100 flex items-center justify-between bg-white">
                                 <div className="space-y-1">
@@ -566,7 +566,7 @@ export const CategoriesPage = () => {
                                     </h2>
                                     <p className="text-sm text-gray-500 font-medium">Nhập thông tin cơ bản để hiển thị trên hệ thống.</p>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 hover:text-gray-950 transition-all">
+                                <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-950 transition-all">
                                     <X size={24} />
                                 </button>
                             </div>
@@ -579,7 +579,7 @@ export const CategoriesPage = () => {
                                         required
                                         defaultValue={editingItem?.name}
                                         placeholder={`Ví dụ: ${activeType === 'categories' ? 'Laptop Gaming' : 'ASUS'}`}
-                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none"
+                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none"
                                     />
                                 </div>
 
@@ -590,14 +590,14 @@ export const CategoriesPage = () => {
                                         defaultValue={editingItem?.description}
                                         rows={4}
                                         placeholder="Mô tả tóm tắt..."
-                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10"
+                                        className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10"
                                     />
                                 </div>
 
-                                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                                <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                                     <div className="space-y-1">
                                         <p className="text-xs font-bold text-gray-900 uppercase">Trạng thái hoạt động</p>
-                                        <p className="text-[10px] text-gray-500 font-medium">Nếu tắt, mục này sẽ không hiển thị trên trang chủ.</p>
+                                        <p className="text-xs text-gray-500 font-medium">Nếu tắt, mục này sẽ không hiển thị trên trang chủ.</p>
                                     </div>
                                     <SearchableSelect
                                         name="isActive"
@@ -610,7 +610,7 @@ export const CategoriesPage = () => {
                                 </div>
 
                                 {editingItem && (
-                                    <div className="flex items-start gap-4 p-5 bg-red-50 rounded-2xl border border-red-100">
+                                    <div className="flex items-start gap-4 p-5 bg-red-50 rounded-xl border border-red-100">
                                         <AlertCircle className="text-accent flex-shrink-0" size={20} />
                                         <p className="text-[11px] text-red-900 font-medium leading-relaxed">
                                             Lưu ý: Nếu thay đổi trạng thái thành "Tạm dừng", toàn bộ sản phẩm thuộc mục này sẽ không được liệt kê trên website cho đến khi được kích hoạt lại.
@@ -619,11 +619,11 @@ export const CategoriesPage = () => {
                                 )}
 
                                 <div className="pt-4 flex items-center gap-4 font-sans">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-500 text-sm font-bold rounded-2xl hover:bg-gray-100 transition-all">Hủy</button>
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-50 text-gray-500 text-sm font-bold rounded-xl hover:bg-gray-100 transition-all">Hủy</button>
                                     <button
                                         type="submit"
                                         disabled={createMutation.isPending || updateMutation.isPending}
-                                        className="flex-[2] py-4 bg-accent text-white text-sm font-bold rounded-2xl shadow-xl shadow-red-500/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
+                                        className="flex-[2] py-4 bg-accent text-white text-sm font-bold rounded-xl shadow-sm shadow-blue-500/15 hover:bg-black transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {createMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
                                     </button>

@@ -38,7 +38,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <div className="relative bg-white rounded-xl shadow-md w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6">
                     <div className="flex items-center justify-between">
@@ -71,11 +71,11 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 
                     {/* Serial & Customer */}
                     <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-gray-50 rounded-2xl p-5">
+                        <div className="bg-gray-50 rounded-xl p-5">
                             <p className="text-xs text-slate-500 font-medium mb-2">Serial Number</p>
                             <p className="font-mono font-semibold text-gray-900">{claim.serialNumber}</p>
                         </div>
-                        <div className="bg-gray-50 rounded-2xl p-5">
+                        <div className="bg-gray-50 rounded-xl p-5">
                             <p className="text-xs text-slate-500 font-medium mb-2">Phương thức mong muốn</p>
                             <p className="font-bold text-gray-900">
                                 {claim.preferredResolution === 'Repair' && 'Sửa chữa'}
@@ -86,14 +86,14 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                     </div>
 
                     {/* Issue Description */}
-                    <div className="bg-gray-50 rounded-2xl p-5">
+                    <div className="bg-gray-50 rounded-xl p-5">
                         <p className="text-xs text-slate-500 font-medium mb-2">Mô tả lỗi</p>
                         <p className="text-gray-900">{claim.issueDescription}</p>
                     </div>
 
                     {/* Warranty Info */}
                     {claim.warranty && (
-                        <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
+                        <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
                             <p className="text-xs text-blue-600 font-bold uppercase mb-3 flex items-center gap-2">
                                 <Shield className="w-4 h-4" /> Thông tin bảo hành
                             </p>
@@ -122,7 +122,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 
                     {/* Resolution Notes */}
                     {claim.resolutionNotes && (
-                        <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
+                        <div className="bg-amber-50 rounded-xl p-5 border border-amber-100">
                             <p className="text-xs text-amber-600 font-bold uppercase mb-2">Ghi chú xử lý</p>
                             <p className="text-gray-900">{claim.resolutionNotes}</p>
                             {claim.resolvedDate && (
@@ -137,7 +137,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 
                     {/* Reject Form */}
                     {showRejectForm && (
-                        <div className="bg-red-50 rounded-2xl p-5 border border-red-100 space-y-4">
+                        <div className="bg-red-50 rounded-xl p-5 border border-red-100 space-y-4">
                             <p className="text-sm font-bold text-red-700">Lý do từ chối:</p>
                             <textarea
                                 value={rejectReason}
@@ -163,7 +163,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 
                     {/* Resolve Form */}
                     {showResolveForm && (
-                        <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 space-y-4">
+                        <div className="bg-emerald-50 rounded-xl p-5 border border-emerald-100 space-y-4">
                             <p className="text-sm font-bold text-emerald-700">Ghi chú hoàn thành:</p>
                             <textarea
                                 value={resolveNotes}
@@ -364,7 +364,7 @@ export const WarrantyPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight uppercase">
+                    <h1 className="text-2xl font-semibold text-slate-900">
                         Quản lý <span className="text-accent">Bảo hành</span>
                     </h1>
                     <p className="text-gray-500 font-medium mt-2">
@@ -381,7 +381,7 @@ export const WarrantyPortal = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex bg-gray-100 rounded-2xl p-1.5 gap-1">
+            <div className="flex bg-gray-100 rounded-xl p-1.5 gap-1">
                 <button
                     onClick={() => setActiveTab('claims')}
                     className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'claims' ? 'bg-white text-accent shadow-sm' : 'text-gray-500 hover:text-gray-700'
@@ -411,7 +411,7 @@ export const WarrantyPortal = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div
                                 onClick={() => setStatusFilter('Pending')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Pending' ? 'border-amber-400 bg-amber-50' : 'border-gray-100'
+                                className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Pending' ? 'border-amber-400 bg-amber-50' : 'border-gray-100'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -424,7 +424,7 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Approved')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Approved' ? 'border-blue-400 bg-blue-50' : 'border-gray-100'
+                                className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Approved' ? 'border-blue-400 bg-blue-50' : 'border-gray-100'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -437,7 +437,7 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Resolved')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Resolved' ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100'
+                                className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'Resolved' ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -450,7 +450,7 @@ export const WarrantyPortal = () => {
                             </div>
                             <div
                                 onClick={() => setStatusFilter('')}
-                                className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === '' ? 'border-gray-400 bg-gray-50' : 'border-gray-100'
+                                className={`bg-white rounded-xl p-6 border-2 cursor-pointer transition-all hover:shadow-lg ${statusFilter === '' ? 'border-gray-400 bg-gray-50' : 'border-gray-100'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -465,7 +465,7 @@ export const WarrantyPortal = () => {
                     )}
 
                     {/* Claims List */}
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">Danh sách yêu cầu</h3>
                             {statusFilter && (
@@ -554,7 +554,7 @@ export const WarrantyPortal = () => {
             {activeTab === 'warranties' && (
                 <>
                     {/* Search Box */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <Search className="text-accent" size={20} />
                             <h3 className="text-lg font-bold text-gray-900">Tra cứu bảo hành</h3>
@@ -578,7 +578,7 @@ export const WarrantyPortal = () => {
                         </div>
 
                         {searchResult && (
-                            <div className="mt-6 p-6 bg-gray-50 rounded-2xl">
+                            <div className="mt-6 p-6 bg-gray-50 rounded-xl">
                                 {searchResult.error ? (
                                     <div className="flex items-center gap-3 text-red-600">
                                         <XCircle size={24} />
@@ -612,7 +612,7 @@ export const WarrantyPortal = () => {
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
                                     <CheckCircle className="w-6 h-6" />
@@ -623,7 +623,7 @@ export const WarrantyPortal = () => {
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Đang hiệu lực</p>
                         </div>
-                        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
                                     <AlertCircle className="w-6 h-6" />
@@ -637,7 +637,7 @@ export const WarrantyPortal = () => {
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Sắp hết hạn</p>
                         </div>
-                        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-gray-100 text-gray-600 rounded-xl">
                                     <Clock className="w-6 h-6" />
@@ -648,7 +648,7 @@ export const WarrantyPortal = () => {
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Đã hết hạn</p>
                         </div>
-                        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
                                     <Package className="w-6 h-6" />
@@ -660,7 +660,7 @@ export const WarrantyPortal = () => {
                     </div>
 
                     {/* Warranties Table */}
-                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <div className="p-6 border-b border-gray-100">
                             <h3 className="text-xl font-bold text-gray-900">Danh sách bảo hành</h3>
                         </div>

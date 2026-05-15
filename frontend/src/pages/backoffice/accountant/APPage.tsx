@@ -44,7 +44,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
             <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
 
-                <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <div className="flex items-center justify-between px-6 py-4 border-b">
                         <h3 className="text-lg font-bold text-gray-900 ">Thanh toán NCC</h3>
                         <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors" disabled={isSubmitting}>
@@ -207,7 +207,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
             <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div className="fixed inset-0 transition-opacity bg-gray-950/50 backdrop-blur-sm" onClick={handleClose}></div>
 
-                <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-md transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                     <div className="flex items-center justify-between px-8 py-6 border-b bg-gray-50">
                         <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Tạo hóa đơn NCC</h3>
                         <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
@@ -336,7 +336,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                             </div>
 
                             {/* Summary */}
-                            <div className="bg-gray-950 text-white p-6 rounded-2xl space-y-3">
+                            <div className="bg-gray-950 text-white p-6 rounded-xl space-y-3">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-400 uppercase text-xs font-semibold">Tiền hàng</span>
                                     <span className="font-semibold">{formatCurrency(subtotal)}</span>
@@ -363,7 +363,7 @@ function CreateInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateI
                             </button>
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-xl hover:bg-accent-hover transition-all disabled:opacity-50"
+                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-sm hover:bg-accent-hover transition-all disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Đang tạo...' : 'Tạo hóa đơn'}
@@ -530,7 +530,7 @@ export const APPage = () => {
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-xs text-slate-500 hover:bg-accent transition-all shadow-xl flex items-center gap-3"
+                    className="px-8 py-4 bg-gray-950 text-white rounded-xl text-xs text-slate-500 hover:bg-accent transition-all shadow-sm flex items-center gap-3"
                 >
                     <Plus size={16} />
                     Tạo hóa đơn
@@ -541,7 +541,7 @@ export const APPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <DollarSign size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Tổng số tiền nợ</span>
@@ -552,7 +552,7 @@ export const APPage = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                        <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
                             <Clock size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Trong khoảng 60 ngày</span>
@@ -565,7 +565,7 @@ export const APPage = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-red-100 bg-red-50/10">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                        <div className="p-3 bg-red-100 text-red-600 rounded-xl">
                             <CheckCircle size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Quá hạn thanh toán (60+ ng)</span>
@@ -595,7 +595,7 @@ export const APPage = () => {
             </div>
 
             {/* Search */}
-            <div className="premium-card p-4 border-2 shadow-2xl shadow-gray-200/50">
+            <div className="premium-card p-4 border-2 shadow-md shadow-gray-200/50">
                 <div className="p-6 border-b border-gray-50 flex items-center gap-4">
                     <div className="flex-1 relative">
                         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -606,7 +606,7 @@ export const APPage = () => {
                             placeholder="Tìm kiếm theo mã hóa đơn, nhà cung cấp..."
                             value={search}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
+                            className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
                         />
                     </div>
                 </div>

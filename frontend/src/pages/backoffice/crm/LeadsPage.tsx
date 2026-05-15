@@ -118,7 +118,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100">
+      <div className="bg-white rounded-xl p-4 border border-gray-100">
         <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px] relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -172,7 +172,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
@@ -404,7 +404,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+        className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">Thêm Lead Mới</h2>

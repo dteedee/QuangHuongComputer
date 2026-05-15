@@ -133,7 +133,7 @@ export const HRPortal = () => {
                     { label: 'Hiệu suất TB', value: '98%', icon: <BarChart size={22} />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                 ].map((stat, i) => (
                     <motion.div whileHover={{ y: -5 }} key={i} className="premium-card p-8 group">
-                        <div className={`p-4 ${stat.bg} ${stat.color} rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform`}>{stat.icon}</div>
+                        <div className={`p-4 ${stat.bg} ${stat.color} rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform`}>{stat.icon}</div>
                         <p className="text-gray-400 text-xs text-slate-500 mb-1">{stat.label}</p>
                         <h3 className="text-xl font-semibold text-slate-900">{stat.value}</h3>
                     </motion.div>
@@ -153,7 +153,7 @@ export const HRPortal = () => {
                         to={card.to}
                         className="premium-card p-6 flex flex-col gap-3 hover:shadow-lg transition-all active:scale-95 group"
                     >
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
                             {card.icon}
                         </div>
                         <div>
@@ -177,7 +177,7 @@ export const HRPortal = () => {
                         ) : employees.map((emp) => (
                             <div key={emp.id} className="p-8 flex items-center justify-between hover:bg-gray-50/50 transition-all group cursor-pointer">
                                 <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-semibold text-gray-400 shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
+                                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center font-semibold text-gray-400 shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
                                         {emp.fullName.charAt(0).toUpperCase()}
                                     </div>
                                     <div>

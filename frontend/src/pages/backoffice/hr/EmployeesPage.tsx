@@ -182,14 +182,14 @@ export const EmployeesPage = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 group">
-                    <div className="p-4 bg-blue-50 text-blue-500 rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-blue-50 text-blue-500 rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
                         <Users2 size={22} />
                     </div>
                     <p className="text-gray-400 text-xs text-slate-500 mb-1">Tổng nhân sự</p>
                     <h3 className="text-xl font-semibold text-slate-900">{total}</h3>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 group">
-                    <div className="p-4 bg-emerald-50 text-emerald-500 rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-emerald-50 text-emerald-500 rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
                         <Briefcase size={22} />
                     </div>
                     <p className="text-gray-400 text-xs text-slate-500 mb-1">Đang làm việc</p>
@@ -198,7 +198,7 @@ export const EmployeesPage = () => {
                     </h3>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 group">
-                    <div className="p-4 bg-amber-50 text-amber-500 rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-amber-50 text-amber-500 rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
                         <Calendar size={22} />
                     </div>
                     <p className="text-gray-400 text-xs text-slate-500 mb-1">Nghỉ phép</p>
@@ -207,7 +207,7 @@ export const EmployeesPage = () => {
                     </h3>
                 </motion.div>
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 group">
-                    <div className="p-4 bg-gray-50 text-gray-400 rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
+                    <div className="p-4 bg-gray-50 text-gray-400 rounded-xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform">
                         <Users2 size={22} />
                     </div>
                     <p className="text-gray-400 text-xs text-slate-500 mb-1">Đã nghỉ việc</p>
@@ -226,7 +226,7 @@ export const EmployeesPage = () => {
                         placeholder="Tìm kiếm theo tên hoặc email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-5 py-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-accent/5 focus:border-blue-200 transition-all shadow-sm"
+                        className="w-full pl-12 pr-5 py-4 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-4 focus:ring-accent/5 focus:border-blue-200 transition-all shadow-sm"
                     />
                 </div>
                 <SearchableSelect
@@ -252,7 +252,7 @@ export const EmployeesPage = () => {
                 {(departmentFilter || statusFilter) && (
                     <button
                         onClick={() => { setDepartmentFilter(''); setStatusFilter(''); }}
-                        className="px-6 py-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-blue-50 hover:text-accent transition-all font-semibold text-xs"
+                        className="px-6 py-4 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-50 hover:text-accent transition-all font-semibold text-xs"
                     >
                         Xóa bộ lọc
                     </button>
@@ -355,7 +355,7 @@ export const EmployeesPage = () => {
             </motion.div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-xs text-slate-400">
                     Hiển thị <span className="text-gray-900">{filteredEmployees.length}</span> / <span className="text-gray-900">{total}</span> nhân viên
                 </p>

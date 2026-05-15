@@ -105,7 +105,7 @@ export const StatsCard = ({
                 {loading ? (
                     <div className={`h-8 w-24 rounded animate-pulse ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`} />
                 ) : (
-                    <p className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {value}
                     </p>
                 )}

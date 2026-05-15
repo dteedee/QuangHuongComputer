@@ -107,9 +107,9 @@ export const AccountingPortal = () => {
                             <Link
                                 key={tab.path}
                                 to={tab.path}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all group ${
+                                className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all group ${
                                     isActive
-                                        ? 'bg-gray-950 text-white shadow-xl shadow-gray-950/20'
+                                        ? 'bg-gray-950 text-white shadow-sm shadow-gray-950/20'
                                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950'
                                 }`}
                             >
@@ -133,7 +133,7 @@ export const AccountingPortal = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-red-50 text-accent rounded-2xl">
+                        <div className="p-3 bg-red-50 text-accent rounded-xl">
                             <DollarSign size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Công nợ</span>
@@ -146,7 +146,7 @@ export const AccountingPortal = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
                             <TrendingUp size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Doanh thu</span>
@@ -159,7 +159,7 @@ export const AccountingPortal = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <FileText size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Hóa đơn</span>
@@ -170,7 +170,7 @@ export const AccountingPortal = () => {
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
                             <Clock size={24} />
                         </div>
                         <span className="text-sm font-medium text-slate-400">Tài khoản</span>
@@ -193,7 +193,7 @@ export const AccountingPortal = () => {
                         <Link
                             key={action.to}
                             to={action.to}
-                            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-gray-50 hover:border-gray-200 hover:shadow-lg transition-all group active:scale-[0.98]"
+                            className="flex items-center gap-4 p-5 rounded-xl border-2 border-gray-50 hover:border-gray-200 hover:shadow-lg transition-all group active:scale-[0.98]"
                         >
                             <div className={`p-3 rounded-xl ${action.color}`}>
                                 {action.icon}

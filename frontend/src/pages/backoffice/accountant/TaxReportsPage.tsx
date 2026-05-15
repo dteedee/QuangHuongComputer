@@ -244,7 +244,7 @@ export function TaxReportsPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 p-6 bg-blue-600 rounded-2xl text-white shadow-lg flex items-center justify-between">
+                            <div className="mt-6 p-6 bg-blue-600 rounded-xl text-white shadow-lg flex items-center justify-between">
                                 <div>
                                     <span className="text-xs font-semibold text-blue-200 uppercase">[40] Thuế GTGT phải nộp</span>
                                     <p className="text-3xl font-semibold mt-1">{formatCurrency(vatDeclaration?.indicator40 ?? vatDeclaration?.vatPayable ?? 0)}</p>
@@ -292,7 +292,7 @@ export function TaxReportsPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 p-6 bg-purple-900 rounded-2xl text-white shadow-lg flex items-center justify-between">
+                            <div className="mt-6 p-6 bg-purple-900 rounded-xl text-white shadow-lg flex items-center justify-between">
                                 <div>
                                     <span className="text-xs font-semibold text-purple-300 uppercase">Thuế TNDN phải nộp</span>
                                     <p className="text-3xl font-semibold mt-1 text-purple-100">{formatCurrency(citReport?.citPayable || 0)}</p>
@@ -544,7 +544,7 @@ function TT133Section({ tab, setTab, month, year, balanceSheet, isLoadingBS, inc
                                     <ReportRow label="[25] Thuế GTGT được khấu trừ" code="25" value={formatCurrency(vatTT133?.inputVAT?.indicator25 ?? 0)} bold />
                                 </div>
                             </div>
-                            <div className="lg:col-span-2 p-6 bg-orange-600 rounded-2xl text-white flex justify-between items-center">
+                            <div className="lg:col-span-2 p-6 bg-orange-600 rounded-xl text-white flex justify-between items-center">
                                 <div>
                                     <p className="text-xs font-semibold text-orange-200 uppercase">[40] Thuế GTGT phải nộp</p>
                                     <p className="text-3xl font-semibold mt-1">{formatCurrency(vatTT133?.indicator40 ?? 0)}</p>

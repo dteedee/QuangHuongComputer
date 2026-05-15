@@ -100,7 +100,7 @@ const StatsCard = ({ title, value, icon: Icon, color, subtitle }: {
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+      className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm"
     >
       <div className="flex items-center gap-4">
         <div className={`p-3 rounded-xl ${colors.bg} ring-1 ${colors.ring}`}>
@@ -140,7 +140,7 @@ const DetailModal = ({ log, onClose }: { log: AuditLog; onClose: () => void }) =
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-md max-w-2xl w-full max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -325,7 +325,7 @@ const BackupSection = () => {
       </div>
 
       {/* Backup Actions */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-gray-50">
           <div>
             <h3 className="font-semibold text-gray-900">Danh sách Backup</h3>
@@ -546,7 +546,7 @@ export const AuditLogsPage = () => {
           )}
 
           {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <div className="flex flex-col md:flex-row gap-3">
               {/* Search */}
               <div className="flex-1 relative">
@@ -677,7 +677,7 @@ export const AuditLogsPage = () => {
           </div>
 
           {/* Logs Table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

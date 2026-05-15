@@ -77,7 +77,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
 
   if (!allLoaded) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-20 text-center">
+      <div className="bg-white rounded-xl border border-gray-100 p-20 text-center">
         <Loader2 size={48} className="mx-auto animate-spin text-blue-500 mb-4" />
         <p className="text-gray-500 font-medium">Đang tải ma trận quyền hạn...</p>
       </div>
@@ -93,7 +93,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -115,7 +115,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-20 bg-white">
@@ -376,7 +376,7 @@ export function PermissionsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Role Selector */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sticky top-8">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-8">
               <div className="p-5 border-b border-gray-50 bg-gray-50/30">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <Shield size={18} className="text-blue-500" />
@@ -417,7 +417,7 @@ export function PermissionsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col min-h-[600px]"
+                  className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col min-h-[600px]"
                 >
                   <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 bg-white/80 backdrop-blur-md z-10 rounded-t-2xl">
                     <div>
@@ -602,7 +602,7 @@ export function PermissionsPage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center h-full flex flex-col items-center justify-center min-h-[400px]"
+                  className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-12 text-center h-full flex flex-col items-center justify-center min-h-[400px]"
                 >
                   <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
                     <Shield size={40} className="text-blue-400" />

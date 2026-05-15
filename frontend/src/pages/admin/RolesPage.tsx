@@ -209,7 +209,7 @@ export const RolesPage = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
+                    <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight  leading-none mb-3">
                         Quản lý <span className="text-accent">Phân quyền</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
@@ -218,7 +218,7 @@ export const RolesPage = () => {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-bold uppercase tracking-wide rounded-xl transition-all shadow-lg shadow-blue-500/15 active:scale-95"
                 >
                     <Plus size={20} />
                     Tạo vai trò mới
@@ -228,9 +228,9 @@ export const RolesPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Roles List - Left Sidebar */}
                 <div className="lg:col-span-4 xl:col-span-3">
-                    <div className="bg-white rounded-2xl border-2 border-gray-100 shadow-sm sticky top-6">
+                    <div className="bg-white rounded-xl border-2 border-gray-100 shadow-sm sticky top-6">
                         <div className="p-6 border-b-2 border-gray-50">
-                            <h2 className="text-lg font-black text-gray-900 uppercase tracking-wide flex items-center gap-3">
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-wide flex items-center gap-3">
                                 <Shield className="text-accent" size={22} />
                                 Danh sách vai trò
                             </h2>
@@ -286,7 +286,7 @@ export const RolesPage = () => {
                                                     {role.name}
                                                 </span>
                                                 {isAdmin && (
-                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                                                         isSelected ? 'bg-amber-400 text-amber-900' : 'bg-amber-100 text-amber-700'
                                                     }`}>
                                                         SUPER
@@ -327,11 +327,11 @@ export const RolesPage = () => {
                 {/* Permissions Panel - Right Side */}
                 <div className="lg:col-span-8 xl:col-span-9">
                     {selectedRole ? (
-                        <div className="bg-white rounded-2xl border-2 border-gray-100 shadow-sm">
+                        <div className="bg-white rounded-xl border-2 border-gray-100 shadow-sm">
                             {/* Role Header */}
                             <div className="p-6 border-b-2 border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
-                                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
+                                    <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center">
                                             <Shield size={22} />
                                         </div>
@@ -344,7 +344,7 @@ export const RolesPage = () => {
 
                                 <div className="flex items-center gap-4">
                                     <div className="text-right hidden sm:block">
-                                        <p className="text-2xl font-black text-gray-900">{selectedCount}/{totalPermissions}</p>
+                                        <p className="text-2xl font-semibold text-gray-900">{selectedCount}/{totalPermissions}</p>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">quyền đã chọn</p>
                                     </div>
                                     <button
@@ -387,7 +387,7 @@ export const RolesPage = () => {
                                     return (
                                         <div
                                             key={category}
-                                            className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden"
+                                            className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden"
                                         >
                                             {/* Category Header */}
                                             <div
@@ -470,11 +470,11 @@ export const RolesPage = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 h-[600px] flex flex-col items-center justify-center text-center p-8">
+                        <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 h-[600px] flex flex-col items-center justify-center text-center p-8">
                             <div className="w-24 h-24 rounded-3xl bg-gray-100 flex items-center justify-center mb-6">
                                 <Shield size={48} className="text-gray-300" />
                             </div>
-                            <h3 className="text-2xl font-black text-gray-400 uppercase tracking-tight mb-2">
+                            <h3 className="text-2xl font-semibold text-gray-400 uppercase tracking-tight mb-2">
                                 Chọn một vai trò
                             </h3>
                             <p className="text-gray-500 max-w-md">
@@ -500,10 +500,10 @@ export const RolesPage = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
+                            className="relative w-full max-w-md bg-white rounded-3xl shadow-md overflow-hidden"
                         >
                             <div className="p-6 border-b border-gray-100">
-                                <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+                                <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">
                                     Tạo vai trò mới
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">
