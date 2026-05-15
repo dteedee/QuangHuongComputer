@@ -50,6 +50,12 @@ public static class FormDefinitionEndpoints
             if (duplicate)
                 return Results.BadRequest(new { error = $"Form code '{dto.Code}' already exists" });
 
+            if (!string.IsNullOrWhiteSpace(dto.FieldsSchema))
+            {
+                try { System.Text.Json.JsonDocument.Parse(dto.FieldsSchema); }
+                catch { return Results.BadRequest(new { error = "FieldsSchema phải là JSON hợp lệ" }); }
+            }
+
             var form = new FormDefinition
             {
                 Code = dto.Code.Trim().ToLowerInvariant().Replace(' ', '_'),

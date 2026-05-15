@@ -98,7 +98,7 @@ public static class SystemConfigEndpoints
             return Results.Ok(modules);
         });
 
-        group.MapGet("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache) =>
+        adminGroup.MapGet("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache) =>
         {
             var cacheKey = CacheKeys.SystemConfigKey(key);
             var cachedEntry = await cache.GetAsync<ConfigurationEntry>(cacheKey);
@@ -111,7 +111,7 @@ public static class SystemConfigEndpoints
             return Results.Ok(entry);
         });
 
-        group.MapPost("/", async (ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapPost("/", async (ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var (isValid, errorMessage) = ConfigValidator.Validate(entry);
             if (!isValid)
@@ -146,7 +146,7 @@ public static class SystemConfigEndpoints
             return Results.Ok(existing ?? entry);
         });
 
-        group.MapPost("/{key}", async (string key, ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapPost("/{key}", async (string key, ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var (isValid, errorMessage) = ConfigValidator.Validate(entry);
             if (!isValid)
@@ -183,7 +183,7 @@ public static class SystemConfigEndpoints
             return Results.Ok(existing);
         });
 
-        group.MapDelete("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapDelete("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var existing = await db.Configurations.FindAsync(key);
             if (existing == null) return Results.NotFound();

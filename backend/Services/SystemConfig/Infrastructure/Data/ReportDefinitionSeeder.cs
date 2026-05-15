@@ -134,7 +134,7 @@ public static class ReportDefinitionSeeder
                 Name = "Chấm công nhân sự",
                 Description = "Thống kê chấm công, ngày nghỉ, tăng ca",
                 Category = "HR",
-                DataSourceEndpoint = "/api/reports/hr/attendance",
+                DataSourceEndpoint = "/api/reports/hr/attendance-summary",
                 DisplayOrder = 6,
                 AvailableColumns = """
                 [
@@ -160,7 +160,7 @@ public static class ReportDefinitionSeeder
                 Name = "Bảng lương",
                 Description = "Tổng hợp lương, phụ cấp, bảo hiểm theo tháng",
                 Category = "HR",
-                DataSourceEndpoint = "/api/reports/hr/payroll",
+                DataSourceEndpoint = "/api/reports/hr/payroll-summary",
                 DisplayOrder = 7,
                 AvailableColumns = """
                 [
@@ -185,7 +185,7 @@ public static class ReportDefinitionSeeder
                 Name = "Yêu cầu bảo hành",
                 Description = "Thống kê bảo hành, tỷ lệ xử lý, chi phí",
                 Category = "Warranty",
-                DataSourceEndpoint = "/api/reports/warranty/claims",
+                DataSourceEndpoint = "/api/reports/warranty/summary",
                 DisplayOrder = 8,
                 AvailableColumns = """
                 [
@@ -211,7 +211,7 @@ public static class ReportDefinitionSeeder
                 Name = "Chiến dịch CRM",
                 Description = "Hiệu quả chiến dịch marketing, tỷ lệ chuyển đổi",
                 Category = "CRM",
-                DataSourceEndpoint = "/api/reports/crm/campaigns",
+                DataSourceEndpoint = "/api/reports/crm/campaign-performance",
                 DisplayOrder = 9,
                 AvailableColumns = """
                 [
@@ -237,7 +237,7 @@ public static class ReportDefinitionSeeder
                 Name = "Báo cáo lãi lỗ",
                 Description = "Doanh thu, chi phí, lợi nhuận theo kỳ",
                 Category = "Finance",
-                DataSourceEndpoint = "/api/reports/financial/pl",
+                DataSourceEndpoint = "/api/reports/revenue-expense",
                 DisplayOrder = 10,
                 AvailableColumns = """
                 [
@@ -263,7 +263,7 @@ public static class ReportDefinitionSeeder
                 Name = "Báo cáo thuế",
                 Description = "VAT đầu vào, đầu ra, thuế phải nộp",
                 Category = "Finance",
-                DataSourceEndpoint = "/api/reports/tax",
+                DataSourceEndpoint = "/api/reports/tax/balance-sheet",
                 DisplayOrder = 11,
                 AvailableColumns = """
                 [
@@ -287,7 +287,7 @@ public static class ReportDefinitionSeeder
                 Name = "So sánh kỳ kinh doanh",
                 Description = "So sánh doanh thu, đơn hàng giữa các kỳ",
                 Category = "Analytics",
-                DataSourceEndpoint = "/api/reports/comparison",
+                DataSourceEndpoint = "/api/reports/comparison/revenue",
                 DisplayOrder = 12,
                 AvailableColumns = """
                 [

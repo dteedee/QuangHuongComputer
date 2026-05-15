@@ -63,6 +63,12 @@ public static class CustomFieldEndpoints
             if (duplicate)
                 return Results.BadRequest(new { error = $"Field key '{dto.FieldKey}' already exists for entity '{dto.EntityType}'" });
 
+            if (!string.IsNullOrWhiteSpace(dto.OptionsJson))
+            {
+                try { System.Text.Json.JsonDocument.Parse(dto.OptionsJson); }
+                catch { return Results.BadRequest(new { error = "OptionsJson phải là JSON hợp lệ" }); }
+            }
+
             var definition = new CustomFieldDefinition
             {
                 EntityType = dto.EntityType,

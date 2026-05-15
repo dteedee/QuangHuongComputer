@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SystemConfig.Infrastructure;
 using SystemConfig.Domain;
+using System.Text.Json;
 
 namespace SystemConfig;
 
@@ -53,6 +54,8 @@ public static class AutomationRuleEndpoints
         {
             var validation = ValidateDto(dto.Name, dto.EntityType, dto.TriggerEvent, dto.ActionType);
             if (validation is not null) return validation;
+            if (!IsValidJson(dto.ConditionJson) || !IsValidJson(dto.ActionConfig))
+                return Results.BadRequest(new { error = "ConditionJson/ActionConfig phải là JSON hợp lệ" });
 
             var rule = new AutomationRule
             {
@@ -133,6 +136,13 @@ public static class AutomationRuleEndpoints
             return Results.BadRequest(new { error = $"Invalid action type '{actionType}'. Valid: {string.Join(", ", ValidActionTypes)}" });
 
         return null;
+    }
+
+    private static bool IsValidJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return true;
+        try { JsonDocument.Parse(json); return true; }
+        catch { return false; }
     }
 }
 
