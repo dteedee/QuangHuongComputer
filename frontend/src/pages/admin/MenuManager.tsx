@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     DndContext, 
     closestCenter,
@@ -137,11 +137,14 @@ export const MenuManager = () => {
     const { data: selectedMenu, isLoading } = useQuery({
         queryKey: ['menu', selectedLocation],
         queryFn: () => contentApi.getMenu(selectedLocation),
-        onSuccess: (menu: Menu) => {
-            setLocalItems([...menu.items].sort((a, b) => a.order - b.order));
+    });
+
+    useEffect(() => {
+        if (selectedMenu) {
+            setLocalItems([...selectedMenu.items].sort((a, b) => a.order - b.order));
             setHasChanges(false);
         }
-    });
+    }, [selectedMenu]);
 
     // ── Add menu item via API ─────────────────────────────────────
     const addMutation = useMutation({
@@ -169,20 +172,21 @@ export const MenuManager = () => {
         },
     });
 
-    // ── Save all changes (order + field edits) via updateMenu ─────
+    // ── Save all changes (reorder + update each item) ─────────────
     const saveMutation = useMutation({
-        mutationFn: (data: { menuId: string; items: MenuItem[] }) =>
-            contentApi.admin.updateMenu(data.menuId, {
-                items: data.items.map((item, idx) => ({
-                    id: item.id,
+        mutationFn: async (data: { menuId: string; items: MenuItem[] }) => {
+            await contentApi.admin.reorderMenuItems(data.menuId,
+                data.items.map((item, idx) => ({ id: item.id, displayOrder: idx + 1 }))
+            );
+            for (const item of data.items) {
+                await contentApi.admin.updateMenuItem(data.menuId, item.id, {
                     label: item.label,
                     url: item.url,
                     icon: item.icon,
                     openInNewTab: item.openInNewTab,
-                    order: idx + 1,
-                    type: item.type,
-                }))
-            }),
+                });
+            }
+        },
         onSuccess: () => {
             setHasChanges(false);
             queryClient.invalidateQueries({ queryKey: ['menu', selectedLocation] });
@@ -269,15 +273,15 @@ export const MenuManager = () => {
                     </button>
                     <button 
                         onClick={handleSave}
-                        disabled={!selectedMenu || saveMutation.isLoading || !hasChanges}
+                        disabled={!selectedMenu || saveMutation.isPending || !hasChanges}
                         className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-accent-dark/20"
                     >
-                        {saveMutation.isLoading ? (
+                        {saveMutation.isPending ? (
                             <Loader2 size={18} className="animate-spin" />
                         ) : (
                             <Save size={18} />
                         )}
-                        {saveMutation.isLoading ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
+                        {saveMutation.isPending ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
                     </button>
                 </div>
             </header>
@@ -317,15 +321,15 @@ export const MenuManager = () => {
                                 </h2>
                                 <button 
                                     onClick={addItem}
-                                    disabled={addMutation.isLoading}
+                                    disabled={addMutation.isPending}
                                     className="text-red-400 hover:text-red-300 disabled:opacity-50 flex items-center gap-2 text-sm font-bold bg-red-400/10 px-4 py-2 rounded-xl transition"
                                 >
-                                    {addMutation.isLoading ? (
+                                    {addMutation.isPending ? (
                                         <Loader2 size={18} className="animate-spin" />
                                     ) : (
                                         <Plus size={18} />
                                     )}
-                                    {addMutation.isLoading ? 'Adding...' : 'Add Link'}
+                                    {addMutation.isPending ? 'Adding...' : 'Add Link'}
                                 </button>
                             </div>
 

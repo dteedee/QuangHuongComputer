@@ -105,6 +105,11 @@ public class MenuItem : Entity<Guid>
     {
         DisplayOrder = order;
     }
+
+    public void SetOpenInNewTab(bool openInNewTab)
+    {
+        OpenInNewTab = openInNewTab;
+    }
 }
 
 public enum MenuLocation

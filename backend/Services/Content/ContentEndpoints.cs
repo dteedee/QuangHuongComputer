@@ -1006,6 +1006,7 @@ public static class ContentEndpoints
             item.Update(dto.Label, dto.Url, dto.Icon);
             if (dto.DisplayOrder.HasValue) item.SetDisplayOrder(dto.DisplayOrder.Value);
             if (dto.IsActive.HasValue) item.SetActive(dto.IsActive.Value);
+            if (dto.OpenInNewTab.HasValue) item.SetOpenInNewTab(dto.OpenInNewTab.Value);
 
             await db.SaveChangesAsync();
             await cache.RemoveByPatternAsync("cache:menus*");
@@ -1242,7 +1243,7 @@ public record CreateMenuItemDto(
     Guid? PageId = null,
     Guid? CategoryId = null
 );
-public record UpdateMenuItemDto(string Label, string? Url = null, string? Icon = null, int? DisplayOrder = null, bool? IsActive = null);
+public record UpdateMenuItemDto(string Label, string? Url = null, string? Icon = null, int? DisplayOrder = null, bool? IsActive = null, bool? OpenInNewTab = null);
 public record ReorderItemsDto(List<OrderItemDto> Items);
 public record OrderItemDto(Guid Id, int DisplayOrder);
 
