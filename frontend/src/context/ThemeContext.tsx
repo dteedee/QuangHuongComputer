@@ -38,7 +38,7 @@ const accentColors: Record<AccentColor, AccentColorConfig> = {
     blue: {
         primary: '#2563EB',
         primaryHover: '#1D4ED8',
-        primaryLight: '#DBEAFE',
+        primaryLight: '#EFF6FF',
         primaryDark: '#1E40AF',
         gradient: 'from-blue-500 to-indigo-600',
         ring: 'ring-blue-500/20',
@@ -110,7 +110,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     const [accent, setAccentState] = useState<AccentColor>(() => {
         const saved = localStorage.getItem('theme-accent');
-        return (saved as AccentColor) || 'red';
+        return (saved as AccentColor) || 'blue';
     });
 
     const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => {

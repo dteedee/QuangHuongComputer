@@ -68,14 +68,14 @@ const DroppableColumn = ({ column, children }: { column: PipelineView, children:
           />
           <h3 className="font-bold text-gray-800 uppercase tracking-tight text-sm flex items-center gap-2">
              {column.stage.name}
-             <span className="text-[10px] px-2 py-0.5 bg-white text-gray-600 rounded-full font-black drop-shadow-sm">
+             <span className="text-xs px-2 py-0.5 bg-white text-gray-600 rounded-full font-semibold drop-shadow-sm">
               {column.leads.length}
             </span>
           </h3>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-bold text-gray-400">{column.stage.winProbability}% THẮNG</p>
-          <p className="text-sm font-black text-emerald-600 tracking-tighter">
+          <p className="text-xs font-bold text-gray-400">{column.stage.winProbability}% THẮNG</p>
+          <p className="text-sm font-semibold text-emerald-600 tracking-tighter">
             {formatCurrency(column.stage.totalEstimatedValue)}
           </p>
         </div>
@@ -193,8 +193,8 @@ export default function LeadPipelinePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">Lead Pipeline</h1>
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 font-bold uppercase tracking-widest">
+          <h1 className="text-xl font-semibold text-slate-900">Lead Pipeline</h1>
+          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 font-bold uppercase">
             <span className="flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-lg">
               <Users size={16} />
               {totalLeads} leads
@@ -208,13 +208,13 @@ export default function LeadPipelinePage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/backoffice/crm/leads')}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl hover:bg-gray-100 text-xs font-black uppercase tracking-widest text-gray-600 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl hover:bg-gray-100 text-sm font-medium text-gray-600 transition-colors"
           >
             Danh sách
           </button>
           <button
             onClick={() => navigate('/backoffice/crm/leads?new=true')}
-            className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl shadow-xl shadow-accent/20 hover:bg-accent-hover text-xs font-black uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 px-6 py-2.5 bg-accent text-white rounded-xl shadow-xl shadow-blue-600/15 hover:bg-accent-hover text-sm font-medium transition-transform hover:scale-105 active:scale-95"
           >
             <Plus size={18} />
             Thêm Lead
@@ -246,7 +246,7 @@ export default function LeadPipelinePage() {
                 {!column.stage.isFinalStage && (
                   <button
                     onClick={() => navigate(`/backoffice/crm/leads?new=true&stageId=${column.stage.id}`)}
-                    className="mt-2 w-full flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-accent hover:bg-accent/5 rounded-xl border-2 border-dashed border-transparent hover:border-accent/20 transition-all"
+                    className="mt-2 w-full flex items-center justify-center gap-2 py-3 text-xs font-medium text-gray-400 hover:text-accent hover:bg-accent/5 rounded-xl border-2 border-dashed border-transparent hover:border-accent/20 transition-all"
                   >
                     <Plus size={16} />
                     Thêm lead
@@ -260,7 +260,7 @@ export default function LeadPipelinePage() {
               <div className="flex-1 flex items-center justify-center w-full min-h-[300px]">
                 <div className="text-center">
                   <Target size={48} className="mx-auto mb-4 text-gray-200" />
-                  <p className="text-gray-400 font-bold uppercase tracking-widest">Chưa có pipeline stage nào</p>
+                  <p className="text-gray-400 font-bold uppercase">Chưa có pipeline stage nào</p>
                   <button
                     onClick={() => navigate('/backoffice/crm/settings/pipeline')}
                     className="mt-4 text-accent hover:underline font-bold"

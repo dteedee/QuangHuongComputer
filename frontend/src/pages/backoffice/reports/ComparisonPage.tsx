@@ -48,8 +48,8 @@ function KpiCard({ label, value, change }: { label: string; value: string; chang
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-            <p className="text-xl font-black text-gray-900">{value}</p>
+            <p className="text-xs font-bold text-gray-400 uppercase mb-1">{label}</p>
+            <p className="text-xl font-semibold text-gray-900">{value}</p>
             {change !== undefined && <div className="mt-2"><ChangeTag value={change} /></div>}
         </motion.div>
     );
@@ -78,10 +78,10 @@ export function ComparisonPage() {
     return (
         <div className="space-y-8 pb-20 animate-fade-in admin-area">
             <div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                     So sánh <span className="text-accent">kỳ</span>
                 </h1>
-                <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">So sánh chỉ số giữa hai khoảng thời gian</p>
+                <p className="text-gray-500 font-bold uppercase text-xs">So sánh chỉ số giữa hai khoảng thời gian</p>
             </div>
 
             {/* Presets */}
@@ -109,7 +109,7 @@ export function ComparisonPage() {
             <div className="flex gap-2">
                 {metricTabs.map(tab => (
                     <button key={tab.id} onClick={() => setMetric(tab.id)}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${metric === tab.id ? 'bg-gray-900 text-white shadow-lg' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all ${metric === tab.id ? 'bg-gray-900 text-white shadow-lg' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>
                         <tab.icon size={16} />{tab.label}
                     </button>
                 ))}

@@ -86,7 +86,7 @@ export default function NotificationCenter() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
+                    <h1 className="text-3xl font-semibold text-gray-900 flex items-center gap-3 tracking-tight">
                         <div className="p-2 bg-accent/10 rounded-xl">
                             <Bell className="w-8 h-8 text-accent" />
                         </div>
@@ -106,7 +106,7 @@ export default function NotificationCenter() {
                     <button
                         onClick={handleMarkAllAsRead}
                         disabled={notifications.every(n => n.read)}
-                        className="px-5 py-2.5 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-all active:scale-95 border-2 border-transparent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm shadow-accent/20"
+                        className="px-5 py-2.5 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-all active:scale-95 border-2 border-transparent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm shadow-blue-600/15"
                     >
                         <Check size={18} strokeWidth={2.5} />
                         Đánh dấu tất cả đã đọc
@@ -176,7 +176,7 @@ export default function NotificationCenter() {
                                             {unreadInTab > 0 && tab.id !== 'unread' && (
                                                 <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                                             )}
-                                            <span className={`text-[11px] px-2.5 py-1 rounded-lg font-bold min-w-[28px] text-center ${
+                                            <span className={`text-xs px-2.5 py-1 rounded-lg font-bold min-w-[28px] text-center ${
                                                 activeTab === tab.id 
                                                     ? 'bg-accent/10 text-accent' 
                                                     : 'bg-gray-200/70 text-gray-500 group-hover:bg-gray-200'
@@ -203,7 +203,7 @@ export default function NotificationCenter() {
                             <div className="p-6 bg-gray-50 rounded-full mb-6">
                                 <Bell className="w-16 h-16 text-gray-300" />
                             </div>
-                            <h3 className="font-black text-xl text-gray-900 mb-2">Hộp thư trống</h3>
+                            <h3 className="font-semibold text-xl text-gray-900 mb-2">Hộp thư trống</h3>
                             <p className="text-gray-500 font-medium text-center max-w-sm">
                                 Hiện không có thông báo nào trong danh mục này. Hãy thử chọn Tab khác.
                             </p>
@@ -254,7 +254,7 @@ export default function NotificationCenter() {
                                                 {notification.title}
                                             </h3>
                                             {notification.priority === 'high' && (
-                                                <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] uppercase font-black tracking-wider rounded-md shrink-0">
+                                                <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs uppercase font-semibold tracking-wider rounded-md shrink-0">
                                                     Khẩn cấp
                                                 </span>
                                             )}

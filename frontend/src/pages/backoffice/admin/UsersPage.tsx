@@ -255,7 +255,7 @@ export function UsersPage() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAdd}
-            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl shadow-lg shadow-red-500/20 font-bold transition-all"
+            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg shadow-sm shadow-blue-500/15 font-bold transition-all"
           >
             <Plus size={20} />
             <span>Thêm Người dùng</span>
@@ -324,11 +324,11 @@ export function UsersPage() {
                      <Square size={20} />}
                   </button>
                 </th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Người dùng</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Vai trò</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Trạng thái</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Ngày tạo</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right pr-10">Thao tác</th>
+                <th className="px-6 py-4 text-sm font-medium text-slate-400">Người dùng</th>
+                <th className="px-6 py-4 text-sm font-medium text-slate-400">Vai trò</th>
+                <th className="px-6 py-4 text-sm font-medium text-slate-400">Trạng thái</th>
+                <th className="px-6 py-4 text-sm font-medium text-slate-400">Ngày tạo</th>
+                <th className="px-6 py-4 text-sm font-medium text-slate-400 text-right pr-10">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -375,7 +375,7 @@ export function UsersPage() {
                         {user.roles.map((role) => (
                           <span
                             key={role}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${getRoleBadgeColor(role)}`}
+                            className={`px-2 py-0.5 rounded-md text-xs font-medium ${getRoleBadgeColor(role)}`}
                           >
                             {role}
                           </span>
@@ -542,12 +542,12 @@ export function UsersPage() {
             <div className="bg-gray-900 text-white rounded-2xl shadow-2xl shadow-black/30 px-6 py-4 flex items-center gap-5 min-w-[500px] border border-gray-700">
               {/* Selection Count */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-black text-lg">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-semibold text-lg">
                   {selectedIds.size}
                 </div>
                 <div>
                   <p className="text-sm font-bold">đã chọn</p>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">người dùng</p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">người dùng</p>
                 </div>
               </div>
 
@@ -558,7 +558,7 @@ export function UsersPage() {
                 <button
                   onClick={handleBulkActivate}
                   disabled={bulkProcessing}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {bulkProcessing ? <Loader2 size={14} className="animate-spin" /> : <Power size={14} />}
                   Kích hoạt
@@ -567,7 +567,7 @@ export function UsersPage() {
                 <button
                   onClick={handleBulkDeactivate}
                   disabled={bulkProcessing}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {bulkProcessing ? <Loader2 size={14} className="animate-spin" /> : <PowerOff size={14} />}
                   Vô hiệu hóa
@@ -576,7 +576,7 @@ export function UsersPage() {
                 <button
                   onClick={handleBulkExport}
                   disabled={bulkProcessing}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download size={14} />
                   Xuất CSV

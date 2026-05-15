@@ -31,7 +31,7 @@ function ReportGroupNav() {
                 <button key={g.path} onClick={() => navigate(g.path)}
                     className={`${g.color} p-4 rounded-xl text-white hover:opacity-90 transition-all active:scale-95 flex items-center gap-3`}>
                     <g.icon size={20} />
-                    <span className="text-xs font-black uppercase tracking-widest">{g.label}</span>
+                    <span className="text-sm font-medium">{g.label}</span>
                 </button>
             ))}
         </div>
@@ -149,10 +149,10 @@ export const ReportsPortal = () => {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Báo cáo & <span className="text-accent">Phân tích</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">
+                    <p className="text-gray-500 font-bold uppercase text-xs">
                         Dữ liệu kinh doanh thời gian thực
                     </p>
                 </div>
@@ -168,7 +168,7 @@ export const ReportsPortal = () => {
                     <button
                         onClick={() => handleExport('full')}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-6 py-3 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 bg-accent text-white text-sm font-medium rounded-xl shadow-lg shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
                     >
                         <FileSpreadsheet size={18} />
                         {isExporting ? 'Đang xuất...' : 'Xuất báo cáo tổng hợp'}
@@ -181,7 +181,7 @@ export const ReportsPortal = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex items-center gap-2 text-gray-500">
                         <Calendar size={18} />
-                        <span className="text-xs font-bold uppercase tracking-wider">Khoảng thời gian:</span>
+                        <span className="text-xs font-medium">Khoảng thời gian:</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {(Object.keys(presetLabels) as DatePreset[]).map(preset => (
@@ -238,8 +238,8 @@ export const ReportsPortal = () => {
                             {Math.abs(growthPercent)}%
                         </span>
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Doanh thu tháng</p>
-                    <p className="text-2xl font-black text-gray-900 tracking-tight">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Doanh thu tháng</p>
+                    <p className="text-2xl font-semibold text-gray-900 tracking-tight">
                         {formatCurrency(overview?.sales.thisMonthRevenue ?? 0)}
                     </p>
                 </motion.div>
@@ -258,8 +258,8 @@ export const ReportsPortal = () => {
                             {overview?.sales.pendingOrders ?? 0} chờ xử lý
                         </span>
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng đơn hàng</p>
-                    <p className="text-2xl font-black text-gray-900 tracking-tight">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Tổng đơn hàng</p>
+                    <p className="text-2xl font-semibold text-gray-900 tracking-tight">
                         {salesStats?.totalOrders ?? 0}
                     </p>
                 </motion.div>
@@ -281,8 +281,8 @@ export const ReportsPortal = () => {
                             </span>
                         )}
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Giá trị tồn kho</p>
-                    <p className="text-2xl font-black text-gray-900 tracking-tight">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Giá trị tồn kho</p>
+                    <p className="text-2xl font-semibold text-gray-900 tracking-tight">
                         {formatCurrency(overview?.inventory.totalValue ?? 0)}
                     </p>
                 </motion.div>
@@ -301,8 +301,8 @@ export const ReportsPortal = () => {
                             {overview?.repairs.pendingCount ?? 0} đang sửa
                         </span>
                     </div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Doanh thu sửa chữa</p>
-                    <p className="text-2xl font-black text-gray-900 tracking-tight">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Doanh thu sửa chữa</p>
+                    <p className="text-2xl font-semibold text-gray-900 tracking-tight">
                         {formatCurrency(overview?.repairs.thisMonthRevenue ?? 0)}
                     </p>
                 </motion.div>
@@ -322,7 +322,7 @@ export const ReportsPortal = () => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.id
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
                             ? 'bg-gray-900 text-white shadow-lg'
                             : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                             }`}
@@ -339,7 +339,7 @@ export const ReportsPortal = () => {
                     {/* Revenue Chart */}
                     <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Doanh thu 12 tháng</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Doanh thu 12 tháng</h3>
                             <button
                                 onClick={() => handleExport('sales')}
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-xs font-bold text-gray-600 transition-all"
@@ -360,10 +360,10 @@ export const ReportsPortal = () => {
                                             transition={{ duration: 0.8, delay: i * 0.05 }}
                                             className="bg-gradient-to-t from-accent to-red-400 rounded-t-lg hover:from-accent-hover transition-all cursor-pointer w-full"
                                         />
-                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
+                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
                                             {formatCurrency(m.revenue)}
                                         </div>
-                                        <p className="text-center text-[10px] font-bold text-gray-400 mt-2">T{m.month}</p>
+                                        <p className="text-center text-xs font-bold text-gray-400 mt-2">T{m.month}</p>
                                     </div>
                                 );
                             })}
@@ -373,7 +373,7 @@ export const ReportsPortal = () => {
                     {/* Low Stock Alert */}
                     <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <AlertTriangle className="text-amber-500" size={20} />
                                 Sản phẩm sắp hết hàng
                             </h3>
@@ -393,8 +393,8 @@ export const ReportsPortal = () => {
                                         <p className="text-xs text-gray-500">Điểm đặt lại: {item.reorderPoint}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-black text-red-600">{item.quantityOnHand}</p>
-                                        <p className="text-[10px] text-gray-400 uppercase">còn lại</p>
+                                        <p className="text-xl font-semibold text-red-600">{item.quantityOnHand}</p>
+                                        <p className="text-xs text-gray-400 uppercase">còn lại</p>
                                     </div>
                                 </div>
                             ))}
@@ -409,7 +409,7 @@ export const ReportsPortal = () => {
             {activeTab === 'products' && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Trophy className="text-amber-500" size={20} />
                             Top 10 sản phẩm bán chạy
                         </h3>
@@ -425,18 +425,18 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Sản phẩm</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Số lượng</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Doanh thu</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Đơn hàng</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Sản phẩm</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số lượng</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Đơn hàng</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topProducts ?? []).map((product, i) => (
                                     <tr key={product.productId} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
                                                 i === 1 ? 'bg-gray-200 text-gray-600' :
                                                     i === 2 ? 'bg-orange-100 text-orange-600' :
                                                         'bg-gray-50 text-gray-400'
@@ -448,7 +448,7 @@ export const ReportsPortal = () => {
                                             <p className="font-bold text-gray-900">{product.productName}</p>
                                         </td>
                                         <td className="px-6 py-4 text-right font-bold text-gray-900">{product.totalQuantity}</td>
-                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(product.totalRevenue)}</td>
+                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(product.totalRevenue)}</td>
                                         <td className="px-6 py-4 text-right text-gray-500">{product.orderCount}</td>
                                     </tr>
                                 ))}
@@ -461,7 +461,7 @@ export const ReportsPortal = () => {
             {activeTab === 'customers' && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Star className="text-amber-500" size={20} />
                             Top 10 khách hàng VIP
                         </h3>
@@ -470,18 +470,18 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Khách hàng</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Tổng chi tiêu</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Số đơn</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Mua gần nhất</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Khách hàng</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Tổng chi tiêu</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Số đơn</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Mua gần nhất</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topCustomers ?? []).map((customer, i) => (
                                     <tr key={customer.customerId} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
                                                 i === 1 ? 'bg-gray-200 text-gray-600' :
                                                     i === 2 ? 'bg-orange-100 text-orange-600' :
                                                         'bg-gray-50 text-gray-400'
@@ -493,7 +493,7 @@ export const ReportsPortal = () => {
                                             <p className="font-bold text-gray-900">{customer.customerName}</p>
                                             <p className="text-xs text-gray-400">{customer.email}</p>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(customer.totalSpent)}</td>
+                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(customer.totalSpent)}</td>
                                         <td className="px-6 py-4 text-right font-bold text-gray-900">{customer.orderCount}</td>
                                         <td className="px-6 py-4 text-right text-gray-500 text-sm">
                                             {new Date(customer.lastOrderDate).toLocaleDateString('vi-VN')}
@@ -509,7 +509,7 @@ export const ReportsPortal = () => {
             {activeTab === 'technicians' && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <Wrench className="text-blue-500" size={20} />
                             Top kỹ thuật viên xuất sắc
                         </h3>
@@ -525,19 +525,19 @@ export const ReportsPortal = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Hạng</th>
-                                    <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Kỹ thuật viên</th>
-                                    <th className="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Công việc</th>
-                                    <th className="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Hoàn thành</th>
-                                    <th className="px-6 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Tỷ lệ</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Doanh thu</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Hạng</th>
+                                    <th className="px-6 py-4 text-left text-sm font-medium text-slate-500">Kỹ thuật viên</th>
+                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Công việc</th>
+                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Hoàn thành</th>
+                                    <th className="px-6 py-4 text-center text-sm font-medium text-slate-500">Tỷ lệ</th>
+                                    <th className="px-6 py-4 text-right text-sm font-medium text-slate-500">Doanh thu</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {(topTechnicians ?? []).map((tech, i) => (
                                     <tr key={tech.technicianId} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${i === 0 ? 'bg-amber-100 text-amber-600' :
                                                 i === 1 ? 'bg-gray-200 text-gray-600' :
                                                     i === 2 ? 'bg-orange-100 text-orange-600' :
                                                         'bg-gray-50 text-gray-400'
@@ -559,7 +559,7 @@ export const ReportsPortal = () => {
                                                 {tech.successRate}%
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-right font-black text-accent">{formatCurrency(tech.totalRevenue)}</td>
+                                        <td className="px-6 py-4 text-right font-semibold text-accent">{formatCurrency(tech.totalRevenue)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -570,7 +570,7 @@ export const ReportsPortal = () => {
 
             {/* Export Options */}
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl">
-                <h3 className="text-xl font-black text-white uppercase tracking-tight mb-6">Xuất báo cáo Excel</h3>
+                <h3 className="text-xl font-semibold text-white uppercase tracking-tight mb-6">Xuất báo cáo Excel</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     {[
                         { id: 'full', label: 'Báo cáo tổng hợp', icon: BarChart3, color: 'bg-accent' },
@@ -586,7 +586,7 @@ export const ReportsPortal = () => {
                             className={`${item.color} p-5 rounded-xl text-white hover:opacity-90 transition-all active:scale-95 disabled:opacity-50`}
                         >
                             <item.icon size={24} className="mb-3" />
-                            <p className="text-xs font-black uppercase tracking-widest">{item.label}</p>
+                            <p className="text-sm font-medium">{item.label}</p>
                         </button>
                     ))}
                 </div>

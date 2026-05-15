@@ -389,7 +389,7 @@ const BackupSection = () => {
                         deleteMutation.mutate(backup.baseName);
                       }
                     }}
-                    className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition-colors"
+                    className="p-2 hover:bg-blue-50 text-red-500 rounded-lg transition-colors"
                     title="Xóa"
                   >
                     <Trash2 size={16} />
@@ -596,7 +596,7 @@ export const AuditLogsPage = () => {
                   onClick={() => {
                     if (confirm('Xóa các log cũ hơn 90 ngày?')) cleanupMutation.mutate();
                   }}
-                  className="flex items-center gap-2 px-4 py-2.5 border border-red-200 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 border border-red-200 rounded-xl text-sm font-medium text-red-600 hover:bg-blue-50 transition-colors"
                 >
                   <Trash2 size={14} />
                   Dọn dẹp

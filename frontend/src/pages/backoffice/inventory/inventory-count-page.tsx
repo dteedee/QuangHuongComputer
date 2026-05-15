@@ -144,7 +144,7 @@ function SessionDetail({ sessionId, onApprove }: { sessionId: string; onApprove:
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-lg text-xs font-semibold hover:bg-[#b5001e] transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-lg text-xs font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
                             >
                                 {saving && <RefreshCw size={12} className="animate-spin" />}
                                 Lưu kết quả

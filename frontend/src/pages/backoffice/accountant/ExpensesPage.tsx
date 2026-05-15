@@ -82,7 +82,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
 
                 <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
                     <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="text-xl font-black text-gray-950 uppercase italic tracking-tighter">Tạo chi phí mới</h3>
+                        <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Tạo chi phí mới</h3>
                         <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
                             <X size={24} />
                         </button>
@@ -92,7 +92,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                         <div className="px-8 py-6 space-y-5 max-h-[60vh] overflow-y-auto">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Danh mục *</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Danh mục *</label>
                                     <SearchableSelect
                                         disabled={isSubmitting}
                                         placeholder="Chọn danh mục"
@@ -103,7 +103,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Mô tả *</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Mô tả *</label>
                                     <input
                                         type="text"
                                         {...register('description')}
@@ -115,11 +115,11 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Số tiền *</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Số tiền *</label>
                                     <input
                                         type="number"
                                         {...register('amount', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-black text-lg text-accent"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-lg text-accent"
                                         placeholder="0"
                                         disabled={isSubmitting}
                                     />
@@ -127,7 +127,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">VAT (%)</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">VAT (%)</label>
                                     <input
                                         type="number"
                                         {...register('vatRate', { valueAsNumber: true })}
@@ -138,7 +138,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Ngày chi</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Ngày chi</label>
                                     <input
                                         type="date"
                                         {...register('expenseDate')}
@@ -148,7 +148,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Tiền tệ</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Tiền tệ</label>
                                     <SearchableSelect
                                         disabled={isSubmitting}
                                         onChange={(val: string) => register('currency').onChange({ target: { name: 'currency', value: val } })}
@@ -160,7 +160,7 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Ghi chú</label>
+                                    <label className="text-xs text-slate-400 mb-2 block">Ghi chú</label>
                                     <textarea
                                         {...register('notes')}
                                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm min-h-[80px]"
@@ -173,16 +173,16 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             {/* Summary */}
                             <div className="bg-gray-950 text-white p-6 rounded-2xl space-y-3">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400 uppercase text-[10px] font-black tracking-widest">Số tiền</span>
-                                    <span className="font-black">{formatCurrency(amount || 0)}</span>
+                                    <span className="text-gray-400 uppercase text-xs font-semibold">Số tiền</span>
+                                    <span className="font-semibold">{formatCurrency(amount || 0)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400 uppercase text-[10px] font-black tracking-widest">VAT ({vatRate}%)</span>
-                                    <span className="font-black">{formatCurrency(vatAmount || 0)}</span>
+                                    <span className="text-gray-400 uppercase text-xs font-semibold">VAT ({vatRate}%)</span>
+                                    <span className="font-semibold">{formatCurrency(vatAmount || 0)}</span>
                                 </div>
                                 <div className="flex justify-between text-lg pt-3 border-t border-white/10">
-                                    <span className="text-gray-400 uppercase text-xs font-black tracking-widest">Tổng cộng</span>
-                                    <span className="font-black text-accent text-2xl italic">{formatCurrency(totalAmount || 0)}</span>
+                                    <span className="text-gray-400 uppercase text-xs font-semibold">Tổng cộng</span>
+                                    <span className="font-semibold text-accent text-2xl">{formatCurrency(totalAmount || 0)}</span>
                                 </div>
                             </div>
                         </div>
@@ -191,14 +191,14 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                             <button
                                 type="button"
                                 onClick={handleClose}
-                                className="px-6 py-3 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:text-gray-950 transition-all"
+                                className="px-6 py-3 text-gray-500 text-xs text-slate-500 hover:text-gray-950 transition-all"
                                 disabled={isSubmitting}
                             >
                                 Hủy
                             </button>
                             <button
                                 type="submit"
-                                className="px-8 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
+                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Đang tạo...' : 'Tạo chi phí'}
@@ -313,7 +313,7 @@ export const ExpensesPage = () => {
         };
         const config = configs[status];
         return (
-            <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-black uppercase tracking-widest border border-current opacity-80`}>
+            <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-medium border border-current opacity-80`}>
                 {config.label}
             </span>
         );
@@ -324,7 +324,7 @@ export const ExpensesPage = () => {
             key: 'expenseNumber',
             label: 'Mã chi phí',
             sortable: true,
-            render: (item) => <span className="font-black text-accent font-mono text-xs">{item.expenseNumber}</span>,
+            render: (item) => <span className="font-semibold text-accent font-mono text-xs">{item.expenseNumber}</span>,
         },
         {
             key: 'categoryName',
@@ -341,14 +341,14 @@ export const ExpensesPage = () => {
             key: 'totalAmount',
             label: 'Tổng tiền',
             sortable: true,
-            render: (item) => <span className="font-black text-gray-950 tracking-tighter">{formatCurrency(item.totalAmount)}</span>,
+            render: (item) => <span className="font-semibold text-gray-950 tracking-tighter">{formatCurrency(item.totalAmount)}</span>,
         },
         {
             key: 'expenseDate',
             label: 'Ngày chi',
             sortable: true,
             render: (item) => (
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <span className="text-xs font-bold text-gray-500 uppercase">
                     {new Date(item.expenseDate).toLocaleDateString('vi-VN')}
                 </span>
             ),
@@ -377,16 +377,16 @@ export const ExpensesPage = () => {
         <div className="space-y-10 pb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Quản lý <span className="text-accent">Chi phí</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                    <p className="text-gray-500 font-medium text-xs">
                         Theo dõi và phê duyệt các khoản chi phí
                     </p>
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent transition-all shadow-xl flex items-center gap-3"
+                    className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-xs text-slate-500 hover:bg-accent transition-all shadow-xl flex items-center gap-3"
                 >
                     <Plus size={16} />
                     Tạo chi phí
@@ -400,9 +400,9 @@ export const ExpensesPage = () => {
                         <div className="p-3 bg-gray-50 text-gray-600 rounded-2xl">
                             <Wallet size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tổng chi</span>
+                        <span className="text-xs text-slate-400">Tổng chi</span>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 tracking-tighter">{formatCurrency(summary?.totalExpenses || 0)}</h3>
+                    <h3 className="text-xl font-semibold text-slate-900">{formatCurrency(summary?.totalExpenses || 0)}</h3>
                 </motion.div>
 
                 <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-amber-50">
@@ -410,9 +410,9 @@ export const ExpensesPage = () => {
                         <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
                             <Clock size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Chờ duyệt</span>
+                        <span className="text-xs font-semibold text-amber-500 uppercase">Chờ duyệt</span>
                     </div>
-                    <h3 className="text-2xl font-black text-amber-600 tracking-tighter">{summary?.pendingCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-amber-600 tracking-tighter">{summary?.pendingCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.pendingAmount || 0)}</p>
                 </motion.div>
 
@@ -421,9 +421,9 @@ export const ExpensesPage = () => {
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                             <CheckCircle size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Đã duyệt</span>
+                        <span className="text-xs font-semibold text-blue-500 uppercase">Đã duyệt</span>
                     </div>
-                    <h3 className="text-2xl font-black text-blue-600 tracking-tighter">{summary?.approvedCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-blue-600 tracking-tighter">{summary?.approvedCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.approvedAmount || 0)}</p>
                 </motion.div>
 
@@ -432,9 +432,9 @@ export const ExpensesPage = () => {
                         <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
                             <CreditCard size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Đã chi</span>
+                        <span className="text-xs font-semibold text-green-500 uppercase">Đã chi</span>
                     </div>
-                    <h3 className="text-2xl font-black text-green-600 tracking-tighter">{summary?.paidCount || 0}</h3>
+                    <h3 className="text-2xl font-semibold text-green-600 tracking-tighter">{summary?.paidCount || 0}</h3>
                     <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.paidAmount || 0)}</p>
                 </motion.div>
             </div>
@@ -444,14 +444,14 @@ export const ExpensesPage = () => {
                 <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2">
                         <Filter size={16} className="text-gray-400" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lọc:</span>
+                        <span className="text-xs text-slate-400">Lọc:</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {statusFilters.map((filter) => (
                             <button
                                 key={filter.key}
                                 onClick={() => setStatusFilter(filter.key)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                className={`px-4 py-2 rounded-xl text-xs text-slate-500 transition-all border-2 ${
                                     statusFilter === filter.key
                                         ? 'bg-gray-950 text-white border-gray-950'
                                         : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
@@ -489,13 +489,13 @@ export const ExpensesPage = () => {
                                     <>
                                         <button
                                             onClick={() => handleApprove(item.id)}
-                                            className="px-4 py-2 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all"
+                                            className="px-4 py-2 bg-blue-600 text-white text-[9px] font-medium rounded-lg hover:bg-blue-700 transition-all"
                                         >
                                             Duyệt
                                         </button>
                                         <button
                                             onClick={() => handleReject(item.id)}
-                                            className="px-4 py-2 bg-red-50 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-red-100 transition-all"
+                                            className="px-4 py-2 bg-red-50 text-red-600 text-[9px] font-medium rounded-lg hover:bg-red-100 transition-all"
                                         >
                                             Từ chối
                                         </button>
@@ -504,13 +504,13 @@ export const ExpensesPage = () => {
                                 {item.status === 'Approved' && (
                                     <button
                                         onClick={() => handlePay(item.id)}
-                                        className="px-4 py-2 bg-green-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-green-700 transition-all"
+                                        className="px-4 py-2 bg-green-600 text-white text-[9px] font-medium rounded-lg hover:bg-green-700 transition-all"
                                     >
                                         Thanh toán
                                     </button>
                                 )}
                                 {item.status === 'Paid' && (
-                                    <span className="px-4 py-2 bg-gray-100 text-gray-400 text-[9px] font-black uppercase tracking-widest rounded-lg">
+                                    <span className="px-4 py-2 bg-gray-100 text-gray-400 text-[9px] font-medium rounded-lg">
                                         Hoàn tất
                                     </span>
                                 )}
@@ -523,16 +523,16 @@ export const ExpensesPage = () => {
             {/* Category Breakdown */}
             {summary?.byCategory && summary.byCategory.length > 0 && (
                 <div className="premium-card p-8 border-2">
-                    <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6">Chi phí theo danh mục</h3>
+                    <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">Chi phí theo danh mục</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {summary.byCategory.map((cat) => (
                             <div key={cat.categoryId} className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
                                 <div className="flex justify-between items-start mb-3">
-                                    <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{cat.categoryName}</span>
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{cat.categoryCode}</span>
+                                    <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase">{cat.categoryCode}</span>
                                 </div>
-                                <p className="text-xl font-black text-accent tracking-tighter">{formatCurrency(cat.totalAmount)}</p>
-                                <p className="text-[10px] text-gray-400 mt-1">{cat.expenseCount} khoản chi</p>
+                                <p className="text-xl font-semibold text-accent tracking-tighter">{formatCurrency(cat.totalAmount)}</p>
+                                <p className="text-xs text-gray-400 mt-1">{cat.expenseCount} khoản chi</p>
                             </div>
                         ))}
                     </div>

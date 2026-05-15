@@ -65,7 +65,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h3 className="text-lg font-bold text-gray-900 uppercase italic">Ghi nhận thanh toán</h3>
+            <h3 className="text-lg font-bold text-gray-900 ">Ghi nhận thanh toán</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-500 transition-colors"
@@ -79,16 +79,16 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
             <div className="px-6 py-4 space-y-4">
               <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border-2 border-gray-100">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Mã hóa đơn</span>
-                  <span className="font-black text-gray-950 font-mono tracking-tighter">{invoice.invoiceNumber}</span>
+                  <span className="text-gray-500 font-medium text-xs">Mã hóa đơn</span>
+                  <span className="font-semibold text-gray-950 font-mono tracking-tighter">{invoice.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Khách hàng</span>
-                  <span className="font-black text-gray-950 text-right">{invoice.customerId}</span>
+                  <span className="text-gray-500 font-medium text-xs">Khách hàng</span>
+                  <span className="font-semibold text-gray-950 text-right">{invoice.customerId}</span>
                 </div>
                 <div className="flex justify-between text-sm border-t-2 border-dashed border-gray-200 pt-3">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Dư nợ hiện tại</span>
-                  <span className="font-black text-accent text-xl tracking-tighter italic">
+                  <span className="text-gray-500 font-medium text-xs">Dư nợ hiện tại</span>
+                  <span className="font-semibold text-accent text-xl tracking-tighter">
                     {formatCurrency(invoice.outstandingAmount)}
                   </span>
                 </div>
@@ -96,21 +96,21 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
                     Số tiền thanh toán
                   </label>
                   <input
                     type="number"
                     {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-semibold text-2xl tracking-tighter italic text-accent placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
                   {errors.amount && (
-                    <p className="mt-2 text-xs font-bold text-red-600 uppercase tracking-widest">{errors.amount.message}</p>
+                    <p className="mt-2 text-xs font-bold text-red-600 uppercase">{errors.amount.message}</p>
                   )}
                   {isOverLimit && (
-                    <div className="mt-3 flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-100">
+                    <div className="mt-3 flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs text-slate-500 border border-red-100">
                       <AlertCircle size={14} />
                       <span>Không thể thanh toán vượt quá số tiền nợ</span>
                     </div>
@@ -118,7 +118,7 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
                     Ghi chú
                   </label>
                   <textarea
@@ -135,14 +135,14 @@ function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: Paym
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all active:scale-95"
+                className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-400 text-xs text-slate-500 rounded-xl hover:bg-gray-100 transition-all active:scale-95"
                 disabled={isSubmitting}
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                className="px-8 py-3 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
+                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
                 disabled={isSubmitting || isOverLimit}
               >
                 {isSubmitting ? 'Đang xử lý...' : 'Xác nhận thu nợ'}
@@ -223,7 +223,7 @@ export const ARPage = () => {
     };
     const config = configs[status] || configs.Draft;
     return (
-      <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-black uppercase tracking-widest border border-current opacity-70`}>
+      <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-medium border border-current opacity-70`}>
         {config.label}
       </span>
     );
@@ -235,21 +235,21 @@ export const ARPage = () => {
       label: 'Mã hóa đơn',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-accent font-mono tracking-tighter">{item.invoiceNumber}</span>
+        <span className="font-semibold text-accent font-mono tracking-tighter">{item.invoiceNumber}</span>
       ),
     },
     {
       key: 'customerId',
       label: 'Khách hàng',
       sortable: true,
-      render: (item) => <span className="font-black text-gray-900 uppercase italic text-xs">{item.customerId}</span>,
+      render: (item) => <span className="font-semibold text-gray-900  text-xs">{item.customerId}</span>,
     },
     {
       key: 'totalAmount',
       label: 'Tổng tiền',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-gray-900 tracking-tighter">{formatCurrency(item.totalAmount)}</span>
+        <span className="font-semibold text-gray-900 tracking-tighter">{formatCurrency(item.totalAmount)}</span>
       ),
     },
     {
@@ -257,7 +257,7 @@ export const ARPage = () => {
       label: 'Còn nợ',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-accent tracking-tighter italic">{formatCurrency(item.outstandingAmount)}</span>
+        <span className="font-semibold text-accent tracking-tighter">{formatCurrency(item.outstandingAmount)}</span>
       ),
     },
     {
@@ -265,7 +265,7 @@ export const ARPage = () => {
       label: 'Hạn thanh toán',
       sortable: true,
       render: (item) => (
-        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+        <span className="text-xs font-bold text-gray-500 uppercase">
           {new Date(item.dueDate).toLocaleDateString('vi-VN')}
         </span>
       ),
@@ -291,10 +291,10 @@ export const ARPage = () => {
     <div className="space-y-10 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+          <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
             Quản lý <span className="text-accent">Công nợ phải thu</span>
           </h1>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+          <p className="text-gray-500 font-medium text-xs">
             Theo dõi khoản thu từ khách hàng đại lý (AR)
           </p>
         </div>
@@ -306,12 +306,12 @@ export const ARPage = () => {
           <div className="absolute top-0 right-0 p-8 text-red-500/5 group-hover:scale-125 transition-transform duration-700">
             <DollarSign size={120} />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Tổng nợ chưa thu</p>
-          <h3 className="text-4xl font-black text-accent tracking-tighter italic">
+          <p className="text-gray-400 text-xs text-slate-500 mb-3">Tổng nợ chưa thu</p>
+          <h3 className="text-4xl font-semibold text-accent tracking-tighter">
             {formatCurrency(agingSummary?.totalOutstanding ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50 flex items-center gap-3">
-            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Toàn bộ dư nợ AR</span>
+            <span className="text-xs font-semibold text-gray-900 uppercase">Toàn bộ dư nợ AR</span>
           </div>
         </motion.div>
 
@@ -319,12 +319,12 @@ export const ARPage = () => {
           <div className="absolute top-0 right-0 p-8 text-amber-500/5 group-hover:scale-125 transition-transform duration-700">
             <Clock size={120} />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Dư nợ quá hạn</p>
-          <h3 className="text-4xl font-black text-amber-600 tracking-tighter italic">
+          <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ quá hạn</p>
+          <h3 className="text-4xl font-semibold text-amber-600 tracking-tighter">
             {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0) + (agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">
-            <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic animate-pulse">Cần ưu tiên thu nợ</span>
+            <span className="text-xs font-semibold text-amber-600  animate-pulse">Cần ưu tiên thu nợ</span>
           </div>
         </motion.div>
 
@@ -332,25 +332,25 @@ export const ARPage = () => {
           <div className="absolute top-0 right-0 p-8 text-blue-500/5 group-hover:scale-125 transition-transform duration-700">
             <AlertCircle size={120} />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3 italic">Dư nợ trong hạn</p>
-          <h3 className="text-4xl font-black text-blue-600 tracking-tighter italic">
+          <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ trong hạn</p>
+          <h3 className="text-4xl font-semibold text-blue-600 tracking-tighter">
             {formatCurrency(agingSummary?.current ?? 0)}
           </h3>
           <div className="mt-8 pt-6 border-t-2 border-gray-50">
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Dòng tiền ổn định</span>
+            <span className="text-xs text-slate-500">Dòng tiền ổn định</span>
           </div>
         </motion.div>
       </div>
 
       {/* Aging Filters */}
       <div className="premium-card p-8 border-2 bg-white">
-        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 italic">Phân tích tuổi nợ</h3>
+        <h3 className="text-xs text-slate-400 mb-6">Phân tích tuổi nợ</h3>
         <div className="flex flex-wrap gap-3">
           {agingBuckets.map((bucket) => (
             <button
               key={bucket.key}
               onClick={() => setSelectedAgingBucket(bucket.key)}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedAgingBucket === bucket.key
+              className={`px-6 py-3 rounded-xl text-xs text-slate-500 transition-all border-2 ${selectedAgingBucket === bucket.key
                   ? 'bg-gray-950 text-white border-gray-950 shadow-xl'
                   : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
                 }`}
@@ -373,7 +373,7 @@ export const ARPage = () => {
               placeholder="Tìm kiếm theo mã hóa đơn, khách hàng..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-black uppercase tracking-tighter italic placeholder-gray-400 text-gray-900 transition-all"
+              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-2xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
             />
           </div>
         </div>
@@ -391,7 +391,7 @@ export const ARPage = () => {
               <button
                 onClick={() => openPaymentModal(item)}
                 disabled={item.outstandingAmount <= 0}
-                className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-accent transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-gray-200"
+                className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-medium rounded-xl hover:bg-accent transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-gray-200"
               >
                 Ghi nhận thu nợ
               </button>

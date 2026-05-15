@@ -97,7 +97,7 @@ export default function SystemHealthPage() {
                 </div>
                 
                 <div className="flex items-end gap-2 mb-2">
-                    <span className="text-3xl font-black text-gray-900">{value.toFixed(1)}</span>
+                    <span className="text-3xl font-semibold text-gray-900">{value.toFixed(1)}</span>
                     <span className="text-gray-500 text-lg mb-1">{unit}</span>
                 </div>
 
@@ -118,7 +118,7 @@ export default function SystemHealthPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
                         <Activity className="w-7 h-7 text-accent" />
                         System Health
                     </h1>

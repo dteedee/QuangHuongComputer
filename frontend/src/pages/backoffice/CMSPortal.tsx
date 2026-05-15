@@ -141,24 +141,24 @@ export const CMSPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-3">
                         Quản trị <span className="text-accent">Nội dung</span>
                     </h1>
-                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                    <p className="text-gray-700 font-semibold text-xs flex items-center gap-2">
                         Quản lý giao diện, bài viết và tài nguyên marketing
                     </p>
                 </div>
                 <div className="flex gap-4">
                     <button
                         onClick={() => seedMutation.mutate()}
-                        className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl active:scale-95"
+                        className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-2xl transition-all shadow-xl active:scale-95"
                     >
                         <RefreshCcw size={20} className={seedMutation.isPending ? 'animate-spin' : ''} />
                         Khởi tạo dữ liệu
                     </button>
                     <button
                         onClick={() => handleOpenModal()}
-                        className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-2xl transition-all shadow-xl shadow-blue-500/15 active:scale-95 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo nội dung mới
@@ -184,7 +184,7 @@ export const CMSPortal = () => {
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
                         >
-                            <span className="flex items-center gap-5 font-black uppercase text-xs tracking-tight italic">
+                            <span className="flex items-center gap-5 font-semibold text-xs tracking-tight">
                                 <span>{tab.icon}</span>
                                 {tab.label}
                             </span>
@@ -195,9 +195,9 @@ export const CMSPortal = () => {
                     <div className="mt-6 pt-6 border-t-2 border-gray-100">
                         <button
                             onClick={() => navigate('/admin/homepage-builder')}
-                            className="w-full flex justify-between items-center px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 shadow-sm bg-gradient-to-r from-red-50 to-white border-red-100 text-accent hover:border-red-300 hover:shadow-md group"
+                            className="w-full flex justify-between items-center px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 shadow-sm bg-gradient-to-r from-blue-50 to-white border-blue-100 text-blue-600 hover:border-blue-300 hover:shadow-md group"
                         >
-                            <span className="flex items-center gap-5 font-black uppercase text-xs tracking-tight italic">
+                            <span className="flex items-center gap-5 font-semibold text-xs tracking-tight">
                                 <Home size={20} />
                                 Trình thiết kế Trang chủ
                             </span>
@@ -210,7 +210,7 @@ export const CMSPortal = () => {
                 <div className="lg:col-span-3 space-y-8">
                     <div className="premium-card overflow-hidden border-2 bg-white">
                         <div className="p-10 border-b-2 border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50/30">
-                            <h3 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter">
+                            <h3 className="text-3xl font-semibold text-gray-950  tracking-tighter">
                                 Danh sách: <span className="text-accent">
                                     {{
                                         Pages: 'Trang tĩnh',
@@ -226,12 +226,12 @@ export const CMSPortal = () => {
                             {isLoading ? (
                                 <div className="p-24 text-center">
                                     <Loader2 className="mx-auto animate-spin text-accent" size={48} />
-                                    <p className="mt-4 text-gray-950 font-black uppercase italic tracking-widest text-sm">Đang tải dữ liệu...</p>
+                                    <p className="mt-4 text-gray-950 font-semibold text-sm">Đang tải dữ liệu...</p>
                                 </div>
                             ) : filteredContent.length === 0 ? (
                                 <div className="p-24 text-center">
                                     <Sparkles className="mx-auto text-gray-100 mb-6" size={80} />
-                                    <p className="text-gray-400 font-black uppercase text-sm tracking-widest italic font-sans px-10">Mục bài viết này hiện đang trống. Hãy bắt đầu tạo nội dung đầu tiên của bạn!</p>
+                                    <p className="text-gray-400 font-semibold text-sm italic font-sans px-10">Mục bài viết này hiện đang trống. Hãy bắt đầu tạo nội dung đầu tiên của bạn!</p>
                                 </div>
                             ) : filteredContent.map((item) => (
                                 <div key={item.id} className="p-10 flex items-start md:items-center justify-between hover:bg-gray-50 transition-all group cursor-pointer">
@@ -240,15 +240,15 @@ export const CMSPortal = () => {
                                             {item.type === 'Article' ? <FileText size={32} /> : <Layout size={32} />}
                                         </div>
                                         <div className="max-w-xl">
-                                            <h4 className="font-black text-gray-950 text-xl group-hover:text-accent transition-colors uppercase italic tracking-tight leading-tight">{item.title}</h4>
+                                            <h4 className="font-semibold text-gray-950 text-xl group-hover:text-accent transition-colors  tracking-tight leading-tight">{item.title}</h4>
                                             <div className="flex flex-wrap items-center gap-3 mt-3">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest border px-2 py-0.5 rounded-lg border-gray-100">#{item.type}</span>
-                                                <span className="text-[10px] font-black text-accent uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded-lg border border-red-100 italic">Slug: /{item.slug}</span>
+                                                <span className="text-xs text-slate-400 border px-2 py-0.5 rounded-lg border-gray-100">#{item.type}</span>
+                                                <span className="text-xs font-semibold text-accent uppercase bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">Slug: /{item.slug}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
-                                        <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic border-2 shadow-sm ${item.isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                        <span className={`px-5 py-2 rounded-2xl text-xs text-slate-500 italic border-2 shadow-sm ${item.isPublished ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                                             {item.isPublished ? 'Đã xuất bản' : 'Bản nháp'}
                                         </span>
                                         <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
@@ -271,27 +271,27 @@ export const CMSPortal = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden border-4 border-gray-100">
                             <div className="p-10 border-b-2 border-gray-50 flex items-center justify-between bg-gray-50/30">
                                 <div>
-                                    <h2 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter">
+                                    <h2 className="text-3xl font-semibold text-gray-950  tracking-tighter">
                                         {editingItem ? 'Cấu hình' : 'Thiết kế'} <span className="text-accent">Nội dung</span>
                                     </h2>
-                                    <p className="text-xs font-black text-gray-500 uppercase tracking-widest mt-1">Hệ thống quản trị nội dung CMS</p>
+                                    <p className="text-sm font-medium text-slate-500 mt-1">Hệ thống quản trị nội dung CMS</p>
                                 </div>
-                                <button onClick={() => setIsPostModalOpen(false)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:bg-red-50 hover:text-accent hover:border-red-100 transition-all shadow-sm"><X size={24} /></button>
+                                <button onClick={() => setIsPostModalOpen(false)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-2 border-gray-100 text-gray-400 hover:bg-blue-50 hover:text-accent hover:border-blue-100 transition-all shadow-sm"><X size={24} /></button>
                             </div>
                             <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="col-span-2 space-y-3">
-                                        <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Tiêu đề bài viết / trang</label>
+                                        <label className="text-sm font-medium text-slate-700 ml-1">Tiêu đề bài viết / trang</label>
                                         <input name="title" defaultValue={editingItem?.title} className={`w-full px-6 py-5 bg-white border-2 ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-base font-bold text-gray-950 focus:outline-none shadow-sm transition-all placeholder:text-gray-400`} placeholder="Nhập tiêu đề hấp dẫn..." />
                                         {errors.title && <p className="mt-1 text-xs text-red-500 font-medium">{errors.title}</p>}
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Đường dẫn tĩnh (Slug)</label>
-                                        <input name="slug" defaultValue={editingItem?.slug} className={`w-full px-6 py-5 bg-white border-2 ${errors.slug ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-sm font-black text-accent focus:outline-none shadow-sm font-mono placeholder:text-gray-400`} placeholder="my-awesome-post" />
+                                        <label className="text-sm font-medium text-slate-700 ml-1">Đường dẫn tĩnh (Slug)</label>
+                                        <input name="slug" defaultValue={editingItem?.slug} className={`w-full px-6 py-5 bg-white border-2 ${errors.slug ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-2xl text-sm font-semibold text-accent focus:outline-none shadow-sm font-mono placeholder:text-gray-400`} placeholder="my-awesome-post" />
                                         {errors.slug && <p className="mt-1 text-xs text-red-500 font-medium">{errors.slug}</p>}
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Phân loại</label>
+                                        <label className="text-sm font-medium text-slate-700 ml-1">Phân loại</label>
                                         <SearchableSelect
                                             name="type"
                                             value={editingItem?.type || (activeTab === 'Pages' ? 'Custom' : 'Article')}
@@ -308,7 +308,7 @@ export const CMSPortal = () => {
                                         />
                                     </div>
                                     <div className="col-span-2 space-y-3">
-                                        <label className="text-xs font-black text-gray-950 uppercase tracking-widest ml-1">Nội dung chi tiết (Markdown / HTML)</label>
+                                        <label className="text-sm font-medium text-slate-700 ml-1">Nội dung chi tiết (Markdown / HTML)</label>
                                         <div className="bg-white rounded-2xl border-2 border-gray-100 overflow-hidden shadow-sm focus-within:border-accent transition-all">
                                             <ReactQuill
                                                 theme="snow"
@@ -330,8 +330,8 @@ export const CMSPortal = () => {
                                     </div>
                                     <div className="col-span-2 p-6 bg-gray-50 rounded-2xl border-2 border-gray-100 flex items-center justify-between">
                                         <div className="flex flex-col">
-                                            <span className="text-xs font-black text-gray-900 uppercase tracking-widest">Trạng thái xuất bản</span>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase mt-1 italic">Nội dung sẽ được hiển thị ngay nếu chọn "Đã xuất bản"</span>
+                                            <span className="text-sm font-medium text-slate-800">Trạng thái xuất bản</span>
+                                            <span className="text-xs font-bold text-gray-500 uppercase mt-1">Nội dung sẽ được hiển thị ngay nếu chọn "Đã xuất bản"</span>
                                         </div>
                                         <SearchableSelect
                                             name="isPublished"
@@ -344,8 +344,8 @@ export const CMSPortal = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-6 pt-6 sticky bottom-0 bg-white">
-                                    <button type="button" onClick={() => setIsPostModalOpen(false)} className="flex-1 py-5 text-xs font-black uppercase tracking-widest bg-gray-100 text-gray-500 rounded-2xl hover:bg-gray-200 transition-all font-sans">Hủy thao tác</button>
-                                    <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] flex items-center justify-center gap-4 py-5 text-xs font-black uppercase tracking-widest bg-accent text-white rounded-2xl shadow-2xl shadow-red-500/30 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50">
+                                    <button type="button" onClick={() => setIsPostModalOpen(false)} className="flex-1 py-5 text-sm font-medium bg-gray-100 text-gray-500 rounded-2xl hover:bg-gray-200 transition-all font-sans">Hủy thao tác</button>
+                                    <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="flex-[2] flex items-center justify-center gap-4 py-5 text-sm font-medium bg-accent text-white rounded-2xl shadow-2xl shadow-blue-500/20 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50">
                                         {createMutation.isPending || updateMutation.isPending ? <Loader2 size={24} className="animate-spin" /> : <Check size={24} />}
                                         Xác nhận lưu nội dung
                                     </button>

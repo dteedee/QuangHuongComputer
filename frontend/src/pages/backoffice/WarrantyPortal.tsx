@@ -43,7 +43,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-black text-white uppercase tracking-tight">Chi tiết yêu cầu bảo hành</h2>
+                            <h2 className="text-xl font-semibold text-white uppercase tracking-tight">Chi tiết yêu cầu bảo hành</h2>
                             <p className="text-gray-400 text-sm mt-1">ID: {claim.id.substring(0, 8)}...</p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
@@ -72,11 +72,11 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
                     {/* Serial & Customer */}
                     <div className="grid grid-cols-2 gap-6">
                         <div className="bg-gray-50 rounded-2xl p-5">
-                            <p className="text-xs text-gray-500 font-bold uppercase mb-2">Serial Number</p>
-                            <p className="font-mono font-black text-gray-900">{claim.serialNumber}</p>
+                            <p className="text-xs text-slate-500 font-medium mb-2">Serial Number</p>
+                            <p className="font-mono font-semibold text-gray-900">{claim.serialNumber}</p>
                         </div>
                         <div className="bg-gray-50 rounded-2xl p-5">
-                            <p className="text-xs text-gray-500 font-bold uppercase mb-2">Phương thức mong muốn</p>
+                            <p className="text-xs text-slate-500 font-medium mb-2">Phương thức mong muốn</p>
                             <p className="font-bold text-gray-900">
                                 {claim.preferredResolution === 'Repair' && 'Sửa chữa'}
                                 {claim.preferredResolution === 'Replace' && 'Đổi mới'}
@@ -87,7 +87,7 @@ const ClaimDetailModal = ({ claim, onClose, onApprove, onReject, onResolve }: Cl
 
                     {/* Issue Description */}
                     <div className="bg-gray-50 rounded-2xl p-5">
-                        <p className="text-xs text-gray-500 font-bold uppercase mb-2">Mô tả lỗi</p>
+                        <p className="text-xs text-slate-500 font-medium mb-2">Mô tả lỗi</p>
                         <p className="text-gray-900">{claim.issueDescription}</p>
                     </div>
 
@@ -340,10 +340,10 @@ export const WarrantyPortal = () => {
 
     const getStatusBadge = (status: number) => {
         switch (status) {
-            case 0: return <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] font-black uppercase">Hiệu lực</span>;
-            case 1: return <span className="px-4 py-1.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-xl text-[10px] font-black uppercase">Hết hạn</span>;
-            case 2: return <span className="px-4 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-xl text-[10px] font-black uppercase">Đã hủy</span>;
-            default: return <span className="px-4 py-1.5 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl text-[10px] font-black uppercase">N/A</span>;
+            case 0: return <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">Hiệu lực</span>;
+            case 1: return <span className="px-4 py-1.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-xl text-xs font-semibold">Hết hạn</span>;
+            case 2: return <span className="px-4 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-semibold">Đã hủy</span>;
+            default: return <span className="px-4 py-1.5 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl text-xs font-semibold">N/A</span>;
         }
     };
 
@@ -364,7 +364,7 @@ export const WarrantyPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight uppercase">
+                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight uppercase">
                         Quản lý <span className="text-accent">Bảo hành</span>
                     </h1>
                     <p className="text-gray-500 font-medium mt-2">
@@ -420,7 +420,7 @@ export const WarrantyPortal = () => {
                                     </div>
                                     <span className="text-xs font-bold text-amber-600 uppercase">Chờ xử lý</span>
                                 </div>
-                                <h3 className="text-4xl font-black text-gray-900">{claimStats.pending}</h3>
+                                <h3 className="text-4xl font-semibold text-gray-900">{claimStats.pending}</h3>
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Approved')}
@@ -433,7 +433,7 @@ export const WarrantyPortal = () => {
                                     </div>
                                     <span className="text-xs font-bold text-blue-600 uppercase">Đã duyệt</span>
                                 </div>
-                                <h3 className="text-4xl font-black text-gray-900">{claimStats.approved}</h3>
+                                <h3 className="text-4xl font-semibold text-gray-900">{claimStats.approved}</h3>
                             </div>
                             <div
                                 onClick={() => setStatusFilter('Resolved')}
@@ -446,7 +446,7 @@ export const WarrantyPortal = () => {
                                     </div>
                                     <span className="text-xs font-bold text-emerald-600 uppercase">Hoàn thành</span>
                                 </div>
-                                <h3 className="text-4xl font-black text-gray-900">{claimStats.resolved}</h3>
+                                <h3 className="text-4xl font-semibold text-gray-900">{claimStats.resolved}</h3>
                             </div>
                             <div
                                 onClick={() => setStatusFilter('')}
@@ -459,7 +459,7 @@ export const WarrantyPortal = () => {
                                     </div>
                                     <span className="text-xs font-bold text-gray-600 uppercase">Tổng cộng</span>
                                 </div>
-                                <h3 className="text-4xl font-black text-gray-900">{claimStats.total}</h3>
+                                <h3 className="text-4xl font-semibold text-gray-900">{claimStats.total}</h3>
                             </div>
                         </div>
                     )}
@@ -587,21 +587,21 @@ export const WarrantyPortal = () => {
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                         <div>
-                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Serial</p>
+                                            <p className="text-xs text-slate-500 font-medium mb-1">Serial</p>
                                             <p className="font-mono font-bold text-gray-900">{searchResult.serialNumber}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Trạng thái</p>
+                                            <p className="text-xs text-slate-500 font-medium mb-1">Trạng thái</p>
                                             <span className={`px-3 py-1 rounded-lg text-sm font-bold ${searchResult.isValid ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                                                 {searchResult.status}
                                             </span>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Ngày hết hạn</p>
+                                            <p className="text-xs text-slate-500 font-medium mb-1">Ngày hết hạn</p>
                                             <p className="font-bold text-gray-900">{new Date(searchResult.expirationDate).toLocaleDateString('vi-VN')}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Mã sản phẩm</p>
+                                            <p className="text-xs text-slate-500 font-medium mb-1">Mã sản phẩm</p>
                                             <p className="font-mono text-xs text-gray-500">{searchResult.productId?.substring(0, 12)}...</p>
                                         </div>
                                     </div>
@@ -618,7 +618,7 @@ export const WarrantyPortal = () => {
                                     <CheckCircle className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-4xl font-black text-gray-900">
+                            <h3 className="text-4xl font-semibold text-gray-900">
                                 {warranties.filter(w => !isExpired(w.expirationDate) && w.status === 0).length}
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Đang hiệu lực</p>
@@ -629,7 +629,7 @@ export const WarrantyPortal = () => {
                                     <AlertCircle className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-4xl font-black text-gray-900">
+                            <h3 className="text-4xl font-semibold text-gray-900">
                                 {warranties.filter(w => {
                                     const daysLeft = Math.ceil((new Date(w.expirationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                                     return daysLeft > 0 && daysLeft <= 30;
@@ -643,7 +643,7 @@ export const WarrantyPortal = () => {
                                     <Clock className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-4xl font-black text-gray-900">
+                            <h3 className="text-4xl font-semibold text-gray-900">
                                 {warranties.filter(w => isExpired(w.expirationDate) || w.status === 1).length}
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Đã hết hạn</p>
@@ -654,7 +654,7 @@ export const WarrantyPortal = () => {
                                     <Package className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-4xl font-black text-gray-900">{warranties.length}</h3>
+                            <h3 className="text-4xl font-semibold text-gray-900">{warranties.length}</h3>
                             <p className="text-sm text-gray-500 mt-1">Tổng số bảo hành</p>
                         </div>
                     </div>

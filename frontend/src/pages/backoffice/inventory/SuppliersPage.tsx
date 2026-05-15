@@ -51,7 +51,7 @@ const StatCard = ({ icon: Icon, label, value, subValue, color, trend }: {
             )}
         </div>
         <div className="mt-4">
-            <p className="text-2xl font-black text-gray-900">{value}</p>
+            <p className="text-2xl font-semibold text-gray-900">{value}</p>
             <p className="text-sm text-gray-500 font-medium">{label}</p>
             {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
         </div>
@@ -608,7 +608,7 @@ const SupplierDetailDrawer = ({
                     {supplier.logoUrl ? (
                         <img src={supplier.logoUrl} alt={supplier.name} className="w-16 h-16 rounded-2xl object-cover" />
                     ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-black">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-red-600 flex items-center justify-center text-white text-2xl font-semibold">
                             {supplier.name.charAt(0)}
                         </div>
                     )}
@@ -623,7 +623,7 @@ const SupplierDetailDrawer = ({
                                 {supplier.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
                             </span>
                         </div>
-                        <h2 className="text-xl font-black text-gray-900 mt-1">{supplier.name}</h2>
+                        <h2 className="text-xl font-semibold text-gray-900 mt-1">{supplier.name}</h2>
                         <p className="text-sm text-gray-500">{supplier.supplierTypeDisplay}</p>
                     </div>
                 </div>
@@ -645,12 +645,12 @@ const SupplierDetailDrawer = ({
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4">
                     <Package size={20} className="text-blue-600" />
-                    <p className="text-2xl font-black text-gray-900 mt-2">{supplier.totalOrders}</p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-2">{supplier.totalOrders}</p>
                     <p className="text-xs text-gray-500">Đơn hàng</p>
                 </div>
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4">
                     <TrendingUp size={20} className="text-emerald-600" />
-                    <p className="text-2xl font-black text-gray-900 mt-2">{formatCurrency(supplier.totalPurchaseAmount)}</p>
+                    <p className="text-2xl font-semibold text-gray-900 mt-2">{formatCurrency(supplier.totalPurchaseAmount)}</p>
                     <p className="text-xs text-gray-500">Tổng mua hàng</p>
                 </div>
             </div>
@@ -931,7 +931,7 @@ export function SuppliersPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
+                    <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight  leading-none mb-3">
                         Nhà <span className="text-accent">Cung Cấp</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
@@ -940,7 +940,7 @@ export function SuppliersPage() {
                 </div>
                 <button
                     onClick={() => { setEditingSupplier(null); setShowForm(true); }}
-                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-bold uppercase tracking-wide rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                    className="flex items-center gap-3 px-6 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium tracking-wide rounded-2xl transition-all shadow-lg shadow-blue-500/15 active:scale-95"
                 >
                     <Plus size={20} />
                     Thêm nhà cung cấp
@@ -1185,7 +1185,7 @@ export function SuppliersPage() {
                             className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                         >
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+                                <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">
                                     {editingSupplier ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">

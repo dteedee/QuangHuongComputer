@@ -114,15 +114,15 @@ export const CommonDashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-3">
                         Bảng điều khiển <span className="text-accent">Tổng quan</span>
                     </h1>
                     <div className="flex items-center gap-4">
-                        <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                        <p className="text-gray-700 font-semibold text-xs flex items-center gap-2">
                             Trung tâm điều hành Quang Hưởng Computer
                         </p>
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                        <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest italic flex items-center gap-2">
+                        <p className="text-gray-400 font-medium text-xs italic flex items-center gap-2">
                             <Clock size={14} /> LIVE: {new Date().toLocaleTimeString()}
                         </p>
                     </div>
@@ -130,13 +130,13 @@ export const CommonDashboard = () => {
                 <div className="flex gap-4">
                     <button
                         onClick={handleExportReport}
-                        className="px-8 py-4 bg-white border-2 border-gray-100 rounded-2xl text-xs font-black text-gray-950 uppercase tracking-widest shadow-sm hover:border-accent transition-all active:scale-95 hover:bg-red-50"
+                        className="px-5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 shadow-sm hover:border-blue-300 transition-all active:scale-95 hover:bg-blue-50"
                     >
                         Xuất dữ liệu báo cáo
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/reports')}
-                        className="px-8 py-4 bg-gray-950 rounded-2xl text-xs font-black text-white uppercase tracking-widest shadow-2xl shadow-gray-900/30 hover:bg-black transition-all active:scale-95 flex items-center gap-3 italic"
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white shadow-sm transition-all active:scale-95 flex items-center gap-2"
                     >
                         <TrendingUp size={20} className="text-accent" /> Phân tích chuyên sâu
                     </button>
@@ -155,14 +155,14 @@ export const CommonDashboard = () => {
                                 {stat.icon}
                             </div>
                             {stat.trend !== 'none' && (
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm border ${stat.trend === 'up' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs text-slate-500 shadow-sm border ${stat.trend === 'up' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                                     {stat.trend === 'up' ? <ArrowUpRight size={14} strokeWidth={3} /> : <ArrowDownRight size={14} strokeWidth={3} />}
                                     {stat.change}
                                 </div>
                             )}
                         </div>
-                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 italic">{stat.label}</p>
-                        <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic leading-none">{stat.value}</h3>
+                        <p className="text-gray-500 text-xs text-slate-500 mb-2">{stat.label}</p>
+                        <h3 className="text-2xl font-bold text-slate-900 leading-none">{stat.value}</h3>
                     </div>
                 ))}
             </div>
@@ -172,8 +172,8 @@ export const CommonDashboard = () => {
                 <div className="lg:col-span-2 premium-card p-10 border-2 bg-white flex flex-col min-h-[550px] overflow-hidden">
                     <div className="flex items-center justify-between mb-14 pb-8 border-b-2 border-gray-50">
                         <div>
-                            <h3 className="text-3xl font-black text-gray-950 tracking-tighter uppercase italic">Hiệu suất <span className="text-accent">Doanh thu</span></h3>
-                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-2">Phân tích dòng tiền theo chu kỳ kinh doanh {new Date().getFullYear()}</p>
+                            <h3 className="text-xl font-semibold text-slate-900">Hiệu suất <span className="text-accent">Doanh thu</span></h3>
+                            <p className="text-xs text-slate-400 mt-2">Phân tích dòng tiền theo chu kỳ kinh doanh {new Date().getFullYear()}</p>
                         </div>
                         <SearchableSelect
                             options={[]}
@@ -192,14 +192,14 @@ export const CommonDashboard = () => {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${Math.max(heightPercent, 2)}%` }} // Ensure at least a tiny visible bar
                                             transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gradient-to-t from-accent to-red-600 shadow-2xl' : 'bg-gradient-to-t from-red-100 to-red-200 group-hover:from-accent group-hover:to-red-500 group-hover:shadow-brand-lg'}`}
+                                            className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === new Date().getMonth() ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-2xl' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
                                         >
-                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
+                                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
                                                 {formatCurrency(data.revenue)}
                                             </div>
                                         </motion.div>
                                     </div>
-                                    <span className={`text-[10px] font-black uppercase italic tracking-tighter ${i === new Date().getMonth() ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
+                                    <span className={`text-xs text-slate-400 ${i === new Date().getMonth() ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
                                 </div>
                             );
                         }) : [40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
@@ -209,14 +209,14 @@ export const CommonDashboard = () => {
                                         initial={{ height: 0 }}
                                         animate={{ height: `${h}%` }}
                                         transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-accent to-red-600 shadow-2xl' : 'bg-gradient-to-t from-red-100 to-red-200 group-hover:from-accent group-hover:to-red-500 group-hover:shadow-brand-lg'}`}
+                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-2xl' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
                                     >
-                                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-[10px] font-black px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
+                                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-2xl z-20">
                                             {h}%
                                         </div>
                                     </motion.div>
                                 </div>
-                                <span className={`text-[10px] font-black uppercase italic tracking-tighter ${i === 11 ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
+                                <span className={`text-xs text-slate-400 ${i === 11 ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
                             </div>
                         ))}
                     </div>
@@ -225,9 +225,9 @@ export const CommonDashboard = () => {
                 {/* Recent activity */}
                 <div className="premium-card p-10 border-2 bg-white flex flex-col">
                     <div className="flex items-center justify-between mb-10 pb-8 border-b-2 border-gray-50">
-                        <h3 className="text-2xl font-black text-gray-950 tracking-tighter uppercase italic flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-3">
                             Dòng <span className="text-accent">Hoạt động</span>
-                            <span className="w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-ping" />
                         </h3>
                     </div>
 
@@ -238,11 +238,11 @@ export const CommonDashboard = () => {
                                     {act.icon}
                                 </div>
                                 <div className="flex-1 min-w-0 pt-1">
-                                    <p className="text-base font-black text-gray-950 leading-tight group-hover:text-accent transition-colors uppercase italic tracking-tight">{act.title}</p>
+                                    <p className="text-base font-semibold text-gray-950 leading-tight group-hover:text-accent transition-colors  tracking-tight">{act.title}</p>
                                     <div className="flex items-center gap-3 mt-3">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[100px] border border-gray-100 px-2 py-0.5 rounded-md italic">ID: {act.user}</p>
+                                        <p className="text-xs text-slate-400 truncate max-w-[100px] border border-gray-100 px-2 py-0.5 rounded-md">ID: {act.user}</p>
                                         <span className="w-1.5 h-1.5 bg-gray-200 rounded-full" />
-                                        <p className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2 tracking-widest">
+                                        <p className="text-xs text-slate-500 flex items-center gap-2">
                                             <Clock size={12} className="text-gray-300" /> {act.time}
                                         </p>
                                     </div>
@@ -253,7 +253,7 @@ export const CommonDashboard = () => {
 
                     <button
                         onClick={() => navigate('/backoffice/reports')}
-                        className="w-full py-5 mt-10 bg-gray-50 hover:bg-gray-100 text-gray-950 text-xs font-black uppercase tracking-widest rounded-2xl transition-all border-2 border-gray-100 flex items-center justify-center gap-3 group italic shadow-sm hover:shadow-md"
+                        className="w-full py-3 mt-6 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-lg transition-all border border-slate-200 flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
                     >
                         Xem nhật ký vận hành
                         <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-accent" />

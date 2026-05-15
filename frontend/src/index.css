@@ -6,10 +6,10 @@
 /* These CSS variables are dynamically set by ThemeContext.tsx    */
 /* Default values match the 'red' accent (brand color #D70018)   */
 :root {
-  --accent-primary: #D70018;
-  --accent-primary-hover: #B50014;
-  --accent-primary-light: #FEE2E2;
-  --accent-primary-dark: #991B1B;
+  --accent-primary: #2563EB;
+  --accent-primary-hover: #1D4ED8;
+  --accent-primary-light: #EFF6FF;
+  --accent-primary-dark: #1E40AF;
 }
 
 
@@ -106,7 +106,7 @@ textarea::placeholder {
 
 .button-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(215, 0, 24, 0.15);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .button-hover:active {
@@ -331,10 +331,10 @@ img[loaded] {
 /* Pulse glow animation */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(215, 0, 24, 0.4);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px 5px rgba(215, 0, 24, 0.2);
+    box-shadow: 0 0 20px 5px rgba(37, 99, 235, 0.15);
   }
 }
 
@@ -472,12 +472,12 @@ img[loaded] {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(215, 0, 24, 0.3);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 5px 10px rgba(215, 0, 24, 0.2);
+  box-shadow: 0 5px 10px rgba(37, 99, 235, 0.15);
 }
 
 /* ==================== Enhanced Input Styles ==================== */
@@ -555,7 +555,7 @@ img[loaded] {
 
 /* ==================== Text Gradient ==================== */
 .text-gradient {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #ff4d6d 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #60a5fa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -584,37 +584,24 @@ img[loaded] {
 
 /* Backoffice Branding & High Contrast */
 .premium-card {
-    @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300 rounded-2xl;
+    @apply bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 shadow-sm transition-all duration-300 rounded-xl;
 }
 
 .premium-card:hover {
-    @apply border-gray-300 dark:border-gray-700 shadow-md;
+    @apply border-slate-300 dark:border-gray-700 shadow-md;
 }
 
 .admin-title {
-    @apply text-gray-900 dark:text-gray-100 font-black uppercase tracking-tight;
+    @apply text-gray-900 dark:text-gray-100 font-semibold;
 }
 
 .admin-label {
-    @apply text-gray-700 dark:text-gray-400 font-bold uppercase tracking-wide text-sm;
+    @apply text-slate-600 dark:text-gray-400 font-medium text-sm;
 }
 
 .admin-value {
-    @apply text-gray-900 dark:text-gray-100 font-extrabold;
+    @apply text-gray-900 dark:text-gray-100 font-bold;
 }
-
-
-/* Override small text in admin */
-.admin-area .text-xs { font-size: 0.875rem !important; } /* force to 14px */
-.admin-area .text-\[10px\] { font-size: 0.8125rem !important; } /* force to 13px */
-.admin-area .text-\[11px\] { font-size: 0.8125rem !important; } /* force to 13px */
-
-/* High-contrast colors - scoped to admin area only */
-.admin-area .text-gray-400 { color: #6b7280; /* Tailwind gray-500 */ }
-.dark .admin-area .text-gray-400 { color: #9ca3af; /* Tailwind gray-400 */ }
-
-.admin-area .text-gray-500 { color: #374151; /* Tailwind gray-700 */ }
-.dark .admin-area .text-gray-500 { color: #d1d5db; /* Tailwind gray-300 */ }
 
 
 /* Branding overrides */

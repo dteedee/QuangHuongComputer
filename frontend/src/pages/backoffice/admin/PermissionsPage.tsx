@@ -108,7 +108,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
           </span>
           {changedRoles.size > 0 && (
             <button onClick={saveAll}
-              className="flex items-center gap-2 px-5 py-2 bg-accent text-white rounded-xl shadow-lg shadow-red-500/30 hover:bg-accent-hover font-bold text-sm transition-all">
+              className="flex items-center gap-2 px-5 py-2 bg-accent text-white rounded-xl shadow-lg shadow-blue-500/20 hover:bg-accent-hover font-bold text-sm transition-all">
               <Save size={16} /> Lưu tất cả ({changedRoles.size})
             </button>
           )}
@@ -120,7 +120,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-20 bg-white">
               <tr>
-                <th className="sticky left-0 z-30 bg-gray-50 px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest border-b border-r border-gray-100 min-w-[280px]">
+                <th className="sticky left-0 z-30 bg-gray-50 px-6 py-4 text-left text-sm font-medium text-slate-500 border-b border-r border-gray-100 min-w-[280px]">
                   Quyền hạn
                 </th>
                 {roles.map(role => (
@@ -129,7 +129,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
                       <span className="text-xs font-bold text-gray-900 whitespace-nowrap">{role.name}</span>
                       {changedRoles.has(role.id) && (
                         <button onClick={() => saveRole(role.id)} disabled={savingRole === role.id}
-                          className="text-[10px] px-2 py-0.5 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all">
+                          className="text-xs px-2 py-0.5 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all">
                           {savingRole === role.id ? '...' : 'Lưu'}
                         </button>
                       )}
@@ -143,7 +143,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
                 <>{/* Module Header */}
                   <tr key={`mod-${module}`} className="bg-blue-50/50">
                     <td colSpan={1 + roles.length} className="px-6 py-3 border-b border-gray-100">
-                      <span className="text-sm font-black text-gray-800 uppercase tracking-tight">{module}</span>
+                      <span className="text-sm font-semibold text-gray-800 uppercase tracking-tight">{module}</span>
                       <span className="ml-2 text-xs font-bold text-gray-400">({Object.values(categories).flat().length})</span>
                     </td>
                   </tr>
@@ -153,7 +153,7 @@ function MatrixView({ roles, allPermissions, groupedPermissions, canManagePermis
                         <tr key={permission.id} className="hover:bg-gray-50/50 transition-colors group">
                           <td className="sticky left-0 bg-white group-hover:bg-gray-50 px-6 py-2.5 border-b border-r border-gray-50 z-10">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-gray-300 uppercase">{category}.</span>
+                              <span className="text-xs font-bold text-gray-300 uppercase">{category}.</span>
                               <span className="text-xs font-medium text-gray-700 truncate max-w-[200px]" title={permission.name}>
                                 {permission.name.split('.').pop()}
                               </span>
@@ -446,7 +446,7 @@ export function PermissionsPage() {
                           whileTap={{ scale: 0.95 }}
                           onClick={handleSavePermissions}
                           disabled={updatePermissionsMutation.isPending}
-                          className="flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-xl shadow-lg shadow-red-500/30 hover:bg-accent-hover font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-xl shadow-lg shadow-blue-500/20 hover:bg-accent-hover font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save size={18} />
                           {updatePermissionsMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
@@ -534,7 +534,7 @@ export function PermissionsPage() {
 
                                     return (
                                       <div key={category}>
-                                        <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 pl-2 border-l-2 border-gray-200">
+                                        <h4 className="text-sm font-medium text-slate-400 mb-3 pl-2 border-l-2 border-gray-200">
                                           {category}
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

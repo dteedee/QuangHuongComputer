@@ -251,7 +251,7 @@ const CreatePOModal = ({
                                                 {(item.quantity * item.unitPrice).toLocaleString('vi-VN')}
                                             </td>
                                             <td className="px-2 py-3">
-                                                <button type="button" onClick={() => removeItem(idx)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
+                                                <button type="button" onClick={() => removeItem(idx)} className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors">
                                                     <Trash2 size={16} className="text-red-500" />
                                                 </button>
                                             </td>
@@ -291,7 +291,7 @@ const CreatePOModal = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting || items.length === 0 || !supplierId}
-                            className="px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
                             <Plus size={16} />
@@ -426,7 +426,7 @@ export default function PurchaseOrdersPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-red-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                             <ShoppingCart size={22} className="text-white" />
                         </div>
                         Đơn mua hàng
@@ -435,7 +435,7 @@ export default function PurchaseOrdersPage() {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-[#b5001e] transition-all shadow-lg shadow-red-200 hover:shadow-red-300"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-hover transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300"
                 >
                     <Plus size={18} />
                     Tạo đơn mua hàng

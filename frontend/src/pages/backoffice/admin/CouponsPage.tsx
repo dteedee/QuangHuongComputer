@@ -316,7 +316,7 @@ export function CouponsPage() {
           </button>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-bold text-sm shadow-lg shadow-red-500/20"
+            className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-bold text-sm shadow-lg shadow-blue-500/15"
           >
             <Plus className="w-4 h-4" />
             Tạo mã lẻ
@@ -707,11 +707,11 @@ export function CouponsPage() {
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-white uppercase tracking-tight flex items-center gap-2">
                     <PackagePlus className="w-5 h-5" /> 
                     Phát hành mã hàng loạt
                   </h2>
-                  <p className="text-purple-100 text-xs font-bold uppercase tracking-widest mt-1">Dành cho chiến dịch Marketing cấm sao chép</p>
+                  <p className="text-purple-100 text-xs font-medium mt-1">Dành cho chiến dịch Marketing cấm sao chép</p>
                 </div>
                 <button onClick={() => setIsBulkModalOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
                   <X className="w-5 h-5 text-white" />
@@ -723,19 +723,19 @@ export function CouponsPage() {
               
               <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 flex gap-4 items-center">
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-purple-900 uppercase tracking-widest mb-2">Số lượng mã</label>
+                  <label className="block text-xs font-bold text-purple-900 uppercase mb-2">Số lượng mã</label>
                   <input
                     type="number"
                     value={bulkQuantity}
                     onChange={(e) => setBulkQuantity(Number(e.target.value))}
                     min={1}
                     max={500}
-                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-0 focus:border-purple-500 font-black text-xl text-center text-purple-700"
+                    className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-0 focus:border-purple-500 font-semibold text-xl text-center text-purple-700"
                     required
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-purple-900 uppercase tracking-widest mb-2">Tiền tố mã</label>
+                  <label className="block text-xs font-bold text-purple-900 uppercase mb-2">Tiền tố mã</label>
                   <input
                     type="text"
                     value={bulkPrefix}
@@ -750,7 +750,7 @@ export function CouponsPage() {
               {/* Discount Type & Value */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Loại giảm giá</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Loại giảm giá</label>
                   <SearchableSelect
                       value={formData.discountType}
                       onChange={null}
@@ -761,7 +761,7 @@ export function CouponsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
                     Giá trị {formData.discountType === 'Percentage' ? '(%)' : '(VNĐ)'}
                   </label>
                   <input
@@ -779,7 +779,7 @@ export function CouponsPage() {
                {/* Valid From & To */}
                <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Bắt đầu</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Bắt đầu</label>
                   <input
                     type="date"
                     value={formData.validFrom}
@@ -789,7 +789,7 @@ export function CouponsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Kết thúc</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Kết thúc</label>
                   <input
                     type="date"
                     value={formData.validTo}
@@ -803,7 +803,7 @@ export function CouponsPage() {
               {/* Min Order & Max Discount */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Đơn tối thiểu (VNĐ)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Đơn tối thiểu (VNĐ)</label>
                   <input
                     type="number"
                     value={formData.minOrderAmount}
@@ -813,7 +813,7 @@ export function CouponsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Giảm tối đa (VNĐ)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Giảm tối đa (VNĐ)</label>
                   <input
                     type="number"
                     value={formData.maxDiscount || ''}
@@ -827,7 +827,7 @@ export function CouponsPage() {
 
               {/* Usage Limit */}
               <div>
-                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Giới hạn sử dụng MỖI MÃ</label>
+                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Giới hạn sử dụng MỖI MÃ</label>
                  <input
                   type="number"
                   value={formData.usageLimit || ''}
@@ -840,7 +840,7 @@ export function CouponsPage() {
 
                {/* Description */}
                <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Mô tả (Áp dụng chung)</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả (Áp dụng chung)</label>
                 <input
                   type="text"
                   value={formData.description}
@@ -855,13 +855,13 @@ export function CouponsPage() {
                 <button
                   type="button"
                   onClick={() => setIsBulkModalOpen(false)}
-                  className="flex-1 px-4 py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-black uppercase tracking-widest transition-colors"
+                  className="flex-1 px-4 py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-medium transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-black uppercase tracking-widest transition-transform shadow-xl shadow-purple-500/30 hover:scale-105 active:scale-95 flex justify-center items-center gap-2"
+                  className="flex-1 px-4 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-medium transition-transform shadow-xl shadow-purple-500/30 hover:scale-105 active:scale-95 flex justify-center items-center gap-2"
                 >
                   <PackagePlus size={18} />
                   Phát hành ngay

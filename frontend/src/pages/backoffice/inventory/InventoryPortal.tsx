@@ -165,7 +165,7 @@ export const InventoryPortal = () => {
     const getStockBadge = (quantity: number, threshold: number = 5) => {
         if (quantity === 0) {
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-red-100 text-red-700 ring-1 ring-red-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 ring-1 ring-red-200">
                     <AlertCircle size={12} />
                     HẾT HÀNG
                 </span>
@@ -173,14 +173,14 @@ export const InventoryPortal = () => {
         }
         if (quantity <= threshold) {
             return (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 ring-1 ring-amber-200">
                     <AlertTriangle size={12} />
                     SẮP HẾT
                 </span>
             );
         }
         return (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                 <CheckCircle size={12} />
                 CÒN HÀNG
             </span>
@@ -196,16 +196,16 @@ export const InventoryPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Quản lý <span className="text-accent">Kho hàng</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                    <p className="text-gray-500 font-medium text-xs">
                         Theo dõi số lượng tồn kho, cảnh báo sắp hết hàng và điều chỉnh nhanh
                     </p>
                 </div>
                 <button
                     onClick={() => refetch()}
-                    className="flex items-center gap-3 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+                    className="flex items-center gap-3 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition-all"
                 >
                     <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                     Làm mới
@@ -223,7 +223,7 @@ export const InventoryPortal = () => {
                     </div>
                     <div>
                         <p className="font-bold text-gray-900 text-sm">Phiếu Nhập Kho</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">Quản lý GRN</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Quản lý GRN</p>
                     </div>
                 </Link>
                 <Link
@@ -235,7 +235,7 @@ export const InventoryPortal = () => {
                     </div>
                     <div>
                         <p className="font-bold text-gray-900 text-sm">Phiếu Xuất Kho</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">Quản lý DN</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Quản lý DN</p>
                     </div>
                 </Link>
                 <Link
@@ -247,7 +247,7 @@ export const InventoryPortal = () => {
                     </div>
                     <div>
                         <p className="font-bold text-gray-900 text-sm">Kiểm Kê Kho</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">Phiên kiểm kê</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Phiên kiểm kê</p>
                     </div>
                 </Link>
             </div>
@@ -267,8 +267,8 @@ export const InventoryPortal = () => {
                             <Package size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 tracking-tighter tabular-nums">{stats.total}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Tổng SP</p>
+                    <h3 className="text-xl font-semibold text-slate-900 tabular-nums">{stats.total}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Tổng SP</p>
                 </motion.div>
 
                 <motion.div
@@ -284,8 +284,8 @@ export const InventoryPortal = () => {
                             <Layers size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 tracking-tighter tabular-nums">{stats.totalStock.toLocaleString()}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Tổng kho</p>
+                    <h3 className="text-xl font-semibold text-slate-900 tabular-nums">{stats.totalStock.toLocaleString()}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Tổng kho</p>
                 </motion.div>
 
                 <motion.div
@@ -301,8 +301,8 @@ export const InventoryPortal = () => {
                             <CheckCircle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-black text-emerald-600 tracking-tighter tabular-nums">{stats.inStock}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Còn hàng</p>
+                    <h3 className="text-2xl font-semibold text-emerald-600 tracking-tighter tabular-nums">{stats.inStock}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Còn hàng</p>
                 </motion.div>
 
                 <motion.div
@@ -318,8 +318,8 @@ export const InventoryPortal = () => {
                             <AlertTriangle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-black text-amber-600 tracking-tighter tabular-nums">{stats.lowStock}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Sắp hết</p>
+                    <h3 className="text-2xl font-semibold text-amber-600 tracking-tighter tabular-nums">{stats.lowStock}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Sắp hết</p>
                 </motion.div>
 
                 <motion.div
@@ -335,8 +335,8 @@ export const InventoryPortal = () => {
                             <AlertCircle size={20} />
                         </div>
                     </div>
-                    <h3 className="text-2xl font-black text-red-600 tracking-tighter tabular-nums">{stats.outOfStock}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-1">Hết hàng</p>
+                    <h3 className="text-2xl font-semibold text-red-600 tracking-tighter tabular-nums">{stats.outOfStock}</h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">Hết hàng</p>
                 </motion.div>
             </div>
 
@@ -383,14 +383,14 @@ export const InventoryPortal = () => {
                     <table className="w-full">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="text-left py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                <th className="text-left py-4 px-6 text-xs text-slate-500">
                                     Sản phẩm
                                 </th>
-                                <th className="text-left py-4 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                <th className="text-left py-4 px-4 text-xs text-slate-500">
                                     Danh mục
                                 </th>
                                 <th
-                                    className="text-center py-4 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-gray-900 transition-colors"
+                                    className="text-center py-4 px-4 text-xs text-slate-500 cursor-pointer hover:text-gray-900 transition-colors"
                                     onClick={() => handleSort('stockQuantity')}
                                 >
                                     <span className="inline-flex items-center gap-1">
@@ -398,11 +398,11 @@ export const InventoryPortal = () => {
                                         <ArrowUpDown size={12} />
                                     </span>
                                 </th>
-                                <th className="text-center py-4 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                <th className="text-center py-4 px-4 text-xs text-slate-500">
                                     Trạng thái
                                 </th>
                                 <th
-                                    className="text-right py-4 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-gray-900 transition-colors"
+                                    className="text-right py-4 px-4 text-xs text-slate-500 cursor-pointer hover:text-gray-900 transition-colors"
                                     onClick={() => handleSort('price')}
                                 >
                                     <span className="inline-flex items-center gap-1 justify-end">
@@ -410,7 +410,7 @@ export const InventoryPortal = () => {
                                         <ArrowUpDown size={12} />
                                     </span>
                                 </th>
-                                <th className="text-center py-4 px-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                <th className="text-center py-4 px-6 text-xs text-slate-500">
                                     Thao tác
                                 </th>
                             </tr>
@@ -521,7 +521,7 @@ export const InventoryPortal = () => {
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <span className={`text-xl font-black tabular-nums ${
+                                                    <span className={`text-xl font-semibold tabular-nums ${
                                                         product.stockQuantity === 0 ? 'text-red-600' :
                                                         product.stockQuantity <= 5 ? 'text-amber-600' : 'text-gray-900'
                                                     }`}>
@@ -603,7 +603,7 @@ export const InventoryPortal = () => {
                             <AlertTriangle size={24} />
                         </div>
                         <div>
-                            <h3 className="font-black text-gray-900 text-lg">Cảnh báo tồn kho</h3>
+                            <h3 className="font-semibold text-gray-900 text-lg">Cảnh báo tồn kho</h3>
                             <p className="text-gray-600 text-sm mt-1">
                                 Có <span className="font-bold text-amber-600">{stats.lowStock} sản phẩm sắp hết</span> và{' '}
                                 <span className="font-bold text-red-600">{stats.outOfStock} sản phẩm đã hết hàng</span>.

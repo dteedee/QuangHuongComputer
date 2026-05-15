@@ -160,7 +160,7 @@ export function FinancialReportsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase italic leading-none mb-3">
+                    <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight  leading-none mb-3">
                         Báo Cáo <span className="text-accent">Tài Chính</span>
                     </h1>
                     <p className="text-gray-600 font-semibold text-sm">
@@ -186,7 +186,7 @@ export function FinancialReportsPage() {
                     </div>
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-3 px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+                        className="flex items-center gap-3 px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white text-xs font-medium rounded-xl transition-all shadow-lg active:scale-95"
                     >
                         <Download size={16} />
                         Xuất Excel
@@ -207,11 +207,11 @@ export function FinancialReportsPage() {
                                 <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
                                     <TrendingUp size={24} />
                                 </div>
-                                <span className="flex items-center text-green-600 text-xs font-black">
+                                <span className="flex items-center text-green-600 text-xs font-semibold">
                                     <ArrowUpRight size={14} /> Doanh thu
                                 </span>
                             </div>
-                            <h3 className="text-2xl font-black text-gray-900 tracking-tighter">
+                            <h3 className="text-xl font-semibold text-slate-900">
                                 {formatCurrency(revenueExpense?.summary.totalRevenue || 0)}
                             </h3>
                             <p className="text-xs text-gray-400 mt-2">Tổng doanh thu trong kỳ</p>
@@ -222,11 +222,11 @@ export function FinancialReportsPage() {
                                 <div className="p-3 bg-red-50 text-red-600 rounded-2xl">
                                     <TrendingDown size={24} />
                                 </div>
-                                <span className="flex items-center text-red-600 text-xs font-black">
+                                <span className="flex items-center text-red-600 text-xs font-semibold">
                                     <ArrowDownRight size={14} /> Chi phí
                                 </span>
                             </div>
-                            <h3 className="text-2xl font-black text-gray-900 tracking-tighter">
+                            <h3 className="text-xl font-semibold text-slate-900">
                                 {formatCurrency(revenueExpense?.summary.totalExpenses || 0)}
                             </h3>
                             <p className="text-xs text-gray-400 mt-2">Tổng chi phí trong kỳ</p>
@@ -237,9 +237,9 @@ export function FinancialReportsPage() {
                                 <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                                     <DollarSign size={24} />
                                 </div>
-                                <span className="text-blue-600 text-xs font-black uppercase tracking-widest">Lợi nhuận</span>
+                                <span className="text-blue-600 text-sm font-medium">Lợi nhuận</span>
                             </div>
-                            <h3 className={`text-2xl font-black tracking-tighter ${(revenueExpense?.summary.grossProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <h3 className={`text-2xl font-bold ${(revenueExpense?.summary.grossProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {formatCurrency(revenueExpense?.summary.grossProfit || 0)}
                             </h3>
                             <p className="text-xs text-gray-400 mt-2">
@@ -252,9 +252,9 @@ export function FinancialReportsPage() {
                                 <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
                                     <Wallet size={24} />
                                 </div>
-                                <span className="text-purple-600 text-xs font-black uppercase tracking-widest">Dòng tiền</span>
+                                <span className="text-purple-600 text-sm font-medium">Dòng tiền</span>
                             </div>
-                            <h3 className={`text-2xl font-black tracking-tighter ${(cashFlow?.netCashFlow || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <h3 className={`text-2xl font-bold ${(cashFlow?.netCashFlow || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {formatCurrency(cashFlow?.netCashFlow || 0)}
                             </h3>
                             <p className="text-xs text-gray-400 mt-2">Dòng tiền ròng</p>
@@ -265,7 +265,7 @@ export function FinancialReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Revenue vs Expense Chart */}
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
                                 <BarChart3 size={20} className="text-accent" />
                                 Doanh thu vs Chi phí
                             </h3>
@@ -276,7 +276,7 @@ export function FinancialReportsPage() {
 
                         {/* Profit Trend Chart */}
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
                                 <TrendingUp size={20} className="text-accent" />
                                 Xu hướng lợi nhuận
                             </h3>
@@ -289,7 +289,7 @@ export function FinancialReportsPage() {
                     {/* Cash Flow Trend Chart */}
                     {cashFlow?.monthlyInflows && cashFlow.monthlyInflows.length > 0 && (
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
                                 <Wallet size={20} className="text-purple-600" />
                                 Xu hướng dòng tiền
                             </h3>
@@ -298,12 +298,12 @@ export function FinancialReportsPage() {
                             </div>
                             <div className="mt-6 grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-green-50 rounded-xl border border-green-100 flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Tổng thu vào</span>
-                                    <span className="font-black text-green-700 tracking-tighter">{formatCurrency(cashFlow.totalInflows)}</span>
+                                    <span className="text-xs font-semibold text-green-700 uppercase">Tổng thu vào</span>
+                                    <span className="font-semibold text-green-700 tracking-tighter">{formatCurrency(cashFlow.totalInflows)}</span>
                                 </div>
                                 <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-red-700 uppercase tracking-widest">Tổng chi ra</span>
-                                    <span className="font-black text-red-700 tracking-tighter">{formatCurrency(cashFlow.totalOutflows)}</span>
+                                    <span className="text-xs font-semibold text-red-700 uppercase">Tổng chi ra</span>
+                                    <span className="font-semibold text-red-700 tracking-tighter">{formatCurrency(cashFlow.totalOutflows)}</span>
                                 </div>
                             </div>
                         </div>
@@ -313,38 +313,38 @@ export function FinancialReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Assets */}
                         <div className="premium-card p-8 border-2 border-green-50">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
                                 <Package size={20} className="text-green-600" />
                                 Tài sản
                             </h3>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                                     <span className="text-sm font-bold text-gray-600">Công nợ phải thu (AR)</span>
-                                    <span className="font-black text-gray-900">{formatCurrency(balance?.assets.accountsReceivable || 0)}</span>
+                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.assets.accountsReceivable || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                                     <span className="text-sm font-bold text-gray-600">Giá trị tồn kho</span>
-                                    <span className="font-black text-gray-900">{formatCurrency(balance?.assets.inventoryValue || 0)}</span>
+                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.assets.inventoryValue || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-4 bg-green-100 rounded-xl border-2 border-green-200">
-                                    <span className="text-sm font-black text-green-700 uppercase tracking-widest">Tổng tài sản</span>
-                                    <span className="font-black text-green-700 text-xl">{formatCurrency(balance?.assets.totalAssets || 0)}</span>
+                                    <span className="text-sm font-semibold text-green-700 uppercase">Tổng tài sản</span>
+                                    <span className="font-semibold text-green-700 text-xl">{formatCurrency(balance?.assets.totalAssets || 0)}</span>
                                 </div>
                                 {/* AR Aging Breakdown */}
                                 {balance?.arAgingBreakdown && balance.arAgingBreakdown.length > 0 && (
                                     <div className="pt-4 border-t border-gray-100">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tuổi nợ AR</p>
+                                        <p className="text-xs text-slate-400 mb-3">Tuổi nợ AR</p>
                                         <div className="space-y-2">
                                             {balance.arAgingBreakdown.map((item, idx) => {
                                                 const maxAmount = Math.max(...balance.arAgingBreakdown.map(b => b.amount));
                                                 const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
                                                 return (
                                                     <div key={idx} className="flex items-center gap-3">
-                                                        <span className="text-[10px] font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
+                                                        <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
                                                         <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
                                                             <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
                                                         </div>
-                                                        <span className="text-[10px] font-black text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
+                                                        <span className="text-xs font-semibold text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
                                                     </div>
                                                 );
                                             })}
@@ -356,38 +356,38 @@ export function FinancialReportsPage() {
 
                         {/* Liabilities */}
                         <div className="premium-card p-8 border-2 border-red-50">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6 flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6 flex items-center gap-3">
                                 <CreditCard size={20} className="text-red-600" />
                                 Nợ phải trả
                             </h3>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                                     <span className="text-sm font-bold text-gray-600">Công nợ phải trả (AP)</span>
-                                    <span className="font-black text-gray-900">{formatCurrency(balance?.liabilities.accountsPayable || 0)}</span>
+                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.liabilities.accountsPayable || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                                     <span className="text-sm font-bold text-gray-600">Chi phí chờ thanh toán</span>
-                                    <span className="font-black text-gray-900">{formatCurrency(balance?.liabilities.pendingExpenses || 0)}</span>
+                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.liabilities.pendingExpenses || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-4 bg-red-100 rounded-xl border-2 border-red-200">
-                                    <span className="text-sm font-black text-red-700 uppercase tracking-widest">Tổng nợ</span>
-                                    <span className="font-black text-red-700 text-xl">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</span>
+                                    <span className="text-sm font-semibold text-red-700 uppercase">Tổng nợ</span>
+                                    <span className="font-semibold text-red-700 text-xl">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</span>
                                 </div>
                                 {/* AP Aging Breakdown */}
                                 {balance?.apAgingBreakdown && balance.apAgingBreakdown.length > 0 && (
                                     <div className="pt-4 border-t border-gray-100">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tuổi nợ AP</p>
+                                        <p className="text-xs text-slate-400 mb-3">Tuổi nợ AP</p>
                                         <div className="space-y-2">
                                             {balance.apAgingBreakdown.map((item, idx) => {
                                                 const maxAmount = Math.max(...balance.apAgingBreakdown.map(b => b.amount));
                                                 const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
                                                 return (
                                                     <div key={idx} className="flex items-center gap-3">
-                                                        <span className="text-[10px] font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
+                                                        <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
                                                         <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
                                                             <div className="bg-red-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
                                                         </div>
-                                                        <span className="text-[10px] font-black text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
+                                                        <span className="text-xs font-semibold text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
                                                     </div>
                                                 );
                                             })}
@@ -402,20 +402,20 @@ export function FinancialReportsPage() {
                     <div className="premium-card p-10 border-2 bg-gray-950 text-white">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div>
-                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-2">Vị thế tài chính ròng</h3>
-                                <p className={`text-5xl font-black tracking-tighter italic ${(balance?.netPosition || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                <h3 className="text-sm font-semibold text-gray-400 uppercase mb-2">Vị thế tài chính ròng</h3>
+                                <p className={`text-5xl font-bold ${(balance?.netPosition || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {formatCurrency(balance?.netPosition || 0)}
                                 </p>
                             </div>
                             <div className="flex gap-6">
                                 <div className="text-center">
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Tài sản</p>
-                                    <p className="text-lg font-black text-green-400">{formatCurrency(balance?.assets.totalAssets || 0)}</p>
+                                    <p className="text-xs text-slate-500 mb-1">Tài sản</p>
+                                    <p className="text-lg font-semibold text-green-400">{formatCurrency(balance?.assets.totalAssets || 0)}</p>
                                 </div>
                                 <div className="text-4xl font-thin text-gray-600">−</div>
                                 <div className="text-center">
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Nợ phải trả</p>
-                                    <p className="text-lg font-black text-red-400">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</p>
+                                    <p className="text-xs text-slate-500 mb-1">Nợ phải trả</p>
+                                    <p className="text-lg font-semibold text-red-400">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</p>
                                 </div>
                             </div>
                         </div>
@@ -424,17 +424,17 @@ export function FinancialReportsPage() {
                     {/* Expense by Category */}
                     {revenueExpense?.expenseByCategory && revenueExpense.expenseByCategory.length > 0 && (
                         <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">
                                 Chi phí theo danh mục
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {revenueExpense.expenseByCategory.map((cat, idx) => (
                                     <div key={idx} className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
                                         <div className="flex justify-between items-start mb-3">
-                                            <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{cat.categoryName}</span>
+                                            <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
                                             <span className="text-[9px] font-bold text-gray-400">{cat.count} khoản</span>
                                         </div>
-                                        <p className="text-xl font-black text-accent tracking-tighter">{formatCurrency(cat.total)}</p>
+                                        <p className="text-xl font-semibold text-accent tracking-tighter">{formatCurrency(cat.total)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -443,25 +443,25 @@ export function FinancialReportsPage() {
 
                     {/* Cash Flow Breakdown */}
                     <div className="premium-card p-8 border-2">
-                        <h3 className="text-lg font-black text-gray-900 uppercase italic tracking-tighter mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900  tracking-tighter mb-6">
                             Chi tiết dòng tiền
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="p-6 bg-green-50 rounded-2xl border border-green-100">
-                                <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">Thu từ AR</p>
-                                <p className="text-2xl font-black text-green-700 tracking-tighter">
+                                <p className="text-xs font-semibold text-green-600 uppercase mb-2">Thu từ AR</p>
+                                <p className="text-2xl font-semibold text-green-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.arCollected || 0)}
                                 </p>
                             </div>
                             <div className="p-6 bg-red-50 rounded-2xl border border-red-100">
-                                <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Trả cho AP</p>
-                                <p className="text-2xl font-black text-red-700 tracking-tighter">
+                                <p className="text-xs font-semibold text-red-600 uppercase mb-2">Trả cho AP</p>
+                                <p className="text-2xl font-semibold text-red-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.apPaid || 0)}
                                 </p>
                             </div>
                             <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
-                                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">Chi phí đã trả</p>
-                                <p className="text-2xl font-black text-amber-700 tracking-tighter">
+                                <p className="text-xs font-semibold text-amber-600 uppercase mb-2">Chi phí đã trả</p>
+                                <p className="text-2xl font-semibold text-amber-700 tracking-tighter">
                                     {formatCurrency(cashFlow?.breakdown.expensesPaid || 0)}
                                 </p>
                             </div>

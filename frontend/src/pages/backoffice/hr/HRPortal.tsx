@@ -99,24 +99,24 @@ export const HRPortal = () => {
         <div className="space-y-10 pb-20 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Quản trị <span className="text-accent">Nhân sự</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                    <p className="text-gray-500 font-medium text-xs flex items-center gap-2">
                         Quản lý đội ngũ nhân viên và quy trình tính lương
                     </p>
                 </div>
                 <div className="flex gap-4">
                     <Link
                         to="/backoffice/hr/recruitment"
-                        className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-gray-200 hover:bg-gray-800 transition-all active:scale-95 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white text-sm font-medium rounded-lg shadow-sm shadow-gray-200 hover:bg-gray-800 transition-all active:scale-95 group"
                     >
                         <Briefcase size={18} className="group-hover:scale-110 transition-transform" />
                         Quản lý tuyển dụng
                     </Link>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-accent text-white text-sm font-medium rounded-lg shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 group"
                     >
                         <UserPlus size={18} className="group-hover:scale-110 transition-transform" />
                         Thêm nhân viên
@@ -134,8 +134,8 @@ export const HRPortal = () => {
                 ].map((stat, i) => (
                     <motion.div whileHover={{ y: -5 }} key={i} className="premium-card p-8 group">
                         <div className={`p-4 ${stat.bg} ${stat.color} rounded-2xl w-fit mb-6 shadow-inner group-hover:scale-110 transition-transform`}>{stat.icon}</div>
-                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">{stat.label}</p>
-                        <h3 className="text-2xl font-black text-gray-900 tracking-tighter">{stat.value}</h3>
+                        <p className="text-gray-400 text-xs text-slate-500 mb-1">{stat.label}</p>
+                        <h3 className="text-xl font-semibold text-slate-900">{stat.value}</h3>
                     </motion.div>
                 ))}
             </div>
@@ -157,8 +157,8 @@ export const HRPortal = () => {
                             {card.icon}
                         </div>
                         <div>
-                            <p className="font-black text-sm uppercase italic tracking-tight text-gray-900">{card.label}</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{card.desc}</p>
+                            <p className="font-semibold text-sm  tracking-tight text-gray-900">{card.label}</p>
+                            <p className="text-xs text-gray-400 font-bold uppercase mt-0.5">{card.desc}</p>
                         </div>
                     </Link>
                 ))}
@@ -167,27 +167,27 @@ export const HRPortal = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="premium-card overflow-hidden">
                     <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-sm flex justify-between items-center">
-                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Danh bạ nhân viên</h3>
+                        <h3 className="text-xl font-semibold text-gray-900  tracking-tighter">Danh bạ nhân viên</h3>
                     </div>
                     <div className="divide-y divide-gray-50">
                         {empLoading ? (
                             <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-accent" /></div>
                         ) : employees.length === 0 ? (
-                            <div className="p-20 text-center"><UserCheck className="mx-auto text-gray-100 mb-4" size={60} /><p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">Không có dữ liệu nhân sự.</p></div>
+                            <div className="p-20 text-center"><UserCheck className="mx-auto text-gray-100 mb-4" size={60} /><p className="text-xs text-gray-300 font-semibold">Không có dữ liệu nhân sự.</p></div>
                         ) : employees.map((emp) => (
                             <div key={emp.id} className="p-8 flex items-center justify-between hover:bg-gray-50/50 transition-all group cursor-pointer">
                                 <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-gray-400 shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
+                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-semibold text-gray-400 shadow-inner group-hover:bg-accent group-hover:text-white transition-all">
                                         {emp.fullName.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <h4 className="font-black text-gray-800 text-sm uppercase italic tracking-tight">{emp.fullName}</h4>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-1 flex items-center gap-2">{emp.position} <span className="w-1 h-1 bg-gray-300 rounded-full" /> {emp.email}</p>
+                                        <h4 className="font-semibold text-gray-800 text-sm  tracking-tight">{emp.fullName}</h4>
+                                        <p className="text-xs font-bold text-gray-400 uppercase mt-1 flex items-center gap-2">{emp.position} <span className="w-1 h-1 bg-gray-300 rounded-full" /> {emp.email}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-base font-black text-gray-900 tracking-tighter">{formatCurrency(emp.baseSalary)}</p>
-                                    <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black italic mt-1">{emp.status === 'Active' ? 'Đang làm việc' : 'Nghỉ việc/Vắng mặt'}</p>
+                                    <p className="text-base font-semibold text-gray-900 tracking-tighter">{formatCurrency(emp.baseSalary)}</p>
+                                    <p className="text-[9px] text-gray-400 uppercase font-semibold italic mt-1">{emp.status === 'Active' ? 'Đang làm việc' : 'Nghỉ việc/Vắng mặt'}</p>
                                 </div>
                             </div>
                         ))}
@@ -196,10 +196,10 @@ export const HRPortal = () => {
 
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="premium-card p-8 flex flex-col">
                     <div className="flex justify-between items-center mb-8 border-b border-gray-50 pb-6">
-                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Bảng lương tháng {currentMonth}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900  tracking-tighter">Bảng lương tháng {currentMonth}</h3>
                         <button
                             onClick={() => generatePayrollMutation.mutate({ month: currentMonth, year: currentYear })}
-                            className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline italic"
+                            className="text-xs font-semibold text-accent uppercase hover:underline"
                         >
                             Chốt lương &gt;
                         </button>
@@ -208,18 +208,18 @@ export const HRPortal = () => {
                         {payLoading ? (
                             <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-gray-200" /></div>
                         ) : payrolls.length === 0 ? (
-                            <div className="py-10 text-center text-[10px] font-black text-gray-200 uppercase tracking-widest">Chưa có bảng lương</div>
+                            <div className="py-10 text-center text-xs font-semibold text-gray-200 uppercase">Chưa có bảng lương</div>
                         ) : payrolls.map((pay) => (
                             <div key={pay.id} className="p-5 bg-gray-50/50 hover:bg-white rounded-[20px] border border-transparent hover:border-red-100 transition-all flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 flex items-center justify-center rounded-xl ${pay.status === 'Paid' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}><CheckCircle size={18} /></div>
                                     <div>
-                                        <p className="text-xs font-black text-gray-800 uppercase italic leading-none mb-1.5">{pay.employeeName || 'Thành viên'}</p>
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{formatCurrency(pay.netPay)}</p>
+                                        <p className="text-xs font-semibold text-gray-800  leading-none mb-1.5">{pay.employeeName || 'Thành viên'}</p>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase">{formatCurrency(pay.netPay)}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${pay.status === 'Paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                    <span className={`text-[9px] font-semibold px-2 py-1 rounded-lg ${pay.status === 'Paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
                                         {pay.status === 'Paid' ? 'Đã thanh toán' : pay.status === 'Processed' ? 'Đã xử lý' : 'Chờ xử lý'}
                                     </span>
                                 </div>
@@ -271,7 +271,7 @@ export const HRPortal = () => {
                             type="button" 
                             variant="outline" 
                             onClick={() => setIsAddModalOpen(false)} 
-                            className="flex-1 uppercase text-[10px] tracking-widest"
+                            className="flex-1 uppercase text-xs"
                         >
                             Hủy
                         </Button>
@@ -279,7 +279,7 @@ export const HRPortal = () => {
                             type="submit" 
                             loading={createEmployeeMutation.isPending} 
                             icon={Check} 
-                            className="flex-[2] uppercase text-[10px] tracking-widest"
+                            className="flex-[2] uppercase text-xs"
                         >
                             Lưu nhân sự
                         </Button>

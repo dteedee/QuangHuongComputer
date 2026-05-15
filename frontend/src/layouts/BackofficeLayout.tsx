@@ -312,7 +312,7 @@ export const BackofficeLayout = () => {
             {/* Logo & Brand */}
             <div className={`px-6 py-6 flex items-center gap-3 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
                 <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg bg-gradient-to-br ${colors.gradient}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm bg-gradient-to-br ${colors.gradient}`}
                 >
                     QH
                 </div>
@@ -322,10 +322,10 @@ export const BackofficeLayout = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col"
                     >
-                        <span className={`text-sm font-bold leading-none uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <span className={`text-sm font-semibold leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
                             Quang Hưởng
                         </span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: colors.primary }}>
+                        <span className="text-xs font-medium mt-1" style={{ color: colors.primary }}>
                             Management
                         </span>
                     </motion.div>
@@ -338,7 +338,7 @@ export const BackofficeLayout = () => {
                     <div className="grid grid-cols-2 gap-2">
                         <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
                             <div className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Đơn chờ</div>
-                            <div className="text-xl font-black" style={{ color: colors.primary }}>{pendingCount}</div>
+                            <div className="text-xl font-bold" style={{ color: colors.primary }}>{pendingCount}</div>
                         </div>
                         <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
                             <div className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Doanh thu</div>
@@ -360,7 +360,7 @@ export const BackofficeLayout = () => {
                         <div key={group.id} className="space-y-1">
                             <button
                                 onClick={() => toggleGroup(group.id)}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${groupActive
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium uppercase tracking-wider transition-all ${groupActive
                                     ? isDark
                                         ? 'text-white bg-gray-800/50'
                                         : 'text-gray-900 bg-gray-100/50'
@@ -399,18 +399,18 @@ export const BackofficeLayout = () => {
                                                     key={item.path}
                                                     to={item.path}
                                                     title={sidebarCollapsed ? item.title : undefined}
-                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${active
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group ${active
                                                         ? isDark
                                                             ? 'bg-gray-800 text-white'
-                                                            : 'bg-gray-100 text-gray-900'
+                                                            : 'bg-blue-50 text-blue-700'
                                                         : isDark
                                                             ? 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                                                         }`}
                                                     style={active ? { borderLeft: `3px solid ${colors.primary}` } : {}}
                                                 >
                                                     <span
-                                                        className={`flex-shrink-0 ${active ? '' : isDark ? 'text-gray-500' : 'text-gray-400'}`}
+                                                        className={`flex-shrink-0 ${active ? '' : isDark ? 'text-gray-500' : 'text-slate-400'}`}
                                                         style={active ? { color: colors.primary } : {}}
                                                     >
                                                         {item.icon}
@@ -446,7 +446,7 @@ export const BackofficeLayout = () => {
                 {!sidebarCollapsed && (
                     <Link
                         to="/"
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02]"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium text-white shadow-sm transition-all hover:opacity-90"
                         style={{ backgroundColor: colors.primary }}
                     >
                         <Store size={14} /> Quay về trang chủ
@@ -466,7 +466,7 @@ export const BackofficeLayout = () => {
                                 <p className={`text-sm font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {user?.fullName}
                                 </p>
-                                <p className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
                                     {roles[0]}
                                 </p>
                             </div>
@@ -487,7 +487,7 @@ export const BackofficeLayout = () => {
         <div className={`h-screen flex overflow-hidden transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
             {/* Sidebar Desktop */}
             <aside
-                className={`hidden lg:block transition-all duration-300 border-r ${isDark ? 'border-gray-800' : 'border-gray-200'} ${sidebarCollapsed ? 'w-20' : 'w-72'}`}
+                className={`hidden lg:block transition-all duration-300 border-r ${isDark ? 'border-gray-800' : 'border-slate-200'} ${sidebarCollapsed ? 'w-20' : 'w-60'}`}
             >
                 <SidebarContent />
             </aside>
@@ -507,7 +507,7 @@ export const BackofficeLayout = () => {
                             initial={{ x: -300 }}
                             animate={{ x: 0 }}
                             exit={{ x: -300 }}
-                            className="lg:hidden fixed inset-y-0 left-0 w-72 z-[60] shadow-2xl"
+                            className="lg:hidden fixed inset-y-0 left-0 w-60 z-[60] shadow-2xl"
                         >
                             <SidebarContent />
                         </motion.div>
@@ -555,9 +555,9 @@ export const BackofficeLayout = () => {
                         </div>
 
                         {/* Search */}
-                        <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border ${isDark
+                        <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border ${isDark
                             ? 'bg-gray-800 border-gray-700'
-                            : 'bg-gray-50 border-gray-200'
+                            : 'bg-slate-100 border-slate-200'
                             }`}>
                             <Search size={16} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                             <input

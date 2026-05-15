@@ -66,7 +66,7 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
 
         <div className="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
           <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50 bg-gray-50/50">
-            <h3 className="text-xl font-black text-gray-950 uppercase italic tracking-tighter">Mở ca làm việc</h3>
+            <h3 className="text-xl font-semibold text-gray-950  tracking-tighter">Mở ca làm việc</h3>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-950 transition-colors"
@@ -80,21 +80,21 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
             <div className="px-8 py-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Mã thu ngân</label>
+                  <label className="text-xs text-slate-400 italic ml-1">Mã thu ngân</label>
                   <input
                     type="text"
                     {...register('cashierId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-semibold text-xs uppercase placeholder-gray-400 text-gray-900 transition-all"
                     placeholder="ENTER ID"
                     disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Mã kho</label>
+                  <label className="text-xs text-slate-400 italic ml-1">Mã kho</label>
                   <input
                     type="text"
                     {...register('warehouseId')}
-                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-xs uppercase tracking-widest placeholder-gray-400 text-gray-900 transition-all font-mono"
+                    className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-semibold text-xs uppercase placeholder-gray-400 text-gray-900 transition-all font-mono"
                     placeholder="MAIN"
                     disabled={isSubmitting}
                   />
@@ -102,16 +102,16 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Số dư tiền mặt đầu ca</label>
+                <label className="text-xs text-slate-400 italic ml-1">Số dư tiền mặt đầu ca</label>
                 <div className="relative">
                   <input
                     type="number"
                     {...register('openingBalance', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-black text-2xl tracking-tighter italic text-accent transition-all"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-0 focus:border-accent font-semibold text-2xl tracking-tighter italic text-accent transition-all"
                     placeholder="0"
                     disabled={isSubmitting}
                   />
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-black italic">VND</div>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">VND</div>
                 </div>
               </div>
 
@@ -120,13 +120,13 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
                   <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
                     <CheckCircle size={16} />
                   </div>
-                  <span className="text-xs font-black text-blue-900 uppercase tracking-widest italic">Quy định mở ca</span>
+                  <span className="text-xs font-semibold text-blue-900 ">Quy định mở ca</span>
                 </div>
                 <ul className="space-y-2">
-                  <li className="flex items-center gap-2 text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                  <li className="flex items-center gap-2 text-xs text-blue-700 font-bold uppercase tracking-wider">
                     <ArrowRight size={10} /> Kiểm đếm tiền mặt thực tế trong ngăn kéo
                   </li>
-                  <li className="flex items-center gap-2 text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                  <li className="flex items-center gap-2 text-xs text-blue-700 font-bold uppercase tracking-wider">
                     <ArrowRight size={10} /> Đảm bảo bàn giao đầy đủ từ ca trước
                   </li>
                 </ul>
@@ -137,14 +137,14 @@ function OpenShiftModal({ isOpen, onClose, onSubmit, isSubmitting }: OpenShiftMo
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-950 transition-all"
+                className="px-6 py-3 text-xs text-slate-500 text-gray-400 hover:text-gray-950 transition-all"
                 disabled={isSubmitting}
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                className="px-10 py-4 bg-gray-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-gray-950/20 hover:bg-accent transform hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
+                className="px-10 py-4 bg-gray-950 text-white text-xs text-slate-500 rounded-2xl shadow-2xl shadow-gray-950/20 hover:bg-accent transform hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'ĐANG MỞ CHỨNG TỪ...' : (
@@ -209,8 +209,8 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
           <div className="px-10 py-10 bg-gray-950">
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter leading-none mb-2">Đóng ca</h3>
-                <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Xác nhận kết thúc phiên làm việc</p>
+                <h3 className="text-3xl font-semibold text-white  tracking-tighter leading-none mb-2">Đóng ca</h3>
+                <p className="text-gray-500 font-medium text-xs">Xác nhận kết thúc phiên làm việc</p>
               </div>
               <button onClick={handleClose} className="text-gray-600 hover:text-white transition-colors">
                 <X size={32} />
@@ -219,17 +219,17 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
 
             <div className="space-y-4">
               <div className="flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/10">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Thu ngân</span>
-                <span className="text-sm font-black text-white italic">{shift.cashierId}</span>
+                <span className="text-xs text-slate-500">Thu ngân</span>
+                <span className="text-sm font-semibold text-white">{shift.cashierId}</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-5 bg-white/5 rounded-3xl border border-white/10">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-2">Đầu ca</span>
-                  <span className="text-lg font-black text-white tracking-tighter">{formatCurrency(shift.openingBalance)}</span>
+                  <span className="text-xs text-slate-500 block mb-2">Đầu ca</span>
+                  <span className="text-lg font-semibold text-white tracking-tighter">{formatCurrency(shift.openingBalance)}</span>
                 </div>
                 <div className="p-5 bg-emerald-500/10 rounded-3xl border border-emerald-500/20">
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block mb-2">Dự kiến</span>
-                  <span className="text-lg font-black text-emerald-400 tracking-tighter">{formatCurrency(shift.openingBalance + (shift.closingBalance || 0))}</span>
+                  <span className="text-xs font-semibold text-emerald-500 uppercase block mb-2">Dự kiến</span>
+                  <span className="text-lg font-semibold text-emerald-400 tracking-tighter">{formatCurrency(shift.openingBalance + (shift.closingBalance || 0))}</span>
                 </div>
               </div>
             </div>
@@ -237,12 +237,12 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
 
           <form onSubmit={handleSubmit(handleFormSubmit)} className="p-10 space-y-8">
             <div className="space-y-4">
-              <label className="text-xs font-black text-gray-500 uppercase tracking-widest italic ml-1">Tiền mặt thực tế tại quầy</label>
+              <label className="text-sm font-medium text-slate-500 italic ml-1">Tiền mặt thực tế tại quầy</label>
               <div className="relative">
                 <input
                   type="number"
                   {...register('actualCash', { valueAsNumber: true })}
-                  className="w-full px-8 py-10 bg-gray-50 border-4 border-gray-100 rounded-[32px] focus:ring-0 focus:border-accent font-black text-5xl tracking-tighter italic text-accent transition-all text-center"
+                  className="w-full px-8 py-10 bg-gray-50 border-4 border-gray-100 rounded-[32px] focus:ring-0 focus:border-accent font-semibold text-5xl tracking-tighter italic text-accent transition-all text-center"
                   placeholder="0"
                   disabled={isSubmitting}
                 />
@@ -252,14 +252,14 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
             {actualCash > 0 && (
               <div className={`p-8 rounded-[32px] border-4 ${variance === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
                 <div className="flex items-center gap-6">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${variance === 0 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-accent text-white shadow-red-500/20'}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${variance === 0 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-accent text-white shadow-blue-500/15'}`}>
                     <CheckCircle size={28} />
                   </div>
                   <div>
-                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${variance === 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <p className={`text-xs text-slate-500 mb-1 ${variance === 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                       Trạng thái đối soát
                     </p>
-                    <p className={`text-2xl font-black italic tracking-tighter ${variance === 0 ? 'text-emerald-950' : 'text-red-950'}`}>
+                    <p className={`text-2xl font-semibold italic tracking-tighter ${variance === 0 ? 'text-emerald-950' : 'text-red-950'}`}>
                       {variance === 0 ? 'KHỚP SỐ DƯ 100%' : `LỆCH: ${formatCurrency(Math.abs(variance))}`}
                     </p>
                   </div>
@@ -269,7 +269,7 @@ function CloseShiftModal({ shift, isOpen, onClose, onSubmit, isSubmitting }: Clo
 
             <button
               type="submit"
-              className="w-full py-6 bg-gray-950 text-white text-sm font-black uppercase tracking-[0.2em] rounded-[32px] shadow-2xl shadow-gray-950/40 hover:bg-accent transform hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-gray-950 text-white text-sm font-semibold tracking-[0.2em] rounded-[32px] shadow-2xl shadow-gray-950/40 hover:bg-accent transform hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'ĐANG CHỐT SỔ...' : 'KẾT THÚC & ĐÓNG CA'}
@@ -341,11 +341,11 @@ export const ShiftsPage = () => {
 
   const getStatusBadge = (status: ShiftStatus) => {
     return status === 'Open' ? (
-      <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest border border-emerald-200">
+      <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-medium border border-emerald-200">
         Đang mở
       </span>
     ) : (
-      <span className="px-4 py-1.5 bg-gray-100 text-gray-500 rounded-xl text-[9px] font-black uppercase tracking-widest border border-gray-200">
+      <span className="px-4 py-1.5 bg-gray-100 text-gray-500 rounded-xl text-[9px] font-medium border border-gray-200">
         Đã đóng
       </span>
     );
@@ -356,14 +356,14 @@ export const ShiftsPage = () => {
       key: 'cashierId',
       label: 'Thu ngân',
       sortable: true,
-      render: (item) => <span className="font-black text-gray-950 uppercase italic text-xs tracking-tight">{item.cashierId}</span>,
+      render: (item) => <span className="font-semibold text-gray-950  text-xs tracking-tight">{item.cashierId}</span>,
     },
     {
       key: 'openedAt',
       label: 'Bắt đầu',
       sortable: true,
       render: (item) => (
-        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+        <span className="text-xs font-bold text-gray-500 uppercase">
           {new Date(item.openedAt).toLocaleString('vi-VN')}
         </span>
       ),
@@ -373,7 +373,7 @@ export const ShiftsPage = () => {
       label: 'Kết thúc',
       sortable: true,
       render: (item) => (
-        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+        <span className="text-xs font-bold text-gray-500 uppercase">
           {item.closedAt ? new Date(item.closedAt).toLocaleString('vi-VN') : (
             <span className="text-accent animate-pulse">ĐANG HOẠT ĐỘNG</span>
           )}
@@ -385,7 +385,7 @@ export const ShiftsPage = () => {
       label: 'Tiền đầu ca',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-gray-950 tracking-tighter italic">{formatCurrency(item.openingBalance)}</span>
+        <span className="font-semibold text-gray-950 tracking-tighter">{formatCurrency(item.openingBalance)}</span>
       ),
     },
     {
@@ -393,7 +393,7 @@ export const ShiftsPage = () => {
       label: 'Tiền kết ca',
       sortable: true,
       render: (item) => (
-        <span className="font-black text-gray-950 tracking-tighter italic">
+        <span className="font-semibold text-gray-950 tracking-tighter">
           {item.closingBalance !== undefined ? formatCurrency(item.closingBalance) : '---'}
         </span>
       ),
@@ -403,12 +403,12 @@ export const ShiftsPage = () => {
       label: 'Chênh lệch',
       sortable: true,
       render: (item) => {
-        if (item.cashVariance === undefined) return <span className="text-gray-300 font-black tracking-widest">---</span>;
+        if (item.cashVariance === undefined) return <span className="text-gray-300 font-semibold">---</span>;
         const isPositive = item.cashVariance > 0;
         const isZero = item.cashVariance === 0;
         return (
           <span
-            className={`font-black italic tracking-tighter ${isZero ? 'text-gray-400' : isPositive ? 'text-blue-600' : 'text-accent'
+            className={`font-semibold italic tracking-tighter ${isZero ? 'text-gray-400' : isPositive ? 'text-blue-600' : 'text-accent'
               }`}
           >
             {isPositive && '+'}{formatCurrency(item.cashVariance)}
@@ -428,10 +428,10 @@ export const ShiftsPage = () => {
     <div className="space-y-12 pb-20 admin-area">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div>
-          <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-4">
+          <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-4">
             Quản lý <span className="text-accent">Ca làm việc</span>
           </h1>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest flex items-center gap-3">
+          <p className="text-gray-500 font-medium text-xs flex items-center gap-3">
             <span className="w-2 h-2 rounded-full bg-accent animate-ping" /> Kiểm soát dòng tiền mặt & đối soát ca trực
           </p>
         </div>
@@ -450,26 +450,26 @@ export const ShiftsPage = () => {
 
           <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-12">
             <div className="flex items-center gap-10">
-              <div className="w-24 h-24 bg-accent text-white rounded-[32px] flex items-center justify-center shadow-2xl shadow-red-500/30 transform group-hover:rotate-12 transition-transform duration-500">
+              <div className="w-24 h-24 bg-accent text-white rounded-[32px] flex items-center justify-center shadow-2xl shadow-blue-500/20 transform group-hover:rotate-12 transition-transform duration-500">
                 <Clock size={40} />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none">Phiên trực hiện tại</h3>
+                <h3 className="text-4xl font-semibolder leading-none">Phiên trực hiện tại</h3>
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">NHÂN VIÊN:</span>
-                    <span className="text-sm font-black italic text-red-500">{currentShift.cashierId}</span>
+                    <span className="text-xs text-slate-500">NHÂN VIÊN:</span>
+                    <span className="text-sm font-semibold italic text-red-500">{currentShift.cashierId}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">BẮT ĐẦU:</span>
-                    <span className="text-sm font-black italic">{new Date(currentShift.openedAt).toLocaleTimeString('vi-VN')}</span>
+                    <span className="text-xs text-slate-500">BẮT ĐẦU:</span>
+                    <span className="text-sm font-semibold">{new Date(currentShift.openedAt).toLocaleTimeString('vi-VN')}</span>
                   </div>
                 </div>
               </div>
             </div>
             <button
               onClick={() => setIsCloseShiftModalOpen(true)}
-              className="px-12 py-5 bg-white text-gray-950 rounded-[20px] font-black uppercase tracking-[0.2em] text-xs hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+              className="px-12 py-5 bg-white text-gray-950 rounded-[20px] font-semibold tracking-[0.2em] text-xs hover:bg-accent hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
             >
               KẾT THÚC PHIÊN TRỰC
             </button>
@@ -477,20 +477,20 @@ export const ShiftsPage = () => {
 
           <div className="relative grid grid-cols-1 md:grid-cols-3 gap-10 mt-16 pt-12 border-t border-white/10">
             <div>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4 italic">Tiền mặt đầu ca</p>
-              <p className="text-4xl font-black text-white tracking-tighter italic">
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Tiền mặt đầu ca</p>
+              <p className="text-4xl font-semibold text-white tracking-tighter">
                 {formatCurrency(currentShift.openingBalance)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4 italic">Doanh thu dự kiến</p>
-              <p className="text-4xl font-black text-red-500 tracking-tighter italic">
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Doanh thu dự kiến</p>
+              <p className="text-4xl font-semibold text-red-500 tracking-tighter">
                 {formatCurrency(currentShift.closingBalance || 0)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4 italic">Thời gian trực</p>
-              <p className="text-4xl font-black text-white tracking-tighter italic font-mono uppercase">
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Thời gian trực</p>
+              <p className="text-4xl font-semibold text-white tracking-tighter italic font-mono uppercase">
                 {Math.floor((Date.now() - new Date(currentShift.openedAt).getTime()) / 1000 / 60)} PHÚT
               </p>
             </div>
@@ -506,12 +506,12 @@ export const ShiftsPage = () => {
               <AlertCircle size={40} />
             </div>
             <div className="space-y-3">
-              <h3 className="text-2xl font-black text-gray-950 uppercase italic tracking-tighter leading-none">Hệ thống đang chờ lệnh mở ca</h3>
-              <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Bắt đầu phiên trực mới để ghi nhận các giao dịch tiền mặt</p>
+              <h3 className="text-2xl font-semibold text-gray-950  tracking-tighter leading-none">Hệ thống đang chờ lệnh mở ca</h3>
+              <p className="text-gray-500 font-medium text-xs">Bắt đầu phiên trực mới để ghi nhận các giao dịch tiền mặt</p>
             </div>
             <button
               onClick={() => setIsOpenShiftModalOpen(true)}
-              className="px-14 py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-accent transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-4"
+              className="px-14 py-5 bg-gray-950 text-white rounded-2xl font-semibold tracking-[0.2em] text-xs hover:bg-accent transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-4"
             >
               MỞ CA LÀM VIỆC MỚI <ArrowRight size={18} />
             </button>
@@ -526,11 +526,11 @@ export const ShiftsPage = () => {
             <div className="w-14 h-14 bg-gray-50 text-gray-950 rounded-2xl flex items-center justify-center group-hover:bg-gray-950 group-hover:text-white transition-all duration-500 shadow-sm border border-gray-100">
               <Clock size={28} />
             </div>
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Tổng số phiên</span>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-[0.2em]">Tổng số phiên</span>
           </div>
-          <h3 className="text-5xl font-black text-gray-950 tracking-tighter italic">{total}</h3>
+          <h3 className="text-5xl font-semibold text-gray-950 tracking-tighter">{total}</h3>
           <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-2">
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Lịch sử hoạt động toàn thời gian</span>
+            <span className="text-[9px] font-semibold text-gray-400 uppercase">Lịch sử hoạt động toàn thời gian</span>
           </div>
         </motion.div>
 
@@ -539,11 +539,11 @@ export const ShiftsPage = () => {
             <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-500 shadow-sm border border-emerald-100">
               <DollarSign size={28} />
             </div>
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] italic">Phiên đang mở</span>
+            <span className="text-xs font-semibold text-emerald-500 uppercase tracking-[0.2em]">Phiên đang mở</span>
           </div>
-          <h3 className="text-5xl font-black text-emerald-950 tracking-tighter italic">{data.filter(s => s.status === 'Open').length}</h3>
+          <h3 className="text-5xl font-semibold text-emerald-950 tracking-tighter">{data.filter(s => s.status === 'Open').length}</h3>
           <div className="mt-8 pt-6 border-t border-emerald-100 flex items-center gap-2">
-            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest italic animate-pulse">Hệ thống đang ghi nhận</span>
+            <span className="text-[9px] font-semibold text-emerald-600  animate-pulse">Hệ thống đang ghi nhận</span>
           </div>
         </motion.div>
       </div>
@@ -551,7 +551,7 @@ export const ShiftsPage = () => {
       {/* History */}
       <div className="premium-card p-4 border-2 shadow-[0_40px_80px_rgba(0,0,0,0.05)] bg-white">
         <div className="p-8 border-b border-gray-50">
-          <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">Lịch sử ca làm việc</h3>
+          <h3 className="text-xl font-semibold text-gray-900  tracking-tighter">Lịch sử ca làm việc</h3>
         </div>
         <div className="p-4">
           <DataTable

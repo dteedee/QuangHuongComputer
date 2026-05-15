@@ -95,7 +95,7 @@ export default function TwoFactorSetupPage() {
               value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
               placeholder="Nhập mã 6 số"
-              className="border rounded-lg px-3 py-2 w-40 text-center text-lg tracking-widest"
+              className="border rounded-lg px-3 py-2 w-40 text-center text-lg"
             />
             <button
               onClick={handleVerify}

@@ -145,11 +145,11 @@ export const TechDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-4 mb-3">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-xl">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-semibold shadow-xl">
                             {user?.fullName?.charAt(0) || 'T'}
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                            <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">
                                 Xin chào, <span className="text-accent">{user?.fullName || 'Kỹ thuật viên'}</span>
                             </h1>
                             <p className="text-gray-600 font-semibold flex items-center gap-2 mt-1">
@@ -184,7 +184,7 @@ export const TechDashboard: React.FC = () => {
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-gray-500 font-bold text-xs uppercase tracking-wider">Ngày công tháng này</p>
-                            <h3 className="text-4xl font-black text-gray-900 mt-2">{stats.totalWorkDays}</h3>
+                            <h3 className="text-4xl font-semibold text-gray-900 mt-2">{stats.totalWorkDays}</h3>
                             <p className="text-sm text-gray-500 mt-1">
                                 <span className="text-amber-500 font-semibold">{stats.lateDays} đi muộn</span>
                                 {' · '}
@@ -202,7 +202,7 @@ export const TechDashboard: React.FC = () => {
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-gray-500 font-bold text-xs uppercase tracking-wider">Lương ước tính</p>
-                            <h3 className="text-3xl font-black text-emerald-600 mt-2">{formatCurrency(stats.estimatedSalary)}</h3>
+                            <h3 className="text-3xl font-semibold text-emerald-600 mt-2">{formatCurrency(stats.estimatedSalary)}</h3>
                             <p className="text-sm text-gray-500 mt-1">
                                 {myPayroll ? 'Từ bảng lương' : 'Chưa có dữ liệu bảng lương'}
                             </p>
@@ -218,7 +218,7 @@ export const TechDashboard: React.FC = () => {
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-gray-500 font-bold text-xs uppercase tracking-wider">Đánh giá trung bình</p>
-                            <h3 className="text-4xl font-black text-amber-500 mt-2 flex items-center gap-2">
+                            <h3 className="text-4xl font-semibold text-amber-500 mt-2 flex items-center gap-2">
                                 {stats.avgRating.toFixed(1)}
                                 <Star size={24} fill="currentColor" />
                             </h3>
@@ -237,7 +237,7 @@ export const TechDashboard: React.FC = () => {
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-gray-500 font-bold text-xs uppercase tracking-wider">Tỷ lệ hoàn thành</p>
-                            <h3 className="text-4xl font-black text-blue-600 mt-2">{stats.completionRate.toFixed(0)}%</h3>
+                            <h3 className="text-4xl font-semibold text-blue-600 mt-2">{stats.completionRate.toFixed(0)}%</h3>
                             <p className="text-sm text-gray-500 mt-1">
                                 <span className="font-semibold">{stats.completedOrders}</span>/{stats.totalOrders} đơn
                             </p>
@@ -263,7 +263,7 @@ export const TechDashboard: React.FC = () => {
                                 <p className="text-xs text-gray-500">{stats.pendingOrders} đơn</p>
                             </div>
                         </div>
-                        <span className="text-3xl font-black text-amber-500">{stats.pendingOrders}</span>
+                        <span className="text-3xl font-semibold text-amber-500">{stats.pendingOrders}</span>
                     </div>
                     <div className="p-4 max-h-64 overflow-y-auto">
                         {workOrders.filter(w => w.status === 'Assigned' || w.status === 'Requested').slice(0, 5).map(order => (
@@ -300,7 +300,7 @@ export const TechDashboard: React.FC = () => {
                                 <p className="text-xs text-gray-500">{stats.inProgressOrders} đơn</p>
                             </div>
                         </div>
-                        <span className="text-3xl font-black text-blue-500">{stats.inProgressOrders}</span>
+                        <span className="text-3xl font-semibold text-blue-500">{stats.inProgressOrders}</span>
                     </div>
                     <div className="p-4 max-h-64 overflow-y-auto">
                         {workOrders.filter(w => w.status === 'InProgress').slice(0, 5).map(order => (
@@ -337,7 +337,7 @@ export const TechDashboard: React.FC = () => {
                                 <p className="text-xs text-gray-500">Tháng này</p>
                             </div>
                         </div>
-                        <span className="text-3xl font-black text-emerald-500">{stats.completedOrders}</span>
+                        <span className="text-3xl font-semibold text-emerald-500">{stats.completedOrders}</span>
                     </div>
                     <div className="p-4 max-h-64 overflow-y-auto">
                         {workOrders.filter(w => w.status === 'Completed').slice(0, 5).map(order => (
@@ -436,7 +436,7 @@ export const TechDashboard: React.FC = () => {
                             >
                                 <span>{day.date}</span>
                                 {day.checkIn && (
-                                    <span className="text-[10px] opacity-70">{day.checkIn}</span>
+                                    <span className="text-xs opacity-70">{day.checkIn}</span>
                                 )}
                             </div>
                         ))}

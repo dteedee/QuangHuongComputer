@@ -71,7 +71,7 @@ const ReturnDetailModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-sm w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ const ReturnDetailModal = ({
                   <DollarSign className="w-5 h-5 text-emerald-600" />
                   <span className="font-bold text-emerald-700">Số tiền hoàn trả</span>
                 </div>
-                <span className="text-xl font-black text-emerald-700">{formatCurrency(returnRequest.refundAmount)}</span>
+                <span className="text-xl font-semibold text-emerald-700">{formatCurrency(returnRequest.refundAmount)}</span>
               </div>
               {returnRequest.refundMethod && (
                 <p className="text-sm text-emerald-600 mt-2">Phương thức: {returnRequest.refundMethod}</p>
@@ -228,7 +228,7 @@ const ReturnDetailModal = ({
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRejectForm(true)}
-                className="flex-1 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-white border-2 border-red-200 text-red-600 rounded-xl font-bold hover:bg-blue-50 flex items-center justify-center gap-2"
               >
                 <XCircle className="w-5 h-5" />
                 Từ chối
@@ -395,7 +395,7 @@ export const ReturnsManagementPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Quản lý đổi trả</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 uppercase tracking-tight">Quản lý đổi trả</h1>
           <p className="text-gray-500 text-sm">Xử lý yêu cầu đổi trả từ khách hàng</p>
         </div>
         <button
@@ -415,7 +415,7 @@ export const ReturnsManagementPage = () => {
               <Package className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-2xl font-black text-gray-900">{stats.total}</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
               <p className="text-xs text-gray-500">Tổng yêu cầu</p>
             </div>
           </div>
@@ -427,7 +427,7 @@ export const ReturnsManagementPage = () => {
               <Clock className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-black text-amber-600">{stats.pending}</p>
+              <p className="text-2xl font-semibold text-amber-600">{stats.pending}</p>
               <p className="text-xs text-gray-500">Chờ duyệt</p>
             </div>
           </div>
@@ -439,7 +439,7 @@ export const ReturnsManagementPage = () => {
               <CheckCircle className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-black text-blue-600">{stats.approved}</p>
+              <p className="text-2xl font-semibold text-blue-600">{stats.approved}</p>
               <p className="text-xs text-gray-500">Đã duyệt</p>
             </div>
           </div>
@@ -451,7 +451,7 @@ export const ReturnsManagementPage = () => {
               <XCircle className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-black text-red-600">{stats.rejected}</p>
+              <p className="text-2xl font-semibold text-red-600">{stats.rejected}</p>
               <p className="text-xs text-gray-500">Từ chối</p>
             </div>
           </div>
@@ -463,7 +463,7 @@ export const ReturnsManagementPage = () => {
               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-black text-emerald-600">{stats.refunded}</p>
+              <p className="text-2xl font-semibold text-emerald-600">{stats.refunded}</p>
               <p className="text-xs text-gray-500">Đã hoàn tiền</p>
             </div>
           </div>

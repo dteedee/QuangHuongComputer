@@ -137,8 +137,8 @@ export const RecruitmentManagement = () => {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-black italic uppercase tracking-tighter text-gray-900 leading-none">Quản lý tuyển dụng</h1>
-                    <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Quản lý tin đăng và ứng viên</p>
+                    <h1 className="text-2xl font-semibold  tracking-tighter text-gray-900 leading-none">Quản lý tuyển dụng</h1>
+                    <p className="text-gray-500 text-sm mt-1 uppercase font-bold">Quản lý tin đăng và ứng viên</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
@@ -163,7 +163,7 @@ export const RecruitmentManagement = () => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 uppercase text-[10px] font-black tracking-widest text-gray-500">
+                        <thead className="bg-gray-50 uppercase text-xs font-semibold text-gray-500">
                             <tr>
                                 <th className="px-6 py-4">Vị trí & Phòng ban</th>
                                 <th className="px-6 py-4">Loại hình & Lương</th>
@@ -184,7 +184,7 @@ export const RecruitmentManagement = () => {
                                     <tr key={job.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-gray-900 group-hover:text-accent transition-colors">{job.title}</div>
-                                            <div className="text-xs text-gray-500 font-bold uppercase tracking-tighter">{job.department}</div>
+                                            <div className="text-xs text-slate-500 font-medium tracking-tighter">{job.department}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1 font-medium text-gray-700">
@@ -203,7 +203,7 @@ export const RecruitmentManagement = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${job.status === 'Active' ? 'bg-green-100 text-green-700' :
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibolder ${job.status === 'Active' ? 'bg-green-100 text-green-700' :
                                                 job.status === 'Draft' ? 'bg-orange-100 text-orange-700' :
                                                     'bg-gray-100 text-gray-700'
                                                 }`}>
@@ -236,7 +236,7 @@ export const RecruitmentManagement = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-bold uppercase italic">Chưa có tin tuyển dụng nào</td>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-bold ">Chưa có tin tuyển dụng nào</td>
                                 </tr>
                             )}
                         </tbody>
@@ -363,7 +363,7 @@ export const RecruitmentManagement = () => {
                             type="button"
                             variant="outline"
                             onClick={() => setIsModalOpen(false)}
-                            className="flex-1 uppercase text-sm tracking-widest"
+                            className="flex-1 uppercase text-sm"
                         >
                             Hủy
                         </Button>
@@ -371,7 +371,7 @@ export const RecruitmentManagement = () => {
                             type="submit"
                             loading={saving}
                             icon={Save}
-                            className="flex-[2] uppercase text-sm tracking-widest bg-gray-900 border-none hover:bg-gray-800"
+                            className="flex-[2] uppercase text-sm bg-gray-900 border-none hover:bg-gray-800"
                         >
                             Lưu thông tin
                         </Button>

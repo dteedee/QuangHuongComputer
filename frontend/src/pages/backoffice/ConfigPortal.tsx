@@ -317,10 +317,10 @@ export const ConfigPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-3">
                         Cấu hình <span className="text-accent">Hệ thống</span>
                     </h1>
-                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                    <p className="text-gray-700 font-semibold text-xs flex items-center gap-2">
                         <Database size={16} />
                         Quản lý toàn bộ thông số vận hành doanh nghiệp
                     </p>
@@ -328,7 +328,7 @@ export const ConfigPortal = () => {
                 {hasChanges && (
                     <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border-2 border-amber-200 rounded-xl">
                         <AlertTriangle size={20} className="text-amber-600" />
-                        <span className="text-xs font-black text-amber-800 uppercase">
+                        <span className="text-xs font-semibold text-amber-800 uppercase">
                             Có thay đổi chưa lưu
                         </span>
                     </div>
@@ -342,7 +342,7 @@ export const ConfigPortal = () => {
                         <button
                             key={i}
                             onClick={() => setActiveCategory(cat.name)}
-                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 font-black uppercase text-xs tracking-tight shadow-sm ${activeCategory === cat.name
+                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-[1.5rem] transition-all border-2 duration-300 font-semibold text-xs tracking-tight shadow-sm ${activeCategory === cat.name
                                 ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-xl'
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
@@ -352,7 +352,7 @@ export const ConfigPortal = () => {
                             </span>
                             {cat.label}
                             {activeCategory === cat.name && (
-                                <span className="ml-auto bg-accent text-white px-2 py-1 rounded-full text-[10px]">
+                                <span className="ml-auto bg-accent text-white px-2 py-1 rounded-full text-xs">
                                     {filteredConfigs.length}
                                 </span>
                             )}
@@ -369,11 +369,11 @@ export const ConfigPortal = () => {
                                     <span className={categories.find(c => c.name === activeCategory)?.color || 'text-gray-600'}>
                                         {categories.find(c => c.name === activeCategory)?.icon}
                                     </span>
-                                    <h3 className="text-3xl font-black text-gray-950 uppercase italic tracking-tighter">
+                                    <h3 className="text-3xl font-semibold text-gray-950  tracking-tighter">
                                         {categories.find(c => c.name === activeCategory)?.label || activeCategory}
                                     </h3>
                                 </div>
-                                <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                                <p className="text-sm font-medium text-slate-500">
                                     {filteredConfigs.length} tham số cấu hình
                                 </p>
                             </div>
@@ -426,8 +426,8 @@ export const ConfigPortal = () => {
                                 <button
                                     onClick={handleSave}
                                     disabled={!hasChanges}
-                                    className={`flex items-center gap-3 px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 group ${hasChanges
-                                        ? 'bg-accent hover:bg-accent-hover shadow-red-500/20'
+                                    className={`flex items-center gap-3 px-8 py-3 text-white text-sm font-medium rounded-xl shadow-lg transition-all active:scale-95 group ${hasChanges
+                                        ? 'bg-accent hover:bg-accent-hover shadow-blue-500/15'
                                         : 'bg-gray-300 cursor-not-allowed'
                                         }`}
                                 >
@@ -446,7 +446,7 @@ export const ConfigPortal = () => {
                                 return (
                                 <div key={config.key} className={`space-y-3 group border-2 rounded-2xl p-6 transition-all bg-gradient-to-r from-gray-50/50 to-white ${hasError ? 'border-red-200 bg-red-50/30' : 'border-gray-50 hover:border-accent/20'}`}>
                                     <div className="flex justify-between items-center">
-                                        <label className="text-xs font-black text-gray-950 uppercase tracking-widest flex items-center gap-3">
+                                        <label className="text-sm font-medium text-slate-700 flex items-center gap-3">
                                             <span className="bg-gray-900 text-white p-2 rounded-lg">
                                                 {getConfigIcon(config.key)}
                                             </span>
@@ -469,7 +469,7 @@ export const ConfigPortal = () => {
                                                 'Văn bản'
                                             }</span>
                                         </label>
-                                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest flex items-center gap-2">
+                                        <span className="text-xs text-slate-400 flex items-center gap-2">
                                             <Clock size={12} />
                                             {new Date(config.lastUpdated).toLocaleDateString('vi-VN')}
                                         </span>
@@ -490,7 +490,7 @@ export const ConfigPortal = () => {
                                                 ? <ToggleRight size={32} className="text-emerald-500" />
                                                 : <ToggleLeft size={32} className="text-gray-400" />
                                             }
-                                            <span className={`text-sm font-black uppercase tracking-widest ${
+                                            <span className={`text-sm font-medium ${
                                                 config.value === 'true' ? 'text-emerald-700' : 'text-gray-500'
                                             }`}>
                                                 {config.value === 'true' ? 'Đang bật' : 'Đang tắt'}
@@ -550,7 +550,7 @@ export const ConfigPortal = () => {
                                         <RefreshCw className="text-red-50 animate-spin" size={100} strokeWidth={1} />
                                         <Settings className="absolute inset-0 m-auto text-accent" size={48} />
                                     </div>
-                                    <p className="text-sm text-gray-900 font-black uppercase tracking-widest mt-8 italic">
+                                    <p className="text-sm text-gray-900 font-medium mt-8">
                                         Đang đồng bộ cấu hình hệ thống...
                                     </p>
                                 </div>
@@ -559,7 +559,7 @@ export const ConfigPortal = () => {
                             {!isLoading && filteredConfigs.length === 0 && (
                                 <div className="py-24 text-center bg-gray-50 rounded-[2rem] border-4 border-dashed border-gray-100">
                                     <Database className="mx-auto text-gray-200 mb-6" size={80} />
-                                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">
+                                    <p className="text-sm text-gray-400 font-medium">
                                         {searchQuery ? 'Không tìm thấy kết quả phù hợp' : 'Chưa có cấu hình nào'}
                                     </p>
                                 </div>
@@ -571,17 +571,17 @@ export const ConfigPortal = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
                             <Database className="text-blue-600 mb-3" size={32} />
-                            <h4 className="text-2xl font-black text-blue-900">{configs.length}</h4>
+                            <h4 className="text-2xl font-semibold text-blue-900">{configs.length}</h4>
                             <p className="text-xs font-bold text-blue-700 uppercase">Tổng số cấu hình</p>
                         </div>
                         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border-2 border-emerald-200">
                             <Award className="text-emerald-600 mb-3" size={32} />
-                            <h4 className="text-2xl font-black text-emerald-900">{categories.length}</h4>
+                            <h4 className="text-2xl font-semibold text-emerald-900">{categories.length}</h4>
                             <p className="text-xs font-bold text-emerald-700 uppercase">Danh mục</p>
                         </div>
                         <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border-2 border-amber-200">
                             <Clock className="text-amber-600 mb-3" size={32} />
-                            <h4 className="text-2xl font-black text-amber-900">
+                            <h4 className="text-2xl font-semibold text-amber-900">
                                 {configs.length > 0 ? new Date(Math.max(...configs.map(c => new Date(c.lastUpdated).getTime()))).toLocaleDateString('vi-VN') : '-'}
                             </h4>
                             <p className="text-xs font-bold text-amber-700 uppercase">Cập nhật gần nhất</p>

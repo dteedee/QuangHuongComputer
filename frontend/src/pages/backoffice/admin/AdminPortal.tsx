@@ -88,7 +88,7 @@ const QuickActionButton = ({
     onClick?: () => void;
 }) => {
     const colorMap: Record<string, string> = {
-        red: 'hover:bg-red-50 hover:text-red-600 hover:border-red-200',
+        red: 'hover:bg-blue-50 hover:text-red-600 hover:border-red-200',
         blue: 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200',
         green: 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200',
         purple: 'hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200',
@@ -297,7 +297,7 @@ export const AdminPortal = () => {
                     <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">
                         Trung tâm <span className="text-accent">Điều hành</span>
                     </h1>
-                    <p className="text-sm text-gray-500 font-medium italic">
+                    <p className="text-sm text-gray-500 font-medium">
                         Giám sát và quản trị hệ thống Quang Hưởng Computer chuyên sâu.
                     </p>
                 </div>
@@ -420,7 +420,7 @@ export const AdminPortal = () => {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <div className="flex -space-x-2">
                             {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 border-2 border-white flex items-center justify-center text-[10px] font-medium text-gray-600">
+                                <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
                                     U{i}
                                 </div>
                             ))}
@@ -545,7 +545,7 @@ export const AdminPortal = () => {
                     </div>
                     <div className="space-y-3">
                         {(!salesStats?.pendingOrders && (!productsData?.products?.some(p => p.stockQuantity < 10))) && (
-                            <p className="text-sm text-gray-500 italic">Không có cảnh báo nào.</p>
+                            <p className="text-sm text-gray-500">Không có cảnh báo nào.</p>
                         )}
 
                         {productsData?.products?.filter(p => p.stockQuantity < 10).slice(0, 3).map(p => (

@@ -71,12 +71,12 @@ export const AccountingPortal = () => {
 
     const getStatusBadge = (status: number) => {
         switch (status) {
-            case 0: return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-black uppercase">Bản nháp</span>;
-            case 1: return <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase">Đã xuất</span>;
-            case 2: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase">Trả một phần</span>;
-            case 3: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-black uppercase">Đã thanh toán</span>;
-            case 4: return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase">Quá hạn</span>;
-            case 5: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-black uppercase">Đã hủy</span>;
+            case 0: return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold">Bản nháp</span>;
+            case 1: return <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold">Đã xuất</span>;
+            case 2: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-semibold">Trả một phần</span>;
+            case 3: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-semibold">Đã thanh toán</span>;
+            case 4: return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-semibold">Quá hạn</span>;
+            case 5: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-semibold">Đã hủy</span>;
             default: return null;
         }
     };
@@ -89,10 +89,10 @@ export const AccountingPortal = () => {
         <div className="space-y-10 pb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
                         Kế toán & <span className="text-accent">Tài chính</span>
                     </h1>
-                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                    <p className="text-gray-500 font-medium text-xs">
                         Quản lý hóa đơn, công nợ và báo cáo tài chính
                     </p>
                 </div>
@@ -117,9 +117,9 @@ export const AccountingPortal = () => {
                                     {tab.icon}
                                 </span>
                                 <div>
-                                    <span className="text-xs font-black uppercase tracking-widest">{tab.label}</span>
+                                    <span className="text-sm font-medium">{tab.label}</span>
                                     {isActive && (
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{tab.description}</p>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase">{tab.description}</p>
                                     )}
                                 </div>
                                 {isActive && <ArrowRight size={14} className="text-accent ml-2" />}
@@ -136,9 +136,9 @@ export const AccountingPortal = () => {
                         <div className="p-3 bg-red-50 text-accent rounded-2xl">
                             <DollarSign size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Công nợ</span>
+                        <span className="text-sm font-medium text-slate-400">Công nợ</span>
                     </div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">
                         {formatCurrency(stats?.totalReceivables || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Phải thu khách hàng</p>
@@ -149,9 +149,9 @@ export const AccountingPortal = () => {
                         <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
                             <TrendingUp size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Doanh thu</span>
+                        <span className="text-sm font-medium text-slate-400">Doanh thu</span>
                     </div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">
+                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">
                         {formatCurrency(stats?.revenueToday || 0)}
                     </h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Hôm nay</p>
@@ -162,9 +162,9 @@ export const AccountingPortal = () => {
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                             <FileText size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Hóa đơn</span>
+                        <span className="text-sm font-medium text-slate-400">Hóa đơn</span>
                     </div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats?.totalInvoices || 0}</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">{stats?.totalInvoices || 0}</h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Tổng số hóa đơn</p>
                 </motion.div>
 
@@ -173,16 +173,16 @@ export const AccountingPortal = () => {
                         <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
                             <Clock size={24} />
                         </div>
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Tài khoản</span>
+                        <span className="text-sm font-medium text-slate-400">Tài khoản</span>
                     </div>
-                    <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats?.activeAccounts || 0}</h3>
+                    <h3 className="text-3xl font-semibold text-gray-900 tracking-tighter">{stats?.activeAccounts || 0}</h3>
                     <p className="text-xs text-gray-400 font-bold mt-2">Đang hoạt động</p>
                 </motion.div>
             </div>
 
             {/* Quick Actions */}
             <div className="premium-card p-8 border-2">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 italic">Thao tác nhanh</h3>
+                <h3 className="text-xs text-slate-400 mb-6">Thao tác nhanh</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                         { to: '/backoffice/accounting/ar', icon: <TrendingUp size={20} />, label: 'Thu nợ khách', color: 'text-green-600 bg-green-50' },
@@ -199,7 +199,7 @@ export const AccountingPortal = () => {
                                 {action.icon}
                             </div>
                             <div className="flex-1">
-                                <span className="text-xs font-black text-gray-900 uppercase tracking-widest">{action.label}</span>
+                                <span className="text-sm font-medium text-slate-800">{action.label}</span>
                             </div>
                             <ArrowRight size={16} className="text-gray-300 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                         </Link>
@@ -213,9 +213,9 @@ export const AccountingPortal = () => {
                 className="premium-card overflow-hidden"
             >
                 <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-sm flex justify-between items-center">
-                    <h3 className="text-xl font-black text-gray-900 uppercase italic">Danh sách hóa đơn</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 ">Danh sách hóa đơn</h3>
                     <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-gray-50 text-gray-400 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-100 transition-all">
+                        <button className="px-4 py-2 bg-gray-50 text-gray-400 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all">
                             <Filter size={14} className="inline mr-2" />
                             Lọc
                         </button>
@@ -223,7 +223,7 @@ export const AccountingPortal = () => {
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 text-gray-400 text-[10px] uppercase font-black tracking-widest">
+                        <thead className="bg-gray-50/50 text-gray-400 text-xs uppercase font-semibold">
                             <tr>
                                 <th className="px-8 py-5">Số hóa đơn</th>
                                 <th className="px-8 py-5">Ngày phát hành</th>
@@ -245,7 +245,7 @@ export const AccountingPortal = () => {
                                 <tr>
                                     <td colSpan={7} className="px-8 py-20 text-center">
                                         <FileText className="mx-auto text-gray-100 mb-4" size={60} />
-                                        <p className="text-[11px] text-gray-300 font-black uppercase italic tracking-widest">
+                                        <p className="text-xs text-gray-300 font-semibold">
                                             Chưa có hóa đơn nào.
                                         </p>
                                     </td>
@@ -254,7 +254,7 @@ export const AccountingPortal = () => {
                                 invoices.map((invoice: Invoice) => (
                                     <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
                                         <td className="px-8 py-6">
-                                            <span className="font-black text-accent font-mono">
+                                            <span className="font-semibold text-accent font-mono">
                                                 {invoice.invoiceNumber}
                                             </span>
                                         </td>
@@ -270,7 +270,7 @@ export const AccountingPortal = () => {
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="font-black text-gray-900 text-base">
+                                            <span className="font-semibold text-gray-900 text-base">
                                                 {formatCurrency(invoice.totalAmount)}
                                             </span>
                                         </td>
@@ -283,7 +283,7 @@ export const AccountingPortal = () => {
                                         <td className="px-8 py-6 text-right">
                                             <button
                                                 onClick={() => viewInvoiceHTML(invoice.id)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
                                             >
                                                 <Eye size={18} />
                                             </button>

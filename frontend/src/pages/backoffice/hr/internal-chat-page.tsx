@@ -82,7 +82,7 @@ export default function InternalChatPage() {
                 {/* Sidebar */}
                 <div className="w-56 border-r border-gray-100 flex flex-col shrink-0">
                     <div className="p-4 border-b border-gray-100">
-                        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Kênh</p>
+                        <p className="text-sm font-medium text-gray-400">Kênh</p>
                     </div>
                     <div className="flex-1 overflow-y-auto py-2">
                         {channels.map(ch => (

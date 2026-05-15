@@ -14,25 +14,25 @@ export default {
         'accent-light': 'var(--accent-primary-light)',
         'accent-dark': 'var(--accent-primary-dark)',
 
-        // Brand colors (Quang Hưởng đỏ)
-        'brand-red': '#D70018',
-        'brand-red-dark': '#B50014',
-        'brand-red-light': '#FFEDED',
+        // Brand colors (Professional Blue)
+        'brand': '#2563EB',
+        'brand-dark': '#1D4ED8',
+        'brand-light': '#EFF6FF',
         'brand-gray': '#f3f4f6',
 
-        // Primary (Mặc định là đỏ)
+        // Primary (Professional Blue)
         primary: {
-          50: '#FFEDED',
-          100: '#FFD3D3',
-          200: '#FFA8A8',
-          300: '#FF7B7B',
-          400: '#FF4D4D',
-          500: '#D70018',
-          600: '#B50014',
-          700: '#910010',
-          800: '#6D000C',
-          900: '#4A0008',
-          DEFAULT: '#D70018',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
+          DEFAULT: '#2563EB',
         },
 
         // Success (Green)
@@ -87,8 +87,8 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        'brand': '0 4px 16px rgba(215, 0, 24, 0.2)',
-        'brand-lg': '0 8px 32px rgba(215, 0, 24, 0.3)',
+        'brand': '0 4px 16px rgba(37, 99, 235, 0.15)',
+        'brand-lg': '0 8px 32px rgba(37, 99, 235, 0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

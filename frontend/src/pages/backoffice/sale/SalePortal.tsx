@@ -66,10 +66,10 @@ export const SalePortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-3">
+                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-3">
                         Trung tâm <span className="text-accent">Kinh doanh</span>
                     </h1>
-                    <p className="text-gray-700 font-black uppercase text-xs tracking-widest flex items-center gap-2">
+                    <p className="text-gray-700 font-semibold text-xs flex items-center gap-2">
                         Quản lý đơn hàng, doanh thu và chương trình bán hàng
                     </p>
                 </div>
@@ -84,14 +84,14 @@ export const SalePortal = () => {
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
-                        className="flex items-center gap-3 px-6 py-4 bg-gray-950 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-900/20 active:scale-95 group"
+                        className="flex items-center gap-3 px-6 py-4 bg-gray-950 text-white text-sm font-medium rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-900/20 active:scale-95 group"
                     >
                         <CreditCard size={18} className="group-hover:scale-110 transition-transform" />
                         POS Bán hàng
                     </button>
                     <button
                         onClick={() => navigate('/backoffice/pos')}
-                        className="flex items-center gap-3 px-6 py-4 bg-accent text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all shadow-xl shadow-red-500/20 active:scale-95 group"
+                        className="flex items-center gap-3 px-6 py-4 bg-accent text-white text-sm font-medium rounded-2xl hover:bg-accent-hover transition-all shadow-xl shadow-blue-500/15 active:scale-95 group"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
                         Tạo đơn hàng
@@ -106,13 +106,13 @@ export const SalePortal = () => {
                         <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg">
                             <Package size={28} />
                         </div>
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black ${(stats?.orderGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${(stats?.orderGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                             <TrendingUp size={14} className="fill-current" /> {(stats?.orderGrowth ?? 0) >= 0 ? '+' : ''}{stats?.orderGrowth ?? 0}%
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Tổng đơn hàng</p>
-                        <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">{stats?.totalOrders || 0}</h3>
+                        <p className="text-gray-600 font-semibold text-xs">Tổng đơn hàng</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{stats?.totalOrders || 0}</h3>
                     </div>
                 </div>
 
@@ -121,13 +121,13 @@ export const SalePortal = () => {
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-lg">
                             <DollarSign size={28} />
                         </div>
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-black ${(stats?.revenueGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold ${(stats?.revenueGrowth ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                             <TrendingUp size={14} className="fill-current" /> {(stats?.revenueGrowth ?? 0) >= 0 ? '+' : ''}{stats?.revenueGrowth ?? 0}%
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Doanh thu tháng</p>
-                        <h3 className="text-3xl font-black text-gray-950 tracking-tighter italic">{formatCurrency(stats?.monthRevenue || 0)}</h3>
+                        <p className="text-gray-600 font-semibold text-xs">Doanh thu tháng</p>
+                        <h3 className="text-xl font-semibold text-slate-900">{formatCurrency(stats?.monthRevenue || 0)}</h3>
                     </div>
                 </div>
 
@@ -138,8 +138,8 @@ export const SalePortal = () => {
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Đơn chờ xử lý</p>
-                        <h3 className="text-4xl font-black text-gray-950 tracking-tighter italic">{stats?.pendingOrders || 0}</h3>
+                        <p className="text-gray-600 font-semibold text-xs">Đơn chờ xử lý</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{stats?.pendingOrders || 0}</h3>
                     </div>
                 </div>
 
@@ -150,8 +150,8 @@ export const SalePortal = () => {
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-gray-600 font-black uppercase text-xs tracking-widest">Giá trị đơn TB</p>
-                        <h3 className="text-3xl font-black text-gray-950 tracking-tighter italic">{formatCurrency(stats?.averageOrderValue || 0)}</h3>
+                        <p className="text-gray-600 font-semibold text-xs">Giá trị đơn TB</p>
+                        <h3 className="text-xl font-semibold text-slate-900">{formatCurrency(stats?.averageOrderValue || 0)}</h3>
                     </div>
                 </div>
             </div>
@@ -160,14 +160,14 @@ export const SalePortal = () => {
                 {/* Recent Orders List */}
                 <div className="lg:col-span-2 premium-card overflow-hidden border-2">
                     <div className="p-8 flex items-center justify-between border-b-2 border-gray-50">
-                        <h2 className="text-2xl font-black text-gray-950 tracking-tight uppercase italic">Đơn hàng gần đây</h2>
-                        <Link to="/backoffice/orders" className="flex items-center gap-2 text-sm text-accent font-black hover:underline uppercase tracking-widest">
+                        <h2 className="text-2xl font-semibold text-gray-950 tracking-tight ">Đơn hàng gần đây</h2>
+                        <Link to="/backoffice/orders" className="flex items-center gap-2 text-sm text-accent font-semibold hover:underline uppercase">
                             Xem tất cả <ExternalLink size={16} />
                         </Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-900 text-white text-xs font-black uppercase tracking-widest">
+                            <thead className="bg-gray-900 text-white text-sm font-medium">
                                 <tr>
                                     <th className="px-8 py-5">Mã đơn</th>
                                     <th className="px-8 py-5">Khách hàng</th>
@@ -186,19 +186,19 @@ export const SalePortal = () => {
                                         >
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
-                                                    <span className="text-base font-black text-gray-950 group-hover:text-accent transition-colors tracking-tight">#{order.orderNumber}</span>
-                                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{formatDate(order.orderDate)}</span>
+                                                    <span className="text-base font-semibold text-gray-950 group-hover:text-accent transition-colors tracking-tight">#{order.orderNumber}</span>
+                                                    <span className="text-xs font-bold text-gray-400 uppercase mt-0.5">{formatDate(order.orderDate)}</span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className="text-sm font-bold text-gray-800">{order.customerId}</span>
                                             </td>
                                             <td className="px-8 py-6">
-                                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest italic border ${status.bg} ${status.color} border-current/20`}>
+                                                <span className={`px-4 py-1.5 rounded-xl text-xs text-slate-500 italic border ${status.bg} ${status.color} border-current/20`}>
                                                     {status.label}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-6 text-right font-black text-gray-950 text-lg tracking-tighter italic">
+                                            <td className="px-8 py-6 text-right font-semibold text-gray-950 text-lg tracking-tighter">
                                                 {formatCurrency(order.totalAmount)}
                                             </td>
                                         </tr>
@@ -213,9 +213,9 @@ export const SalePortal = () => {
                 <div className="space-y-8">
                     <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl border-4 border-gray-100">
                         <div className="relative z-10">
-                            <h3 className="text-2xl font-black mb-2 uppercase italic tracking-tighter">Tạo khuyến mãi</h3>
+                            <h3 className="text-2xl font-semibold mb-2  tracking-tighter">Tạo khuyến mãi</h3>
                             <p className="text-gray-400 text-sm font-bold mb-8 uppercase tracking-wide">Tăng doanh số với các chương trình Hot Sale</p>
-                            <button className="w-full bg-accent text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20 hover:bg-accent-hover transition-all active:scale-95">
+                            <button className="w-full bg-accent text-white px-6 py-4 rounded-lg text-sm font-medium shadow-xl shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95">
                                 Tạo chiến dịch ngay
                             </button>
                         </div>
@@ -223,14 +223,14 @@ export const SalePortal = () => {
                     </div>
 
                     <div className="premium-card p-8 border-2">
-                        <h3 className="text-lg font-black text-gray-950 mb-6 uppercase italic tracking-widest border-b-2 border-red-50 pb-2">Thao tác nhanh</h3>
+                        <h3 className="text-lg font-semibold text-gray-950 mb-6  border-b-2 border-red-50 pb-2">Thao tác nhanh</h3>
                         <div className="space-y-4">
                             <Link to="/backoffice/orders" className="w-full flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 hover:bg-blue-50 transition-all border-2 border-transparent hover:border-blue-100 group">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-white text-blue-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <Package size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Đơn hàng</span>
+                                    <span className="text-sm font-semibold text-gray-800 uppercase tracking-tight">Đơn hàng</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                             </Link>
@@ -239,7 +239,7 @@ export const SalePortal = () => {
                                     <div className="p-3 bg-white text-amber-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <Percent size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Mã giảm giá</span>
+                                    <span className="text-sm font-semibold text-gray-800 uppercase tracking-tight">Mã giảm giá</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
                             </Link>
@@ -248,7 +248,7 @@ export const SalePortal = () => {
                                     <div className="p-3 bg-white text-purple-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <ShoppingBag size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Sản phẩm</span>
+                                    <span className="text-sm font-semibold text-gray-800 uppercase tracking-tight">Sản phẩm</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
                             </Link>
@@ -257,7 +257,7 @@ export const SalePortal = () => {
                                     <div className="p-3 bg-white text-rose-600 rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                                         <RotateCcw size={20} />
                                     </div>
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tight">Đổi trả</span>
+                                    <span className="text-sm font-semibold text-gray-800 uppercase tracking-tight">Đổi trả</span>
                                 </div>
                                 <ArrowRight size={20} className="text-gray-300 group-hover:text-rose-600 group-hover:translate-x-1 transition-all" />
                             </Link>
@@ -274,7 +274,7 @@ export const SalePortal = () => {
                             <AlertCircle size={24} className="text-amber-600" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="font-black text-amber-800 mb-1 text-lg">
+                            <h3 className="font-semibold text-amber-800 mb-1 text-lg">
                                 Có {stats?.pendingOrders} đơn hàng cần xử lý
                             </h3>
                             <p className="text-sm text-amber-700 mb-3">
@@ -295,22 +295,22 @@ export const SalePortal = () => {
             <div className="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
                     <Calendar size={20} className="text-gray-500" />
-                    <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">Tổng kết hôm nay</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight">Tổng kết hôm nay</h2>
                     <span className="text-sm text-gray-500">
                         {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </span>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
-                        <p className="text-3xl font-black text-blue-600">{stats?.todayOrders || 0}</p>
+                        <p className="text-3xl font-semibold text-blue-600">{stats?.todayOrders || 0}</p>
                         <p className="text-sm text-gray-500 font-medium">Đơn hàng</p>
                     </div>
                     <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
-                        <p className="text-2xl font-black text-emerald-600">{formatCurrency(stats?.todayRevenue || stats?.monthRevenue || 0)}</p>
+                        <p className="text-2xl font-semibold text-emerald-600">{formatCurrency(stats?.todayRevenue || stats?.monthRevenue || 0)}</p>
                         <p className="text-sm text-gray-500 font-medium">Doanh thu</p>
                     </div>
                     <div className="bg-white rounded-2xl p-4 text-center border border-gray-100">
-                        <p className="text-2xl font-black text-purple-600">
+                        <p className="text-2xl font-semibold text-purple-600">
                             {formatCurrency(stats?.averageOrderValue || (stats?.totalRevenue || 0) / (stats?.totalOrders || 1))}
                         </p>
                         <p className="text-sm text-gray-500 font-medium">Giá trị TB/đơn</p>

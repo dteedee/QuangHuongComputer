@@ -201,10 +201,10 @@ export const WorkOrderDetailPage = () => {
                         Quay lại
                     </button>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">
+                        <h1 className="text-2xl font-semibold text-slate-900">
                             {workOrder.ticketNumber}
                         </h1>
-                        <span className={`px-4 py-2 rounded-xl text-sm font-black uppercase ${getStatusColor(workOrder.status)}`}>
+                        <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${getStatusColor(workOrder.status)}`}>
                             {translateStatus(workOrder.status)}
                         </span>
                     </div>
@@ -274,26 +274,26 @@ export const WorkOrderDetailPage = () => {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Device Info */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
                             <Smartphone size={20} className="text-accent" />
                             Thông tin thiết bị
                         </h2>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase">Model</p>
+                                <p className="text-xs text-slate-500 font-medium">Model</p>
                                 <p className="font-bold text-gray-900">{workOrder.deviceModel}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase">Serial Number</p>
+                                <p className="text-xs text-slate-500 font-medium">Serial Number</p>
                                 <p className="font-mono font-bold text-gray-900">{workOrder.serialNumber || 'N/A'}</p>
                             </div>
                             <div className="col-span-2">
-                                <p className="text-xs text-gray-500 font-bold uppercase">Mô tả vấn đề</p>
+                                <p className="text-xs text-slate-500 font-medium">Mô tả vấn đề</p>
                                 <p className="text-gray-700 bg-gray-50 p-3 rounded-lg mt-1">{workOrder.description}</p>
                             </div>
                             {workOrder.technicalNotes && (
                                 <div className="col-span-2">
-                                    <p className="text-xs text-gray-500 font-bold uppercase">Ghi chú kỹ thuật</p>
+                                    <p className="text-xs text-slate-500 font-medium">Ghi chú kỹ thuật</p>
                                     <p className="text-gray-700 bg-blue-50 p-3 rounded-lg mt-1 border border-blue-100">
                                         {workOrder.technicalNotes}
                                     </p>
@@ -305,7 +305,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Parts Section */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <Package size={20} className="text-accent" />
                                 Linh kiện sử dụng
                             </h2>
@@ -321,7 +321,7 @@ export const WorkOrderDetailPage = () => {
                         </div>
 
                         {parts.length === 0 ? (
-                            <p className="text-gray-400 text-center py-8 italic">Chưa có linh kiện nào</p>
+                            <p className="text-gray-400 text-center py-8">Chưa có linh kiện nào</p>
                         ) : (
                             <div className="space-y-3">
                                 {parts.map((part: any) => (
@@ -340,7 +340,7 @@ export const WorkOrderDetailPage = () => {
                                             {canAddParts && (
                                                 <button
                                                     onClick={() => removePartMutation.mutate(part.id)}
-                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                                                    className="p-2 text-red-500 hover:bg-blue-50 rounded-lg transition"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -350,7 +350,7 @@ export const WorkOrderDetailPage = () => {
                                 ))}
                                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                                     <span className="font-bold text-gray-700">Tổng chi phí linh kiện:</span>
-                                    <span className="text-xl font-black text-accent">
+                                    <span className="text-xl font-semibold text-accent">
                                         {formatCurrency(parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0))}
                                     </span>
                                 </div>
@@ -362,7 +362,7 @@ export const WorkOrderDetailPage = () => {
                     {canCreateQuote && (
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                                <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                     <FileText size={20} className="text-blue-600" />
                                     Tạo báo giá
                                 </h2>
@@ -383,7 +383,7 @@ export const WorkOrderDetailPage = () => {
                     {/* Activity Log */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight flex items-center gap-2">
                                 <MessageSquare size={20} className="text-accent" />
                                 Lịch sử hoạt động
                             </h2>
@@ -419,7 +419,7 @@ export const WorkOrderDetailPage = () => {
                 <div className="space-y-6">
                     {/* Cost Summary */}
                     <div className="bg-gray-900 rounded-2xl p-6 text-white">
-                        <h2 className="text-lg font-black uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                             <DollarSign size={20} className="text-accent" />
                             Tổng chi phí
                         </h2>
@@ -438,14 +438,14 @@ export const WorkOrderDetailPage = () => {
                             </div>
                             <div className="border-t border-gray-700 pt-3 flex justify-between">
                                 <span className="font-bold">Tổng cộng</span>
-                                <span className="text-2xl font-black text-accent">{formatCurrency(workOrder.totalCost)}</span>
+                                <span className="text-2xl font-semibold text-accent">{formatCurrency(workOrder.totalCost)}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Timeline */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900 uppercase tracking-tight mb-4 flex items-center gap-2">
                             <Calendar size={20} className="text-accent" />
                             Timeline
                         </h2>
@@ -502,7 +502,7 @@ export const WorkOrderDetailPage = () => {
             {showAddPartModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-                        <h3 className="text-xl font-black text-gray-900 mb-6">Thêm linh kiện</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm linh kiện</h3>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Chọn linh kiện từ kho *</label>
@@ -580,7 +580,7 @@ export const WorkOrderDetailPage = () => {
                             </div>
                             <div className="p-3 bg-gray-50 rounded-xl">
                                 <p className="text-sm text-gray-500">Thành tiền:</p>
-                                <p className="text-xl font-black text-accent">{formatCurrency(partQuantity * partUnitPrice)}</p>
+                                <p className="text-xl font-semibold text-accent">{formatCurrency(partQuantity * partUnitPrice)}</p>
                             </div>
                         </div>
                         <div className="flex gap-4 mt-6">
@@ -606,11 +606,11 @@ export const WorkOrderDetailPage = () => {
             {showQuoteModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-black text-gray-900 mb-6">Tạo báo giá</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Tạo báo giá</h3>
                         <div className="space-y-4">
                             <div className="p-4 bg-gray-50 rounded-xl">
                                 <p className="text-sm text-gray-500">Chi phí linh kiện (tự động tính)</p>
-                                <p className="text-xl font-black text-gray-900">
+                                <p className="text-xl font-semibold text-gray-900">
                                     {formatCurrency(parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0))}
                                 </p>
                             </div>
@@ -674,7 +674,7 @@ export const WorkOrderDetailPage = () => {
                             </div>
                             <div className="p-4 bg-accent rounded-xl text-white">
                                 <p className="text-sm opacity-80">Tổng báo giá:</p>
-                                <p className="text-2xl font-black">
+                                <p className="text-2xl font-semibold">
                                     {formatCurrency(
                                         parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0) +
                                         quoteLaborCost +
@@ -706,7 +706,7 @@ export const WorkOrderDetailPage = () => {
             {showNoteModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-                        <h3 className="text-xl font-black text-gray-900 mb-6">Thêm ghi chú</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm ghi chú</h3>
                         <textarea
                             value={noteContent}
                             onChange={(e) => setNoteContent(e.target.value)}

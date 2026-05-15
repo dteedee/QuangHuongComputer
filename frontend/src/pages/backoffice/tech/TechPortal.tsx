@@ -40,7 +40,7 @@ const DroppableColumn = ({ stage, children, count }: { stage: any, children: Rea
                         {stage.label}
                     </h3>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full font-black drop-shadow-sm border border-gray-100 dark:border-gray-700">
+                <span className="text-xs px-2 py-0.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full font-semibold drop-shadow-sm border border-gray-100 dark:border-gray-700">
                     {count}
                 </span>
             </div>
@@ -71,14 +71,14 @@ const DraggableWorkOrderCard = ({ order, onClick }: { order: WorkOrder, onClick:
                 onClick={onClick}
             >
                 <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-black text-gray-900 dark:text-gray-100 uppercase">#{order.ticketNumber?.split('-')[1] || order.ticketNumber}</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase">#{order.ticketNumber?.split('-')[1] || order.ticketNumber}</span>
+                    <span className="text-xs text-slate-400">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
                 <p className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1.5 line-clamp-1">
                     <Smartphone size={12} className="text-gray-400 dark:text-gray-500" />
                     {order.deviceModel}
                 </p>
-                <p className="text-[10px] font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+                <p className="text-xs font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
                     {order.description}
                 </p>
             </div>
@@ -295,7 +295,7 @@ export const TechPortal = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">
+                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-2">
                         Phiếu sửa chữa <span className="text-accent">của tôi</span>
                     </h1>
                     <p className="text-gray-600 font-medium">
@@ -306,7 +306,7 @@ export const TechPortal = () => {
                 <div className="flex items-center bg-gray-100 p-1.5 rounded-2xl shadow-inner border border-gray-200">
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                             viewMode === 'list' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
                         }`}
                     >
@@ -314,7 +314,7 @@ export const TechPortal = () => {
                     </button>
                     <button
                         onClick={() => setViewMode('kanban')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                             viewMode === 'kanban' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
                         }`}
                     >
@@ -337,7 +337,7 @@ export const TechPortal = () => {
                         </div>
                         <div>
                             <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Chờ xử lý</p>
-                            <h3 className="text-3xl font-black text-gray-900">{stats.pending}</h3>
+                            <h3 className="text-3xl font-semibold text-gray-900">{stats.pending}</h3>
                         </div>
                     </div>
                 </button>
@@ -354,7 +354,7 @@ export const TechPortal = () => {
                         </div>
                         <div>
                             <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Đang thực hiện</p>
-                            <h3 className="text-3xl font-black text-gray-900">{stats.inProgress}</h3>
+                            <h3 className="text-3xl font-semibold text-gray-900">{stats.inProgress}</h3>
                         </div>
                     </div>
                 </button>
@@ -371,7 +371,7 @@ export const TechPortal = () => {
                         </div>
                         <div>
                             <p className="text-gray-500 font-semibold text-xs uppercase tracking-wider">Đã hoàn thành</p>
-                            <h3 className="text-3xl font-black text-gray-900">{stats.completed}</h3>
+                            <h3 className="text-3xl font-semibold text-gray-900">{stats.completed}</h3>
                         </div>
                     </div>
                 </button>
@@ -463,7 +463,7 @@ export const TechPortal = () => {
                         {/* Table */}
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                <thead className="bg-gray-50 text-gray-600 text-xs font-medium border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-4">Thông tin phiếu</th>
                                         <th className="px-6 py-4">Thiết bị</th>
@@ -624,7 +624,7 @@ export const TechPortal = () => {
                                             ))}
                                             {columnOrders.length === 0 && (
                                                 <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-xl">
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Trống</p>
+                                                    <p className="text-xs text-slate-400">Trống</p>
                                                 </div>
                                             )}
                                         </DroppableColumn>
@@ -637,14 +637,14 @@ export const TechPortal = () => {
                                     <div className="transform scale-105 rotate-3 shadow-2xl opacity-90 cursor-grabbing pointer-events-none">
                                         <div className="bg-white rounded-xl p-4 border border-accent shadow-xl ring-2 ring-accent">
                                             <div className="flex justify-between items-start mb-2">
-                                                <span className="text-sm font-black text-gray-900 uppercase">#{activeWorkOrder.ticketNumber?.split('-')[1] || activeWorkOrder.ticketNumber}</span>
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(activeWorkOrder.createdAt).toLocaleDateString('vi-VN')}</span>
+                                                <span className="text-sm font-semibold text-gray-900 uppercase">#{activeWorkOrder.ticketNumber?.split('-')[1] || activeWorkOrder.ticketNumber}</span>
+                                                <span className="text-xs text-slate-400">{new Date(activeWorkOrder.createdAt).toLocaleDateString('vi-VN')}</span>
                                             </div>
                                             <p className="text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5 line-clamp-1">
                                                 <Smartphone size={12} className="text-gray-400" />
                                                 {activeWorkOrder.deviceModel}
                                             </p>
-                                            <p className="text-[10px] font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 p-2 rounded border border-gray-100">
+                                            <p className="text-xs font-medium text-gray-500 line-clamp-2 mt-2 bg-gray-50 p-2 rounded border border-gray-100">
                                                 {activeWorkOrder.description}
                                             </p>
                                         </div>

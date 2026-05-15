@@ -68,7 +68,7 @@ const ReceiptModal = ({
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-12 h-12" />
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">Thanh toán thành công!</h2>
+          <h2 className="text-2xl font-semibold">Thanh toán thành công!</h2>
           <p className="text-emerald-100 mt-2 font-mono text-lg">{order.orderNumber}</p>
         </div>
 
@@ -109,7 +109,7 @@ const ReceiptModal = ({
                 <span>-{formatCurrency(order.discount)}</span>
               </div>
             )}
-            <div className="flex justify-between text-lg font-black pt-2 border-t border-gray-200">
+            <div className="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
               <span>Tổng cộng</span>
               <span className="text-accent">{formatCurrency(order.total)}</span>
             </div>
@@ -196,7 +196,7 @@ const CustomerSearchModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-sm w-full max-w-md">
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
             <Users className="w-5 h-5 text-accent" />
@@ -298,7 +298,7 @@ const HeldOrdersModal = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+      <div className="bg-white rounded-lg shadow-sm w-full max-w-lg">
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
             <Clock className="w-5 h-5 text-amber-500" />
@@ -649,7 +649,7 @@ export default function POSPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-black text-gray-900 uppercase tracking-tight">POS Bán hàng</h1>
+            <h1 className="text-xl font-semibold text-gray-900 uppercase tracking-tight">POS Bán hàng</h1>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
               Online
             </span>
@@ -958,7 +958,7 @@ export default function POSPage() {
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-bold text-gray-900">Tổng cộng</span>
-                <span className="text-xl font-black text-accent">{formatCurrency(calculateFinalTotal())}</span>
+                <span className="text-xl font-semibold text-accent">{formatCurrency(calculateFinalTotal())}</span>
               </div>
             </div>
 

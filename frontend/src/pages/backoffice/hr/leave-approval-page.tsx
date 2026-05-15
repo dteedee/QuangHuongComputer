@@ -153,7 +153,7 @@ export default function LeaveApprovalPage() {
                             onChange={e => setRejectReason(e.target.value)}
                             rows={3}
                             placeholder="Nhập lý do từ chối..."
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         />
                         <div className="flex gap-3 mt-4">
                             <button
