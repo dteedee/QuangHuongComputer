@@ -210,7 +210,7 @@ public static class TechnicianEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -248,7 +248,7 @@ public static class TechnicianEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -308,7 +308,7 @@ public static class TechnicianEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -360,7 +360,7 @@ public static class TechnicianEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 

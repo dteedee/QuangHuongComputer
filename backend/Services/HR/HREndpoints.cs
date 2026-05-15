@@ -409,7 +409,7 @@ public static class HREndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -437,7 +437,7 @@ public static class HREndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -465,7 +465,7 @@ public static class HREndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -489,7 +489,7 @@ public static class HREndpoints
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -514,7 +514,7 @@ public static class HREndpoints
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 

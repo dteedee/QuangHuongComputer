@@ -121,7 +121,7 @@ public static class BackupEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { error = $"Backup failed: {ex.Message}" });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("CreateBackup");
 

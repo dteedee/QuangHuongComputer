@@ -168,7 +168,6 @@ public static class SalesEndpoints
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Guest checkout error: {ex.Message}");
                 return Results.Problem("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.");
             }
         });
@@ -249,9 +248,8 @@ public static class SalesEndpoints
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error auto-creating inventory item: {ex}");
                     // Fallback or return error? Let's return error to debug
-                    return Results.Content($"Error creating inventory for product {dto.ProductId}: {ex.Message}", "text/plain", System.Text.Encoding.UTF8, 500);
+                    return Results.Content("Có lỗi xảy ra. Vui lòng thử lại.", "text/plain", System.Text.Encoding.UTF8, 500);
                 }
             }
 
@@ -292,7 +290,7 @@ public static class SalesEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = $"Không thể đặt trước hàng: {ex.Message}" });
+                return Results.BadRequest(new { Error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
 
             cart.AddItem(dto.ProductId, dto.ProductName, dto.Price, dto.Quantity);
@@ -611,7 +609,6 @@ public static class SalesEndpoints
 
             if (model.Items == null || !model.Items.Any())
             {
-                Console.WriteLine("Checkout Error: Cart is empty");
                 return Results.BadRequest(new { Error = "Cart is empty" });
             }
 
@@ -632,7 +629,6 @@ public static class SalesEndpoints
             var products = await productsTask;
             var inventoryItems = await inventoryTask;
             
-            Console.WriteLine($"[DEBUG] Fetched {products.Count} products and {inventoryItems.Count} inventory items");
 
             // Get cart to find reservations
             var cart = await salesDb.Carts
@@ -644,7 +640,6 @@ public static class SalesEndpoints
                 var product = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
                 if (product == null)
                 {
-                    Console.WriteLine($"Checkout Error: Product not found {cartItem.ProductId}");
                     return Results.BadRequest(new { Error = $"Product not found: {cartItem.ProductId}" });
                 }
 
@@ -652,7 +647,6 @@ public static class SalesEndpoints
                 var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
                 if (inventoryItem == null)
                 {
-                    Console.WriteLine($"Inventory missing for {product.Name}, auto-creating...");
                     // Auto-create inventory for demo/development if missing
                     inventoryItem = new InventoryModule.Domain.InventoryItem(cartItem.ProductId, 100);
                     inventoryDb.InventoryItems.Add(inventoryItem);
@@ -671,14 +665,12 @@ public static class SalesEndpoints
                     if (cartItemInDb == null || cartItemInDb.Quantity < cartItem.Quantity)
                     {
                         // Minor mismatch: just use what's in the checkout model but log it
-                        Console.WriteLine($"Warning: Cart quantity mismatch for {product.Name}");
                     }
                 }
 
                 // Kiểm tra reserved quantity - ensure we have enough reserved
                 if (inventoryItem.ReservedQuantity < cartItem.Quantity)
                 {
-                    Console.WriteLine($"Not enough reserved for {product.Name}. Reserved: {inventoryItem.ReservedQuantity}, Requested: {cartItem.Quantity}. Available: {inventoryItem.AvailableQuantity}");
                     // If not enough reserved, try to reserve more now if available
                     if (inventoryItem.AvailableQuantity >= (cartItem.Quantity - inventoryItem.ReservedQuantity))
                     {
@@ -686,7 +678,6 @@ public static class SalesEndpoints
                     }
                     else
                     {
-                        Console.WriteLine($"Checkout Error: Not enough stock for {product.Name}");
                         return Results.BadRequest(new { Error = $"Không đủ hàng cho sản phẩm: {product.Name}. Yêu cầu: {cartItem.Quantity}, Khả dụng: {inventoryItem.AvailableQuantity + inventoryItem.ReservedQuantity}" });
                     }
                 }
@@ -715,8 +706,7 @@ public static class SalesEndpoints
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error confirming stock for {item.ProductName}: {ex.Message}");
-                    return Results.BadRequest(new { Error = $"Lỗi xác nhận kho cho {item.ProductName}: {ex.Message}" });
+                    return Results.BadRequest(new { Error = "Có lỗi xảy ra. Vui lòng thử lại." });
                 }
 
                 // Prepare catalog stock update
@@ -856,7 +846,6 @@ public static class SalesEndpoints
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error during batch save: {ex.Message}");
                     // If batch save fails, try saving individually
                     await inventoryDb.SaveChangesAsync(cts.Token);
                     await catalogDb.SaveChangesAsync(cts.Token);
@@ -866,7 +855,6 @@ public static class SalesEndpoints
                 // 6. Publish Event (non-blocking)
                 _ = publishEndpoint.Publish(new OrderCreatedIntegrationEvent(order.Id, order.CustomerId, email, order.TotalAmount, order.OrderNumber));
 
-                Console.WriteLine($"Order created successfully: {order.OrderNumber}");
 
                 return Results.Ok(new
                 {
@@ -878,21 +866,12 @@ public static class SalesEndpoints
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Checkout Exception: {ex.Message}");
                 if (ex is OperationCanceledException)
                 {
-                    Console.WriteLine("Checkout operation timed out");
                     return Results.BadRequest(new { Error = "Đặt hàng thất bại do timeout. Vui lòng thử lại." });
                 }
                 
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                    if (ex.InnerException.InnerException != null)
-                        Console.WriteLine($"Inner Inner Exception: {ex.InnerException.InnerException.Message}");
-                }
-                Console.WriteLine(ex.StackTrace);
-                return Results.BadRequest(new { Error = $"Đặt hàng thất bại: {ex.Message}" + (ex.InnerException != null ? " | " + ex.InnerException.Message : "") });
+                return Results.BadRequest(new { Error = "Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại." });
             }
             finally
             {
@@ -1357,7 +1336,7 @@ public static class SalesEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
 
             // Log history
@@ -1925,7 +1904,7 @@ public static class SalesEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { message = ex.Message });
+                return Results.BadRequest(new { message = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 

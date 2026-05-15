@@ -91,7 +91,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                return Results.BadRequest("Có lỗi xảy ra. Vui lòng thử lại.");
             }
         });
         
@@ -279,7 +279,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("ApplyARPayment");
 
@@ -441,7 +441,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("ApplyAPPayment");
 
@@ -484,7 +484,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("OpenShift");
 
@@ -512,7 +512,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("CloseShift");
 
@@ -592,7 +592,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("RecordShiftTransaction");
 
@@ -731,7 +731,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("UpdateExpense");
 
@@ -753,7 +753,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("ApproveExpense");
 
@@ -775,7 +775,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("RejectExpense");
 
@@ -794,7 +794,7 @@ public static class AccountingEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         }).WithName("PayExpense");
 

@@ -48,7 +48,6 @@ public static class IdentityEndpoints
                 catch (Exception ex)
                 {
                     // Log error but don't fail registration
-                    Console.WriteLine($"Failed to send welcome email: {ex.Message}");
                 }
 
                 return Results.Ok(new { Message = "User registered successfully" });
@@ -125,9 +124,7 @@ public static class IdentityEndpoints
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Login Error] {ex.GetType().Name}: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                return Results.Problem(detail: ex.Message, statusCode: 500);
+                return Results.Problem(detail: "Có lỗi xảy ra. Vui lòng thử lại.", statusCode: 500);
             }
         });
 
@@ -199,7 +196,7 @@ public static class IdentityEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = $"Invalid refresh token: {ex.Message}" });
+                return Results.BadRequest(new { Error = "Token không hợp lệ" });
             }
         });
 
@@ -219,7 +216,7 @@ public static class IdentityEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = $"Logout failed: {ex.Message}" });
+                return Results.BadRequest(new { Error = "Đăng xuất thất bại" });
             }
         });
 
@@ -239,7 +236,7 @@ public static class IdentityEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = $"Failed to revoke tokens: {ex.Message}" });
+                return Results.BadRequest(new { Error = "Không thể thu hồi token" });
             }
         });
 
@@ -468,7 +465,7 @@ public static class IdentityEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(new { Error = "Invalid Google Token", Details = ex.Message });
+                return Results.BadRequest(new { Error = "Google Token không hợp lệ" });
             }
         });
 
@@ -722,7 +719,6 @@ public static class IdentityEndpoints
             catch (Exception ex)
             {
                 // Log error but don't reveal to user for security reasons
-                Console.WriteLine($"Failed to send email: {ex.Message}");
             }
 
             return Results.Ok(new { Message = "If the email exists, a password reset link has been sent." });

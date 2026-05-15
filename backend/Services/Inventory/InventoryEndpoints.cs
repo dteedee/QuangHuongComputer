@@ -74,7 +74,7 @@ public static class InventoryEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
@@ -160,7 +160,7 @@ public static class InventoryEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { Message = "Đã gửi đơn hàng" });
             } catch (InvalidOperationException ex) {
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
@@ -176,7 +176,7 @@ public static class InventoryEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { Message = "Đã hủy đơn hàng" });
             } catch (InvalidOperationException ex) {
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
@@ -215,7 +215,7 @@ public static class InventoryEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { Message = "Đã nhận hàng và cập nhật tồn kho" });
             } catch (InvalidOperationException ex) {
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,

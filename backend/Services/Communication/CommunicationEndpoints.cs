@@ -69,7 +69,7 @@ public static class CommunicationEndpoints
             }
             catch (Exception ex)
             {
-                return Results.Problem($"Có lỗi xảy ra: {ex.Message}");
+                return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
         });
 
@@ -142,7 +142,7 @@ public static class CommunicationEndpoints
             }
             catch (Exception ex)
             {
-                return Results.Problem($"Failed to send email: {ex.Message}");
+                return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
         }); // In production, add .RequireAuthorization("Admin") or similar
 
@@ -239,7 +239,7 @@ public static class CommunicationEndpoints
             }
             catch (Exception ex)
             {
-                return Results.Problem($"AI service error: {ex.Message}");
+                return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
         });
     }

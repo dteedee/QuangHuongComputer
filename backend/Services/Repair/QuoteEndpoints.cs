@@ -80,7 +80,7 @@ public static class QuoteEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
@@ -180,7 +180,7 @@ public static class QuoteEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -231,7 +231,7 @@ public static class QuoteEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
@@ -274,7 +274,7 @@ public static class QuoteEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
@@ -325,7 +325,7 @@ public static class QuoteEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { Error = ex.Message });
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
         .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));

@@ -34,6 +34,5 @@ public class OrderCreatedConsumer(IEmailService emailService) : IConsumer<OrderC
             IsHtml = true
         });
         
-        Console.WriteLine($"[Email Sent] To: {message.Email}, Order: {message.OrderNumber}");
     }
 }

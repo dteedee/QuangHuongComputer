@@ -739,7 +739,7 @@ public static class ContentEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { message = ex.Message });
+                return Results.BadRequest(new { message = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 

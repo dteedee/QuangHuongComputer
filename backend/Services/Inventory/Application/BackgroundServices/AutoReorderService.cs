@@ -30,12 +30,12 @@ public class AutoReorderService : BackgroundService
                 // Log low stock items — in production, create draft POs
                 foreach (var item in lowStockItems)
                 {
-                    Console.WriteLine($"[AutoReorder] Low stock: Product {item.ProductId}, Qty: {item.QuantityOnHand}, Reorder Point: {item.ReorderPoint}");
+                    // TODO: use ILogger - $"[AutoReorder] Low stock: Product {item.ProductId}, Qty: {item.QuantityOnHand}, Reorder Point: {item.ReorderPoint}"
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AutoReorder] Error: {ex.Message}");
+                // TODO: use ILogger - $"[AutoReorder] Error: {ex.Message}"
             }
 
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
