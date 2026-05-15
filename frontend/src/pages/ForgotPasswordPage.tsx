@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowRight, KeyRound, ArrowLeft, CheckCircle } from 'lucide-react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
@@ -14,11 +14,11 @@ export const ForgotPasswordPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const schema = z.object({
             email: z.string().min(1, msg.requireInput('Email')).email(msg.email)
         });
-        
+
         const result = schema.safeParse({ email });
         if (!result.success) {
             const fieldErrors: Record<string, string> = {};
@@ -44,25 +44,33 @@ export const ForgotPasswordPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6 font-sans">
-            <div className="w-full max-w-[500px] bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
-                <div className="p-8 lg:p-12">
-                    <Link to="/login" className="inline-flex items-center gap-2 text-gray-600 hover:text-accent mb-8 font-bold transition-colors">
-                        <ArrowLeft size={18} />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4 font-sans">
+            <div className="w-full max-w-md mx-auto">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                    {/* Back link */}
+                    <Link
+                        to="/login"
+                        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-accent mb-6 transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={16} />
                         Quay lại đăng nhập
                     </Link>
 
-                    <div className="mb-10">
-                        <h1 className="text-3xl font-black text-gray-800 mb-2 uppercase italic">Quên mật khẩu?</h1>
-                        <p className="text-gray-500 font-medium italic">
+                    {/* Icon + Heading */}
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="w-14 h-14 bg-red-50 text-accent rounded-xl flex items-center justify-center mb-4">
+                            <KeyRound size={28} />
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">Quên mật khẩu?</h1>
+                        <p className="text-gray-500 text-sm text-center">
                             Nhập email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu.
                         </p>
                     </div>
 
                     {!isSubmitted ? (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-1">
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Địa chỉ Email
                                 </label>
                                 <div className="relative">
@@ -71,17 +79,19 @@ export const ForgotPasswordPage = () => {
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${errors.email ? 'border-red-400 focus:border-red-500 bg-red-50/50' : 'border-gray-200 focus:border-accent'} rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-gray-400`}
+                                        className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all ${errors.email ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
                                         placeholder="name@gmail.com"
                                     />
                                 </div>
-                                {errors.email && <p className="text-red-500 text-sm font-medium animate-fade-in-up mt-1">{errors.email}</p>}
+                                {errors.email && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-black rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
+                                className="w-full py-3 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -94,23 +104,23 @@ export const ForgotPasswordPage = () => {
                             </button>
                         </form>
                     ) : (
-                        <div className="p-6 bg-green-50 border border-green-100 rounded-xl text-green-700 font-bold flex items-start gap-3">
-                            <ShieldCheck size={24} className="flex-shrink-0 mt-0.5" />
+                        <div className="p-5 bg-green-50 border border-green-100 rounded-xl text-green-700 flex items-start gap-3">
+                            <CheckCircle size={22} className="flex-shrink-0 mt-0.5" />
                             <div>
-                                <p className="mb-2">Email đã được gửi!</p>
-                                <p className="text-sm font-medium">
+                                <p className="font-semibold mb-1">Email đã được gửi!</p>
+                                <p className="text-sm">
                                     Vui lòng kiểm tra hộp thư của bạn và làm theo hướng dẫn để đặt lại mật khẩu.
                                 </p>
                             </div>
                         </div>
                     )}
 
-                    <div className="mt-8 text-center text-gray-500 text-sm font-medium italic">
+                    <p className="mt-6 text-center text-sm text-gray-500">
                         Nhớ mật khẩu?{' '}
-                        <Link to="/login" className="text-accent hover:underline font-black not-italic">
+                        <Link to="/login" className="text-accent font-semibold hover:underline cursor-pointer">
                             Đăng nhập ngay
                         </Link>
-                    </div>
+                    </p>
                 </div>
             </div>
         </div>

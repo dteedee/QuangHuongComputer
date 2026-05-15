@@ -3,14 +3,14 @@ import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Brand, type Category } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
-import { Monitor, Filter, ArrowDownWideNarrow, X } from 'lucide-react';
+import { Monitor, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { generateItemListSchema, generateBreadcrumbSchema } from '../utils/structuredData';
 
 // Helper to normalize strings for comparison
 const normalize = (str: string) => {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    return str.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 };
 
 export const CategoryPage = () => {
@@ -92,9 +92,6 @@ export const CategoryPage = () => {
         const fetchProducts = async () => {
             setIsLoading(true);
             try {
-                // If we haven't loaded categories yet, we might miss the matchedCategory
-                // But this effect runs when 'categories' updates too.
-
                 const params: any = {};
 
                 if (searchQuery) {
@@ -122,7 +119,6 @@ export const CategoryPage = () => {
                 params.pageSize = pageSize;
                 params.sortBy = sortBy;
 
-                // Use the search endpoint which supports advanced filters
                 const response = await catalogApi.searchProducts(params);
                 setProducts(response.products || []);
                 setTotalProducts(response.total || 0);
@@ -135,8 +131,6 @@ export const CategoryPage = () => {
             }
         };
 
-        // Only fetch if we have categories loaded (unless it failed to load any)
-        // Or if we are in search mode (no categories needed for search)
         if (categories.length > 0 || searchQuery) {
             fetchProducts();
         }
@@ -145,7 +139,7 @@ export const CategoryPage = () => {
     // Handlers
     const handlePriceSelect = (min?: number, max?: number) => {
         if (priceRange?.min === min && priceRange?.max === max) {
-            setPriceRange(null); // Deselect
+            setPriceRange(null);
         } else {
             setPriceRange({ min, max });
         }
@@ -169,8 +163,7 @@ export const CategoryPage = () => {
     const totalPages = Math.ceil(totalProducts / pageSize);
 
     return (
-        <div className="bg-gray-100 min-h-screen pb-10">
-            {/* SEO for category / search pages */}
+        <div className="bg-gray-50 min-h-screen pb-10">
             <SEO
                 title={categoryTitle}
                 description={`${categoryTitle} - Mua sắm ${categoryTitle} chính hãng giá tốt tại Quang Hưởng Computer. Tìm thấy ${totalProducts} sản phẩm.`}
@@ -184,109 +177,112 @@ export const CategoryPage = () => {
                     ]),
                 ]}
             />
+
             {/* Breadcrumb */}
-            <div className="bg-white py-3 border-b border-gray-200">
-                <div className="container mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-accent">Trang chủ</Link>
+            <div className="bg-white border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 text-sm text-gray-500 flex items-center gap-1">
+                    <Link to="/" className="hover:text-accent transition-colors">Trang chủ</Link>
                     <span>/</span>
                     <span className="text-gray-900 font-medium">{categoryTitle}</span>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 mt-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                 {/* Header Banner */}
-                <div className="bg-white p-4 rounded-md shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-accent">
-                            <Monitor size={32} />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800 uppercase">{categoryTitle}</h1>
-                            <p className="text-sm text-gray-500">Tìm thấy {products.length} sản phẩm</p>
-                        </div>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center text-accent flex-shrink-0">
+                        <Monitor size={28} />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">{categoryTitle}</h1>
+                        <p className="text-gray-500 text-sm">Tìm thấy {totalProducts} sản phẩm</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Sidebar Filters */}
-                    <div className="hidden lg:block space-y-4">
-                        <div className="bg-white p-4 rounded-md shadow-sm">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-bold text-sm flex items-center gap-2">
-                                    <Filter size={16} /> BỘ LỌC
+                    <div className="hidden lg:block">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                                    <Filter size={15} />
+                                    BỘ LỌC
                                 </h3>
                                 {(selectedBrandId || priceRange) && (
-                                    <button onClick={clearFilters} className="text-xs text-red-500 hover:underline flex items-center">
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-xs text-accent hover:underline flex items-center gap-0.5 cursor-pointer"
+                                    >
                                         <X size={12} /> Xóa
                                     </button>
                                 )}
                             </div>
 
-                            <div className="space-y-6">
-                                {/* Brands */}
-                                <div>
-                                    <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Thương hiệu</h4>
-                                    <div className="flex flex-col gap-2 text-sm text-gray-600 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                        {brands.map((brand) => (
-                                            <label key={brand.id} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedBrandId === brand.id}
-                                                    onChange={() => handleBrandSelect(brand.id)}
-                                                    className="rounded border-gray-300 text-accent focus:ring-accent"
-                                                />
-                                                <span>{brand.name}</span>
-                                            </label>
-                                        ))}
-                                        {brands.length === 0 && <p className="text-xs text-gray-400 italic">Đang tải thương hiệu...</p>}
-                                    </div>
-                                </div>
-                                <hr className="border-gray-100" />
-
-                                {/* Price Ranges */}
-                                <div>
-                                    <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Mức giá</h4>
-                                    <div className="flex flex-col gap-2 text-sm text-gray-600">
-                                        {[
-                                            { label: 'Dưới 10 triệu', max: 10000000 },
-                                            { label: '10 - 15 triệu', min: 10000000, max: 15000000 },
-                                            { label: '15 - 20 triệu', min: 15000000, max: 20000000 },
-                                            { label: '20 - 30 triệu', min: 20000000, max: 30000000 },
-                                            { label: 'Trên 30 triệu', min: 30000000 }
-                                        ].map((range, idx) => {
-                                            const isChecked = priceRange?.min === range.min && priceRange?.max === range.max;
-                                            return (
-                                                <label key={idx} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
-                                                    <input
-                                                        type="radio"
-                                                        name="price_range"
-                                                        checked={isChecked}
-                                                        onChange={() => handlePriceSelect(range.min, range.max)}
-                                                        className="rounded-full border-gray-300 text-accent focus:ring-accent"
-                                                    />
-                                                    <span>{range.label}</span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                <hr className="border-gray-100" />
-
-                                {/* Status */}
-                                <div>
-                                    <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Trạng thái</h4>
-                                    <div className="flex flex-col gap-2 text-sm text-gray-600">
-                                        <label className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
+                            {/* Brands */}
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Thương hiệu</h4>
+                                <div className="flex flex-col gap-2 text-sm text-gray-600 max-h-60 overflow-y-auto pr-1">
+                                    {brands.map((brand) => (
+                                        <label key={brand.id} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
                                             <input
                                                 type="checkbox"
-                                                checked={inStockOnly}
-                                                onChange={(e) => setInStockOnly(e.target.checked)}
+                                                checked={selectedBrandId === brand.id}
+                                                onChange={() => handleBrandSelect(brand.id)}
                                                 className="rounded border-gray-300 text-accent focus:ring-accent"
                                             />
-                                            <span>Chỉ hiển thị hàng có sẵn</span>
+                                            <span>{brand.name}</span>
                                         </label>
-                                    </div>
+                                    ))}
+                                    {brands.length === 0 && (
+                                        <p className="text-xs text-gray-400 italic">Đang tải thương hiệu...</p>
+                                    )}
                                 </div>
+                            </div>
+
+                            <hr className="border-gray-100" />
+
+                            {/* Price Ranges */}
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Mức giá</h4>
+                                <div className="flex flex-col gap-2 text-sm text-gray-600">
+                                    {[
+                                        { label: 'Dưới 10 triệu', max: 10000000 },
+                                        { label: '10 - 15 triệu', min: 10000000, max: 15000000 },
+                                        { label: '15 - 20 triệu', min: 15000000, max: 20000000 },
+                                        { label: '20 - 30 triệu', min: 20000000, max: 30000000 },
+                                        { label: 'Trên 30 triệu', min: 30000000 }
+                                    ].map((range, idx) => {
+                                        const isChecked = priceRange?.min === range.min && priceRange?.max === range.max;
+                                        return (
+                                            <label key={idx} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
+                                                <input
+                                                    type="radio"
+                                                    name="price_range"
+                                                    checked={isChecked}
+                                                    onChange={() => handlePriceSelect(range.min, range.max)}
+                                                    className="border-gray-300 text-accent focus:ring-accent"
+                                                />
+                                                <span>{range.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <hr className="border-gray-100" />
+
+                            {/* Status */}
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Trạng thái</h4>
+                                <label className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors text-sm text-gray-600">
+                                    <input
+                                        type="checkbox"
+                                        checked={inStockOnly}
+                                        onChange={(e) => setInStockOnly(e.target.checked)}
+                                        className="rounded border-gray-300 text-accent focus:ring-accent"
+                                    />
+                                    <span>Chỉ hiển thị hàng có sẵn</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -294,7 +290,7 @@ export const CategoryPage = () => {
                     {/* Products Grid */}
                     <div className="lg:col-span-3">
                         {/* Sort Bar */}
-                        <div className="bg-white p-2 rounded-md shadow-sm mb-4 flex justify-end items-center gap-2">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 mb-4 flex justify-end items-center gap-3">
                             <span className="text-sm text-gray-500">Sắp xếp theo:</span>
                             <SearchableSelect
                                 value={sortBy}
@@ -310,9 +306,9 @@ export const CategoryPage = () => {
                         </div>
 
                         {isLoading ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                    <div key={i} className="bg-white h-[300px] rounded animate-pulse"></div>
+                                    <div key={i} className="bg-white h-[300px] rounded-xl animate-pulse border border-gray-100" />
                                 ))}
                             </div>
                         ) : (
@@ -321,39 +317,46 @@ export const CategoryPage = () => {
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.5 }}
-                                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                                        transition={{ duration: 0.4 }}
+                                        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
                                     >
                                         {products.map((product) => (
                                             <ProductCard key={product.id} product={product} />
                                         ))}
                                     </motion.div>
                                 ) : (
-                                    <div className="bg-white p-8 text-center rounded-lg shadow-sm">
-                                        <p className="text-gray-500">Không tìm thấy sản phẩm nào phù hợp.</p>
-                                        <button onClick={clearFilters} className="mt-2 text-accent hover:underline">Xóa bộ lọc</button>
+                                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+                                        <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <p className="text-gray-500 mb-3">Không tìm thấy sản phẩm nào phù hợp.</p>
+                                        <button
+                                            onClick={clearFilters}
+                                            className="text-accent hover:underline text-sm cursor-pointer"
+                                        >
+                                            Xóa bộ lọc
+                                        </button>
                                     </div>
                                 )}
 
-                                {/* Pagination UI */}
+                                {/* Pagination */}
                                 {totalPages > 1 && (
-                                    <div className="mt-10 flex justify-center items-center gap-2">
+                                    <div className="mt-8 flex justify-center items-center gap-2">
                                         <button
                                             disabled={page === 1}
                                             onClick={() => setPage(p => p - 1)}
-                                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all cursor-pointer flex items-center gap-1"
                                         >
-                                            Trước
+                                            <ChevronLeft size={16} /> Trước
                                         </button>
                                         <div className="flex gap-1">
                                             {[...Array(totalPages)].map((_, i) => (
                                                 <button
                                                     key={i}
                                                     onClick={() => setPage(i + 1)}
-                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${page === i + 1
-                                                        ? 'bg-accent text-white shadow-lg shadow-red-500/30'
-                                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                                                        }`}
+                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm transition-all cursor-pointer ${
+                                                        page === i + 1
+                                                            ? 'bg-accent text-white shadow-sm'
+                                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                    }`}
                                                 >
                                                     {i + 1}
                                                 </button>
@@ -362,9 +365,9 @@ export const CategoryPage = () => {
                                         <button
                                             disabled={page === totalPages}
                                             onClick={() => setPage(p => p + 1)}
-                                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all cursor-pointer flex items-center gap-1"
                                         >
-                                            Sau
+                                            Sau <ChevronRight size={16} />
                                         </button>
                                     </div>
                                 )}
