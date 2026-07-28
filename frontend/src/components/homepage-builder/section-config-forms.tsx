@@ -13,18 +13,22 @@ import { ServiceGridConfig } from './section-configs/service-grid-config';
 import { PostGridConfig } from './section-configs/post-grid-config';
 import { CustomHtmlConfig } from './section-configs/custom-html-config';
 import { GenericConfig } from './section-configs/generic-config';
+import { ProductGridWithPanelsConfig } from './section-configs/product-grid-with-panels-config';
+import { BrandShowcaseConfig } from './section-configs/brand-showcase-config';
 
 export type { ConfigFormProps };
 
 const REGISTRY: Record<string, React.FC<ConfigFormProps>> = {
-    hero_slider:   HeroSliderConfig,
-    banner_grid:   BannerGridConfig,
-    flash_deal:    FlashDealConfig,
-    product_grid:  ProductGridConfig,
-    category_grid: CategoryGridConfig,
-    service_grid:  ServiceGridConfig,
-    post_grid:     PostGridConfig,
-    custom_html:   CustomHtmlConfig,
+    hero_slider:               HeroSliderConfig,
+    banner_grid:               BannerGridConfig,
+    flash_deal:                FlashDealConfig,
+    product_grid:              ProductGridConfig,
+    product_grid_with_panels:  ProductGridWithPanelsConfig,
+    category_grid:             CategoryGridConfig,
+    brand_showcase:            BrandShowcaseConfig,
+    service_grid:              ServiceGridConfig,
+    post_grid:                 PostGridConfig,
+    custom_html:               CustomHtmlConfig,
 };
 
 export function getSectionConfigForm(sectionType: string): React.FC<ConfigFormProps> {

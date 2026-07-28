@@ -194,12 +194,68 @@ const GenericPreview: React.FC<{ sectionType: string; config: Record<string, unk
 
 // ─── Tag ──────────────────────────────────────────────────────────────────────
 
+// ─── Product Grid With Panels Preview ────────────────────────────────────────
+
+const ProductGridWithPanelsPreview: React.FC<{ config: Record<string, unknown> }> = ({ config }) => {
+    const limit = (config.limit as number) ?? 10;
+    const leftPanel = config.leftPanel as { imageUrl?: string } | undefined;
+    const rightPanel = config.rightPanel as { imageUrl?: string } | undefined;
+    const brandTabs = (config.brandTabs as Array<{ name?: string }>) ?? [];
+
+    return (
+        <div className="bg-gray-50 rounded-lg p-3 h-20">
+            <div className="flex items-center gap-2 mb-2">
+                <ShoppingBag size={14} className="text-red-500" />
+                <span className="text-xs font-bold text-gray-700 uppercase">Grid + Panels</span>
+                {brandTabs.length > 0 && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 rounded">{brandTabs.length} brands</span>}
+            </div>
+            <div className="flex gap-1 h-8">
+                {leftPanel?.imageUrl && <div className="w-5 bg-blue-200 rounded shrink-0" title="Left panel" />}
+                <div className="flex-1 flex gap-1">
+                    {Array.from({ length: Math.min(limit, 4) }).map((_, i) => (
+                        <div key={i} className="flex-1 bg-white border border-gray-200 rounded" />
+                    ))}
+                </div>
+                {rightPanel?.imageUrl && <div className="w-5 bg-blue-200 rounded shrink-0" title="Right panel" />}
+            </div>
+        </div>
+    );
+};
+
+// ─── Brand Showcase Preview ──────────────────────────────────────────────────
+
+const BrandShowcasePreview: React.FC<{ config: Record<string, unknown> }> = ({ config }) => {
+    const brands = (config.brands as Array<{ name?: string; logoUrl?: string }>) ?? [];
+    const columns = (config.columns as number) ?? 6;
+
+    return (
+        <div className="bg-gray-50 rounded-lg p-3 h-20">
+            <div className="flex items-center gap-2 mb-2">
+                <Tag size={14} className="text-teal-500" />
+                <span className="text-xs font-bold text-gray-700 uppercase">Brands</span>
+                <span className="text-[10px] text-gray-400">{brands.length} brands / {columns} cols</span>
+            </div>
+            <div className="flex gap-1.5">
+                {Array.from({ length: Math.min(brands.length || columns, 6) }).map((_, i) => (
+                    <div key={i} className="flex-1 bg-teal-100 rounded h-6 flex items-center justify-center">
+                        <span className="text-[8px] text-teal-700 font-medium truncate px-1">{brands[i]?.name || '—'}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// ─── Tag ──────────────────────────────────────────────────────────────────────
+
 const TAG_COLORS: Record<string, string> = {
     hero_slider: 'bg-red-100 text-red-700',
     banner_grid: 'bg-blue-100 text-blue-700',
     flash_deal: 'bg-orange-100 text-orange-700',
     product_grid: 'bg-indigo-100 text-indigo-700',
+    product_grid_with_panels: 'bg-rose-100 text-rose-700',
     category_grid: 'bg-purple-100 text-purple-700',
+    brand_showcase: 'bg-teal-100 text-teal-700',
     service_grid: 'bg-amber-100 text-amber-700',
     post_grid: 'bg-green-100 text-green-700',
     custom_html: 'bg-gray-700 text-gray-200',
@@ -216,7 +272,9 @@ export const SectionPreview: React.FC<SectionPreviewProps> = ({ sectionType, con
             case 'banner_grid':   return <BannerGridPreview config={config} />;
             case 'flash_deal':    return <FlashDealPreview config={config} />;
             case 'product_grid':  return <ProductGridPreview config={config} />;
+            case 'product_grid_with_panels': return <ProductGridWithPanelsPreview config={config} />;
             case 'category_grid': return <CategoryGridPreview config={config} />;
+            case 'brand_showcase': return <BrandShowcasePreview config={config} />;
             case 'service_grid':  return <ServiceGridPreview config={config} />;
             case 'post_grid':     return <PostGridPreview config={config} />;
             case 'custom_html':   return <CustomHtmlPreview config={config} />;

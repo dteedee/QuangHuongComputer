@@ -9,6 +9,8 @@ import { CategoryGridSection } from './homepage/CategoryGridSection';
 import { ServiceGrid } from './homepage/ServiceGrid';
 import { PostGridSection } from './homepage/PostGridSection';
 import { CustomHtml } from './homepage/CustomHtml';
+import { ProductGridWithPanels } from './homepage/ProductGridWithPanels';
+import { BrandShowcase } from './homepage/BrandShowcase';
 
 interface DynamicHomepageProps {
     sections: HomepageSection[];
@@ -19,8 +21,10 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<any>> = {
     'banner_grid': BannerGrid,
     'flash_deal': FlashDeal,
     'product_grid': ProductGridSection,
+    'product_grid_with_panels': ProductGridWithPanels,
     'category_grid': CategoryGridSection,
     'service_grid': ServiceGrid,
+    'brand_showcase': BrandShowcase,
     'post_grid': PostGridSection,
     'custom_html': CustomHtml
 };

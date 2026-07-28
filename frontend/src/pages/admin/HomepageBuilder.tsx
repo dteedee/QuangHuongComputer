@@ -18,7 +18,8 @@ import toast from 'react-hot-toast';
 
 const SECTION_TYPES = [
     'hero_slider', 'banner_grid', 'flash_deal',
-    'product_grid', 'category_grid', 'service_grid',
+    'product_grid', 'product_grid_with_panels', 'category_grid',
+    'brand_showcase', 'service_grid',
     'post_grid', 'custom_html',
 ];
 
