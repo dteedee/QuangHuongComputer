@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48"
+     role="img" aria-label="Quang Hưởng Computer">
+  <title>Quang Hưởng Computer</title>
+  <g transform="translate(2,6)" fill="#1A1A1A">
+    <rect x="0" y="0" width="36" height="26" rx="3"/>
+    <rect x="3" y="3" width="30" height="18" rx="1.5" fill="#FFFFFF"/>
+    <rect x="6" y="7" width="14" height="2" rx="1"/>
+    <rect x="6" y="11" width="20" height="2" rx="1"/>
+    <rect x="6" y="15" width="10" height="2" rx="1"/>
+    <rect x="12" y="28" width="12" height="3" rx="1"/>
+    <rect x="8" y="31" width="20" height="2" rx="1"/>
+  </g>
+  <text x="46" y="24" font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="800" font-size="18" fill="#1A1A1A" letter-spacing="0.5">
+    QUANG HƯỞNG
+  </text>
+  <text x="46" y="40" font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="500" font-size="10" fill="#404040" letter-spacing="2.5">
+    COMPUTER
+  </text>
+</svg>

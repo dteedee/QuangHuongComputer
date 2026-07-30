@@ -13,23 +13,25 @@ interface SEOProps {
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
 
+const DEFAULT_OG_IMAGE = '/brand/og-default.svg';
+
 const SEO: React.FC<SEOProps> = ({
   title,
-  description = 'Quang Hưởng Computer - Chuyên cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt tại Hải Dương.',
-  keywords = 'máy tính, laptop, pc gaming, linh kiện máy tính, hải dương, quang hưởng computer',
-  image = '/logo.png',
+  description = 'Quang Hưởng Computer - Chuyên cung cấp linh kiện máy tính, laptop, PC gaming chính hãng. Bảo hành tận nơi, xuất hoá đơn VAT.',
+  keywords = 'máy tính, laptop, pc gaming, linh kiện máy tính, quang hưởng computer',
+  image = DEFAULT_OG_IMAGE,
   url,
   type = 'website',
   noindex = false,
   canonicalUrl,
   structuredData,
 }) => {
-  const siteTitle = title ? `${title} | Quang Hưởng Computer` : 'Quang Hưởng Computer - Linh kiện máy tính chính hãng';
+  const siteTitle = title ? `${title} | Quang Hưởng Computer` : 'Quang Hưởng Computer - Máy tính chính hãng, dịch vụ tận tâm';
   const currentUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
   const canonical = canonicalUrl || currentUrl;
 
   // Ensure image is absolute URL, gracefully handling null
-  const safeImage = image || '/logo.png';
+  const safeImage = image || DEFAULT_OG_IMAGE;
   const absoluteImage = safeImage.startsWith('http')
     ? safeImage
     : `${typeof window !== 'undefined' ? window.location.origin : ''}${safeImage}`;

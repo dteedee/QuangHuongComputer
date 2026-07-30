@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <rect width="180" height="180" rx="36" fill="#D22B2B"/>
+  <text x="90" y="112" text-anchor="middle"
+        font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="900" font-size="88" fill="#FFFFFF" letter-spacing="1">QH</text>
+  <text x="90" y="150" text-anchor="middle"
+        font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="700" font-size="16" fill="#FFFFFF" letter-spacing="4">COMPUTER</text>
+</svg>

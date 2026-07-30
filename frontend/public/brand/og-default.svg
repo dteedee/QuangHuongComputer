@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FEF2F2"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="16" height="630" fill="#D22B2B"/>
+
+  <!-- Brand mark (square logo, upscaled) -->
+  <g transform="translate(140,180)">
+    <rect width="180" height="180" rx="24" fill="#D22B2B"/>
+    <text x="90" y="118" text-anchor="middle"
+          font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+          font-weight="900" font-size="94" fill="#FFFFFF" letter-spacing="1">QH</text>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="360" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="900" font-size="72" fill="#1A1A1A" letter-spacing="1">
+    QUANG HƯỞNG
+  </text>
+  <text x="360" y="300" font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="700" font-size="36" fill="#D22B2B" letter-spacing="8">
+    COMPUTER
+  </text>
+
+  <!-- Tagline -->
+  <text x="360" y="380" font-family="Inter, 'Segoe UI', system-ui, sans-serif"
+        font-weight="500" font-size="30" fill="#525252">
+    Máy tính chính hãng, dịch vụ tận tâm
+  </text>
+
+  <!-- Footer chips -->
+  <g font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="22" fill="#8C1919">
+    <g transform="translate(360,460)">
+      <rect x="0" y="0" width="220" height="52" rx="26" fill="#FEE2E2"/>
+      <text x="110" y="34" text-anchor="middle">Bán lẻ &amp; Sửa chữa</text>
+    </g>
+    <g transform="translate(600,460)">
+      <rect x="0" y="0" width="180" height="52" rx="26" fill="#FEE2E2"/>
+      <text x="90" y="34" text-anchor="middle">Bảo hành tận nơi</text>
+    </g>
+    <g transform="translate(800,460)">
+      <rect x="0" y="0" width="180" height="52" rx="26" fill="#FEE2E2"/>
+      <text x="90" y="34" text-anchor="middle">Hoá đơn VAT</text>
+    </g>
+  </g>
+</svg>

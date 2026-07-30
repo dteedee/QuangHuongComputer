@@ -64,17 +64,29 @@ export const Footer = () => {
             <div className="max-w-[1400px] mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* Brand column */}
                 <div className="space-y-4">
-                    <Link to="/" className="inline-flex flex-col">
-                        <span className="text-xl font-black text-white uppercase tracking-tight">{brand1}</span>
-                        <span className="text-[9px] font-bold text-gray-500 tracking-[0.15em] uppercase">{brand2}</span>
+                    <Link
+                        to="/"
+                        className="inline-flex items-center gap-2.5"
+                        aria-label={`${brand1} ${brand2}`}
+                    >
+                        <img
+                            src="/brand/logo-square.svg"
+                            alt=""
+                            aria-hidden="true"
+                            className="w-10 h-10 rounded-lg"
+                        />
+                        <span className="flex flex-col">
+                            <span className="text-xl font-black text-white uppercase tracking-tight leading-none">{brand1}</span>
+                            <span className="text-[9px] font-bold text-gray-400 tracking-[0.15em] uppercase mt-0.5">{brand2}</span>
+                        </span>
                     </Link>
-                    <p className="text-gray-500 text-sm leading-relaxed">He thong ban le may tinh, linh kien va thiet bi IT. Cam ket chat luong, san pham chinh hang, bao hanh tan tam.</p>
+                    <p className="text-gray-400 text-sm leading-relaxed">He thong ban le may tinh, linh kien va thiet bi IT. Cam ket chat luong, san pham chinh hang, bao hanh tan tam.</p>
                     <div className="space-y-2 text-sm">
                         <div className="flex gap-2 items-start"><MapPin size={15} className="text-accent flex-shrink-0 mt-0.5" /><span>{c('COMPANY_ADDRESS', '')}</span></div>
                         <div className="flex gap-2"><Phone size={15} className="text-accent flex-shrink-0" /><span className="font-semibold text-white">{c('COMPANY_PHONE_2', '')} - {c('COMPANY_PHONE', '')}</span></div>
                         <div className="flex gap-2"><Mail size={15} className="text-accent flex-shrink-0" /><span>{c('COMPANY_EMAIL', '')}</span></div>
                     </div>
-                    <div className="text-xs text-gray-600"><span className="font-semibold">MST:</span> {c('COMPANY_TAX_CODE', '')}</div>
+                    <div className="text-xs text-gray-400"><span className="font-semibold">MST:</span> {c('COMPANY_TAX_CODE', '')}</div>
                     <div className="flex gap-2 pt-1">
                         {socials.map(({ url, Icon, hover }) => (
                             <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={`w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 ${hover} hover:text-white transition-all cursor-pointer`}>
@@ -107,10 +119,10 @@ export const Footer = () => {
                         <><FL to="/policy/warranty" label="Chinh sach bao hanh" /><FL to="/policy/return" label="Chinh sach doi tra" /><FL to="/policy/shipping" label="Chinh sach van chuyen" /><FL to="/policy/payment" label="Huong dan thanh toan" /></>
                     } />
                     <div className="mt-5">
-                        <p className="text-[10px] font-bold text-gray-600 uppercase mb-2">Thanh toan</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Thanh toan</p>
                         <div className="flex flex-wrap gap-1.5">
                             {['VISA', 'MASTER', 'NAPAS', 'VNPAY', 'COD'].map(m => (
-                                <span key={m} className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-[10px] font-bold text-gray-400">{m}</span>
+                                <span key={m} className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-[10px] font-bold text-gray-300">{m}</span>
                             ))}
                         </div>
                     </div>
@@ -119,7 +131,7 @@ export const Footer = () => {
 
             {/* Bottom bar */}
             <div className="bg-gray-950 py-4 pb-20 lg:pb-4 border-t border-gray-800">
-                <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] text-gray-600">
+                <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-3 text-[11px] text-gray-400">
                     <p>&copy; {new Date().getFullYear()} Ban quyen thuoc ve {brand1} {brand2}.</p>
                     <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> He thong dang hoat dong</span>

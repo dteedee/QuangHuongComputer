@@ -50,13 +50,21 @@ export const HeaderMobileMenu = ({
             <div className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col animate-slide-in z-10">
                 {/* Drawer header */}
                 <div className="bg-accent p-4 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5" onClick={onClose}>
-                        <div className="w-9 h-9 bg-white text-accent rounded-lg flex items-center justify-center font-black text-lg shadow">
-                            QH
-                        </div>
+                    <Link
+                        to="/"
+                        className="flex items-center gap-2.5"
+                        onClick={onClose}
+                        aria-label={`${companyBrand1} ${companyBrand2}`}
+                    >
+                        <img
+                            src="/brand/logo-square.svg"
+                            alt=""
+                            aria-hidden="true"
+                            className="w-9 h-9 rounded-lg bg-white shadow"
+                        />
                         <div className="flex flex-col">
                             <span className="text-white font-black text-base tracking-tight">{companyBrand1}</span>
-                            <span className="text-white/60 text-[8px] font-bold tracking-[0.15em] uppercase">{companyBrand2}</span>
+                            <span className="text-white/80 text-[8px] font-bold tracking-[0.15em] uppercase">{companyBrand2}</span>
                         </div>
                     </Link>
                     <button
