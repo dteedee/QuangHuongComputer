@@ -21,6 +21,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+    <!-- Phase 03: MinIO client + ImageSharp cho resize ảnh WebP -->
+    <PackageReference Include="Minio" Version="6.0.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
 
   </ItemGroup>
 

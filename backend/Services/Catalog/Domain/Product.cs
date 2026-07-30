@@ -46,6 +46,45 @@ public class Product : Entity<Guid>
     public virtual Category? Category { get; private set; }
     public virtual Brand? Brand { get; private set; }
 
+    // ------- Phase 03: Media / Variant / Specification collections -------
+    // Backing collections nạp lười qua EF; expose IReadOnly để giữ encapsulation.
+    private readonly List<ProductMedia> _medias = new();
+    public virtual IReadOnlyCollection<ProductMedia> Medias => _medias.AsReadOnly();
+
+    private readonly List<ProductVariant> _variants = new();
+    public virtual IReadOnlyCollection<ProductVariant> Variants => _variants.AsReadOnly();
+
+    private readonly List<ProductSpecificationValue> _specValues = new();
+    public virtual IReadOnlyCollection<ProductSpecificationValue> SpecValues => _specValues.AsReadOnly();
+
+    /// <summary>
+    /// Ảnh chính hiển thị. Ưu tiên media Primary; fallback về cột legacy `ImageUrl` (giữ tương thích).
+    /// EF ánh xạ cột "ImageUrl" — không phá schema cũ.
+    /// </summary>
+    public string? EffectiveImageUrl
+    {
+        get
+        {
+            var primary = _medias.FirstOrDefault(m => m.IsPrimary && m.Type == MediaType.Image);
+            return primary?.Url ?? ImageUrl;
+        }
+    }
+
+    /// <summary>Giá hiển thị: nếu có biến thể đang bán, lấy MIN(Variants.Price); nếu không, `Price` của sản phẩm.</summary>
+    public decimal EffectivePrice
+    {
+        get
+        {
+            var activeVariants = _variants
+                .Where(v => v.Status == VariantStatus.InStock || v.Status == VariantStatus.LowStock)
+                .ToList();
+            if (activeVariants.Count == 0) return Price;
+            return activeVariants.Min(v => v.Price);
+        }
+    }
+
+    public bool HasVariants() => _variants.Count > 0;
+
     public Product(
         string name,
         decimal price,
@@ -239,6 +278,77 @@ public class Product : Entity<Guid>
         if (string.IsNullOrWhiteSpace(slug))
             throw new ArgumentException("Slug không được rỗng", nameof(slug));
         Slug = SlugGenerator.Generate(slug);
+    }
+
+    // ------- Phase 03: helpers thao tác media / variant -------
+
+    /// <summary>
+    /// Thêm media vào sản phẩm. Nếu đặt IsPrimary=true, tự động unset các primary khác.
+    /// </summary>
+    public void AddMedia(ProductMedia media)
+    {
+        if (media == null) throw new ArgumentNullException(nameof(media));
+        if (media.ProductId != Id)
+            throw new InvalidOperationException("ProductId của media không khớp sản phẩm");
+        if (media.IsPrimary)
+            UnsetOtherPrimaryMedias(media.Id);
+        _medias.Add(media);
+    }
+
+    public void RemoveMedia(Guid mediaId)
+    {
+        var m = _medias.FirstOrDefault(x => x.Id == mediaId);
+        if (m != null) _medias.Remove(m);
+    }
+
+    /// <summary>
+    /// Chỉ định 1 media làm ảnh chính duy nhất. Các media khác tự động bị unset.
+    /// Chỉ áp dụng cho media loại Image.
+    /// </summary>
+    public void SetPrimaryMedia(Guid mediaId)
+    {
+        var target = _medias.FirstOrDefault(x => x.Id == mediaId)
+            ?? throw new InvalidOperationException($"Không tìm thấy media {mediaId}");
+        if (target.Type != MediaType.Image)
+            throw new InvalidOperationException("Chỉ ảnh mới được đặt làm ảnh chính");
+        UnsetOtherPrimaryMedias(mediaId);
+        target.SetPrimary(true);
+    }
+
+    private void UnsetOtherPrimaryMedias(Guid keepId)
+    {
+        foreach (var m in _medias.Where(x => x.Id != keepId && x.IsPrimary))
+            m.SetPrimary(false);
+    }
+
+    public void AddVariant(ProductVariant variant)
+    {
+        if (variant == null) throw new ArgumentNullException(nameof(variant));
+        if (variant.ProductId != Id)
+            throw new InvalidOperationException("ProductId của biến thể không khớp sản phẩm");
+        if (_variants.Any(v => v.Sku == variant.Sku))
+            throw new InvalidOperationException($"Đã tồn tại biến thể SKU '{variant.Sku}' trong sản phẩm");
+        // Chỉ 1 default
+        if (variant.IsDefault)
+            foreach (var v in _variants.Where(x => x.IsDefault)) v.SetDefault(false);
+        _variants.Add(variant);
+    }
+
+    public void RemoveVariant(Guid variantId)
+    {
+        var v = _variants.FirstOrDefault(x => x.Id == variantId);
+        if (v != null) _variants.Remove(v);
+    }
+
+    public void AddSpecificationValue(ProductSpecificationValue value)
+    {
+        if (value == null) throw new ArgumentNullException(nameof(value));
+        if (value.ProductId != Id)
+            throw new InvalidOperationException("ProductId của spec value không khớp sản phẩm");
+        // Chỉ 1 giá trị per attribute
+        var existing = _specValues.FirstOrDefault(x => x.AttributeId == value.AttributeId);
+        if (existing != null) _specValues.Remove(existing);
+        _specValues.Add(value);
     }
 }
 
