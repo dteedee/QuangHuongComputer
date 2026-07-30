@@ -2,6 +2,11 @@ using BuildingBlocks.SharedKernel;
 
 namespace Content.Domain;
 
+/// <summary>
+/// [LEGACY] Sử dụng <see cref="Promotion"/> với <see cref="PromotionType.FlashSale"/> thay thế.
+/// Giữ lại để tương thích endpoint /api/content/flash-sales hiện có.
+/// </summary>
+[Obsolete("Use Promotion (Type=FlashSale, IsAutomatic=true) instead. Kept for legacy /api/content/flash-sales endpoints.")]
 public class FlashSale : Entity<Guid>
 {
     public string Name { get; private set; } = string.Empty;

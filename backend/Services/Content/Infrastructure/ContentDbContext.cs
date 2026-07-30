@@ -10,13 +10,21 @@ public class ContentDbContext : DbContext
     }
 
     public DbSet<Post> Posts { get; set; }
+#pragma warning disable CS0618 // Coupon/FlashSale giữ để tương thích, sẽ gỡ sau Phase 04.
     public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<FlashSale> FlashSales { get; set; }
+#pragma warning restore CS0618
     public DbSet<Banner> Banners { get; set; }
     public DbSet<CMSPage> Pages { get; set; }
     public DbSet<Menu> Menus { get; set; }
     public DbSet<HomepageSection> HomepageSections { get; set; }
-    public DbSet<FlashSale> FlashSales { get; set; }
     public DbSet<ContactMessage> ContactMessages { get; set; }
+
+    // Promotion engine — thay thế Coupon/FlashSale trong tương lai.
+    public DbSet<Promotion> Promotions { get; set; } = null!;
+    public DbSet<PromotionCondition> PromotionConditions { get; set; } = null!;
+    public DbSet<PromotionReward> PromotionRewards { get; set; } = null!;
+    public DbSet<PromotionUsage> PromotionUsages { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +41,7 @@ public class ContentDbContext : DbContext
                 .HasDatabaseName("IX_Post_Status_PublishedAt");
         });
 
+#pragma warning disable CS0618 // Coupon/FlashSale legacy — cấu hình EF cần tham chiếu type.
         modelBuilder.Entity<Coupon>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -43,6 +52,7 @@ public class ContentDbContext : DbContext
             entity.HasIndex(e => new { e.IsActive, e.ValidFrom, e.ValidTo })
                 .HasDatabaseName("IX_Coupon_Active_DateRange");
         });
+#pragma warning restore CS0618
         
         modelBuilder.Entity<Banner>(entity =>
         {
@@ -90,6 +100,7 @@ public class ContentDbContext : DbContext
                 .HasDatabaseName("IX_HomepageSection_Visible_Order");
         });
 
+#pragma warning disable CS0618
         modelBuilder.Entity<FlashSale>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -107,6 +118,71 @@ public class ContentDbContext : DbContext
 
             entity.HasIndex(e => new { e.Status, e.DisplayOrder })
                 .HasDatabaseName("IX_FlashSale_Status_Order");
+        });
+#pragma warning restore CS0618
+
+        // ==================== PROMOTION ENGINE ====================
+
+        modelBuilder.Entity<Promotion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Promotions");
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.AudienceTag).HasMaxLength(50);
+            entity.Property(e => e.DiscountValue).HasPrecision(18, 2);
+            entity.Property(e => e.MaxDiscountAmount).HasPrecision(18, 2);
+
+            // Unique code khi có (partial index) — cho phép nhiều promotion tự động không có code.
+            entity.HasIndex(e => e.Code)
+                .IsUnique()
+                .HasFilter("\"Code\" IS NOT NULL")
+                .HasDatabaseName("IX_Promotion_Code_Unique");
+
+            entity.HasIndex(e => new { e.Status, e.StartAt, e.EndAt })
+                .HasDatabaseName("IX_Promotion_Status_Schedule");
+
+            entity.HasIndex(e => new { e.Type, e.IsAutomatic, e.Status })
+                .HasDatabaseName("IX_Promotion_Type_Auto_Status");
+
+            entity.HasMany(e => e.Conditions)
+                .WithOne()
+                .HasForeignKey(c => c.PromotionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.Rewards)
+                .WithOne()
+                .HasForeignKey(r => r.PromotionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PromotionCondition>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("PromotionConditions");
+            entity.Property(e => e.ValueJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(e => e.PromotionId).HasDatabaseName("IX_PromotionCondition_Promotion");
+        });
+
+        modelBuilder.Entity<PromotionReward>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("PromotionRewards");
+            entity.Property(e => e.DiscountPercent).HasPrecision(5, 2);
+            entity.HasIndex(e => e.PromotionId).HasDatabaseName("IX_PromotionReward_Promotion");
+        });
+
+        modelBuilder.Entity<PromotionUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("PromotionUsages");
+            entity.Property(e => e.CustomerPhone).HasMaxLength(20);
+            entity.HasIndex(e => new { e.PromotionId, e.CustomerId })
+                .HasDatabaseName("IX_PromotionUsage_Promotion_Customer");
+            entity.HasIndex(e => new { e.PromotionId, e.CustomerPhone })
+                .HasDatabaseName("IX_PromotionUsage_Promotion_Phone");
+            entity.HasIndex(e => e.OrderId).HasDatabaseName("IX_PromotionUsage_Order");
         });
 
         modelBuilder.Entity<ContactMessage>(entity =>

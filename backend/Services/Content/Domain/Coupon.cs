@@ -3,6 +3,11 @@ using BuildingBlocks.Validation;
 
 namespace Content.Domain;
 
+/// <summary>
+/// [LEGACY] Sử dụng <see cref="Promotion"/> với <see cref="PromotionType.Code"/> thay thế.
+/// Giữ lại để tương thích endpoint /api/content/coupons hiện có và snapshot đơn hàng cũ.
+/// </summary>
+[Obsolete("Use Promotion (Type=Code) instead. Kept for legacy /api/content/coupons endpoints.")]
 public class Coupon : Entity<Guid>
 {
     public string Code { get; private set; } = string.Empty;
