@@ -4,12 +4,21 @@
 
 /* ==================== Accent Color System ==================== */
 /* These CSS variables are dynamically set by ThemeContext.tsx    */
-/* Default values match the 'red' accent (brand color #D70018)   */
+/* Default = Quang Hưởng brand red (see design-system/brand-tokens.ts) */
 :root {
-  --accent-primary: #2563EB;
-  --accent-primary-hover: #1D4ED8;
-  --accent-primary-light: #EFF6FF;
-  --accent-primary-dark: #1E40AF;
+  --accent-primary: #D22B2B;
+  --accent-primary-hover: #B02020;
+  --accent-primary-light: #FEF2F2;
+  --accent-primary-dark: #8C1919;
+  /* rgba components of the primary for use in shadow/glow effects */
+  --accent-primary-rgb: 210, 43, 43;
+
+  /* Neutral system — sync với design-system/brand-tokens.ts */
+  --ink-900: #1A1A1A;
+  --ink-600: #525252;
+  --surface: #FFFFFF;
+  --surface-alt: #FAFAFA;
+  --border: #E5E5E5;
 }
 
 
@@ -106,7 +115,7 @@ textarea::placeholder {
 
 .button-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 .button-hover:active {
@@ -331,10 +340,10 @@ img[loaded] {
 /* Pulse glow animation */
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.3);
+    box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0.3);
   }
   50% {
-    box-shadow: 0 0 20px 5px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 20px 5px rgba(var(--accent-primary-rgb), 0.15);
   }
 }
 
@@ -472,12 +481,12 @@ img[loaded] {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 20px rgba(var(--accent-primary-rgb), 0.2);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 5px 10px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 5px 10px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 /* ==================== Enhanced Input Styles ==================== */
@@ -555,7 +564,7 @@ img[loaded] {
 
 /* ==================== Text Gradient ==================== */
 .text-gradient {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

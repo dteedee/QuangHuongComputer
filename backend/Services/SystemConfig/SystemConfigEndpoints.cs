@@ -36,12 +36,23 @@ public static class ConfigValidator
                 ? (true, null) : (false, "Chỉ chấp nhận true hoặc false"),
             ConfigValueType.Percentage => double.TryParse(value, out var pct) && pct >= 0 && pct <= 1
                 ? (true, null) : (false, "Tỷ lệ phải từ 0 đến 1"),
-            ConfigValueType.Url => value?.StartsWith("http://") == true || value?.StartsWith("https://") == true
-                ? (true, null) : (false, "URL phải bắt đầu bằng http:// hoặc https://"),
+            // Allow relative same-origin paths ("/foo/bar.svg") in addition to
+            // absolute http(s) URLs. Rejects javascript: and other schemes.
+            ConfigValueType.Url =>
+                value?.StartsWith("http://") == true
+                || value?.StartsWith("https://") == true
+                || (value?.StartsWith("/") == true && !value.StartsWith("//"))
+                    ? (true, null)
+                    : (false, "URL phải bắt đầu bằng http://, https:// hoặc / (đường dẫn cùng miền)"),
             ConfigValueType.Email => value?.Contains("@") == true
                 ? (true, null) : (false, "Email không hợp lệ"),
             ConfigValueType.Number => double.TryParse(value, out _)
                 ? (true, null) : (false, "Phải là số hợp lệ"),
+            // Hex color #RRGGBB — 3-byte form only, to keep CSS variable substitution safe.
+            ConfigValueType.Color => value is not null
+                && System.Text.RegularExpressions.Regex.IsMatch(value, "^#[0-9A-Fa-f]{6}$")
+                    ? (true, null)
+                    : (false, "Màu phải theo định dạng #RRGGBB (ví dụ #D22B2B)"),
             _ => (true, null)
         };
     }

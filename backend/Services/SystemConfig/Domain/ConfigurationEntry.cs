@@ -9,7 +9,8 @@ public enum ConfigValueType
     Secret,
     Url,
     Email,
-    Percentage
+    Percentage,
+    Color
 }
 
 public class ConfigurationEntry

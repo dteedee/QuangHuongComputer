@@ -5,12 +5,13 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-[#D70018] text-white hover:bg-[#B50014] focus:ring-[#D70018] shadow-md hover:shadow-lg',
-        secondary: 'bg-white text-[#D70018] border-2 border-[#D70018] hover:bg-[#D70018] hover:text-white',
-        outline: 'bg-transparent text-[#D70018] border-2 border-[#D70018] hover:bg-[#D70018]/10',
-        ghost: 'bg-transparent text-[#D70018] hover:bg-[#D70018]/10',
-        danger: 'bg-red-600 text-white hover:bg-red-700',
-        success: 'bg-green-600 text-white hover:bg-green-700',
+        primary: 'bg-brand text-white hover:bg-brand-dark focus:ring-brand shadow-md hover:shadow-lg',
+        secondary: 'bg-white text-brand border-2 border-brand hover:bg-brand hover:text-white',
+        outline: 'bg-transparent text-brand border-2 border-brand hover:bg-brand-light',
+        ghost: 'bg-transparent text-brand hover:bg-brand-light',
+        // Danger uses burnt-orange to remain visually distinct from brand red
+        danger: 'bg-danger text-white hover:bg-danger-700',
+        success: 'bg-success text-white hover:bg-success-700',
       },
       size: {
         sm: 'px-4 py-2 text-sm',
@@ -32,8 +33,8 @@ export const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-200 focus:border-[#D70018] focus:ring-[#D70018]/20',
-        error: 'border-red-500 focus:border-red-600 focus:ring-red-500/20',
+        default: 'border-gray-200 focus:border-brand focus:ring-brand/20',
+        error: 'border-danger focus:border-danger-700 focus:ring-danger/20',
       },
     },
     defaultVariants: {
@@ -52,10 +53,10 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-gray-100 text-gray-700',
-        primary: 'bg-[#D70018]/10 text-[#D70018]',
-        success: 'bg-green-100 text-green-700',
-        warning: 'bg-amber-100 text-amber-700',
-        danger: 'bg-red-100 text-red-700',
+        primary: 'bg-brand-light text-brand',
+        success: 'bg-success-100 text-success-700',
+        warning: 'bg-warning-100 text-warning-700',
+        danger: 'bg-danger-100 text-danger-700',
         info: 'bg-blue-100 text-blue-700',
       },
       size: {

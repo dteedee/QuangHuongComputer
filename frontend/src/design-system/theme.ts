@@ -8,18 +8,18 @@ export const designSystem = {
   // COLOR PALETTE - Inspired by modern e-commerce
   // ============================================
   colors: {
-    // Primary - Quang Hưởng Brand Red
+    // Primary - Quang Hưởng Brand Red (source of truth: brand-tokens.ts)
     primary: {
-      50: '#FFF1F2',
-      100: '#FFE1E3',
-      200: '#FFC7CB',
-      300: '#FFA0A7',
-      400: '#FF6B76',
-      500: '#D70018',  // Main brand color
-      600: '#B50014',
-      700: '#940010',
-      800: '#7A000D',
-      900: '#60000A',
+      50: '#FEF2F2',
+      100: '#FEE2E2',
+      200: '#FBBFBF',
+      300: '#F49898',
+      400: '#E86363',
+      500: '#DE3838',
+      600: '#D22B2B',  // Main brand color
+      700: '#B02020',
+      800: '#8C1919',
+      900: '#701212',
     },
 
     // Secondary - Tech Blue
@@ -216,10 +216,10 @@ export const designSystem = {
     none: 'none',
 
     // Colored shadows
-    primary: '0 10px 30px -5px rgba(215, 0, 24, 0.3)',
+    primary: '0 10px 30px -5px rgba(210, 43, 43, 0.3)',
     success: '0 10px 30px -5px rgba(34, 197, 94, 0.3)',
     warning: '0 10px 30px -5px rgba(249, 115, 22, 0.3)',
-    error: '0 10px 30px -5px rgba(239, 68, 68, 0.3)',
+    error: '0 10px 30px -5px rgba(234, 88, 12, 0.3)',
   },
 
   // ============================================

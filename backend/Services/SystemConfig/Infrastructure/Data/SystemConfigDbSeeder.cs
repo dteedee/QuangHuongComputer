@@ -8,8 +8,12 @@ public static class SystemConfigDbSeeder
 {
     public static async Task SeedAsync(SystemConfigDbContext context)
     {
+        // Theme keys are seeded independently so they show up even on
+        // databases that were seeded before the theme feature landed.
+        await SeedThemeKeysAsync(context);
+
         // Check if configs already exist
-        if (await context.Configurations.AnyAsync()) return;
+        if (await context.Configurations.AnyAsync(c => c.Category != "Theme")) return;
 
         var configs = new List<ConfigurationEntry>
         {
@@ -407,6 +411,59 @@ public static class SystemConfigDbSeeder
         };
 
         await context.Configurations.AddRangeAsync(configs);
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Seeds the brand/theme configuration keys.
+    /// Idempotent: only inserts keys that are not already present, so it is
+    /// safe to run on existing databases without wiping admin overrides.
+    /// </summary>
+    private static async Task SeedThemeKeysAsync(SystemConfigDbContext context)
+    {
+        var defaults = new List<ConfigurationEntry>
+        {
+            new ConfigurationEntry
+            {
+                Key = "theme.accentPrimary",
+                Value = "#D22B2B",
+                Description = "Màu chủ đạo (hex #RRGGBB) áp cho nút mua, liên kết, tiêu đề nhấn",
+                Category = "Theme",
+                Module = "Global",
+                ValueType = ConfigValueType.Color,
+                LastUpdated = DateTime.UtcNow
+            },
+            new ConfigurationEntry
+            {
+                Key = "theme.accentPrimaryHover",
+                Value = "#B02020",
+                Description = "Màu hover/active tương ứng với accentPrimary",
+                Category = "Theme",
+                Module = "Global",
+                ValueType = ConfigValueType.Color,
+                LastUpdated = DateTime.UtcNow
+            },
+            new ConfigurationEntry
+            {
+                Key = "theme.logoUrl",
+                Value = "/brand/logo.svg",
+                Description = "URL logo hiển thị ở header (cùng miền hoặc CDN tin cậy)",
+                Category = "Theme",
+                Module = "Global",
+                ValueType = ConfigValueType.Url,
+                LastUpdated = DateTime.UtcNow
+            }
+        };
+
+        var existingKeys = await context.Configurations
+            .Where(c => c.Category == "Theme")
+            .Select(c => c.Key)
+            .ToListAsync();
+
+        var toInsert = defaults.Where(d => !existingKeys.Contains(d.Key)).ToList();
+        if (toInsert.Count == 0) return;
+
+        await context.Configurations.AddRangeAsync(toInsert);
         await context.SaveChangesAsync();
     }
 }

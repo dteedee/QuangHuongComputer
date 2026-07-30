@@ -14,25 +14,47 @@ export default {
         'accent-light': 'var(--accent-primary-light)',
         'accent-dark': 'var(--accent-primary-dark)',
 
-        // Brand colors (Professional Blue)
-        'brand': '#2563EB',
-        'brand-dark': '#1D4ED8',
-        'brand-light': '#EFF6FF',
+        // Brand colors — Quang Hưởng Red (source of truth: design-system/brand-tokens.ts)
+        'brand': '#D22B2B',
+        'brand-dark': '#B02020',
+        'brand-light': '#FEF2F2',
         'brand-gray': '#f3f4f6',
 
-        // Primary (Professional Blue)
+        // Primary (Quang Hưởng Red scale)
         primary: {
-          50: '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#60A5FA',
-          500: '#3B82F6',
-          600: '#2563EB',
-          700: '#1D4ED8',
-          800: '#1E40AF',
-          900: '#1E3A8A',
-          DEFAULT: '#2563EB',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          200: '#FBBFBF',
+          300: '#F49898',
+          400: '#E86363',
+          500: '#DE3838',
+          600: '#D22B2B',
+          700: '#B02020',
+          800: '#8C1919',
+          900: '#701212',
+          DEFAULT: '#D22B2B',
+        },
+
+        // Neutral ink for typography
+        ink: {
+          50: '#FAFAFA',
+          100: '#F5F5F5',
+          200: '#E5E5E5',
+          300: '#D4D4D4',
+          400: '#A3A3A3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#1A1A1A',
+          DEFAULT: '#1A1A1A',
+        },
+
+        // Surface layers
+        surface: {
+          DEFAULT: '#FFFFFF',
+          alt: '#FAFAFA',
+          subtle: '#F5F5F5',
         },
 
         // Success (Green)
@@ -43,11 +65,11 @@ export default {
           300: '#6EE7B7',
           400: '#34D399',
           500: '#10B981',
-          600: '#059669',
+          600: '#16A34A',
           700: '#047857',
           800: '#065F46',
           900: '#064E3B',
-          DEFAULT: '#10B981',
+          DEFAULT: '#16A34A',
         },
 
         // Warning (Amber)
@@ -65,19 +87,20 @@ export default {
           DEFAULT: '#F59E0B',
         },
 
-        // Danger (Red)
+        // Danger (Burnt Orange) — INTENTIONALLY separated from brand red
+        // so "Delete/Error" reads visually distinct from "Buy/Primary CTA".
         danger: {
-          50: '#FEF2F2',
-          100: '#FEE2E2',
-          200: '#FECACA',
-          300: '#FCA5A5',
-          400: '#F87171',
-          500: '#EF4444',
-          600: '#DC2626',
-          700: '#B91C1C',
-          800: '#991B1B',
-          900: '#7F1D1D',
-          DEFAULT: '#EF4444',
+          50: '#FFF7ED',
+          100: '#FFEDD5',
+          200: '#FED7AA',
+          300: '#FDBA74',
+          400: '#FB923C',
+          500: '#F97316',
+          600: '#EA580C',
+          700: '#C2410C',
+          800: '#9A3412',
+          900: '#7C2D12',
+          DEFAULT: '#EA580C',
         },
       },
       fontFamily: {
@@ -87,8 +110,8 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        'brand': '0 4px 16px rgba(37, 99, 235, 0.15)',
-        'brand-lg': '0 8px 32px rgba(37, 99, 235, 0.2)',
+        'brand': '0 4px 16px rgba(210, 43, 43, 0.15)',
+        'brand-lg': '0 8px 32px rgba(210, 43, 43, 0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
