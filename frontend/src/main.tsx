@@ -5,6 +5,7 @@ import './index.css'
 import './dark-theme.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import App from './App'
+import { AudienceProvider } from './context/AudienceContext'
 
 console.log('Main.tsx executing...');
 const container = document.getElementById('root');
@@ -14,7 +15,9 @@ createRoot(container!).render(
   <StrictMode>
     <HelmetProvider>
       <ErrorBoundary>
-        <App />
+        <AudienceProvider>
+          <App />
+        </AudienceProvider>
       </ErrorBoundary>
     </HelmetProvider>
   </StrictMode>,

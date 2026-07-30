@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { FontSizeToggle } from '../ui/font-size-toggle';
 import {
     Search, ShoppingCart, Menu as MenuIcon, ChevronDown,
     MessageCircle
@@ -58,15 +59,22 @@ export const HeaderMainBar = ({
                 </button>
 
                 {/* Logo */}
-                <Link to="/" className="flex-shrink-0 flex items-center gap-2.5 group">
-                    <div className={`bg-accent rounded-lg flex items-center justify-center text-white font-black shadow-md group-hover:shadow-brand transition-all duration-200 ${isScrolled ? 'w-9 h-9 text-lg' : 'w-11 h-11 text-xl'}`}>
-                        QH
-                    </div>
+                <Link
+                    to="/"
+                    className="flex-shrink-0 flex items-center gap-2.5 group"
+                    aria-label={`${companyBrand1} ${companyBrand2}`}
+                >
+                    <img
+                        src="/brand/logo-square.svg"
+                        alt=""
+                        aria-hidden="true"
+                        className={`rounded-lg shadow-md group-hover:shadow-brand transition-all duration-200 ${isScrolled ? 'w-9 h-9' : 'w-11 h-11'}`}
+                    />
                     <div className="hidden sm:flex flex-col">
                         <span className={`font-black text-accent uppercase tracking-tight leading-none transition-all duration-200 ${isScrolled ? 'text-base' : 'text-lg'}`}>
                             {companyBrand1}
                         </span>
-                        <span className="text-[9px] font-bold text-gray-400 tracking-[0.15em] uppercase mt-0.5">
+                        <span className="text-[9px] font-bold text-gray-500 tracking-[0.15em] uppercase mt-0.5">
                             {companyBrand2}
                         </span>
                     </div>
@@ -140,6 +148,9 @@ export const HeaderMainBar = ({
                     >
                         <Search size={20} />
                     </button>
+
+                    {/* Font-size toggle — chỉ khu khách hàng, giúp người lớn tuổi đọc dễ hơn */}
+                    <FontSizeToggle />
 
                     {/* Chat button - desktop */}
                     <button
