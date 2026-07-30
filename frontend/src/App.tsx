@@ -152,6 +152,7 @@ const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/Review
 const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
 const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
+const PromotionsPage = lazy(() => import('./pages/admin/PromotionsPage'));
 const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
 const CustomFieldsManager = lazy(() => import('./pages/admin/CustomFieldsManager'));
 const FormBuilderPage = lazy(() => import('./pages/admin/FormBuilderPage').then(m => ({ default: m.FormBuilderPage })));
@@ -318,6 +319,7 @@ function App() {
                           <Route path="menus" element={<MenuManager />} />
                           <Route path="homepage-builder" element={<HomepageBuilder />} />
                           <Route path="flash-sales" element={<FlashSalesPage />} />
+                          <Route path="promotions" element={<PromotionsPage />} />
                           <Route path="payments/sepay" element={<SePayAdminPage />} />
                           <Route path="custom-fields" element={<CustomFieldsManager />} />
                           <Route path="form-builder" element={<FormBuilderPage />} />
@@ -339,6 +341,7 @@ function App() {
                           <Route path="menus" element={<Navigate to="/backoffice/menus" replace />} />
                           <Route path="homepage-builder" element={<Navigate to="/backoffice/homepage-builder" replace />} />
                           <Route path="flash-sales" element={<Navigate to="/backoffice/flash-sales" replace />} />
+                          <Route path="promotions" element={<Navigate to="/backoffice/promotions" replace />} />
                       </Route>
 
                       {/* Auth Pages (Standalone) */}
