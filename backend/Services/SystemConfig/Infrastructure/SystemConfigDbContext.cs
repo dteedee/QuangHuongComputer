@@ -21,7 +21,8 @@ public class SystemConfigDbContext : DbContext
         {
             e.HasKey(c => c.Key);
             e.Property(c => c.Module).HasMaxLength(50).HasDefaultValue("Global");
-            e.Property(c => c.ValueType).HasConversion<string>().HasMaxLength(20).HasDefaultValue("String");
+            // Default value must be the CLR enum value; EF applies the string conversion itself
+            e.Property(c => c.ValueType).HasConversion<string>().HasMaxLength(20).HasDefaultValue(ConfigValueType.String);
             e.Property(c => c.JsonValue).HasColumnType("jsonb");
             e.Property(c => c.IsSystem).HasDefaultValue(false);
             e.Property(c => c.SortOrder).HasDefaultValue(0);

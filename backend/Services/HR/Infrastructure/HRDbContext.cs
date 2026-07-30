@@ -7,6 +7,10 @@ public class HRDbContext : DbContext
 {
     public HRDbContext(DbContextOptions<HRDbContext> options) : base(options) { }
 
+    // Seed data must be deterministic, otherwise every "migrations add" detects a model change
+    private static readonly DateTime SeedCreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime SeedExpiryDate = new(2027, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Timesheet> Timesheets => Set<Timesheet>();
     public DbSet<Payroll> Payrolls => Set<Payroll>();
@@ -43,12 +47,44 @@ public class HRDbContext : DbContext
             entity.HasIndex(e => new { e.Status, e.HireDate });
         });
         
+        // Timesheet configuration
+        modelBuilder.Entity<Timesheet>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TotalHours).HasPrecision(8, 2);
+            entity.Property(e => e.RegularHours).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHours).HasPrecision(8, 2);
+
+            entity.HasIndex(e => new { e.EmployeeId, e.Date });
+        });
+
+        // Payroll configuration (money = 18,2 / hours = 8,2)
+        modelBuilder.Entity<Payroll>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BaseSalary).HasPrecision(18, 2);
+            entity.Property(e => e.Deductions).HasPrecision(18, 2);
+            entity.Property(e => e.Bonuses).HasPrecision(18, 2);
+            entity.Property(e => e.NetPay).HasPrecision(18, 2);
+            entity.Property(e => e.OvertimePay).HasPrecision(18, 2);
+            entity.Property(e => e.TaxDeduction).HasPrecision(18, 2);
+            entity.Property(e => e.InsuranceDeduction).HasPrecision(18, 2);
+            entity.Property(e => e.OtherDeductions).HasPrecision(18, 2);
+            entity.Property(e => e.PerformanceBonus).HasPrecision(18, 2);
+            entity.Property(e => e.AttendanceBonus).HasPrecision(18, 2);
+            entity.Property(e => e.RegularHours).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHours).HasPrecision(8, 2);
+
+            entity.HasIndex(e => new { e.EmployeeId, e.Year, e.Month });
+        });
+
         // Shift configuration
         modelBuilder.Entity<Shift>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            
+            entity.Property(e => e.BreakDurationMinutes).HasPrecision(6, 2);
+
             entity.HasIndex(e => new { e.IsActive, e.DisplayOrder });
         });
         
@@ -118,11 +154,11 @@ public class HRDbContext : DbContext
                     Department = "Kỹ thuật",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(2),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 8000000m,
                     SalaryRangeMax = 12000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 },
                 new
                 {
@@ -134,11 +170,11 @@ public class HRDbContext : DbContext
                     Department = "Kinh doanh",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(1),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 7000000m,
                     SalaryRangeMax = 15000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 },
                 new
                 {
@@ -150,11 +186,11 @@ public class HRDbContext : DbContext
                     Department = "Kỹ thuật",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(3),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 10000000m,
                     SalaryRangeMax = 18000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 },
                 new
                 {
@@ -166,11 +202,11 @@ public class HRDbContext : DbContext
                     Department = "Marketing",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(1),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 9000000m,
                     SalaryRangeMax = 14000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 },
                 new
                 {
@@ -182,11 +218,11 @@ public class HRDbContext : DbContext
                     Department = "Logistics",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(2),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 7000000m,
                     SalaryRangeMax = 10000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 },
                 new
                 {
@@ -198,11 +234,11 @@ public class HRDbContext : DbContext
                     Department = "Kế toán",
                     Location = "Hồ Chí Minh",
                     JobType = "Full-time",
-                    ExpiryDate = DateTime.UtcNow.AddMonths(1),
+                    ExpiryDate = SeedExpiryDate,
                     SalaryRangeMin = 8000000m,
                     SalaryRangeMax = 12000000m,
                     Status = JobStatus.Active,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SeedCreatedAt
                 }
             );
         });
