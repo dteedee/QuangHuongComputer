@@ -47,6 +47,101 @@ public static class InventoryEndpoints
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
             BuildingBlocks.Security.Permissions.Inventory.AdjustStock));
 
+        // ==================== STOCK QUERIES: PRODUCT / VARIANT / BRANCH ====================
+        // Public read: FE trang chi tiết sản phẩm gọi 3 endpoint này để hiển thị "còn X sản phẩm",
+        // chọn biến thể (RAM/SSD) và bảng tồn theo chi nhánh.
+
+        // Tồn TỔNG của 1 sản phẩm — cộng dồn mọi InventoryItem (mọi variant, mọi kho).
+        // Không phân biệt VariantId=null hay không (ProductId hiện hữu là đủ).
+        app.MapGet("/api/inventory/products/{productId:guid}/stock", async (Guid productId, InventoryDbContext db) =>
+        {
+            var rows = await db.InventoryItems
+                .Where(i => i.ProductId == productId)
+                .Select(i => new { i.QuantityOnHand, i.ReservedQuantity })
+                .ToListAsync();
+
+            var totalOnHand = rows.Sum(r => r.QuantityOnHand);
+            var totalReserved = rows.Sum(r => r.ReservedQuantity);
+            return Results.Ok(new
+            {
+                productId,
+                quantityOnHand = totalOnHand,
+                reservedQuantity = totalReserved,
+                availableQuantity = totalOnHand - totalReserved
+            });
+        });
+
+        // Tồn của 1 BIẾN THỂ cụ thể — dùng cho product-variant-selector đổi giá + tồn khi chọn RAM/SSD.
+        app.MapGet("/api/inventory/products/{productId:guid}/variants/{variantId:guid}/stock", async (
+            Guid productId, Guid variantId, InventoryDbContext db) =>
+        {
+            var rows = await db.InventoryItems
+                .Where(i => i.ProductId == productId && i.VariantId == variantId)
+                .Select(i => new { i.QuantityOnHand, i.ReservedQuantity })
+                .ToListAsync();
+
+            var totalOnHand = rows.Sum(r => r.QuantityOnHand);
+            var totalReserved = rows.Sum(r => r.ReservedQuantity);
+            return Results.Ok(new
+            {
+                productId,
+                variantId,
+                quantityOnHand = totalOnHand,
+                reservedQuantity = totalReserved,
+                availableQuantity = totalOnHand - totalReserved
+            });
+        });
+
+        // Tồn theo CHI NHÁNH — trả list warehouse có tồn của product này.
+        // Chỉ trả warehouse Type ∈ {Branch, Showroom} — khách chỉ quan tâm nơi có thể mua/xem trực tiếp.
+        // Phase 05 sẽ có Store entity riêng; hiện tại dùng Warehouse cho khớp dữ liệu thực.
+        app.MapGet("/api/inventory/products/{productId:guid}/stock-by-branch", async (
+            Guid productId, InventoryDbContext db) =>
+        {
+            // Kỹ thuật: join in-memory sau khi query để tránh phụ thuộc filter join phức tạp trên EF.
+            var stocks = await db.InventoryItems
+                .Where(i => i.ProductId == productId && i.WarehouseId != null)
+                .GroupBy(i => i.WarehouseId!.Value)
+                .Select(g => new
+                {
+                    WarehouseId = g.Key,
+                    QuantityOnHand = g.Sum(x => x.QuantityOnHand),
+                    ReservedQuantity = g.Sum(x => x.ReservedQuantity)
+                })
+                .ToListAsync();
+
+            if (!stocks.Any())
+                return Results.Ok(Array.Empty<object>());
+
+            var warehouseIds = stocks.Select(s => s.WarehouseId).ToList();
+            var warehouses = await db.Warehouses
+                .Where(w => warehouseIds.Contains(w.Id)
+                    && (w.Type == WarehouseType.Branch || w.Type == WarehouseType.Showroom))
+                .Select(w => new { w.Id, w.Name, w.Code, w.Address, w.City, w.Phone, w.Type })
+                .ToListAsync();
+
+            var result = warehouses.Select(w =>
+            {
+                var stock = stocks.First(s => s.WarehouseId == w.Id);
+                return new
+                {
+                    warehouseId = w.Id,
+                    warehouseName = w.Name,
+                    warehouseCode = w.Code,
+                    address = w.Address,
+                    city = w.City,
+                    phone = w.Phone,
+                    type = w.Type.ToString(),
+                    quantity = stock.QuantityOnHand - stock.ReservedQuantity
+                };
+            })
+            .Where(x => x.quantity > 0)
+            .OrderByDescending(x => x.quantity)
+            .ToList();
+
+            return Results.Ok(result);
+        });
+
         // Stock Reservations
         group.MapPost("/stock/{productId:guid}/reserve", async (Guid productId, ReserveStockDto dto, InventoryDbContext db) =>
         {

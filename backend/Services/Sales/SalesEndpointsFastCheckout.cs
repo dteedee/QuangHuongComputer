@@ -75,17 +75,28 @@ public static class SalesEndpointsFastCheckout
 
                 // Fetch minimal data needed
                 var productIds = model.Items.Select(i => i.ProductId).Distinct().ToList();
+                var variantIds = model.Items.Where(i => i.VariantId.HasValue)
+                    .Select(i => i.VariantId!.Value).Distinct().ToList();
 
                 var products = await catalogDb.Products
                     .Where(p => productIds.Contains(p.Id))
-                    .Select(p => new { p.Id, p.Name, p.Price })
+                    .Select(p => new { p.Id, p.Name, p.Price, p.Sku })
                     .ToListAsync(cts.Token);
 
 
                 var inventoryItems = await inventoryDb.InventoryItems
                     .Where(i => productIds.Contains(i.ProductId))
-                    .Select(i => new { i.Id, i.ProductId, i.AvailableQuantity, i.ReservedQuantity })
+                    .Select(i => new { i.Id, i.ProductId, i.VariantId, i.AvailableQuantity, i.ReservedQuantity })
                     .ToListAsync(cts.Token);
+
+                // Snapshot biến thể — tra từ Catalog để lưu vào OrderItem (không tin client).
+                var variantSnapshots = variantIds.Any()
+                    ? (await catalogDb.ProductVariants.AsNoTracking()
+                        .Where(v => variantIds.Contains(v.Id))
+                        .Select(v => new { v.Id, v.Name, v.Sku })
+                        .ToListAsync(cts.Token))
+                        .ToDictionary(v => v.Id, v => (v.Name, v.Sku))
+                    : new Dictionary<Guid, (string Name, string Sku)>();
 
 
                 // Get cart
@@ -101,11 +112,30 @@ public static class SalesEndpointsFastCheckout
                     if (product == null)
                         return Results.BadRequest(new { Error = $"Sản phẩm không tìm thấy: {cartItem.ProductId}" });
 
-                    var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
+                    // Match tồn theo (ProductId, VariantId) — cùng sản phẩm khác biến thể tính riêng.
+                    var inventoryItem = inventoryItems.FirstOrDefault(i =>
+                        i.ProductId == cartItem.ProductId && i.VariantId == cartItem.VariantId);
                     if (inventoryItem != null && inventoryItem.AvailableQuantity < cartItem.Quantity)
                         return Results.BadRequest(new { Error = $"Không đủ hàng cho {product.Name}" });
 
-                    orderItems.Add(new OrderItem(product.Id, product.Name, product.Price, cartItem.Quantity));
+                    string? vName = null;
+                    string? vSku = null;
+                    if (cartItem.VariantId.HasValue && variantSnapshots.TryGetValue(cartItem.VariantId.Value, out var vs))
+                    {
+                        vName = vs.Name;
+                        vSku = vs.Sku;
+                    }
+
+                    orderItems.Add(new OrderItem(
+                        product.Id,
+                        product.Name,
+                        product.Price,
+                        cartItem.Quantity,
+                        productSku: product.Sku,
+                        originalPrice: null,
+                        variantId: cartItem.VariantId,
+                        variantName: vName,
+                        variantSku: vSku));
                 }
 
                 // Create order with minimal processing

@@ -5,6 +5,10 @@ namespace InventoryModule.Domain;
 public class InventoryItem : Entity<Guid>
 {
     public Guid ProductId { get; private set; }
+    // Biến thể sản phẩm — nullable.
+    // null = tồn tổng của sản phẩm không có biến thể.
+    // NOT null = tồn của 1 biến thể cụ thể (cùng ProductId có thể có nhiều dòng).
+    public Guid? VariantId { get; private set; }
     public Guid? WarehouseId { get; private set; }
     public int QuantityOnHand { get; private set; }
     public int ReorderLevel { get; private set; }
@@ -26,8 +30,24 @@ public class InventoryItem : Entity<Guid>
     public int AvailableQuantity => QuantityOnHand - ReservedQuantity;
 
     public InventoryItem(
-        Guid productId, 
-        int initialQuantity, 
+        Guid productId,
+        int initialQuantity,
+        int reorderLevel = 5,
+        Guid? warehouseId = null,
+        string? location = null,
+        string? barcode = null,
+        string? batchNumber = null,
+        decimal averageCost = 0)
+        : this(productId, variantId: null, initialQuantity, reorderLevel, warehouseId,
+               location, barcode, batchNumber, averageCost)
+    {
+    }
+
+    // Overload có variantId — cùng ProductId + VariantId + WarehouseId là 1 dòng duy nhất.
+    public InventoryItem(
+        Guid productId,
+        Guid? variantId,
+        int initialQuantity,
         int reorderLevel = 5,
         Guid? warehouseId = null,
         string? location = null,
@@ -37,6 +57,7 @@ public class InventoryItem : Entity<Guid>
     {
         Id = Guid.NewGuid();
         ProductId = productId;
+        VariantId = variantId;
         WarehouseId = warehouseId;
         QuantityOnHand = initialQuantity;
         ReorderLevel = reorderLevel;

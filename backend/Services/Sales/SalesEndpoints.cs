@@ -216,33 +216,57 @@ public static class SalesEndpoints
                 cart.TaxRate,
                 cart.CouponCode,
                 cart.Items.Select(i => new CartItemDto(
-                    i.ProductId, 
-                    i.ProductName, 
-                    i.Price, 
-                    i.Quantity, 
+                    i.ProductId,
+                    i.ProductName,
+                    i.Price,
+                    i.Quantity,
                     i.Subtotal,
                     products.TryGetValue(i.ProductId, out var img) ? img : null,
-                    inventory.TryGetValue(i.ProductId, out var stock) ? stock : 999
+                    inventory.TryGetValue(i.ProductId, out var stock) ? stock : 999,
+                    // Snapshot biến thể trong giỏ hàng — không đổi khi admin sửa tên biến thể sau.
+                    i.VariantId,
+                    i.VariantName,
+                    i.VariantSku
                 )).ToList()
             ));
         });
 
-        group.MapPost("/cart/items", async ([FromBody] AddToCartDto dto, SalesDbContext db, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
+        group.MapPost("/cart/items", async ([FromBody] AddToCartDto dto, SalesDbContext db, InventoryDbContext inventoryDb, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
-            // 1. Kiểm tra tồn kho
+            // 1. Nếu sản phẩm có biến thể → fetch snapshot Name/Sku từ Catalog (KHÔNG tin client).
+            //    Query anonymous projection để tránh import Catalog.Domain.ProductVariant.
+            string? variantName = null;
+            string? variantSku = null;
+            if (dto.VariantId.HasValue)
+            {
+                var variantSnapshot = await catalogDb.ProductVariants
+                    .AsNoTracking()
+                    .Where(v => v.Id == dto.VariantId.Value)
+                    .Select(v => new { v.Name, v.Sku })
+                    .FirstOrDefaultAsync();
+
+                if (variantSnapshot == null)
+                    return Results.BadRequest(new { Error = "Biến thể không tồn tại" });
+
+                variantName = variantSnapshot.Name;
+                variantSku = variantSnapshot.Sku;
+            }
+
+            // 2. Kiểm tra tồn kho — ưu tiên tồn theo biến thể nếu có, ngược lại rơi về tồn tổng.
             var inventoryItem = await inventoryDb.InventoryItems
-                .FirstOrDefaultAsync(i => i.ProductId == dto.ProductId);
+                .FirstOrDefaultAsync(i => i.ProductId == dto.ProductId && i.VariantId == dto.VariantId);
 
             if (inventoryItem == null)
             {
                 try
                 {
                     // Auto-create inventory item for development convenience
-                    inventoryItem = new InventoryModule.Domain.InventoryItem(dto.ProductId, 100);
+                    inventoryItem = new InventoryModule.Domain.InventoryItem(
+                        dto.ProductId, dto.VariantId, initialQuantity: 100);
                     inventoryDb.InventoryItems.Add(inventoryItem);
                     await inventoryDb.SaveChangesAsync();
                 }
@@ -263,8 +287,9 @@ public static class SalesEndpoints
                 db.Carts.Add(cart);
             }
 
-            // Kiểm tra nếu sản phẩm đã có trong giỏ hàng
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId);
+            // 3. Dòng giỏ hàng unique theo (ProductId, VariantId) — không gộp khác biến thể.
+            var existingItem = cart.Items.FirstOrDefault(i =>
+                i.ProductId == dto.ProductId && i.VariantId == dto.VariantId);
             var totalQuantity = dto.Quantity + (existingItem?.Quantity ?? 0);
 
             if (inventoryItem.AvailableQuantity < totalQuantity)
@@ -274,7 +299,7 @@ public static class SalesEndpoints
             try
             {
                 inventoryItem.ReserveStock(dto.Quantity);
-                
+
                 var reservation = new InventoryModule.Domain.StockReservation(
                     inventoryItem.Id,
                     dto.ProductId,
@@ -284,7 +309,7 @@ public static class SalesEndpoints
                     24,
                     $"Reserved for cart {cart.Id}"
                 );
-                
+
                 inventoryDb.StockReservations.Add(reservation);
                 await inventoryDb.SaveChangesAsync();
             }
@@ -293,7 +318,15 @@ public static class SalesEndpoints
                 return Results.BadRequest(new { Error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
 
-            cart.AddItem(dto.ProductId, dto.ProductName, dto.Price, dto.Quantity);
+            // 4. Thêm vào giỏ hàng kèm snapshot biến thể (VariantName/Sku từ Catalog, không tin client).
+            cart.AddItem(
+                dto.ProductId,
+                dto.ProductName,
+                dto.Price,
+                dto.Quantity,
+                dto.VariantId,
+                variantName,
+                variantSku);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Item added to cart" });
@@ -619,16 +652,26 @@ public static class SalesEndpoints
 
             // 1. Fetch products and inventory in parallel for better performance
             var productIds = model.Items.Select(i => i.ProductId).Distinct().ToList();
-            
-            // Fetch products and inventory in parallel
+            var variantIds = model.Items.Where(i => i.VariantId.HasValue)
+                .Select(i => i.VariantId!.Value).Distinct().ToList();
+
+            // Fetch products, inventory và snapshot biến thể song song
             var productsTask = catalogDb.Products.Where(p => productIds.Contains(p.Id)).ToListAsync(cts.Token);
             var inventoryTask = inventoryDb.InventoryItems.Where(i => productIds.Contains(i.ProductId)).ToListAsync(cts.Token);
-            
-            await Task.WhenAll(productsTask, inventoryTask);
-            
+            // Snapshot biến thể — anonymous projection để không phụ thuộc kiểu Catalog.Domain.
+            var variantSnapshotsTask = variantIds.Any()
+                ? catalogDb.ProductVariants.AsNoTracking()
+                    .Where(v => variantIds.Contains(v.Id))
+                    .Select(v => new { v.Id, v.Name, v.Sku })
+                    .ToListAsync(cts.Token)
+                : Task.FromResult(new List<dynamic>().Select(x => new { Id = Guid.Empty, Name = "", Sku = "" }).ToList());
+
+            await Task.WhenAll(productsTask, inventoryTask, variantSnapshotsTask);
+
             var products = await productsTask;
             var inventoryItems = await inventoryTask;
-            
+            var variantSnapshots = (await variantSnapshotsTask).ToDictionary(v => v.Id, v => (v.Name, v.Sku));
+
 
             // Get cart to find reservations
             var cart = await salesDb.Carts
@@ -643,17 +686,19 @@ public static class SalesEndpoints
                     return Results.BadRequest(new { Error = $"Product not found: {cartItem.ProductId}" });
                 }
 
-                // Validate Stock - kiểm tra reserved quantity
-                var inventoryItem = inventoryItems.FirstOrDefault(i => i.ProductId == cartItem.ProductId);
+                // Validate Stock — ưu tiên match theo (ProductId, VariantId) để cùng sản phẩm khác biến thể tính riêng.
+                var inventoryItem = inventoryItems.FirstOrDefault(i =>
+                    i.ProductId == cartItem.ProductId && i.VariantId == cartItem.VariantId);
                 if (inventoryItem == null)
                 {
-                    // Auto-create inventory for demo/development if missing
-                    inventoryItem = new InventoryModule.Domain.InventoryItem(cartItem.ProductId, 100);
+                    // Auto-create inventory for demo/development if missing — tồn theo (product, variant).
+                    inventoryItem = new InventoryModule.Domain.InventoryItem(
+                        cartItem.ProductId, cartItem.VariantId, initialQuantity: 100);
                     inventoryDb.InventoryItems.Add(inventoryItem);
-                    
+
                     // Reserve stock before saving
                     inventoryItem.ReserveStock(cartItem.Quantity);
-                    
+
                     // Save immediately to get the ID
                     await inventoryDb.SaveChangesAsync(cts.Token);
                 }
@@ -661,7 +706,8 @@ public static class SalesEndpoints
                 // Kiểm tra xem có đủ reserved stock không
                 if (cart != null)
                 {
-                    var cartItemInDb = cart.Items.FirstOrDefault(ci => ci.ProductId == cartItem.ProductId);
+                    var cartItemInDb = cart.Items.FirstOrDefault(ci =>
+                        ci.ProductId == cartItem.ProductId && ci.VariantId == cartItem.VariantId);
                     if (cartItemInDb == null || cartItemInDb.Quantity < cartItem.Quantity)
                     {
                         // Minor mismatch: just use what's in the checkout model but log it
@@ -682,16 +728,36 @@ public static class SalesEndpoints
                     }
                 }
 
-                orderItems.Add(new OrderItem(product.Id, product.Name, product.Price, cartItem.Quantity));
+                // Snapshot biến thể — tra từ Catalog, không tin client.
+                string? vName = null;
+                string? vSku = null;
+                if (cartItem.VariantId.HasValue && variantSnapshots.TryGetValue(cartItem.VariantId.Value, out var vs))
+                {
+                    vName = vs.Name;
+                    vSku = vs.Sku;
+                }
+
+                orderItems.Add(new OrderItem(
+                    product.Id,
+                    product.Name,
+                    product.Price,
+                    cartItem.Quantity,
+                    productSku: product.Sku,
+                    originalPrice: null,
+                    variantId: cartItem.VariantId,
+                    variantName: vName,
+                    variantSku: vSku));
             }
 
             // 2. Fulfill reservations và trừ stock thật - batch process for better performance
             var stockUpdates = new List<Action>();
             var reservationUpdates = new List<Func<Task>>();
-            
+
             foreach (var item in orderItems)
             {
-                var invItem = inventoryItems.First(i => i.ProductId == item.ProductId);
+                // Match theo (ProductId, VariantId) — cùng sản phẩm khác biến thể phải tính tồn riêng.
+                var invItem = inventoryItems.First(i =>
+                    i.ProductId == item.ProductId && i.VariantId == item.VariantId);
                 
                 // Check if we have enough stock (including reserved)
                 if (invItem.AvailableQuantity + invItem.ReservedQuantity < item.Quantity)
@@ -2058,7 +2124,13 @@ public record CheckoutDto(
     string? CouponCode = null,
     decimal ShippingFee = 0
 );
-public record CheckoutItemDto(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
+public record CheckoutItemDto(
+    Guid ProductId,
+    string ProductName,
+    decimal UnitPrice,
+    int Quantity,
+    // Optional — nếu sản phẩm có biến thể, truyền VariantId để order lưu snapshot đúng dòng biến thể.
+    Guid? VariantId = null);
 public record UpdateOrderStatusDto(string Status);
 public record CancelOrderDto(string Reason);
 public record CreateReturnRequestDto(Guid OrderId, Guid OrderItemId, string Reason, string? Description);
@@ -2085,10 +2157,22 @@ public record CartItemDto(
     int Quantity,
     decimal Subtotal,
     string? ImageUrl = null,
-    int StockQuantity = 999
+    int StockQuantity = 999,
+    // Biến thể sản phẩm — snapshot lịch sử; null nếu sản phẩm không có biến thể.
+    Guid? VariantId = null,
+    string? VariantName = null,
+    string? VariantSku = null
 );
 
-public record AddToCartDto(Guid ProductId, string ProductName, decimal Price, int Quantity);
+public record AddToCartDto(
+    Guid ProductId,
+    string ProductName,
+    decimal Price,
+    int Quantity,
+    // Optional — nếu sản phẩm có biến thể (RAM/SSD/màu), truyền VariantId.
+    // Endpoint tự fetch snapshot VariantName/Sku từ Catalog, không tin client.
+    Guid? VariantId = null
+);
 public record UpdateQuantityDto(int Quantity);
 public record ApplyCouponDto(string CouponCode);
 public record SetShippingDto(decimal ShippingAmount);

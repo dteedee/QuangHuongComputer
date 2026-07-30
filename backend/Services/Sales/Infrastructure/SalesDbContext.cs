@@ -46,6 +46,10 @@ public class SalesDbContext : DbContext
             {
                 item.ToTable("CartItem");
                 item.Property(i => i.Price).HasPrecision(18, 2);
+                // Biến thể sản phẩm — nullable, snapshot lịch sử.
+                item.Property(i => i.VariantId).HasColumnName("VariantId");
+                item.Property(i => i.VariantName).HasColumnName("VariantName");
+                item.Property(i => i.VariantSku).HasColumnName("VariantSku");
             });
         });
 
@@ -84,6 +88,10 @@ public class SalesDbContext : DbContext
                 item.Property(i => i.OriginalPrice).HasPrecision(18, 2);
                 item.Property(i => i.DiscountAmount).HasPrecision(18, 2);
                 item.Property(i => i.LineTotal).HasPrecision(18, 2);
+                // Biến thể sản phẩm — nullable, snapshot lịch sử đơn hàng.
+                item.Property(i => i.VariantId).HasColumnName("VariantId");
+                item.Property(i => i.VariantName).HasColumnName("VariantName");
+                item.Property(i => i.VariantSku).HasColumnName("VariantSku");
             });
         });
 

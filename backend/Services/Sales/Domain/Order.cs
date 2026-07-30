@@ -133,11 +133,23 @@ public class Order : Entity<Guid>
     }
 
     public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)
+        => AddItem(productId, productName, unitPrice, quantity, null, null, null);
+
+    public void AddItem(
+        Guid productId,
+        string productName,
+        decimal unitPrice,
+        int quantity,
+        Guid? variantId,
+        string? variantName,
+        string? variantSku)
     {
         if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
             throw new InvalidOperationException("Cannot add items to non-draft and non-pending order");
 
-        var item = new OrderItem(productId, productName, unitPrice, quantity);
+        var item = new OrderItem(productId, productName, unitPrice, quantity,
+            productSku: null, originalPrice: null,
+            variantId: variantId, variantName: variantName, variantSku: variantSku);
         Items.Add(item);
         CalculateAmounts();
     }
@@ -311,7 +323,22 @@ public class OrderItem : Entity<Guid>
     public decimal DiscountAmount { get; private set; }
     public decimal LineTotal { get; private set; }
 
-    public OrderItem(Guid productId, string productName, decimal unitPrice, int quantity, string? productSku = null, decimal? originalPrice = null)
+    // Biến thể sản phẩm — SNAPSHOT tại thời điểm đặt hàng.
+    // Không đổi khi admin sửa tên biến thể sau đó (ràng buộc kế toán/lịch sử đơn hàng).
+    public Guid? VariantId { get; private set; }
+    public string? VariantName { get; private set; }
+    public string? VariantSku { get; private set; }
+
+    public OrderItem(
+        Guid productId,
+        string productName,
+        decimal unitPrice,
+        int quantity,
+        string? productSku = null,
+        decimal? originalPrice = null,
+        Guid? variantId = null,
+        string? variantName = null,
+        string? variantSku = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -322,10 +349,13 @@ public class OrderItem : Entity<Guid>
         Quantity = quantity;
         DiscountAmount = 0;
         LineTotal = unitPrice * quantity;
+        VariantId = variantId;
+        VariantName = variantName;
+        VariantSku = variantSku;
     }
 
     protected OrderItem() { }
-    
+
     public void ApplyDiscount(decimal discountAmount)
     {
         DiscountAmount = discountAmount;

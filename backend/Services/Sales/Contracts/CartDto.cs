@@ -20,14 +20,21 @@ public record CartItemDto(
     int Quantity,
     decimal Subtotal,
     string? ImageUrl,
-    int StockQuantity
+    int StockQuantity,
+    // Biến thể sản phẩm — snapshot lịch sử; null nếu sản phẩm không có biến thể.
+    Guid? VariantId = null,
+    string? VariantName = null,
+    string? VariantSku = null
 );
 
 public record AddToCartDto(
     Guid ProductId,
     string ProductName,
     decimal Price,
-    int Quantity
+    int Quantity,
+    // Optional — nếu sản phẩm có biến thể (RAM/SSD/màu), truyền VariantId.
+    // Handler tự fetch snapshot VariantName/Sku từ Catalog, không tin client.
+    Guid? VariantId = null
 );
 
 public record UpdateQuantityDto(int Quantity);

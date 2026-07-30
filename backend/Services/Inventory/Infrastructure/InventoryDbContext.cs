@@ -46,6 +46,14 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => new { e.ProductId, e.WarehouseId })
                 .HasDatabaseName("IX_Inventory_Product_Warehouse");
 
+            // Unique per biến thể trong 1 kho: chặn tạo trùng InventoryItem.
+            // Partial index WHERE VariantId IS NOT NULL — an toàn với cả Postgres < 15,
+            // và không ràng buộc cho hàng cũ không có biến thể (VariantId=null).
+            entity.HasIndex(e => new { e.ProductId, e.VariantId, e.WarehouseId })
+                .IsUnique()
+                .HasFilter("\"VariantId\" IS NOT NULL")
+                .HasDatabaseName("IX_Inventory_Product_Variant_Warehouse_Unique");
+
             entity.HasIndex(e => new { e.QuantityOnHand, e.IsActive })
                 .HasFilter("\"QuantityOnHand\" <= \"LowStockThreshold\"")
                 .HasDatabaseName("IX_Inventory_LowStock");

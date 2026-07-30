@@ -24,12 +24,26 @@ public class Cart : Entity<Guid>
 
     protected Cart() { }
 
+    // Backward-compatible overload — dùng cho sản phẩm không có biến thể.
     public void AddItem(Guid productId, string productName, decimal price, int quantity)
+        => AddItem(productId, productName, price, quantity, null, null, null);
+
+    // Overload có biến thể: giỏ hàng gộp theo (ProductId, VariantId).
+    // Hai biến thể khác nhau của cùng sản phẩm là 2 dòng hàng riêng.
+    public void AddItem(
+        Guid productId,
+        string productName,
+        decimal price,
+        int quantity,
+        Guid? variantId,
+        string? variantName,
+        string? variantSku)
     {
         if (quantity <= 0)
             throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
 
-        var existingItem = Items.FirstOrDefault(i => i.ProductId == productId);
+        var existingItem = Items.FirstOrDefault(i =>
+            i.ProductId == productId && i.VariantId == variantId);
 
         if (existingItem != null)
         {
@@ -37,13 +51,20 @@ public class Cart : Entity<Guid>
         }
         else
         {
-            Items.Add(new CartItem(productId, productName, price, quantity));
+            Items.Add(new CartItem(productId, productName, price, quantity, variantId, variantName, variantSku));
         }
     }
 
+    // Backward-compatible: xoá tất cả dòng hàng của productId (mọi biến thể).
     public void RemoveItem(Guid productId)
     {
-        var item = Items.FirstOrDefault(i => i.ProductId == productId);
+        Items.RemoveAll(i => i.ProductId == productId);
+    }
+
+    // Xoá đúng 1 dòng theo (ProductId, VariantId).
+    public void RemoveItem(Guid productId, Guid? variantId)
+    {
+        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
         if (item != null)
         {
             Items.Remove(item);
@@ -51,8 +72,11 @@ public class Cart : Entity<Guid>
     }
 
     public void UpdateItemQuantity(Guid productId, int quantity)
+        => UpdateItemQuantity(productId, null, quantity);
+
+    public void UpdateItemQuantity(Guid productId, Guid? variantId, int quantity)
     {
-        var item = Items.FirstOrDefault(i => i.ProductId == productId);
+        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
         if (item != null)
         {
             if (quantity <= 0)
@@ -111,12 +135,35 @@ public class CartItem
     public int Quantity { get; private set; }
     public decimal Subtotal => Price * Quantity;
 
+    // Biến thể sản phẩm — nullable để tương thích với sản phẩm không có biến thể.
+    // VariantName/VariantSku là SNAPSHOT tại thời điểm thêm giỏ,
+    // KHÔNG đổi khi admin sửa tên biến thể sau đó (ràng buộc lịch sử đơn hàng).
+    public Guid? VariantId { get; private set; }
+    public string? VariantName { get; private set; }
+    public string? VariantSku { get; private set; }
+
+    // Backward-compatible constructor.
     public CartItem(Guid productId, string productName, decimal price, int quantity)
+        : this(productId, productName, price, quantity, null, null, null)
+    {
+    }
+
+    public CartItem(
+        Guid productId,
+        string productName,
+        decimal price,
+        int quantity,
+        Guid? variantId,
+        string? variantName,
+        string? variantSku)
     {
         ProductId = productId;
         ProductName = productName;
         Price = price;
         Quantity = quantity;
+        VariantId = variantId;
+        VariantName = variantName;
+        VariantSku = variantSku;
     }
 
     protected CartItem() { }
@@ -125,7 +172,7 @@ public class CartItem
     {
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than 0");
-        
+
         Quantity = quantity;
     }
 }
