@@ -1,606 +1,46 @@
-using Catalog;
-using Sales;
-using Repair;
-using Warranty;
-using InventoryModule;
 using Accounting;
-using Payments;
+using ApiGateway;
+using ApiGateway.Startup;
+using Catalog;
+using Communication;
+using CRM;
 using Content;
+using DotNetEnv;
+using HR;
 using Identity;
+using InventoryModule;
+using Payments;
+using Repair;
+using Reporting;
+using Sales;
+using Sales.Infrastructure.Shipping;
+using SystemConfig;
+using Warranty;
 using Ai;
 using Ai.Application;
-using Communication;
-using HR;
-using SystemConfig;
-using Reporting;
-using CRM;
-using Catalog.Infrastructure;
-using Catalog.Infrastructure.Data;
-using Sales.Infrastructure;
-using Sales.Infrastructure.Shipping;
-using Repair.Infrastructure;
-using Accounting.Infrastructure;
-
-
-using Warranty.Infrastructure;
-using InventoryModule.Infrastructure;
-using Payments.Infrastructure;
-using Content.Infrastructure;
-using Ai.Infrastructure;
-using CRM.Infrastructure;
-using HR.Infrastructure;
-using SystemConfig.Infrastructure;
-using SystemConfig.Infrastructure.Data;
-using BuildingBlocks.Messaging.Outbox;
-using System.Globalization;
-using BuildingBlocks.Security;
-using BuildingBlocks.Email;
-using BuildingBlocks.Caching;
-using BuildingBlocks.Caching.Redis;
-using BuildingBlocks.Endpoints;
-using MassTransit;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using ApiGateway;
-using Content.Infrastructure.Data;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Options;
-using DotNetEnv;
 
 Env.TraversePath().Load();
 
+// Preserve legacy PostgreSQL timestamp behavior (DateTime → "timestamp without time zone")
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Map environment variables to configuration (for OAuth and other services)
-// DotNetEnv loads .env file, but we need to explicitly map to configuration paths
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")))
-{
-    builder.Configuration["OAuth:Google:ClientId"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
-}
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")))
-{
-    builder.Configuration["OAuth:Google:ClientSecret"] = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
-}
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_ID")))
-{
-    builder.Configuration["OAuth:Facebook:AppId"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_ID");
-}
-if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET")))
-{
-    builder.Configuration["OAuth:Facebook:AppSecret"] = Environment.GetEnvironmentVariable("FACEBOOK_APP_SECRET");
-}
-
-// Configure Vietnamese culture for the application
-CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");
-CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("vi-VN");
-
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
-});
-// ========================================
-// RESPONSE COMPRESSION
-// ========================================
-builder.Services.AddResponseCompression(options =>
-{
-    options.Providers.Add<GzipCompressionProvider>();
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes
-        .Concat(new[] { "application/json", "text/json", "application/xml", "text/plain" })
-        .Distinct();
-});
-
-// ========================================
-// AUDIT INTERCEPTOR (Auto-log all DB changes)
-// ========================================
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<BuildingBlocks.Database.AuditSaveChangesInterceptor>();
-
-// ========================================
-// RATE LIMITING CONFIGURATION
-// ========================================
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-            factory: _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = int.Parse(builder.Configuration["RateLimiting:PermitLimit"] ?? "100"),
-                Window = TimeSpan.FromSeconds(int.Parse(builder.Configuration["RateLimiting:WindowInSeconds"] ?? "60")),
-                SegmentsPerWindow = 2,
-                QueueLimit = 10,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-            }));
-
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        if (!context.HttpContext.Response.HasStarted)
-        {
-            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            context.HttpContext.Response.Headers.TryAdd("Retry-After", "60");
-            
-            await context.HttpContext.Response.WriteAsJsonAsync(new 
-            { 
-                error = "Too many requests. Please try again later.",
-                retryAfter = 60
-            }, cancellationToken);
-        }
-    };
-});
-
-// Health Checks
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString!, name: "postgres")
-    .AddRabbitMQ(rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672", name: "rabbitmq")
-    .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379", name: "redis");
-
-// CORS - Read from configuration with localhost fallbacks for development
-var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5173", "http://localhost:4173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
-
-// In development, ensure localhost is always allowed
-if (builder.Environment.IsDevelopment())
-{
-    var devOrigins = new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176" };
-    corsOrigins = corsOrigins.Union(devOrigins).Distinct().ToArray();
-}
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.SetIsOriginAllowed(origin => true)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        }
-        else
-        {
-            policy.WithOrigins(corsOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        }
-    });
-});
-
-// ========================================
-// REDIS CACHING CONFIGURATION
-// ========================================
-builder.Services.AddRedisCache(builder.Configuration);
-
-// ========================================
-// LOCALIZATION CONFIGURATION
-// ========================================
-builder.Services.AddLocalization(options =>
-{
-    options.ResourcesPath = "Resources";
-});
-
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var supportedCultures = new[]
-    {
-        new CultureInfo("vi-VN"),
-        new CultureInfo("en-US")
-    };
-
-    options.DefaultRequestCulture = new RequestCulture("vi-VN");
-    options.SupportedCultures = supportedCultures;
-    options.SupportedUICultures = supportedCultures;
-});
-
-// Modules
-builder.Services.AddCatalogModule(builder.Configuration);
-// builder.Services.AddOmnichannelModule(builder.Configuration); // TODO: Omnichannel module lacks .csproj
-builder.Services.AddSalesModule(builder.Configuration);
-builder.Services.AddRepairModule(builder.Configuration);
-builder.Services.AddWarrantyModule(builder.Configuration);
-builder.Services.AddInventoryModule(builder.Configuration);
-builder.Services.AddAccountingModule(builder.Configuration);
-builder.Services.AddIdentityModule(builder.Configuration);
-builder.Services.AddPaymentsModule(builder.Configuration);
-builder.Services.AddContentModule(builder.Configuration);
-builder.Services.AddAiModule(builder.Configuration);
-builder.Services.AddSignalR();
-builder.Services.AddCommunicationModule(builder.Configuration);  // Added Communication Module
-builder.Services.AddHRModule(builder.Configuration);
-builder.Services.AddSystemConfigModule(builder.Configuration);
-builder.Services.AddReportingModule();
-builder.Services.AddCrmModule(builder.Configuration);
-
-// Email Service
-builder.Services.AddSingleton<IEmailService, EmailService>();
-
-// Infrastructure
-builder.Services.AddMassTransit(x =>
-{
-    // Register Consumers from Modules
-    x.AddConsumers(typeof(Communication.DependencyInjection).Assembly);
-    x.AddConsumers(typeof(Sales.DependencyInjection).Assembly);
-    x.AddConsumers(typeof(Accounting.DependencyInjection).Assembly);
-    x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
-    x.AddConsumers(typeof(Identity.DependencyInjection).Assembly);
-    
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost", "/", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
-
-        cfg.ConfigureEndpoints(context);
-    });
-});
-
-builder.Services.AddHostedService<OutboxProcessorBackgroundService>();
-builder.Services.AddHostedService<CRM.BackgroundServices.AutomationJobService>();
-
-// Security
-builder.Services.AddAuthorization(options =>
-{
-    foreach (var field in typeof(Permissions).GetNestedTypes().SelectMany(t => t.GetFields()))
-    {
-        var permission = field.GetValue(null)?.ToString();
-        if (permission != null)
-        {
-            options.AddPolicy(permission, policy => policy.Requirements.Add(new PermissionRequirement(permission)));
-        }
-    }
-});
-builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
-
-builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-{
-    options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-});
-
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+// -- Service registration ------------------------------------------------------
+ServiceRegistration.RegisterAll(builder);
+AuthenticationSetup.Configure(builder);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+// -- Database migrations + seeding --------------------------------------------
+// Runs in every environment (gated by Database:AutoMigrate config; default true in Dev, false in Prod).
+// In Production a migration failure aborts startup — see DatabaseMigrationRunner.
+await DatabaseMigrationRunner.RunAsync(app);
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<Program>>();
+// -- HTTP pipeline -------------------------------------------------------------
+MiddlewarePipeline.Configure(app);
 
-        // ── Contexts that HAVE EF migrations ──
-        var migrateContexts = new DbContext[]
-        {
-            services.GetRequiredService<CatalogDbContext>(),
-            // services.GetRequiredService<SalesDbContext>(), // Hotfix: Schema mismatch (Carts vs carts), skipping migration to use existing DB
-            services.GetRequiredService<RepairDbContext>(),
-            services.GetRequiredService<WarrantyDbContext>(),
-            services.GetRequiredService<ContentDbContext>(),
-            services.GetRequiredService<Identity.Infrastructure.IdentityDbContext>(),
-            services.GetRequiredService<PaymentsDbContext>(),
-        };
-
-        foreach (var ctx in migrateContexts)
-        {
-            try
-            {
-                logger.LogInformation("Migrating {Context}...", ctx.GetType().Name);
-                await ctx.Database.MigrateAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Migration failed for {Context}", ctx.GetType().Name);
-            }
-        }
-
-        // Hotfix: Manually update Sales Schema content
-        try
-        {
-            using (var salesScope = app.Services.CreateScope())
-            {
-                var salesContext = salesScope.ServiceProvider.GetRequiredService<SalesDbContext>();
-                logger.LogInformation("Updating Sales Schema manually...");
-                
-                await salesContext.Database.ExecuteSqlRawAsync(@"
-                    DO $$
-                    BEGIN
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""CouponCode"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""TaxRate"" numeric(5,4) DEFAULT 0.1;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""ShippingAmount"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""CreatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""Carts"" ADD COLUMN ""UpdatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                        
-                        -- Fix for OrderItem schema mismatch
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""CreatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL; -- Ignore if column already exists
-                            WHEN undefined_table THEN NULL; -- Ignore if table OrderItem doesn't exist (maybe OrderItems?)
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""UpdatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItem"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-
-                        -- Try plural ""OrderItems"" just in case
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""CreatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""UpdatedBy"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""DiscountAmount"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""IsActive"" boolean DEFAULT true;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""LineTotal"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""OrderItems"" ADD COLUMN ""OriginalPrice"" numeric(18,2) DEFAULT 0;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                    END $$;
-                ");
-
-                var catalogContext = salesScope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-                logger.LogInformation("Updating Catalog Schema manually...");
-                await catalogContext.Database.ExecuteSqlRawAsync(@"
-                    DO $$
-                    BEGIN
-                        BEGIN
-                            ALTER TABLE ""ProductReviews"" ADD COLUMN ""ImageUrls"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                        BEGIN
-                            ALTER TABLE ""ProductReviews"" ADD COLUMN ""VideoUrl"" text;
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                            WHEN undefined_table THEN NULL;
-                        END;
-                    END $$;
-                ");
-            }
-        }
-        catch (Exception ex)
-        {
-             logger.LogError(ex, "Sales Schema Update failed");
-        }
-
-        // ── Contexts WITHOUT migrations – use EnsureCreated ──
-        var ensureCreatedContexts = new DbContext[]
-        {
-            services.GetRequiredService<InventoryModule.Infrastructure.InventoryDbContext>(),
-            services.GetRequiredService<AccountingDbContext>(),
-            // services.GetRequiredService<PaymentsDbContext>(), // Moved to Migrations
-            services.GetRequiredService<AiDbContext>(),
-            services.GetRequiredService<Communication.Infrastructure.CommunicationDbContext>(),
-            services.GetRequiredService<HRDbContext>(),
-            services.GetRequiredService<SystemConfigDbContext>(),
-            services.GetRequiredService<CrmDbContext>(),
-        };
-
-        foreach (var ctx in ensureCreatedContexts)
-        {
-            try
-            {
-                // Ensure Schema exists for contexts using EnsureCreated
-                var schema = ctx.Model.GetDefaultSchema();
-                if (!string.IsNullOrEmpty(schema))
-                {
-                    // Validate schema name to prevent SQL injection (only allow alphanumeric and underscore)
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(schema, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
-                    {
-                        logger.LogWarning("Invalid schema name: {Schema}", schema);
-                        continue;
-                    }
-                    logger.LogInformation("Creating schema {Schema} for {Context} if not exists...", schema, ctx.GetType().Name);
-                    // Schema name is validated above, safe to use in SQL
-                    #pragma warning disable EF1002 // Schema name validated via regex
-                    await ctx.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{schema}\";");
-                    #pragma warning restore EF1002
-                }
-
-                logger.LogInformation("EnsureCreated {Context}...", ctx.GetType().Name);
-                await ctx.Database.EnsureCreatedAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "EnsureCreated failed for {Context}", ctx.GetType().Name);
-            }
-        }
-
-        // ── Seed data ──
-        try
-        {
-            await CatalogDbSeeder.SeedAsync(services.GetRequiredService<CatalogDbContext>());
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Catalog seeding failed (tables may not exist yet)");
-        }
-
-        // Add SystemConfig Seeding
-        try
-        {
-            await SystemConfigDbSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
-            logger.LogInformation("SystemConfig seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "SystemConfig seeding failed");
-        }
-
-        // Add BackofficeMenu Seeding
-        try
-        {
-            await BackofficeMenuSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
-            logger.LogInformation("BackofficeMenu seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "BackofficeMenu seeding failed");
-        }
-
-        // Add ReportDefinition Seeding
-        try
-        {
-            await ReportDefinitionSeeder.SeedAsync(services.GetRequiredService<SystemConfigDbContext>());
-            logger.LogInformation("ReportDefinition seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "ReportDefinition seeding failed");
-        }
-
-        // Add Identity Seeding
-        try
-        {
-            await IdentitySeeder.SeedAsync(services);
-            logger.LogInformation("Identity seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Identity seeding failed");
-        }
-
-        // Add HR Seeding
-        try
-        {
-            await HRDbSeeder.SeedAsync(services.GetRequiredService<HRDbContext>());
-            logger.LogInformation("HR seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "HR seeding failed");
-        }
-
-        // Add Content Seeding (homepage sections, pages, menus)
-        try
-        {
-            await ContentDbSeeder.SeedAsync(services.GetRequiredService<ContentDbContext>());
-            logger.LogInformation("Content seeding completed.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Content seeding failed");
-        }
-    }
-}
-
-app.UseCors();
-
-// Configure localization
-var localizationOptions = app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
-app.UseRequestLocalization(localizationOptions);
-
-app.UseHttpsRedirection();
-
-// Ensure wwwroot/uploads exists
-var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-var uploadsPath = Path.Combine(webRootPath, "uploads");
-if (!Directory.Exists(uploadsPath))
-{
-    Directory.CreateDirectory(uploadsPath);
-}
-
-app.UseStaticFiles(); // Enable static file serving from wwwroot
-app.UseResponseCompression();
-
-// ========================================
-// MEDIA UPLOAD ENDPOINT
-// ========================================
+// -- Media upload endpoint -----------------------------------------------------
 app.MapPost("/api/media/upload", async (IFormFile file, IWebHostEnvironment env, HttpContext context) =>
 {
     if (file == null || file.Length == 0)
@@ -618,38 +58,17 @@ app.MapPost("/api/media/upload", async (IFormFile file, IWebHostEnvironment env,
         await file.CopyToAsync(stream);
     }
 
-    // Return the relative path or absolute URL
-    // For local dev, absolute URL is easier
     var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
     var fileUrl = $"{baseUrl}/uploads/{fileName}";
 
     return Results.Ok(new { Url = fileUrl });
 }).DisableAntiforgery();
 
-// ========================================
-// CUSTOM MIDDLEWARE
-// ========================================
-app.UseGlobalExceptionHandling();
-app.UseSecurityHeaders();
-app.UsePerformanceMonitoring();
-
-// ========================================
-// RATE LIMITING MIDDLEWARE
-// ========================================
-app.UseRateLimiter();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Review validation: Ensure users have purchased a product before reviewing
-app.UseReviewValidation();
-
-// Chatbot endpoint moved to AiEndpoints.cs (MapAiEndpoints)
-
+// -- SignalR hubs --------------------------------------------------------------
 app.MapHub<Communication.Hubs.ChatHub>("/hubs/chat");
 app.MapHub<Communication.Hubs.NotificationHub>("/hubs/notification");
 
-// Health Checks Endpoints
+// -- Health checks -------------------------------------------------------------
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
@@ -660,7 +79,7 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
     Predicate = _ => false
 });
 
-// Map Endpoints
+// -- Module endpoints ----------------------------------------------------------
 app.MapSitemapEndpoints();
 app.MapCatalogEndpoints();
 app.MapAiEndpoints();
@@ -678,9 +97,9 @@ app.MapShippingEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();
-// app.MapInstallmentEndpoints(); // TODO: Payment module lacks .csproj
+// app.MapInstallmentEndpoints(); // Payment installment endpoints not compiled — see phase-01 report
 app.MapContentEndpoints();
-app.MapCommunicationEndpoints(); // Added Communication Endpoints
+app.MapCommunicationEndpoints();
 app.MapHREndpoints();
 app.MapHRLeaveEndpoints();
 app.MapAttendanceEndpoints();
@@ -702,18 +121,14 @@ app.MapEInvoiceEndpoints();
 app.MapTaxReportingEndpoints();
 app.MapReportingEndpoints();
 app.MapCrmEndpoints();
-// app.MapAutomationRuleEndpoints(); // TODO: CRM AutomationRule endpoint not compiled
 
-// Audit Logs & System Management
+// -- Audit / system management -------------------------------------------------
 app.MapAuditLogEndpoints();
 app.MapBackupEndpoints();
 
-// Add fast checkout endpoint
+// -- Fast checkout -------------------------------------------------------------
 app.MapFastCheckoutEndpoint();
 
 app.MapControllers();
 
-
 app.Run();
-
-
