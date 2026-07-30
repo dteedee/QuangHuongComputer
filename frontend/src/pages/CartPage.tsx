@@ -1,23 +1,13 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, X } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 
 export const CartPage = () => {
-    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, applyCoupon, removeCoupon, subtotal, tax, shippingAmount, total } = useCart();
+    // Phase 04-C: mã giảm giá chỉ áp ở Checkout (bước 2). Cart chỉ hiển thị mã đã áp nếu có.
+    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, subtotal, tax, shippingAmount, total } = useCart();
     const navigate = useNavigate();
-    const [couponInput, setCouponInput] = useState('');
-    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-
-    const handleApplyCoupon = async () => {
-        if (!couponInput.trim()) return;
-        setIsApplyingCoupon(true);
-        await applyCoupon(couponInput.trim());
-        setIsApplyingCoupon(false);
-        setCouponInput('');
-    };
 
     if (items.length === 0) {
         return (
@@ -66,6 +56,11 @@ export const CartPage = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">{item.name}</h3>
+                                        {item.variantName && (
+                                            <span className="inline-block mt-1 text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">
+                                                {item.variantName}
+                                            </span>
+                                        )}
                                         <p className="text-xs text-gray-400 mt-0.5">{formatCurrency(item.price)}/cai</p>
                                     </div>
                                     <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100">
@@ -103,20 +98,14 @@ export const CartPage = () => {
                     <div className="lg:w-[35%]">
                         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm sticky top-24 space-y-5">
                             <h3 className="text-lg font-bold text-gray-900">Tom tat don hang</h3>
-                            {/* Coupon */}
-                            <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-100/50">
-                                <div className="flex items-center gap-2 mb-2"><Tag className="w-4 h-4 text-orange-600" /><span className="text-sm font-semibold text-orange-900">Ma giam gia</span></div>
-                                {couponCode ? (
-                                    <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-emerald-200">
-                                        <span className="font-bold text-emerald-700 uppercase text-sm">{couponCode}</span>
-                                        <button onClick={removeCoupon} className="text-red-500 hover:text-red-700 p-1 cursor-pointer"><X className="w-4 h-4" /></button>
-                                    </div>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value.toUpperCase())} onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()} placeholder="Nhap ma" className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent font-medium uppercase" />
-                                        <button onClick={handleApplyCoupon} disabled={!couponInput.trim() || isApplyingCoupon} className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">{isApplyingCoupon ? '...' : 'Ap dung'}</button>
-                                    </div>
-                                )}
+                            {couponCode && (
+                                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-2 text-sm">
+                                    <Tag className="w-4 h-4 text-emerald-600" />
+                                    <span className="text-emerald-800">Mã đã áp: <span className="font-bold uppercase">{couponCode}</span></span>
+                                </div>
+                            )}
+                            <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-xs text-blue-800">
+                                Áp mã giảm giá & xem tất cả khuyến mãi tự động ở bước Thanh toán.
                             </div>
                             {/* Totals */}
                             <div className="space-y-3 text-sm">

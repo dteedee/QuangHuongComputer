@@ -83,6 +83,8 @@ export interface CheckoutDto {
     manualDiscount?: number;
     /** Phí vận chuyển. Backend: CheckoutDto.ShippingFee (decimal, mặc định 0). */
     shippingFee?: number;
+    /** ID phiên giữ chỗ (giữ tồn 15 phút). Nếu có, backend đối chiếu và không giữ lại. */
+    checkoutSessionId?: string;
 }
 
 export interface GuestCheckoutDto {
@@ -154,6 +156,31 @@ export interface CartItemDto {
     subtotal: number;
     imageUrl?: string;
     stockQuantity?: number;
+    /** Tên biến thể (VD "16GB / 512GB / Đen"). Chỉ có khi sản phẩm có biến thể. */
+    variantId?: string;
+    variantName?: string;
+}
+
+// ============================================
+// Checkout Session (giữ chỗ tồn kho 15 phút)
+// ============================================
+export interface CheckoutSession {
+    id: string;
+    cartId?: string;
+    status: 'Active' | 'Expired' | 'Completed' | 'Cancelled';
+    createdAt: string;
+    expiresAt: string;
+    reservationIds: string[];
+}
+
+export interface CreateCheckoutSessionDto {
+    items: {
+        productId: string;
+        quantity: number;
+        variantId?: string;
+    }[];
+    /** Mặc định 15 phút. Nếu backend cấu hình khác, cứ để trống. */
+    holdMinutes?: number;
 }
 
 export interface SalesStats {
@@ -229,6 +256,25 @@ export const salesApi = {
         },
     },
 
+    // ============================================
+    // Checkout Session — giữ chỗ tồn 15 phút
+    // Backend endpoints (Phase 04-B): POST /sales/checkout/session, POST /sales/checkout/session/{id}/extend
+    // ============================================
+    checkoutSession: {
+        create: async (data: CreateCheckoutSessionDto): Promise<CheckoutSession> => {
+            const response = await client.post<CheckoutSession>('/sales/checkout/session', data);
+            return response.data;
+        },
+        extend: async (sessionId: string): Promise<CheckoutSession> => {
+            const response = await client.post<CheckoutSession>(`/sales/checkout/session/${sessionId}/extend`);
+            return response.data;
+        },
+        cancel: async (sessionId: string): Promise<{ message: string }> => {
+            const response = await client.delete<{ message: string }>(`/sales/checkout/session/${sessionId}`);
+            return response.data;
+        },
+    },
+
     // Order Endpoints
     orders: {
         getList: async (params?: {
@@ -249,27 +295,7 @@ export const salesApi = {
         },
 
         create: async (data: CheckoutDto) => {
-            // Try fast checkout first for better performance
-            try {
-                const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/fast-checkout', {
-                    items: data.items,
-                    shippingAddress: data.shippingAddress,
-                    notes: data.notes,
-                    customerId: data.customerId,
-                    paymentMethod: data.paymentMethod,
-                    isPickup: data.isPickup,
-                    pickupStoreId: data.pickupStoreId,
-                    pickupStoreName: data.pickupStoreName,
-                    manualDiscount: data.manualDiscount,
-                    couponCode: data.couponCode
-                });
-                return response.data;
-            } catch (fastError: any) {
-                const errorData = fastError.response?.data;
-                console.warn('Fast checkout failed, falling back to regular checkout:', errorData?.error || fastError.message);
-            }
-
-            // Fall back to regular checkout if fast checkout fails
+            // Luồng hợp nhất: gọi thẳng /sales/checkout (backend Phase 04-B đã gom fast-checkout vào đây).
             try {
                 const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/checkout', {
                     items: data.items,
@@ -280,13 +306,16 @@ export const salesApi = {
                     couponCode: data.couponCode,
                     isPickup: data.isPickup,
                     pickupStoreId: data.pickupStoreId,
-                    pickupStoreName: data.pickupStoreName
+                    pickupStoreName: data.pickupStoreName,
+                    customerId: data.customerId,
+                    manualDiscount: data.manualDiscount,
+                    shippingFee: data.shippingFee,
+                    checkoutSessionId: data.checkoutSessionId,
                 });
                 return response.data;
             } catch (checkoutError: any) {
-                const checkoutErrorData = checkoutError.response?.data;
-                console.error('Regular checkout also failed:', checkoutErrorData);
-                const finalError = checkoutErrorData?.error || checkoutErrorData?.Error || checkoutErrorData?.message || 'Không thể đặt hàng';
+                const errorData = checkoutError.response?.data;
+                const finalError = errorData?.error || errorData?.Error || errorData?.message || 'Không thể đặt hàng';
                 throw new Error(finalError);
             }
         },

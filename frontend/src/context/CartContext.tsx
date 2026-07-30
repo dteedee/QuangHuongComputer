@@ -17,6 +17,9 @@ export interface CartItem {
     quantity: number;
     imageUrl?: string;
     stockQuantity: number;
+    /** Tên biến thể để hiển thị (VD "16GB/512GB/Đen"). Chỉ có khi sản phẩm có biến thể. */
+    variantName?: string;
+    variantId?: string;
 }
 
 /**
@@ -89,7 +92,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 price: item.price,
                 quantity: item.quantity,
                 imageUrl: item.imageUrl || '',
-                stockQuantity: item.stockQuantity ?? 999
+                stockQuantity: item.stockQuantity ?? 999,
+                variantName: item.variantName,
+                variantId: item.variantId,
             }));
 
             setItems(cartItems);

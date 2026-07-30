@@ -118,11 +118,13 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                             <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-tight mb-1 group-hover:text-accent transition-colors">
                                                 {item.name}
                                             </h3>
+                                            {item.variantName && (
+                                                <span className="inline-block mb-1 text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">
+                                                    {item.variantName}
+                                                </span>
+                                            )}
                                             <div className="flex items-center gap-2">
                                                 <p className="text-accent font-bold text-sm">{formatCurrency(item.price)}</p>
-                                                {(item as any).oldPrice && (item as any).oldPrice > item.price && (
-                                                    <p className="text-gray-400 text-xs line-through">{formatCurrency((item as any).oldPrice)}</p>
-                                                )}
                                             </div>
                                         </div>
 
