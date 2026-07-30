@@ -1,3 +1,5 @@
+using BuildingBlocks.SharedKernel;
+
 namespace Accounting.Domain;
 
 /// <summary>
@@ -180,10 +182,11 @@ public static class VietnameseTaxEngine
     // VAT (Thuế GTGT)
     // ============================================
 
-    public const decimal VatStandard = 0.08m;     // 8% (reduced from 10% through June 2025)
-    public const decimal VatTelecom = 0.10m;      // 10% for telecom, finance, real estate
-    public const decimal VatExport = 0.00m;       // 0% for export
-    public const decimal VatExempt = -1m;         // Exempt flag
+    // Single source of truth: BuildingBlocks/TaxRates.cs. Alias để giữ tương thích ngược.
+    public const decimal VatStandard = TaxRates.VatStandard;
+    public const decimal VatTelecom = TaxRates.VatTelecom;
+    public const decimal VatExport = TaxRates.VatExport;
+    public const decimal VatExempt = TaxRates.VatExempt;
 
     /// <summary>
     /// Returns the appropriate VAT rate for a product category slug.

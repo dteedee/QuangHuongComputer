@@ -573,11 +573,7 @@ public static class CatalogEndpoints
 
             product.UpdateSeo(model.MetaTitle, model.MetaDescription, model.MetaKeywords);
 
-            if (string.IsNullOrWhiteSpace(product.Slug))
-            {
-                var uniqueUpdateSlug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s && p.Id != id));
-                product.SetSlug(uniqueUpdateSlug);
-            }
+            // Slug đã đảm bảo non-empty bởi ctor Product; endpoint update không cần regenerate.
 
             await db.SaveChangesAsync();
 
