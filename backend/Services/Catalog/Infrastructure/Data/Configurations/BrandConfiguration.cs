@@ -34,7 +34,7 @@ public class BrandConfiguration : IEntityTypeConfiguration<Brand>
         // Index for active brands
         builder.HasIndex(b => new { b.Name, b.IsActive })
             .IsUnique()
-            .HasFilter("[IsActive] = 1");
+            .HasFilter("\"IsActive\" = TRUE");
 
         // Index for deactivated brands
         builder.HasIndex(b => b.DeactivatedAt);

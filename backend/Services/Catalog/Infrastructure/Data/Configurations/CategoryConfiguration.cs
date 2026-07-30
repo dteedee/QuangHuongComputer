@@ -34,7 +34,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         // Index for active categories
         builder.HasIndex(c => new { c.Name, c.IsActive })
             .IsUnique()
-            .HasFilter("[IsActive] = 1");
+            .HasFilter("\"IsActive\" = TRUE");
 
         // Index for deactivated categories
         builder.HasIndex(c => c.DeactivatedAt);

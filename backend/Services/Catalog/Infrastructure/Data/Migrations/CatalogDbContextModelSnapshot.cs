@@ -69,7 +69,7 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasIndex("Name", "IsActive")
                         .IsUnique()
-                        .HasFilter("[IsActive] = 1");
+                        .HasFilter("\"IsActive\" = TRUE");
 
                     b.ToTable("Brands", "public");
                 });
@@ -136,7 +136,7 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasIndex("Name", "IsActive")
                         .IsUnique()
-                        .HasFilter("[IsActive] = 1");
+                        .HasFilter("\"IsActive\" = TRUE");
 
                     b.ToTable("Categories", "public");
                 });

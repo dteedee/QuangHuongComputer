@@ -87,7 +87,7 @@ public class CommunicationDbContext : DbContext
                 .HasDatabaseName("IX_NotificationLog_Type_Date");
                 
             entity.HasIndex(e => new { e.IsSent, e.RetryCount })
-                .HasFilter("IsSent = false AND RetryCount < 5")
+                .HasFilter("\"IsSent\" = false AND \"RetryCount\" < 5")
                 .HasDatabaseName("IX_NotificationLog_Failed_Retries");
         });
 

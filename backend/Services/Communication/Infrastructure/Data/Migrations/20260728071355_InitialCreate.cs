@@ -203,7 +203,7 @@ namespace Communication.Infrastructure.Data.Migrations
                 schema: "communication",
                 table: "NotificationLogs",
                 columns: new[] { "IsSent", "RetryCount" },
-                filter: "IsSent = false AND RetryCount < 5");
+                filter: "\"IsSent\" = false AND \"RetryCount\" < 5");
 
             migrationBuilder.CreateIndex(
                 name: "IX_NotificationLog_Type_Date",

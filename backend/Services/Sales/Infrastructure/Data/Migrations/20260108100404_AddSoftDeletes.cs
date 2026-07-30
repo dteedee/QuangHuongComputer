@@ -21,13 +21,7 @@ namespace Sales.Infrastructure.Data.Migrations
                 table: "Orders",
                 newName: "FulfilledAt");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "CustomerId",
-                table: "Orders",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+            migrationBuilder.Sql(@"ALTER TABLE ""Orders"" ALTER COLUMN ""CustomerId"" TYPE uuid USING NULLIF(""CustomerId"", '')::uuid;");
 
             migrationBuilder.AddColumn<string>(
                 name: "CancellationReason",

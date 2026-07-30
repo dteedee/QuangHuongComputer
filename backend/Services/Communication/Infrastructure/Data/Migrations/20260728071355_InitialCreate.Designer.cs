@@ -271,7 +271,7 @@ namespace Communication.Infrastructure.Data.Migrations
 
                     b.HasIndex("IsSent", "RetryCount")
                         .HasDatabaseName("IX_NotificationLog_Failed_Retries")
-                        .HasFilter("IsSent = false AND RetryCount < 5");
+                        .HasFilter("\"IsSent\" = false AND \"RetryCount\" < 5");
 
                     b.HasIndex("Type", "CreatedAt")
                         .HasDatabaseName("IX_NotificationLog_Type_Date");

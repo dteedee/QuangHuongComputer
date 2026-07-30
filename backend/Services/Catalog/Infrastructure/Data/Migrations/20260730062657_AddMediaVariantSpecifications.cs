@@ -497,7 +497,7 @@ namespace Catalog.Infrastructure.Data.Migrations
                 table: "Categories",
                 columns: new[] { "Name", "IsActive" },
                 unique: true,
-                filter: "[IsActive] = 1");
+                filter: "\"IsActive\" = TRUE");
 
             migrationBuilder.CreateIndex(
                 name: "uq_categories_slug",
@@ -519,7 +519,7 @@ namespace Catalog.Infrastructure.Data.Migrations
                 table: "Brands",
                 columns: new[] { "Name", "IsActive" },
                 unique: true,
-                filter: "[IsActive] = 1");
+                filter: "\"IsActive\" = TRUE");
 
             migrationBuilder.CreateIndex(
                 name: "ix_product_bundle_items_product_id_main",

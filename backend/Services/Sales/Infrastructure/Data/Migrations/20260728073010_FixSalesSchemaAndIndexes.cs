@@ -11,586 +11,152 @@ namespace Sales.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_CartItem_Carts_CartId",
-                table: "CartItem");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrderItem_Orders_OrderId",
-                table: "OrderItem");
-
-            migrationBuilder.EnsureSchema(
-                name: "public");
-
-            migrationBuilder.RenameTable(
-                name: "WishlistItems",
-                newName: "WishlistItems",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "ReturnRequests",
-                newName: "ReturnRequests",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "Orders",
-                newName: "Orders",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "OrderItem",
-                newName: "OrderItem",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "OrderHistories",
-                newName: "OrderHistories",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "LoyaltyTransactions",
-                newName: "LoyaltyTransactions",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "LoyaltyAccounts",
-                newName: "LoyaltyAccounts",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "Carts",
-                newName: "Carts",
-                newSchema: "public");
-
-            migrationBuilder.RenameTable(
-                name: "CartItem",
-                newName: "CartItem",
-                newSchema: "public");
-
-            // NOTE: previous migration chain never actually added a "Sku" column
-            // (snapshot drift). Add ProductSku directly instead of RenameColumn.
-            migrationBuilder.AddColumn<string>(
-                name: "ProductSku",
-                schema: "public",
-                table: "OrderItem",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "WishlistItems",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "WishlistItems",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "AddedAt",
-                schema: "public",
-                table: "WishlistItems",
-                type: "timestamp without time zone",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "RequestedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "RejectedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "RefundedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "ApprovedAt",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "CustomerNotes",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "ProcessedBy",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "RefundMethod",
-                schema: "public",
-                table: "ReturnRequests",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "PaidAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "OrderDate",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "FulfilledAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "ConfirmedAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CompletedAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CancelledAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "AffiliateId",
-                schema: "public",
-                table: "Orders",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "CustomerIp",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "CustomerUserAgent",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DeliveredAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "DeliveryCarrier",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "DeliveryTrackingNumber",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "DiscountReason",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "FailureReason",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "InternalNotes",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsPickup",
-                schema: "public",
-                table: "Orders",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<string>(
-                name: "PaymentMethod",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<string>(
-                name: "PickupStoreId",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "PickupStoreName",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "RetryCount",
-                schema: "public",
-                table: "Orders",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "ShippedAt",
-                schema: "public",
-                table: "Orders",
-                type: "timestamp without time zone",
-                nullable: true);
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "ShippingFee",
-                schema: "public",
-                table: "Orders",
-                type: "numeric",
-                nullable: false,
-                defaultValue: 0m);
-
-            migrationBuilder.AddColumn<string>(
-                name: "ShippingProvider",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "SourceId",
-                schema: "public",
-                table: "Orders",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "TrackingNumber",
-                schema: "public",
-                table: "Orders",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "OrderItem",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "OriginalPrice",
-                schema: "public",
-                table: "OrderItem",
-                type: "numeric(18,2)",
-                precision: 18,
-                scale: 2,
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(18,2)",
-                oldPrecision: 18,
-                oldScale: 2);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "OrderItem",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "OrderHistories",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "OrderHistories",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "ChangedAt",
-                schema: "public",
-                table: "OrderHistories",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "LoyaltyTransactions",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "LoyaltyTransactions",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "LoyaltyAccounts",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "TierExpiresAt",
-                schema: "public",
-                table: "LoyaltyAccounts",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "LastActivityAt",
-                schema: "public",
-                table: "LoyaltyAccounts",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "LoyaltyAccounts",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "UpdatedAt",
-                schema: "public",
-                table: "Carts",
-                type: "timestamp without time zone",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                schema: "public",
-                table: "Carts",
-                type: "timestamp without time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone");
-
-            // Idempotent: DB có thể đã có cột này do DO $$ ALTER TABLE hotfix cũ (Program.cs:327 trước refactor).
-            // Dùng IF NOT EXISTS để migration không crash trên DB đã boot HEAD cũ.
-            migrationBuilder.Sql(@"ALTER TABLE ""Carts"" ADD COLUMN IF NOT EXISTS ""CouponCode"" text;");
-
-            migrationBuilder.CreateTable(
-                name: "CustomerAddresses",
-                schema: "public",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Label = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    FullName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Province = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    District = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Ward = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    StreetAddress = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    CreatedBy = table.Column<string>(type: "text", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_customer_addresses_user_default",
-                schema: "public",
-                table: "CustomerAddresses",
-                columns: new[] { "UserId", "IsDefault" });
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_CartItem_Carts_CartId",
-                schema: "public",
-                table: "CartItem",
-                column: "CartId",
-                principalSchema: "public",
-                principalTable: "Carts",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_OrderItem_Orders_OrderId",
-                schema: "public",
-                table: "OrderItem",
-                column: "OrderId",
-                principalSchema: "public",
-                principalTable: "Orders",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+            // NOTE: prior migrations left the schema in an inconsistent state
+            // relative to the model snapshot (missing tables/columns). Instead
+            // of replaying dozens of drift-sensitive Alter/Rename/Drop ops that
+            // fail on a fresh database, this migration now uses idempotent DDL
+            // (CREATE TABLE IF NOT EXISTS + ADD COLUMN IF NOT EXISTS) to bring
+            // the Sales schema up to match the model snapshot.
+            migrationBuilder.EnsureSchema(name: "public");
+
+            migrationBuilder.Sql(@"
+-- Missing tables ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.""CustomerAddresses"" (
+    ""Id"" uuid NOT NULL,
+    ""UserId"" uuid NOT NULL,
+    ""Label"" character varying(50) NOT NULL,
+    ""FullName"" character varying(100) NOT NULL,
+    ""Phone"" character varying(20) NOT NULL,
+    ""Province"" character varying(100) NOT NULL,
+    ""District"" character varying(100) NOT NULL,
+    ""Ward"" character varying(100) NOT NULL,
+    ""StreetAddress"" character varying(300) NOT NULL,
+    ""IsDefault"" boolean NOT NULL DEFAULT FALSE,
+    ""CreatedAt"" timestamp without time zone NOT NULL,
+    ""UpdatedAt"" timestamp without time zone NULL,
+    ""CreatedBy"" text NULL,
+    ""UpdatedBy"" text NULL,
+    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT ""PK_CustomerAddresses"" PRIMARY KEY (""Id"")
+);
+CREATE INDEX IF NOT EXISTS ix_customer_addresses_user_default
+    ON public.""CustomerAddresses"" (""UserId"", ""IsDefault"");
+
+CREATE TABLE IF NOT EXISTS public.""OrderHistories"" (
+    ""Id"" uuid NOT NULL,
+    ""OrderId"" uuid NOT NULL,
+    ""FromStatus"" integer NOT NULL,
+    ""ToStatus"" integer NOT NULL,
+    ""ChangedAt"" timestamp without time zone NOT NULL,
+    ""ChangedBy"" text NULL,
+    ""Notes"" text NULL,
+    ""CreatedAt"" timestamp without time zone NOT NULL,
+    ""UpdatedAt"" timestamp without time zone NULL,
+    ""CreatedBy"" text NULL,
+    ""UpdatedBy"" text NULL,
+    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT ""PK_OrderHistories"" PRIMARY KEY (""Id"")
+);
+CREATE INDEX IF NOT EXISTS ix_order_histories_order_id_changed_at
+    ON public.""OrderHistories"" (""OrderId"", ""ChangedAt"");
+
+CREATE TABLE IF NOT EXISTS public.""ReturnRequests"" (
+    ""Id"" uuid NOT NULL,
+    ""OrderId"" uuid NOT NULL,
+    ""OrderItemId"" uuid NOT NULL,
+    ""Reason"" text NOT NULL,
+    ""Description"" text NULL,
+    ""Status"" integer NOT NULL,
+    ""RefundAmount"" numeric(18,2) NOT NULL,
+    ""RejectionReason"" text NULL,
+    ""RequestedAt"" timestamp without time zone NULL,
+    ""ApprovedAt"" timestamp without time zone NULL,
+    ""RejectedAt"" timestamp without time zone NULL,
+    ""RefundedAt"" timestamp without time zone NULL,
+    ""CustomerNotes"" text NULL,
+    ""ProcessedBy"" text NULL,
+    ""RefundMethod"" text NULL,
+    ""CreatedAt"" timestamp without time zone NOT NULL,
+    ""UpdatedAt"" timestamp without time zone NULL,
+    ""CreatedBy"" text NULL,
+    ""UpdatedBy"" text NULL,
+    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT ""PK_ReturnRequests"" PRIMARY KEY (""Id"")
+);
+CREATE INDEX IF NOT EXISTS ix_return_requests_status
+    ON public.""ReturnRequests"" (""Status"");
+CREATE INDEX IF NOT EXISTS ix_return_requests_order_id_status
+    ON public.""ReturnRequests"" (""OrderId"", ""Status"");
+
+CREATE TABLE IF NOT EXISTS public.""WishlistItems"" (
+    ""Id"" uuid NOT NULL,
+    ""UserId"" text NOT NULL,
+    ""ProductId"" uuid NOT NULL,
+    ""AddedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
+    ""CreatedAt"" timestamp without time zone NOT NULL,
+    ""UpdatedAt"" timestamp without time zone NULL,
+    ""CreatedBy"" text NULL,
+    ""UpdatedBy"" text NULL,
+    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT ""PK_WishlistItems"" PRIMARY KEY (""Id"")
+);
+CREATE INDEX IF NOT EXISTS ix_wishlist_items_user_id
+    ON public.""WishlistItems"" (""UserId"");
+CREATE UNIQUE INDEX IF NOT EXISTS ix_wishlist_items_user_product
+    ON public.""WishlistItems"" (""UserId"", ""ProductId"");
+
+-- Orders: add new columns / normalise types --------------------------------
+ALTER TABLE public.""Orders""
+    ADD COLUMN IF NOT EXISTS ""AffiliateId"" uuid NULL,
+    ADD COLUMN IF NOT EXISTS ""CustomerIp"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""CustomerUserAgent"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""DeliveryCarrier"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""DeliveryTrackingNumber"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""DiscountReason"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""FailureReason"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""InternalNotes"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""IsPickup"" boolean NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS ""PaymentMethod"" text NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS ""PickupStoreId"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""PickupStoreName"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""RetryCount"" integer NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""ShippingFee"" numeric NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""ShippingProvider"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""SourceId"" uuid NULL,
+    ADD COLUMN IF NOT EXISTS ""TrackingNumber"" text NULL;
+
+-- Orders: rename legacy CustomerId (uuid or text) then ensure type ----------
+ALTER TABLE public.""Orders""
+    ALTER COLUMN ""CustomerId"" TYPE uuid USING NULLIF(""CustomerId""::text, '')::uuid;
+
+-- OrderItem: add missing columns ------------------------------------------
+ALTER TABLE public.""OrderItem""
+    ADD COLUMN IF NOT EXISTS ""DiscountAmount"" numeric(18,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""LineTotal"" numeric(18,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""OriginalPrice"" numeric(18,2) NULL,
+    ADD COLUMN IF NOT EXISTS ""ProductSku"" text NULL;
+
+-- Carts: add missing columns ----------------------------------------------
+ALTER TABLE public.""Carts""
+    ADD COLUMN IF NOT EXISTS ""CouponCode"" text NULL,
+    ADD COLUMN IF NOT EXISTS ""CustomerId"" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
+    ADD COLUMN IF NOT EXISTS ""DiscountAmount"" numeric(18,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""ShippingAmount"" numeric(18,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS ""TaxRate"" numeric(5,4) NOT NULL DEFAULT 0;
+
+-- CartItem: add missing columns -------------------------------------------
+ALTER TABLE public.""CartItem""
+    ADD COLUMN IF NOT EXISTS ""ProductName"" text NOT NULL DEFAULT '';
+
+-- Orders indexes ----------------------------------------------------------
+CREATE INDEX IF NOT EXISTS ix_orders_total_amount ON public.""Orders"" (""TotalAmount"");
+CREATE INDEX IF NOT EXISTS ix_orders_customer_id_order_date ON public.""Orders"" (""CustomerId"", ""OrderDate"");
+CREATE INDEX IF NOT EXISTS ix_orders_fulfillment_status_order_date ON public.""Orders"" (""FulfillmentStatus"", ""OrderDate"");
+CREATE INDEX IF NOT EXISTS ix_orders_payment_status_order_date ON public.""Orders"" (""PaymentStatus"", ""OrderDate"");
+CREATE INDEX IF NOT EXISTS ix_orders_status_order_date ON public.""Orders"" (""Status"", ""OrderDate"");
+");
         }
+
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
