@@ -85,9 +85,18 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                        <div className="text-2xl font-bold text-accent leading-none">
-                            {formatCurrency(product.price)}
-                        </div>
+                        {product.priceFrom != null && product.priceFrom < product.price ? (
+                            <div className="flex items-baseline gap-1 justify-end">
+                                <span className="text-xs text-gray-500">Từ</span>
+                                <span className="text-2xl font-bold text-accent leading-none">
+                                    {formatCurrency(product.priceFrom)}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="text-2xl font-bold text-accent leading-none">
+                                {formatCurrency(product.price)}
+                            </div>
+                        )}
                         {product.oldPrice && (
                             <div className="text-sm text-gray-400 line-through mt-1">
                                 {formatCurrency(product.oldPrice)}

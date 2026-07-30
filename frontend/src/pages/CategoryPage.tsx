@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Brand, type Category } from '../api/catalog';
 import { ProductCard } from '../components/ProductCard';
+import ProductFilterSpecSection from '../components/product-filter-spec-section';
 import { Monitor, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -16,8 +17,28 @@ const normalize = (str: string) => {
 export const CategoryPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const location = useLocation();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const searchQuery = searchParams.get('query');
+
+    // Spec filters: URL param format ?spec.<key>=<value>
+    const specValues = useMemo(() => {
+        const values: Record<string, string> = {};
+        searchParams.forEach((value, key) => {
+            if (key.startsWith('spec.')) {
+                values[key.slice(5)] = value;
+            }
+        });
+        return values;
+    }, [searchParams]);
+
+    const handleSpecChange = (key: string, value: string) => {
+        const next = new URLSearchParams(searchParams);
+        const paramKey = `spec.${key}`;
+        if (!value) next.delete(paramKey);
+        else next.set(paramKey, value);
+        setSearchParams(next, { replace: true });
+        setPage(1);
+    };
 
     // State
     const [products, setProducts] = useState<Product[]>([]);
@@ -92,32 +113,22 @@ export const CategoryPage = () => {
         const fetchProducts = async () => {
             setIsLoading(true);
             try {
-                const params: any = {};
+                type SearchArg = NonNullable<Parameters<typeof catalogApi.searchProducts>[0]>;
+                const params: SearchArg = { page, pageSize, sortBy };
 
-                if (searchQuery) {
-                    params.query = searchQuery;
-                }
-
-                if (matchedCategory) {
-                    params.categoryId = matchedCategory.id;
-                }
-
-                if (selectedBrandId) {
-                    params.brandId = selectedBrandId;
-                }
-
+                if (searchQuery) params.query = searchQuery;
+                if (matchedCategory) params.categoryId = matchedCategory.id;
+                if (selectedBrandId) params.brandId = selectedBrandId;
                 if (priceRange) {
                     if (priceRange.min !== undefined) params.minPrice = priceRange.min;
                     if (priceRange.max !== undefined) params.maxPrice = priceRange.max;
                 }
+                if (inStockOnly) params.inStock = true;
 
-                if (inStockOnly) {
-                    params.inStock = true;
-                }
-
-                params.page = page;
-                params.pageSize = pageSize;
-                params.sortBy = sortBy;
+                // Spec filters — pass through as `spec.<key>` params so backend can parse
+                Object.entries(specValues).forEach(([key, value]) => {
+                    if (value) params[`spec.${key}`] = value;
+                });
 
                 const response = await catalogApi.searchProducts(params);
                 setProducts(response.products || []);
@@ -134,7 +145,7 @@ export const CategoryPage = () => {
         if (categories.length > 0 || searchQuery) {
             fetchProducts();
         }
-    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, sortBy, categories.length, searchQuery, page]);
+    }, [matchedCategory, selectedBrandId, priceRange, inStockOnly, sortBy, categories.length, searchQuery, page, specValues]);
 
     // Handlers
     const handlePriceSelect = (min?: number, max?: number) => {
@@ -284,6 +295,21 @@ export const CategoryPage = () => {
                                     <span>Chỉ hiển thị hàng có sẵn</span>
                                 </label>
                             </div>
+
+                            {/* Spec filters (dynamic) */}
+                            {matchedCategory?.id && (
+                                <>
+                                    <hr className="border-gray-100" />
+                                    <div>
+                                        <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Thông số kỹ thuật</h4>
+                                        <ProductFilterSpecSection
+                                            categoryId={matchedCategory.id}
+                                            values={specValues}
+                                            onChange={handleSpecChange}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

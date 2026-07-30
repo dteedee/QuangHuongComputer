@@ -139,9 +139,18 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
                 {/* Price */}
                 <div className="mt-auto space-y-0.5">
-                    <div className="text-lg font-bold text-accent leading-tight">
-                        {formatCurrency(product.price)}
-                    </div>
+                    {product.priceFrom != null && product.priceFrom < product.price ? (
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-[11px] text-gray-500">Từ</span>
+                            <span className="text-lg font-bold text-accent leading-tight">
+                                {formatCurrency(product.priceFrom)}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="text-lg font-bold text-accent leading-tight">
+                            {formatCurrency(product.price)}
+                        </div>
+                    )}
                     {product.oldPrice && product.oldPrice > product.price && (
                         <div className="text-xs text-gray-400 line-through">
                             {formatCurrency(oldPrice)}

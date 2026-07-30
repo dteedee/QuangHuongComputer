@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Filter, ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react';
 import type { Category, Brand } from '../api/catalog';
+import ProductFilterSpecSection from './product-filter-spec-section';
 
 interface ProductFilterProps {
     categories: Category[];
@@ -14,6 +15,12 @@ interface ProductFilterProps {
     onPriceChange: (range: { min: number; max: number }) => void;
     onInStockChange: (checked: boolean) => void;
     onReset: () => void;
+    /** Khi có → hiển thị các filter thông số kỹ thuật động. */
+    categoryId?: string;
+    /** Map key → URL raw value cho spec filters (dùng cho lọc dyn). */
+    specValues?: Record<string, string>;
+    /** Callback thay đổi 1 spec filter. */
+    onSpecChange?: (key: string, value: string) => void;
 }
 
 const FilterSection = ({
@@ -55,7 +62,10 @@ export const ProductFilter = ({
     onBrandChange,
     onPriceChange,
     onInStockChange,
-    onReset
+    onReset,
+    categoryId,
+    specValues,
+    onSpecChange,
 }: ProductFilterProps) => {
     const [localMinPrice, setLocalMinPrice] = useState(priceRange.min);
     const [localMaxPrice, setLocalMaxPrice] = useState(priceRange.max);
@@ -190,6 +200,16 @@ export const ProductFilter = ({
                     <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Chỉ hiện hàng có sẵn</span>
                 </label>
             </div>
+
+            {categoryId && onSpecChange && (
+                <FilterSection title="Thông số kỹ thuật">
+                    <ProductFilterSpecSection
+                        categoryId={categoryId}
+                        values={specValues || {}}
+                        onChange={onSpecChange}
+                    />
+                </FilterSection>
+            )}
 
         </aside>
     );

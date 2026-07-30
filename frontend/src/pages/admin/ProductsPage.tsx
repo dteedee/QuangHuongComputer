@@ -10,8 +10,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogApi, type Product, type CreateProductDto, type UpdateProductDto } from '../../api/catalog';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import ProductMediaManager from '../../components/admin/product-media-manager';
+import ProductVariantEditor from '../../components/admin/product-variant-editor';
+import SpecificationEditor from '../../components/admin/specification-editor';
 
-type FormTab = 'general' | 'catalog' | 'media' | 'specifications' | 'seo';
+type FormTab = 'general' | 'catalog' | 'media' | 'variants' | 'specifications' | 'seo';
 
 interface SpecItem {
     label: string;
@@ -275,10 +278,11 @@ export const AdminProductsPage = () => {
         }
     };
 
-    const tabs = [
+    const tabs: Array<{ id: FormTab; label: string; icon: React.ReactNode; requiresEditing?: boolean }> = [
         { id: 'general', label: 'Cơ bản', icon: <Info size={18} /> },
         { id: 'catalog', label: 'Giá & Kho', icon: <DollarSign size={18} /> },
         { id: 'media', label: 'Hình ảnh', icon: <ImageIcon size={18} /> },
+        { id: 'variants', label: 'Biến thể', icon: <Layers size={18} />, requiresEditing: true },
         { id: 'specifications', label: 'Kỹ thuật', icon: <Settings size={18} /> },
         { id: 'seo', label: 'SEO', icon: <Share2 size={18} /> },
     ];
@@ -544,23 +548,25 @@ export const AdminProductsPage = () => {
 
                             {/* Tab System */}
                             <div className="flex px-10 py-2 border-b border-gray-50 bg-white/50 overflow-x-auto scrollbar-hide">
-                                {tabs.map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as FormTab)}
-                                        className={`flex items-center gap-3 px-6 py-4 relative group transition-all`}
-                                    >
-                                        <span className={`p-2 rounded-xl transition-all ${activeTab === tab.id ? 'bg-accent text-white shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}>
-                                            {tab.icon}
-                                        </span>
-                                        <span className={`text-sm font-bold transition-all ${activeTab === tab.id ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-700'}`}>
-                                            {tab.label}
-                                        </span>
-                                        {activeTab === tab.id && (
-                                            <motion.div layoutId="tab-underline" className="absolute bottom-0 left-6 right-6 h-1 bg-accent rounded-t-full" />
-                                        )}
-                                    </button>
-                                ))}
+                                {tabs
+                                    .filter(tab => !tab.requiresEditing || !!editingProduct)
+                                    .map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`flex items-center gap-3 px-6 py-4 relative group transition-all`}
+                                        >
+                                            <span className={`p-2 rounded-xl transition-all ${activeTab === tab.id ? 'bg-accent text-white shadow-lg' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'}`}>
+                                                {tab.icon}
+                                            </span>
+                                            <span className={`text-sm font-bold transition-all ${activeTab === tab.id ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-700'}`}>
+                                                {tab.label}
+                                            </span>
+                                            {activeTab === tab.id && (
+                                                <motion.div layoutId="tab-underline" className="absolute bottom-0 left-6 right-6 h-1 bg-accent rounded-t-full" />
+                                            )}
+                                        </button>
+                                    ))}
                             </div>
 
                             {/* Form Content */}
@@ -641,8 +647,14 @@ export const AdminProductsPage = () => {
 
                                 {activeTab === 'media' ? (
                                     <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
+                                        {editingProduct && (
+                                            <div className="space-y-3 pb-8 border-b border-gray-100">
+                                                <label className="text-sm font-bold text-gray-700">Media chuẩn (mới) — ảnh, video, YouTube</label>
+                                                <ProductMediaManager productId={editingProduct.id} />
+                                            </div>
+                                        )}
                                         <div className="space-y-4">
-                                            <label className="text-sm font-bold text-gray-700">Ảnh đại diện chính</label>
+                                            <label className="text-sm font-bold text-gray-700">Ảnh đại diện chính (legacy)</label>
                                             <div className="flex flex-col md:flex-row gap-8 items-start">
                                                 <div className="w-full md:w-64 aspect-square rounded-[2.5rem] bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group">
                                                     <img
@@ -792,7 +804,54 @@ export const AdminProductsPage = () => {
                                     <input type="hidden" name="imageUrl" defaultValue={editingProduct?.imageUrl} id="imageUrlInput_hidden" />
                                 )}
 
-                                {activeTab === 'specifications' && (
+                                {activeTab === 'variants' && editingProduct && (
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                                        <ProductVariantEditor productId={editingProduct.id} />
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'specifications' && editingProduct && (
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                                        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 text-xs text-blue-800">
+                                            Thông số có cấu trúc (theo danh mục) — được lọc và so sánh được.
+                                        </div>
+                                        <SpecificationEditor
+                                            productId={editingProduct.id}
+                                            categoryId={editingProduct.categoryId}
+                                        />
+                                        <details className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                            <summary className="cursor-pointer text-xs font-semibold text-gray-600">
+                                                Thông số dạng cũ (JSON — dùng khi chưa có nhóm chuẩn)
+                                            </summary>
+                                            <div className="mt-3 space-y-3">
+                                                {specs.map((item, index) => (
+                                                    <div key={index} className="flex items-center gap-3">
+                                                        <input
+                                                            value={item.label}
+                                                            onChange={(e) => handleSpecChange(index, 'label', e.target.value)}
+                                                            placeholder="Tên thuộc tính"
+                                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold outline-none"
+                                                        />
+                                                        <input
+                                                            value={item.value}
+                                                            onChange={(e) => handleSpecChange(index, 'value', e.target.value)}
+                                                            placeholder="Giá trị"
+                                                            className="flex-[2] px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold outline-none"
+                                                        />
+                                                        <button type="button" onClick={() => handleRemoveSpec(index)} className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors">
+                                                            <MinusCircle size={16} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button type="button" onClick={handleAddSpec} className="flex items-center gap-2 text-blue-600 text-xs font-bold hover:underline">
+                                                    <Plus size={14} /> Thêm dòng
+                                                </button>
+                                            </div>
+                                        </details>
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'specifications' && !editingProduct && (
                                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="text-sm font-bold text-gray-700">Thông số kỹ thuật sản phẩm</label>

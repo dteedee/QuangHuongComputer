@@ -1,3 +1,13 @@
 export { default as ProductDescriptionTab } from './product-description-tab';
 export { default as ProductSpecificationsTab } from './product-specifications-tab';
 export { default as ProductReviewsTab } from './product-reviews-tab';
+export { default as ProductBuyingGuideTab } from './product-buying-guide-tab';
+export { default as ProductQaTab } from './product-qa-tab';
+export { default as ProductMediaGallery } from './product-media-gallery';
+export { default as ProductVideoPlayer } from './product-video-player';
+export { default as ProductMediaLightbox } from './product-media-lightbox';
+export { default as ProductVariantSelector } from './product-variant-selector';
+export { default as ProductStockByBranch } from './product-stock-by-branch';
+export { default as ProductDetailInfo } from './product-detail-info';
+export { default as ProductDetailTabs } from './product-detail-tabs';
+export type { ProductDetailTabKey } from './product-detail-tabs';

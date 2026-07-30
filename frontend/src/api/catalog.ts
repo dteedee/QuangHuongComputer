@@ -45,6 +45,138 @@ export interface Product {
     updatedAt?: string;
     createdBy?: string;
     updatedBy?: string;
+
+    // Variant-aware fields (Phase 03)
+    defaultVariantId?: string;
+    priceFrom?: number; // Giá thấp nhất khi có nhiều biến thể; nếu undefined coi như dùng `price`
+}
+
+// ============ Phase 03: Media / Variants / Specifications ============
+
+export type MediaType = 'Image' | 'Video' | 'YoutubeEmbed';
+
+export interface ProductMedia {
+    id: string;
+    productId: string;
+    variantId?: string;
+    type: MediaType;
+    url: string;
+    thumbnailUrl?: string;
+    altText?: string;
+    sortOrder: number;
+    isPrimary: boolean;
+    fileSize?: number;
+    durationSeconds?: number;
+}
+
+export type OptionInputType = 'Dropdown' | 'Swatch' | 'Button';
+
+export interface ProductOptionValue {
+    id: string;
+    optionTypeId: string;
+    value: string;
+    displayValue: string;
+    colorHex?: string;
+    sortOrder: number;
+}
+
+export interface ProductOptionType {
+    id: string;
+    name: string;
+    displayName: string;
+    inputType: OptionInputType;
+    sortOrder: number;
+    values: ProductOptionValue[];
+}
+
+export interface VariantOptionAssignment {
+    optionTypeId: string;
+    optionValueId: string;
+    typeName: string;
+    valueDisplay: string;
+    colorHex?: string;
+}
+
+export type VariantStatus = 'Active' | 'Inactive' | 'OutOfStock';
+
+export interface ProductVariant {
+    id: string;
+    productId: string;
+    sku: string;
+    name: string;
+    price: number;
+    oldPrice?: number;
+    costPrice?: number;
+    stockQuantity: number;
+    barcode?: string;
+    isDefault: boolean;
+    status: VariantStatus;
+    sortOrder: number;
+    options: VariantOptionAssignment[];
+}
+
+export type SpecDataType = 'Text' | 'Number' | 'Boolean' | 'Enum';
+
+export interface SpecificationAttribute {
+    id: string;
+    groupId: string;
+    key: string;
+    name: string;
+    unit?: string;
+    dataType: SpecDataType;
+    isFilterable: boolean;
+    isComparable: boolean;
+    sortOrder: number;
+}
+
+export interface SpecificationGroup {
+    id: string;
+    categoryId?: string;
+    name: string;
+    sortOrder: number;
+    attributes: SpecificationAttribute[];
+}
+
+export interface ProductSpecificationValue {
+    productId: string;
+    attributeId: string;
+    valueText?: string;
+    valueNumber?: number;
+    valueBool?: boolean;
+    /** Payload sẵn có cho UI hiển thị (nếu backend trả kèm). */
+    attribute?: SpecificationAttribute;
+}
+
+export interface StockByBranch {
+    warehouseId: string;
+    warehouseName: string;
+    quantity: number;
+    address?: string;
+    openingHours?: string;
+}
+
+export interface CategoryFilterOption {
+    value: string;
+    label: string;
+    count: number;
+}
+
+export interface CategoryFilter {
+    attributeId: string;
+    key: string;
+    name: string;
+    unit?: string;
+    dataType: SpecDataType;
+    options?: CategoryFilterOption[];
+    numberRange?: { min: number; max: number };
+}
+
+export interface ProductDetailBundle extends Product {
+    medias: ProductMedia[];
+    variants: ProductVariant[];
+    specs: ProductSpecificationValue[];
+    specGroups?: SpecificationGroup[];
+    stockByBranch?: StockByBranch[];
 }
 
 export interface ProductReview {
@@ -179,6 +311,8 @@ export const catalogApi = {
         sortBy?: string;
         page?: number;
         pageSize?: number;
+        /** Spec filter dynamic keys: `spec.<key>` allowed. */
+        [key: `spec.${string}`]: string | number | boolean | undefined;
     }) => {
         const response = await client.get<ProductsResponse>('/catalog/products/search', { params });
         return response.data;
@@ -356,6 +490,102 @@ export const catalogApi = {
         formData.append('file', file);
         const response = await client.post<{ url: string }>('/media/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    // ============ Phase 03 endpoints ============
+
+    /** Lấy sản phẩm kèm media/variants/specs/stockByBranch (endpoint mở rộng). */
+    getProductWithDetails: async (id: string): Promise<ProductDetailBundle> => {
+        const response = await client.get<ProductDetailBundle>(`/catalog/products/${id}?include=medias,variants,specs,stock`);
+        return response.data;
+    },
+
+    // Media (structured)
+    uploadMedia: async (file: File): Promise<{ url: string; thumbnailUrl?: string }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await client.post<{ url: string; thumbnailUrl?: string }>(
+            '/catalog/media/upload',
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        return response.data;
+    },
+
+    addProductMedia: async (productId: string, data: Omit<ProductMedia, 'id' | 'productId'>) => {
+        const response = await client.post<ProductMedia>(`/catalog/products/${productId}/media`, data);
+        return response.data;
+    },
+
+    updateProductMedia: async (productId: string, mediaId: string, data: Partial<ProductMedia>) => {
+        const response = await client.put<ProductMedia>(`/catalog/products/${productId}/media/${mediaId}`, data);
+        return response.data;
+    },
+
+    deleteProductMedia: async (productId: string, mediaId: string) => {
+        const response = await client.delete<{ message: string }>(`/catalog/products/${productId}/media/${mediaId}`);
+        return response.data;
+    },
+
+    reorderProductMedia: async (productId: string, ids: string[]) => {
+        const response = await client.post<{ message: string }>(`/catalog/products/${productId}/media/reorder`, { ids });
+        return response.data;
+    },
+
+    // Variants
+    getVariants: async (productId: string) => {
+        const response = await client.get<ProductVariant[]>(`/catalog/products/${productId}/variants`);
+        return response.data;
+    },
+
+    createVariantMatrix: async (productId: string, optionTypeIds: string[]) => {
+        const response = await client.post<ProductVariant[]>(`/catalog/products/${productId}/variants`, { optionTypeIds });
+        return response.data;
+    },
+
+    updateVariant: async (
+        productId: string,
+        variantId: string,
+        data: Partial<Pick<ProductVariant, 'sku' | 'name' | 'price' | 'oldPrice' | 'costPrice' | 'stockQuantity' | 'barcode' | 'isDefault' | 'status' | 'sortOrder'>>
+    ) => {
+        const response = await client.put<ProductVariant>(`/catalog/products/${productId}/variants/${variantId}`, data);
+        return response.data;
+    },
+
+    deleteVariant: async (productId: string, variantId: string) => {
+        const response = await client.delete<{ message: string }>(`/catalog/products/${productId}/variants/${variantId}`);
+        return response.data;
+    },
+
+    getOptionTypes: async () => {
+        const response = await client.get<ProductOptionType[]>('/catalog/option-types');
+        return response.data;
+    },
+
+    // Specifications
+    getSpecGroupsByCategory: async (categoryId: string) => {
+        const response = await client.get<SpecificationGroup[]>(`/catalog/categories/${categoryId}/spec-groups`);
+        return response.data;
+    },
+
+    upsertProductSpecifications: async (productId: string, values: Array<Omit<ProductSpecificationValue, 'productId' | 'attribute'>>) => {
+        const response = await client.post<{ message: string }>(`/catalog/products/${productId}/specifications`, { values });
+        return response.data;
+    },
+
+    getCategoryFilters: async (categoryId: string, currentFilters?: Record<string, string>) => {
+        const response = await client.get<CategoryFilter[]>(`/catalog/categories/${categoryId}/filters`, {
+            params: currentFilters,
+        });
+        return response.data;
+    },
+
+    // Inventory (proxied from Inventory service)
+    getStockByBranch: async (productId: string, variantId?: string) => {
+        const response = await client.get<StockByBranch[]>(`/inventory/products/${productId}/stock-by-branch`, {
+            params: variantId ? { variantId } : undefined,
         });
         return response.data;
     },
