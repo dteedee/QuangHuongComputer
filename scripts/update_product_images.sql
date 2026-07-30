@@ -6,15 +6,15 @@ BEGIN;
 -- Phụ kiện & thiết bị ngoại vi ---------------------------------------------
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Hub USB-C 7 in 1 Anker PowerExpand+';
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Bộ vệ sinh laptop đa năng Baseus 8 in 1';
-UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Đế tản nhiệt laptop Cooler Master NotePal X3';
+UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1755290726854-11ef582225b7?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Đế tản nhiệt laptop Cooler Master NotePal X3';
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Túi chống sốc laptop 15.6 inch Tomtoc';
 
 -- Âm thanh & thu hình ------------------------------------------------------
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Tai nghe Gaming Logitech G Pro X 2 Lightspeed';
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Microphone HyperX QuadCast S RGB';
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Loa Logitech Z407 Bluetooth 2.1';
-UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1587826080692-f439cd0b70da?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Webcam Logitech StreamCam 1080p/60fps';
-UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1587826080692-f439cd0b70da?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Webcam Logitech C920 HD Pro';
+UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1760348213920-d2a90ed705fd?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Webcam Logitech StreamCam 1080p/60fps';
+UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1763905180930-892ee8d37ea6?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Webcam Logitech C920 HD Pro';
 
 -- Bàn phím & chuột ---------------------------------------------------------
 UPDATE "Products" SET "ImageUrl" = 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&auto=format&fit=crop&q=70' WHERE "Name" = 'Bàn phím cơ Asus ROG Strix Scope RX';
