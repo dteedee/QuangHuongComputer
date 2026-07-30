@@ -18,6 +18,8 @@ public class SalesDbContext : DbContext
     public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
     public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+    public DbSet<CheckoutSession> CheckoutSessions { get; set; }
+    public DbSet<InstallmentApplication> InstallmentApplications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +52,9 @@ public class SalesDbContext : DbContext
                 item.Property(i => i.VariantId).HasColumnName("VariantId");
                 item.Property(i => i.VariantName).HasColumnName("VariantName");
                 item.Property(i => i.VariantSku).HasColumnName("VariantSku");
+                // Phase 04: gift flag + promotion snapshot.
+                item.Property(i => i.IsGift).HasColumnName("IsGift").HasDefaultValue(false);
+                item.Property(i => i.AppliedPromotionCode).HasColumnName("AppliedPromotionCode").HasMaxLength(50);
             });
         });
 
@@ -64,6 +69,9 @@ public class SalesDbContext : DbContext
             entity.Property(o => o.TotalAmount).HasPrecision(18, 2);
             entity.Property(o => o.DiscountAmount).HasPrecision(18, 2);
             entity.Property(o => o.ShippingAmount).HasPrecision(18, 2);
+            // Phase 04: freeship discount + snapshot promotions đã áp.
+            entity.Property(o => o.ShippingDiscount).HasPrecision(18, 2).HasDefaultValue(0m);
+            entity.Property(o => o.AppliedPromotionsJson).HasColumnType("text");
             
             // Indexes for common queries
             entity.HasIndex(o => new { o.CustomerId, o.OrderDate })
@@ -92,7 +100,46 @@ public class SalesDbContext : DbContext
                 item.Property(i => i.VariantId).HasColumnName("VariantId");
                 item.Property(i => i.VariantName).HasColumnName("VariantName");
                 item.Property(i => i.VariantSku).HasColumnName("VariantSku");
+                // Phase 04: gift flag + promotion snapshot.
+                item.Property(i => i.IsGift).HasColumnName("IsGift").HasDefaultValue(false);
+                item.Property(i => i.AppliedPromotionCode).HasColumnName("AppliedPromotionCode").HasMaxLength(50);
             });
+        });
+
+        // Phase 04: CheckoutSession — phiên giữ chỗ 15 phút.
+        modelBuilder.Entity<CheckoutSession>(entity =>
+        {
+            entity.ToTable("CheckoutSessions");
+            entity.HasKey(cs => cs.Id);
+            entity.Property(cs => cs.CartId).IsRequired();
+            entity.Property(cs => cs.Status).HasConversion<int>();
+            entity.HasIndex(cs => cs.CartId).HasDatabaseName("ix_checkout_sessions_cart_id");
+            entity.HasIndex(cs => new { cs.Status, cs.ExpiresAt })
+                .HasDatabaseName("ix_checkout_sessions_status_expires");
+            // Reservation IDs — lưu JSON để không phải join sang InventoryDb.
+            entity.Property<string>("ReservationIdsJson")
+                .HasColumnName("ReservationIdsJson")
+                .HasColumnType("text");
+            entity.Ignore(cs => cs.ReservationIds);
+            entity.HasQueryFilter(cs => cs.IsActive);
+        });
+
+        // Phase 04: InstallmentApplication — hồ sơ trả góp.
+        modelBuilder.Entity<InstallmentApplication>(entity =>
+        {
+            entity.ToTable("InstallmentApplications");
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.OrderId).IsRequired();
+            entity.Property(i => i.Provider).IsRequired().HasMaxLength(50);
+            entity.Property(i => i.DownPayment).HasPrecision(18, 2);
+            entity.Property(i => i.MonthlyAmount).HasPrecision(18, 2);
+            entity.Property(i => i.TotalAmount).HasPrecision(18, 2);
+            entity.Property(i => i.Status).HasConversion<int>();
+            entity.Property(i => i.DocumentUrls).HasColumnType("text");
+            entity.Property(i => i.RejectionReason).HasMaxLength(500);
+            entity.HasIndex(i => i.OrderId).HasDatabaseName("ix_installment_applications_order_id");
+            entity.HasIndex(i => i.Status).HasDatabaseName("ix_installment_applications_status");
+            entity.HasQueryFilter(i => i.IsActive);
         });
 
         // OrderHistory configuration

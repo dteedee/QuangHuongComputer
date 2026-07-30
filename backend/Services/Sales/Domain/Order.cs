@@ -23,6 +23,13 @@ public class Order : Entity<Guid>
     // Coupon Snapshot (BUSINESS REQUIREMENT: Audit trail)
     public string? CouponCode { get; private set; }
     public string? CouponSnapshot { get; private set; } // JSON snapshot of coupon details
+
+    // Phase 04: Snapshot toàn bộ khuyến mãi đã áp lúc chốt đơn (đối chiếu tranh chấp).
+    // Format JSON array: [{code, name, discountType, discountAmount, appliesTo}, ...]
+    public string? AppliedPromotionsJson { get; private set; }
+    // Số tiền giảm phí ship (do FreeShip promotion). Không cộng vào DiscountAmount tránh
+    // nhầm gốc VAT — VAT tính trên (subtotal - discount hàng), ship giảm tính riêng.
+    public decimal ShippingDiscount { get; private set; }
     
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
@@ -104,10 +111,17 @@ public class Order : Entity<Guid>
     private void CalculateAmounts()
     {
         // BUSINESS REQUIREMENT: Consistent calculation order
-        // Final Price = Subtotal - Discount + Tax + Shipping
+        // 1) Subtotal = sum unitPrice*qty (gift item price=0 nên không tính vào subtotal thực)
+        // 2) Tax = (Subtotal - DiscountAmount) * TaxRate  → thuế tính SAU giảm giá hàng
+        // 3) ShippingNet = ShippingAmount - ShippingDiscount (không âm; freeship riêng, không đụng gốc VAT)
+        // 4) Total = Subtotal - Discount + Tax + ShippingNet
         SubtotalAmount = Items.Sum(i => i.UnitPrice * i.Quantity);
-        TaxAmount = (SubtotalAmount - DiscountAmount) * TaxRate;
-        TotalAmount = SubtotalAmount - DiscountAmount + TaxAmount + ShippingAmount;
+        var netSubtotal = SubtotalAmount - DiscountAmount;
+        if (netSubtotal < 0) netSubtotal = 0;
+        TaxAmount = netSubtotal * TaxRate;
+        var shippingNet = ShippingAmount - ShippingDiscount;
+        if (shippingNet < 0) shippingNet = 0;
+        TotalAmount = netSubtotal + TaxAmount + shippingNet;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -120,6 +134,31 @@ public class Order : Entity<Guid>
         DiscountAmount = discountAmount;
         CouponSnapshot = couponSnapshot; // Store coupon details for audit
         DiscountReason = discountReason;
+        CalculateAmounts();
+    }
+
+    // Phase 04: Áp kết quả từ PricingEngine (không dùng chung với ApplyCoupon để tránh double-count).
+    // - discountAmount: tổng giảm hàng (line discount + order discount).
+    // - shippingDiscount: giảm phí ship (freeship promotion).
+    // - appliedPromotionsJson: snapshot JSON các promotion đã áp (audit).
+    public void ApplyPricingResult(
+        decimal discountAmount,
+        decimal shippingDiscount,
+        string appliedPromotionsJson,
+        string? couponCode = null)
+    {
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Cannot apply pricing to non-draft and non-pending order");
+        if (discountAmount < 0) throw new ArgumentException("discountAmount không được âm", nameof(discountAmount));
+        if (shippingDiscount < 0) throw new ArgumentException("shippingDiscount không được âm", nameof(shippingDiscount));
+
+        DiscountAmount = discountAmount;
+        ShippingDiscount = shippingDiscount;
+        AppliedPromotionsJson = appliedPromotionsJson;
+        if (!string.IsNullOrEmpty(couponCode))
+        {
+            CouponCode = couponCode;
+        }
         CalculateAmounts();
     }
 
@@ -329,6 +368,10 @@ public class OrderItem : Entity<Guid>
     public string? VariantName { get; private set; }
     public string? VariantSku { get; private set; }
 
+    // Phase 04: đánh dấu hàng tặng (mua X tặng Y). Giá luôn = 0.
+    public bool IsGift { get; private set; }
+    public string? AppliedPromotionCode { get; private set; }
+
     public OrderItem(
         Guid productId,
         string productName,
@@ -338,20 +381,25 @@ public class OrderItem : Entity<Guid>
         decimal? originalPrice = null,
         Guid? variantId = null,
         string? variantName = null,
-        string? variantSku = null)
+        string? variantSku = null,
+        bool isGift = false,
+        string? appliedPromotionCode = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
         ProductName = productName;
         ProductSku = productSku;
-        UnitPrice = unitPrice;
+        // Gift LUÔN giá 0 — không tin caller.
+        UnitPrice = isGift ? 0m : unitPrice;
         OriginalPrice = originalPrice;
         Quantity = quantity;
         DiscountAmount = 0;
-        LineTotal = unitPrice * quantity;
+        LineTotal = UnitPrice * quantity;
         VariantId = variantId;
         VariantName = variantName;
         VariantSku = variantSku;
+        IsGift = isGift;
+        AppliedPromotionCode = appliedPromotionCode;
     }
 
     protected OrderItem() { }

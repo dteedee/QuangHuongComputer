@@ -9,6 +9,7 @@
     <PackageReference Include="xunit" Version="2.6.6" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../Services/Accounting/Accounting.csproj" />
@@ -17,5 +18,7 @@
     <ProjectReference Include="../../Services/Inventory/Inventory.csproj" />
     <ProjectReference Include="../../Services/HR/HR.csproj" />
     <ProjectReference Include="../../Services/Warranty/Warranty.csproj" />
+    <ProjectReference Include="../../Services/Content/Content.csproj" />
+    <ProjectReference Include="../../Services/Payments/Payments.csproj" />
   </ItemGroup>
 </Project>

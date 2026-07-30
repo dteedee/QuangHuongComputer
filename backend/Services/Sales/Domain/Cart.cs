@@ -95,6 +95,9 @@ public class Cart : Entity<Guid>
         Items.Clear();
     }
 
+    // [LEGACY - Phase 04] Áp mã thủ công. Ưu tiên gọi PricingEngine trong CheckoutOrchestrator.
+    // Giữ lại để tương thích endpoint /api/sales/cart/apply-coupon hiện có; sẽ gỡ khi frontend chuyển sang preview API.
+    [Obsolete("Dùng PricingEngine (Sales.Application.Pricing.IPricingEngine) — chỉ giữ vì tương thích /cart/apply-coupon.")]
     public void ApplyCoupon(string couponCode, decimal discountAmount)
     {
         if (discountAmount < 0)
@@ -108,6 +111,33 @@ public class Cart : Entity<Guid>
     {
         CouponCode = null;
         DiscountAmount = 0;
+    }
+
+    // Thêm hàng tặng (giá 0) — dùng cho khuyến mãi mua X tặng Y do PricingEngine phát hiện.
+    // Dòng gift KHÔNG gộp với dòng thường cùng ProductId+VariantId (khác flag IsGift).
+    public void AddGiftItem(
+        Guid productId,
+        string productName,
+        int quantity,
+        Guid? variantId = null,
+        string? variantName = null,
+        string? variantSku = null,
+        string? promotionCode = null)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
+
+        // Dòng gift luôn là dòng mới (không gộp) — giá = 0, đánh dấu IsGift + AppliedPromotionCode.
+        var giftItem = new CartItem(productId, productName, price: 0m, quantity,
+            variantId, variantName, variantSku);
+        giftItem.MarkAsGift(promotionCode);
+        Items.Add(giftItem);
+    }
+
+    // Gỡ toàn bộ hàng tặng — gọi trước khi PricingEngine tính lại (tránh tồn đọng gift cũ).
+    public void ClearGiftItems()
+    {
+        Items.RemoveAll(i => i.IsGift);
     }
 
     public void SetShippingAmount(decimal amount)
@@ -142,6 +172,11 @@ public class CartItem
     public string? VariantName { get; private set; }
     public string? VariantSku { get; private set; }
 
+    // Dòng gift do PricingEngine sinh ra (khuyến mãi mua X tặng Y).
+    // IsGift=true → giá luôn = 0, không hợp nhất với dòng thường cùng ProductId+VariantId.
+    public bool IsGift { get; private set; }
+    public string? AppliedPromotionCode { get; private set; }
+
     // Backward-compatible constructor.
     public CartItem(Guid productId, string productName, decimal price, int quantity)
         : this(productId, productName, price, quantity, null, null, null)
@@ -164,6 +199,7 @@ public class CartItem
         VariantId = variantId;
         VariantName = variantName;
         VariantSku = variantSku;
+        IsGift = false;
     }
 
     protected CartItem() { }
@@ -174,5 +210,12 @@ public class CartItem
             throw new ArgumentException("Quantity must be greater than 0");
 
         Quantity = quantity;
+    }
+
+    internal void MarkAsGift(string? promotionCode)
+    {
+        IsGift = true;
+        Price = 0m; // Dòng gift LUÔN giá 0 — bảo vệ tuyệt đối, không tin caller.
+        AppliedPromotionCode = promotionCode;
     }
 }

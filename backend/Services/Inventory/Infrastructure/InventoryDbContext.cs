@@ -175,6 +175,10 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => e.ReferenceId);
             entity.HasIndex(e => new { e.ProductId, e.InventoryItemId, e.Status });
             entity.HasIndex(e => e.ExpiresAt);
+            // Index theo (ProductId, VariantId) — tra reservation của 1 biến thể cụ thể.
+            entity.HasIndex(e => new { e.ProductId, e.VariantId, e.Status })
+                .HasFilter("\"VariantId\" IS NOT NULL")
+                .HasDatabaseName("IX_StockReservation_Product_Variant_Status");
         });
 
         modelBuilder.Entity<Warehouse>(entity =>

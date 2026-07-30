@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sales.Infrastructure;
+using Sales.Application.Checkout;
+using Sales.Application.Pricing;
 using BuildingBlocks.Database;
 
 namespace Sales;
@@ -29,6 +31,21 @@ public static class DependencyInjection
                 options.AddInterceptors(interceptor);
         });
 
+        // Phase 04: Checkout orchestrator + real PricingEngine (luồng A đã nộp).
+        // Stub đã bị gỡ; đăng ký DI cho pricing bộ 9 rule + engine ở ApiGateway.ServiceRegistration.
+        services.AddScoped<CheckoutOrchestrator>();
+        services.TryAddScopedIfMissing<IPricingEngine, PricingEngine>();
+
         return services;
+    }
+
+    private static void TryAddScopedIfMissing<TService, TImpl>(this IServiceCollection services)
+        where TService : class
+        where TImpl : class, TService
+    {
+        if (!services.Any(s => s.ServiceType == typeof(TService)))
+        {
+            services.AddScoped<TService, TImpl>();
+        }
     }
 }

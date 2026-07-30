@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Payments.Application;
 using Payments.Infrastructure;
 using BuildingBlocks.Database;
 
@@ -29,6 +30,9 @@ public static class DependencyInjection
         });
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        // Phase 04: webhook handler idempotent.
+        services.AddScoped<PaymentWebhookHandler>();
 
         return services;
     }

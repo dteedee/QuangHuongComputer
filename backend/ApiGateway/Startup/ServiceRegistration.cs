@@ -18,6 +18,7 @@ using Payments;
 using Repair;
 using Reporting;
 using Sales;
+using Sales.Application.Pricing;
 using SystemConfig;
 using System.Globalization;
 using Warranty;
@@ -153,6 +154,8 @@ public static class ServiceRegistration
         builder.Services.AddIdentityModule(builder.Configuration);
         builder.Services.AddPaymentsModule(builder.Configuration);
         builder.Services.AddContentModule(builder.Configuration);
+        // Promotion engine — 9 rule + evaluator + engine.
+        builder.Services.AddPricingEngine();
         builder.Services.AddAiModule(builder.Configuration);
         builder.Services.AddSignalR();
         builder.Services.AddCommunicationModule(builder.Configuration);

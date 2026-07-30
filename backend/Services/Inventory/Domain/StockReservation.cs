@@ -10,9 +10,12 @@ public class StockReservation : Entity<Guid>
 {
     public Guid InventoryItemId { get; private set; }
     public Guid ProductId { get; private set; }
+    // Biến thể sản phẩm — nullable. NOT NULL nếu InventoryItem có VariantId.
+    // Ràng buộc match theo (ProductId, VariantId) khi giữ/nhả chỗ để tránh oversell chéo biến thể.
+    public Guid? VariantId { get; private set; }
     public int Quantity { get; private set; }
     public string ReferenceId { get; private set; } = string.Empty; // OrderId
-    public string ReferenceType { get; private set; } = string.Empty; // "Order", "WorkOrder"
+    public string ReferenceType { get; private set; } = string.Empty; // "Order", "WorkOrder", "CheckoutSession"
     public ReservationStatus Status { get; private set; }
     public DateTime ReservedAt { get; private set; }
     public DateTime? ReleasedAt { get; private set; }
@@ -22,9 +25,24 @@ public class StockReservation : Entity<Guid>
 
     protected StockReservation() { }
 
+    // Backward-compat ctor (sản phẩm không có biến thể).
     public StockReservation(
         Guid inventoryItemId,
         Guid productId,
+        int quantity,
+        string referenceId,
+        string referenceType,
+        int expirationHours = 24,
+        string? notes = null)
+        : this(inventoryItemId, productId, variantId: null, quantity, referenceId, referenceType, expirationHours, notes)
+    {
+    }
+
+    // Overload có variantId — cùng ProductId + VariantId + WarehouseId là 1 dòng riêng.
+    public StockReservation(
+        Guid inventoryItemId,
+        Guid productId,
+        Guid? variantId,
         int quantity,
         string referenceId,
         string referenceType,
@@ -34,6 +52,7 @@ public class StockReservation : Entity<Guid>
         Id = Guid.NewGuid();
         InventoryItemId = inventoryItemId;
         ProductId = productId;
+        VariantId = variantId;
         Quantity = quantity;
         ReferenceId = referenceId;
         ReferenceType = referenceType;

@@ -95,13 +95,16 @@ app.MapIdentityEndpoints();
 app.MapTwoFactorEndpoints();
 app.MapSessionEndpoints();
 app.MapSalesEndpoints();
+app.MapCheckoutEndpoints();
+app.MapInstallmentEndpoints();
 app.MapAddressBookEndpoints();
 app.MapShippingEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
 app.MapPaymentsEndpoints();
-// app.MapInstallmentEndpoints(); // Payment installment endpoints not compiled — see phase-01 report
+app.MapPaymentWebhookEndpoints();
 app.MapContentEndpoints();
+app.MapPromotionEndpoints();
 app.MapCommunicationEndpoints();
 app.MapHREndpoints();
 app.MapHRLeaveEndpoints();
@@ -129,8 +132,8 @@ app.MapCrmEndpoints();
 app.MapAuditLogEndpoints();
 app.MapBackupEndpoints();
 
-// -- Fast checkout -------------------------------------------------------------
-app.MapFastCheckoutEndpoint();
+// -- Fast checkout hợp nhất vào CheckoutOrchestrator (Phase 04) --
+// Legacy alias /api/sales/fast-checkout được giữ trong CheckoutEndpoints.cs.
 
 app.MapControllers();
 
