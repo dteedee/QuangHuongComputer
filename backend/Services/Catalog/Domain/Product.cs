@@ -36,7 +36,7 @@ public class Product : Entity<Guid>
     public Guid? UpdatedByUserId { get; private set; }
     
     // SEO fields
-    public string Slug { get; set; } = string.Empty;
+    public string Slug { get; private set; } = string.Empty;
     public string? MetaTitle { get; private set; }
     public string? MetaDescription { get; private set; }
     public string? MetaKeywords { get; private set; }
@@ -68,9 +68,16 @@ public class Product : Entity<Guid>
         string? metaKeywords = null,
         Guid? createdByUserId = null)
     {
+        // Validate nghiệp vụ: giá bán/giá vốn không được âm.
+        if (price < 0)
+            throw new ArgumentException("Giá bán không được âm", nameof(price));
+        if (costPrice < 0)
+            throw new ArgumentException("Giá vốn không được âm", nameof(costPrice));
+
         Id = Guid.NewGuid();
         Name = name;
         Sku = sku ?? GenerateSku();
+        Slug = SlugGenerator.Generate(name); // Auto-sinh slug SEO từ Name.
         Price = price;
         OldPrice = oldPrice;
         CostPrice = costPrice;
@@ -215,6 +222,24 @@ public class Product : Entity<Guid>
     }
     
     public bool IsLowStock() => StockQuantity <= LowStockThreshold;
+
+    /// <summary>
+    /// True nếu giá vốn > giá bán (bán lỗ / âm margin).
+    /// Không throw ở ctor vì có trường hợp hợp lệ (xả hàng, khuyến mãi có chủ đích);
+    /// nghiệp vụ dùng cờ này để cảnh báo/chặn xuất kho lỗ vô ý.
+    /// </summary>
+    public bool HasNegativeMargin() => CostPrice > Price;
+
+    /// <summary>
+    /// Cập nhật slug SEO. Chấp nhận slug đã pre-generated (giữ nguyên suffix "-2", "-3"...);
+    /// chỉ normalize khi phát hiện ký tự có dấu / khoảng trắng.
+    /// </summary>
+    public void SetSlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            throw new ArgumentException("Slug không được rỗng", nameof(slug));
+        Slug = SlugGenerator.Generate(slug);
+    }
 }
 
 public enum ProductStatus

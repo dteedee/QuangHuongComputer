@@ -60,39 +60,51 @@ public class InventoryItem : Entity<Guid>
     
     public void ReserveStock(int quantity)
     {
+        // Chặn số lượng âm — trước đây cho -5 làm ReservedQuantity âm,
+        // AvailableQuantity phồng lên -> bán vượt tồn kho thật.
+        if (quantity < 0)
+            throw new ArgumentException("Số lượng giữ chỗ không được âm", nameof(quantity));
+
         if (AvailableQuantity < quantity)
             throw new InvalidOperationException($"Not enough available stock. Available: {AvailableQuantity}, Requested: {quantity}");
-        
+
         ReservedQuantity += quantity;
         LastStockUpdate = DateTime.UtcNow;
     }
-    
+
     public void ReleaseReservedStock(int quantity)
     {
+        if (quantity < 0)
+            throw new ArgumentException("Số lượng nhả giữ chỗ không được âm", nameof(quantity));
+
         if (ReservedQuantity < quantity)
         {
             // Gracefully handle out-of-sync reservations by capping
             quantity = ReservedQuantity;
         }
-        
+
         ReservedQuantity -= quantity;
         LastStockUpdate = DateTime.UtcNow;
     }
-    
+
     public void ConfirmReservedStock(int quantity)
     {
-        if (ReservedQuantity < quantity)
-        {
-            // Gracefully handle out-of-sync reservations by capping the reserved portion
-            QuantityOnHand -= quantity; // Still reduce the actual stock by the full amount
-            ReservedQuantity = 0; // And clear whatever was reserved
-        }
-        else
-        {
-            ReservedQuantity -= quantity;
-            QuantityOnHand -= quantity;
-        }
-        
+        if (quantity < 0)
+            throw new ArgumentException("Số lượng xác nhận xuất kho không được âm", nameof(quantity));
+
+        // Không cho xác nhận nhiều hơn phần đã giữ chỗ:
+        // đây là dấu hiệu dữ liệu lệch (reservation/OrderItem không khớp) — phải THROW để nghiệp vụ biết.
+        if (quantity > ReservedQuantity)
+            throw new InvalidOperationException(
+                $"Không thể xác nhận {quantity}, chỉ còn {ReservedQuantity} đang giữ chỗ");
+
+        // Tồn kho vật lý không được âm.
+        if (quantity > QuantityOnHand)
+            throw new InvalidOperationException(
+                $"Không thể xác nhận {quantity}, tồn thực chỉ còn {QuantityOnHand}");
+
+        ReservedQuantity -= quantity;
+        QuantityOnHand -= quantity;
         LastStockUpdate = DateTime.UtcNow;
     }
 

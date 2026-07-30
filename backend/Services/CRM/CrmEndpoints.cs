@@ -237,8 +237,11 @@ public static class CrmEndpoints
                 return new CustomerAnalyticsDto(
                     c.Id,
                     c.UserId,
-                    null, // TODO: Get from Identity
-                    null, // TODO: Get from Identity
+                    // UserName / Email intentionally null. Populating requires a cross-module
+                    // Identity lookup (IUserQueryService abstraction). Deferred until Identity
+                    // exposes a read-model — do not couple CRM directly to IdentityDbContext.
+                    null,
+                    null,
                     c.RecencyScore,
                     c.FrequencyScore,
                     c.MonetaryScore,
@@ -336,10 +339,12 @@ public static class CrmEndpoints
             return Results.Ok(new CustomerDetailDto(
                 customer.Id,
                 customer.UserId,
-                null, // TODO: Get from Identity
-                null, // TODO: Get from Identity
-                null, // TODO: Get from Identity
-                null, // TODO: Get from Identity
+                // UserName / Email / Phone / Address intentionally null — see comment in
+                // /customers listing endpoint above. Requires Identity read-model abstraction.
+                null,
+                null,
+                null,
+                null,
                 customer.RecencyScore,
                 customer.FrequencyScore,
                 customer.MonetaryScore,

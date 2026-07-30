@@ -8,7 +8,9 @@ public class Cart : Entity<Guid>
     public List<CartItem> Items { get; private set; } = new();
     public string? CouponCode { get; private set; }
     public decimal DiscountAmount { get; private set; }
-    public decimal TaxRate { get; private set; } = 0.1m; // 10% VAT
+    // VAT chuẩn lấy từ BuildingBlocks.TaxRates (8% - VN hiện hành).
+    // TRƯỚC: hardcode 0.1m -> BUG pháp lý: mọi đơn hàng thu dư 2% VAT.
+    public decimal TaxRate { get; private set; } = TaxRates.VatStandard;
     public decimal ShippingAmount { get; private set; }
 
     public decimal SubtotalAmount => Items.Sum(i => i.Subtotal);
@@ -24,8 +26,11 @@ public class Cart : Entity<Guid>
 
     public void AddItem(Guid productId, string productName, decimal price, int quantity)
     {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
+
         var existingItem = Items.FirstOrDefault(i => i.ProductId == productId);
-        
+
         if (existingItem != null)
         {
             existingItem.UpdateQuantity(existingItem.Quantity + quantity);
@@ -68,6 +73,9 @@ public class Cart : Entity<Guid>
 
     public void ApplyCoupon(string couponCode, decimal discountAmount)
     {
+        if (discountAmount < 0)
+            throw new ArgumentException("Số tiền giảm giá không được âm", nameof(discountAmount));
+
         CouponCode = couponCode;
         DiscountAmount = discountAmount;
     }

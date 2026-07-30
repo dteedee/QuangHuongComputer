@@ -447,8 +447,9 @@ public static class CatalogEndpoints
                 galleryImages: model.GalleryImages
             );
 
-            if (string.IsNullOrWhiteSpace(product.Slug))
-                product.Slug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s));
+            // Slug đã được auto-sinh trong ctor Product; ở đây đảm bảo tính duy nhất trong DB.
+            var uniqueCreateSlug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s));
+            product.SetSlug(uniqueCreateSlug);
 
             db.Products.Add(product);
             await db.SaveChangesAsync();
@@ -573,7 +574,10 @@ public static class CatalogEndpoints
             product.UpdateSeo(model.MetaTitle, model.MetaDescription, model.MetaKeywords);
 
             if (string.IsNullOrWhiteSpace(product.Slug))
-                product.Slug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s && p.Id != id));
+            {
+                var uniqueUpdateSlug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s && p.Id != id));
+                product.SetSlug(uniqueUpdateSlug);
+            }
 
             await db.SaveChangesAsync();
 

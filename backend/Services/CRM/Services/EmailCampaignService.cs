@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using BuildingBlocks.Email;
 using CRM.Domain;
 using CRM.DTOs;
 using CRM.Infrastructure;
@@ -12,13 +13,16 @@ public partial class EmailCampaignService : IEmailCampaignService
 {
     private readonly CrmDbContext _crmDb;
     private readonly ILogger<EmailCampaignService> _logger;
+    private readonly IEmailService _emailService;
 
     public EmailCampaignService(
         CrmDbContext crmDb,
-        ILogger<EmailCampaignService> logger)
+        ILogger<EmailCampaignService> logger,
+        IEmailService emailService)
     {
         _crmDb = crmDb;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task<PagedResult<EmailCampaign>> GetCampaignsAsync(CampaignQueryParams queryParams, CancellationToken cancellationToken = default)
@@ -221,8 +225,9 @@ public partial class EmailCampaignService : IEmailCampaignService
         campaign.StartSending(recipients.Count);
         await _crmDb.SaveChangesAsync(cancellationToken);
 
-        // TODO: Queue actual email sending via background job
-        // For now, mark as sent immediately (demo)
+        // Send synchronously — for very large campaigns this should be replaced with a
+        // MassTransit job (out of scope for phase-01). ProcessSendingAsync uses the real
+        // IEmailService and per-recipient try/catch so a single failure does not abort.
         await ProcessSendingAsync(campaign, cancellationToken);
 
         _logger.LogInformation("Started sending campaign {CampaignId} to {RecipientCount} recipients",
@@ -333,12 +338,26 @@ public partial class EmailCampaignService : IEmailCampaignService
 
         foreach (var recipient in recipients)
         {
-            // TODO: Actually send email via email service
-            // For demo, mark as sent
-            recipient.MarkAsSent();
-            recipient.MarkAsDelivered();
-            campaign.IncrementSentCount();
-            campaign.IncrementDeliveredCount();
+            try
+            {
+                await _emailService.SendEmailAsync(new EmailMessage
+                {
+                    ToEmail = recipient.Email,
+                    Subject = campaign.Subject,
+                    Body = campaign.HtmlContent,
+                    IsHtml = true
+                });
+
+                recipient.MarkAsSent();
+                // SMTP acceptance does not equal delivery — mark delivered only when the
+                // provider callback confirms it. Leaving as MarkAsSent for now.
+                campaign.IncrementSentCount();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send campaign {CampaignId} email to {Email}", campaign.Id, recipient.Email);
+                // Recipient stays Pending — a retry job (out of scope) will pick it up.
+            }
         }
 
         campaign.MarkAsSent();
@@ -443,7 +462,9 @@ public partial class EmailCampaignService : IEmailCampaignService
         recipient.MarkAsUnsubscribed();
         recipient.Campaign.IncrementUnsubscribedCount();
 
-        // TODO: Mark customer as unsubscribed globally
+        // Global unsubscribe requires a MarkUnsubscribed method on CustomerAnalytics
+        // (Domain-owned by another phase). Currently only the per-recipient flag is set;
+        // future campaigns will still target this customer until Domain adds the flag.
 
         await _crmDb.SaveChangesAsync(cancellationToken);
 
