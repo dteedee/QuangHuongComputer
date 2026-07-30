@@ -216,17 +216,15 @@ textarea::placeholder {
   outline-offset: 2px;
 }
 
-/* Smooth image loading */
+/* Smooth image loading — fade-in via CSS animation without needing a JS-set attr.
+   Previous impl relied on `img[loaded]` toggled by JS which never fired, so
+   every `loading="lazy"` image stayed invisible. */
 img {
-  transition: opacity 0.3s ease;
+  animation: fadeInImg 0.3s ease-out both;
 }
-
-img[loading] {
-  opacity: 0;
-}
-
-img[loaded] {
-  opacity: 1;
+@keyframes fadeInImg {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Toast notifications */

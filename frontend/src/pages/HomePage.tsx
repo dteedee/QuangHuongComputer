@@ -10,6 +10,7 @@ import { FallbackHero } from '../components/homepage/fallback-hero';
 import { FallbackCategories } from '../components/homepage/fallback-categories';
 import { TrustBadges } from '../components/homepage/trust-badges';
 import { NewsletterCta } from '../components/homepage/newsletter-cta';
+import { ProductGridSection } from '../components/homepage/ProductGridSection';
 import { AudienceSwitcher } from '../components/ui/audience-switcher';
 import { AnimatedSection } from '../components/motion/animated-section';
 import { useAudience } from '../context/AudienceContext';
@@ -187,6 +188,10 @@ export const HomePage = () => {
                 <div className="space-y-4 pb-20">
                     <FallbackHero />
                     <FallbackCategories />
+                    <ProductGridSection
+                        title="Sản phẩm nổi bật"
+                        config={{ limit: 10, icon: 'Sparkles', showViewAll: true }}
+                    />
                     <TrustBadges />
                     <NewsletterCta />
                 </div>
