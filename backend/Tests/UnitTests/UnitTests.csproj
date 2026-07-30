@@ -13,5 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="../../Services/Accounting/Accounting.csproj" />
     <ProjectReference Include="../../Services/Catalog/Catalog.csproj" />
+    <ProjectReference Include="../../Services/Sales/Sales.csproj" />
+    <ProjectReference Include="../../Services/Inventory/Inventory.csproj" />
+    <ProjectReference Include="../../Services/HR/HR.csproj" />
+    <ProjectReference Include="../../Services/Warranty/Warranty.csproj" />
   </ItemGroup>
 </Project>
