@@ -9,7 +9,7 @@ import {
     Download, Upload, History
 } from 'lucide-react';
 import { systemConfigApi } from '../../api/systemConfig';
-import type { ConfigurationEntry } from '../../api/systemConfig';
+import type { ConfigurationEntry, ConfigValueType } from '../../api/systemConfig';
 
 import toast from 'react-hot-toast';
 
@@ -73,11 +73,12 @@ const validateConfig = (key: string, value: string): string | null => {
         case 'boolean':
             if (value !== 'true' && value !== 'false') return 'Chỉ chấp nhận true hoặc false';
             break;
-        case 'percentage':
+        case 'percentage': {
             const pct = parseFloat(value);
             if (isNaN(pct)) return 'Phải là số thập phân (VD: 0.08)';
             if (pct < 0 || pct > 1) return 'Tỷ lệ phải từ 0 đến 1 (VD: 0.08 = 8%)';
             break;
+        }
         case 'currency':
         case 'number': {
             const num = parseFloat(value);
@@ -99,76 +100,138 @@ const validateConfig = (key: string, value: string): string | null => {
     return null;
 };
 
+// ============================================
+// Default config seeds
+// ============================================
+
+// Ánh xạ kiểu suy luận trên UI sang ConfigValueType mà backend lưu trữ.
+const CONFIG_TYPE_TO_VALUE_TYPE: Record<ConfigType, ConfigValueType> = {
+    boolean: 'Boolean',
+    number: 'Number',
+    percentage: 'Percentage',
+    currency: 'Number',
+    url: 'Url',
+    email: 'Email',
+    phone: 'String',
+    text: 'String',
+};
+
+/** Mỗi mục chỉ khai báo phần khác nhau; các trường còn lại được suy ra trong buildDefaults. */
+type ConfigSeed = Pick<ConfigurationEntry, 'key' | 'value' | 'description'>;
+
+/**
+ * Bổ sung đủ trường của ConfigurationEntry cho các mục mặc định.
+ * - `module`: backend đặt mặc định "Global" (SystemConfig.Domain.ConfigurationEntry),
+ *   giữ đúng giá trị này để không sinh ra module ma khi upsert.
+ * - `valueType`: suy ra từ getConfigType để backend lưu đúng kiểu.
+ * - `isSystem`: false — đây là tham số nghiệp vụ, người dùng được phép sửa.
+ * - `sortOrder`: theo thứ tự khai báo (backend sắp xếp Module -> SortOrder).
+ */
+const buildDefaults = (category: string, seeds: ConfigSeed[]): ConfigurationEntry[] =>
+    seeds.map((seed, index) => ({
+        ...seed,
+        category,
+        module: 'Global',
+        valueType: CONFIG_TYPE_TO_VALUE_TYPE[getConfigType(seed.key, seed.value)],
+        isSystem: false,
+        sortOrder: index,
+        lastUpdated: new Date().toISOString(),
+    }));
+
+/**
+ * Chuẩn hoá 1 mục đọc từ file JSON import về đúng ConfigurationEntry.
+ * File import do người dùng cung cấp nên không thể tin cấu trúc; thiếu trường nào
+ * thì điền mặc định, sai kiểu thì loại bỏ — tránh gửi payload hỏng lên backend.
+ */
+const normalizeImportedConfig = (raw: unknown, index: number): ConfigurationEntry | null => {
+    if (!raw || typeof raw !== 'object') return null;
+    const entry = raw as Partial<ConfigurationEntry>;
+    if (typeof entry.key !== 'string' || typeof entry.value !== 'string') return null;
+
+    return {
+        key: entry.key,
+        value: entry.value,
+        description: entry.description ?? '',
+        category: entry.category ?? 'Company',
+        module: entry.module ?? 'Global',
+        valueType: entry.valueType ?? CONFIG_TYPE_TO_VALUE_TYPE[getConfigType(entry.key, entry.value)],
+        jsonValue: entry.jsonValue ?? null,
+        isSystem: entry.isSystem ?? false,
+        sortOrder: entry.sortOrder ?? index,
+        lastUpdated: entry.lastUpdated ?? new Date().toISOString(),
+    };
+};
+
 // Extended config structure with default values
 const DEFAULT_CONFIGS: Record<string, ConfigurationEntry[]> = {
-    'Company': [
-        { key: 'COMPANY_NAME', value: 'Quang Hưởng Computer', description: 'Tên công ty hiển thị trên website', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_FULL_NAME', value: 'CÔNG TY TNHH QUANG HƯỞNG COMPUTER', description: 'Tên đầy đủ công ty (dùng cho hóa đơn)', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_ADDRESS', value: 'Số 179 Thôn 3/2 Xã Vĩnh Bảo Thành phố Hải Phòng', description: 'Địa chỉ công ty', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_PHONE', value: '0904.235.090', description: 'Số điện thoại chính', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_PHONE_2', value: '02253.xxx.xxx', description: 'Số điện thoại phụ', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_EMAIL', value: 'quanghuongvbhp@gmail.com', description: 'Email liên hệ chính', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_TAX_CODE', value: '0123456789', description: 'Mã số thuế', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_WEBSITE', value: 'https://quanghuongcomputer.vn', description: 'Website chính thức', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_SLOGAN', value: 'Uy Tín - Chất Lượng - Giá Tốt', description: 'Slogan công ty', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_WORKING_HOURS', value: '7:00 - 17h15 (Từ thứ 2 đến thứ 7)', description: 'Thời gian làm việc', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_BRAND_TEXT_1', value: 'QUANG HƯỞNG', description: 'Tên thương hiệu dòng 1 (Header)', category: 'Company', lastUpdated: new Date().toISOString() },
-        { key: 'COMPANY_BRAND_TEXT_2', value: 'COMPUTER', description: 'Tên thương hiệu dòng 2 (Header)', category: 'Company', lastUpdated: new Date().toISOString() },
-    ],
-    'Sales & Tax': [
-        { key: 'TAX_RATE', value: '0.08', description: 'Thuế VAT (%) - Mặc định 8%', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'COMMISSION_RATE', value: '0.05', description: 'Hoa hồng bán hàng (%) - Mặc định 5%', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'VIP_DISCOUNT_RATE', value: '0.10', description: 'Chiết khấu khách VIP (%) - Mặc định 10%', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'MIN_ORDER_AMOUNT', value: '100000', description: 'Giá trị đơn hàng tối thiểu (VNĐ)', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'FREESHIP_THRESHOLD', value: '500000', description: 'Ngưỡng freeship (VNĐ)', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'SHIPPING_FEE', value: '30000', description: 'Phí ship cơ bản (VNĐ)', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'RETURN_PERIOD_DAYS', value: '7', description: 'Thời gian đổi trả (ngày)', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-        { key: 'WARRANTY_PERIOD_MONTHS', value: '36', description: 'Thời gian bảo hành cơ bản (tháng)', category: 'Sales & Tax', lastUpdated: new Date().toISOString() },
-    ],
-    'HR & Payroll': [
-        { key: 'BASE_SALARY', value: '5000000', description: 'Lương cơ bản nhân viên (VNĐ)', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'OVERTIME_RATE', value: '1.5', description: 'Hệ số làm thêm giờ', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'BONUS_RATE', value: '0.15', description: 'Tỷ lệ thưởng (%) trên doanh số', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'SOCIAL_INSURANCE_RATE', value: '0.105', description: 'Tỷ lệ BHXH (%) - 10.5%', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'HEALTH_INSURANCE_RATE', value: '0.03', description: 'Tỷ lệ BHYT (%) - 3%', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'UNEMPLOYMENT_INSURANCE_RATE', value: '0.01', description: 'Tỷ lệ BHTN (%) - 1%', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'WORKING_HOURS_PER_DAY', value: '8', description: 'Số giờ làm việc/ngày', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'WORKING_DAYS_PER_MONTH', value: '26', description: 'Số ngày làm việc/tháng', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-        { key: 'ANNUAL_LEAVE_DAYS', value: '12', description: 'Số ngày phép năm', category: 'HR & Payroll', lastUpdated: new Date().toISOString() },
-    ],
-    'Repair SLA': [
-        { key: 'REPAIR_WARRANTY_MONTHS', value: '3', description: 'Bảo hành dịch vụ sửa chữa (tháng)', category: 'Repair SLA', lastUpdated: new Date().toISOString() },
-        { key: 'REPAIR_RESPONSE_TIME', value: '24', description: 'Thời gian phản hồi yêu cầu (giờ)', category: 'Repair SLA', lastUpdated: new Date().toISOString() },
-        { key: 'REPAIR_COMPLETION_TIME', value: '72', description: 'Thời gian hoàn thành sửa chữa (giờ)', category: 'Repair SLA', lastUpdated: new Date().toISOString() },
-        { key: 'DIAGNOSTIC_FEE', value: '100000', description: 'Phí kiểm tra chẩn đoán (VNĐ)', category: 'Repair SLA', lastUpdated: new Date().toISOString() },
-        { key: 'URGENT_REPAIR_FEE', value: '200000', description: 'Phí sửa chữa khẩn cấp (VNĐ)', category: 'Repair SLA', lastUpdated: new Date().toISOString() },
-    ],
-    'Security': [
-        { key: 'SESSION_TIMEOUT', value: '3600', description: 'Thời gian timeout phiên (giây)', category: 'Security', lastUpdated: new Date().toISOString() },
-        { key: 'MAX_LOGIN_ATTEMPTS', value: '5', description: 'Số lần đăng nhập sai tối đa', category: 'Security', lastUpdated: new Date().toISOString() },
-        { key: 'PASSWORD_MIN_LENGTH', value: '8', description: 'Độ dài mật khẩu tối thiểu', category: 'Security', lastUpdated: new Date().toISOString() },
-        { key: 'REQUIRE_2FA', value: 'false', description: 'Bắt buộc xác thực 2 yếu tố (true/false)', category: 'Security', lastUpdated: new Date().toISOString() },
-        { key: 'PASSWORD_EXPIRY_DAYS', value: '90', description: 'Thời gian hết hạn mật khẩu (ngày)', category: 'Security', lastUpdated: new Date().toISOString() },
-    ],
-    'AI Chatbot': [
-        { key: 'CHATBOT_ENABLED', value: 'true', description: 'Bật/tắt chatbot (true/false)', category: 'AI Chatbot', lastUpdated: new Date().toISOString() },
-        { key: 'CHATBOT_GREETING', value: 'Xin chào! Tôi có thể giúp gì cho bạn?', description: 'Tin nhắn chào mừng', category: 'AI Chatbot', lastUpdated: new Date().toISOString() },
-        { key: 'CHATBOT_RESPONSE_DELAY', value: '1500', description: 'Độ trễ phản hồi (ms)', category: 'AI Chatbot', lastUpdated: new Date().toISOString() },
-        { key: 'CHATBOT_MAX_MESSAGES', value: '50', description: 'Số tin nhắn tối đa lưu trữ', category: 'AI Chatbot', lastUpdated: new Date().toISOString() },
-    ],
-    'Notifications': [
-        { key: 'EMAIL_NOTIFICATIONS', value: 'true', description: 'Gửi thông báo qua email (true/false)', category: 'Notifications', lastUpdated: new Date().toISOString() },
-        { key: 'SMS_NOTIFICATIONS', value: 'false', description: 'Gửi thông báo qua SMS (true/false)', category: 'Notifications', lastUpdated: new Date().toISOString() },
-        { key: 'ORDER_CONFIRMATION_EMAIL', value: 'true', description: 'Email xác nhận đơn hàng (true/false)', category: 'Notifications', lastUpdated: new Date().toISOString() },
-        { key: 'LOW_STOCK_ALERT_THRESHOLD', value: '5', description: 'Ngưỡng cảnh báo hết hàng', category: 'Notifications', lastUpdated: new Date().toISOString() },
-    ],
-    'Social Media': [
-        { key: 'FACEBOOK_URL', value: 'https://facebook.com/quanghuongcomputer', description: 'Link Facebook fanpage', category: 'Social Media', lastUpdated: new Date().toISOString() },
-        { key: 'YOUTUBE_URL', value: 'https://youtube.com/@quanghuongcomputer', description: 'Link Youtube channel', category: 'Social Media', lastUpdated: new Date().toISOString() },
-        { key: 'INSTAGRAM_URL', value: 'https://instagram.com/quanghuongcomputer', description: 'Link Instagram', category: 'Social Media', lastUpdated: new Date().toISOString() },
-        { key: 'TIKTOK_URL', value: 'https://tiktok.com/@quanghuongcomputer', description: 'Link TikTok', category: 'Social Media', lastUpdated: new Date().toISOString() },
-        { key: 'ZALO_PHONE', value: '0904235090', description: 'Số Zalo hỗ trợ', category: 'Social Media', lastUpdated: new Date().toISOString() },
-    ]
+    'Company': buildDefaults('Company', [
+        { key: 'COMPANY_NAME', value: 'Quang Hưởng Computer', description: 'Tên công ty hiển thị trên website' },
+        { key: 'COMPANY_FULL_NAME', value: 'CÔNG TY TNHH QUANG HƯỞNG COMPUTER', description: 'Tên đầy đủ công ty (dùng cho hóa đơn)' },
+        { key: 'COMPANY_ADDRESS', value: 'Số 179 Thôn 3/2 Xã Vĩnh Bảo Thành phố Hải Phòng', description: 'Địa chỉ công ty' },
+        { key: 'COMPANY_PHONE', value: '0904.235.090', description: 'Số điện thoại chính' },
+        { key: 'COMPANY_PHONE_2', value: '02253.xxx.xxx', description: 'Số điện thoại phụ' },
+        { key: 'COMPANY_EMAIL', value: 'quanghuongvbhp@gmail.com', description: 'Email liên hệ chính' },
+        { key: 'COMPANY_TAX_CODE', value: '0123456789', description: 'Mã số thuế' },
+        { key: 'COMPANY_WEBSITE', value: 'https://quanghuongcomputer.vn', description: 'Website chính thức' },
+        { key: 'COMPANY_SLOGAN', value: 'Uy Tín - Chất Lượng - Giá Tốt', description: 'Slogan công ty' },
+        { key: 'COMPANY_WORKING_HOURS', value: '7:00 - 17h15 (Từ thứ 2 đến thứ 7)', description: 'Thời gian làm việc' },
+        { key: 'COMPANY_BRAND_TEXT_1', value: 'QUANG HƯỞNG', description: 'Tên thương hiệu dòng 1 (Header)' },
+        { key: 'COMPANY_BRAND_TEXT_2', value: 'COMPUTER', description: 'Tên thương hiệu dòng 2 (Header)' },
+    ]),
+    'Sales & Tax': buildDefaults('Sales & Tax', [
+        { key: 'TAX_RATE', value: '0.08', description: 'Thuế VAT (%) - Mặc định 8%' },
+        { key: 'COMMISSION_RATE', value: '0.05', description: 'Hoa hồng bán hàng (%) - Mặc định 5%' },
+        { key: 'VIP_DISCOUNT_RATE', value: '0.10', description: 'Chiết khấu khách VIP (%) - Mặc định 10%' },
+        { key: 'MIN_ORDER_AMOUNT', value: '100000', description: 'Giá trị đơn hàng tối thiểu (VNĐ)' },
+        { key: 'FREESHIP_THRESHOLD', value: '500000', description: 'Ngưỡng freeship (VNĐ)' },
+        { key: 'SHIPPING_FEE', value: '30000', description: 'Phí ship cơ bản (VNĐ)' },
+        { key: 'RETURN_PERIOD_DAYS', value: '7', description: 'Thời gian đổi trả (ngày)' },
+        { key: 'WARRANTY_PERIOD_MONTHS', value: '36', description: 'Thời gian bảo hành cơ bản (tháng)' },
+    ]),
+    'HR & Payroll': buildDefaults('HR & Payroll', [
+        { key: 'BASE_SALARY', value: '5000000', description: 'Lương cơ bản nhân viên (VNĐ)' },
+        { key: 'OVERTIME_RATE', value: '1.5', description: 'Hệ số làm thêm giờ' },
+        { key: 'BONUS_RATE', value: '0.15', description: 'Tỷ lệ thưởng (%) trên doanh số' },
+        { key: 'SOCIAL_INSURANCE_RATE', value: '0.105', description: 'Tỷ lệ BHXH (%) - 10.5%' },
+        { key: 'HEALTH_INSURANCE_RATE', value: '0.03', description: 'Tỷ lệ BHYT (%) - 3%' },
+        { key: 'UNEMPLOYMENT_INSURANCE_RATE', value: '0.01', description: 'Tỷ lệ BHTN (%) - 1%' },
+        { key: 'WORKING_HOURS_PER_DAY', value: '8', description: 'Số giờ làm việc/ngày' },
+        { key: 'WORKING_DAYS_PER_MONTH', value: '26', description: 'Số ngày làm việc/tháng' },
+        { key: 'ANNUAL_LEAVE_DAYS', value: '12', description: 'Số ngày phép năm' },
+    ]),
+    'Repair SLA': buildDefaults('Repair SLA', [
+        { key: 'REPAIR_WARRANTY_MONTHS', value: '3', description: 'Bảo hành dịch vụ sửa chữa (tháng)' },
+        { key: 'REPAIR_RESPONSE_TIME', value: '24', description: 'Thời gian phản hồi yêu cầu (giờ)' },
+        { key: 'REPAIR_COMPLETION_TIME', value: '72', description: 'Thời gian hoàn thành sửa chữa (giờ)' },
+        { key: 'DIAGNOSTIC_FEE', value: '100000', description: 'Phí kiểm tra chẩn đoán (VNĐ)' },
+        { key: 'URGENT_REPAIR_FEE', value: '200000', description: 'Phí sửa chữa khẩn cấp (VNĐ)' },
+    ]),
+    'Security': buildDefaults('Security', [
+        { key: 'SESSION_TIMEOUT', value: '3600', description: 'Thời gian timeout phiên (giây)' },
+        { key: 'MAX_LOGIN_ATTEMPTS', value: '5', description: 'Số lần đăng nhập sai tối đa' },
+        { key: 'PASSWORD_MIN_LENGTH', value: '8', description: 'Độ dài mật khẩu tối thiểu' },
+        { key: 'REQUIRE_2FA', value: 'false', description: 'Bắt buộc xác thực 2 yếu tố (true/false)' },
+        { key: 'PASSWORD_EXPIRY_DAYS', value: '90', description: 'Thời gian hết hạn mật khẩu (ngày)' },
+    ]),
+    'AI Chatbot': buildDefaults('AI Chatbot', [
+        { key: 'CHATBOT_ENABLED', value: 'true', description: 'Bật/tắt chatbot (true/false)' },
+        { key: 'CHATBOT_GREETING', value: 'Xin chào! Tôi có thể giúp gì cho bạn?', description: 'Tin nhắn chào mừng' },
+        { key: 'CHATBOT_RESPONSE_DELAY', value: '1500', description: 'Độ trễ phản hồi (ms)' },
+        { key: 'CHATBOT_MAX_MESSAGES', value: '50', description: 'Số tin nhắn tối đa lưu trữ' },
+    ]),
+    'Notifications': buildDefaults('Notifications', [
+        { key: 'EMAIL_NOTIFICATIONS', value: 'true', description: 'Gửi thông báo qua email (true/false)' },
+        { key: 'SMS_NOTIFICATIONS', value: 'false', description: 'Gửi thông báo qua SMS (true/false)' },
+        { key: 'ORDER_CONFIRMATION_EMAIL', value: 'true', description: 'Email xác nhận đơn hàng (true/false)' },
+        { key: 'LOW_STOCK_ALERT_THRESHOLD', value: '5', description: 'Ngưỡng cảnh báo hết hàng' },
+    ]),
+    'Social Media': buildDefaults('Social Media', [
+        { key: 'FACEBOOK_URL', value: 'https://facebook.com/quanghuongcomputer', description: 'Link Facebook fanpage' },
+        { key: 'YOUTUBE_URL', value: 'https://youtube.com/@quanghuongcomputer', description: 'Link Youtube channel' },
+        { key: 'INSTAGRAM_URL', value: 'https://instagram.com/quanghuongcomputer', description: 'Link Instagram' },
+        { key: 'TIKTOK_URL', value: 'https://tiktok.com/@quanghuongcomputer', description: 'Link TikTok' },
+        { key: 'ZALO_PHONE', value: '0904235090', description: 'Số Zalo hỗ trợ' },
+    ]),
 };
 
 export const ConfigPortal = () => {
@@ -198,15 +261,25 @@ export const ConfigPortal = () => {
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
-                const imported = JSON.parse(event.target?.result as string);
-                if (Array.isArray(imported)) {
-                    // Simple validation: Ensure keys exist
-                    const validImport = imported.filter(i => i.key && typeof i.value !== 'undefined');
-                    setConfigs(validImport);
-                    setHasChanges(true);
-                    toast.success('Đã nạp file cấu hình. Vui lòng kiểm tra và lưu lại.');
+                const imported: unknown = JSON.parse(event.target?.result as string);
+                if (!Array.isArray(imported)) {
+                    toast.error('File cấu hình phải là một mảng JSON');
+                    return;
                 }
-            } catch (err) {
+
+                const validImport = imported
+                    .map(normalizeImportedConfig)
+                    .filter((entry): entry is ConfigurationEntry => entry !== null);
+
+                if (validImport.length === 0) {
+                    toast.error('Không có mục cấu hình hợp lệ nào trong file');
+                    return;
+                }
+
+                setConfigs(validImport);
+                setHasChanges(true);
+                toast.success(`Đã nạp ${validImport.length} mục cấu hình. Vui lòng kiểm tra và lưu lại.`);
+            } catch {
                 toast.error('File JSON không hợp lệ');
             }
         };

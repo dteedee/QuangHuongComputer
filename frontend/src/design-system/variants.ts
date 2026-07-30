@@ -46,6 +46,33 @@ export const labelVariants = cva(
   'block text-sm font-semibold text-gray-700'
 );
 
+export const badgeVariants = cva(
+  'inline-flex items-center justify-center gap-1 rounded-full font-semibold whitespace-nowrap',
+  {
+    variants: {
+      variant: {
+        default: 'bg-gray-100 text-gray-700',
+        primary: 'bg-[#D70018]/10 text-[#D70018]',
+        success: 'bg-green-100 text-green-700',
+        warning: 'bg-amber-100 text-amber-700',
+        danger: 'bg-red-100 text-red-700',
+        info: 'bg-blue-100 text-blue-700',
+      },
+      size: {
+        sm: 'px-2 py-0.5 text-[10px]',
+        md: 'px-2.5 py-1 text-xs',
+        lg: 'px-3 py-1.5 text-sm',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  }
+);
+
+export type BadgeVariants = VariantProps<typeof badgeVariants>;
+
 export const cardVariants = cva(
   'rounded-2xl overflow-hidden transition-all duration-300',
   {

@@ -1,18 +1,24 @@
 
 import client from './client';
 
-export enum ClaimStatus {
-    Pending = 'Pending',
-    Approved = 'Approved',
-    Rejected = 'Rejected',
-    Resolved = 'Resolved'
-}
+// Plain const objects instead of `enum`: tsconfig bật `erasableSyntaxOnly`
+// (enum sinh mã runtime nên không hợp lệ). Vẫn dùng được cả ở vị trí giá trị và kiểu.
+export const ClaimStatus = {
+    Pending: 'Pending',
+    Approved: 'Approved',
+    Rejected: 'Rejected',
+    Resolved: 'Resolved'
+} as const;
 
-export enum ResolutionPreference {
-    Repair = 'Repair',
-    Replace = 'Replace',
-    Refund = 'Refund'
-}
+export type ClaimStatus = (typeof ClaimStatus)[keyof typeof ClaimStatus];
+
+export const ResolutionPreference = {
+    Repair: 'Repair',
+    Replace: 'Replace',
+    Refund: 'Refund'
+} as const;
+
+export type ResolutionPreference = (typeof ResolutionPreference)[keyof typeof ResolutionPreference];
 
 export interface WarrantyClaim {
     id: string;

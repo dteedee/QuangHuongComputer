@@ -3,13 +3,8 @@ import { Star } from 'lucide-react';
 interface RatingBreakdownProps {
   averageRating: number;
   totalReviews: number;
-  ratingCounts: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
+  /** Số lượng đánh giá theo từng mức sao (1-5). Mức chưa có đánh giá có thể vắng mặt. */
+  ratingCounts: Record<number, number>;
 }
 
 export default function RatingBreakdown({
@@ -58,7 +53,7 @@ export default function RatingBreakdown({
         {/* Rating Distribution */}
         <div className="flex-1 space-y-3">
           {[5, 4, 3, 2, 1].map((star) => {
-            const count = ratingCounts[star as keyof typeof ratingCounts] || 0;
+            const count = ratingCounts[star] ?? 0;
             const percentage = getPercentage(count);
 
             return (

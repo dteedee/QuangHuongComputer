@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Plus } from 'lucide-react';
-import { DataTable, Column } from './DataTable';
+import { DataTable, type Column } from './DataTable';
 
 export interface CrudListPageProps<T extends { id: string }> {
   title: string;

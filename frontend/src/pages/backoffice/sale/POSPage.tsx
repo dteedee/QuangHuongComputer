@@ -4,7 +4,7 @@ import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { useNavigate } from 'react-router-dom';
 import { catalogApi, type Product } from '../../../api/catalog';
 import { adminApi } from '../../../api/admin';
-import { useCart } from '../../../context/CartContext';
+import { useCart, type CartItem } from '../../../context/CartContext';
 import {
   Search,
   ShoppingCart,
@@ -40,14 +40,28 @@ interface Customer {
   email: string;
 }
 
+type PosPaymentMethod = 'cash' | 'card' | 'transfer';
+
 interface HeldOrder {
   id: string;
-  items: typeof items;
+  items: CartItem[];
   customer: Customer | null;
   discount: number;
   discountType: 'percentage' | 'fixed';
   notes: string;
-  heldAt: Date;
+  /** ISO string — đơn giữ được lưu vào localStorage nên luôn bị JSON hoá thành chuỗi. */
+  heldAt: string;
+}
+
+interface CompletedOrder {
+  orderNumber: string;
+  items: CartItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  customer: Customer | null;
+  paymentMethod: PosPaymentMethod;
 }
 
 // Receipt Modal Component
@@ -56,7 +70,7 @@ const ReceiptModal = ({
   onClose,
   onPrint
 }: {
-  order: { orderNumber: string; items: any[]; subtotal: number; tax: number; discount: number; total: number; customer: Customer | null; paymentMethod: string };
+  order: CompletedOrder;
   onClose: () => void;
   onPrint: () => void;
 }) => {
@@ -372,7 +386,7 @@ export default function POSPage() {
   const [notes, setNotes] = useState('');
 
   const [processingOrder, setProcessingOrder] = useState(false);
-  const [completedOrder, setCompletedOrder] = useState<any>(null);
+  const [completedOrder, setCompletedOrder] = useState<CompletedOrder | null>(null);
 
   // Hold orders
   const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([]);
@@ -390,7 +404,13 @@ export default function POSPage() {
     // Load held orders from localStorage
     const saved = localStorage.getItem('pos_held_orders');
     if (saved) {
-      setHeldOrders(JSON.parse(saved));
+      try {
+        const parsed: unknown = JSON.parse(saved);
+        setHeldOrders(Array.isArray(parsed) ? (parsed as HeldOrder[]) : []);
+      } catch {
+        // Dữ liệu localStorage hỏng — bỏ qua thay vì làm trắng trang POS
+        localStorage.removeItem('pos_held_orders');
+      }
     }
   }, []);
 
@@ -489,7 +509,7 @@ export default function POSPage() {
       discount,
       discountType,
       notes,
-      heldAt: new Date()
+      heldAt: new Date().toISOString()
     };
 
     setHeldOrders([...heldOrders, heldOrder]);
@@ -500,24 +520,23 @@ export default function POSPage() {
     toast.success('Đã giữ đơn hàng');
   };
 
-  const handleResumeOrder = (order: HeldOrder) => {
-    // Clear current cart first
-    clearCart();
+  const handleResumeOrder = async (order: HeldOrder) => {
+    // Clear current cart first — phải chờ xong, nếu không sẽ đua với các lệnh thêm bên dưới
+    await clearCart();
 
-    // Add items from held order
-    order.items.forEach(item => {
-      addToCart({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        stockQuantity: 999, // We already reserved
-        imageUrl: item.imageUrl
-      } as Product);
-      // Update quantity if more than 1
-      if (item.quantity > 1) {
-        updateQuantity(item.id, item.quantity);
-      }
-    });
+    // Thêm lại từng dòng hàng tuần tự. Mỗi lệnh addToCart gọi API rồi refresh giỏ,
+    // nên chạy song song (forEach + async) sẽ ghi đè lẫn nhau và mất hàng.
+    for (const item of order.items) {
+      await addToCart(
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          stockQuantity: item.stockQuantity
+        },
+        item.quantity
+      );
+    }
 
     setSelectedCustomer(order.customer);
     setDiscount(order.discount);
@@ -535,7 +554,7 @@ export default function POSPage() {
     toast.success('Đã xóa đơn hàng');
   };
 
-  const handleProcessOrder = async (paymentMethod: 'cash' | 'card' | 'transfer') => {
+  const handleProcessOrder = async (paymentMethod: PosPaymentMethod) => {
     if (items.length === 0) {
       toast.error('Giỏ hàng trống');
       return;
@@ -1050,7 +1069,7 @@ export default function POSPage() {
               order={{
                 orderNumber: completedOrder.orderNumber,
                 orderDate: new Date().toISOString(),
-                items: completedOrder.items.map((item: any) => ({
+                items: completedOrder.items.map((item) => ({
                   name: item.name,
                   quantity: item.quantity,
                   unitPrice: item.price,

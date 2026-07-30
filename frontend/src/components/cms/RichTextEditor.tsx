@@ -1,5 +1,5 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify';
 import {
   Bold,
   Italic,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 // Configure DOMPurify to allow safe HTML elements for rich text editing
-const sanitizeConfig: DOMPurify.Config = {
+const sanitizeConfig = {
   ALLOWED_TAGS: [
     'p', 'br', 'b', 'i', 'u', 'strong', 'em', 'strike', 's',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -29,7 +29,9 @@ const sanitizeConfig: DOMPurify.Config = {
   ADD_ATTR: ['target'],
   FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input'],
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
-};
+  // Ép trả về string thay vì TrustedHTML để dùng trực tiếp với innerHTML/state
+  RETURN_TRUSTED_TYPE: false,
+} satisfies DOMPurifyConfig;
 
 // Sanitize HTML content to prevent XSS attacks
 const sanitizeHtml = (dirty: string): string => {

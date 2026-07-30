@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { systemConfigApi, type ConfigurationEntry, getConfigValue, configParsers } from '../api/systemConfig';
 
 interface SystemConfigContextValue {
@@ -49,7 +49,8 @@ export const SystemConfigProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getJson = <T,>(key: string, fallback: T): T => {
-    return getConfigValue(configs, key, fallback, configParsers.json);
+    // configParsers.json là hàm generic; phải chỉ định T rõ ràng, nếu không TS suy ra `unknown`.
+    return getConfigValue(configs, key, fallback, configParsers.json<T>);
   };
 
   return (

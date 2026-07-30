@@ -8,6 +8,7 @@ import {
     FIELD_TYPES,
     type CustomFieldDefinition,
     type CreateCustomFieldDto,
+    type UpdateCustomFieldDto,
     type EntityType,
     type FieldType,
 } from '../../api/custom-fields';
@@ -218,7 +219,7 @@ export default function CustomFieldsManager() {
     });
 
     const updateMut = useMutation({
-        mutationFn: ({ id, dto }: { id: string; dto: Partial<CreateCustomFieldDto> }) =>
+        mutationFn: ({ id, dto }: { id: string; dto: UpdateCustomFieldDto }) =>
             customFieldsApi.update(id, dto),
         onSuccess: () => { toast.success('Field updated'); qc.invalidateQueries({ queryKey }); setEditingId(null); },
         onError: (e: { response?: { data?: { error?: string } } }) =>

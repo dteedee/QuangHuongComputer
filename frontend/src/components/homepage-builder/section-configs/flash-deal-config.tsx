@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, Toggle } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, Toggle } from './section-config-form-helpers';
 
 export const FlashDealConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {
     const tag = (config.tag as string) ?? 'sale';

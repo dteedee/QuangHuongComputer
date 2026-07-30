@@ -87,7 +87,7 @@ const ProductGridPreview: React.FC<{ config: Record<string, unknown> }> = ({ con
             <div className="flex items-center gap-2 mb-2">
                 <ShoppingBag size={14} className="text-blue-500" />
                 <span className="text-xs font-bold text-gray-700 uppercase">Products</span>
-                {config.categorySlug && <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 rounded">{String(config.categorySlug)}</span>}
+                {config.categorySlug ? <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 rounded">{String(config.categorySlug)}</span> : null}
             </div>
             <div className="flex gap-1.5">
                 {Array.from({ length: Math.min(limit, 5) }).map((_, i) => (

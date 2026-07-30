@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, SelectField } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, SelectField } from './section-config-form-helpers';
 
 export const CategoryGridConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {
     const limit = (config.limit as number) ?? 8;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label } from './section-config-form-helpers';
 
 export const ProductGridConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {
     const icon = (config.icon as string) ?? '';

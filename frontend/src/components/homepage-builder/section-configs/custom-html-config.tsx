@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Label } from './section-config-form-helpers';
+import { type ConfigFormProps, Label } from './section-config-form-helpers';
 
 export const CustomHtmlConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {
     const html = (config.html as string) ?? '';

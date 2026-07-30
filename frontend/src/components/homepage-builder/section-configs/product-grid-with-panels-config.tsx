@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, Toggle, ItemList } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, Toggle, ItemList } from './section-config-form-helpers';
 
 interface BrandTab { name: string; brandId: string; }
 interface SidePanel { imageUrl: string; link: string; }

@@ -81,6 +81,8 @@ export interface CheckoutDto {
     pickupStoreName?: string;
     customerId?: string;
     manualDiscount?: number;
+    /** Phí vận chuyển. Backend: CheckoutDto.ShippingFee (decimal, mặc định 0). */
+    shippingFee?: number;
 }
 
 export interface GuestCheckoutDto {

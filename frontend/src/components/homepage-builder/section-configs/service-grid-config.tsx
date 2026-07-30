@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, SelectField, ItemList } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, SelectField, ItemList } from './section-config-form-helpers';
 
 interface ServiceItem { icon?: string; title?: string; desc?: string; }
 

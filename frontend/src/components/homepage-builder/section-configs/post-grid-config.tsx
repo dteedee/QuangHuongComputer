@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, SelectField } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, SelectField } from './section-config-form-helpers';
 
 export const PostGridConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {
     const postType = (config.postType as string) ?? 'News';

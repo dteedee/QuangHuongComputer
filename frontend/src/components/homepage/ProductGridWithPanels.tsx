@@ -57,7 +57,7 @@ export const ProductGridWithPanels: React.FC<ProductGridWithPanelsProps> = ({ ti
         return true;
     }).filter(p => {
         if (activeBrand === 'all') return true;
-        return (p as any).brandId === activeBrand || p.brand === activeBrand;
+        return p.brandId === activeBrand;
     }).slice(0, limit) || [];
 
     if (isLoading && filteredProducts.length === 0) return null;

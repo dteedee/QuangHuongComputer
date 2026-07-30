@@ -128,9 +128,9 @@ export function TaxReportsPage() {
                         </button>
                     </div>
                     <SearchableSelect
-                        value={month}
+                        value={String(month)}
                         onChange={(val) => setMonth(Number(val))}
-                        options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `Tháng ${i + 1}` }))}
+                        options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Tháng ${i + 1}` }))}
                         placeholder="Chọn tháng"
                     />
                     <input

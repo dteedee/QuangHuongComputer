@@ -10,7 +10,7 @@ interface ApiErrorResponse {
     error?: string;
 }
 
-interface CartItem {
+export interface CartItem {
     id: string;
     name: string;
     price: number;
@@ -19,9 +19,16 @@ interface CartItem {
     stockQuantity: number;
 }
 
+/**
+ * Tập trường tối thiểu `addToCart` thực sự cần. Khai báo hẹp để nơi gọi
+ * (VD: POS khôi phục đơn đang giữ) không phải bịa một `Product` đầy đủ.
+ * Mọi `Product` đều thoả kiểu này nên các nơi gọi cũ không đổi.
+ */
+export type CartProductInput = Pick<Product, 'id' | 'name' | 'price' | 'stockQuantity'>;
+
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: Product, quantity?: number) => Promise<void>;
+    addToCart: (product: CartProductInput, quantity?: number) => Promise<void>;
     removeFromCart: (productId: string) => Promise<void>;
     updateQuantity: (productId: string, quantity: number) => Promise<void>;
     clearCart: () => Promise<void>;
@@ -101,7 +108,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [isAuthenticated, refreshCart]);
 
-    const addToCart = useCallback(async (product: Product, quantity: number = 1) => {
+    const addToCart = useCallback(async (product: CartProductInput, quantity: number = 1) => {
         if (!isAuthenticated) {
             toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
             return;

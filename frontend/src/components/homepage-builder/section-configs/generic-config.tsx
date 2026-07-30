@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ConfigFormProps, Label } from './section-config-form-helpers';
+import { type ConfigFormProps, Label } from './section-config-form-helpers';
 
 /** Fallback: raw JSON editor for section types without a dedicated form. */
 export const GenericConfig: React.FC<ConfigFormProps> = ({ config, onChange }) => {

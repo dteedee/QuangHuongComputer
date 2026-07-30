@@ -24,7 +24,11 @@ const expenseSchema = z.object({
     notes: z.string().optional(),
 });
 
-type ExpenseFormData = z.infer<typeof expenseSchema>;
+// `currency` có `.default('VND')` nên input (trước parse) khác output (sau parse):
+// input coi currency là optional, output đảm bảo luôn có. useForm phải khai báo cả hai,
+// nếu không zodResolver và kiểu form sẽ lệch nhau.
+type ExpenseFormInput = z.input<typeof expenseSchema>;
+type ExpenseFormData = z.output<typeof expenseSchema>;
 
 interface CreateExpenseModalProps {
     isOpen: boolean;
@@ -41,7 +45,8 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
         formState: { errors },
         reset,
         watch,
-    } = useForm<ExpenseFormData>({
+        setValue,
+    } = useForm<ExpenseFormInput, unknown, ExpenseFormData>({
         resolver: zodResolver(expenseSchema),
         defaultValues: {
             categoryId: '',
@@ -56,6 +61,10 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
 
     const amount = watch('amount');
     const vatRate = watch('vatRate');
+    // SearchableSelect là controlled component: phải truyền cả value, nếu không
+    // ô chọn luôn hiện placeholder dù người dùng đã chọn.
+    const categoryId = watch('categoryId');
+    const currency = watch('currency');
     const vatAmount = amount * vatRate / 100;
     const totalAmount = amount + vatAmount;
 
@@ -96,7 +105,8 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <SearchableSelect
                                         disabled={isSubmitting}
                                         placeholder="Chọn danh mục"
-                                        onChange={(val: string) => register('categoryId').onChange({ target: { name: 'categoryId', value: val } })}
+                                        value={categoryId}
+                                        onChange={(val: string) => setValue('categoryId', val, { shouldValidate: true, shouldDirty: true })}
                                         options={categories.filter(c => c.isActive).map((cat) => ({ value: cat.id, label: `${cat.name} (${cat.code})` }))}
                                     />
                                     {errors.categoryId && <p className="mt-1 text-xs text-red-500">{errors.categoryId.message}</p>}
@@ -151,7 +161,8 @@ function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmittin
                                     <label className="text-xs text-slate-400 mb-2 block">Tiền tệ</label>
                                     <SearchableSelect
                                         disabled={isSubmitting}
-                                        onChange={(val: string) => register('currency').onChange({ target: { name: 'currency', value: val } })}
+                                        value={currency}
+                                        onChange={(val: string) => setValue('currency', val, { shouldDirty: true })}
                                         options={[
                                             { value: 'VND', label: 'VND' },
                                             { value: 'USD', label: 'USD' },

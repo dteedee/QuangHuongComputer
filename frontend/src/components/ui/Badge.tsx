@@ -1,4 +1,4 @@
-import { HTMLAttributes, ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { badgeVariants, type BadgeVariants } from '../../design-system/variants';
 import { cn } from '../../lib/utils';
 

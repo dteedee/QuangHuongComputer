@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';

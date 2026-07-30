@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfigFormProps, Input, Label, SelectField, ItemList } from './section-config-form-helpers';
+import { type ConfigFormProps, Input, Label, SelectField, ItemList } from './section-config-form-helpers';
 
 interface Banner { title?: string; subtitle?: string; icon?: string; gradient?: string; link?: string; }
 

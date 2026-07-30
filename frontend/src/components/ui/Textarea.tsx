@@ -1,4 +1,4 @@
-import { TextareaHTMLAttributes, forwardRef } from 'react';
+import { forwardRef, type TextareaHTMLAttributes } from 'react';
 import { inputVariants, labelVariants } from '../../design-system/variants';
 import { cn } from '../../lib/utils';
 
@@ -25,7 +25,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            inputVariants({ state: hasError ? 'error' : 'default' }),
+            inputVariants({ variant: hasError ? 'error' : 'default' }),
             'resize-none',
             className
           )}
