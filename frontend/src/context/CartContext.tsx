@@ -61,7 +61,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const [items, setItems] = useState<CartItem[]>([]);
     const [couponCode, setCouponCode] = useState<string | null>(null);
     const [discountAmount, setDiscountAmount] = useState<number>(0);
-    const [taxRate, setTaxRate] = useState<number>(0.1);
+    // VAT VN hiện hành 8%. Backend là nguồn sự thật (BuildingBlocks.TaxRates.VatStandard).
+    // Giá trị này chỉ dùng cho lần render đầu trước khi cart API trả về; refreshCart() sẽ ghi đè.
+    const [taxRate, setTaxRate] = useState<number>(0.08);
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 

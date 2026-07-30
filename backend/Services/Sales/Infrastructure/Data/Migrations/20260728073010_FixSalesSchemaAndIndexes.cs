@@ -535,12 +535,9 @@ namespace Sales.Infrastructure.Data.Migrations
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp with time zone");
 
-            migrationBuilder.AddColumn<string>(
-                name: "CouponCode",
-                schema: "public",
-                table: "Carts",
-                type: "text",
-                nullable: true);
+            // Idempotent: DB có thể đã có cột này do DO $$ ALTER TABLE hotfix cũ (Program.cs:327 trước refactor).
+            // Dùng IF NOT EXISTS để migration không crash trên DB đã boot HEAD cũ.
+            migrationBuilder.Sql(@"ALTER TABLE ""Carts"" ADD COLUMN IF NOT EXISTS ""CouponCode"" text;");
 
             migrationBuilder.CreateTable(
                 name: "CustomerAddresses",

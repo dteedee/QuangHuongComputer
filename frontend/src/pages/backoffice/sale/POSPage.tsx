@@ -114,7 +114,7 @@ const ReceiptModal = ({
               <span>{formatCurrency(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">VAT (10%)</span>
+              <span className="text-gray-600">VAT (8%)</span>
               <span>{formatCurrency(order.tax)}</span>
             </div>
             {order.discount > 0 && (
@@ -964,7 +964,7 @@ export default function POSPage() {
                 <span className="font-medium">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">VAT (10%)</span>
+                <span className="text-gray-600">VAT (8%)</span>
                 <span className="font-medium">{formatCurrency(tax)}</span>
               </div>
               {discount > 0 && (
