@@ -1,42 +1,19 @@
-using BuildingBlocks.SharedKernel;
+using BB = BuildingBlocks.TaxEngine;
 
 namespace Accounting.Domain;
 
 /// <summary>
-/// Vietnamese Tax Engine - Thuế Việt Nam
-/// Implements PIT (TNCN), VAT (GTGT), CIT (TNDN), and Social Insurance calculations
-/// Based on current Vietnamese tax law (2024-2025)
+/// [DEPRECATED] Alias tương thích ngược. Source of truth đã chuyển sang
+/// <see cref="BB.VietnameseTaxEngine"/> ở BuildingBlocks để cả HR và Accounting dùng chung.
+/// Giữ file này chỉ để các test cũ / code cũ trong Accounting/AccountingEndpoints.cs
+/// không bị vỡ đột ngột. Code mới hãy dùng <c>BuildingBlocks.TaxEngine.VietnameseTaxEngine</c>.
 /// </summary>
 public static class VietnameseTaxEngine
 {
-    // ============================================
-    // PERSONAL INCOME TAX (PIT / Thuế TNCN)
-    // ============================================
-    // Progressive tax rates per Vietnamese law
-    // Personal deduction: 11,000,000 VND/month
-    // Dependent deduction: 4,400,000 VND/dependent/month
-    // ============================================
+    // ---- PIT ----
+    public const decimal PersonalDeduction = BB.VietnameseTaxEngine.PersonalDeduction;
+    public const decimal DependentDeduction = BB.VietnameseTaxEngine.DependentDeduction;
 
-    public const decimal PersonalDeduction = 11_000_000m;  // Giảm trừ bản thân
-    public const decimal DependentDeduction = 4_400_000m;  // Giảm trừ người phụ thuộc
-
-    /// <summary>
-    /// Progressive PIT tax brackets (monthly taxable income ranges)
-    /// </summary>
-    private static readonly (decimal UpperLimit, decimal Rate)[] PitBrackets = new[]
-    {
-        (5_000_000m,   0.05m),   // Bậc 1: đến 5 triệu → 5%
-        (10_000_000m,  0.10m),   // Bậc 2: 5-10 triệu → 10%
-        (18_000_000m,  0.15m),   // Bậc 3: 10-18 triệu → 15%
-        (32_000_000m,  0.20m),   // Bậc 4: 18-32 triệu → 20%
-        (52_000_000m,  0.25m),   // Bậc 5: 32-52 triệu → 25%
-        (80_000_000m,  0.30m),   // Bậc 6: 52-80 triệu → 30%
-        (decimal.MaxValue, 0.35m) // Bậc 7: trên 80 triệu → 35%
-    };
-
-    /// <summary>
-    /// Calculate monthly PIT (Thuế TNCN) from gross salary
-    /// </summary>
     public static PitCalculationResult CalculateMonthlyPit(
         decimal grossSalary,
         int numberOfDependents = 0,
@@ -44,277 +21,129 @@ public static class VietnameseTaxEngine
         decimal healthInsurance = 0,
         decimal unemploymentInsurance = 0,
         decimal otherDeductions = 0)
-    {
-        // Step 1: Total insurance deductions
-        var totalInsurance = socialInsurance + healthInsurance + unemploymentInsurance;
+        => Map(BB.VietnameseTaxEngine.CalculateMonthlyPit(
+            grossSalary, numberOfDependents, socialInsurance, healthInsurance,
+            unemploymentInsurance, otherDeductions));
 
-        // Step 2: Pre-tax income = Gross - Insurance
-        var preTaxIncome = grossSalary - totalInsurance;
+    // ---- Insurance ----
+    public const decimal SocialInsuranceRate_Employee = BB.VietnameseTaxEngine.SocialInsuranceRate_Employee;
+    public const decimal HealthInsuranceRate_Employee = BB.VietnameseTaxEngine.HealthInsuranceRate_Employee;
+    public const decimal UnemploymentInsuranceRate_Employee = BB.VietnameseTaxEngine.UnemploymentInsuranceRate_Employee;
+    public const decimal TotalInsuranceRate_Employee = BB.VietnameseTaxEngine.TotalInsuranceRate_Employee;
+    public const decimal SocialInsuranceRate_Employer = BB.VietnameseTaxEngine.SocialInsuranceRate_Employer;
+    public const decimal HealthInsuranceRate_Employer = BB.VietnameseTaxEngine.HealthInsuranceRate_Employer;
+    public const decimal UnemploymentInsuranceRate_Employer = BB.VietnameseTaxEngine.UnemploymentInsuranceRate_Employer;
+    public const decimal TotalInsuranceRate_Employer = BB.VietnameseTaxEngine.TotalInsuranceRate_Employer;
+    public const decimal BaseSalary2025 = BB.VietnameseTaxEngine.BaseSalary2025;
+    public const decimal MaxInsurableSalary = BB.VietnameseTaxEngine.MaxInsurableSalary;
 
-        // Step 3: Taxable income = Pre-tax - Personal deduction - Dependent deductions - Other
-        var personalDeduction = PersonalDeduction;
-        var dependentDeductions = DependentDeduction * numberOfDependents;
-        var taxableIncome = preTaxIncome - personalDeduction - dependentDeductions - otherDeductions;
-
-        if (taxableIncome <= 0)
-        {
-            return new PitCalculationResult
-            {
-                GrossSalary = grossSalary,
-                TotalInsurance = totalInsurance,
-                PreTaxIncome = preTaxIncome,
-                PersonalDeduction = personalDeduction,
-                DependentDeductions = dependentDeductions,
-                OtherDeductions = otherDeductions,
-                TaxableIncome = 0,
-                PitAmount = 0,
-                NetSalary = preTaxIncome,
-                EffectiveTaxRate = 0,
-                Brackets = new List<PitBracketDetail>()
-            };
-        }
-
-        // Step 4: Apply progressive tax rates
-        var brackets = new List<PitBracketDetail>();
-        var totalTax = 0m;
-        var remaining = taxableIncome;
-        var previousLimit = 0m;
-
-        foreach (var (upperLimit, rate) in PitBrackets)
-        {
-            if (remaining <= 0) break;
-
-            var bracketWidth = upperLimit == decimal.MaxValue
-                ? remaining
-                : Math.Min(upperLimit - previousLimit, remaining);
-
-            var bracketTax = bracketWidth * rate;
-            totalTax += bracketTax;
-
-            brackets.Add(new PitBracketDetail
-            {
-                From = previousLimit,
-                To = upperLimit == decimal.MaxValue ? taxableIncome : Math.Min(upperLimit, taxableIncome),
-                Rate = rate,
-                TaxableAmount = bracketWidth,
-                TaxAmount = bracketTax
-            });
-
-            remaining -= bracketWidth;
-            previousLimit = upperLimit;
-        }
-
-        return new PitCalculationResult
-        {
-            GrossSalary = grossSalary,
-            TotalInsurance = totalInsurance,
-            PreTaxIncome = preTaxIncome,
-            PersonalDeduction = personalDeduction,
-            DependentDeductions = dependentDeductions,
-            OtherDeductions = otherDeductions,
-            TaxableIncome = taxableIncome,
-            PitAmount = Math.Round(totalTax, 0),
-            NetSalary = preTaxIncome - Math.Round(totalTax, 0),
-            EffectiveTaxRate = preTaxIncome > 0 ? Math.Round(totalTax / preTaxIncome * 100, 2) : 0,
-            Brackets = brackets
-        };
-    }
-
-    // ============================================
-    // SOCIAL INSURANCE (BHXH, BHYT, BHTN)
-    // ============================================
-
-    // Employee contribution rates (2024-2025)
-    public const decimal SocialInsuranceRate_Employee = 0.08m;       // 8% BHXH
-    public const decimal HealthInsuranceRate_Employee = 0.015m;      // 1.5% BHYT
-    public const decimal UnemploymentInsuranceRate_Employee = 0.01m; // 1% BHTN
-    public const decimal TotalInsuranceRate_Employee = 0.105m;       // Total 10.5%
-
-    // Employer contribution rates
-    public const decimal SocialInsuranceRate_Employer = 0.175m;      // 17.5% BHXH
-    public const decimal HealthInsuranceRate_Employer = 0.03m;       // 3% BHYT
-    public const decimal UnemploymentInsuranceRate_Employer = 0.01m; // 1% BHTN
-    public const decimal TotalInsuranceRate_Employer = 0.215m;       // Total 21.5%
-
-    // Cap: 20x base salary for BHXH/BHYT, 20x regional min salary for BHTN
-    public const decimal BaseSalary2025 = 2_340_000m;  // Mức lương cơ sở 2025
-    public const decimal MaxInsurableSalary = 46_800_000m; // 20 x base salary
-
-    /// <summary>
-    /// Calculate insurance contributions for both employee and employer
-    /// </summary>
     public static InsuranceCalculationResult CalculateInsurance(decimal grossSalary, decimal? regionalMinSalary = null)
-    {
-        var insurable = Math.Min(grossSalary, MaxInsurableSalary);
-        var regionalMin = regionalMinSalary ?? 4_960_000m; // Region I default
+        => Map(BB.VietnameseTaxEngine.CalculateInsurance(grossSalary, regionalMinSalary));
 
-        // Employee contributions
-        var empBhxh = Math.Round(insurable * SocialInsuranceRate_Employee, 0);
-        var empBhyt = Math.Round(insurable * HealthInsuranceRate_Employee, 0);
-        var empBhtn = Math.Round(Math.Min(grossSalary, regionalMin * 20) * UnemploymentInsuranceRate_Employee, 0);
+    // ---- VAT ----
+    public const decimal VatStandard = BB.VietnameseTaxEngine.VatStandard;
+    public const decimal VatTelecom = BB.VietnameseTaxEngine.VatTelecom;
+    public const decimal VatExport = BB.VietnameseTaxEngine.VatExport;
+    public const decimal VatExempt = BB.VietnameseTaxEngine.VatExempt;
 
-        // Employer contributions
-        var erBhxh = Math.Round(insurable * SocialInsuranceRate_Employer, 0);
-        var erBhyt = Math.Round(insurable * HealthInsuranceRate_Employer, 0);
-        var erBhtn = Math.Round(Math.Min(grossSalary, regionalMin * 20) * UnemploymentInsuranceRate_Employer, 0);
-
-        return new InsuranceCalculationResult
-        {
-            InsurableSalary = insurable,
-            Employee = new InsuranceBreakdown
-            {
-                SocialInsurance = empBhxh,
-                HealthInsurance = empBhyt,
-                UnemploymentInsurance = empBhtn,
-                Total = empBhxh + empBhyt + empBhtn
-            },
-            Employer = new InsuranceBreakdown
-            {
-                SocialInsurance = erBhxh,
-                HealthInsurance = erBhyt,
-                UnemploymentInsurance = erBhtn,
-                Total = erBhxh + erBhyt + erBhtn
-            }
-        };
-    }
-
-    // ============================================
-    // VAT (Thuế GTGT)
-    // ============================================
-
-    // Single source of truth: BuildingBlocks/TaxRates.cs. Alias để giữ tương thích ngược.
-    public const decimal VatStandard = TaxRates.VatStandard;
-    public const decimal VatTelecom = TaxRates.VatTelecom;
-    public const decimal VatExport = TaxRates.VatExport;
-    public const decimal VatExempt = TaxRates.VatExempt;
-
-    /// <summary>
-    /// Returns the appropriate VAT rate for a product category slug.
-    /// Computer hardware uses 8% reduced rate; telecom/finance/real-estate use 10%.
-    /// </summary>
-    public static decimal VatRateForCategory(string? categorySlug) => categorySlug switch
-    {
-        "vien-thong" or "tai-chinh" or "bat-dong-san" => VatTelecom,
-        _ => VatStandard
-    };
+    public static decimal VatRateForCategory(string? categorySlug)
+        => BB.VietnameseTaxEngine.VatRateForCategory(categorySlug);
 
     public static VatCalculationResult CalculateVat(decimal priceBeforeVat, decimal vatRate = 0.08m)
-    {
-        if (vatRate < 0) // Exempt
-        {
-            return new VatCalculationResult
-            {
-                PriceBeforeVat = priceBeforeVat,
-                VatRate = 0,
-                VatAmount = 0,
-                PriceAfterVat = priceBeforeVat,
-                IsExempt = true
-            };
-        }
+        => Map(BB.VietnameseTaxEngine.CalculateVat(priceBeforeVat, vatRate));
 
-        var vatAmount = Math.Round(priceBeforeVat * vatRate, 0);
-        return new VatCalculationResult
-        {
-            PriceBeforeVat = priceBeforeVat,
-            VatRate = vatRate,
-            VatAmount = vatAmount,
-            PriceAfterVat = priceBeforeVat + vatAmount,
-            IsExempt = false
-        };
-    }
-
-    /// <summary>
-    /// Extract VAT from a VAT-inclusive price
-    /// </summary>
     public static VatCalculationResult ExtractVat(decimal priceIncludingVat, decimal vatRate = 0.08m)
-    {
-        if (vatRate <= 0)
-        {
-            return new VatCalculationResult
-            {
-                PriceBeforeVat = priceIncludingVat,
-                VatRate = 0,
-                VatAmount = 0,
-                PriceAfterVat = priceIncludingVat,
-                IsExempt = vatRate < 0
-            };
-        }
+        => Map(BB.VietnameseTaxEngine.ExtractVat(priceIncludingVat, vatRate));
 
-        var priceBeforeVat = Math.Round(priceIncludingVat / (1 + vatRate), 0);
-        var vatAmount = priceIncludingVat - priceBeforeVat;
-
-        return new VatCalculationResult
-        {
-            PriceBeforeVat = priceBeforeVat,
-            VatRate = vatRate,
-            VatAmount = vatAmount,
-            PriceAfterVat = priceIncludingVat,
-            IsExempt = false
-        };
-    }
-
-    // ============================================
-    // CIT (Thuế TNDN - Corporate Income Tax)
-    // ============================================
-    public const decimal CitStandardRate = 0.20m; // 20%
+    // ---- CIT ----
+    public const decimal CitStandardRate = BB.VietnameseTaxEngine.CitStandardRate;
 
     public static CitCalculationResult CalculateCit(decimal revenue, decimal deductibleExpenses)
-    {
-        var taxableIncome = Math.Max(0, revenue - deductibleExpenses);
-        var citAmount = Math.Round(taxableIncome * CitStandardRate, 0);
+        => Map(BB.VietnameseTaxEngine.CalculateCit(revenue, deductibleExpenses));
 
-        return new CitCalculationResult
-        {
-            Revenue = revenue,
-            DeductibleExpenses = deductibleExpenses,
-            TaxableIncome = taxableIncome,
-            TaxRate = CitStandardRate,
-            CitAmount = citAmount
-        };
-    }
-
-    // ============================================
-    // COMPREHENSIVE PAYROLL CALCULATION
-    // ============================================
-
-    /// <summary>
-    /// Full payroll calculation: Gross → Insurance → PIT → Net
-    /// </summary>
+    // ---- Comprehensive ----
     public static PayrollTaxResult CalculatePayroll(
-        decimal grossSalary,
-        int numberOfDependents = 0,
-        decimal otherDeductions = 0,
-        decimal? regionalMinSalary = null)
+        decimal grossSalary, int numberOfDependents = 0,
+        decimal otherDeductions = 0, decimal? regionalMinSalary = null)
+        => Map(BB.VietnameseTaxEngine.CalculatePayroll(
+            grossSalary, numberOfDependents, otherDeductions, regionalMinSalary));
+
+    // ============================================
+    // Mappers giữa DTO alias và DTO gốc ở BuildingBlocks
+    // ============================================
+    private static PitCalculationResult Map(BB.PitCalculationResult r) => new()
     {
-        // Step 1: Calculate insurance
-        var insurance = CalculateInsurance(grossSalary, regionalMinSalary);
-
-        // Step 2: Calculate PIT
-        var pit = CalculateMonthlyPit(
-            grossSalary,
-            numberOfDependents,
-            insurance.Employee.SocialInsurance,
-            insurance.Employee.HealthInsurance,
-            insurance.Employee.UnemploymentInsurance,
-            otherDeductions
-        );
-
-        // Step 3: Build result
-        return new PayrollTaxResult
+        GrossSalary = r.GrossSalary,
+        TotalInsurance = r.TotalInsurance,
+        PreTaxIncome = r.PreTaxIncome,
+        PersonalDeduction = r.PersonalDeduction,
+        DependentDeductions = r.DependentDeductions,
+        OtherDeductions = r.OtherDeductions,
+        TaxableIncome = r.TaxableIncome,
+        PitAmount = r.PitAmount,
+        NetSalary = r.NetSalary,
+        EffectiveTaxRate = r.EffectiveTaxRate,
+        Brackets = r.Brackets.Select(b => new PitBracketDetail
         {
-            GrossSalary = grossSalary,
-            Insurance = insurance,
-            Pit = pit,
-            EmployeeDeductions = insurance.Employee.Total + pit.PitAmount,
-            EmployerCosts = insurance.Employer.Total,
-            NetSalary = grossSalary - insurance.Employee.Total - pit.PitAmount,
-            TotalCompanyCost = grossSalary + insurance.Employer.Total
-        };
-    }
+            From = b.From,
+            To = b.To,
+            Rate = b.Rate,
+            TaxableAmount = b.TaxableAmount,
+            TaxAmount = b.TaxAmount
+        }).ToList()
+    };
+
+    private static InsuranceCalculationResult Map(BB.InsuranceCalculationResult r) => new()
+    {
+        InsurableSalary = r.InsurableSalary,
+        Employee = new InsuranceBreakdown
+        {
+            SocialInsurance = r.Employee.SocialInsurance,
+            HealthInsurance = r.Employee.HealthInsurance,
+            UnemploymentInsurance = r.Employee.UnemploymentInsurance,
+            Total = r.Employee.Total
+        },
+        Employer = new InsuranceBreakdown
+        {
+            SocialInsurance = r.Employer.SocialInsurance,
+            HealthInsurance = r.Employer.HealthInsurance,
+            UnemploymentInsurance = r.Employer.UnemploymentInsurance,
+            Total = r.Employer.Total
+        }
+    };
+
+    private static VatCalculationResult Map(BB.VatCalculationResult r) => new()
+    {
+        PriceBeforeVat = r.PriceBeforeVat,
+        VatRate = r.VatRate,
+        VatAmount = r.VatAmount,
+        PriceAfterVat = r.PriceAfterVat,
+        IsExempt = r.IsExempt
+    };
+
+    private static CitCalculationResult Map(BB.CitCalculationResult r) => new()
+    {
+        Revenue = r.Revenue,
+        DeductibleExpenses = r.DeductibleExpenses,
+        TaxableIncome = r.TaxableIncome,
+        TaxRate = r.TaxRate,
+        CitAmount = r.CitAmount
+    };
+
+    private static PayrollTaxResult Map(BB.PayrollTaxResult r) => new()
+    {
+        GrossSalary = r.GrossSalary,
+        Insurance = Map(r.Insurance),
+        Pit = Map(r.Pit),
+        EmployeeDeductions = r.EmployeeDeductions,
+        EmployerCosts = r.EmployerCosts,
+        NetSalary = r.NetSalary,
+        TotalCompanyCost = r.TotalCompanyCost
+    };
 }
 
 // ============================================
-// RESULT DTOs
+// DTO alias giữ nguyên public shape để không phá code cũ
 // ============================================
 
 public class PitCalculationResult

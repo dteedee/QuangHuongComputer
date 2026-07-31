@@ -48,6 +48,18 @@ public class Employee : Entity<Guid>
     public string? SocialInsuranceNumber { get; private set; }
     public string? WorkLocation { get; private set; }
 
+    // Phase 06: bổ sung dữ liệu lương–thuế–bảo hiểm–chi nhánh
+    public DateTime? IdCardIssueDate { get; private set; }
+    public string? IdCardIssuePlace { get; private set; }
+    public Guid? StoreId { get; private set; }              // chi nhánh trực thuộc (Phase 05)
+    public int NumberOfDependents { get; private set; }      // đếm nhanh, đồng bộ với Dependent
+
+    // Navigation
+    public ICollection<Dependent> Dependents { get; private set; } = new List<Dependent>();
+    public ICollection<EmploymentContract> Contracts { get; private set; } = new List<EmploymentContract>();
+    public ICollection<SalaryStructure> SalaryStructures { get; private set; } = new List<SalaryStructure>();
+    public ICollection<Allowance> Allowances { get; private set; } = new List<Allowance>();
+
     public Employee(
         string fullName,
         string email,
@@ -196,6 +208,9 @@ public class Employee : Entity<Guid>
     
     public void UpdateBankInfo(string bankAccount, string bankName)
     {
+        // Phase 06: cặp Tài khoản/Ngân hàng phải đi cùng nhau — có tên NH thì phải có số TK.
+        if (!string.IsNullOrWhiteSpace(bankName) && string.IsNullOrWhiteSpace(bankAccount))
+            throw new ArgumentException("BankAccount không được rỗng khi đã có BankName.");
         BankAccount = bankAccount;
         BankName = bankName;
     }
@@ -215,11 +230,52 @@ public class Employee : Entity<Guid>
     {
         Skills = skills;
     }
-    
+
     public void UpdateCertifications(string certifications)
     {
         Certifications = certifications;
     }
+
+    // ---- Phase 06 mutators ----
+    public void SetTaxCode(string? taxCode)
+    {
+        if (!string.IsNullOrWhiteSpace(taxCode) && !IsValidTaxCode(taxCode))
+            throw new ArgumentException("TaxCode phải gồm đúng 10 hoặc 13 chữ số.", nameof(taxCode));
+        TaxCode = taxCode;
+    }
+
+    public void SetSocialInsuranceNumber(string? sin)
+    {
+        if (!string.IsNullOrWhiteSpace(sin) && !IsValidSocialInsuranceNumber(sin))
+            throw new ArgumentException("SocialInsuranceNumber phải gồm đúng 10 chữ số.", nameof(sin));
+        SocialInsuranceNumber = sin;
+    }
+
+    public void SetIdCard(string? idCardNumber, DateTime? issueDate = null, string? issuePlace = null)
+    {
+        if (!string.IsNullOrWhiteSpace(idCardNumber) && !IsValidIdCard(idCardNumber))
+            throw new ArgumentException("IdCardNumber phải gồm đúng 9 (CMND) hoặc 12 (CCCD) chữ số.", nameof(idCardNumber));
+        IdCardNumber = idCardNumber;
+        IdCardIssueDate = issueDate;
+        IdCardIssuePlace = issuePlace;
+    }
+
+    public void AssignStore(Guid? storeId) => StoreId = storeId;
+
+    public void RefreshDependentCount(int count)
+    {
+        if (count < 0) throw new ArgumentException("Số người phụ thuộc không thể âm.");
+        NumberOfDependents = count;
+    }
+
+    private static bool IsValidTaxCode(string tc) =>
+        tc.All(char.IsDigit) && (tc.Length == 10 || tc.Length == 13);
+
+    private static bool IsValidSocialInsuranceNumber(string sin) =>
+        sin.All(char.IsDigit) && sin.Length == 10;
+
+    private static bool IsValidIdCard(string id) =>
+        id.All(char.IsDigit) && (id.Length == 9 || id.Length == 12);
 
     public void Validate()
     {

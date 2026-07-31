@@ -7,6 +7,8 @@ using Accounting.Domain;
 using Accounting.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+// Phase 06: tax engine đã chuyển sang BuildingBlocks — trỏ trực tiếp nguồn thay vì alias legacy.
+using VietnameseTaxEngine = BuildingBlocks.TaxEngine.VietnameseTaxEngine;
 
 namespace Accounting;
 
