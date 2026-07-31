@@ -20,5 +20,6 @@
     <ProjectReference Include="../../Services/Warranty/Warranty.csproj" />
     <ProjectReference Include="../../Services/Content/Content.csproj" />
     <ProjectReference Include="../../Services/Payments/Payments.csproj" />
+    <ProjectReference Include="../../Services/SystemConfig/SystemConfig.csproj" />
   </ItemGroup>
 </Project>

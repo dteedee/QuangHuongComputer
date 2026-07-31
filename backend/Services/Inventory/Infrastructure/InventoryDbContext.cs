@@ -25,6 +25,18 @@ public class InventoryDbContext : DbContext
     public DbSet<InventoryCountSession> InventoryCountSessions { get; set; }
     public DbSet<InventoryCountItem> InventoryCountItems { get; set; }
 
+    // Phase 05 luồng A — quy trình mua hàng chuyên nghiệp
+    public DbSet<POApprovalRule> POApprovalRules { get; set; }
+    public DbSet<POApprovalRequest> POApprovalRequests { get; set; }
+    public DbSet<PurchaseRequisition> PurchaseRequisitions { get; set; }
+    public DbSet<PurchaseRequisitionItem> PurchaseRequisitionItems { get; set; }
+    public DbSet<RequestForQuotation> RequestForQuotations { get; set; }
+    public DbSet<SupplierQuotation> SupplierQuotations { get; set; }
+    public DbSet<SupplierQuotationItem> SupplierQuotationItems { get; set; }
+    public DbSet<PurchaseReturn> PurchaseReturns { get; set; }
+    public DbSet<PurchaseReturnItem> PurchaseReturnItems { get; set; }
+    public DbSet<LandedCost> LandedCosts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -126,6 +138,7 @@ public class InventoryDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.PONumber).IsUnique();
             entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.RejectionReason).HasMaxLength(1000);
 
             entity.HasIndex(e => new { e.SupplierId, e.CreatedAt })
                 .HasDatabaseName("IX_PurchaseOrder_Supplier_Date");
@@ -133,10 +146,119 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => e.Status)
                 .HasDatabaseName("IX_PurchaseOrder_Status");
 
+            entity.HasIndex(e => new { e.Status, e.CreatedAt })
+                .HasDatabaseName("IX_PurchaseOrder_Status_Created");
+
+            entity.HasIndex(e => e.RequisitionId).HasDatabaseName("IX_PurchaseOrder_Requisition");
+
             entity.OwnsMany(e => e.Items, item =>
             {
                 item.Property(i => i.UnitPrice).HasPrecision(18, 2);
+                item.Property(i => i.ProductName).HasMaxLength(300);
             });
+        });
+
+        // === Phase 05 luồng A ===
+
+        modelBuilder.Entity<POApprovalRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.RequiredRole).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.MinAmount).HasPrecision(18, 2);
+            entity.Property(e => e.MaxAmount).HasPrecision(18, 2);
+            entity.HasIndex(e => new { e.MinAmount, e.MaxAmount, e.IsActive })
+                .HasDatabaseName("IX_POApprovalRule_Amount_Active");
+            entity.HasIndex(e => e.SortOrder).HasDatabaseName("IX_POApprovalRule_SortOrder");
+        });
+
+        modelBuilder.Entity<POApprovalRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RequiredRole).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.HasIndex(e => e.PurchaseOrderId).HasDatabaseName("IX_POApprovalRequest_PO");
+            entity.HasIndex(e => new { e.Decision, e.CreatedAt })
+                .HasDatabaseName("IX_POApprovalRequest_Decision_Created");
+        });
+
+        modelBuilder.Entity<PurchaseRequisition>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Number).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.RequesterName).HasMaxLength(100);
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.Property(e => e.RejectionReason).HasMaxLength(1000);
+            entity.Property(e => e.Source).HasMaxLength(30);
+            entity.HasIndex(e => e.Number).IsUnique().HasDatabaseName("IX_PR_Number");
+            entity.HasIndex(e => new { e.Status, e.CreatedAt })
+                .HasDatabaseName("IX_PR_Status_Created");
+            entity.HasIndex(e => e.RequestedBy).HasDatabaseName("IX_PR_RequestedBy");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.PurchaseRequisitionId);
+        });
+
+        modelBuilder.Entity<PurchaseRequisitionItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<RequestForQuotation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Number).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.ItemsJson).HasColumnType("jsonb");
+            entity.HasIndex(e => e.Number).IsUnique().HasDatabaseName("IX_RFQ_Number");
+            entity.HasIndex(e => new { e.Status, e.CreatedAt })
+                .HasDatabaseName("IX_RFQ_Status_Created");
+            entity.HasIndex(e => e.RequisitionId).HasDatabaseName("IX_RFQ_Requisition");
+        });
+
+        modelBuilder.Entity<SupplierQuotation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuotationNumber).HasMaxLength(60);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.HasIndex(e => new { e.RfqId, e.SupplierId })
+                .HasDatabaseName("IX_SQ_Rfq_Supplier");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_SQ_Status");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.QuotationId);
+        });
+
+        modelBuilder.Entity<SupplierQuotationItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.HasIndex(e => e.ProductId).HasDatabaseName("IX_SQI_Product");
+        });
+
+        modelBuilder.Entity<PurchaseReturn>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Number).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.TotalValue).HasPrecision(18, 2);
+            entity.Property(e => e.RefundAmount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.Number).IsUnique().HasDatabaseName("IX_PurchaseReturn_Number");
+            entity.HasIndex(e => new { e.Status, e.CreatedAt })
+                .HasDatabaseName("IX_PurchaseReturn_Status_Created");
+            entity.HasIndex(e => e.GRNId).HasDatabaseName("IX_PurchaseReturn_GRN");
+            entity.HasIndex(e => e.SupplierId).HasDatabaseName("IX_PurchaseReturn_Supplier");
+            entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.PurchaseReturnId);
+        });
+
+        modelBuilder.Entity<PurchaseReturnItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductName).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 2);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.SerialNumbers).HasMaxLength(2000);
         });
 
         modelBuilder.Entity<StockTransfer>(entity =>
@@ -244,6 +366,7 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.ProductName).HasMaxLength(300);
             entity.Property(e => e.UnitCost).HasPrecision(18, 2);
             entity.Property(e => e.SerialNumbers).HasMaxLength(2000);
+            entity.Property(e => e.RejectReason).HasMaxLength(500);
         });
 
         modelBuilder.Entity<DeliveryNote>(entity =>
@@ -282,6 +405,16 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.CountedBy).HasMaxLength(100);
             entity.Property(e => e.Notes).HasMaxLength(500);
             entity.Ignore(e => e.Variance); // Computed property
+        });
+
+        modelBuilder.Entity<LandedCost>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.GRNId).HasDatabaseName("IX_LandedCost_GRN");
+            entity.HasIndex(e => new { e.GRNId, e.IsAllocated })
+                .HasDatabaseName("IX_LandedCost_GRN_Allocated");
         });
     }
 }

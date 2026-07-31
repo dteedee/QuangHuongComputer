@@ -13,6 +13,11 @@ public class SystemConfigDbContext : DbContext
     public DbSet<ReportDefinition> ReportDefinitions => Set<ReportDefinition>();
     public DbSet<SavedReportPreset> SavedReportPresets => Set<SavedReportPreset>();
 
+    // Phase 05 luồng B — chi nhánh cửa hàng
+    public DbSet<Store> Stores => Set<Store>();
+    public DbSet<StoreWarehouse> StoreWarehouses => Set<StoreWarehouse>();
+    public DbSet<StoreEmployee> StoreEmployees => Set<StoreEmployee>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("config");
@@ -94,6 +99,53 @@ public class SystemConfigDbContext : DbContext
             e.Property(p => p.IsDefault).HasDefaultValue(false);
             e.Property(p => p.IsShared).HasDefaultValue(false);
             e.HasIndex(p => new { p.ReportDefinitionId, p.UserId });
+        });
+
+        // === Phase 05 luồng B — Store (chi nhánh) ===
+        modelBuilder.Entity<Store>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Code).IsRequired().HasMaxLength(20);
+            e.Property(s => s.Name).IsRequired().HasMaxLength(200);
+            e.Property(s => s.Address).IsRequired().HasMaxLength(300);
+            e.Property(s => s.Ward).HasMaxLength(100);
+            e.Property(s => s.District).HasMaxLength(100);
+            e.Property(s => s.Province).HasMaxLength(100);
+            e.Property(s => s.Phone).HasMaxLength(20);
+            e.Property(s => s.Email).HasMaxLength(200);
+            e.Property(s => s.OpeningHoursJson).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
+            e.Property(s => s.Latitude).HasPrecision(9, 6);
+            e.Property(s => s.Longitude).HasPrecision(9, 6);
+            e.Property(s => s.IsActive).HasDefaultValue(true);
+            e.Property(s => s.IsPickupPoint).HasDefaultValue(true);
+            e.Property(s => s.SortOrder).HasDefaultValue(0);
+            e.HasIndex(s => s.Code).IsUnique().HasDatabaseName("IX_Store_Code");
+            e.HasIndex(s => new { s.IsActive, s.SortOrder }).HasDatabaseName("IX_Store_Active_Sort");
+            e.HasMany(s => s.Warehouses)
+             .WithOne()
+             .HasForeignKey(w => w.StoreId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(s => s.Employees)
+             .WithOne()
+             .HasForeignKey(w => w.StoreId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StoreWarehouse>(e =>
+        {
+            e.HasKey(w => w.Id);
+            e.HasIndex(w => new { w.StoreId, w.WarehouseId }).IsUnique()
+                .HasDatabaseName("IX_StoreWarehouse_Store_Warehouse");
+            e.HasIndex(w => w.WarehouseId).HasDatabaseName("IX_StoreWarehouse_Warehouse");
+        });
+
+        modelBuilder.Entity<StoreEmployee>(e =>
+        {
+            e.HasKey(w => w.Id);
+            e.Property(w => w.Role).HasMaxLength(50);
+            e.HasIndex(w => new { w.StoreId, w.EmployeeId }).IsUnique()
+                .HasDatabaseName("IX_StoreEmployee_Store_Employee");
+            e.HasIndex(w => w.EmployeeId).HasDatabaseName("IX_StoreEmployee_Employee");
         });
 
         base.OnModelCreating(modelBuilder);

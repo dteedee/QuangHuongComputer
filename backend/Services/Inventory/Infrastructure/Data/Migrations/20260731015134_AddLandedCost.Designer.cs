@@ -3,6 +3,7 @@ using System;
 using InventoryModule.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Inventory.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(InventoryDbContext))]
-    partial class InventoryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731015134_AddLandedCost")]
+    partial class AddLandedCost
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,7 +68,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("DeliveryNoteId");
 
-                    b.ToTable("DNItems", (string)null);
+                    b.ToTable("DNItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.DeliveryNote", b =>
@@ -127,7 +130,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_DN_Status");
 
-                    b.ToTable("DeliveryNotes", (string)null);
+                    b.ToTable("DeliveryNotes");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.GRNItem", b =>
@@ -190,7 +193,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("GoodsReceivedNoteId");
 
-                    b.ToTable("GRNItems", (string)null);
+                    b.ToTable("GRNItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.GoodsReceivedNote", b =>
@@ -252,7 +255,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_GRN_Status");
 
-                    b.ToTable("GoodsReceivedNotes", (string)null);
+                    b.ToTable("GoodsReceivedNotes");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.InventoryCountItem", b =>
@@ -305,7 +308,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("CountSessionId");
 
-                    b.ToTable("InventoryCountItems", (string)null);
+                    b.ToTable("InventoryCountItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.InventoryCountSession", b =>
@@ -369,7 +372,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_CountSession_Status");
 
-                    b.ToTable("InventoryCountSessions", (string)null);
+                    b.ToTable("InventoryCountSessions");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.InventoryItem", b =>
@@ -465,7 +468,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_Inventory_Product_Variant_Warehouse_Unique")
                         .HasFilter("\"VariantId\" IS NOT NULL");
 
-                    b.ToTable("InventoryItems", (string)null);
+                    b.ToTable("InventoryItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.LandedCost", b =>
@@ -521,7 +524,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("GRNId", "IsAllocated")
                         .HasDatabaseName("IX_LandedCost_GRN_Allocated");
 
-                    b.ToTable("LandedCosts", (string)null);
+                    b.ToTable("LandedCosts");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.POApprovalRequest", b =>
@@ -584,7 +587,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Decision", "CreatedAt")
                         .HasDatabaseName("IX_POApprovalRequest_Decision_Created");
 
-                    b.ToTable("POApprovalRequests", (string)null);
+                    b.ToTable("POApprovalRequests");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.POApprovalRule", b =>
@@ -637,7 +640,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("MinAmount", "MaxAmount", "IsActive")
                         .HasDatabaseName("IX_POApprovalRule_Amount_Active");
 
-                    b.ToTable("POApprovalRules", (string)null);
+                    b.ToTable("POApprovalRules");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseOrder", b =>
@@ -726,7 +729,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("SupplierId", "CreatedAt")
                         .HasDatabaseName("IX_PurchaseOrder_Supplier_Date");
 
-                    b.ToTable("PurchaseOrders", (string)null);
+                    b.ToTable("PurchaseOrders");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseRequisition", b =>
@@ -814,7 +817,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_PR_Status_Created");
 
-                    b.ToTable("PurchaseRequisitions", (string)null);
+                    b.ToTable("PurchaseRequisitions");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseRequisitionItem", b =>
@@ -860,7 +863,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("PurchaseRequisitionId");
 
-                    b.ToTable("PurchaseRequisitionItems", (string)null);
+                    b.ToTable("PurchaseRequisitionItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseReturn", b =>
@@ -931,7 +934,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_PurchaseReturn_Status_Created");
 
-                    b.ToTable("PurchaseReturns", (string)null);
+                    b.ToTable("PurchaseReturns");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseReturnItem", b =>
@@ -985,7 +988,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("PurchaseReturnId");
 
-                    b.ToTable("PurchaseReturnItems", (string)null);
+                    b.ToTable("PurchaseReturnItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.RequestForQuotation", b =>
@@ -1058,7 +1061,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_RFQ_Status_Created");
 
-                    b.ToTable("RequestForQuotations", (string)null);
+                    b.ToTable("RequestForQuotations");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.SerialNumber", b =>
@@ -1157,7 +1160,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("ProductId", "Status")
                         .HasDatabaseName("IX_Serial_Product_Status");
 
-                    b.ToTable("SerialNumbers", (string)null);
+                    b.ToTable("SerialNumbers");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockAdjustment", b =>
@@ -1223,7 +1226,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("WarehouseId", "AdjustedAt")
                         .HasDatabaseName("IX_StockAdjustment_Warehouse_Date");
 
-                    b.ToTable("StockAdjustments", (string)null);
+                    b.ToTable("StockAdjustments");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockAdjustmentItem", b =>
@@ -1272,7 +1275,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("StockAdjustmentId");
 
-                    b.ToTable("StockAdjustmentItem", (string)null);
+                    b.ToTable("StockAdjustmentItem");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockMovement", b =>
@@ -1347,7 +1350,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("ProductId", "MovementDate")
                         .HasDatabaseName("IX_StockMovement_Product_Date");
 
-                    b.ToTable("StockMovements", (string)null);
+                    b.ToTable("StockMovements");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockReservation", b =>
@@ -1421,7 +1424,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_StockReservation_Product_Variant_Status")
                         .HasFilter("\"VariantId\" IS NOT NULL");
 
-                    b.ToTable("StockReservations", (string)null);
+                    b.ToTable("StockReservations");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockTransfer", b =>
@@ -1499,7 +1502,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("ToWarehouseId", "Status")
                         .HasDatabaseName("IX_StockTransfer_To_Status");
 
-                    b.ToTable("StockTransfers", (string)null);
+                    b.ToTable("StockTransfers");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockTransferItem", b =>
@@ -1542,7 +1545,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("StockTransferId");
 
-                    b.ToTable("StockTransferItem", (string)null);
+                    b.ToTable("StockTransferItem");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.Supplier", b =>
@@ -1729,7 +1732,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_Supplier_Debt")
                         .HasFilter("\"CurrentDebt\" > 0");
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.SupplierQuotation", b =>
@@ -1797,7 +1800,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("RfqId", "SupplierId")
                         .HasDatabaseName("IX_SQ_Rfq_Supplier");
 
-                    b.ToTable("SupplierQuotations", (string)null);
+                    b.ToTable("SupplierQuotations");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.SupplierQuotationItem", b =>
@@ -1848,7 +1851,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("QuotationId");
 
-                    b.ToTable("SupplierQuotationItems", (string)null);
+                    b.ToTable("SupplierQuotationItems");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.Warehouse", b =>
@@ -1935,7 +1938,7 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("IsDefault")
                         .HasDatabaseName("IX_Warehouse_Default");
 
-                    b.ToTable("Warehouses", (string)null);
+                    b.ToTable("Warehouses");
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.DNItem", b =>
@@ -1967,7 +1970,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseOrder", b =>
                 {
-                    b.OwnsMany("InventoryModule.Domain.PurchaseOrder.Items#InventoryModule.Domain.PurchaseOrderItem", "Items", b1 =>
+                    b.OwnsMany("InventoryModule.Domain.PurchaseOrderItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("PurchaseOrderId")
                                 .HasColumnType("uuid");
@@ -1995,7 +1998,7 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                             b1.HasKey("PurchaseOrderId", "Id");
 
-                            b1.ToTable("PurchaseOrderItem", (string)null);
+                            b1.ToTable("PurchaseOrderItem");
 
                             b1.WithOwner()
                                 .HasForeignKey("PurchaseOrderId");

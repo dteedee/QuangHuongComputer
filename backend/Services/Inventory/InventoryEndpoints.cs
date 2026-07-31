@@ -318,6 +318,211 @@ public static class InventoryEndpoints
 
         // Suppliers CRUD
         MapSupplierEndpoints(group);
+
+        // Serial timeline — tra 1 serial trả dòng thời gian trọn đời.
+        MapSerialTimelineEndpoint(app);
+    }
+
+    /// <summary>
+    /// GET /api/inventory/serials/{serial}/timeline — trả timeline gộp:
+    ///  - Purchased  (từ SerialNumber.PurchaseOrderId → PurchaseOrder.PONumber + Supplier)
+    ///  - Sold       (SerialNumber.OrderId — join Sales.Orders qua raw SQL)
+    ///  - Repair     (SerialNumber.WorkOrderId — join Repair.WorkOrders qua raw SQL)
+    ///  - Warranty   (join Warranty.WarrantyClaims theo Serial string)
+    /// Module hạ nguồn chưa có bản ghi → bỏ qua entry đó, không throw.
+    /// </summary>
+    private static void MapSerialTimelineEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/api/inventory/serials/{serial}/timeline", async (string serial, InventoryDbContext db) =>
+        {
+            var sn = await db.SerialNumbers.FirstOrDefaultAsync(s => s.Serial == serial);
+            if (sn == null) return Results.NotFound(new { error = "Không tìm thấy serial" });
+
+            var timeline = new List<object>();
+
+            // 1. Purchased
+            if (sn.PurchaseOrderId.HasValue)
+            {
+                var po = await db.PurchaseOrders
+                    .Where(p => p.Id == sn.PurchaseOrderId.Value)
+                    .Select(p => new { p.PONumber, p.SupplierId, p.CreatedAt })
+                    .FirstOrDefaultAsync();
+                if (po != null)
+                {
+                    var supplierName = await db.Suppliers
+                        .Where(s => s.Id == po.SupplierId)
+                        .Select(s => s.Name)
+                        .FirstOrDefaultAsync();
+                    timeline.Add(new
+                    {
+                        at = sn.ReceivedAt ?? po.CreatedAt,
+                        type = "Purchased",
+                        reference = po.PONumber,
+                        supplier = supplierName
+                    });
+                }
+            }
+
+            // 2. Sold — từ SerialNumber.OrderId + Sales.Orders (raw SQL để không import Sales entity)
+            if (sn.OrderId.HasValue && sn.SoldAt.HasValue)
+            {
+                var (orderNumber, customerName) = await LookupOrderAsync(db, sn.OrderId.Value);
+                timeline.Add(new
+                {
+                    at = sn.SoldAt.Value,
+                    type = "Sold",
+                    reference = orderNumber ?? sn.OrderId.Value.ToString(),
+                    customer = customerName
+                });
+            }
+
+            // 3. Repair — SerialNumber.WorkOrderId + Repair.WorkOrders
+            if (sn.WorkOrderId.HasValue)
+            {
+                var woInfo = await LookupWorkOrderAsync(db, sn.WorkOrderId.Value);
+                if (woInfo != null)
+                {
+                    timeline.Add(new
+                    {
+                        at = woInfo.Value.At,
+                        type = "Repair",
+                        reference = woInfo.Value.Number,
+                        status = woInfo.Value.Status
+                    });
+                }
+            }
+
+            // 4. Warranty claims theo Serial string (Warranty.WarrantyClaims)
+            var claims = await LookupWarrantyClaimsAsync(db, sn.Serial);
+            foreach (var c in claims)
+            {
+                timeline.Add(new
+                {
+                    at = c.At,
+                    type = "WarrantyClaim",
+                    reference = c.Number,
+                    status = c.Status
+                });
+            }
+
+            // 5. Returned (nếu có)
+            if (sn.ReturnedAt.HasValue)
+            {
+                timeline.Add(new
+                {
+                    at = sn.ReturnedAt.Value,
+                    type = "Returned",
+                    notes = sn.Notes
+                });
+            }
+
+            return Results.Ok(new
+            {
+                serial = sn.Serial,
+                productId = sn.ProductId,
+                productName = sn.ProductName,
+                status = sn.Status.ToString(),
+                warrantyEndDate = sn.WarrantyEndDate,
+                timeline = timeline.OrderBy(x => ((DateTime)x.GetType().GetProperty("at")!.GetValue(x)!)).ToList()
+            });
+        })
+        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
+            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
+    }
+
+    private static async Task<(string? OrderNumber, string? CustomerName)> LookupOrderAsync(InventoryDbContext db, Guid orderId)
+    {
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            var opened = conn.State != System.Data.ConnectionState.Open;
+            if (opened) await conn.OpenAsync();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"SELECT ""OrderNumber"", ""CustomerName""
+                                    FROM ""Orders"" WHERE ""Id"" = @id LIMIT 1";
+                var p = cmd.CreateParameter();
+                p.ParameterName = "@id";
+                p.Value = orderId;
+                cmd.Parameters.Add(p);
+                using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var num = reader.IsDBNull(0) ? null : reader.GetString(0);
+                    var cust = reader.IsDBNull(1) ? null : reader.GetString(1);
+                    return (num, cust);
+                }
+            }
+            finally { if (opened) await conn.CloseAsync(); }
+        }
+        catch { }
+        return (null, null);
+    }
+
+    private static async Task<(string Number, string Status, DateTime At)?> LookupWorkOrderAsync(InventoryDbContext db, Guid workOrderId)
+    {
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            var opened = conn.State != System.Data.ConnectionState.Open;
+            if (opened) await conn.OpenAsync();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"SELECT ""WorkOrderNumber"", ""Status"", ""CreatedAt""
+                                    FROM ""WorkOrders"" WHERE ""Id"" = @id LIMIT 1";
+                var p = cmd.CreateParameter();
+                p.ParameterName = "@id";
+                p.Value = workOrderId;
+                cmd.Parameters.Add(p);
+                using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var num = reader.IsDBNull(0) ? workOrderId.ToString() : reader.GetString(0);
+                    var status = reader.IsDBNull(1) ? "Unknown" : reader.GetValue(1).ToString() ?? "Unknown";
+                    var at = reader.IsDBNull(2) ? DateTime.UtcNow : reader.GetDateTime(2);
+                    return (num, status, at);
+                }
+            }
+            finally { if (opened) await conn.CloseAsync(); }
+        }
+        catch { }
+        return null;
+    }
+
+    private static async Task<List<(string Number, string Status, DateTime At)>> LookupWarrantyClaimsAsync(InventoryDbContext db, string serial)
+    {
+        var list = new List<(string, string, DateTime)>();
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            var opened = conn.State != System.Data.ConnectionState.Open;
+            if (opened) await conn.OpenAsync();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"SELECT ""ClaimNumber"", ""Status"", ""ClaimDate""
+                                    FROM ""WarrantyClaims""
+                                    WHERE ""SerialNumber"" = @serial
+                                    ORDER BY ""ClaimDate"" ASC";
+                var p = cmd.CreateParameter();
+                p.ParameterName = "@serial";
+                p.Value = serial;
+                cmd.Parameters.Add(p);
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var num = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var status = reader.IsDBNull(1) ? "" : reader.GetValue(1).ToString() ?? "";
+                    var at = reader.IsDBNull(2) ? DateTime.UtcNow : reader.GetDateTime(2);
+                    list.Add((num, status, at));
+                }
+            }
+            finally { if (opened) await conn.CloseAsync(); }
+        }
+        catch { }
+        return list;
     }
 
     private static void MapSupplierEndpoints(RouteGroupBuilder group)

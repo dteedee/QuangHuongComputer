@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using InventoryModule.Infrastructure;
 using InventoryModule.Application.BackgroundServices;
+using InventoryModule.Application.Purchasing;
 using Microsoft.Extensions.Configuration;
 using BuildingBlocks.Database;
 
@@ -36,6 +37,9 @@ public static class DependencyInjection
 
         // Auto-reorder background service
         services.AddHostedService<AutoReorderService>();
+
+        // Phase 05 luồng A — quy trình mua hàng chuyên nghiệp
+        services.AddScoped<PoApprovalService>();
 
         return services;
     }

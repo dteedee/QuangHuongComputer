@@ -122,6 +122,14 @@ app.MapDeliveryNoteEndpoints();
 app.MapInventoryCountEndpoints();
 app.MapBarcodeEndpoints();
 app.MapWarehouseEndpoints();
+// Phase 05 luồng A — quy trình mua hàng chuyên nghiệp
+app.MapPoApprovalEndpoints();
+app.MapPurchaseRequisitionEndpoints();
+app.MapRfqEndpoints();
+app.MapPurchaseReturnEndpoints();
+app.MapLandedCostEndpoints();
+app.MapSupplierScorecardEndpoints();
+app.MapStoreEndpoints();
 app.MapAccountingEndpoints();
 app.MapEInvoiceEndpoints();
 app.MapTaxReportingEndpoints();
