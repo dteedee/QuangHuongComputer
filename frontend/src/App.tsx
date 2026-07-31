@@ -128,9 +128,18 @@ const HRPortal = lazy(() => import('./pages/backoffice/hr/HRPortal').then(m => (
 const RecruitmentManagement = lazy(() => import('./pages/backoffice/hr/RecruitmentManagement').then(m => ({ default: m.RecruitmentManagement })));
 const AttendancePage = lazy(() => import('./pages/backoffice/hr/attendance-page'));
 const LeaveApprovalPage = lazy(() => import('./pages/backoffice/hr/leave-approval-page'));
+const OvertimeApprovalPage = lazy(() => import('./pages/backoffice/hr/overtime-approval-page'));
 const EmployeeSelfServicePage = lazy(() => import('./pages/backoffice/hr/employee-self-service-page'));
 const InternalChatPage = lazy(() => import('./pages/backoffice/hr/internal-chat-page'));
 const HRReportsPage = lazy(() => import('./pages/backoffice/hr/HRReportsPage').then(m => ({ default: m.HRReportsPage })));
+const EmployeesPage = lazy(() => import('./pages/backoffice/hr/EmployeesPage').then(m => ({ default: m.EmployeesPage })));
+const PayrollRunPage = lazy(() => import('./pages/backoffice/hr/payroll-run-page'));
+const PayrollDetailPage = lazy(() => import('./pages/backoffice/hr/payroll-detail-page'));
+const HrContractsPage = lazy(() => import('./pages/backoffice/hr/contracts-page'));
+const SalaryStructurePage = lazy(() => import('./pages/backoffice/hr/salary-structure-page'));
+const AttendanceRulesPage = lazy(() => import('./pages/backoffice/hr/attendance-rules-page'));
+const EmployeeAssetsPage = lazy(() => import('./pages/backoffice/hr/employee-assets-page'));
+const PitFinalizationPage = lazy(() => import('./pages/backoffice/hr/pit-finalization-page'));
 const ManagerPortal = lazy(() => import('./pages/backoffice/manager/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
 const AdminPortal = lazy(() => import('./pages/backoffice/admin/AdminPortal').then(m => ({ default: m.AdminPortal })));
 const WarrantyPortal = lazy(() => import('./pages/backoffice/WarrantyPortal').then(m => ({ default: m.WarrantyPortal })));
@@ -304,12 +313,24 @@ function App() {
                           <Route path="accounting/reports" element={<FinancialReportsPage />} />
                           <Route path="accounting/tax-reports" element={<TaxReportsPage />} />
                           <Route path="hr" element={<HRPortal />} />
+                          <Route path="hr/employees" element={<EmployeesPage />} />
                           <Route path="hr/recruitment" element={<RecruitmentManagement />} />
                           <Route path="hr/attendance" element={<AttendancePage />} />
                           <Route path="hr/approvals" element={<LeaveApprovalPage />} />
+                          <Route path="hr/overtime-approval" element={<OvertimeApprovalPage />} />
                           <Route path="hr/self-service" element={<EmployeeSelfServicePage />} />
                           <Route path="hr/chat" element={<InternalChatPage />} />
                           <Route path="hr/reports" element={<HRReportsPage />} />
+                          <Route path="hr/contracts" element={<HrContractsPage />} />
+                          <Route path="hr/attendance-rules" element={<AttendanceRulesPage />} />
+                          <Route path="hr/employee-assets" element={<EmployeeAssetsPage />} />
+                          {/* Sensitive: Payroll/Salary/PIT — Admin + HR only */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'HR']} />}>
+                              <Route path="hr/payroll-runs" element={<PayrollRunPage />} />
+                              <Route path="hr/payroll/:payrollId" element={<PayrollDetailPage />} />
+                              <Route path="hr/salary-structures" element={<SalaryStructurePage />} />
+                              <Route path="hr/pit-finalization" element={<PitFinalizationPage />} />
+                          </Route>
                           <Route path="warranty" element={<WarrantyPortal />} />
                           <Route path="warranty/reports" element={<WarrantyReportsPage />} />
                           <Route path="crm/reports" element={<CRMReportsPage />} />

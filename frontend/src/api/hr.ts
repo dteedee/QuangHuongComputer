@@ -797,3 +797,973 @@ export const shiftAssignmentStatusLabels: Record<ShiftAssignmentStatus, string> 
     Late: 'Đi trễ',
     Cancelled: 'Đã hủy'
 };
+
+// ============================================
+// Phase 06 (Luồng D) — Payroll / Contract / Salary / Asset / PIT / AttendanceRule
+// ============================================
+
+export type PayrollRunStatus = 'Draft' | 'Calculating' | 'Calculated' | 'Approved' | 'Paid' | 'Cancelled';
+export type PayrollLineType =
+    | 'BaseSalary' | 'OvertimeWeekday' | 'OvertimeSunday' | 'OvertimeHoliday' | 'OvertimeNight'
+    | 'AllowanceTaxable' | 'AllowanceNonTaxable' | 'Bonus' | 'Advance'
+    | 'InsuranceSocial' | 'InsuranceHealth' | 'InsuranceUnemployment'
+    | 'PersonalIncomeTax' | 'LateFine' | 'OtherDeduction'
+    | 'DependentDeduction' | 'SelfDeduction';
+
+export type ContractType = 'Probation' | 'FixedTerm1Year' | 'FixedTerm3Year' | 'Permanent' | 'Seasonal' | 'Internship';
+export type ContractStatus = 'Draft' | 'Active' | 'Expired' | 'Terminated' | 'Renewed';
+export type DependentRelation = 'Child' | 'Spouse' | 'Parent' | 'Grandparent' | 'Sibling' | 'Other';
+export type AssetType = 'Laptop' | 'Desktop' | 'Phone' | 'Monitor' | 'Uniform' | 'Vehicle' | 'Other';
+export type AssetCondition = 'New' | 'Good' | 'Fair' | 'Damaged' | 'Lost';
+
+export interface PayrollRun {
+    id: string;
+    periodMonth: number;
+    periodYear: number;
+    status: PayrollRunStatus;
+    employeeCount: number;
+    totalGross: number;
+    totalNet: number;
+    totalTax: number;
+    totalInsurance: number;
+    storeId?: string;
+    storeName?: string;
+    createdAt: string;
+    calculatedAt?: string;
+    approvedAt?: string;
+    approvedBy?: string;
+    paidAt?: string;
+    paidBy?: string;
+    notes?: string;
+}
+
+export interface PayrollRunDetail extends PayrollRun {
+    payrolls: Payroll[];
+}
+
+export interface PayrollLineItem {
+    id: string;
+    payrollId: string;
+    type: PayrollLineType;
+    label: string;
+    amount: number;
+    isTaxable?: boolean;
+    quantity?: number;
+    rate?: number;
+    notes?: string;
+}
+
+export interface PayrollDetail extends Payroll {
+    lineItems: PayrollLineItem[];
+    payrollRunId?: string;
+    grossPay?: number;
+    workdaysStandard?: number;
+    workdaysActual?: number;
+    lateMinutes?: number;
+    dependentCount?: number;
+    salaryStructureId?: string;
+    bankTransferRef?: string;
+    employeeCode?: string;
+    employeeBankAccount?: string;
+    employeeBankName?: string;
+}
+
+export interface CreatePayrollRunDto {
+    periodMonth: number;
+    periodYear: number;
+    storeId?: string;
+    employeeIds?: string[];
+    notes?: string;
+}
+
+export interface BankTransferRow {
+    employeeCode: string;
+    employeeName: string;
+    bankAccount: string;
+    bankName: string;
+    amount: number;
+    description: string;
+}
+
+export interface EmploymentContract {
+    id: string;
+    employeeId: string;
+    employeeName?: string;
+    contractNumber: string;
+    type: ContractType;
+    startDate: string;
+    endDate?: string;
+    contractSalary: number;
+    insurableSalary: number;
+    status: ContractStatus;
+    documentUrl?: string;
+    signedAt?: string;
+    terminatedAt?: string;
+    terminationReason?: string;
+    createdAt?: string;
+}
+
+export interface CreateContractDto {
+    employeeId: string;
+    contractNumber?: string;
+    type: ContractType;
+    startDate: string;
+    endDate?: string;
+    contractSalary: number;
+    insurableSalary: number;
+    documentUrl?: string;
+}
+
+export interface Dependent {
+    id: string;
+    employeeId: string;
+    fullName: string;
+    relation: DependentRelation;
+    birthDate: string;
+    taxCode?: string;
+    deductionStartDate: string;
+    deductionEndDate?: string;
+    createdAt?: string;
+}
+
+export interface CreateDependentDto {
+    fullName: string;
+    relation: DependentRelation;
+    birthDate: string;
+    taxCode?: string;
+    deductionStartDate: string;
+    deductionEndDate?: string;
+}
+
+export interface SalaryStructure {
+    id: string;
+    employeeId: string;
+    baseSalary: number;
+    insurableSalary: number;
+    coefficient: number;
+    effectiveDate: string;
+    endDate?: string;
+    note?: string;
+    createdAt?: string;
+}
+
+export interface CreateSalaryStructureDto {
+    baseSalary: number;
+    insurableSalary: number;
+    coefficient?: number;
+    effectiveDate: string;
+    endDate?: string;
+    note?: string;
+}
+
+export interface AllowanceType {
+    id: string;
+    code: string;
+    name: string;
+    taxFreeMonthlyCap?: number;
+    taxFreeYearlyCap?: number;
+    isTaxable: boolean;
+}
+
+export interface Allowance {
+    id: string;
+    employeeId: string;
+    allowanceTypeId: string;
+    allowanceTypeName?: string;
+    amount: number;
+    effectiveDate: string;
+    endDate?: string;
+    isTaxable: boolean;
+}
+
+export interface CreateAllowanceDto {
+    allowanceTypeId: string;
+    amount: number;
+    effectiveDate: string;
+    endDate?: string;
+}
+
+export interface EmployeeAsset {
+    id: string;
+    employeeId: string;
+    employeeName?: string;
+    type: AssetType;
+    code: string;
+    serialNumber?: string;
+    name: string;
+    value: number;
+    condition: AssetCondition;
+    assignedDate: string;
+    returnedDate?: string;
+    returnCondition?: AssetCondition;
+    notes?: string;
+    createdAt?: string;
+}
+
+export interface CreateAssetDto {
+    type: AssetType;
+    code: string;
+    serialNumber?: string;
+    name: string;
+    value: number;
+    condition: AssetCondition;
+    assignedDate: string;
+    notes?: string;
+}
+
+export interface ReturnAssetDto {
+    returnCondition: AssetCondition;
+    returnedDate: string;
+    notes?: string;
+}
+
+export interface AttendanceRule {
+    id: string;
+    storeId?: string;
+    storeName?: string;
+    lateToleranceMinutes: number;
+    lateFineMoneyPerMinute: number;
+    earlyLeaveFineMoneyPerMinute: number;
+    otRateWeekday: number;
+    otRateSunday: number;
+    otRateHoliday: number;
+    otRateNight: number;
+    halfDayThresholdMinutes: number;
+    active: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface CreateAttendanceRuleDto {
+    storeId?: string;
+    lateToleranceMinutes: number;
+    lateFineMoneyPerMinute: number;
+    earlyLeaveFineMoneyPerMinute: number;
+    otRateWeekday: number;
+    otRateSunday: number;
+    otRateHoliday: number;
+    otRateNight: number;
+    halfDayThresholdMinutes: number;
+    active: boolean;
+}
+
+export interface PitMonthlyBreakdown {
+    month: number;
+    grossIncome: number;
+    taxableIncome: number;
+    withheldPit: number;
+    insurance: number;
+    dependentDeduction: number;
+}
+
+export interface PitFinalizationResult {
+    employeeId: string;
+    employeeName?: string;
+    employeeCode?: string;
+    year: number;
+    totalIncome: number;
+    totalWithheld: number;
+    totalTaxable: number;
+    totalDue: number;
+    overpaymentOrShortfall: number;
+    dependentCount: number;
+    monthlyBreakdown: PitMonthlyBreakdown[];
+    isFinalized?: boolean;
+    finalizedAt?: string;
+}
+
+export interface PitFinalizationSummary {
+    year: number;
+    items: PitFinalizationResult[];
+    totalIncome: number;
+    totalWithheld: number;
+    totalDue: number;
+}
+
+export interface ExpiringContract {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    contractNumber: string;
+    type: ContractType;
+    endDate: string;
+    daysLeft: number;
+}
+
+// ── Payroll Run API ──
+const _createPayrollRun = async (data: CreatePayrollRunDto): Promise<PayrollRun> => {
+    const { data: res } = await client.post<PayrollRun>('/hr/payroll/runs', data);
+    return res;
+};
+
+const _calculatePayrollRun = async (runId: string): Promise<PayrollRun> => {
+    const { data } = await client.post<PayrollRun>(`/hr/payroll/runs/${runId}/calculate`);
+    return data;
+};
+
+const _listPayrollRuns = async (params?: { year?: number; month?: number; storeId?: string }): Promise<PayrollRun[]> => {
+    const { data } = await client.get<PayrollRun[] | { items: PayrollRun[] }>('/hr/payroll/runs', { params });
+    return Array.isArray(data) ? data : data.items ?? [];
+};
+
+const _getPayrollRun = async (runId: string): Promise<PayrollRunDetail> => {
+    const { data } = await client.get<PayrollRunDetail>(`/hr/payroll/runs/${runId}`);
+    return data;
+};
+
+const _approvePayrollRun = async (runId: string): Promise<PayrollRun> => {
+    const { data } = await client.post<PayrollRun>(`/hr/payroll/runs/${runId}/approve`);
+    return data;
+};
+
+const _markPayrollRunPaid = async (runId: string): Promise<PayrollRun> => {
+    const { data } = await client.post<PayrollRun>(`/hr/payroll/runs/${runId}/mark-paid`);
+    return data;
+};
+
+const _getPayrollDetail = async (payrollId: string): Promise<PayrollDetail> => {
+    const { data } = await client.get<PayrollDetail>(`/hr/payroll/${payrollId}`);
+    return data;
+};
+
+const _recalculatePayroll = async (payrollId: string): Promise<PayrollDetail> => {
+    const { data } = await client.post<PayrollDetail>(`/hr/payroll/${payrollId}/recalculate`);
+    return data;
+};
+
+const _downloadBankTransferFile = async (runId: string): Promise<Blob> => {
+    const { data } = await client.get(`/hr/payroll/runs/${runId}/bank-transfer-file`, { responseType: 'blob' });
+    return data as Blob;
+};
+
+// ── Contracts API ──
+const _listContracts = async (params?: { status?: ContractStatus; type?: ContractType; employeeId?: string }): Promise<EmploymentContract[]> => {
+    const { data } = await client.get<EmploymentContract[]>('/hr/contracts', { params });
+    return Array.isArray(data) ? data : [];
+};
+
+const _getContract = async (id: string): Promise<EmploymentContract> => {
+    const { data } = await client.get<EmploymentContract>(`/hr/contracts/${id}`);
+    return data;
+};
+
+const _createContract = async (payload: CreateContractDto): Promise<EmploymentContract> => {
+    const { data } = await client.post<EmploymentContract>('/hr/contracts', payload);
+    return data;
+};
+
+const _updateContract = async (id: string, payload: Partial<CreateContractDto>): Promise<EmploymentContract> => {
+    const { data } = await client.put<EmploymentContract>(`/hr/contracts/${id}`, payload);
+    return data;
+};
+
+const _terminateContract = async (id: string, reason: string): Promise<EmploymentContract> => {
+    const { data } = await client.post<EmploymentContract>(`/hr/contracts/${id}/terminate`, { reason });
+    return data;
+};
+
+const _renewContract = async (id: string, payload: { newEndDate: string; newSalary?: number }): Promise<EmploymentContract> => {
+    const { data } = await client.post<EmploymentContract>(`/hr/contracts/${id}/renew`, payload);
+    return data;
+};
+
+const _getExpiringContracts = async (days: number = 30): Promise<ExpiringContract[]> => {
+    const { data } = await client.get<ExpiringContract[]>('/hr/contracts/expiring', { params: { days } });
+    return Array.isArray(data) ? data : [];
+};
+
+// ── Dependents API ──
+const _listDependents = async (employeeId: string): Promise<Dependent[]> => {
+    const { data } = await client.get<Dependent[]>(`/hr/employees/${employeeId}/dependents`);
+    return Array.isArray(data) ? data : [];
+};
+
+const _createDependent = async (employeeId: string, payload: CreateDependentDto): Promise<Dependent> => {
+    const { data } = await client.post<Dependent>(`/hr/employees/${employeeId}/dependents`, payload);
+    return data;
+};
+
+const _updateDependent = async (employeeId: string, depId: string, payload: Partial<CreateDependentDto>): Promise<Dependent> => {
+    const { data } = await client.put<Dependent>(`/hr/employees/${employeeId}/dependents/${depId}`, payload);
+    return data;
+};
+
+const _deleteDependent = async (employeeId: string, depId: string): Promise<void> => {
+    await client.delete(`/hr/employees/${employeeId}/dependents/${depId}`);
+};
+
+// ── Salary Structure API ──
+const _listSalaryStructures = async (employeeId: string): Promise<SalaryStructure[]> => {
+    const { data } = await client.get<SalaryStructure[]>(`/hr/employees/${employeeId}/salary-structures`);
+    return Array.isArray(data) ? data : [];
+};
+
+const _createSalaryStructure = async (employeeId: string, payload: CreateSalaryStructureDto): Promise<SalaryStructure> => {
+    const { data } = await client.post<SalaryStructure>(`/hr/employees/${employeeId}/salary-structures`, payload);
+    return data;
+};
+
+const _updateSalaryStructure = async (employeeId: string, sid: string, payload: Partial<CreateSalaryStructureDto>): Promise<SalaryStructure> => {
+    const { data } = await client.put<SalaryStructure>(`/hr/employees/${employeeId}/salary-structures/${sid}`, payload);
+    return data;
+};
+
+const _deleteSalaryStructure = async (employeeId: string, sid: string): Promise<void> => {
+    await client.delete(`/hr/employees/${employeeId}/salary-structures/${sid}`);
+};
+
+// ── Allowances API ──
+const _listAllowanceTypes = async (): Promise<AllowanceType[]> => {
+    const { data } = await client.get<AllowanceType[]>('/hr/allowance-types');
+    return Array.isArray(data) ? data : [];
+};
+
+const _listAllowances = async (employeeId: string): Promise<Allowance[]> => {
+    const { data } = await client.get<Allowance[]>(`/hr/employees/${employeeId}/allowances`);
+    return Array.isArray(data) ? data : [];
+};
+
+const _createAllowance = async (employeeId: string, payload: CreateAllowanceDto): Promise<Allowance> => {
+    const { data } = await client.post<Allowance>(`/hr/employees/${employeeId}/allowances`, payload);
+    return data;
+};
+
+// ── Employee Assets API ──
+const _listAssets = async (employeeId?: string): Promise<EmployeeAsset[]> => {
+    const url = employeeId ? `/hr/employees/${employeeId}/assets` : '/hr/employee-assets';
+    const { data } = await client.get<EmployeeAsset[]>(url);
+    return Array.isArray(data) ? data : [];
+};
+
+const _assignAsset = async (employeeId: string, payload: CreateAssetDto): Promise<EmployeeAsset> => {
+    const { data } = await client.post<EmployeeAsset>(`/hr/employees/${employeeId}/assets`, payload);
+    return data;
+};
+
+const _returnAsset = async (employeeId: string, assetId: string, payload: ReturnAssetDto): Promise<EmployeeAsset> => {
+    const { data } = await client.post<EmployeeAsset>(`/hr/employees/${employeeId}/assets/${assetId}/return`, payload);
+    return data;
+};
+
+// ── Attendance Rules API ──
+const _listAttendanceRules = async (): Promise<AttendanceRule[]> => {
+    const { data } = await client.get<AttendanceRule[]>('/hr/attendance-rules');
+    return Array.isArray(data) ? data : [];
+};
+
+const _createAttendanceRule = async (payload: CreateAttendanceRuleDto): Promise<AttendanceRule> => {
+    const { data } = await client.post<AttendanceRule>('/hr/attendance-rules', payload);
+    return data;
+};
+
+const _updateAttendanceRule = async (id: string, payload: Partial<CreateAttendanceRuleDto>): Promise<AttendanceRule> => {
+    const { data } = await client.put<AttendanceRule>(`/hr/attendance-rules/${id}`, payload);
+    return data;
+};
+
+// ── PIT Finalization API ──
+const _getPitFinalization = async (employeeId: string, year: number): Promise<PitFinalizationResult> => {
+    const { data } = await client.get<PitFinalizationResult>(`/hr/tax/pit-finalization/${employeeId}`, { params: { year } });
+    return data;
+};
+
+const _getPitFinalizationSummary = async (year: number): Promise<PitFinalizationSummary> => {
+    const { data } = await client.get<PitFinalizationSummary>('/hr/tax/pit-finalization/summary', { params: { year } });
+    return data;
+};
+
+const _exportPitFinalization = async (employeeId: string, year: number): Promise<Blob> => {
+    const { data } = await client.post(`/hr/tax/pit-finalization/${employeeId}/export`, null, { params: { year }, responseType: 'blob' });
+    return data as Blob;
+};
+
+// ── Public exports (Phase 06 D) ──
+export const payrollRunsApi = {
+    create: _createPayrollRun,
+    calculate: _calculatePayrollRun,
+    list: _listPayrollRuns,
+    get: _getPayrollRun,
+    approve: _approvePayrollRun,
+    markPaid: _markPayrollRunPaid,
+    getPayrollDetail: _getPayrollDetail,
+    recalculatePayroll: _recalculatePayroll,
+    downloadBankTransferFile: _downloadBankTransferFile,
+};
+
+export const contractsApi = {
+    list: _listContracts,
+    get: _getContract,
+    create: _createContract,
+    update: _updateContract,
+    terminate: _terminateContract,
+    renew: _renewContract,
+    expiring: _getExpiringContracts,
+};
+
+export const dependentsApi = {
+    list: _listDependents,
+    create: _createDependent,
+    update: _updateDependent,
+    remove: _deleteDependent,
+};
+
+export const salaryStructureApi = {
+    list: _listSalaryStructures,
+    create: _createSalaryStructure,
+    update: _updateSalaryStructure,
+    remove: _deleteSalaryStructure,
+};
+
+export const allowancesApi = {
+    listTypes: _listAllowanceTypes,
+    listForEmployee: _listAllowances,
+    create: _createAllowance,
+};
+
+export const employeeAssetsApi = {
+    list: _listAssets,
+    assign: _assignAsset,
+    return: _returnAsset,
+};
+
+export const attendanceRulesApi = {
+    list: _listAttendanceRules,
+    create: _createAttendanceRule,
+    update: _updateAttendanceRule,
+};
+
+export const pitFinalizationApi = {
+    getForEmployee: _getPitFinalization,
+    getSummary: _getPitFinalizationSummary,
+    export: _exportPitFinalization,
+};
+
+// ── Labels & helpers for Phase 06 D ──
+export const contractTypeLabels: Record<ContractType, string> = {
+    Probation: 'Thử việc',
+    FixedTerm1Year: 'Xác định 1 năm',
+    FixedTerm3Year: 'Xác định 3 năm',
+    Permanent: 'Không xác định thời hạn',
+    Seasonal: 'Thời vụ',
+    Internship: 'Thực tập',
+};
+
+export const contractStatusLabels: Record<ContractStatus, string> = {
+    Draft: 'Nháp',
+    Active: 'Đang hiệu lực',
+    Expired: 'Hết hạn',
+    Terminated: 'Đã chấm dứt',
+    Renewed: 'Đã gia hạn',
+};
+
+export const dependentRelationLabels: Record<DependentRelation, string> = {
+    Child: 'Con',
+    Spouse: 'Vợ/Chồng',
+    Parent: 'Cha/Mẹ',
+    Grandparent: 'Ông/Bà',
+    Sibling: 'Anh/Chị/Em',
+    Other: 'Khác',
+};
+
+export const payrollRunStatusLabels: Record<PayrollRunStatus, string> = {
+    Draft: 'Nháp',
+    Calculating: 'Đang tính',
+    Calculated: 'Đã tính',
+    Approved: 'Đã duyệt',
+    Paid: 'Đã chi trả',
+    Cancelled: 'Đã hủy',
+};
+
+export const payrollRunStatusColors: Record<PayrollRunStatus, string> = {
+    Draft: 'bg-gray-100 text-gray-700',
+    Calculating: 'bg-blue-100 text-blue-700',
+    Calculated: 'bg-indigo-100 text-indigo-700',
+    Approved: 'bg-emerald-100 text-emerald-700',
+    Paid: 'bg-green-600 text-white',
+    Cancelled: 'bg-red-100 text-red-700',
+};
+
+export const assetTypeLabels: Record<AssetType, string> = {
+    Laptop: 'Laptop',
+    Desktop: 'PC/Desktop',
+    Phone: 'Điện thoại',
+    Monitor: 'Màn hình',
+    Uniform: 'Đồng phục',
+    Vehicle: 'Phương tiện',
+    Other: 'Khác',
+};
+
+export const assetConditionLabels: Record<AssetCondition, string> = {
+    New: 'Mới',
+    Good: 'Tốt',
+    Fair: 'Bình thường',
+    Damaged: 'Hư hỏng',
+    Lost: 'Mất',
+};
+
+export const payrollLineTypeLabels: Record<PayrollLineType, string> = {
+    BaseSalary: 'Lương cơ bản (theo công)',
+    OvertimeWeekday: 'OT ngày thường (150%)',
+    OvertimeSunday: 'OT chủ nhật (200%)',
+    OvertimeHoliday: 'OT ngày lễ (300%)',
+    OvertimeNight: 'OT ban đêm (+30%)',
+    AllowanceTaxable: 'Phụ cấp chịu thuế',
+    AllowanceNonTaxable: 'Phụ cấp miễn thuế',
+    Bonus: 'Thưởng',
+    Advance: 'Tạm ứng',
+    InsuranceSocial: 'BHXH (8%)',
+    InsuranceHealth: 'BHYT (1.5%)',
+    InsuranceUnemployment: 'BHTN (1%)',
+    PersonalIncomeTax: 'Thuế TNCN',
+    LateFine: 'Phạt đi muộn',
+    OtherDeduction: 'Khấu trừ khác',
+    DependentDeduction: 'Giảm trừ người phụ thuộc',
+    SelfDeduction: 'Giảm trừ bản thân',
+};
+
+export const PAYROLL_INCOME_TYPES: PayrollLineType[] = [
+    'BaseSalary', 'OvertimeWeekday', 'OvertimeSunday', 'OvertimeHoliday', 'OvertimeNight',
+    'AllowanceTaxable', 'AllowanceNonTaxable', 'Bonus',
+];
+
+export const PAYROLL_DEDUCTION_TYPES: PayrollLineType[] = [
+    'InsuranceSocial', 'InsuranceHealth', 'InsuranceUnemployment',
+    'PersonalIncomeTax', 'LateFine', 'Advance', 'OtherDeduction',
+];
+
+// ============================================
+// Phase 06 — Attendance / Overtime / Payroll self-service
+// ============================================
+
+export type CheckInMethod = 'GPS' | 'QR' | 'WiFi' | 'Manual' | 'Web';
+export type AttendanceStatus = 'Present' | 'Late' | 'Absent' | 'HalfDay' | 'Holiday' | 'OnLeave' | 'Weekend';
+export type OvertimeRequestStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
+
+export interface CheckInRequest {
+    method: CheckInMethod;
+    latitude?: number;
+    longitude?: number;
+    deviceId?: string;
+    storeId?: string;
+    qrCode?: string;
+}
+
+export interface CheckOutRequest {
+    method?: CheckInMethod;
+    latitude?: number;
+    longitude?: number;
+    deviceId?: string;
+    storeId?: string;
+    qrCode?: string;
+}
+
+export interface ManualAttendanceRequest {
+    employeeId: string;
+    date: string;
+    checkIn: string;
+    checkOut?: string;
+    reason: string;
+}
+
+export interface AttendanceRecord {
+    id?: string;
+    employeeId?: string;
+    employeeName?: string;
+    date: string;
+    checkIn?: string;
+    checkInTime?: string;
+    checkOut?: string;
+    checkOutTime?: string;
+    lateMin?: number;
+    earlyLeaveMin?: number;
+    workHours?: number;
+    approvedOvertimeHours?: number;
+    status: AttendanceStatus | string;
+    method?: CheckInMethod;
+    storeId?: string;
+    isManualEntry?: boolean;
+    manualReason?: string;
+    shiftName?: string;
+    shiftStart?: string;
+    shiftEnd?: string;
+}
+
+export interface AttendanceQrCode {
+    qrData: string;
+    expiresIn: number;
+    storeId?: string;
+    generatedAt?: string;
+}
+
+export interface OvertimeRequest {
+    id: string;
+    employeeId: string;
+    employeeName?: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    hours: number;
+    reason?: string;
+    status: OvertimeRequestStatus;
+    expectedRate?: number; // 1.5 / 2.0 / 3.0
+    approvedBy?: string;
+    approvedAt?: string;
+    rejectReason?: string;
+    createdAt?: string;
+}
+
+export interface CreateOvertimeRequestDto {
+    date: string;
+    startTime: string;
+    endTime: string;
+    reason?: string;
+}
+
+export interface TimesheetDetail {
+    employeeId: string;
+    employeeName?: string;
+    year: number;
+    month: number;
+    standardWorkDays?: number;
+    actualWorkDays?: number;
+    halfDays?: number;
+    absentDays?: number;
+    lateMinutes?: number;
+    earlyLeaveMinutes?: number;
+    overtimeWeekdayHours?: number;
+    overtimeWeekendHours?: number;
+    overtimeHolidayHours?: number;
+    leaveDaysPaid?: number;
+    leaveDaysUnpaid?: number;
+    isLocked?: boolean;
+    lockedAt?: string;
+    lockedBy?: string;
+    records?: AttendanceRecord[];
+}
+
+export interface PayslipLineItem {
+    label: string;
+    category: 'Income' | 'Deduction' | 'Insurance' | 'Tax' | 'Bonus' | 'Allowance' | 'Other';
+    amount: number;
+    taxable?: boolean;
+    note?: string;
+}
+
+export interface PayslipDetail {
+    payrollId: string;
+    employeeId: string;
+    employeeName?: string;
+    employeeCode?: string;
+    department?: string;
+    position?: string;
+    period: { month: number; year: number };
+    baseSalary: number;
+    grossPay?: number;
+    netPay: number;
+    totalIncome?: number;
+    totalDeductions?: number;
+    lineItems: PayslipLineItem[];
+    bankAccount?: string;
+    bankName?: string;
+    paidAt?: string;
+    status: PayrollStatus;
+    notes?: string;
+}
+
+// ---------- Attendance (Phase 06) ----------
+const _attendanceCheckIn = async (data: CheckInRequest): Promise<AttendanceRecord> => {
+    const response = await client.post<AttendanceRecord>('/api/hr/attendance/check-in', data);
+    return response.data;
+};
+
+const _attendanceCheckOut = async (data: CheckOutRequest): Promise<AttendanceRecord> => {
+    const response = await client.post<AttendanceRecord>('/api/hr/attendance/check-out', data);
+    return response.data;
+};
+
+const _attendanceQrCode = async (storeId?: string): Promise<AttendanceQrCode> => {
+    const response = await client.get<AttendanceQrCode>('/api/hr/attendance/qr-code', {
+        params: storeId ? { storeId } : undefined,
+    });
+    return response.data;
+};
+
+const _attendanceManual = async (data: ManualAttendanceRequest): Promise<AttendanceRecord> => {
+    const response = await client.post<AttendanceRecord>('/api/hr/attendance/manual', data);
+    return response.data;
+};
+
+const _attendanceList = async (params: { employeeId?: string; year?: number; month?: number; storeId?: string }): Promise<AttendanceRecord[]> => {
+    const response = await client.get<AttendanceRecord[] | { items: AttendanceRecord[] }>('/api/hr/attendance', { params });
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    return data?.items ?? [];
+};
+
+// ---------- Overtime ----------
+const _overtimeCreate = async (data: CreateOvertimeRequestDto): Promise<OvertimeRequest> => {
+    const response = await client.post<OvertimeRequest>('/api/hr/overtime', data);
+    return response.data;
+};
+
+const _overtimePending = async (): Promise<OvertimeRequest[]> => {
+    const response = await client.get<OvertimeRequest[]>('/api/hr/overtime/pending');
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+const _overtimeApprove = async (id: string): Promise<{ message: string }> => {
+    const response = await client.post(`/api/hr/overtime/${id}/approve`);
+    return response.data;
+};
+
+const _overtimeReject = async (id: string, reason: string): Promise<{ message: string }> => {
+    const response = await client.post(`/api/hr/overtime/${id}/reject`, { reason });
+    return response.data;
+};
+
+const _overtimeMine = async (): Promise<OvertimeRequest[]> => {
+    const response = await client.get<OvertimeRequest[]>('/api/hr/overtime/mine');
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+// ---------- Leave (self-service extras) ----------
+const _leaveMine = async (): Promise<LeaveRequest[]> => {
+    const response = await client.get<LeaveRequest[]>('/api/hr/leave/mine');
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+const _leavePending = async (): Promise<LeaveRequest[]> => {
+    const response = await client.get<LeaveRequest[]>('/api/hr/leave/pending');
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+const _leaveCreatePhase06 = async (data: {
+    type: LeaveType;
+    startDate: string;
+    endDate: string;
+    reason?: string;
+}): Promise<LeaveRequest> => {
+    const response = await client.post<LeaveRequest>('/api/hr/leave', data);
+    return response.data;
+};
+
+const _leaveApprovePhase06 = async (id: string): Promise<{ message: string }> => {
+    const response = await client.post(`/api/hr/leave/${id}/approve`);
+    return response.data;
+};
+
+const _leaveRejectPhase06 = async (id: string, reason: string): Promise<{ message: string }> => {
+    const response = await client.post(`/api/hr/leave/${id}/reject`, { reason });
+    return response.data;
+};
+
+// ---------- Timesheet ----------
+const _timesheetGet = async (employeeId: string, year: number, month: number): Promise<TimesheetDetail> => {
+    const response = await client.get<TimesheetDetail>(`/api/hr/timesheet/${employeeId}`, {
+        params: { year, month },
+    });
+    return response.data;
+};
+
+const _timesheetAggregate = async (employeeId: string, year: number, month: number): Promise<TimesheetDetail> => {
+    const response = await client.post<TimesheetDetail>(`/api/hr/timesheet/${employeeId}/aggregate`, null, {
+        params: { year, month },
+    });
+    return response.data;
+};
+
+// ---------- Payroll self-service ----------
+const _payrollMine = async (year?: number): Promise<Payroll[]> => {
+    const response = await client.get<Payroll[]>('/api/hr/payroll/mine', {
+        params: year ? { year } : undefined,
+    });
+    return Array.isArray(response.data) ? response.data : [];
+};
+
+const _payrollGetById = async (payrollId: string): Promise<Payroll> => {
+    const response = await client.get<Payroll>(`/api/hr/payroll/${payrollId}`);
+    return response.data;
+};
+
+const _payslipGet = async (payrollId: string): Promise<PayslipDetail> => {
+    const response = await client.get<PayslipDetail>(`/api/hr/payroll/${payrollId}/payslip`);
+    return response.data;
+};
+
+// Named exports
+export const attendanceApi = {
+    checkIn: _attendanceCheckIn,
+    checkOut: _attendanceCheckOut,
+    qrCode: _attendanceQrCode,
+    manual: _attendanceManual,
+    list: _attendanceList,
+};
+
+export const overtimeApi = {
+    create: _overtimeCreate,
+    pending: _overtimePending,
+    approve: _overtimeApprove,
+    reject: _overtimeReject,
+    mine: _overtimeMine,
+};
+
+export const leavePhase06Api = {
+    mine: _leaveMine,
+    pending: _leavePending,
+    create: _leaveCreatePhase06,
+    approve: _leaveApprovePhase06,
+    reject: _leaveRejectPhase06,
+};
+
+export const timesheetApi = {
+    get: _timesheetGet,
+    aggregate: _timesheetAggregate,
+};
+
+export const payrollSelfServiceApi = {
+    mine: _payrollMine,
+    getById: _payrollGetById,
+    payslip: _payslipGet,
+};
+
+// Label helpers
+export const attendanceStatusLabels: Record<string, string> = {
+    Present: 'Có mặt',
+    Late: 'Đi trễ',
+    Absent: 'Vắng',
+    HalfDay: 'Nửa công',
+    Holiday: 'Ngày lễ',
+    OnLeave: 'Nghỉ phép',
+    Weekend: 'Cuối tuần',
+};
+
+export const attendanceStatusColors: Record<string, string> = {
+    Present: 'bg-green-100 text-green-800 border-green-200',
+    Late: 'bg-orange-100 text-orange-800 border-orange-200',
+    Absent: 'bg-red-100 text-red-800 border-red-200',
+    HalfDay: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    Holiday: 'bg-gray-100 text-gray-600 border-gray-200',
+    OnLeave: 'bg-blue-100 text-blue-800 border-blue-200',
+    Weekend: 'bg-slate-50 text-slate-500 border-slate-200',
+};
+
+export const overtimeStatusLabels: Record<OvertimeRequestStatus, string> = {
+    Pending: 'Chờ duyệt',
+    Approved: 'Đã duyệt',
+    Rejected: 'Từ chối',
+    Cancelled: 'Đã hủy',
+};
+
+/** Tính hệ số OT theo ngày (đơn giản, backend là nguồn chân lý). */
+export const calculateOvertimeRate = (date: Date, isHoliday = false): number => {
+    if (isHoliday) return 3.0;
+    const day = date.getDay();
+    if (day === 0) return 2.0; // Chủ nhật
+    return 1.5;
+};
+
+export const overtimeRateLabel = (rate: number): string => {
+    if (rate >= 3) return '300% (Ngày lễ)';
+    if (rate >= 2) return '200% (Chủ nhật)';
+    return '150% (Ngày thường)';
+};

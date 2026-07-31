@@ -1,18 +1,22 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
-import { UserPlus, Mail, Phone, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { UserPlus, Mail, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { hrApi, type Employee } from '../../../api/hr';
+import { hrApi, contractsApi, contractTypeLabels, contractStatusLabels, type Employee } from '../../../api/hr';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../../context/ConfirmContext';
-import { formatCurrency } from '../../../utils/format';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
+import { DependentsEditor } from '../../../components/hr/dependents-editor';
+import { SalaryStructureHistory } from '../../../components/hr/salary-structure-history';
 import { z } from 'zod';
 import { validationMessages as msg } from '../../../lib/validation/messages';
+
+type EditTab = 'info' | 'dependents' | 'contracts' | 'salary';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +26,7 @@ export const EmployeesPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [editTab, setEditTab] = useState<EditTab>('info');
     const pageSize = 15;
     const queryClient = useQueryClient();
     const confirm = useConfirm();
@@ -80,17 +85,23 @@ export const EmployeesPage = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = {
+        const data: Partial<Employee> = {
             fullName: formData.get('fullName') as string,
             email: formData.get('email') as string,
-            phone: formData.get('phone') as string,
+            phone: (formData.get('phone') as string) || undefined,
             department: formData.get('department') as string,
             position: formData.get('position') as string,
             baseSalary: Number(formData.get('baseSalary')),
             hireDate: formData.get('hireDate') as string,
-            status: formData.get('status') as 'Active' | 'Inactive' | 'OnLeave',
-            address: formData.get('address') as string,
-            emergencyContact: formData.get('emergencyContact') as string,
+            status: formData.get('status') as Employee['status'],
+            address: (formData.get('address') as string) || undefined,
+            emergencyContact: (formData.get('emergencyContact') as string) || undefined,
+            taxCode: (formData.get('taxCode') as string) || undefined,
+            socialInsuranceNumber: (formData.get('socialInsuranceNumber') as string) || undefined,
+            idCardNumber: (formData.get('idCardNumber') as string) || undefined,
+            bankAccount: (formData.get('bankAccount') as string) || undefined,
+            bankName: (formData.get('bankName') as string) || undefined,
+            workLocation: (formData.get('workLocation') as string) || undefined,
         };
 
         const schema = z.object({
@@ -125,12 +136,14 @@ export const EmployeesPage = () => {
     const openEditModal = (employee: Employee) => {
         setEditingEmployee(employee);
         setErrors({});
+        setEditTab('info');
         setIsModalOpen(true);
     };
 
     const openAddModal = () => {
         setEditingEmployee(null);
         setErrors({});
+        setEditTab('info');
         setIsModalOpen(true);
     };
 
@@ -384,6 +397,32 @@ export const EmployeesPage = () => {
                 title={`${editingEmployee ? 'Chỉnh sửa' : 'Thêm'} Nhân viên`}
                 description="Nhập thông tin chi tiết nhân viên vào hệ thống"
             >
+                {editingEmployee && (
+                    <div className="flex gap-1 mb-6 border-b border-gray-100">
+                        {(['info', 'dependents', 'contracts', 'salary'] as EditTab[]).map(t => (
+                            <button
+                                key={t}
+                                type="button"
+                                onClick={() => setEditTab(t)}
+                                className={`px-4 py-2 text-xs font-semibold transition-colors ${editTab === t ? 'border-b-2 border-accent text-accent' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                {tabLabel(t)}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {editingEmployee && editTab === 'dependents' && (
+                    <DependentsEditor employeeId={editingEmployee.id} />
+                )}
+                {editingEmployee && editTab === 'contracts' && (
+                    <EmployeeContractsMini employeeId={editingEmployee.id} />
+                )}
+                {editingEmployee && editTab === 'salary' && (
+                    <SalaryStructureHistory employeeId={editingEmployee.id} />
+                )}
+
+                {(!editingEmployee || editTab === 'info') && (
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
@@ -483,6 +522,20 @@ export const EmployeesPage = () => {
                         defaultValue={editingEmployee?.emergencyContact}
                     />
 
+                    {/* Additional fields — Phase 06 */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Mã số thuế cá nhân" name="taxCode" defaultValue={editingEmployee?.taxCode} />
+                        <Input label="Số sổ BHXH" name="socialInsuranceNumber" defaultValue={editingEmployee?.socialInsuranceNumber} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="CMND/CCCD" name="idCardNumber" defaultValue={editingEmployee?.idCardNumber} />
+                        <Input label="Chi nhánh làm việc" name="workLocation" defaultValue={editingEmployee?.workLocation} placeholder="Store ID hoặc tên..." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Số tài khoản ngân hàng" name="bankAccount" defaultValue={editingEmployee?.bankAccount} />
+                        <Input label="Tên ngân hàng" name="bankName" defaultValue={editingEmployee?.bankName} />
+                    </div>
+
                     <div className="flex gap-4 pt-4">
                         <Button
                             type="button"
@@ -502,7 +555,59 @@ export const EmployeesPage = () => {
                         </Button>
                     </div>
                 </form>
+                )}
             </Modal>
         </div>
     );
 };
+
+function tabLabel(t: EditTab): string {
+    switch (t) {
+        case 'info': return 'Thông tin';
+        case 'dependents': return 'Người phụ thuộc';
+        case 'contracts': return 'Hợp đồng';
+        case 'salary': return 'Cơ cấu lương';
+    }
+}
+
+// Mini list of contracts for the employee, embedded in the edit modal.
+function EmployeeContractsMini({ employeeId }: { employeeId: string }) {
+    const { data: contracts = [], isLoading } = useQuery({
+        queryKey: ['employee-contracts', employeeId],
+        queryFn: () => contractsApi.list({ employeeId }),
+    });
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900">Hợp đồng của nhân viên</h3>
+                <Link to="/backoffice/hr/contracts" className="text-xs text-accent hover:underline flex items-center gap-1">
+                    <FileText size={12} />Xem tất cả
+                </Link>
+            </div>
+            {isLoading ? (
+                <p className="text-xs text-gray-400">Đang tải...</p>
+            ) : contracts.length === 0 ? (
+                <p className="text-xs text-gray-400 italic py-4 text-center border border-dashed border-gray-200 rounded-lg">
+                    Nhân viên chưa có HĐ nào
+                </p>
+            ) : (
+                <ul className="space-y-2">
+                    {contracts.map(c => (
+                        <li key={c.id} className="premium-card p-3 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-mono">{c.contractNumber}</p>
+                                <p className="text-[11px] text-gray-500">
+                                    {contractTypeLabels[c.type]} · {new Date(c.startDate).toLocaleDateString('vi-VN')}
+                                    {c.endDate ? ` – ${new Date(c.endDate).toLocaleDateString('vi-VN')}` : ' (KXĐ)'}
+                                </p>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                                {contractStatusLabels[c.status]}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}
