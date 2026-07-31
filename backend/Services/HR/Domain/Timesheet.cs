@@ -220,3 +220,132 @@ public record TimesheetRejectedEvent(
     DateTime Date,
     Guid RejectedBy,
     string Reason) : DomainEvent;
+
+// =====================================================================
+// Phase 06: BẢNG CÔNG THÁNG — tổng hợp AttendanceRecord + OT + Leave.
+// Khoá lại (Lock) trước khi chạy Payroll để bảng lương ổn định.
+// =====================================================================
+
+public enum MonthlyTimesheetStatus
+{
+    Draft = 0,      // Đang tổng hợp / cho sửa
+    Locked = 1      // Chốt, không cho sửa (mở khoá phải có ghi log)
+}
+
+public class MonthlyTimesheet : Entity<Guid>
+{
+    public Guid EmployeeId { get; private set; }
+    public int Year { get; private set; }
+    public int Month { get; private set; }
+
+    // Ngày công
+    public decimal StandardWorkDays { get; private set; }      // Công chuẩn = ngày làm việc trừ lễ
+    public decimal ActualWorkDays { get; private set; }        // Công đi làm thực tế
+    public decimal AbsentDays { get; private set; }            // Vắng không phép
+    public decimal HalfDays { get; private set; }              // Nửa công (đi muộn > ngưỡng)
+
+    // Giờ OT theo loại
+    public decimal OvertimeHoursWeekday { get; private set; }
+    public decimal OvertimeHoursSunday { get; private set; }
+    public decimal OvertimeHoursHoliday { get; private set; }
+    public decimal OvertimeHoursNight { get; private set; }
+
+    // Đi muộn / về sớm
+    public int TotalLateMinutes { get; private set; }
+    public int TotalEarlyLeaveMinutes { get; private set; }
+
+    // Nghỉ phép
+    public int LeaveDaysPaid { get; private set; }             // nghỉ phép có lương
+    public int LeaveDaysUnpaid { get; private set; }           // nghỉ không lương
+
+    public MonthlyTimesheetStatus Status { get; private set; }
+    public DateTime? LockedAt { get; private set; }
+    public Guid? LockedBy { get; private set; }
+    public string? Notes { get; private set; }
+
+    public MonthlyTimesheet(Guid employeeId, int year, int month)
+    {
+        if (employeeId == Guid.Empty) throw new ArgumentException("EmployeeId là bắt buộc.");
+        if (year < 2000 || year > 2100) throw new ArgumentException("Year không hợp lệ.");
+        if (month < 1 || month > 12) throw new ArgumentException("Month 1..12.");
+
+        Id = Guid.NewGuid();
+        EmployeeId = employeeId;
+        Year = year;
+        Month = month;
+        Status = MonthlyTimesheetStatus.Draft;
+    }
+
+    protected MonthlyTimesheet() { }
+
+    public void SetAttendanceAggregation(
+        decimal standardWorkDays,
+        decimal actualWorkDays,
+        decimal absentDays,
+        decimal halfDays,
+        int totalLateMinutes,
+        int totalEarlyLeaveMinutes)
+    {
+        RequireDraft();
+        StandardWorkDays = standardWorkDays;
+        ActualWorkDays = actualWorkDays;
+        AbsentDays = absentDays;
+        HalfDays = halfDays;
+        TotalLateMinutes = totalLateMinutes;
+        TotalEarlyLeaveMinutes = totalEarlyLeaveMinutes;
+    }
+
+    public void SetOvertimeBreakdown(
+        decimal weekday,
+        decimal sunday,
+        decimal holiday,
+        decimal night)
+    {
+        RequireDraft();
+        if (weekday < 0 || sunday < 0 || holiday < 0 || night < 0)
+            throw new ArgumentException("Giờ OT >= 0.");
+        OvertimeHoursWeekday = weekday;
+        OvertimeHoursSunday = sunday;
+        OvertimeHoursHoliday = holiday;
+        OvertimeHoursNight = night;
+    }
+
+    public void SetLeaveDays(int paid, int unpaid)
+    {
+        RequireDraft();
+        if (paid < 0 || unpaid < 0) throw new ArgumentException("Ngày nghỉ >= 0.");
+        LeaveDaysPaid = paid;
+        LeaveDaysUnpaid = unpaid;
+    }
+
+    public void Lock(Guid lockedBy)
+    {
+        if (Status == MonthlyTimesheetStatus.Locked)
+            throw new InvalidOperationException("Bảng công đã chốt.");
+        Status = MonthlyTimesheetStatus.Locked;
+        LockedAt = DateTime.UtcNow;
+        LockedBy = lockedBy;
+    }
+
+    public void Unlock(Guid unlockedBy, string reason)
+    {
+        if (Status != MonthlyTimesheetStatus.Locked)
+            throw new InvalidOperationException("Chỉ mở khoá được bảng công đã Locked.");
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Phải ghi lý do mở khoá bảng công.");
+        Status = MonthlyTimesheetStatus.Draft;
+        Notes = $"[Unlocked by {unlockedBy} at {DateTime.UtcNow:o}]: {reason}\n" + (Notes ?? "");
+    }
+
+    public void UpdateNotes(string? notes) => Notes = notes;
+
+    private void RequireDraft()
+    {
+        if (Status == MonthlyTimesheetStatus.Locked)
+            throw new InvalidOperationException("Bảng công đã chốt — không thể sửa.");
+    }
+
+    /// <summary>Tổng OT hours (không nhân hệ số) — dùng cho báo cáo tổng quát.</summary>
+    public decimal TotalOvertimeHours =>
+        OvertimeHoursWeekday + OvertimeHoursSunday + OvertimeHoursHoliday;
+}
