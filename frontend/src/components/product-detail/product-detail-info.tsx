@@ -162,11 +162,10 @@ export default function ProductDetailInfo({
                 </button>
             </div>
 
-            {/* Tồn theo chi nhánh */}
+            {/* Tồn theo chi nhánh — nay dùng storeApi (Phase 05) thay cho catalog stock-by-branch */}
             <ProductStockByBranch
                 productId={product.id}
                 variantId={selectedVariant?.id}
-                initialData={stockByBranch}
             />
 
             {/* Trust badges */}

@@ -79,6 +79,7 @@ const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const StoresPage = lazy(() => import('./pages/StoresPage'));
 
 // Auth pages
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -115,6 +116,14 @@ const PurchaseOrdersPage = lazy(() => import('./pages/backoffice/inventory/Purch
 const GoodsReceivedNotesPage = lazy(() => import('./pages/backoffice/inventory/goods-received-notes-page'));
 const DeliveryNotesPage = lazy(() => import('./pages/backoffice/inventory/delivery-notes-page'));
 const InventoryCountPage = lazy(() => import('./pages/backoffice/inventory/inventory-count-page'));
+const PurchaseRequisitionsPage = lazy(() => import('./pages/backoffice/inventory/purchase-requisitions-page'));
+const RfqPage = lazy(() => import('./pages/backoffice/inventory/rfq-page'));
+const RfqDetailPage = lazy(() => import('./pages/backoffice/inventory/rfq-detail-page'));
+const PoApprovalPage = lazy(() => import('./pages/backoffice/inventory/po-approval-page'));
+const PurchaseReturnsPage = lazy(() => import('./pages/backoffice/inventory/purchase-returns-page'));
+const LandedCostPage = lazy(() => import('./pages/backoffice/inventory/landed-cost-page'));
+const SupplierScorecardPage = lazy(() => import('./pages/backoffice/inventory/supplier-scorecard-page'));
+const SerialTracePage = lazy(() => import('./pages/backoffice/inventory/serial-trace-page'));
 const HRPortal = lazy(() => import('./pages/backoffice/hr/HRPortal').then(m => ({ default: m.HRPortal })));
 const RecruitmentManagement = lazy(() => import('./pages/backoffice/hr/RecruitmentManagement').then(m => ({ default: m.RecruitmentManagement })));
 const AttendancePage = lazy(() => import('./pages/backoffice/hr/attendance-page'));
@@ -157,6 +166,7 @@ const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
 const CustomFieldsManager = lazy(() => import('./pages/admin/CustomFieldsManager'));
 const FormBuilderPage = lazy(() => import('./pages/admin/FormBuilderPage').then(m => ({ default: m.FormBuilderPage })));
 const AutomationRulesPage = lazy(() => import('./pages/admin/AutomationRulesPage').then(m => ({ default: m.AutomationRulesPage })));
+const AdminStoresPage = lazy(() => import('./pages/admin/StoresPage'));
 
 // CRM pages
 const CrmPortal = lazy(() => import('./pages/backoffice/crm/CrmPortal'));
@@ -250,6 +260,7 @@ function App() {
                         <Route path="terms" element={<TermsPage />} />
                         <Route path="privacy" element={<PrivacyPage />} />
                         <Route path="about" element={<AboutPage />} />
+                        <Route path="stores" element={<StoresPage />} />
 
                         {/* Redirects for convenience URLs */}
                         <Route path="promotion" element={<Navigate to="/policy/promotions" replace />} />
@@ -277,6 +288,14 @@ function App() {
                           <Route path="inventory/grn" element={<GoodsReceivedNotesPage />} />
                           <Route path="inventory/dn" element={<DeliveryNotesPage />} />
                           <Route path="inventory/count" element={<InventoryCountPage />} />
+                          <Route path="inventory/purchase-requisitions" element={<PurchaseRequisitionsPage />} />
+                          <Route path="inventory/rfq" element={<RfqPage />} />
+                          <Route path="inventory/rfq/:id" element={<RfqDetailPage />} />
+                          <Route path="inventory/po-approval" element={<PoApprovalPage />} />
+                          <Route path="inventory/purchase-returns" element={<PurchaseReturnsPage />} />
+                          <Route path="inventory/landed-cost" element={<LandedCostPage />} />
+                          <Route path="inventory/supplier-scorecard" element={<SupplierScorecardPage />} />
+                          <Route path="inventory/serial-trace" element={<SerialTracePage />} />
                           <Route path="accounting" element={<AccountingPortal />} />
                           <Route path="accounting/ar" element={<ARPage />} />
                           <Route path="accounting/ap" element={<APPage />} />
@@ -333,6 +352,11 @@ function App() {
                           <Route path="crm/segments" element={<CrmSegmentsPage />} />
                           <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
                         </Route>
+                      </Route>
+
+                      {/* Admin-only dedicated route: Store/Branch management */}
+                      <Route element={<RequireAuth allowedRoles={['Admin']} />}>
+                          <Route path="/admin/stores" element={<AdminStoresPage />} />
                       </Route>
 
                       {/* Admin Redirects for backward compatibility */}
