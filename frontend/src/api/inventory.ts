@@ -713,3 +713,423 @@ export async function approveInventoryCount(id: string) {
     const { data } = await client.post(`/api/inventory/count/${id}/approve`);
     return data;
 }
+
+// ============================================
+// PO APPROVAL (Phase 05C)
+// ============================================
+export type POStatusExt = POStatus | 'PendingApproval' | 'Approved' | 'Rejected';
+
+export interface PendingApprovalPO {
+    id: string;
+    poNumber: string;
+    supplierId: string;
+    supplierName?: string;
+    totalAmount: number;
+    createdAt: string;
+    createdBy?: string;
+    createdByName?: string;
+    status: POStatusExt;
+    approvalLevel?: number;
+    approvalLevelName?: string;
+    items?: { productId: string; productName?: string; quantity: number; unitPrice: number }[];
+}
+
+export const poApprovalApi = {
+    getPending: async (): Promise<PendingApprovalPO[]> => {
+        const { data } = await client.get<PendingApprovalPO[]>('/inventory/pending-approval-pos');
+        return data;
+    },
+    submitForApproval: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/submit-for-approval`);
+        return data;
+    },
+    approve: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/approve`);
+        return data;
+    },
+    reject: async (id: string, reason: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/reject`, { reason });
+        return data;
+    },
+};
+
+// ============================================
+// PURCHASE REQUISITION (Phase 05C)
+// ============================================
+export type RequisitionStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Converted' | 'Cancelled';
+export type UrgencyLevel = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export interface PurchaseRequisitionItemDto {
+    productId: string;
+    productName?: string;
+    sku?: string;
+    quantity: number;
+    estimatedPrice?: number;
+}
+
+export interface PurchaseRequisition {
+    id: string;
+    number: string;
+    requestedBy?: string;
+    requestedByName?: string;
+    urgency: UrgencyLevel;
+    reason?: string;
+    status: RequisitionStatus;
+    itemCount: number;
+    estimatedTotal: number;
+    createdAt: string;
+    items?: PurchaseRequisitionItemDto[];
+}
+
+export interface CreateRequisitionDto {
+    urgency: UrgencyLevel;
+    reason?: string;
+    items: PurchaseRequisitionItemDto[];
+}
+
+export const requisitionApi = {
+    getList: async (status?: RequisitionStatus | 'all'): Promise<PurchaseRequisition[]> => {
+        const { data } = await client.get<PurchaseRequisition[]>('/inventory/purchase-requisitions', {
+            params: status && status !== 'all' ? { status } : {},
+        });
+        return data;
+    },
+    create: async (dto: CreateRequisitionDto): Promise<PurchaseRequisition> => {
+        const { data } = await client.post<PurchaseRequisition>('/inventory/purchase-requisitions', dto);
+        return data;
+    },
+    approve: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/purchase-requisitions/${id}/approve`);
+        return data;
+    },
+    convertToPO: async (id: string, supplierId: string): Promise<{ poId: string; poNumber: string }> => {
+        const { data } = await client.post<{ poId: string; poNumber: string }>(
+            `/inventory/purchase-requisitions/${id}/convert-to-po`,
+            { supplierId }
+        );
+        return data;
+    },
+};
+
+// ============================================
+// RFQ (Phase 05C)
+// ============================================
+export type RfqStatus = 'Draft' | 'Sent' | 'ClosedForBidding' | 'Awarded' | 'Cancelled';
+
+export interface RfqItemDto {
+    productId: string;
+    productName?: string;
+    sku?: string;
+    quantity: number;
+}
+
+export interface RequestForQuotation {
+    id: string;
+    number: string;
+    createdAt: string;
+    dueDate?: string;
+    status: RfqStatus;
+    supplierCount: number;
+    quotationCount: number;
+    items?: RfqItemDto[];
+    supplierIds?: string[];
+}
+
+export interface CreateRfqDto {
+    dueDate?: string;
+    requisitionId?: string;
+    items: RfqItemDto[];
+}
+
+export interface QuotationItemInput {
+    productId: string;
+    unitPrice: number;
+    notes?: string;
+}
+
+export interface CreateQuotationDto {
+    supplierId: string;
+    paymentTerm?: PaymentTermType;
+    deliveryDays?: number;
+    warrantyMonths?: number;
+    validUntil?: string;
+    notes?: string;
+    items: QuotationItemInput[];
+}
+
+export interface QuotationSummary {
+    quotationId: string;
+    supplierId: string;
+    supplierName?: string;
+    paymentTerm?: PaymentTermType;
+    deliveryDays?: number;
+    warrantyMonths?: number;
+    total: number;
+}
+
+export interface QuotationCell {
+    quotationId: string;
+    unitPrice?: number;
+    notes?: string;
+}
+
+export interface QuotationComparisonRow {
+    productId: string;
+    productName: string;
+    sku?: string;
+    quantity: number;
+    prices: QuotationCell[];
+}
+
+export interface QuotationComparison {
+    items: QuotationComparisonRow[];
+    quotations: QuotationSummary[];
+    /** Ánh xạ column key -> quotationId có giá trị tốt nhất (giá thấp nhất / thời gian giao ngắn nhất, v.v.) */
+    bestByColumn?: Record<string, string>;
+}
+
+export const rfqApi = {
+    getList: async (status?: RfqStatus | 'all'): Promise<RequestForQuotation[]> => {
+        const { data } = await client.get<RequestForQuotation[]>('/inventory/rfq', {
+            params: status && status !== 'all' ? { status } : {},
+        });
+        return data;
+    },
+    create: async (dto: CreateRfqDto): Promise<RequestForQuotation> => {
+        const { data } = await client.post<RequestForQuotation>('/inventory/rfq', dto);
+        return data;
+    },
+    sendToSuppliers: async (id: string, supplierIds: string[]): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/rfq/${id}/send-to-suppliers`, { supplierIds });
+        return data;
+    },
+    addQuotation: async (id: string, dto: CreateQuotationDto): Promise<{ quotationId: string }> => {
+        const { data } = await client.post<{ quotationId: string }>(`/inventory/rfq/${id}/quotations`, dto);
+        return data;
+    },
+    getComparison: async (id: string): Promise<QuotationComparison> => {
+        const { data } = await client.get<QuotationComparison>(`/inventory/rfq/${id}/comparison`);
+        return data;
+    },
+    award: async (id: string, quotationId: string): Promise<{ poId: string; poNumber: string }> => {
+        const { data } = await client.post<{ poId: string; poNumber: string }>(`/inventory/rfq/${id}/award/${quotationId}`);
+        return data;
+    },
+};
+
+// ============================================
+// GRN INSPECTION (Phase 05C — mở rộng GRN có sẵn)
+// ============================================
+export interface GrnInspectItem {
+    itemId: string;
+    productName?: string;
+    sku?: string;
+    totalQty: number;
+    acceptedQty: number;
+    rejectedQty: number;
+    reason?: string;
+}
+
+export interface GrnDetail {
+    id: string;
+    documentNumber: string;
+    documentDate?: string;
+    warehouseId?: string;
+    warehouseName?: string;
+    supplierId?: string;
+    supplierName?: string;
+    status: number | string;
+    notes?: string;
+    items: GrnInspectItem[];
+}
+
+export interface InspectGrnDto {
+    items: { itemId: string; acceptedQty: number; rejectedQty: number; reason?: string }[];
+}
+
+export const grnInspectionApi = {
+    getDetail: async (id: string): Promise<GrnDetail> => {
+        const { data } = await client.get<GrnDetail>(`/inventory/grn/${id}`);
+        return data;
+    },
+    inspect: async (id: string, dto: InspectGrnDto): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/grn/${id}/inspect`, dto);
+        return data;
+    },
+    confirm: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/grn/${id}/confirm`);
+        return data;
+    },
+};
+
+// ============================================
+// PURCHASE RETURN (Phase 05C)
+// ============================================
+export type PurchaseReturnStatus = 'Draft' | 'Confirmed' | 'Shipped' | 'RefundReceived' | 'Cancelled';
+
+export interface PurchaseReturnItem {
+    productId: string;
+    productName?: string;
+    sku?: string;
+    quantity: number;
+    unitPrice?: number;
+    reason?: string;
+}
+
+export interface PurchaseReturn {
+    id: string;
+    number: string;
+    grnId?: string;
+    grnNumber?: string;
+    supplierId?: string;
+    supplierName?: string;
+    total: number;
+    status: PurchaseReturnStatus;
+    createdAt: string;
+    items?: PurchaseReturnItem[];
+}
+
+export interface CreatePurchaseReturnDto {
+    grnId: string;
+    items: PurchaseReturnItem[];
+}
+
+export const purchaseReturnApi = {
+    getList: async (status?: PurchaseReturnStatus | 'all'): Promise<PurchaseReturn[]> => {
+        const { data } = await client.get<PurchaseReturn[]>('/inventory/purchase-returns', {
+            params: status && status !== 'all' ? { status } : {},
+        });
+        return data;
+    },
+    getDefectiveGrns: async (): Promise<{ grnId: string; grnNumber: string; supplierName?: string; rejectedItemCount: number }[]> => {
+        // Lọc GRN có rejectedQty > 0 — reuse existing GRN list nếu backend chưa có endpoint dedicated
+        const { data } = await client.get('/inventory/grn/defective');
+        return data;
+    },
+    create: async (dto: CreatePurchaseReturnDto): Promise<PurchaseReturn> => {
+        const { data } = await client.post<PurchaseReturn>('/inventory/purchase-returns', dto);
+        return data;
+    },
+    confirm: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/purchase-returns/${id}/confirm`);
+        return data;
+    },
+    acceptRefund: async (id: string, amount: number): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/purchase-returns/${id}/accept-refund`, { amount });
+        return data;
+    },
+};
+
+// ============================================
+// LANDED COST (Phase 05C)
+// ============================================
+export type LandedCostType = 'Shipping' | 'ImportTax' | 'CustomsFee' | 'Insurance' | 'Other';
+export type AllocationMethod = 'ByValue' | 'ByWeight' | 'ByQuantity';
+
+export interface LandedCost {
+    id: string;
+    grnId: string;
+    type: LandedCostType;
+    description?: string;
+    amount: number;
+    allocationMethod: AllocationMethod;
+    isAllocated: boolean;
+    createdAt: string;
+}
+
+export interface CreateLandedCostDto {
+    type: LandedCostType;
+    description?: string;
+    amount: number;
+    allocationMethod: AllocationMethod;
+}
+
+export interface LandedCostAllocationResult {
+    itemId: string;
+    productName?: string;
+    sku?: string;
+    quantity: number;
+    unitPrice: number;
+    costShare: number;
+    actualUnitCost: number;
+    newAverageCost: number;
+}
+
+export const landedCostApi = {
+    getForGrn: async (grnId: string): Promise<LandedCost[]> => {
+        const { data } = await client.get<LandedCost[]>(`/inventory/grn/${grnId}/landed-costs`);
+        return data;
+    },
+    add: async (grnId: string, dto: CreateLandedCostDto): Promise<LandedCost> => {
+        const { data } = await client.post<LandedCost>(`/inventory/grn/${grnId}/landed-costs`, dto);
+        return data;
+    },
+    allocate: async (grnId: string): Promise<LandedCostAllocationResult[]> => {
+        const { data } = await client.post<LandedCostAllocationResult[]>(`/inventory/grn/${grnId}/landed-costs/allocate`);
+        return data;
+    },
+};
+
+// ============================================
+// SUPPLIER SCORECARD (Phase 05C)
+// ============================================
+export interface SupplierScorecard {
+    supplierId: string;
+    supplierName: string;
+    from: string;
+    to: string;
+    ontimeRate: number;      // 0-100 %
+    defectRate: number;      // 0-100 %
+    priceRank: number;       // 1 = tốt nhất
+    totalScore: number;      // 0-100
+    /** So sánh kỳ trước — dương là tăng, âm là giảm */
+    scoreDelta?: number;
+    trend?: { period: string; score: number }[];
+}
+
+export const supplierScorecardApi = {
+    getList: async (from: string, to: string): Promise<SupplierScorecard[]> => {
+        const { data } = await client.get<SupplierScorecard[]>('/inventory/suppliers/scorecards', {
+            params: { from, to },
+        });
+        return data;
+    },
+    getOne: async (supplierId: string, from: string, to: string): Promise<SupplierScorecard> => {
+        const { data } = await client.get<SupplierScorecard>(`/inventory/suppliers/${supplierId}/scorecard`, {
+            params: { from, to },
+        });
+        return data;
+    },
+};
+
+// ============================================
+// SERIAL TIMELINE (Phase 05C)
+// ============================================
+export type SerialEventType =
+    | 'Purchased'
+    | 'Received'
+    | 'Transferred'
+    | 'Reserved'
+    | 'Sold'
+    | 'Warranty'
+    | 'Repair'
+    | 'Returned'
+    | 'Defective'
+    | 'Scrapped';
+
+export interface SerialTimelineEvent {
+    at: string;
+    type: SerialEventType;
+    ref?: string;             // Ví dụ PO-2026-001, ORD-2026-123
+    refLink?: string;         // Đường dẫn nội bộ
+    description?: string;
+}
+
+export const serialTimelineApi = {
+    getTimeline: async (serial: string): Promise<SerialTimelineEvent[]> => {
+        const { data } = await client.get<SerialTimelineEvent[]>(
+            `/inventory/serials/${encodeURIComponent(serial)}/timeline`
+        );
+        return data;
+    },
+};

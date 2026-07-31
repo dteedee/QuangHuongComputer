@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, CheckCircle, XCircle, RefreshCw, AlertCircle } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, RefreshCw, AlertCircle, ClipboardCheck, X } from 'lucide-react';
 import { getGoodsReceivedNotes, confirmGoodsReceivedNote } from '../../../api/inventory';
 import { toast } from 'react-hot-toast';
 import { useConfirm } from '../../../context/ConfirmContext';
+import GrnInspectionForm from '../../../components/inventory/grn-inspection-form';
 
 function getStatusLabel(status: number | string) {
     if (status === 1 || status === 'Confirmed') return 'Đã xác nhận';
@@ -34,6 +35,7 @@ function StatusBadge({ status }: { status: number | string }) {
 export default function GoodsReceivedNotesPage() {
     const [grns, setGrns] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [inspectingGrn, setInspectingGrn] = useState<{ id: string; number: string } | null>(null);
     const confirm = useConfirm();
 
     const fetchData = useCallback(async () => {
@@ -129,15 +131,26 @@ export default function GoodsReceivedNotesPage() {
                                     </td>
                                     <td className="px-5 py-4 text-gray-500 text-xs">{grn.notes || '-'}</td>
                                     <td className="px-5 py-4 text-center">
-                                        {(grn.status === 0 || grn.status === 'Draft') && (
-                                            <button
-                                                onClick={() => handleConfirm(grn)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors"
-                                            >
-                                                <CheckCircle size={13} />
-                                                Xác nhận
-                                            </button>
-                                        )}
+                                        <div className="flex justify-center gap-1.5">
+                                            {(grn.status === 0 || grn.status === 'Draft') && (
+                                                <>
+                                                    <button
+                                                        onClick={() => setInspectingGrn({ id: grn.id, number: grn.documentNumber })}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors"
+                                                    >
+                                                        <ClipboardCheck size={13} />
+                                                        Kiểm hàng
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleConfirm(grn)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-semibold transition-colors"
+                                                    >
+                                                        <CheckCircle size={13} />
+                                                        Xác nhận
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
