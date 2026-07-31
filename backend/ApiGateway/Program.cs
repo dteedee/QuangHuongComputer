@@ -111,7 +111,16 @@ app.MapHRLeaveEndpoints();
 app.MapAttendanceEndpoints();
 app.MapApprovalEndpoints();
 app.MapSelfServiceEndpoints();
+// Phase 06 luồng A — tax engine + nhân sự mở rộng
+app.MapDependentEndpoints();
+app.MapContractEndpoints();
+app.MapSalaryStructureEndpoints();
+app.MapPitFinalizationEndpoints();
 app.MapSystemConfigEndpoints();
+// Phase 06 luồng B — chấm công + OT + payroll run + tài sản
+app.MapOvertimeEndpoints();
+app.MapPayrollEndpoints();
+app.MapEmployeeAssetEndpoints();
 app.MapBackofficeMenuEndpoints();
 app.MapCustomFieldEndpoints();
 app.MapFormDefinitionEndpoints();

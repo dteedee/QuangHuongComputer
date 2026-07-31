@@ -21,6 +21,22 @@ public class HRDbContext : DbContext
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
+    // ===== Phase 06 — Luồng A (Tax/Employee/Contract) =====
+    public DbSet<Dependent> Dependents => Set<Dependent>();
+    public DbSet<EmploymentContract> EmploymentContracts => Set<EmploymentContract>();
+    public DbSet<SalaryStructure> SalaryStructures => Set<SalaryStructure>();
+    public DbSet<AllowanceType> AllowanceTypes => Set<AllowanceType>();
+    public DbSet<Allowance> Allowances => Set<Allowance>();
+
+    // ===== Phase 06 — Luồng B (Attendance/Payroll extension) DbSets =====
+    // Entity file đã do luồng B tạo — luồng A cấu hình DbSet + mapping để migration bao phủ.
+    public DbSet<AttendanceRule> AttendanceRules => Set<AttendanceRule>();
+    public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
+    public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+    public DbSet<PayrollLineItem> PayrollLineItems => Set<PayrollLineItem>();
+    public DbSet<EmployeeAsset> EmployeeAssets => Set<EmployeeAsset>();
+    public DbSet<MonthlyTimesheet> MonthlyTimesheets => Set<MonthlyTimesheet>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("hr");
@@ -39,12 +55,143 @@ public class HRDbContext : DbContext
             entity.Property(e => e.IdCardNumber).HasMaxLength(50);
             entity.Property(e => e.TaxCode).HasMaxLength(50);
             entity.Property(e => e.SocialInsuranceNumber).HasMaxLength(50);
-            
+            // Phase 06 fields
+            entity.Property(e => e.IdCardIssuePlace).HasMaxLength(200);
+
             entity.HasIndex(e => e.EmployeeCode).IsUnique();
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => new { e.Department, e.Status })
                 .HasDatabaseName("IX_Employee_Department_Status");
             entity.HasIndex(e => new { e.Status, e.HireDate });
+            entity.HasIndex(e => e.StoreId).HasDatabaseName("IX_Employee_StoreId");
+        });
+
+        // ===== Phase 06 — Dependent =====
+        modelBuilder.Entity<Dependent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.TaxCode).HasMaxLength(20);
+            entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_Dependent_EmployeeId");
+            entity.HasIndex(e => new { e.EmployeeId, e.DeductionEndDate })
+                .HasDatabaseName("IX_Dependent_Employee_Active");
+        });
+
+        // ===== Phase 06 — EmploymentContract =====
+        modelBuilder.Entity<EmploymentContract>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ContractNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ContractSalary).HasPrecision(18, 2);
+            entity.Property(e => e.InsurableSalary).HasPrecision(18, 2);
+            entity.Property(e => e.DocumentUrl).HasMaxLength(500);
+            entity.Property(e => e.TerminationReason).HasMaxLength(500);
+            entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_Contract_EmployeeId");
+            entity.HasIndex(e => new { e.Type, e.EndDate }).HasDatabaseName("IX_Contract_Type_EndDate");
+            entity.HasIndex(e => e.ContractNumber).IsUnique();
+        });
+
+        // ===== Phase 06 — SalaryStructure =====
+        modelBuilder.Entity<SalaryStructure>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BaseSalary).HasPrecision(18, 2);
+            entity.Property(e => e.InsurableSalary).HasPrecision(18, 2);
+            entity.Property(e => e.Coefficient).HasPrecision(10, 4);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_SalaryStructure_EmployeeId");
+            entity.HasIndex(e => new { e.EmployeeId, e.EffectiveDate })
+                .HasDatabaseName("IX_SalaryStructure_Employee_Effective");
+        });
+
+        // ===== Phase 06 — AllowanceType =====
+        modelBuilder.Entity<AllowanceType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.TaxFreeMonthlyLimit).HasPrecision(18, 2);
+            entity.HasIndex(e => e.Code).IsUnique();
+        });
+
+        // ===== Phase 06 — Allowance =====
+        modelBuilder.Entity<Allowance>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_Allowance_EmployeeId");
+            entity.HasIndex(e => new { e.EmployeeId, e.EffectiveDate })
+                .HasDatabaseName("IX_Allowance_Employee_Effective");
+        });
+
+        // ===== Phase 06 Luồng B pre-config (do luồng A cấu hình để migration bao phủ) =====
+        modelBuilder.Entity<AttendanceRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LateFineMoneyPerMinute).HasPrecision(18, 2);
+            entity.Property(e => e.OvertimeWeekdayRate).HasPrecision(6, 4);
+            entity.Property(e => e.OvertimeSundayRate).HasPrecision(6, 4);
+            entity.Property(e => e.OvertimeHolidayRate).HasPrecision(6, 4);
+            entity.Property(e => e.OvertimeNightBonus).HasPrecision(6, 4);
+            entity.Property(e => e.StandardWorkHoursPerDay).HasPrecision(6, 2);
+            entity.HasIndex(e => e.EffectiveFrom);
+        });
+
+        modelBuilder.Entity<OvertimeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.RequestedHours).HasPrecision(8, 2);
+            entity.Property(e => e.ActualHours).HasPrecision(8, 2);
+            entity.Property(e => e.RejectReason).HasMaxLength(500);
+            entity.HasIndex(e => new { e.EmployeeId, e.Date });
+        });
+
+        modelBuilder.Entity<PayrollRun>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.TotalGrossPay).HasPrecision(18, 2);
+            entity.Property(e => e.TotalNetPay).HasPrecision(18, 2);
+            entity.Property(e => e.TotalTax).HasPrecision(18, 2);
+            entity.Property(e => e.TotalInsurance).HasPrecision(18, 2);
+            entity.Ignore(e => e.Payrolls); // navigation collection in-memory, không map sang DB
+            entity.HasIndex(e => new { e.Year, e.Month }).IsUnique();
+        });
+
+        modelBuilder.Entity<PayrollLineItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            entity.HasIndex(e => e.PayrollId);
+        });
+
+        modelBuilder.Entity<EmployeeAsset>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AssetType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.AssetCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.SerialNumber).HasMaxLength(100);
+            entity.Property(e => e.Value).HasPrecision(18, 2);
+            entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_EmployeeAsset_EmployeeId");
+            entity.HasIndex(e => e.AssetCode).IsUnique();
+        });
+
+        modelBuilder.Entity<MonthlyTimesheet>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StandardWorkDays).HasPrecision(6, 2);
+            entity.Property(e => e.ActualWorkDays).HasPrecision(6, 2);
+            entity.Property(e => e.AbsentDays).HasPrecision(6, 2);
+            entity.Property(e => e.HalfDays).HasPrecision(6, 2);
+            entity.Property(e => e.OvertimeHoursWeekday).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHoursSunday).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHoursHoliday).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHoursNight).HasPrecision(8, 2);
+            entity.HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
         });
         
         // Timesheet configuration
