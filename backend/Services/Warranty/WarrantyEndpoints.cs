@@ -358,6 +358,65 @@ public static class WarrantyEndpoints
             });
         });
 
+        // Phase 07: Assign handling — chọn ClaimType + SLA cho claim đã Approved.
+        adminGroup.MapPost("/claims/{id:guid}/assign", async (
+            Guid id,
+            [FromBody] AssignClaimDto dto,
+            WarrantyDbContext db) =>
+        {
+            var claim = await db.Claims.FirstOrDefaultAsync(c => c.Id == id);
+            if (claim == null) return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
+
+            // Lấy SLA từ WarrantySlaPolicy nếu có, mặc định 48h.
+            var policy = await db.SlaPolicies.FirstOrDefaultAsync(p => p.ClaimType == dto.ClaimType && p.IsActive);
+            var hours = policy?.TargetHours ?? 48;
+
+            try
+            {
+                claim.AssignHandling(dto.ClaimType, hours);
+                if (dto.WorkOrderId.HasValue) claim.LinkWorkOrder(dto.WorkOrderId.Value);
+                if (dto.RmaId.HasValue) claim.LinkRma(dto.RmaId.Value);
+                if (dto.LoanerDeviceId.HasValue) claim.LinkLoanerDevice(dto.LoanerDeviceId.Value);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { claim.Id, ClaimType = claim.ClaimType?.ToString(), claim.SlaDeadline, Status = claim.Status.ToString() });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+        });
+
+        // Phase 07: Sinh phiếu tiếp nhận bảo hành (JSON — frontend render + in).
+        adminGroup.MapGet("/claims/{id:guid}/receipt", async (
+            Guid id,
+            Warranty.Application.WarrantyReceiptGenerator gen,
+            HttpContext http) =>
+        {
+            var baseUrl = $"{http.Request.Scheme}://{http.Request.Host}";
+            var dto = await gen.BuildAsync(id, baseUrl);
+            return dto == null ? Results.NotFound() : Results.Ok(dto);
+        });
+
+        // Phase 07: SLA policy CRUD.
+        adminGroup.MapGet("/sla-policies", async (WarrantyDbContext db) =>
+            Results.Ok(await db.SlaPolicies.OrderBy(p => p.ClaimType).ToListAsync()));
+
+        adminGroup.MapPost("/sla-policies", async ([FromBody] CreateSlaPolicyDto dto, WarrantyDbContext db) =>
+        {
+            var existing = await db.SlaPolicies.FirstOrDefaultAsync(p => p.ClaimType == dto.ClaimType);
+            if (existing != null) return Results.Conflict(new { Error = "Đã tồn tại policy cho ClaimType này" });
+            var p = new WarrantySlaPolicy(dto.ClaimType, dto.TargetHours, dto.WarningAtPercent, dto.IsActive, dto.Notes);
+            db.SlaPolicies.Add(p);
+            await db.SaveChangesAsync();
+            return Results.Created($"/api/warranty/admin/sla-policies/{p.Id}", p);
+        });
+
+        adminGroup.MapPut("/sla-policies/{id:guid}", async (Guid id, [FromBody] UpdateSlaPolicyDto dto, WarrantyDbContext db) =>
+        {
+            var p = await db.SlaPolicies.FindAsync(id);
+            if (p == null) return Results.NotFound();
+            p.Update(dto.TargetHours, dto.WarningAtPercent, dto.IsActive, dto.Notes);
+            await db.SaveChangesAsync();
+            return Results.Ok(p);
+        });
+
         // Get claim statistics
         adminGroup.MapGet("/claims/stats", async (WarrantyDbContext db) =>
         {
@@ -403,3 +462,23 @@ public record RegisterWarrantyDto(
 
 public record RejectClaimDto(string Reason);
 public record ResolveClaimDto(string Notes);
+
+// Phase 07 DTOs
+public record AssignClaimDto(
+    ClaimType ClaimType,
+    Guid? WorkOrderId = null,
+    Guid? RmaId = null,
+    Guid? LoanerDeviceId = null);
+
+public record CreateSlaPolicyDto(
+    ClaimType ClaimType,
+    int TargetHours,
+    int WarningAtPercent = 80,
+    bool IsActive = true,
+    string? Notes = null);
+
+public record UpdateSlaPolicyDto(
+    int TargetHours,
+    int WarningAtPercent,
+    bool IsActive,
+    string? Notes);

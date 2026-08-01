@@ -28,6 +28,10 @@ public static class DependencyInjection
                 options.AddInterceptors(interceptor);
         });
 
+        // Phase 07: receipt generator + SLA background monitor.
+        services.AddScoped<Warranty.Application.WarrantyReceiptGenerator>();
+        services.AddHostedService<Warranty.Application.WarrantySlaMonitor>();
+
         return services;
     }
 }

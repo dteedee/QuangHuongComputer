@@ -19,6 +19,13 @@ public class GoodsReceivedNote : Entity<Guid>
     public string ReceivedBy { get; set; } = "";
     public string? Notes { get; set; }
     public GRNStatus Status { get; set; } = GRNStatus.Draft;
+    /// <summary>
+    /// Phase 07: phân biệt nguồn nhập. Purchase = nhập từ NCC (mặc định).
+    /// CustomerReturn = khách trả hàng (không có SupplierId, có ReferenceOrderId của Sales).
+    /// </summary>
+    public GRNSource Source { get; set; } = GRNSource.Purchase;
+    /// <summary>Nếu Source = CustomerReturn: OrderId gốc (Sales) hoặc ReturnRequestId.</summary>
+    public Guid? ReferenceOrderId { get; set; }
     public List<GRNItem> Items { get; set; } = new();
 
     /// <summary>Có ít nhất 1 dòng bị từ chối → cần sinh PurchaseReturn khi Confirm.</summary>
@@ -67,3 +74,12 @@ public class GRNItem : Entity<Guid>
 }
 
 public enum GRNStatus { Draft, Confirmed, Cancelled }
+
+/// <summary>Phase 07: nguồn phiếu nhập.</summary>
+public enum GRNSource
+{
+    Purchase = 1,        // Nhập từ NCC (mặc định)
+    CustomerReturn = 2,  // Khách trả hàng (Sales.ReturnRequest)
+    Transfer = 3,        // Chuyển kho nội bộ
+    Adjustment = 4       // Điều chỉnh
+}

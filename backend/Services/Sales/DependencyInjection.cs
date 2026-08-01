@@ -36,6 +36,10 @@ public static class DependencyInjection
         services.AddScoped<CheckoutOrchestrator>();
         services.TryAddScopedIfMissing<IPricingEngine, PricingEngine>();
 
+        // Phase 07: Return workflow (3 luồng + nhập lại kho).
+        services.AddScoped<Sales.Application.Returns.RestockService>();
+        services.AddScoped<Sales.Application.Returns.ReturnOrchestrator>();
+
         return services;
     }
 

@@ -29,9 +29,15 @@ public class OrderFulfilledConsumer : IConsumer<OrderFulfilledEvent>
         var msg = context.Message;
         _logger.LogInformation("Auto-registering warranties for Order {OrderId}", msg.OrderId);
 
+        // Phase 07: policy Manufacturer + Store song song — chọn từ WarrantyPolicy trong DB nếu có.
+        // Fallback mặc định: Manufacturer 12 tháng.
+        var manufacturerPolicy = await _warrantyDb.Policies
+            .FirstOrDefaultAsync(p => p.Provider == WarrantyProvider.Manufacturer);
+        var storePolicy = await _warrantyDb.Policies
+            .FirstOrDefaultAsync(p => p.Provider == WarrantyProvider.Store);
+
         foreach (var item in msg.Items)
         {
-            // Fetch product to get warranty period
             var product = await _catalogDb.Products.FindAsync(item.ProductId);
             if (product == null)
             {
@@ -39,36 +45,53 @@ public class OrderFulfilledConsumer : IConsumer<OrderFulfilledEvent>
                 continue;
             }
 
-            // Default warranty: 12 months for all products (can be made configurable per product)
-            var warrantyMonths = 12;
+            var mfrMonths = manufacturerPolicy?.DurationMonths ?? 12;
+            var storeMonths = storePolicy?.DurationMonths ?? 0; // 0 = không tạo bản Store
 
             foreach (var serialNumber in item.SerialNumbers)
             {
-                // Check if warranty already exists (idempotency)
-                var existing = await _warrantyDb.ProductWarranties
-                    .FirstOrDefaultAsync(w => w.SerialNumber == serialNumber);
+                // Idempotency: 1 máy có 2 warranty song song (Manufacturer + Store).
+                // Kiểm tra theo (SerialNumber, Provider).
+                await RegisterIfMissing(serialNumber, item.ProductId, msg.CustomerId,
+                    mfrMonths, WarrantyProvider.Manufacturer, manufacturerPolicy?.Id);
 
-                if (existing != null)
+                if (storeMonths > 0)
                 {
-                    _logger.LogInformation("Warranty for SN {SerialNumber} already exists, skipping", serialNumber);
-                    continue;
+                    await RegisterIfMissing(serialNumber, item.ProductId, msg.CustomerId,
+                        storeMonths, WarrantyProvider.Store, storePolicy?.Id);
                 }
-
-                var warranty = new ProductWarranty(
-                    item.ProductId,
-                    serialNumber,
-                    msg.CustomerId,
-                    DateTime.UtcNow,
-                    warrantyMonths
-                );
-
-                _warrantyDb.ProductWarranties.Add(warranty);
-                _logger.LogInformation("Registered warranty for SN {SerialNumber}, expires {ExpirationDate}", 
-                    serialNumber, warranty.ExpirationDate);
             }
         }
 
         await _warrantyDb.SaveChangesAsync();
         _logger.LogInformation("Warranty auto-registration completed for Order {OrderId}", msg.OrderId);
+    }
+
+    private async Task RegisterIfMissing(
+        string serialNumber,
+        Guid productId,
+        Guid customerId,
+        int months,
+        WarrantyProvider provider,
+        Guid? policyId)
+    {
+        var existing = await _warrantyDb.ProductWarranties
+            .FirstOrDefaultAsync(w => w.SerialNumber == serialNumber && w.Provider == provider);
+        if (existing != null)
+        {
+            _logger.LogInformation("Warranty {Provider} for SN {SerialNumber} exists, skip", provider, serialNumber);
+            return;
+        }
+        var warranty = new ProductWarranty(
+            productId: productId,
+            serialNumber: serialNumber,
+            customerId: customerId,
+            purchaseDate: DateTime.UtcNow,
+            warrantyPeriodMonths: months,
+            provider: provider,
+            policyId: policyId);
+        _warrantyDb.ProductWarranties.Add(warranty);
+        _logger.LogInformation("Registered {Provider} warranty for SN {SerialNumber}, expires {ExpirationDate}",
+            provider, serialNumber, warranty.ExpirationDate);
     }
 }

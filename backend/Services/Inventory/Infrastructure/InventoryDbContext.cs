@@ -355,8 +355,11 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(30);
             entity.Property(e => e.ReceivedBy).HasMaxLength(100);
             entity.Property(e => e.Notes).HasMaxLength(2000);
+            // Phase 07: nguồn phiếu nhập (Purchase mặc định, CustomerReturn từ Sales.ReturnRequest).
+            entity.Property(e => e.Source).HasConversion<int>();
             entity.HasIndex(e => e.DocumentNumber).IsUnique().HasDatabaseName("IX_GRN_DocumentNumber");
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_GRN_Status");
+            entity.HasIndex(e => e.Source).HasDatabaseName("IX_GRN_Source");
             entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.GoodsReceivedNoteId);
         });
 

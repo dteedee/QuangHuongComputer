@@ -101,6 +101,11 @@ app.MapAddressBookEndpoints();
 app.MapShippingEndpoints();
 app.MapRepairEndpoints();
 app.MapWarrantyEndpoints();
+// Phase 07: RMA, LoanerDevice, PublicLookup, ReturnPolicy
+app.MapWarrantyRmaEndpoints();
+app.MapLoanerDeviceEndpoints();
+app.MapPublicWarrantyLookupEndpoints();
+app.MapReturnPolicyEndpoints();
 app.MapPaymentsEndpoints();
 app.MapPaymentWebhookEndpoints();
 app.MapContentEndpoints();

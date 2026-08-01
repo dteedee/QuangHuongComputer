@@ -14,6 +14,8 @@ public class SalesDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderHistory> OrderHistories { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
+    // Phase 07: chính sách đổi trả cấu hình được.
+    public DbSet<ReturnPolicy> ReturnPolicies { get; set; }
     public DbSet<WishlistItem> WishlistItems { get; set; }
     public DbSet<LoyaltyAccount> LoyaltyAccounts { get; set; }
     public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
@@ -162,21 +164,40 @@ public class SalesDbContext : DbContext
         // ReturnRequest configuration
         modelBuilder.Entity<ReturnRequest>(entity =>
         {
-            entity.ToTable("ReturnRequests"); // Changed to match likely DB default
+            entity.ToTable("ReturnRequests");
             entity.HasKey(rr => rr.Id);
             entity.Property(rr => rr.RefundAmount).HasPrecision(18, 2);
-            
+            // Phase 07: 3 luồng + kiểm hàng + ảnh + chênh lệch giá.
+            entity.Property(rr => rr.Type).HasConversion<int>();
+            entity.Property(rr => rr.ReceivedCondition).HasConversion<int?>();
+            entity.Property(rr => rr.PriceDifference).HasPrecision(18, 2);
+            entity.Property(rr => rr.AttachmentUrls).HasColumnType("text");
+            entity.Property(rr => rr.InspectionNotes).HasColumnType("text");
+
             entity.HasOne<Order>()
                 .WithMany()
                 .HasForeignKey(rr => rr.OrderId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_return_requests_order_id");
-            
+
             entity.HasIndex(rr => new { rr.OrderId, rr.Status })
                 .HasDatabaseName("ix_return_requests_order_id_status");
-                
+
             entity.HasIndex(rr => rr.Status)
                 .HasDatabaseName("ix_return_requests_status");
+            entity.HasIndex(rr => rr.Type)
+                .HasDatabaseName("ix_return_requests_type");
+        });
+
+        // Phase 07: ReturnPolicy — cấu hình đổi trả theo Category.
+        modelBuilder.Entity<ReturnPolicy>(entity =>
+        {
+            entity.ToTable("ReturnPolicies");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
+            entity.Property(p => p.RestockingFeePercent).HasPrecision(5, 2);
+            entity.HasIndex(p => p.CategoryId).HasDatabaseName("ix_return_policies_category_id");
+            entity.HasQueryFilter(p => p.IsActive);
         });
 
         // WishlistItem configuration

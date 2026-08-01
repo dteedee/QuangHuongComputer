@@ -1184,41 +1184,39 @@ public static class SalesEndpoints
 
         // ==================== RETURN REQUESTS ENDPOINTS ====================
 
-        // Create Return Request
-        group.MapPost("/returns", async (CreateReturnRequestDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        // Create Return Request (Phase 07: 3 luồng qua Orchestrator)
+        group.MapPost("/returns", async (
+            CreateReturnRequestDto dto,
+            Sales.Application.Returns.ReturnOrchestrator orchestrator,
+            ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
-            // Verify order exists and belongs to user
-            var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == dto.OrderId && o.CustomerId == userId);
-            if (order == null)
-                return Results.NotFound(new { Error = "Order not found" });
-
-            // Verify order item exists
-            var orderItem = order.Items.FirstOrDefault(i => i.Id == dto.OrderItemId);
-            if (orderItem == null)
-                return Results.NotFound(new { Error = "Order item not found" });
-
-            // Create return request
-            var returnRequest = new ReturnRequest(
-                dto.OrderId,
-                dto.OrderItemId,
-                dto.Reason,
-                orderItem.UnitPrice * orderItem.Quantity,
-                dto.Description);
-
-            db.ReturnRequests.Add(returnRequest);
-            await db.SaveChangesAsync();
-
-            return Results.Created($"/api/sales/returns/{returnRequest.Id}", new
+            try
             {
-                returnRequest.Id,
-                returnRequest.OrderId,
-                returnRequest.Status,
-                Message = "Return request submitted successfully"
-            });
+                var type = dto.Type ?? Sales.Domain.ReturnType.Refund;
+                var rr = await orchestrator.RequestAsync(new Sales.Application.Returns.CreateReturnRequestInput(
+                    OrderId: dto.OrderId,
+                    OrderItemId: dto.OrderItemId,
+                    Type: type,
+                    Reason: dto.Reason,
+                    Description: dto.Description,
+                    AttachmentUrls: dto.AttachmentUrls,
+                    ExchangeProductId: dto.ExchangeProductId,
+                    ExchangeVariantId: dto.ExchangeVariantId), userId);
+
+                return Results.Created($"/api/sales/returns/{rr.Id}", new
+                {
+                    rr.Id, rr.OrderId, rr.Type, rr.Status,
+                    Message = "Đã gửi yêu cầu đổi trả"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { Error = ex.Message });
+            }
         });
 
         // Get My Return Requests
@@ -1714,22 +1712,57 @@ public static class SalesEndpoints
             return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
         });
 
-        adminGroup.MapPost("/returns/{id:guid}/refund", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
+        // Phase 07: Inspect — nhân viên kiểm hàng nhận về, chọn kho nhập.
+        adminGroup.MapPost("/returns/{id:guid}/inspect", async (
+            Guid id,
+            [FromBody] InspectReturnDto dto,
+            SalesDbContext db,
+            ClaimsPrincipal user) =>
         {
-            var returnRequest = await db.ReturnRequests.FindAsync(id);
-            if (returnRequest == null)
-                return Results.NotFound(new { Error = "Return request not found" });
-
-            if (returnRequest.Status != ReturnStatus.Approved)
-                return Results.BadRequest(new { Error = "Only approved returns can be refunded" });
+            var rr = await db.ReturnRequests.FindAsync(id);
+            if (rr == null) return Results.NotFound(new { Error = "Return request not found" });
 
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userId = !string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var uid) ? uid.ToString() : "System";
+            if (!Guid.TryParse(userIdStr, out var uid)) uid = Guid.Empty;
+            try
+            {
+                rr.RecordInspection(dto.Condition, dto.WarehouseId, uid, dto.Notes);
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Đã kiểm hàng", rr.Id, rr.Status, rr.ReceivedCondition, rr.RestockWarehouseId });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+        });
 
-            returnRequest.ProcessRefund(userId);
-            await db.SaveChangesAsync();
+        // Phase 07: Complete — chạy Orchestrator (Refund/Exchange/Replace), nhập kho, hoàn tiền/đơn mới.
+        adminGroup.MapPost("/returns/{id:guid}/complete", async (
+            Guid id,
+            Sales.Application.Returns.ReturnOrchestrator orchestrator,
+            ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var processedBy = !string.IsNullOrEmpty(userIdStr) ? userIdStr : "system";
+            try
+            {
+                var result = await orchestrator.ProcessAfterInspectionAsync(id, processedBy);
+                return Results.Ok(new { Message = "Đã hoàn tất yêu cầu", result });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+        });
 
-            return Results.Ok(new { Message = "Return request refunded", Status = returnRequest.Status.ToString() });
+        // Legacy /refund alias — điều hướng qua Complete cho tương thích cũ.
+        adminGroup.MapPost("/returns/{id:guid}/refund", async (
+            Guid id,
+            Sales.Application.Returns.ReturnOrchestrator orchestrator,
+            ClaimsPrincipal user) =>
+        {
+            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var processedBy = !string.IsNullOrEmpty(userIdStr) ? userIdStr : "system";
+            try
+            {
+                var result = await orchestrator.ProcessAfterInspectionAsync(id, processedBy);
+                return Results.Ok(new { Message = "Return request refunded", Status = "Completed", result });
+            }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
         });
 
         // ==================== WISHLIST ENDPOINTS ====================
@@ -2133,8 +2166,21 @@ public record CheckoutItemDto(
     Guid? VariantId = null);
 public record UpdateOrderStatusDto(string Status);
 public record CancelOrderDto(string Reason);
-public record CreateReturnRequestDto(Guid OrderId, Guid OrderItemId, string Reason, string? Description);
+public record CreateReturnRequestDto(
+    Guid OrderId,
+    Guid OrderItemId,
+    string Reason,
+    string? Description,
+    // Phase 07
+    Sales.Domain.ReturnType? Type = null,
+    string? AttachmentUrls = null,
+    Guid? ExchangeProductId = null,
+    Guid? ExchangeVariantId = null);
 public record RejectReturnDto(string Reason);
+public record InspectReturnDto(
+    Sales.Domain.ReceivedCondition Condition,
+    Guid WarehouseId,
+    string? Notes = null);
 public record ShipOrderDto(string? TrackingNumber, string? Carrier);
 
 public record CartDto(
