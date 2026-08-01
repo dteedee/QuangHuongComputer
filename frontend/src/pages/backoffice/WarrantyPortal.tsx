@@ -272,7 +272,7 @@ export const WarrantyPortal = () => {
                 setWarranties(data);
             } else {
                 const [claimsData, statsData] = await Promise.all([
-                    warrantyApi.admin.getAllClaims(statusFilter || undefined),
+                    warrantyApi.admin.getAllClaims(statusFilter ? { status: statusFilter as ClaimStatus } : undefined),
                     warrantyApi.admin.getClaimStats()
                 ]);
                 setClaims(claimsData);
