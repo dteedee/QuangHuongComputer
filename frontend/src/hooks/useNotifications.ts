@@ -360,7 +360,7 @@ export const useNotifications = ({
             // === WARRANTY: Admin, Manager, TechnicianInShop ===
             if (hasRole(['Admin', 'Manager', 'TechnicianInShop'])) {
                 try {
-                    const claims = await warrantyApi.admin.getAllClaims('Pending');
+                    const claims = await warrantyApi.admin.getAllClaims({ status: 'Pending' });
 
                     // Pending claims - need review
                     claims.slice(0, 5).forEach(claim => {
@@ -381,7 +381,7 @@ export const useNotifications = ({
                     });
 
                     // Also get approved claims that need resolution
-                    const approvedClaims = await warrantyApi.admin.getAllClaims('Approved');
+                    const approvedClaims = await warrantyApi.admin.getAllClaims({ status: 'Approved' });
                     approvedClaims.slice(0, 3).forEach(claim => {
                         const notifId = `warranty-approved-${claim.id}`;
                         if (!newNotifications.some(n => n.id === notifId)) {

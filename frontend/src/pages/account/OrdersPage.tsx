@@ -202,16 +202,40 @@ export const OrdersPage = () => {
                                             </button>
                                         )}
                                         {canReturn(order) && (
-                                            <button
-                                                onClick={() => toast('Chức năng đang phát triển')}
+                                            <Link
+                                                to={`/account/returns/new?orderId=${order.id}`}
                                                 className="flex-1 lg:flex-none border border-amber-200 text-amber-700 px-5 py-2.5 rounded-xl hover:bg-amber-50 font-semibold transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
                                             >
                                                 <RotateCcw className="w-4 h-4" />
                                                 Đổi trả
-                                            </button>
+                                            </Link>
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Per-item return actions (chỉ hiện với đơn Delivered) */}
+                                {canReturn(order) && order.items.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sản phẩm trong đơn</p>
+                                        {order.items.map((item) => (
+                                            <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-gray-800 truncate">{item.productName}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        SL {item.quantity} · {formatCurrency(item.unitPrice)}
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    to={`/account/returns/new?orderId=${order.id}&orderItemId=${item.id}`}
+                                                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 text-xs font-semibold hover:bg-amber-50 cursor-pointer"
+                                                >
+                                                    <RotateCcw className="w-3.5 h-3.5" />
+                                                    Yêu cầu đổi/trả
+                                                </Link>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

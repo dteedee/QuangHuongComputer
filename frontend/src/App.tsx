@@ -91,6 +91,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m 
 const OrdersPage = lazy(() => import('./pages/account/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/account/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
 const NewReturnRequestPage = lazy(() => import('./pages/account/NewReturnRequestPage').then(m => ({ default: m.NewReturnRequestPage })));
+const ReturnRequestDetailPage = lazy(() => import('./pages/account/return-request-detail-page').then(m => ({ default: m.ReturnRequestDetailPage })));
 const LoyaltyPage = lazy(() => import('./pages/account/LoyaltyPage').then(m => ({ default: m.LoyaltyPage })));
 const AddressBookPage = lazy(() => import('./pages/account/address-book-page'));
 
@@ -101,6 +102,12 @@ const CommonDashboard = lazy(() => import('./pages/backoffice/CommonDashboard').
 const SalePortal = lazy(() => import('./pages/backoffice/sale/SalePortal').then(m => ({ default: m.SalePortal })));
 const POSPage = lazy(() => import('./pages/backoffice/sale/POSPage'));
 const ReturnsManagementPage = lazy(() => import('./pages/backoffice/sale/ReturnsManagementPage').then(m => ({ default: m.ReturnsManagementPage })));
+const ReturnInspectionPage = lazy(() => import('./pages/backoffice/sale/return-inspection-page'));
+const ReturnPoliciesPage = lazy(() => import('./pages/backoffice/sale/return-policies-page'));
+const WarrantyClaimsPage = lazy(() => import('./pages/backoffice/warranty/warranty-claims-page'));
+const WarrantyRmaPage = lazy(() => import('./pages/backoffice/warranty/warranty-rma-page'));
+const LoanerDevicesPage = lazy(() => import('./pages/backoffice/warranty/loaner-devices-page'));
+const WarrantyPoliciesPage = lazy(() => import('./pages/backoffice/warranty/warranty-policies-page'));
 const TechPortal = lazy(() => import('./pages/backoffice/tech/TechPortal').then(m => ({ default: m.TechPortal })));
 const WorkOrderDetailPage = lazy(() => import('./pages/backoffice/tech/WorkOrderDetailPage').then(m => ({ default: m.WorkOrderDetailPage })));
 const AccountingPortal = lazy(() => import('./pages/backoffice/accountant/AccountingPortal').then(m => ({ default: m.AccountingPortal })));
@@ -248,6 +255,7 @@ function App() {
                         <Route path="account/orders" element={<OrdersPage />} />
                         <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
                         <Route path="account/returns/new" element={<NewReturnRequestPage />} />
+                        <Route path="account/returns/:id" element={<ReturnRequestDetailPage />} />
                         <Route path="account/loyalty" element={<LoyaltyPage />} />
                         <Route path="account/addresses" element={<AddressBookPage />} />
 
@@ -289,6 +297,18 @@ function App() {
                           <Route path="pos" element={<POSPage />} />
                           <Route path="sale" element={<SalePortal />} />
                           <Route path="returns" element={<ReturnsManagementPage />} />
+                          <Route path="sale/return-inspection" element={<ReturnInspectionPage />} />
+                          {/* Chính sách đổi trả — chỉ Admin */}
+                          <Route element={<RequireAuth allowedRoles={['Admin']} />}>
+                              <Route path="sale/return-policies" element={<ReturnPoliciesPage />} />
+                          </Route>
+                          {/* Bảo hành — Sale/Admin/Manager */}
+                          <Route path="warranty/claims" element={<WarrantyClaimsPage />} />
+                          <Route path="warranty/rma" element={<WarrantyRmaPage />} />
+                          <Route path="warranty/loaner-devices" element={<LoanerDevicesPage />} />
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                              <Route path="warranty/policies" element={<WarrantyPoliciesPage />} />
+                          </Route>
                           <Route path="tech" element={<TechPortal />} />
                           <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
                           <Route path="inventory" element={<InventoryPortal />} />

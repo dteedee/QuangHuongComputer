@@ -114,10 +114,43 @@ export interface OrderHistory {
     changedAt: string;
 }
 
+export type ReturnType = 'Refund' | 'Exchange' | 'Replace';
+
+/**
+ * Tình trạng hàng nhận về khi nhân viên kiểm hàng (Phase 07).
+ * Backend map sang WarehouseType:
+ *  - Intact              -> Main (bán lại giá gốc)
+ *  - UsedGood            -> Returns (bán lại "hàng trưng bày")
+ *  - DefectiveTechnical  -> Defective (gửi hãng RMA)
+ *  - UserDamage          -> Defective (từ chối hoàn hoặc trừ tiền)
+ *  - MissingAccessories  -> Returns (trừ tiền phụ kiện)
+ */
+export type ReceivedCondition =
+    | 'Intact'
+    | 'UsedGood'
+    | 'DefectiveTechnical'
+    | 'UserDamage'
+    | 'MissingAccessories';
+
+/**
+ * Trạng thái yêu cầu đổi trả.
+ * Backend Phase 07 có thể trả thêm 'Inspecting' | 'Processing' (giữa Approved và Completed).
+ * Để tránh phá vỡ các `Record<ReturnStatus,...>` exhaustive ở backoffice, giữ union hẹp;
+ * các trạng thái mở rộng sẽ đến dưới dạng string và được xử lý bằng lookup có fallback.
+ */
+export type ReturnStatus =
+    | 'Pending'
+    | 'Approved'
+    | 'Rejected'
+    | 'Refunded'
+    | 'Completed'
+    | 'Cancelled';
+
 export interface ReturnRequest {
     id: string;
     orderId: string;
     orderItemId: string;
+    type: ReturnType;
     reason: string;
     description?: string;
     status: ReturnStatus;
@@ -130,9 +163,57 @@ export interface ReturnRequest {
     refundedAt?: string;
     processedBy?: string;
     customerNotes?: string;
+
+    // Exchange fields
+    exchangeProductId?: string;
+    exchangeVariantId?: string;
+    exchangeOrderId?: string;
+    exchangeProductName?: string;
+    priceDifference?: number;
+
+    // Attachments
+    attachmentUrls?: string[];
+
+    // Product info (denormalized for detail view)
+    orderNumber?: string;
+    productName?: string;
+    productSku?: string;
+    quantity?: number;
+    unitPrice?: number;
 }
 
-export type ReturnStatus = 'Pending' | 'Approved' | 'Rejected' | 'Refunded' | 'Completed' | 'Cancelled';
+export interface ReturnTimelineEvent {
+    status: ReturnStatus;
+    label: string;
+    at?: string;
+    note?: string;
+}
+
+export interface ReturnRequestDetail extends ReturnRequest {
+    timeline?: ReturnTimelineEvent[];
+}
+
+export interface CreateReturnRequestDto {
+    orderItemId: string;
+    type: ReturnType;
+    reason: string;
+    description?: string;
+    exchangeProductId?: string;
+    exchangeVariantId?: string;
+    attachmentUrls?: string[];
+}
+
+export interface ReturnPolicy {
+    id?: string;
+    categoryId?: string;
+    daysForReturn: number;
+    daysForExchange: number;
+    daysForDefectReplace: number;
+    requireOriginalPackaging: boolean;
+    requireAllAccessories: boolean;
+    restockingFeePercent: number;
+    excludedCategories?: string[];
+}
 
 // Cart Types
 export interface CartDto {
@@ -354,26 +435,40 @@ export const salesApi = {
 
         // Return Requests
         returns: {
-            // Get my return requests
+            // Get my return requests (Phase 07: đổi tên endpoint -> /sales/returns/mine)
+            getMine: async () => {
+                const response = await client.get<ReturnRequest[]>('/sales/returns/mine');
+                return response.data;
+            },
+
+            // Backward-compat alias
             getList: async () => {
-                const response = await client.get<ReturnRequest[]>('/sales/returns');
+                const response = await client.get<ReturnRequest[]>('/sales/returns/mine');
                 return response.data;
             },
 
-            // Get return request by ID
+            // Get return request detail (bao gồm timeline)
             getById: async (id: string) => {
-                const response = await client.get<ReturnRequest>(`/sales/returns/${id}`);
+                const response = await client.get<ReturnRequestDetail>(`/sales/returns/${id}`);
                 return response.data;
             },
 
-            // Create return request
-            create: async (data: {
-                orderId: string;
-                orderItemId: string;
-                reason: string;
-                description?: string;
-            }) => {
-                const response = await client.post<{ id: string; orderId: string; status: string; message: string }>('/sales/returns', data);
+            // Create return request (3 luồng)
+            create: async (data: CreateReturnRequestDto) => {
+                const response = await client.post<{ id: string; orderId: string; type: ReturnType; status: string; message?: string }>('/sales/returns', data);
+                return response.data;
+            },
+
+            // Cancel return request (khi Status=Pending)
+            cancel: async (id: string) => {
+                const response = await client.post<{ message: string; status: string }>(`/sales/returns/${id}/cancel`);
+                return response.data;
+            },
+
+            // Chính sách đổi trả áp cho category — dùng để hiển thị điều kiện
+            getEffectivePolicy: async (categoryId?: string) => {
+                const params = categoryId ? { categoryId } : undefined;
+                const response = await client.get<ReturnPolicy>('/sales/return-policies/effective', { params });
                 return response.data;
             },
 
@@ -409,6 +504,45 @@ export const salesApi = {
             processRefund: async (id: string) => {
                 const response = await client.post<{ message: string; status: string }>(`/sales/admin/returns/${id}/refund`);
                 return response.data;
+            },
+
+            // Admin: Kiểm hàng nhận về (Phase 07)
+            inspect: async (
+                id: string,
+                data: {
+                    condition: ReceivedCondition;
+                    warehouseId: string;
+                    notes?: string;
+                    restockingFee?: number;
+                }
+            ) => {
+                const response = await client.post<{ message: string; status: string; grnId?: string }>(`/sales/returns/${id}/inspect`, data);
+                return response.data;
+            },
+
+            // Admin: Hoàn tất return (sau khi inspect + refund)
+            complete: async (id: string) => {
+                const response = await client.post<{ message: string; status: string }>(`/sales/returns/${id}/complete`);
+                return response.data;
+            },
+        },
+
+        // Chính sách đổi trả — admin CRUD
+        returnPolicies: {
+            getList: async () => {
+                const response = await client.get<ReturnPolicy[]>('/sales/return-policies');
+                return response.data;
+            },
+            create: async (data: ReturnPolicy) => {
+                const response = await client.post<ReturnPolicy>('/sales/return-policies', data);
+                return response.data;
+            },
+            update: async (id: string, data: ReturnPolicy) => {
+                const response = await client.put<ReturnPolicy>(`/sales/return-policies/${id}`, data);
+                return response.data;
+            },
+            delete: async (id: string) => {
+                await client.delete(`/sales/return-policies/${id}`);
             },
         },
     },
