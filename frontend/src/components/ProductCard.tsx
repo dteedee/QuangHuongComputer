@@ -80,13 +80,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
 
             <div className="flex flex-col flex-1 px-3 pb-3 pt-1.5 border-t border-gray-100">
-                {/* Tier 2 — rating + SKU */}
+                {/* Tier 2 — rating + SKU (ẩn sao khi chưa có đánh giá, đồng bộ ProductListItem) */}
                 <div className="flex items-center gap-1 mb-1 text-[11px]">
-                    <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <Star key={i} size={10} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
-                        ))}
-                    </div>
+                    {rating > 0 ? (
+                        <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <Star key={i} size={10} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
+                            ))}
+                        </div>
+                    ) : (
+                        <span className="text-gray-300">Chưa có đánh giá</span>
+                    )}
                     <span className="text-gray-400 ml-1 truncate">Mã: {product.sku}</span>
                 </div>
 

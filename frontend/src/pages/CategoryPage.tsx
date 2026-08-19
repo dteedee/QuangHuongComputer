@@ -4,8 +4,10 @@ import { catalogApi, type Product, type Brand, type Category } from '../api/cata
 import SEO from '../components/SEO';
 import { generateItemListSchema, generateBreadcrumbSchema } from '../utils/structuredData';
 import { normalizeCategoryString, ROUTE_TO_CATEGORY_TITLE } from '../utils/category-route-mapping';
+import { Filter } from 'lucide-react';
 import CategoryHeaderBanner from '../components/category/category-header-banner';
 import CategorySidebarFilters from '../components/category/category-sidebar-filters';
+import CategoryMobileFilterDrawer from '../components/category/category-mobile-filter-drawer';
 import CategoryProductsGridSection from '../components/category/category-products-grid-section';
 
 export const CategoryPage = () => {
@@ -47,6 +49,7 @@ export const CategoryPage = () => {
     const [sortBy, setSortBy] = useState<string>('newest');
     const [page, setPage] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
+    const [showMobileFilter, setShowMobileFilter] = useState(false);
     const pageSize = 12;
 
     // Initial load
@@ -180,6 +183,34 @@ export const CategoryPage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                 <CategoryHeaderBanner categoryTitle={categoryTitle} totalProducts={totalProducts} />
+
+                {/* Mobile filter toggle — desktop dùng sidebar cố định bên trái */}
+                <button
+                    type="button"
+                    onClick={() => setShowMobileFilter(true)}
+                    className="lg:hidden mb-4 flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-small active:bg-gray-50"
+                >
+                    <Filter size={16} />
+                    Bộ lọc
+                </button>
+
+                {showMobileFilter && (
+                    <CategoryMobileFilterDrawer
+                        brands={brands}
+                        selectedBrandId={selectedBrandId}
+                        priceRange={priceRange}
+                        inStockOnly={inStockOnly}
+                        matchedCategoryId={matchedCategory?.id}
+                        specValues={specValues}
+                        totalProducts={totalProducts}
+                        onBrandSelect={handleBrandSelect}
+                        onPriceSelect={handlePriceSelect}
+                        onInStockChange={setInStockOnly}
+                        onSpecChange={handleSpecChange}
+                        onClearFilters={() => { clearFilters(); setShowMobileFilter(false); }}
+                        onClose={() => setShowMobileFilter(false)}
+                    />
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <CategorySidebarFilters

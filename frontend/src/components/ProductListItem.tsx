@@ -63,11 +63,15 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Rating + SKU */}
                 <div className="flex items-center gap-1 mb-1 text-[12px]">
-                    <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <Star key={i} size={11} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
-                        ))}
-                    </div>
+                    {rating > 0 ? (
+                        <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <Star key={i} size={11} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
+                            ))}
+                        </div>
+                    ) : (
+                        <span className="text-gray-400 italic">Chưa có đánh giá</span>
+                    )}
                     <span className="text-gray-400 ml-1">Mã: {product.sku}</span>
                 </div>
 
