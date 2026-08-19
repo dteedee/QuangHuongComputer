@@ -19,7 +19,6 @@ using BuildingBlocks.Security;
 
 namespace Identity;
 
-using Identity.Permissions;
 using Identity.Services;
 using Identity.DTOs;
 
@@ -100,7 +99,7 @@ public static class IdentityEndpoints
 
                 var jwtId = Guid.NewGuid().ToString();
                 var token = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
-                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+                var permissions = roleClaims.Where(c => c.Type == Permissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
                 // Generate refresh token with IP tracking
                 var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -178,7 +177,7 @@ public static class IdentityEndpoints
 
                 // 6. Generate new JWT token
                 var newJwtToken = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
-                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+                var permissions = roleClaims.Where(c => c.Type == Permissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
                 return Results.Ok(new
                 {
@@ -315,7 +314,7 @@ public static class IdentityEndpoints
             };
 
             return Results.Ok(pagedResult);
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.View));
 
         group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, IRefreshTokenService refreshTokenService, HttpContext httpContext, IWebHostEnvironment env) =>
         {
@@ -441,7 +440,7 @@ public static class IdentityEndpoints
                 // Generate JWT with refresh token
                 var jwtId = Guid.NewGuid().ToString();
                 var jwtToken = GenerateJwtToken(user, roles, roleClaims, configuration, jwtId);
-                var permissions = roleClaims.Where(c => c.Type == SystemPermissions.PermissionType).Select(c => c.Value).Distinct().ToList();
+                var permissions = roleClaims.Where(c => c.Type == Permissions.PermissionType).Select(c => c.Value).Distinct().ToList();
 
                 // Generate refresh token
                 var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -482,7 +481,7 @@ public static class IdentityEndpoints
                 user.FullName,
                 Roles = roles
             });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.View));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.View));
 
         group.MapPut("/users/{id}", async (string id, UpdateUserDto model, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -502,7 +501,7 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "UpdateUser", "ApplicationUser", user.Id, $"Updated user details. Old: {oldValues}");
 
             return Results.Ok(new { Message = "User updated successfully", User = user });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.Edit));
 
         // Deactivate User (Soft Delete)
         group.MapDelete("/users/{id}", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
@@ -518,7 +517,7 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "DeactivateUser", "ApplicationUser", user.Id, "Deactivated user (Soft Delete)");
 
             return Results.Ok(new { Message = "User deactivated successfully", IsActive = false });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Delete));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.Delete));
 
         // Activate User
         group.MapPost("/users/{id}/activate", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
@@ -534,7 +533,7 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "ActivateUser", "ApplicationUser", user.Id, "Activated user");
 
             return Results.Ok(new { Message = "User activated successfully", IsActive = true });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.Edit));
 
         // Toggle User Status
         group.MapPost("/users/{id}/toggle-status", async (string id, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
@@ -550,7 +549,7 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, user.IsActive ? "ActivateUser" : "DeactivateUser", "ApplicationUser", user.Id, user.IsActive ? "Activated user" : "Deactivated user");
 
             return Results.Ok(new { Message = user.IsActive ? "User activated" : "User deactivated", IsActive = user.IsActive });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.Edit));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.Edit));
 
         group.MapPost("/users/{id}/roles", async (string id, AssignRolesDto model, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -568,13 +567,13 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "UpdateUserRoles", "ApplicationUser", user.Id, $"Updated roles to: {string.Join(", ", model.Roles)}");
 
             return Results.Ok(new { Message = "Roles updated successfully", Roles = model.Roles });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Users.ManageRoles));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.ManageRoles));
 
         group.MapGet("/roles", async (RoleManager<IdentityRole> roleManager) =>
         {
             var roles = await roleManager.Roles.Select(r => new { r.Id, r.Name }).ToListAsync();
             return Results.Ok(roles);
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.View));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
 
         group.MapPost("/roles", async (string roleName, RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -587,7 +586,7 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "CreateRole", "IdentityRole", role.Id, $"Created role {roleName}");
 
             return Results.Ok(new { Message = "Role created" });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.Create));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Create));
 
         group.MapDelete("/roles/{roleName}", async (string roleName, RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -600,14 +599,14 @@ public static class IdentityEndpoints
             await auditService.LogAsync(performedBy, "DeleteRole", "IdentityRole", role.Id, $"Deleted role {roleName}");
 
             return Results.Ok(new { Message = "Role deleted" });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.Delete));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Delete));
 
         // Permission Management
         // We allow Permissions.Roles.View to see available permissions, or maybe we need a separate 'System.Config' but 'Roles.View' is fine for now
         group.MapGet("/permissions", () =>
         {
-            return Results.Ok(SystemPermissions.GetAllPermissions());
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.View));
+            return Results.Ok(Permissions.GetAllPermissions());
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
 
         // GET /api/auth/permissions/registry — return full permission metadata grouped by module
         group.MapGet("/permissions/registry", () =>
@@ -635,12 +634,12 @@ public static class IdentityEndpoints
 
             var claims = await roleManager.GetClaimsAsync(role);
             var permissions = claims
-                .Where(c => c.Type == SystemPermissions.PermissionType)
+                .Where(c => c.Type == Permissions.PermissionType)
                 .Select(c => c.Value)
                 .ToList();
 
             return Results.Ok(permissions);
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.View));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
 
         group.MapPut("/roles/{id}/permissions", async (string id, string[] permissions, RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -651,7 +650,7 @@ public static class IdentityEndpoints
             var validated = PermissionRegistry.ValidatePermissions(permissions.ToList());
 
             var currentClaims = await roleManager.GetClaimsAsync(role);
-            var currentPermissions = currentClaims.Where(c => c.Type == SystemPermissions.PermissionType).ToList();
+            var currentPermissions = currentClaims.Where(c => c.Type == Permissions.PermissionType).ToList();
 
             foreach (var claim in currentPermissions)
             {
@@ -660,14 +659,14 @@ public static class IdentityEndpoints
 
             foreach (var permission in validated)
             {
-                await roleManager.AddClaimAsync(role, new Claim(SystemPermissions.PermissionType, permission));
+                await roleManager.AddClaimAsync(role, new Claim(Permissions.PermissionType, permission));
             }
 
             var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
             await auditService.LogAsync(performedBy, "UpdateRolePermissions", "IdentityRole", role.Id, "Updated permissions");
 
             return Results.Ok(new { Message = "Permissions updated successfully" });
-        }).RequireAuthorization(p => p.RequireClaim(SystemPermissions.PermissionType, SystemPermissions.Roles.Edit));
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Edit));
 
         // Forgot Password
         group.MapPost("/forgot-password", async (ForgotPasswordDto model, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext, IEmailService emailService, IConfiguration configuration, IRateLimitService rateLimitService) =>

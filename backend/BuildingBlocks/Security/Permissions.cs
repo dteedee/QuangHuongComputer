@@ -180,4 +180,6 @@ public static class Roles
     public const string Customer = "Customer";
     public const string Marketing = "Marketing";
     public const string Supplier = "Supplier";
+    public const string InventoryStaff = "InventoryStaff";
+    public const string HR = "HR";
 }

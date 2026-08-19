@@ -281,7 +281,10 @@ public class LeadManagementService : ILeadManagementService
                     var paramNe = command.CreateParameter(); paramNe.ParameterName = "@NormalizedEmail"; paramNe.Value = lead.Email.ToUpperInvariant(); command.Parameters.Add(paramNe);
                     var paramE = command.CreateParameter(); paramE.ParameterName = "@Email"; paramE.Value = lead.Email; command.Parameters.Add(paramE);
                     
-                    var paramPh = command.CreateParameter(); paramPh.ParameterName = "@PasswordHash"; paramPh.Value = "AQAAAAIAAYagAAAAEN...DUMMY"; command.Parameters.Add(paramPh);
+                    // PasswordHash NULL = tài khoản chưa đặt mật khẩu (chuẩn ASP.NET Identity cho
+                    // external/auto-created user) — không thể đăng nhập bằng password cho tới khi
+                    // khách dùng luồng quên-mật-khẩu/đặt mật khẩu. Tuyệt đối không seed hash giả.
+                    var paramPh = command.CreateParameter(); paramPh.ParameterName = "@PasswordHash"; paramPh.Value = DBNull.Value; command.Parameters.Add(paramPh);
                     var paramSs = command.CreateParameter(); paramSs.ParameterName = "@SecurityStamp"; paramSs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramSs);
                     var paramCs = command.CreateParameter(); paramCs.ParameterName = "@ConcurrencyStamp"; paramCs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramCs);
                     var paramPn = command.CreateParameter(); paramPn.ParameterName = "@PhoneNumber"; paramPn.Value = lead.Phone ?? (object)DBNull.Value; command.Parameters.Add(paramPn);

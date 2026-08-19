@@ -1,3 +1,4 @@
+using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -441,7 +442,7 @@ public static class WarehouseEndpoints
                 transfer.TransferNumber,
                 Status = transfer.Status.ToString()
             });
-        });
+        }).WithValidation<CreateTransferDto>();
 
         // PUT /api/inventory/transfers/{id}/approve
         transferGroup.MapPut("{id:guid}/approve", async (Guid id, ApproveTransferDto dto, InventoryDbContext db) =>

@@ -22,7 +22,9 @@ public static class IdentitySeeder
             Roles.Accountant, 
             Roles.Manager, 
             Roles.Marketing,
-            Roles.Supplier 
+            Roles.Supplier,
+            Roles.InventoryStaff,
+            Roles.HR
         };
 
         // Create roles if they don't exist
@@ -88,5 +90,7 @@ public static class IdentitySeeder
         await CreateUser("sale@quanghuong.com", "Nhân viên Bán hàng", Roles.Sale, "Sale@123");
         await CreateUser("accountant@quanghuong.com", "Kế toán", Roles.Accountant, "Accountant@123");
         await CreateUser("marketing@quanghuong.com", "Marketing", Roles.Marketing, "Marketing@123");
+        await CreateUser("kho@quanghuong.com", "Nhân viên Kho", Roles.InventoryStaff, "Kho@123");
+        await CreateUser("hr@quanghuong.com", "Nhân sự", Roles.HR, "Hr@123");
     }
 }

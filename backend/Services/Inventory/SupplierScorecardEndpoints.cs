@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using InventoryModule.Application.Suppliers;
 using InventoryModule.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,7 @@ public static class SupplierScorecardEndpoints
     public static void MapSupplierScorecardEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/inventory/suppliers")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
 
         // GET /api/inventory/suppliers/scorecards?from=&to= — bảng tổng
         group.MapGet("scorecards", async (DateTime? from, DateTime? to, InventoryDbContext db) =>

@@ -1,3 +1,5 @@
+using BuildingBlocks.Security;
+using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,7 +13,7 @@ public static class GoodsReceivedNoteEndpoints
 {
     public static void MapGoodsReceivedNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/grn").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
+        var group = app.MapGroup("/api/inventory/grn").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
 
         // POST /api/inventory/grn — create GRN
         group.MapPost("", async (CreateGRNDto dto, InventoryDbContext db) =>
@@ -39,7 +41,7 @@ public static class GoodsReceivedNoteEndpoints
             db.GoodsReceivedNotes.Add(grn);
             await db.SaveChangesAsync();
             return Results.Created($"/api/inventory/grn/{grn.Id}", grn);
-        });
+        }).WithValidation<CreateGRNDto>();
 
         // GET /api/inventory/grn — list with pagination
         group.MapGet("", async (int page, int pageSize, InventoryDbContext db) =>

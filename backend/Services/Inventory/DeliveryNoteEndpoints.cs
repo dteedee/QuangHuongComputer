@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,7 +12,7 @@ public static class DeliveryNoteEndpoints
 {
     public static void MapDeliveryNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/dn").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
+        var group = app.MapGroup("/api/inventory/dn").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
 
         // POST /api/inventory/dn — create DN
         group.MapPost("", async (CreateDNDto dto, InventoryDbContext db) =>

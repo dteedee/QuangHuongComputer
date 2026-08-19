@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -12,7 +13,7 @@ public static class InventoryCountEndpoints
 {
     public static void MapInventoryCountEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/count").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
+        var group = app.MapGroup("/api/inventory/count").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
 
         // POST /api/inventory/count — create session, populate items from current inventory
         group.MapPost("", async (CreateCountSessionDto dto, InventoryDbContext db, CatalogDbContext catalogDb) =>

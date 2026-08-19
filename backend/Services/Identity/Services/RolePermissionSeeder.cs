@@ -261,9 +261,39 @@ public static class RolePermissionSeeder
         {
             // Inventory
             Perms.Inventory.ViewPurchaseOrder,
-            
+
             // Catalog
             Perms.Catalog.View,
+        });
+
+        // InventoryStaff - Kho vận: nhập/xuất kho, kiểm kê, không đụng tài chính/duyệt PO
+        await AssignPermissionsToRole(roleManager, Roles.InventoryStaff, new[]
+        {
+            // Catalog
+            Perms.Catalog.View,
+
+            // Inventory (toàn bộ nghiệp vụ kho — GRN, delivery note, inventory count, landed cost)
+            Perms.Inventory.ViewStock,
+            Perms.Inventory.ManageStock,
+            Perms.Inventory.AdjustStock,
+            Perms.Inventory.ViewPurchaseOrder,
+            Perms.Inventory.ReceivePurchaseOrder,
+            Perms.Inventory.ViewReservations,
+            Perms.Inventory.ViewSupplier,
+
+            // Reporting
+            Perms.Reporting.ViewInventory,
+        });
+
+        // HR - Nhân sự: toàn quyền module HR, không chạm Accounting/Sales
+        await AssignPermissionsToRole(roleManager, Roles.HR, new[]
+        {
+            Perms.HR.ViewEmployees,
+            Perms.HR.ManageEmployees,
+            Perms.HR.ViewAttendance,
+            Perms.HR.ManageAttendance,
+            Perms.HR.ViewPayroll,
+            Perms.HR.ManagePayroll,
         });
     }
 
