@@ -35,17 +35,18 @@ public static class InventoryEndpoints
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
             BuildingBlocks.Security.Permissions.Inventory.ViewStock));
 
-        group.MapPut("/stock/{id:guid}/adjust", async (Guid id, int amount, string reason, InventoryDbContext db) =>
+        group.MapPut("/stock/{id:guid}/adjust", async (Guid id, AdjustStockDto dto, InventoryDbContext db) =>
         {
             var item = await db.InventoryItems.FindAsync(id);
             if (item == null) return Results.NotFound();
 
-            item.AdjustStock(amount, reason);
+            item.AdjustStock(dto.Amount, dto.Reason);
             await db.SaveChangesAsync();
             return Results.Ok(item);
         })
         .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.AdjustStock));
+            BuildingBlocks.Security.Permissions.Inventory.AdjustStock))
+        .WithValidation<AdjustStockDto>();
 
         // ==================== STOCK QUERIES: PRODUCT / VARIANT / BRANCH ====================
         // Public read: FE trang chi tiết sản phẩm gọi 3 endpoint này để hiển thị "còn X sản phẩm",

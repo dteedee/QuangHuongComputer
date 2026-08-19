@@ -324,7 +324,7 @@ export const inventoryApi = {
     },
 
     adjustStock: async (id: string, amount: number, reason: string) => {
-        const response = await client.put(`/inventory/stock/${id}/adjust`, null, { params: { amount, reason } });
+        const response = await client.put(`/inventory/stock/${id}/adjust`, { amount, reason });
         return response.data;
     },
 
