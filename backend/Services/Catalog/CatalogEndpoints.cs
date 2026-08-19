@@ -1347,13 +1347,19 @@ public static class CatalogEndpoints
                 {
                     id = p.Id,
                     name = p.Name,
+                    sku = p.Sku,
+                    slug = p.Slug,
                     description = p.Description,
                     price = p.Price,
                     oldPrice = p.OldPrice,
                     imageUrl = p.ImageUrl,
                     stockQuantity = p.StockQuantity,
-                    category = new { id = p.Category.Id, name = p.Category.Name },
-                    brand = new { id = p.Brand.Id, name = p.Brand.Name }
+                    // Flat shape — khớp Product DTO chuẩn (GET /products, /products/{id}) thay vì nested category/brand,
+                    // để frontend Product type dùng chung cho related products không cần map riêng.
+                    categoryId = p.CategoryId.ToString(),
+                    categoryName = p.Category != null ? p.Category.Name : null,
+                    brandId = p.BrandId.ToString(),
+                    brandName = p.Brand != null ? p.Brand.Name : null
                 })
                 .ToListAsync<object>();
 
