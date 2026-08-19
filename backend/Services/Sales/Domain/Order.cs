@@ -34,6 +34,12 @@ public class Order : Entity<Guid>
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
     public string PaymentMethod { get; private set; } = "COD"; // Default to COD
+
+    // Snapshot thông tin khách hàng tại thời điểm đặt hàng — admin order list/detail cần hiển thị TÊN,
+    // không phải chỉ CustomerId (Guid). Guest checkout: lấy từ form. Authenticated: lấy từ claims JWT.
+    public string? CustomerName { get; private set; }
+    public string? CustomerEmail { get; private set; }
+    public string? CustomerPhone { get; private set; }
     
     // Pickup fields
     public bool IsPickup { get; private set; }
@@ -84,7 +90,10 @@ public class Order : Entity<Guid>
         string paymentMethod = "COD",
         bool isPickup = false,
         string? pickupStoreId = null,
-        string? pickupStoreName = null)
+        string? pickupStoreName = null,
+        string? customerName = null,
+        string? customerEmail = null,
+        string? customerPhone = null)
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Order must have at least one item");
@@ -105,6 +114,9 @@ public class Order : Entity<Guid>
         IsPickup = isPickup;
         PickupStoreId = pickupStoreId;
         PickupStoreName = pickupStoreName;
+        CustomerName = customerName;
+        CustomerEmail = customerEmail;
+        CustomerPhone = customerPhone;
         OrderDate = DateTime.UtcNow;
         TaxRate = taxRate; // Snapshot tax rate
         RetryCount = 0;
@@ -166,6 +178,14 @@ public class Order : Entity<Guid>
             CouponCode = couponCode;
         }
         CalculateAmounts();
+    }
+
+    public void SetCustomerInfo(string? name, string? email, string? phone)
+    {
+        if (!string.IsNullOrWhiteSpace(name)) CustomerName = name;
+        if (!string.IsNullOrWhiteSpace(email)) CustomerEmail = email;
+        if (!string.IsNullOrWhiteSpace(phone)) CustomerPhone = phone;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void SetShippingAmount(decimal amount)

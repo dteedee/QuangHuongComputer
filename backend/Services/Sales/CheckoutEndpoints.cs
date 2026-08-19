@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Content.Infrastructure;
 using Sales.Application.Checkout;
 using Sales.Application.Pricing;
 using Sales.Domain;
@@ -122,6 +123,7 @@ public static class CheckoutEndpoints
         EvaluatePromotionRequestDto model,
         IPricingEngine pricingEngine,
         CatalogDbContext catalogDb,
+        ContentDbContext contentDb,
         CancellationToken ct)
     {
         if (model.Items == null || model.Items.Count == 0)
@@ -132,7 +134,8 @@ public static class CheckoutEndpoints
                 ShippingDiscount = 0m,
                 FinalTotal = 0m,
                 AppliedPromotions = Array.Empty<object>(),
-                FreeGifts = Array.Empty<object>()
+                FreeGifts = Array.Empty<object>(),
+                Warnings = Array.Empty<string>()
             });
 
         // Cart tạm — không SaveChanges, chỉ dùng làm input cho PricingEngine.
@@ -154,6 +157,25 @@ public static class CheckoutEndpoints
 
         var pricing = await pricingEngine.CalculateAsync(tempCart, customerContext, manualCodes, ct);
 
+        // Nguồn áp thật khi đặt hàng là Content.Coupons (xem /sales/checkout), KHÁC hệ Content.Promotions
+        // ở trên. Preview phải phản ánh CẢ HAI để không lệch số với lúc submit thật.
+        decimal couponDiscount = 0m;
+        Content.Domain.Coupon? matchedCoupon = null;
+        var warnings = new List<string>();
+        if (!string.IsNullOrWhiteSpace(model.CouponCode))
+        {
+            var couponResult = await CouponValidator.ValidateAsync(contentDb, model.CouponCode, pricing.Subtotal, ct);
+            if (couponResult.Success)
+            {
+                couponDiscount = couponResult.DiscountAmount;
+                matchedCoupon = couponResult.Coupon;
+            }
+            else if (couponResult.ErrorMessage != null)
+            {
+                warnings.Add(couponResult.ErrorMessage);
+            }
+        }
+
         // Lookup tên/ảnh sản phẩm tặng (PricingResult.FreeGifts chỉ có Id/Quantity).
         var giftIds = pricing.FreeGifts.Select(g => g.ProductId).Distinct().ToList();
         var giftProducts = giftIds.Count == 0
@@ -167,22 +189,41 @@ public static class CheckoutEndpoints
 
         var codesUpper = manualCodes.Select(c => c.ToUpperInvariant()).ToHashSet();
 
+        var appliedPromotions = pricing.AppliedPromotions.Select(p => new
+        {
+            Id = p.PromotionId,
+            p.Code,
+            p.Name,
+            p.DiscountType,
+            p.DiscountAmount,
+            LineProductId = p.AppliesTo.StartsWith("Line:") ? p.AppliesTo["Line:".Length..] : null,
+            IsAutomatic = !codesUpper.Contains(p.Code.ToUpperInvariant())
+        }).ToList<object>();
+
+        if (matchedCoupon != null && couponDiscount > 0)
+        {
+            appliedPromotions.Add(new
+            {
+                Id = matchedCoupon.Id,
+                Code = matchedCoupon.Code,
+                Name = matchedCoupon.Description,
+                DiscountType = matchedCoupon.DiscountType.ToString(),
+                DiscountAmount = couponDiscount,
+                LineProductId = (string?)null,
+                IsAutomatic = false
+            });
+        }
+
+        var discountTotal = pricing.TotalDiscount + couponDiscount;
+        var finalTotal = Math.Max(0, pricing.Total - couponDiscount);
+
         return Results.Ok(new
         {
             pricing.Subtotal,
-            DiscountTotal = pricing.TotalDiscount,
+            DiscountTotal = discountTotal,
             pricing.ShippingDiscount,
-            FinalTotal = pricing.Total,
-            AppliedPromotions = pricing.AppliedPromotions.Select(p => new
-            {
-                Id = p.PromotionId,
-                p.Code,
-                p.Name,
-                p.DiscountType,
-                p.DiscountAmount,
-                LineProductId = p.AppliesTo.StartsWith("Line:") ? p.AppliesTo["Line:".Length..] : null,
-                IsAutomatic = !codesUpper.Contains(p.Code.ToUpperInvariant())
-            }),
+            FinalTotal = finalTotal,
+            AppliedPromotions = appliedPromotions,
             FreeGifts = pricing.FreeGifts.Select(g =>
             {
                 var product = giftProducts.FirstOrDefault(p => p.Id == g.ProductId);
@@ -193,7 +234,8 @@ public static class CheckoutEndpoints
                     g.Quantity,
                     ImageUrl = product.ImageUrl
                 };
-            })
+            }),
+            Warnings = warnings
         });
     }
 

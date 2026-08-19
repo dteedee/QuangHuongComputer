@@ -76,6 +76,10 @@ public class SalesDbContext : DbContext
             entity.Property(o => o.AppliedPromotionsJson).HasColumnType("text");
             // JSON extensibility — freeform key/value attributes, default '{}'
             entity.Property(o => o.Attributes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
+            // Snapshot tên/email/sđt khách hàng lúc đặt hàng — admin order list cần hiển thị tên thay vì Guid.
+            entity.Property(o => o.CustomerName).HasMaxLength(200);
+            entity.Property(o => o.CustomerEmail).HasMaxLength(200);
+            entity.Property(o => o.CustomerPhone).HasMaxLength(30);
             
             // Indexes for common queries
             entity.HasIndex(o => new { o.CustomerId, o.OrderDate })

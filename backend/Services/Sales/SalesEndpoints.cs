@@ -14,6 +14,7 @@ using Catalog.Infrastructure;
 using InventoryModule.Infrastructure;
 using Content.Infrastructure;
 using Content.Domain;
+using Sales.Application.Pricing;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 
@@ -104,17 +105,15 @@ public static class SalesEndpoints
                 var taxRate = TaxRates.VatStandard;
                 var taxAmount = subtotal * taxRate;
 
-                // Apply coupon if provided
+                // Apply coupon if provided — nguồn duy nhất: CouponValidator (Content.Coupons).
                 decimal discountAmount = 0;
                 if (!string.IsNullOrEmpty(model.CouponCode))
                 {
-                    var coupon = await contentDb.Coupons
-                        .FirstOrDefaultAsync(c => c.Code == model.CouponCode.ToUpper() && c.IsActive, cts.Token);
-
-                    if (coupon != null && coupon.IsValid(subtotal))
+                    var couponResult = await CouponValidator.ValidateAsync(contentDb, model.CouponCode, subtotal, cts.Token);
+                    if (couponResult.Success)
                     {
-                        discountAmount = coupon.CalculateDiscount(subtotal);
-                        coupon.Apply();
+                        discountAmount = couponResult.DiscountAmount;
+                        couponResult.Coupon!.Apply();
                     }
                 }
 
@@ -123,21 +122,15 @@ public static class SalesEndpoints
                 // khiến khách guest bị tính phí ship dù giỏ đã qua ngưỡng miễn phí hiển thị trên UI.
                 var shippingAmount = (subtotal - discountAmount) >= 500000 ? 0 : 30000;
 
-                // Build shipping address with guest info
-                var shippingInfo = new
-                {
-                    name = model.CustomerName,
-                    phone = model.CustomerPhone,
-                    email = model.CustomerEmail,
-                    address = model.ShippingAddress
-                };
-
                 var order = new Order(
                     guestCustomerId,
                     model.ShippingAddress ?? "Guest Checkout",
                     orderItems,
                     taxRate,
-                    model.Notes
+                    model.Notes,
+                    customerName: model.CustomerName,
+                    customerEmail: model.CustomerEmail,
+                    customerPhone: model.CustomerPhone
                 );
 
                 if (discountAmount > 0)
@@ -153,6 +146,10 @@ public static class SalesEndpoints
                 salesDb.Orders.Add(order);
                 await inventoryDb.SaveChangesAsync(cts.Token);
                 await salesDb.SaveChangesAsync(cts.Token);
+                if (discountAmount > 0)
+                {
+                    await contentDb.SaveChangesAsync(cts.Token); // persist Coupon.UsedCount++
+                }
 
                 // Publish order created event
                 await publishEndpoint.Publish(new OrderCreatedIntegrationEvent(
@@ -501,38 +498,12 @@ public static class SalesEndpoints
             if (cart == null)
                 return Results.NotFound(new { Error = "Cart not found" });
 
-            // Validate coupon
-            var coupon = await contentDb.Coupons
-                .FirstOrDefaultAsync(c => c.Code == dto.CouponCode.ToUpper());
+            // Validate coupon — nguồn duy nhất: CouponValidator (Content.Coupons).
+            var couponResult = await CouponValidator.ValidateAsync(contentDb, dto.CouponCode, cart.SubtotalAmount);
+            if (!couponResult.Success)
+                return Results.BadRequest(new { Error = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ" });
 
-            if (coupon == null)
-                return Results.BadRequest(new { Error = "Mã giảm giá không tồn tại" });
-
-            if (!coupon.IsValid(cart.SubtotalAmount))
-            {
-                if (!coupon.IsActive)
-                    return Results.BadRequest(new { Error = "Mã giảm giá không còn hiệu lực" });
-                if (DateTime.UtcNow > coupon.ValidTo)
-                    return Results.BadRequest(new { Error = "Mã giảm giá đã hết hạn" });
-                if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit)
-                    return Results.BadRequest(new { Error = "Mã giảm giá đã hết lượt sử dụng" });
-                if (cart.SubtotalAmount < coupon.MinOrderAmount)
-                    return Results.BadRequest(new { Error = $"Đơn hàng tối thiểu {coupon.MinOrderAmount:N0}đ để sử dụng mã này" });
-            }
-
-            // Calculate discount
-            decimal discountAmount = 0;
-            if (coupon.DiscountType == DiscountType.Percentage)
-            {
-                discountAmount = cart.SubtotalAmount * (coupon.DiscountValue / 100);
-                if (coupon.MaxDiscount.HasValue && discountAmount > coupon.MaxDiscount.Value)
-                    discountAmount = coupon.MaxDiscount.Value;
-            }
-            else // FixedAmount
-            {
-                discountAmount = coupon.DiscountValue;
-            }
-
+            var discountAmount = couponResult.DiscountAmount;
             cart.ApplyCoupon(dto.CouponCode.ToUpper(), discountAmount);
             await salesDb.SaveChangesAsync();
 
@@ -629,7 +600,7 @@ public static class SalesEndpoints
 
         // ==================== CHECKOUT ENDPOINT ====================
 
-        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext) =>
+        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ContentDbContext contentDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext) =>
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // 30 second timeout
             try
@@ -845,7 +816,11 @@ public static class SalesEndpoints
                     notes: model.Notes ?? "",
                     customerIp: httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     customerUserAgent: httpContext.Request.Headers.UserAgent.ToString().Length > 0 ? httpContext.Request.Headers.UserAgent.ToString() : "unknown",
-                    sourceId: Guid.Parse("00000000-0000-0000-0000-000000000001") // Default web source
+                    sourceId: Guid.Parse("00000000-0000-0000-0000-000000000001"), // Default web source
+                    // Snapshot tên/email khách hàng — chỉ điền khi đặt cho chính mình (không phải POS gán CustomerId khác,
+                    // vì claims JWT lúc đó là nhân viên bán hàng, không phải khách walk-in).
+                    customerName: customerId == userId ? user.FindFirstValue("name") : null,
+                    customerEmail: customerId == userId ? email : null
                 );
                 
                 if (model.IsPickup)
@@ -877,26 +852,24 @@ public static class SalesEndpoints
                     order.ApplyCoupon("POS-MANUAL", model.ManualDiscount.Value, "{}", "POS Manual Discount");
                 }
                 
-                // Apply coupon: from request or from cart
+                // Apply coupon: from request or from cart — nguồn duy nhất: CouponValidator (Content.Coupons).
+                // XÓA fallback giả (5/10/15/20% hardcode theo pattern tên mã) — mã không hợp lệ = 0đ + lỗi.
                 var couponToApply = !string.IsNullOrEmpty(model.CouponCode) ? model.CouponCode : cart?.CouponCode;
                 if (!string.IsNullOrEmpty(couponToApply) && order.DiscountAmount == 0)
                 {
-                    // Calculate discount based on coupon code
+                    // Nếu cart đã áp coupon hợp lệ trước đó (qua /cart/apply-coupon), dùng lại số tiền đã tính.
                     var discountAmount = cart?.DiscountAmount ?? 0;
 
-                    // If no cart discount, calculate a default discount (10% for common codes)
-                    if (discountAmount == 0 && !string.IsNullOrEmpty(model.CouponCode))
+                    if (discountAmount == 0)
                     {
-                        // Simple discount calculation for direct checkout
                         var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
-                        discountAmount = couponToApply.ToUpper() switch
+                        var couponResult = await CouponValidator.ValidateAsync(contentDb, couponToApply, subtotal, cts.Token);
+                        if (!couponResult.Success)
                         {
-                            "SAVE10" => subtotal * 0.1m,
-                            "SAVE20" => subtotal * 0.2m,
-                            "SAVE15" => subtotal * 0.15m,
-                            "FREESHIP" => order.ShippingAmount,
-                            _ => subtotal * 0.05m // Default 5% for unknown codes
-                        };
+                            return Results.BadRequest(new { Error = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ" });
+                        }
+                        discountAmount = couponResult.DiscountAmount;
+                        couponResult.Coupon!.Apply();
                     }
 
                     if (discountAmount > 0)
@@ -918,11 +891,12 @@ public static class SalesEndpoints
                 }
 
                 // 5. Save Changes - execute sequentially to avoid connection conflicts
-                try 
+                try
                 {
                     await inventoryDb.SaveChangesAsync(cts.Token);
                     await catalogDb.SaveChangesAsync(cts.Token);
                     await salesDb.SaveChangesAsync(cts.Token);
+                    await contentDb.SaveChangesAsync(cts.Token); // persist Coupon.UsedCount++ nếu có
                 }
                 catch (Exception ex)
                 {
@@ -930,6 +904,7 @@ public static class SalesEndpoints
                     await inventoryDb.SaveChangesAsync(cts.Token);
                     await catalogDb.SaveChangesAsync(cts.Token);
                     await salesDb.SaveChangesAsync(cts.Token);
+                    await contentDb.SaveChangesAsync(cts.Token);
                 }
 
                 // 6. Publish Event (non-blocking)
@@ -1314,7 +1289,10 @@ public static class SalesEndpoints
                 var searchLower = search.ToLower();
                 query = query.Where(o =>
                     o.OrderNumber.ToLower().Contains(searchLower) ||
-                    (o.ShippingAddress != null && o.ShippingAddress.ToLower().Contains(searchLower)));
+                    (o.ShippingAddress != null && o.ShippingAddress.ToLower().Contains(searchLower)) ||
+                    (o.CustomerName != null && o.CustomerName.ToLower().Contains(searchLower)) ||
+                    (o.CustomerEmail != null && o.CustomerEmail.ToLower().Contains(searchLower)) ||
+                    (o.CustomerPhone != null && o.CustomerPhone.Contains(search)));
             }
 
             // Filter by status
@@ -1336,6 +1314,9 @@ public static class SalesEndpoints
                     o.Id,
                     o.OrderNumber,
                     o.CustomerId,
+                    o.CustomerName,
+                    o.CustomerEmail,
+                    o.CustomerPhone,
                     Status = o.Status.ToString(),
                     o.TotalAmount,
                     o.OrderDate,

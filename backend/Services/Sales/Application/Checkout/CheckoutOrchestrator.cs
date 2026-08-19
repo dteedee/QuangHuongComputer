@@ -176,7 +176,10 @@ public class CheckoutOrchestrator
             paymentMethod: req.PaymentMethod.ToString(),
             isPickup: req.Shipping.IsPickup,
             pickupStoreId: req.Shipping.PickupStoreId,
-            pickupStoreName: req.Shipping.PickupStoreName);
+            pickupStoreName: req.Shipping.PickupStoreName,
+            customerName: req.Shipping.RecipientName,
+            customerEmail: req.GuestEmail,
+            customerPhone: req.Shipping.Phone);
 
         order.SetShippingAmount(req.Shipping.ShippingFee);
         var appliedPromoJson = JsonSerializer.Serialize(pricing.AppliedPromotions);
