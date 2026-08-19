@@ -73,6 +73,11 @@ public class GlobalExceptionHandlingMiddleware
         // Handle specific exception types if needed
         switch (exception)
         {
+            // Body JSON sai / thiếu query param bắt buộc là lỗi client → 400, không phải 500
+            case Microsoft.AspNetCore.Http.BadHttpRequestException badReq:
+                response.StatusCode = badReq.StatusCode;
+                response.Message = "Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại định dạng.";
+                break;
             case UnauthorizedAccessException:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 response.Message = "Unauthorized access.";

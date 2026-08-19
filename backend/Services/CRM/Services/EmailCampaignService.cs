@@ -49,11 +49,11 @@ public partial class EmailCampaignService : IEmailCampaignService
 
         query = queryParams.SortBy?.ToLower() switch
         {
-            "name" => queryParams.SortDesc ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
-            "status" => queryParams.SortDesc ? query.OrderByDescending(c => c.Status) : query.OrderBy(c => c.Status),
-            "scheduledat" => queryParams.SortDesc ? query.OrderByDescending(c => c.ScheduledAt) : query.OrderBy(c => c.ScheduledAt),
-            "sentat" => queryParams.SortDesc ? query.OrderByDescending(c => c.SentAt) : query.OrderBy(c => c.SentAt),
-            _ => queryParams.SortDesc ? query.OrderByDescending(c => c.CreatedAt) : query.OrderBy(c => c.CreatedAt)
+            "name" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
+            "status" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(c => c.Status) : query.OrderBy(c => c.Status),
+            "scheduledat" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(c => c.ScheduledAt) : query.OrderBy(c => c.ScheduledAt),
+            "sentat" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(c => c.SentAt) : query.OrderBy(c => c.SentAt),
+            _ => (queryParams.SortDesc ?? true) ? query.OrderByDescending(c => c.CreatedAt) : query.OrderBy(c => c.CreatedAt)
         };
 
         var items = await query

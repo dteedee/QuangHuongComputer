@@ -70,12 +70,12 @@ public class LeadManagementService : ILeadManagementService
         // Apply sorting
         query = queryParams.SortBy?.ToLower() switch
         {
-            "fullname" => queryParams.SortDesc ? query.OrderByDescending(l => l.FullName) : query.OrderBy(l => l.FullName),
-            "company" => queryParams.SortDesc ? query.OrderByDescending(l => l.Company) : query.OrderBy(l => l.Company),
-            "status" => queryParams.SortDesc ? query.OrderByDescending(l => l.Status) : query.OrderBy(l => l.Status),
-            "estimatedvalue" => queryParams.SortDesc ? query.OrderByDescending(l => l.EstimatedValue) : query.OrderBy(l => l.EstimatedValue),
-            "nextfollowupat" => queryParams.SortDesc ? query.OrderByDescending(l => l.NextFollowUpAt) : query.OrderBy(l => l.NextFollowUpAt),
-            _ => queryParams.SortDesc ? query.OrderByDescending(l => l.CreatedAt) : query.OrderBy(l => l.CreatedAt)
+            "fullname" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.FullName) : query.OrderBy(l => l.FullName),
+            "company" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.Company) : query.OrderBy(l => l.Company),
+            "status" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.Status) : query.OrderBy(l => l.Status),
+            "estimatedvalue" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.EstimatedValue) : query.OrderBy(l => l.EstimatedValue),
+            "nextfollowupat" => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.NextFollowUpAt) : query.OrderBy(l => l.NextFollowUpAt),
+            _ => (queryParams.SortDesc ?? true) ? query.OrderByDescending(l => l.CreatedAt) : query.OrderBy(l => l.CreatedAt)
         };
 
         // Apply pagination
@@ -104,6 +104,11 @@ public class LeadManagementService : ILeadManagementService
         if (dto.EstimatedValue.HasValue)
         {
             lead.SetEstimatedValue(dto.EstimatedValue.Value);
+        }
+
+        if (dto.Attributes is not null)
+        {
+            lead.SetAttributes(dto.Attributes);
         }
 
         // Assign to first pipeline stage if available
@@ -137,6 +142,11 @@ public class LeadManagementService : ILeadManagementService
         if (dto.EstimatedValue.HasValue)
         {
             lead.SetEstimatedValue(dto.EstimatedValue.Value);
+        }
+
+        if (dto.Attributes is not null)
+        {
+            lead.SetAttributes(dto.Attributes);
         }
 
         await _crmDb.SaveChangesAsync(cancellationToken);
