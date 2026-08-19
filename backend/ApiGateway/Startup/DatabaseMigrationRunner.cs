@@ -65,6 +65,8 @@ public static class DatabaseMigrationRunner
             services.GetRequiredService<CommunicationDbContext>(),
             services.GetRequiredService<HRDbContext>(),
             services.GetRequiredService<SystemConfigDbContext>(),
+            // CustomFieldDbContext từng bị bỏ sót → bảng config.CustomFieldDefinitions không được tạo
+            services.GetRequiredService<CustomFieldDbContext>(),
             services.GetRequiredService<CrmDbContext>(),
         };
 

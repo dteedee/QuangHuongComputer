@@ -270,28 +270,10 @@ namespace Content.Migrations
                     table.PrimaryKey("PK_contact_messages", x => x.id);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "HomepageSections",
-                schema: "content",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SectionType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    DisplayOrder = table.Column<int>(type: "integer", nullable: false),
-                    Configuration = table.Column<string>(type: "text", nullable: true),
-                    IsVisible = table.Column<bool>(type: "boolean", nullable: false),
-                    CssClass = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    CreatedBy = table.Column<string>(type: "text", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HomepageSections", x => x.Id);
-                });
+            // NOTE: CreateTable for "HomepageSections" removed here — it duplicated the table
+            // already created by migration 20260319160000_AddHomepageSection (that migration was
+            // previously missing its Designer.cs, so EF's diff at generation time didn't see it
+            // and redundantly re-emitted the CREATE TABLE here, causing 42P07 on apply).
 
             migrationBuilder.CreateTable(
                 name: "Promotions",
@@ -419,11 +401,8 @@ namespace Content.Migrations
                 table: "contact_messages",
                 column: "status");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_HomepageSection_Visible_Order",
-                schema: "content",
-                table: "HomepageSections",
-                columns: new[] { "IsVisible", "DisplayOrder" });
+            // NOTE: CreateIndex for "IX_HomepageSection_Visible_Order" removed — duplicate of the
+            // index already created by 20260319160000_AddHomepageSection (same root cause as above).
 
             migrationBuilder.CreateIndex(
                 name: "IX_PromotionCondition_Promotion",
@@ -481,10 +460,6 @@ namespace Content.Migrations
         {
             migrationBuilder.DropTable(
                 name: "contact_messages",
-                schema: "content");
-
-            migrationBuilder.DropTable(
-                name: "HomepageSections",
                 schema: "content");
 
             migrationBuilder.DropTable(

@@ -176,6 +176,9 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             
             entity.HasIndex(e => new { e.UserId, e.IsDefault });
             entity.HasIndex(e => e.City);
+            // Renamed to avoid collision with Sales domain's unrelated "CustomerAddresses" table
+            // (public.CustomerAddresses, created by Sales migrations, has a different schema/purpose).
+            entity.ToTable("IdentityCustomerAddresses");
         });
 
         builder.Entity<RefreshToken>(entity =>
