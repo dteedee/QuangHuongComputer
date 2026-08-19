@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { Zap, WifiOff } from 'lucide-react';
 import SEO from '../components/SEO';
 import { contentApi, type HomepageSection } from '../api/content';
 import { DynamicHomepage } from '../components/DynamicHomepage';
@@ -75,6 +75,16 @@ export const HomePage = () => {
             {/* Section top hardcode theo audience (student/business) */}
             {audience === 'student' && <StudentTopSection />}
             {audience === 'business' && <BusinessTopSection />}
+
+            {/* Thông báo khi tải nội dung động thất bại — vẫn hiển thị bố cục mặc định bên dưới */}
+            {!isLoading && hasError && (
+                <div className="max-w-[1400px] mx-auto px-4 pt-4">
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm rounded-xl px-4 py-2.5">
+                        <WifiOff size={16} className="flex-shrink-0" />
+                        <span>Không tải được nội dung tuỳ chỉnh, đang hiển thị trang chủ mặc định.</span>
+                    </div>
+                </div>
+            )}
 
             {/* Content — DynamicHomepage cho mọi audience; Phase 08 sẽ lọc phía server */}
             {isLoading ? (

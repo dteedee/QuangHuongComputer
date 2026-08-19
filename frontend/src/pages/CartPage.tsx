@@ -1,13 +1,31 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag } from 'lucide-react';
+import { Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
+import { FreeShippingProgress } from '../components/cart/free-shipping-progress';
+import { CartRemoveButton } from '../components/cart/cart-remove-button';
 
 export const CartPage = () => {
     // Phase 04-C: mã giảm giá chỉ áp ở Checkout (bước 2). Cart chỉ hiển thị mã đã áp nếu có.
-    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, subtotal, tax, shippingAmount, total } = useCart();
+    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, subtotal, tax, shippingAmount, total, isLoading } = useCart();
     const navigate = useNavigate();
+
+    if (isLoading && items.length === 0) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 font-sans animate-pulse">
+                <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
+                <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="flex-1 lg:w-[65%] space-y-3">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 h-24" />
+                        ))}
+                    </div>
+                    <div className="lg:w-[35%] bg-white rounded-xl border border-gray-100 h-64" />
+                </div>
+            </div>
+        );
+    }
 
     if (items.length === 0) {
         return (
@@ -44,6 +62,7 @@ export const CartPage = () => {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Items List - 65% */}
                     <div className="flex-1 lg:w-[65%] space-y-4">
+                        <FreeShippingProgress amount={total} />
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
                             {items.map((item) => (
                                 <div key={item.id} className="flex items-center gap-4 p-4">
@@ -71,7 +90,7 @@ export const CartPage = () => {
                                     <div className="text-right min-w-[100px]">
                                         <p className="text-base font-bold text-accent">{formatCurrency(item.price * item.quantity)}</p>
                                     </div>
-                                    <button onClick={() => removeFromCart(item.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"><Trash2 size={16} /></button>
+                                    <CartRemoveButton onConfirm={() => removeFromCart(item.id)} />
                                 </div>
                             ))}
                         </div>

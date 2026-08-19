@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, Gift, Ticket } from 'lucide-react';
+import { ShoppingCart, Check, Star, Gift, Ticket } from 'lucide-react';
 import { formatNumber } from '../utils/format';
 
 interface ProductCardProps {
@@ -22,13 +22,25 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
     const [imgError, setImgError] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
+    const [justAdded, setJustAdded] = useState(false);
+    const addedTimer = useRef<number | undefined>(undefined);
 
     useEffect(() => { setImgError(false); }, [product.imageUrl]);
+    useEffect(() => () => { if (addedTimer.current) window.clearTimeout(addedTimer.current); }, []);
 
-    const handleAddToCart = (e: React.MouseEvent) => {
+    const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        addToCart(product, 1);
+        if (isAdding) return;
+        setIsAdding(true);
+        try {
+            await addToCart(product, 1);
+            setJustAdded(true);
+            addedTimer.current = window.setTimeout(() => setJustAdded(false), 1200);
+        } finally {
+            setIsAdding(false);
+        }
     };
 
     const hasOldPrice = !!product.oldPrice && product.oldPrice > product.price;
@@ -108,15 +120,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </span>
                     <button
                         onClick={handleAddToCart}
-                        disabled={isOutOfStock}
-                        aria-label="Thêm vào giỏ hàng"
+                        disabled={isOutOfStock || isAdding}
+                        aria-label={justAdded ? 'Đã thêm vào giỏ hàng' : 'Thêm vào giỏ hàng'}
                         className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
                             isOutOfStock
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-accent text-white hover:bg-accent-hover active:scale-95 shadow-sm'
-                        }`}
+                                : justAdded
+                                    ? 'bg-emerald-500 text-white scale-110'
+                                    : 'bg-accent text-white hover:bg-accent-hover active:scale-95 shadow-sm'
+                        } ${isAdding ? 'opacity-70 cursor-wait' : ''}`}
                     >
-                        <ShoppingCart size={16} />
+                        {justAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
                     </button>
                 </div>
 
