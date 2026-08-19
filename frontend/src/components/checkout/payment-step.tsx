@@ -106,14 +106,14 @@ export function PaymentStep({ value, onChange, onBack, onSubmit, submitting, tot
 
             <div className="flex gap-3 mt-6">
                 <button type="button" onClick={onBack} disabled={submitting}
-                    className="flex-1 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 inline-flex items-center justify-center gap-2 disabled:opacity-50">
-                    <ArrowLeft className="w-4 h-4" /> Quay lại
+                    className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold whitespace-nowrap hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
+                    <ArrowLeft className="w-[18px] h-[18px]" /> Quay lại
                 </button>
                 <button type="button" onClick={onSubmit} disabled={submitting}
-                    className={`flex-[2] py-3.5 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl font-semibold inline-flex items-center justify-center gap-2 ${
+                    className={`flex-[2] py-3 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center gap-1.5 ${
                         submitting ? 'opacity-70 cursor-not-allowed' : ''
                     }`}>
-                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><ShieldCheck className="w-5 h-5" />Đặt hàng</>}
+                    {submitting ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <><ShieldCheck className="w-[18px] h-[18px]" />Đặt hàng</>}
                 </button>
             </div>
         </motion.div>

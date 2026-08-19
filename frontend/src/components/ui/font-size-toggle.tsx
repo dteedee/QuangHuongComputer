@@ -101,7 +101,8 @@ export const FontSizeToggle = ({ className }: FontSizeToggleProps) => {
         <div
             role="radiogroup"
             aria-label="Chọn cỡ chữ"
-            className={'inline-flex items-center gap-1 ' + (className ?? '')}
+            className={'inline-flex items-center gap-0.5 rounded-md p-0.5 ' + (className ?? '')}
+            style={{ backgroundColor: 'var(--surface-alt, #FAFAFA)' }}
         >
             {OPTIONS.map((opt) => {
                 const active = opt === size;
@@ -114,22 +115,15 @@ export const FontSizeToggle = ({ className }: FontSizeToggleProps) => {
                         title={TITLE[opt]}
                         onClick={() => onChoose(opt)}
                         className={[
-                            'min-w-[36px] min-h-[36px] px-2 py-1 rounded-md',
-                            'text-sm font-semibold leading-none',
+                            'min-w-[24px] min-h-[24px] px-1 py-0.5 rounded',
+                            'text-[11px] font-semibold leading-none',
                             'transition-colors duration-150',
-                            'focus-visible:outline-none focus-visible:ring-2',
+                            'focus-visible:outline-none focus-visible:ring-1',
                             active
-                                ? 'text-white'
-                                : 'border hover:brightness-95 text-current',
+                                ? 'bg-white shadow-sm'
+                                : 'text-gray-400 hover:text-gray-600',
                         ].join(' ')}
-                        style={
-                            active
-                                ? { backgroundColor: 'var(--accent-primary)' }
-                                : {
-                                      backgroundColor: 'var(--surface-alt, #FAFAFA)',
-                                      borderColor: 'var(--border, #E5E5E5)',
-                                  }
-                        }
+                        style={active ? { color: 'var(--accent-primary)' } : undefined}
                     >
                         {LABEL[opt]}
                     </button>

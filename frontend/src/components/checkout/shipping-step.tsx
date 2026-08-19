@@ -113,8 +113,8 @@ export function ShippingStep({
             )}
 
             <button type="button" onClick={() => validate() && onNext()}
-                className="mt-6 w-full py-3.5 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition-all">
-                Tiếp tục — chọn khuyến mãi <ArrowRight className="w-5 h-5" />
+                className="mt-6 w-full py-3 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl text-sm font-semibold whitespace-nowrap flex items-center justify-center gap-1.5 transition-all">
+                Tiếp tục — chọn khuyến mãi <ArrowRight className="w-[18px] h-[18px]" />
             </button>
         </motion.div>
     );

@@ -48,16 +48,16 @@ export default function ProductDetailStickyBuyBar({
               <button
                 onClick={onBuyNow}
                 disabled={stockQuantity === 0}
-                className="flex-1 md:flex-none bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                className="flex-1 md:flex-none bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
               >
                 MUA NGAY
               </button>
               <button
                 onClick={onAddToCart}
                 disabled={stockQuantity === 0 || addingToCart}
-                className="flex-1 md:flex-none border-2 border-accent text-accent px-6 py-3 rounded-lg hover:bg-red-50 font-bold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                className="flex-1 md:flex-none border-2 border-accent text-accent px-6 py-3 rounded-lg hover:bg-red-50 font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart className="w-[18px] h-[18px]" />
                 <span className="hidden sm:inline">{addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}</span>
               </button>
             </div>

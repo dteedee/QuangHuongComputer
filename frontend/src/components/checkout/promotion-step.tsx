@@ -35,12 +35,12 @@ export function PromotionStep({ appliedCode, onCodeChange, applied, loading, onN
 
             <div className="flex gap-3 mt-6">
                 <button type="button" onClick={onBack}
-                    className="flex-1 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 inline-flex items-center justify-center gap-2">
-                    <ArrowLeft className="w-4 h-4" /> Quay lại
+                    className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold whitespace-nowrap hover:bg-gray-50 inline-flex items-center justify-center gap-1.5">
+                    <ArrowLeft className="w-[18px] h-[18px]" /> Quay lại
                 </button>
                 <button type="button" onClick={onNext}
-                    className="flex-[2] py-3.5 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl font-semibold inline-flex items-center justify-center gap-2">
-                    Tiếp tục — thanh toán <ArrowRight className="w-5 h-5" />
+                    className="flex-[2] py-3 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center gap-1.5">
+                    Tiếp tục — thanh toán <ArrowRight className="w-[18px] h-[18px]" />
                 </button>
             </div>
         </motion.div>

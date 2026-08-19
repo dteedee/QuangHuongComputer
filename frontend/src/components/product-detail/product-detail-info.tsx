@@ -142,21 +142,21 @@ export default function ProductDetailInfo({
                 <span className="text-gray-500 text-xs">{availableStock} sản phẩm có sẵn</span>
             </div>
 
-            {/* Nút hành động — CTA đỏ theo pattern hacom */}
+            {/* Nút hành động — CTA đỏ theo pattern hacom, compact ~44-48px */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <button
                     onClick={onBuyNow}
                     disabled={availableStock === 0}
-                    className="flex-[2] bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-bold transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-[3] bg-accent hover:bg-accent-hover text-white px-5 py-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                    <ShoppingBag className="w-5 h-5" /> MUA NGAY
+                    <ShoppingBag className="w-[18px] h-[18px]" /> MUA NGAY
                 </button>
                 <button
                     onClick={onAddToCart}
                     disabled={availableStock === 0 || addingToCart}
-                    className="flex-1 border-2 border-accent text-accent px-4 py-3 rounded-lg hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 flex items-center justify-center gap-2 font-bold cursor-pointer"
+                    className="flex-[2] border-2 border-accent text-accent px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                    <ShoppingCart className="w-5 h-5" />
+                    <ShoppingCart className="w-[18px] h-[18px]" />
                     {addingToCart ? 'ĐANG THÊM...' : 'THÊM VÀO GIỎ'}
                 </button>
             </div>
