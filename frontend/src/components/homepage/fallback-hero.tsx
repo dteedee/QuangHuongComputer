@@ -31,7 +31,7 @@ export const FallbackHero = () => (
                         className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg mb-6"
                     >
                         <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                        Đại lý ủy quyền chính hãng
+                        Back To School 2026 - Đại lý ủy quyền chính hãng
                     </motion.div>
 
                     <motion.h1
@@ -53,7 +53,7 @@ export const FallbackHero = () => (
                         transition={{ delay: 0.3 }}
                         className="text-base md:text-lg mt-5 text-gray-300 font-medium max-w-lg leading-relaxed"
                     >
-                        Linh kiện máy tính chính hãng giá tốt. Chuyên cung cấp Laptop, PC Gaming và linh kiện cao cấp với dịch vụ hậu mãi tốt nhất tại Hải Phòng.
+Ưu đãi mùa tựu trường: giảm đến 20% Laptop học tập, tặng phụ kiện khi build PC Gaming. Linh kiện chính hãng, dịch vụ hậu mãi tốt nhất tại Hải Phòng.
                     </motion.p>
 
                     <motion.div

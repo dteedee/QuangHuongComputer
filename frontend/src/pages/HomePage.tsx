@@ -7,13 +7,23 @@ import { DynamicHomepage } from '../components/DynamicHomepage';
 import { HomepageSkeleton } from '../components/homepage/homepage-skeleton';
 import { FallbackHero } from '../components/homepage/fallback-hero';
 import { FallbackCategories } from '../components/homepage/fallback-categories';
+import { FallbackFlashStrip } from '../components/homepage/fallback-flash-strip';
+import { BrandRow } from '../components/homepage/brand-row';
+import { DualServiceBanner } from '../components/homepage/dual-service-banner';
+import { SkyscraperBanner } from '../components/homepage/skyscraper-banner';
 import { CategorySidebarMenu } from '../components/homepage/category-sidebar-menu';
 import { TrustBadges } from '../components/homepage/trust-badges';
 import { NewsletterCta } from '../components/homepage/newsletter-cta';
 import { ProductGridSection } from '../components/homepage/ProductGridSection';
+import { PostGridSection } from '../components/homepage/PostGridSection';
 import { StudentTopSection, BusinessTopSection } from '../components/homepage/homepage-audience-top-sections';
 import { AudienceSwitcher } from '../components/ui/audience-switcher';
 import { useAudience } from '../context/AudienceContext';
+
+// Category IDs (Catalog seed data) — dùng cho fallback ProductGridSection theo category thật
+const CATEGORY_LAPTOP = '59809214-8b1c-435b-b877-c98afbbfa27e';
+const CATEGORY_PC_GAMING = '6874de51-2788-4914-bb36-04c2ef8a0587';
+const CATEGORY_LINH_KIEN = 'cea082a1-b483-4796-abcb-370c106b67c2';
 
 // ---------------------------------------------------------------------------
 // Trang chủ
@@ -93,6 +103,9 @@ export const HomePage = () => {
                 <DynamicHomepage sections={sections} />
             ) : (
                 <div className="space-y-4 pb-20">
+                    {/* Skyscraper banner phải — chỉ hiện ở màn hình rất rộng (>=1536px) */}
+                    <SkyscraperBanner />
+
                     {/* Body 3 cột: sidebar danh mục + hero, theo bố cục hacom.vn */}
                     <div className="max-w-[1400px] mx-auto px-4 pt-6 flex gap-4 items-stretch">
                         <CategorySidebarMenu />
@@ -100,11 +113,28 @@ export const HomePage = () => {
                             <FallbackHero />
                         </div>
                     </div>
+
                     <FallbackCategories />
+                    <FallbackFlashStrip />
+
                     <ProductGridSection
-                        title="Sản phẩm nổi bật"
-                        config={{ limit: 10, icon: 'Sparkles', showViewAll: true }}
+                        title="LAPTOP - MÁY TÍNH XÁCH TAY"
+                        config={{ categoryId: CATEGORY_LAPTOP, limit: 10, icon: 'Laptop', showViewAll: true }}
                     />
+                    <ProductGridSection
+                        title="PC GAMING & MÁY TÍNH ĐỒ HỌA"
+                        config={{ categoryId: CATEGORY_PC_GAMING, limit: 8, icon: 'Gamepad', showViewAll: true }}
+                    />
+                    <ProductGridSection
+                        title="LINH KIỆN MÁY TÍNH"
+                        config={{ categoryId: CATEGORY_LINH_KIEN, limit: 8, icon: 'Cpu', showViewAll: true }}
+                    />
+
+                    <BrandRow />
+                    <DualServiceBanner />
+
+                    <PostGridSection title="TIN TỨC CÔNG NGHỆ" config={{ postType: 'News', limit: 4, columns: 4 }} />
+
                     <TrustBadges />
                     <NewsletterCta />
                 </div>

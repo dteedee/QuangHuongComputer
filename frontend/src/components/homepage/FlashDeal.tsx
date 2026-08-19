@@ -48,7 +48,7 @@ export const FlashDeal: React.FC<FlashDealProps> = ({ title, config }) => {
                     </motion.div>
                     <div>
                         <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                            {title || 'DEALS TẾT - FLASH SALE'}
+                            {title || 'FLASH SALE - GIÁ SỐC HÔM NAY'}
                             <span className="bg-yellow-400 text-red-700 px-3 py-1 rounded-full text-xs">HOT</span>
                         </h2>
                         {showSubtitle && (
