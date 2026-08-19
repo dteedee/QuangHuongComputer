@@ -4,7 +4,8 @@ import {
     Plus, Edit, Trash2, Search, Filter, Box, RefreshCw, X, Check, Loader2,
     Image as ImageIcon, Layout, Settings, Share2, DollarSign, Package,
     Shield, Info, ChevronRight, ChevronLeft, PlusCircle, MinusCircle,
-    Upload, Star, Eye, Layers, Power, PowerOff, ToggleLeft, ToggleRight
+    Upload, Star, Eye, Layers, Power, PowerOff, ToggleLeft, ToggleRight,
+    LayoutGrid, Table2
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogApi, type Product, type CreateProductDto, type UpdateProductDto } from '../../api/catalog';
@@ -13,6 +14,8 @@ import toast from 'react-hot-toast';
 import ProductMediaManager from '../../components/admin/product-media-manager';
 import ProductVariantEditor from '../../components/admin/product-variant-editor';
 import SpecificationEditor from '../../components/admin/specification-editor';
+import ProductAttributesEditor from '../../components/admin/product-attributes-editor';
+import { DynamicDataTable } from '../../components/backoffice/dynamic-data-table';
 
 type FormTab = 'general' | 'catalog' | 'media' | 'variants' | 'specifications' | 'seo';
 
@@ -53,6 +56,8 @@ export const AdminProductsPage = () => {
     // Specific logic for attributes/specifications
     const [specs, setSpecs] = useState<SpecItem[]>([]);
     const [gallery, setGallery] = useState<string[]>([]);
+    const [customAttributes, setCustomAttributes] = useState<Record<string, unknown>>({});
+    const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
     // Debounce search term
     useEffect(() => {
@@ -160,6 +165,18 @@ export const AdminProductsPage = () => {
             }
         } else {
             setGallery([]);
+        }
+
+        // Initialize JSON extensibility attributes
+        if (editingProduct?.attributes) {
+            try {
+                const parsed = JSON.parse(editingProduct.attributes);
+                setCustomAttributes(typeof parsed === 'object' && parsed !== null ? parsed : {});
+            } catch {
+                setCustomAttributes({});
+            }
+        } else {
+            setCustomAttributes({});
         }
     }, [editingProduct]);
 
@@ -269,6 +286,7 @@ export const AdminProductsPage = () => {
             metaTitle: (formData.get('metaTitle') as string) || editingProduct?.metaTitle,
             metaDescription: (formData.get('metaDescription') as string) || editingProduct?.metaDescription,
             metaKeywords: (formData.get('metaKeywords') as string) || editingProduct?.metaKeywords,
+            attributes: JSON.stringify(customAttributes),
         };
 
         if (editingProduct) {
@@ -303,15 +321,33 @@ export const AdminProductsPage = () => {
                         </h1>
                         <p className="text-sm text-gray-500 font-medium">Quản lý kho hàng, giá bán và nội dung tiếp thị của bạn.</p>
                     </div>
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleOpenModal()}
-                        className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/15 hover:bg-accent-hover transition-all"
-                    >
-                        <PlusCircle size={20} />
-                        Thêm sản phẩm
-                    </motion.button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-gray-100 rounded-xl p-1">
+                            <button
+                                onClick={() => setViewMode('cards')}
+                                className={`p-2.5 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                title="Xem dạng thẻ"
+                            >
+                                <LayoutGrid size={18} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`p-2.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                title="Xem dạng bảng"
+                            >
+                                <Table2 size={18} />
+                            </button>
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleOpenModal()}
+                            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/15 hover:bg-accent-hover transition-all"
+                        >
+                            <PlusCircle size={20} />
+                            Thêm sản phẩm
+                        </motion.button>
+                    </div>
                 </div>
 
                 {/* Filter Bar */}
@@ -398,8 +434,29 @@ export const AdminProductsPage = () => {
                     </div>
                 </div>
 
+                {/* Product Table (dynamic columns from TableViewDefinition "admin.products") */}
+                {viewMode === 'table' && (
+                    <DynamicDataTable
+                        viewKey="admin.products"
+                        rows={filteredProducts ?? []}
+                        isLoading={isLoading}
+                        rowKey={(p) => p.id}
+                        onRowClick={(p) => handleOpenModal(p)}
+                        renderActions={(p) => (
+                            <div className="flex items-center justify-end gap-2">
+                                <button onClick={() => handleOpenModal(p)} className="p-2 text-gray-400 hover:text-accent transition-colors">
+                                    <Edit size={16} />
+                                </button>
+                                <button onClick={() => toggleStatusMutation.mutate(p.id)} className="p-2 text-gray-400 hover:text-amber-600 transition-colors">
+                                    {p.isActive ? <PowerOff size={16} /> : <Power size={16} />}
+                                </button>
+                            </div>
+                        )}
+                    />
+                )}
+
                 {/* Product Cards Grid */}
-                {isLoading ? (
+                {viewMode === 'cards' && (isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                             <div key={i} className="h-[400px] bg-white rounded-[2.5rem] border border-gray-100 animate-pulse flex flex-col p-6">
@@ -487,7 +544,7 @@ export const AdminProductsPage = () => {
                             </motion.div>
                         ))}
                     </div>
-                )}
+                ))}
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between py-10">
@@ -848,6 +905,11 @@ export const AdminProductsPage = () => {
                                                 </button>
                                             </div>
                                         </details>
+                                        <ProductAttributesEditor
+                                            entityType="Product"
+                                            value={customAttributes}
+                                            onChange={setCustomAttributes}
+                                        />
                                     </motion.div>
                                 )}
 
@@ -880,6 +942,11 @@ export const AdminProductsPage = () => {
                                                 </div>
                                             ))}
                                         </div>
+                                        <ProductAttributesEditor
+                                            entityType="Product"
+                                            value={customAttributes}
+                                            onChange={setCustomAttributes}
+                                        />
                                         <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100 flex gap-4 mt-10">
                                             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-sm flex-shrink-0">
                                                 <Star size={20} />

@@ -132,6 +132,8 @@ public class CrmDbContext : DbContext
             entity.Property(l => l.City).HasMaxLength(100);
             entity.Property(l => l.District).HasMaxLength(100);
             entity.Property(l => l.InterestedProducts).HasColumnType("jsonb");
+            // JSON extensibility — freeform key/value attributes, default '{}'
+            entity.Property(l => l.Attributes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
             entity.Property(l => l.LossReason).HasMaxLength(500);
             entity.Property(l => l.NextFollowUpNote).HasMaxLength(500);
             entity.Property(l => l.AssignedToUserName).HasMaxLength(200);

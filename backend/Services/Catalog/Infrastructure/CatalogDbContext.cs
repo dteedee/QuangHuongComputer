@@ -64,6 +64,8 @@ public class CatalogDbContext : DbContext
             entity.Property(p => p.Description).HasColumnType("text");
             entity.Property(p => p.Specifications).HasColumnType("jsonb");
             entity.Property(p => p.GalleryImages).HasColumnType("jsonb");
+            // JSON extensibility — freeform key/value attributes, default '{}'
+            entity.Property(p => p.Attributes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
             
             // Foreign Keys with Navigation Properties
             entity.HasOne(p => p.Category)

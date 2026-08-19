@@ -1385,6 +1385,25 @@ public static class SalesEndpoints
             return Results.Ok(new { Message = "Order status updated", Status = order.Status.ToString() });
         }).WithValidation<UpdateOrderStatusDto>();
 
+        // JSON extensibility: set/replace freeform attributes (validated against CustomFieldDefinition EntityType="Order")
+        adminGroup.MapPut("/orders/{id:guid}/attributes", async (
+            Guid id, SetOrderAttributesDto dto, SalesDbContext db,
+            SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb) =>
+        {
+            var order = await db.Orders.FindAsync(id);
+            if (order == null)
+                return Results.NotFound(new { Error = "Order not found" });
+
+            var attributesError = await SystemConfig.CustomFieldAttributeValidator.ValidateAsync(customFieldDb, "Order", dto.Attributes);
+            if (attributesError is not null)
+                return Results.BadRequest(new { error = attributesError });
+
+            order.SetAttributes(dto.Attributes);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { order.Id, order.Attributes });
+        });
+
         // Confirm Order - Sale confirms the order after verifying details
         adminGroup.MapPost("/orders/{id:guid}/confirm", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>
         {
@@ -2183,6 +2202,7 @@ public record InspectReturnDto(
     Guid WarehouseId,
     string? Notes = null);
 public record ShipOrderDto(string? TrackingNumber, string? Carrier);
+public record SetOrderAttributesDto(string? Attributes);
 
 public record CartDto(
     Guid Id,

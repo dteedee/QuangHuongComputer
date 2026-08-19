@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.csproj" />
+    <!-- JSON extensibility: reuse CustomFieldAttributeValidator + CustomFieldDbContext -->
+    <ProjectReference Include="..\SystemConfig\SystemConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>

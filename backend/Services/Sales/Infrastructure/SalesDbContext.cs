@@ -74,6 +74,8 @@ public class SalesDbContext : DbContext
             // Phase 04: freeship discount + snapshot promotions đã áp.
             entity.Property(o => o.ShippingDiscount).HasPrecision(18, 2).HasDefaultValue(0m);
             entity.Property(o => o.AppliedPromotionsJson).HasColumnType("text");
+            // JSON extensibility — freeform key/value attributes, default '{}'
+            entity.Property(o => o.Attributes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
             
             // Indexes for common queries
             entity.HasIndex(o => new { o.CustomerId, o.OrderDate })

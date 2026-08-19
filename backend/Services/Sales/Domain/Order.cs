@@ -66,6 +66,12 @@ public class Order : Entity<Guid>
     public DateTime? CancelledAt { get; private set; }
     public string? CancellationReason { get; private set; }
 
+    /// <summary>
+    /// JSON extensibility: freeform key/value attributes (jsonb). Declared keys validated against
+    /// CustomFieldDefinition (EntityType="Order") at the endpoint layer; unknown keys always allowed.
+    /// </summary>
+    public string? Attributes { get; private set; }
+
     public Order(
         Guid customerId, 
         string shippingAddress, 
@@ -320,6 +326,13 @@ public class Order : Entity<Guid>
         RaiseDomainEvent(new OrderCancelledDomainEvent(Id, reason));
     }
     
+    /// <summary>Set/replace the JSON extensibility attributes blob. Caller is responsible for validation.</summary>
+    public void SetAttributes(string? attributesJson)
+    {
+        Attributes = attributesJson;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void AddInternalNote(string note)
     {
         InternalNotes = string.IsNullOrWhiteSpace(InternalNotes) 

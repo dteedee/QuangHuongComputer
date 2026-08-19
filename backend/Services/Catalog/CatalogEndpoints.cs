@@ -104,6 +104,7 @@ public static class CatalogEndpoints
                 brandId = p.BrandId.ToString(),
                 brandName = p.Brand?.Name,
                 galleryImages = p.GalleryImages,
+                attributes = p.Attributes,
                 slug = p.Slug
             });
 
@@ -171,6 +172,7 @@ public static class CatalogEndpoints
                 brandId = product.BrandId.ToString(),
                 brandName = product.Brand?.Name,
                 galleryImages = product.GalleryImages,
+                attributes = product.Attributes,
                 slug = product.Slug
             };
 
@@ -202,7 +204,7 @@ public static class CatalogEndpoints
                 isActive = product.IsActive, createdAt = product.CreatedAt, updatedAt = product.UpdatedAt,
                 categoryId = product.CategoryId.ToString(), categoryName = product.Category?.Name,
                 brandId = product.BrandId.ToString(), brandName = product.Brand?.Name,
-                galleryImages = product.GalleryImages, slug = product.Slug
+                galleryImages = product.GalleryImages, attributes = product.Attributes, slug = product.Slug
             });
         });
 
@@ -410,6 +412,7 @@ public static class CatalogEndpoints
                 brandId = p.BrandId.ToString(),
                 brandName = p.Brand?.Name,
                 galleryImages = p.GalleryImages,
+                attributes = p.Attributes,
                 slug = p.Slug
             });
 
@@ -430,8 +433,12 @@ public static class CatalogEndpoints
         });
 
         // Create Product (Admin only)
-        group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
+        group.MapPost("/products", async (CreateProductDto model, CatalogDbContext db, SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb, ICacheService cache, HttpContext httpContext) =>
         {
+            var attributesError = await SystemConfig.CustomFieldAttributeValidator.ValidateAsync(customFieldDb, "Product", model.Attributes);
+            if (attributesError is not null)
+                return Results.BadRequest(new { error = attributesError });
+
             var product = new Product(
                 model.Name,
                 model.Price,
@@ -452,6 +459,7 @@ public static class CatalogEndpoints
             // Slug đã được auto-sinh trong ctor Product; ở đây đảm bảo tính duy nhất trong DB.
             var uniqueCreateSlug = SlugGenerator.GenerateUnique(product.Name, s => db.Products.Any(p => p.Slug == s));
             product.SetSlug(uniqueCreateSlug);
+            if (model.Attributes is not null) product.SetAttributes(model.Attributes);
 
             db.Products.Add(product);
             await db.SaveChangesAsync();
@@ -487,7 +495,8 @@ public static class CatalogEndpoints
                 product.UpdatedBy,
                 CategoryId = product.CategoryId.ToString(),
                 BrandId = product.BrandId.ToString(),
-                product.GalleryImages
+                product.GalleryImages,
+                product.Attributes
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
@@ -542,11 +551,19 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update Product
-        group.MapPut("/products/{id:guid}", async (Guid id, UpdateProductDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
+        group.MapPut("/products/{id:guid}", async (Guid id, UpdateProductDto model, CatalogDbContext db, SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb, ICacheService cache, HttpContext httpContext) =>
         {
             var product = await db.Products.FindAsync(id);
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
+
+            if (model.Attributes is not null)
+            {
+                var attributesError = await SystemConfig.CustomFieldAttributeValidator.ValidateAsync(customFieldDb, "Product", model.Attributes);
+                if (attributesError is not null)
+                    return Results.BadRequest(new { error = attributesError });
+                product.SetAttributes(model.Attributes);
+            }
 
             // Only update core details if they are provided (support partial updates)
             if (model.Name != null || model.Description != null || model.Price.HasValue)
@@ -614,7 +631,8 @@ public static class CatalogEndpoints
                     product.UpdatedBy,
                     CategoryId = product.CategoryId.ToString(),
                     BrandId = product.BrandId.ToString(),
-                    product.GalleryImages
+                    product.GalleryImages,
+                    product.Attributes
                 }
             });
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
@@ -1361,7 +1379,8 @@ public record CreateProductDto(
     string? WarrantyInfo = null,
     string? StockLocations = null,
     string? ImageUrl = null,
-    string? GalleryImages = null);
+    string? GalleryImages = null,
+    string? Attributes = null);
 
 public record UpdateProductDto(
     string? Name = null,
@@ -1383,7 +1402,8 @@ public record UpdateProductDto(
     string? GalleryImages = null,
     string? MetaTitle = null,
     string? MetaDescription = null,
-    string? MetaKeywords = null);
+    string? MetaKeywords = null,
+    string? Attributes = null);
 
 public record CreateCategoryDto(string Name, string Description);
 

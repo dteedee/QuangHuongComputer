@@ -17,6 +17,8 @@
     <ProjectReference Include="..\Content\Content.csproj" />
     <ProjectReference Include="..\Payments\Payments.csproj" />
     <ProjectReference Include="..\Identity\Identity.csproj" />
+    <!-- JSON extensibility: reuse CustomFieldAttributeValidator + CustomFieldDbContext -->
+    <ProjectReference Include="..\SystemConfig\SystemConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>

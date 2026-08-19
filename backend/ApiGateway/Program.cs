@@ -129,6 +129,7 @@ app.MapEmployeeAssetEndpoints();
 app.MapBackofficeMenuEndpoints();
 app.MapCustomFieldEndpoints();
 app.MapFormDefinitionEndpoints();
+app.MapTableViewEndpoints();
 app.MapAutomationRuleEndpoints();
 app.MapInventoryEndpoints();
 app.MapGoodsReceivedNoteEndpoints();

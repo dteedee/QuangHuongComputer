@@ -18,6 +18,9 @@ public class SystemConfigDbContext : DbContext
     public DbSet<StoreWarehouse> StoreWarehouses => Set<StoreWarehouse>();
     public DbSet<StoreEmployee> StoreEmployees => Set<StoreEmployee>();
 
+    // JSON extensibility — dynamic admin data-table definitions
+    public DbSet<TableViewDefinition> TableViewDefinitions => Set<TableViewDefinition>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("config");
@@ -146,6 +149,20 @@ public class SystemConfigDbContext : DbContext
             e.HasIndex(w => new { w.StoreId, w.EmployeeId }).IsUnique()
                 .HasDatabaseName("IX_StoreEmployee_Store_Employee");
             e.HasIndex(w => w.EmployeeId).HasDatabaseName("IX_StoreEmployee_Employee");
+        });
+
+        // === Dynamic admin data-table definitions ===
+        modelBuilder.Entity<TableViewDefinition>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.Key).IsRequired().HasMaxLength(100);
+            e.Property(t => t.Name).IsRequired().HasMaxLength(200);
+            e.Property(t => t.ColumnsJson).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb");
+            e.Property(t => t.FiltersJson).HasColumnType("jsonb");
+            e.Property(t => t.IsSystem).HasDefaultValue(false);
+            e.Property(t => t.IsActive).HasDefaultValue(true);
+            e.Property(t => t.CreatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(t => t.Key).IsUnique().HasDatabaseName("uq_table_view_definitions_key");
         });
 
         base.OnModelCreating(modelBuilder);

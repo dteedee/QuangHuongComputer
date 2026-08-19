@@ -198,19 +198,19 @@ public static class CrmEndpoints
             // Apply sorting
             query = queryParams.SortBy?.ToLower() switch
             {
-                "totalspent" => queryParams.SortDesc
+                "totalspent" => (queryParams.SortDesc ?? true)
                     ? query.OrderByDescending(c => c.TotalSpent)
                     : query.OrderBy(c => c.TotalSpent),
-                "totalordercount" => queryParams.SortDesc
+                "totalordercount" => (queryParams.SortDesc ?? true)
                     ? query.OrderByDescending(c => c.TotalOrderCount)
                     : query.OrderBy(c => c.TotalOrderCount),
-                "lastpurchasedate" => queryParams.SortDesc
+                "lastpurchasedate" => (queryParams.SortDesc ?? true)
                     ? query.OrderByDescending(c => c.LastPurchaseDate)
                     : query.OrderBy(c => c.LastPurchaseDate),
-                "rfmscore" => queryParams.SortDesc
+                "rfmscore" => (queryParams.SortDesc ?? true)
                     ? query.OrderByDescending(c => c.RecencyScore + c.FrequencyScore + c.MonetaryScore)
                     : query.OrderBy(c => c.RecencyScore + c.FrequencyScore + c.MonetaryScore),
-                _ => queryParams.SortDesc
+                _ => (queryParams.SortDesc ?? true)
                     ? query.OrderByDescending(c => c.CreatedAt)
                     : query.OrderBy(c => c.CreatedAt)
             };
@@ -603,14 +603,19 @@ public static class CrmEndpoints
                 lead.EstimatedValue, lead.Currency, lead.NextFollowUpAt, lead.NextFollowUpNote,
                 lead.IsConverted, lead.ConvertedCustomerId, lead.ConvertedAt, lead.LossReason,
                 lead.Notes, lead.Address, lead.City, lead.District, lead.InterestedProducts,
-                interactions, lead.CreatedAt
+                interactions, lead.CreatedAt, lead.Attributes
             ));
         });
 
         group.MapPost("/leads", async (
             [FromBody] CreateLeadDto dto,
-            ILeadManagementService service) =>
+            ILeadManagementService service,
+            SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb) =>
         {
+            var attributesError = await SystemConfig.CustomFieldAttributeValidator.ValidateAsync(customFieldDb, "Lead", dto.Attributes);
+            if (attributesError is not null)
+                return Results.BadRequest(new { error = attributesError });
+
             var lead = await service.CreateLeadAsync(dto);
 
             return Results.Created($"/api/crm/leads/{lead.Id}", new LeadDto(
@@ -624,8 +629,13 @@ public static class CrmEndpoints
         group.MapPut("/leads/{id:guid}", async (
             Guid id,
             [FromBody] UpdateLeadDto dto,
-            ILeadManagementService service) =>
+            ILeadManagementService service,
+            SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb) =>
         {
+            var attributesError = await SystemConfig.CustomFieldAttributeValidator.ValidateAsync(customFieldDb, "Lead", dto.Attributes);
+            if (attributesError is not null)
+                return Results.BadRequest(new { error = attributesError });
+
             var lead = await service.UpdateLeadAsync(id, dto);
             if (lead == null)
                 return Results.NotFound();

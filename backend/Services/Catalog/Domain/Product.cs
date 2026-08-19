@@ -41,7 +41,14 @@ public class Product : Entity<Guid>
     public string? MetaDescription { get; private set; }
     public string? MetaKeywords { get; private set; }
     public string? CanonicalUrl { get; private set; }
-    
+
+    /// <summary>
+    /// JSON extensibility: freeform key/value attributes (jsonb). Declared keys are validated
+    /// against CustomFieldDefinition (EntityType="Product") at the endpoint layer; unknown keys
+    /// are always allowed so new attributes don't require a schema migration.
+    /// </summary>
+    public string? Attributes { get; private set; }
+
     // Navigation properties
     public virtual Category? Category { get; private set; }
     public virtual Brand? Brand { get; private set; }
@@ -213,6 +220,12 @@ public class Product : Entity<Guid>
     public void UpdateSpecifications(string specifications)
     {
         Specifications = specifications;
+    }
+
+    /// <summary>Set/replace the JSON extensibility attributes blob. Caller is responsible for validation.</summary>
+    public void SetAttributes(string? attributesJson)
+    {
+        Attributes = attributesJson;
     }
     
     public void UpdateCostPrice(decimal costPrice)

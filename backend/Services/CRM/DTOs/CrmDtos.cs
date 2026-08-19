@@ -135,7 +135,8 @@ public record LeadDetailDto(
     string? District,
     string? InterestedProducts,
     List<InteractionDto> Interactions,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? Attributes = null
 );
 
 public record CreateLeadDto(
@@ -150,7 +151,8 @@ public record CreateLeadDto(
     string? Notes,
     string? Address,
     string? City,
-    string? District
+    string? District,
+    string? Attributes = null
 );
 
 public record UpdateLeadDto(
@@ -162,7 +164,8 @@ public record UpdateLeadDto(
     string? Notes,
     string? Address,
     string? City,
-    string? District
+    string? District,
+    string? Attributes = null
 );
 
 public record AssignLeadDto(Guid UserId, string UserName);
@@ -392,7 +395,7 @@ public class CustomerQueryParams : BaseSearchParam
     public int? MinRfmScore { get; set; }
     public int? MaxRfmScore { get; set; }
     public string? SortBy { get; set; } = "createdAt";
-    public bool SortDesc { get; set; } = true;
+    public bool? SortDesc { get; set; }
     public int Skip => (PageNumber - 1) * PageSize;
 }
 
@@ -404,7 +407,7 @@ public class LeadQueryParams : BaseSearchParam
     public Guid? AssignedToUserId { get; set; }
     public bool? HasFollowUpToday { get; set; }
     public string? SortBy { get; set; } = "createdAt";
-    public bool SortDesc { get; set; } = true;
+    public bool? SortDesc { get; set; }
     public int Skip => (PageNumber - 1) * PageSize;
 }
 
@@ -412,7 +415,7 @@ public class CampaignQueryParams : BaseSearchParam
 {
     public CampaignStatus? Status { get; set; }
     public string? SortBy { get; set; } = "createdAt";
-    public bool SortDesc { get; set; } = true;
+    public bool? SortDesc { get; set; }
     public int Skip => (PageNumber - 1) * PageSize;
 }
 

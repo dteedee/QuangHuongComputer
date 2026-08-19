@@ -53,6 +53,12 @@ public class Lead : Entity<Guid>
     // Interests
     public string? InterestedProducts { get; private set; } // JSON array of product IDs or names
 
+    /// <summary>
+    /// JSON extensibility: freeform key/value attributes (jsonb). Declared keys validated against
+    /// CustomFieldDefinition (EntityType="Lead") at the endpoint layer; unknown keys always allowed.
+    /// </summary>
+    public string? Attributes { get; private set; }
+
     // Interactions
     public List<CustomerInteraction> Interactions { get; private set; } = new();
 
@@ -134,6 +140,13 @@ public class Lead : Entity<Guid>
     public void SetInterestedProducts(string productsJson)
     {
         InterestedProducts = productsJson;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Set/replace the JSON extensibility attributes blob. Caller is responsible for validation.</summary>
+    public void SetAttributes(string? attributesJson)
+    {
+        Attributes = attributesJson;
         UpdatedAt = DateTime.UtcNow;
     }
 

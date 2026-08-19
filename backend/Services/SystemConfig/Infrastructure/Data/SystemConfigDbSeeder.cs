@@ -23,6 +23,9 @@ public static class SystemConfigDbSeeder
         allEntries.AddRange(SystemConfigSeedDataSystem.GetEntries());
 
         await UpsertAsync(context, allEntries);
+
+        // JSON extensibility — default dynamic table-view definitions (products/orders/leads)
+        await TableViewDefinitionSeeder.SeedAsync(context);
     }
 
     /// <summary>

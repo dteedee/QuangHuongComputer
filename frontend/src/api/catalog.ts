@@ -49,6 +49,9 @@ export interface Product {
     // Variant-aware fields (Phase 03)
     defaultVariantId?: string;
     priceFrom?: number; // Giá thấp nhất khi có nhiều biến thể; nếu undefined coi như dùng `price`
+
+    /** JSON extensibility: freeform key/value attributes (JSON string, validated against CustomFieldDefinition) */
+    attributes?: string;
 }
 
 // ============ Phase 03: Media / Variants / Specifications ============
@@ -256,6 +259,7 @@ export interface CreateProductDto {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string;
+    attributes?: string;
 }
 
 export interface UpdateProductDto {
@@ -279,6 +283,7 @@ export interface UpdateProductDto {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string;
+    attributes?: string;
 }
 
 // API Functions
