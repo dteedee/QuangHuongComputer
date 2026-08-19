@@ -5,6 +5,7 @@ using BuildingBlocks.Caching.Redis;
 using BuildingBlocks.Database;
 using BuildingBlocks.Email;
 using BuildingBlocks.Messaging.Outbox;
+using BuildingBlocks.Validation;
 using Catalog;
 using Communication;
 using Content;
@@ -41,6 +42,9 @@ public static class ServiceRegistration
         RegisterModules(builder);
         RegisterMessagingAndBackgroundJobs(builder);
         RegisterJsonAndControllers(builder);
+        // Chạy sau RegisterModules để đảm bảo mọi assembly Services.* đã được load vào AppDomain
+        // trước khi quét IValidator<T> (FluentValidation).
+        builder.Services.AddApplicationValidators();
     }
 
     private static void MapOAuthEnvironmentVariables(WebApplicationBuilder builder)
@@ -161,6 +165,9 @@ public static class ServiceRegistration
         builder.Services.AddCommunicationModule(builder.Configuration);
         builder.Services.AddHRModule(builder.Configuration);
         builder.Services.AddSystemConfigModule(builder.Configuration);
+        // Hằng số thuế động (ITaxSettingsProvider) — đọc ConfigurationEntry category "Tax",
+        // consume bởi HR PayrollCalculationService (fallback luật định nếu thiếu config).
+        builder.Services.AddTaxSettings();
         builder.Services.AddReportingModule();
         builder.Services.AddCrmModule(builder.Configuration);
 

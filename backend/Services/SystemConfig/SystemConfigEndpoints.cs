@@ -70,7 +70,7 @@ public static class SystemConfigEndpoints
             var cachedConfigs = await cache.GetAsync<List<ConfigurationEntry>>(cacheKey);
             if (cachedConfigs != null) return Results.Ok(cachedConfigs);
 
-            var sensitiveCats = new List<string> { "Security", "HR & Payroll", "Admin Only" };
+            var sensitiveCats = new List<string> { "Security", "HR & Payroll", "Admin Only", "Tax" };
             var configs = await db.Configurations.AsNoTracking()
                 .Where(c => !sensitiveCats.Contains(c.Category) && c.ValueType != ConfigValueType.Secret)
                 .OrderBy(c => c.SortOrder)

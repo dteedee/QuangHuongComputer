@@ -7,9 +7,10 @@ namespace BuildingBlocks.TaxEngine;
 /// Implements PIT (TNCN), VAT (GTGT), CIT (TNDN), and Social Insurance calculations
 /// theo pháp luật hiện hành (Thông tư 111/2013/TT-BTC, Luật BHXH 2014, Nghị quyết 43/2022/QH15).
 ///
-/// TODO(Phase 08): các hằng số PersonalDeduction / DependentDeduction / BaseSalary /
-/// MaxInsurableSalary / insurance rates sẽ chuyển sang SystemConfig để cấu hình động
-/// theo ngày hiệu lực, không cần deploy khi luật thay đổi.
+/// Các hằng số PersonalDeduction/DependentDeduction dưới đây là FALLBACK mặc định.
+/// Caller có thể truyền giá trị đọc từ SystemConfig (category "Tax") qua tham số
+/// <c>personalDeduction</c>/<c>dependentDeduction</c> để cấu hình động theo luật hiện hành
+/// mà không cần deploy — xem <see cref="ITaxSettingsProvider"/>.
 /// </summary>
 public static class VietnameseTaxEngine
 {
@@ -38,14 +39,16 @@ public static class VietnameseTaxEngine
         decimal socialInsurance = 0,
         decimal healthInsurance = 0,
         decimal unemploymentInsurance = 0,
-        decimal otherDeductions = 0)
+        decimal otherDeductions = 0,
+        decimal? personalDeduction = null,
+        decimal? dependentDeduction = null)
     {
         var totalInsurance = socialInsurance + healthInsurance + unemploymentInsurance;
         var preTaxIncome = grossSalary - totalInsurance;
 
-        var personalDeduction = PersonalDeduction;
-        var dependentDeductions = DependentDeduction * numberOfDependents;
-        var taxableIncome = preTaxIncome - personalDeduction - dependentDeductions - otherDeductions;
+        var personalDeductionValue = personalDeduction ?? PersonalDeduction;
+        var dependentDeductions = (dependentDeduction ?? DependentDeduction) * numberOfDependents;
+        var taxableIncome = preTaxIncome - personalDeductionValue - dependentDeductions - otherDeductions;
 
         if (taxableIncome <= 0)
         {
@@ -54,7 +57,7 @@ public static class VietnameseTaxEngine
                 GrossSalary = grossSalary,
                 TotalInsurance = totalInsurance,
                 PreTaxIncome = preTaxIncome,
-                PersonalDeduction = personalDeduction,
+                PersonalDeduction = personalDeductionValue,
                 DependentDeductions = dependentDeductions,
                 OtherDeductions = otherDeductions,
                 TaxableIncome = 0,
@@ -99,7 +102,7 @@ public static class VietnameseTaxEngine
             GrossSalary = grossSalary,
             TotalInsurance = totalInsurance,
             PreTaxIncome = preTaxIncome,
-            PersonalDeduction = personalDeduction,
+            PersonalDeduction = personalDeductionValue,
             DependentDeductions = dependentDeductions,
             OtherDeductions = otherDeductions,
             TaxableIncome = taxableIncome,
@@ -282,7 +285,9 @@ public static class VietnameseTaxEngine
         decimal grossSalary,
         int numberOfDependents = 0,
         decimal otherDeductions = 0,
-        decimal? regionalMinSalary = null)
+        decimal? regionalMinSalary = null,
+        decimal? personalDeduction = null,
+        decimal? dependentDeduction = null)
     {
         var insurance = CalculateInsurance(grossSalary, regionalMinSalary);
         var pit = CalculateMonthlyPit(
@@ -291,7 +296,9 @@ public static class VietnameseTaxEngine
             insurance.Employee.SocialInsurance,
             insurance.Employee.HealthInsurance,
             insurance.Employee.UnemploymentInsurance,
-            otherDeductions
+            otherDeductions,
+            personalDeduction,
+            dependentDeduction
         );
 
         return new PayrollTaxResult

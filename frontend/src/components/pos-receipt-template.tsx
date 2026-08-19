@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { useCompanyInfo } from '../hooks/use-company-info';
 
 interface ReceiptItem {
   name: string;
@@ -26,6 +27,7 @@ interface PosReceiptTemplateProps {
 
 const PosReceiptTemplate = forwardRef<HTMLDivElement, PosReceiptTemplateProps>(
   ({ order }, ref) => {
+    const { companyInfo } = useCompanyInfo();
     return (
       <div
         ref={ref}
@@ -34,9 +36,10 @@ const PosReceiptTemplate = forwardRef<HTMLDivElement, PosReceiptTemplateProps>(
       >
         {/* Header */}
         <div className="text-center mb-3">
-          <h1 className="text-sm font-bold">QUANG HƯỞNG COMPUTER</h1>
-          <p>Hải Dương | ĐT: 0904.235.090</p>
-          <p className="text-[10px]">MST: 0400000000</p>
+          <h1 className="text-sm font-bold">{companyInfo.name}</h1>
+          <p>{companyInfo.address}</p>
+          <p>ĐT: {companyInfo.phone2}</p>
+          <p className="text-[10px]">MST: {companyInfo.taxCode}</p>
         </div>
 
         {/* Order Info */}

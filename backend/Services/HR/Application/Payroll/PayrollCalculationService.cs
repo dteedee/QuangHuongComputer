@@ -50,8 +50,15 @@ public class PayrollCalculationResult
 public class PayrollCalculationService
 {
     private readonly HRDbContext _db;
+    private readonly ITaxSettingsProvider? _taxSettingsProvider;
 
-    public PayrollCalculationService(HRDbContext db) => _db = db;
+    // ITaxSettingsProvider optional: null → fallback hằng số luật định trong VietnameseTaxEngine
+    // (giữ backward-compat cho unit test khởi tạo trực tiếp không qua DI).
+    public PayrollCalculationService(HRDbContext db, ITaxSettingsProvider? taxSettingsProvider = null)
+    {
+        _db = db;
+        _taxSettingsProvider = taxSettingsProvider;
+    }
 
     /// <summary>Tính cho 1 nhân viên. KHÔNG save (caller quản lý transaction).</summary>
     public async Task<HR.Domain.Payroll> CalculateAsync(
@@ -107,8 +114,9 @@ public class PayrollCalculationService
             .ToListAsync(ct);
         var activeAllowances = allowances.Where(a => a.IsEffectiveOn(effectiveDate)).ToList();
 
-        // 6. Tính
-        var result = ComputeCore(ts, effective, activeAllowances, effectiveDependents);
+        // 6. Tính — hằng số thuế động từ SystemConfig (category "Tax"), fallback luật định
+        var taxSettings = _taxSettingsProvider is null ? null : await _taxSettingsProvider.GetAsync(ct);
+        var result = ComputeCore(ts, effective, activeAllowances, effectiveDependents, taxSettings: taxSettings);
 
         // 7. Ghi kết quả + line items
         payroll.SetInsurableSalary(result.InsurableSalary);
@@ -143,7 +151,8 @@ public class PayrollCalculationService
         SalaryStructure salary,
         IReadOnlyCollection<Allowance> allowances,
         int numberOfDependents,
-        decimal lateFinePerMinute = 0)
+        decimal lateFinePerMinute = 0,
+        TaxSettings? taxSettings = null)
     {
         var lines = new List<(PayrollLineType, string, decimal, bool, bool)>();
 
@@ -198,12 +207,14 @@ public class PayrollCalculationService
             empInsurance, false, false));
 
         // 8. Giảm trừ (chỉ để hiển thị breakdown — engine đã trừ trong CalculateMonthlyPit)
-        var personalDed = VietnameseTaxEngine.PersonalDeduction;
-        var dependentDed = VietnameseTaxEngine.DependentDeduction * numberOfDependents;
+        var personalDed = taxSettings?.PersonalDeduction ?? VietnameseTaxEngine.PersonalDeduction;
+        var dependentDedUnit = taxSettings?.DependentDeduction ?? VietnameseTaxEngine.DependentDeduction;
+        var dependentDed = dependentDedUnit * numberOfDependents;
         lines.Add((PayrollLineType.PersonalDeduction, "Giảm trừ bản thân", personalDed, false, false));
         if (numberOfDependents > 0)
             lines.Add((PayrollLineType.DependentDeduction,
-                $"Giảm trừ {numberOfDependents} người phụ thuộc × 4.4tr", dependentDed, false, false));
+                $"Giảm trừ {numberOfDependents} người phụ thuộc × {dependentDedUnit / 1_000_000m:0.#}tr",
+                dependentDed, false, false));
 
         // 9-10. PIT — chỉ tính trên phần THU NHẬP CHỊU THUẾ (grossPay - exempt allowances)
         var taxableGross = baseSalaryProrated + overtimePay + taxableAllowances;
@@ -212,7 +223,9 @@ public class PayrollCalculationService
             numberOfDependents: numberOfDependents,
             socialInsurance: insurance.Employee.SocialInsurance,
             healthInsurance: insurance.Employee.HealthInsurance,
-            unemploymentInsurance: insurance.Employee.UnemploymentInsurance);
+            unemploymentInsurance: insurance.Employee.UnemploymentInsurance,
+            personalDeduction: taxSettings?.PersonalDeduction,
+            dependentDeduction: taxSettings?.DependentDeduction);
         var pit = pitResult.PitAmount;
         if (pit > 0)
             lines.Add((PayrollLineType.Pit,

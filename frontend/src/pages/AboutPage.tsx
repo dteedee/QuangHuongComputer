@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight, Target, TrendingUp, Award, Users, ShieldCheck, Clock, Headphones, Package } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useCompanyInfo } from '../hooks/use-company-info';
 
 const stats = [
     { value: '10+', label: 'Nam kinh nghiem' },
@@ -24,6 +25,7 @@ const commitments = [
 ];
 
 export const AboutPage = () => {
+    const { companyInfo: company } = useCompanyInfo();
     return (
         <div className="bg-gray-50 min-h-screen pb-16">
             <SEO title="Gioi thieu" description="Tim hieu ve Quang Huong Computer - Don vi hang dau cung cap giai phap may tinh, linh kien va dich vu sua chua chuyen nghiep voi hon 10 nam kinh nghiem." />
@@ -138,11 +140,12 @@ export const AboutPage = () => {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Thong tin cong ty</h2>
                     <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                        <div><span className="text-gray-500">Ten cong ty:</span> <span className="font-medium text-gray-900">Cong ty Co phan May tinh Quang Huong</span></div>
-                        <div><span className="text-gray-500">Dia chi:</span> <span className="font-medium text-gray-900">So 179, Thon 3/2, xa Vinh Bao, Hai Phong</span></div>
-                        <div><span className="text-gray-500">Hotline:</span> <span className="font-bold text-accent">0904.235.090</span></div>
-                        <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-900">quanghuongvbhp@gmail.com</span></div>
-                        <div><span className="text-gray-500">Gio lam viec:</span> <span className="font-medium text-gray-900">7:00 - 17h15 (Tu thu 2 den thu 7)</span></div>
+                        <div><span className="text-gray-500">Ten cong ty:</span> <span className="font-medium text-gray-900">{company.name}</span></div>
+                        <div><span className="text-gray-500">MST:</span> <span className="font-medium text-gray-900">{company.taxCode}</span></div>
+                        <div className="sm:col-span-2"><span className="text-gray-500">Dia chi:</span> <span className="font-medium text-gray-900">{company.address}</span></div>
+                        <div><span className="text-gray-500">Hotline:</span> <span className="font-bold text-accent">{company.phone2} - {company.phone}</span></div>
+                        <div><span className="text-gray-500">Email:</span> <span className="font-medium text-gray-900">{company.email}</span></div>
+                        <div><span className="text-gray-500">Gio lam viec:</span> <span className="font-medium text-gray-900">{company.workingHours}</span></div>
                     </div>
                 </div>
 
@@ -151,7 +154,7 @@ export const AboutPage = () => {
                     <p className="text-sm text-gray-700">
                         <strong>Lien he voi chung toi:</strong> Vui long{' '}
                         <Link to="/contact" className="text-accent font-bold hover:underline cursor-pointer">lien he tai day</Link> hoac
-                        goi hotline <a href="tel:0904235090" className="text-accent font-bold cursor-pointer">0904.235.090</a>
+                        goi hotline <a href={`tel:${company.phone2.replace(/\D/g, '')}`} className="text-accent font-bold cursor-pointer">{company.phone2}</a>
                     </p>
                 </div>
             </div>

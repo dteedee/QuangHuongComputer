@@ -22,8 +22,9 @@ export const ContactPage = () => {
     }, []);
 
     const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Huong Computer', (v) => v);
-    const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'So 179, Thon 3/2, xa Vinh Bao, Hai Phong', (v) => v);
-    const phone = getConfigValue(configs, 'COMPANY_PHONE', '0904.235.090', (v) => v);
+    const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'Số 179 khu phố 3/2, Thị Trấn Vĩnh Bảo, Huyện Vĩnh Bảo, TP Hải Phòng', (v) => v);
+    const phone = getConfigValue(configs, 'COMPANY_PHONE', '031 3823769', (v) => v);
+    const phone2 = getConfigValue(configs, 'COMPANY_PHONE_2', '0904.235.090', (v) => v);
     const email = getConfigValue(configs, 'COMPANY_EMAIL', 'quanghuongvbhp@gmail.com', (v) => v);
     const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '7:00 - 17h15 (Tu thu 2 den thu 7)', (v) => v);
 
@@ -68,7 +69,7 @@ export const ContactPage = () => {
 
     const infoItems = [
         { icon: MapPin, label: 'Dia chi', value: address },
-        { icon: Phone, label: 'Hotline', value: phone, accent: true },
+        { icon: Phone, label: 'Hotline', value: `${phone2} - ${phone}`, accent: true },
         { icon: Mail, label: 'Email', value: email },
         { icon: Clock, label: 'Gio lam viec', value: workingHours },
     ];
