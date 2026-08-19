@@ -1,3 +1,4 @@
+using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -147,7 +148,7 @@ public static class PaymentsEndpoints
                 payment.Status,
                 PaymentUrl = paymentUrl
             });
-        });
+        }).WithValidation<InitiatePaymentDto>();
 
         // COD confirmation endpoint (for delivery staff)
         group.MapPost("/cod/confirm/{orderId:guid}", async (Guid orderId, PaymentsDbContext db, IPublishEndpoint publishEndpoint) =>

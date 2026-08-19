@@ -31,6 +31,9 @@ public class PurchaseOrder : Entity<Guid>
     public Guid? RequisitionId { get; private set; }
     public Guid? SupplierQuotationId { get; private set; }
 
+    /// <summary>Ngày giao hàng dự kiến do NCC cam kết — dùng tính on-time delivery rate (SupplierScorecard).</summary>
+    public DateTime? ExpectedDeliveryDate { get; private set; }
+
     public PurchaseOrder(Guid supplierId, List<PurchaseOrderItem> items, Guid? createdByUserId = null, bool isUrgent = false)
     {
         Id = Guid.NewGuid();
@@ -122,6 +125,9 @@ public class PurchaseOrder : Entity<Guid>
     // === Gán liên kết nguồn ===
     public void LinkToRequisition(Guid requisitionId) => RequisitionId = requisitionId;
     public void LinkToQuotation(Guid quotationId) => SupplierQuotationId = quotationId;
+
+    /// <summary>Đặt ngày giao hàng dự kiến (cam kết của NCC khi gửi PO hoặc theo hợp đồng).</summary>
+    public void SetExpectedDeliveryDate(DateTime expectedDeliveryDate) => ExpectedDeliveryDate = expectedDeliveryDate;
 }
 
 public class PurchaseOrderItem

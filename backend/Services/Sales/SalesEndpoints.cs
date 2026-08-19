@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -170,7 +171,7 @@ public static class SalesEndpoints
             {
                 return Results.Problem("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.");
             }
-        });
+        }).WithValidation<GuestCheckoutDto>();
 
         // ==================== CART ENDPOINTS ====================
 
@@ -943,7 +944,7 @@ public static class SalesEndpoints
             {
                 cts.Dispose();
             }
-        });
+        }).WithValidation<CheckoutDto>();
 
         group.MapGet("/orders", async (SalesDbContext db, ClaimsPrincipal user) =>
         {
@@ -1217,7 +1218,7 @@ public static class SalesEndpoints
             {
                 return Results.BadRequest(new { Error = ex.Message });
             }
-        });
+        }).WithValidation<CreateReturnRequestDto>();
 
         // Get My Return Requests
         group.MapGet("/returns", async (SalesDbContext db, ClaimsPrincipal user) =>
@@ -1382,7 +1383,7 @@ public static class SalesEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Order status updated", Status = order.Status.ToString() });
-        });
+        }).WithValidation<UpdateOrderStatusDto>();
 
         // Confirm Order - Sale confirms the order after verifying details
         adminGroup.MapPost("/orders/{id:guid}/confirm", async (Guid id, SalesDbContext db, ClaimsPrincipal user) =>

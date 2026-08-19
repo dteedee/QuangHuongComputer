@@ -35,9 +35,7 @@ public class RfmCalculationService : IRfmCalculationService
             _crmDb.CustomerAnalytics.Add(analytics);
         }
 
-        // Get order data from Sales database (cross-database query via connection)
-        // In real implementation, this would query Sales.Orders
-        // For now, we'll simulate with placeholder logic
+        // Truy vấn thật số liệu đơn hàng từ bảng Orders (module Sales) qua raw SQL trên cùng connection.
         var orderStats = await GetOrderStatsForUser(userId, cancellationToken);
 
         // Calculate RFM scores
@@ -137,7 +135,8 @@ public class RfmCalculationService : IRfmCalculationService
                     MIN(""OrderDate"") as FirstPurchaseDate,
                     MAX(""OrderDate"") as LastPurchaseDate
                 FROM public.""Orders""
-                WHERE ""CustomerId"" = @UserId AND ""Status"" != 4 AND ""Status"" != 5 AND ""IsActive"" = true"; // Status format: assuming 4/5 are Cancelled/Refunded, or we just rely on common logic. We can also simply do Status != 4. Let's rely on IsActive.
+                WHERE ""CustomerId"" = @UserId AND ""IsActive"" = true
+                  AND ""Status"" NOT IN (0, 7, 99)"; // Loại Pending(0)/Draft(7)/Cancelled(99) — chỉ tính đơn đã xác nhận/thanh toán trở lên (Sales.OrderStatus)
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@UserId";

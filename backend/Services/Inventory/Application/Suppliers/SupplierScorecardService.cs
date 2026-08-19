@@ -11,8 +11,7 @@ namespace InventoryModule.Application.Suppliers;
 ///  - PriceRank       = xếp hạng giá trung bình 1..N (1 = rẻ nhất) so với NCC khác cùng ProductId
 ///  - OverallScore    = 40% OnTime + 40% Quality + 20% Price (0..100)
 ///
-/// Đã dùng GRNItem.AcceptedQty/RejectedQty (luồng A cung cấp).
-/// TODO(A): PurchaseOrder.ExpectedDeliveryDate — hiện fallback coi mọi GRN đúng hạn.
+/// Đã dùng GRNItem.AcceptedQty/RejectedQty và PurchaseOrder.ExpectedDeliveryDate để tính on-time thật.
 /// </summary>
 public class SupplierScorecardService
 {
@@ -66,23 +65,23 @@ public class SupplierScorecardService
     private async Task<(int OnTimeCount, int TotalGRN, decimal Rate)> ComputeOnTimeRateAsync(
         Guid supplierId, DateTime from, DateTime to, CancellationToken ct)
     {
-        // Đúng hạn = GRN.DocumentDate <= PO.ExpectedDeliveryDate (nếu có).
-        // PurchaseOrder hiện chưa có ExpectedDeliveryDate — fallback: coi tất cả GRN đúng hạn.
-        // Khi luồng A bổ sung, sửa lại phần này.
-        var grns = await _db.GoodsReceivedNotes
-            .Where(g => g.SupplierId == supplierId
-                && g.DocumentDate >= from && g.DocumentDate <= to
-                && g.Status == GRNStatus.Confirmed)
-            .Select(g => new { g.Id, g.DocumentDate, g.PurchaseOrderId })
-            .ToListAsync(ct);
+        // Đúng hạn = GRN.DocumentDate <= PO.ExpectedDeliveryDate. PO chưa gắn ExpectedDeliveryDate
+        // (chưa cam kết ngày giao) thì coi là đúng hạn — không đủ dữ liệu để phạt NCC.
+        var grns = await (
+            from g in _db.GoodsReceivedNotes
+            join po in _db.PurchaseOrders on g.PurchaseOrderId equals po.Id into poJoin
+            from po in poJoin.DefaultIfEmpty()
+            where g.SupplierId == supplierId
+                && g.DocumentDate >= @from && g.DocumentDate <= to
+                && g.Status == GRNStatus.Confirmed
+            select new { g.Id, g.DocumentDate, ExpectedDeliveryDate = po != null ? po.ExpectedDeliveryDate : (DateTime?)null }
+        ).ToListAsync(ct);
 
         var total = grns.Count;
         if (total == 0) return (0, 0, 0m);
 
-        // Không có ExpectedDeliveryDate → giả định luôn đúng hạn.
-        // TODO(A): join PurchaseOrder.ExpectedDeliveryDate khi luồng A thêm cột.
-        var onTime = total;
-        var rate = total > 0 ? (decimal)onTime / total : 0m;
+        var onTime = grns.Count(g => g.ExpectedDeliveryDate == null || g.DocumentDate <= g.ExpectedDeliveryDate.Value);
+        var rate = (decimal)onTime / total;
         return (onTime, total, rate);
     }
 

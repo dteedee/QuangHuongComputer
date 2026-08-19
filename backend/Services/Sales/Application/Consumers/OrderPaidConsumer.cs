@@ -1,6 +1,7 @@
 using BuildingBlocks.Messaging.IntegrationEvents;
 using Content.Domain;
 using Content.Infrastructure;
+using InventoryModule.Infrastructure;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Sales.Domain;
@@ -14,6 +15,7 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
 {
     private readonly SalesDbContext _dbContext;
     private readonly ContentDbContext _contentDb;
+    private readonly InventoryDbContext _inventoryDb;
     private readonly ILogger<OrderPaidConsumer> _logger;
 
     private readonly IPublishEndpoint _publishEndpoint;
@@ -21,11 +23,13 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
     public OrderPaidConsumer(
         SalesDbContext dbContext,
         ContentDbContext contentDb,
+        InventoryDbContext inventoryDb,
         ILogger<OrderPaidConsumer> logger,
         IPublishEndpoint publishEndpoint)
     {
         _dbContext = dbContext;
         _contentDb = contentDb;
+        _inventoryDb = inventoryDb;
         _logger = logger;
         _publishEndpoint = publishEndpoint;
     }
@@ -58,12 +62,8 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
                 order.TotalAmount
             ));
 
-            // Mock Fulfillment & Warranty Registration
-            var fulfilledItems = order.Items.Select(i => new FulfilledItemDto(
-                i.ProductId, 
-                i.Quantity, 
-                Enumerable.Range(0, i.Quantity).Select(_ => $"SN-{Guid.NewGuid().ToString().Substring(0,8).ToUpper()}").ToList()
-            )).ToList();
+            // Fulfillment thật: gán serial InStock thật từ kho (nếu sản phẩm có theo dõi serial) và đánh dấu đã bán.
+            var fulfilledItems = await AllocateFulfilledItemsAsync(order, context.CancellationToken);
 
             await _publishEndpoint.Publish(new OrderFulfilledEvent(order.Id, order.CustomerId, fulfilledItems));
 
@@ -102,6 +102,40 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
                     promo.Id, order.Id);
             }
         }
+    }
+
+    /// <summary>
+    /// Với mỗi dòng đơn hàng, lấy các SerialNumber còn InStock trong kho (nếu sản phẩm có theo dõi serial)
+    /// và đánh dấu Sold gắn với đơn hàng. Sản phẩm không theo dõi serial → trả danh sách rỗng (không bịa serial).
+    /// </summary>
+    private async Task<List<FulfilledItemDto>> AllocateFulfilledItemsAsync(Order order, CancellationToken ct)
+    {
+        var result = new List<FulfilledItemDto>();
+
+        foreach (var item in order.Items)
+        {
+            var availableSerials = await _inventoryDb.SerialNumbers
+                .Where(s => s.ProductId == item.ProductId && s.Status == InventoryModule.Domain.SerialStatus.InStock)
+                .Take(item.Quantity)
+                .ToListAsync(ct);
+
+            foreach (var serial in availableSerials)
+            {
+                serial.Sell(order.Id, order.CustomerId.ToString());
+            }
+
+            result.Add(new FulfilledItemDto(
+                item.ProductId,
+                item.Quantity,
+                availableSerials.Select(s => s.Serial).ToList()));
+        }
+
+        if (result.Any(r => r.SerialNumbers.Count > 0))
+        {
+            await _inventoryDb.SaveChangesAsync(ct);
+        }
+
+        return result;
     }
 
     // Local snapshot shape (match AppliedPromotion trong IPricingEngine).

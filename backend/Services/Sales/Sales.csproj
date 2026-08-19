@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Inventory\Inventory.csproj" />
     <ProjectReference Include="..\Content\Content.csproj" />
     <ProjectReference Include="..\Payments\Payments.csproj" />
+    <ProjectReference Include="..\Identity\Identity.csproj" />
   </ItemGroup>
 
   <ItemGroup>

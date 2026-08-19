@@ -13,22 +13,35 @@ public static class TaxReportingEndpoints
     {
         var group = app.MapGroup("/api/accounting/tax-reports").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
 
-        // 1. VAT Ledger (Bảng kê thuế GTGT mua vào / bán ra)
-        group.MapGet("/vat-ledger", (int month, int year, string type = "out") =>
+        // 1. VAT Ledger (Bảng kê thuế GTGT mua vào / bán ra) — truy vấn thật từ AccountingDbContext
+        group.MapGet("/vat-ledger", async (AccountingDbContext db, int month, int year, string type = "out") =>
         {
-            // type: "in" (Mua vào) or "out" (Bán ra)
-            var mockRecords = new[]
+            // type: "in" (Mua vào, hoá đơn Payable) or "out" (Bán ra, hoá đơn Receivable)
+            var invoiceType = type == "in" ? InvoiceType.Payable : InvoiceType.Receivable;
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var invoices = await db.Invoices
+                .Where(i => i.Type == invoiceType && i.IssueDate >= start && i.IssueDate < end)
+                .OrderBy(i => i.IssueDate)
+                .ToListAsync();
+
+            var records = invoices.Select(i => new
             {
-                new { InvoiceNo = "0000123", Date = new DateTime(year, month, 5), Buyer = "Công ty ABC", Gross = 10000000, TaxRate = 8, TaxAmount = 800000 },
-                new { InvoiceNo = "0000124", Date = new DateTime(year, month, 12), Buyer = "Nguyễn Văn A", Gross = 15000000, TaxRate = 8, TaxAmount = 1200000 },
-            };
+                InvoiceNo = i.InvoiceNumber,
+                Date = i.IssueDate,
+                Buyer = i.CustomerId?.ToString() ?? i.SupplierId?.ToString() ?? i.OrganizationAccountId?.ToString() ?? "N/A",
+                Gross = i.SubTotal,
+                TaxRate = i.VatRate,
+                TaxAmount = i.VatAmount
+            }).ToList();
 
             return Results.Ok(new
             {
                 month, year, type,
-                totalGross = 25000000,
-                totalTax = 2000000,
-                records = mockRecords
+                totalGross = records.Sum(r => r.Gross),
+                totalTax = records.Sum(r => r.TaxAmount),
+                records
             });
         });
 
@@ -71,17 +84,30 @@ public static class TaxReportingEndpoints
             });
         });
 
-        // 3. Báo cáo thuế TNDN (CIT Report form)
-        group.MapGet("/cit-report", (int year) =>
+        // 3. Báo cáo thuế TNDN (CIT Report form) — doanh thu từ hoá đơn bán ra, chi phí từ Expense đã duyệt
+        group.MapGet("/cit-report", async (AccountingDbContext db, int year) =>
         {
+            var start = new DateTime(year, 1, 1);
+            var end = start.AddYears(1);
+
+            var totalRevenue = await db.Invoices
+                .Where(i => i.Type == InvoiceType.Receivable && i.IssueDate >= start && i.IssueDate < end)
+                .SumAsync(i => i.SubTotal);
+
+            var deductibleExpenses = await db.Expenses
+                .Where(e => e.Status == ExpenseStatus.Paid && e.ExpenseDate >= start && e.ExpenseDate < end)
+                .SumAsync(e => e.Amount);
+
+            var cit = Domain.VietnameseTaxEngine.CalculateCit(totalRevenue, deductibleExpenses);
+
             return Results.Ok(new
             {
                 year,
-                totalRevenue = 5000000000,
-                deductibleExpenses = 4000000000,
-                taxableIncome = 1000000000,
-                citRate = 20,
-                citPayable = 200000000
+                totalRevenue,
+                deductibleExpenses,
+                taxableIncome = cit.TaxableIncome,
+                citRate = cit.TaxRate * 100,
+                citPayable = cit.CitAmount
             });
         });
     }

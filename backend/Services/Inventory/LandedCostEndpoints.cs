@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using InventoryModule.Application.Purchasing;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
@@ -18,7 +19,7 @@ public static class LandedCostEndpoints
     public static void MapLandedCostEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/inventory/grn/{grnId:guid}/landed-costs")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "InventoryStaff"));
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
 
         // GET — liệt kê chi phí nhập của GRN
         group.MapGet("", async (Guid grnId, InventoryDbContext db) =>

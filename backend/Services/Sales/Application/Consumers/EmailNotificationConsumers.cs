@@ -1,5 +1,6 @@
 using BuildingBlocks.Email;
 using BuildingBlocks.Messaging.IntegrationEvents;
+using Identity.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Sales.Domain;
@@ -12,15 +13,18 @@ public class OrderConfirmedEmailConsumer : IConsumer<OrderConfirmedDomainEvent>
 {
     private readonly IEmailService _emailService;
     private readonly SalesDbContext _context;
+    private readonly IdentityDbContext _identityDb;
     private readonly ILogger<OrderConfirmedEmailConsumer> _logger;
 
     public OrderConfirmedEmailConsumer(
         IEmailService emailService,
         SalesDbContext context,
+        IdentityDbContext identityDb,
         ILogger<OrderConfirmedEmailConsumer> logger)
     {
         _emailService = emailService;
         _context = context;
+        _identityDb = identityDb;
         _logger = logger;
     }
 
@@ -38,10 +42,12 @@ public class OrderConfirmedEmailConsumer : IConsumer<OrderConfirmedDomainEvent>
                 return;
             }
 
-            // In a real scenario, you'd fetch customer email from Identity service
-            // For now, we'll use a placeholder
-            var customerEmail = $"customer-{order.CustomerId}@example.com";
-            var customerName = "Valued Customer";
+            var (customerEmail, customerName) = await CustomerContactResolver.ResolveAsync(_identityDb, order.CustomerId);
+            if (string.IsNullOrEmpty(customerEmail))
+            {
+                _logger.LogWarning("Không tìm thấy email khách hàng {CustomerId} cho đơn {OrderId}, bỏ qua gửi mail", order.CustomerId, order.Id);
+                return;
+            }
 
             await _emailService.SendOrderConfirmationAsync(
                 customerEmail,
@@ -64,15 +70,18 @@ public class PaymentSuccessEmailConsumer : IConsumer<PaymentSucceededEvent>
 {
     private readonly IEmailService _emailService;
     private readonly SalesDbContext _salesContext;
+    private readonly IdentityDbContext _identityDb;
     private readonly ILogger<PaymentSuccessEmailConsumer> _logger;
 
     public PaymentSuccessEmailConsumer(
         IEmailService emailService,
         SalesDbContext salesContext,
+        IdentityDbContext identityDb,
         ILogger<PaymentSuccessEmailConsumer> logger)
     {
         _emailService = emailService;
         _salesContext = salesContext;
+        _identityDb = identityDb;
         _logger = logger;
     }
 
@@ -89,9 +98,12 @@ public class PaymentSuccessEmailConsumer : IConsumer<PaymentSucceededEvent>
                 return;
             }
 
-            // In a real scenario, fetch customer email from Identity service
-            var customerEmail = $"customer-{order.CustomerId}@example.com";
-            var customerName = "Valued Customer";
+            var (customerEmail, customerName) = await CustomerContactResolver.ResolveAsync(_identityDb, order.CustomerId);
+            if (string.IsNullOrEmpty(customerEmail))
+            {
+                _logger.LogWarning("Không tìm thấy email khách hàng {CustomerId} cho đơn {OrderId}, bỏ qua gửi mail", order.CustomerId, order.Id);
+                return;
+            }
             var invoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{context.Message.PaymentId.ToString().Substring(0, 8).ToUpper()}";
 
             await _emailService.SendPaymentSuccessAsync(

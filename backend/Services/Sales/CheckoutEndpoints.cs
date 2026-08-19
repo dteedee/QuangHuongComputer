@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BuildingBlocks.Validation;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -67,7 +68,7 @@ public static class CheckoutEndpoints
                     result.RequiresPaymentGateway
                 })
                 : Results.BadRequest(new { Error = result.ErrorMessage });
-        });
+        }).WithValidation<CheckoutOrchestratorRequestDto>();
 
         // ---- Legacy alias: /api/sales/fast-checkout → orchestrator ----
         app.MapPost("/api/sales/fast-checkout", async (
@@ -94,7 +95,7 @@ public static class CheckoutEndpoints
             return result.Success
                 ? Results.Ok(new { result.OrderId, result.OrderNumber, result.TotalAmount })
                 : Results.BadRequest(new { Error = result.ErrorMessage });
-        }).RequireAuthorization();
+        }).RequireAuthorization().WithValidation<CheckoutOrchestratorRequestDto>();
     }
 
     // ============= Session handlers =============

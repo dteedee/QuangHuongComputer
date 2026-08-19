@@ -7,6 +7,8 @@ using Catalog.Domain;
 using BuildingBlocks.Database;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Validation;
+using Catalog.Application.Reviews;
 // Note: Purchase verification is done at ApiGateway level to avoid circular dependency
 
 namespace Catalog;
@@ -1108,17 +1110,7 @@ public static class CatalogEndpoints
                 return Results.Unauthorized();
             }
 
-            // Validate rating
-            if (dto.Rating < 1 || dto.Rating > 5)
-            {
-                return Results.BadRequest(new { message = "Đánh giá phải từ 1 đến 5 sao" });
-            }
-
-            // Validate comment
-            if (string.IsNullOrWhiteSpace(dto.Comment) || dto.Comment.Length < 10)
-            {
-                return Results.BadRequest(new { message = "Nội dung đánh giá phải có ít nhất 10 ký tự" });
-            }
+            // Rating/Comment đã được validate bởi FluentValidation (WithValidation<CreateProductReviewDto>).
 
             // Check if product exists
             var productExists = await db.Products.AnyAsync(p => p.Id == productId);
@@ -1159,7 +1151,7 @@ public static class CatalogEndpoints
                 isVerifiedPurchase,
                 message = "Đánh giá của bạn đang chờ duyệt"
             });
-        }).RequireAuthorization();
+        }).RequireAuthorization().WithValidation<CreateProductReviewDto>();
 
         // Admin: Approve a review
         var reviewsAdmin = app.MapGroup("/api/catalog/reviews/admin")
@@ -1188,10 +1180,17 @@ public static class CatalogEndpoints
             var totalReviews = await db.ProductReviews.CountAsync();
             if (totalReviews == 0) return Results.Ok(new { Positive = 0, Neutral = 0, Negative = 0, TopKeywords = new string[0] });
 
-            // Mock sentiment analysis based on Rating
+            // Sentiment tính từ Rating thật (>=4 tích cực, ==3 trung lập, <=2 tiêu cực)
             var positive = await db.ProductReviews.CountAsync(r => r.Rating >= 4);
             var neutral = await db.ProductReviews.CountAsync(r => r.Rating == 3);
             var negative = await db.ProductReviews.CountAsync(r => r.Rating <= 2);
+
+            // Từ khoá nổi bật: tần suất từ thật trong Title/Comment của review đã duyệt
+            var reviewTexts = await db.ProductReviews
+                .Where(r => r.IsApproved)
+                .Select(r => (r.Title ?? string.Empty) + " " + (r.Comment ?? string.Empty))
+                .ToListAsync();
+            var topKeywords = ReviewKeywordExtractor.ExtractTopKeywords(reviewTexts, take: 6);
 
             return Results.Ok(new
             {
@@ -1199,7 +1198,7 @@ public static class CatalogEndpoints
                 NeutralPercent = Math.Round((double)neutral / totalReviews * 100, 1),
                 NegativePercent = Math.Round((double)negative / totalReviews * 100, 1),
                 TotalReviews = totalReviews,
-                TopKeywords = new[] { "Chất lượng tốt", "Giao hàng nhanh", "Đẹp", "Chính hãng", "Hơi nóng", "Pin kém" } // Mock
+                TopKeywords = topKeywords
             });
         });
 

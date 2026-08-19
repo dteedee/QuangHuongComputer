@@ -1,3 +1,4 @@
+using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -67,7 +68,7 @@ public static class AddressBookEndpoints
             db.CustomerAddresses.Add(address);
             await db.SaveChangesAsync();
             return Results.Created($"/api/sales/addresses/{address.Id}", address);
-        });
+        }).WithValidation<SaveAddressRequest>();
 
         // PUT /api/sales/addresses/{id}
         group.MapPut("/{id:guid}", async (Guid id, ClaimsPrincipal user, [FromBody] SaveAddressRequest request, SalesDbContext db) =>
@@ -95,7 +96,7 @@ public static class AddressBookEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(address);
-        });
+        }).WithValidation<SaveAddressRequest>();
 
         // DELETE /api/sales/addresses/{id}
         group.MapDelete("/{id:guid}", async (Guid id, ClaimsPrincipal user, SalesDbContext db) =>
