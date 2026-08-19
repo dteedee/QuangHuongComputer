@@ -296,6 +296,27 @@ frontend/
 
 ---
 
+## JSON Extensibility (2026-08-19)
+
+Two complementary mechanisms let admins extend the data model and admin data-grids without a deploy:
+
+### 1. Freeform `Attributes` (jsonb) on core entities
+- `Catalog.Product`, `Sales.Order`, `CRM.Lead` each have an `Attributes` (jsonb, default `'{}'`) column.
+- Domain method `SetAttributes(string? json)` on each entity; endpoints accept `attributes` in create/update DTOs (Product, Lead) or via a dedicated `PUT /api/sales/admin/orders/{id}/attributes` (Order, since orders are created via checkout).
+- Validation: `SystemConfig.CustomFieldAttributeValidator.ValidateAsync(...)` checks declared `CustomFieldDefinition` rows (by `EntityType`) for type/required — unknown keys always allowed (extensibility-first). Catalog/Sales/CRM projects reference `SystemConfig.csproj` to reuse this validator + `CustomFieldDbContext`.
+- Migrations: `AddProductAttributesJson` (Catalog), `AddOrderAttributesJson` (Sales), `AddLeadAttributesJson` (CRM).
+- FE: `frontend/src/components/admin/product-attributes-editor.tsx` renders one input per active `CustomFieldDefinition` for an entity type, backed by the `attributes` JSON blob (counterpart of `CustomFieldsManager.tsx`, which only *defines* fields).
+
+### 2. Dynamic admin data-tables (`TableViewDefinition`)
+- New `SystemConfig.Domain.TableViewDefinition` entity (mirrors `FormDefinition`): `Key` (e.g. `admin.products`), `Name`, `ColumnsJson` (`[{key,label,type,sortable,visible,width,format}]`), `FiltersJson`, `IsSystem`.
+- CRUD: `TableViewEndpoints.cs` → `/api/config/table-views` (admin-only, FluentValidation via `CreateTableViewDtoValidator`).
+- Seeded defaults for `admin.products`, `admin.orders`, `admin.leads` via `TableViewDefinitionSeeder` (called from `SystemConfigDbSeeder.SeedAsync`).
+- Migration: `AddTableViewDefinitionsAndFreeshipConfig` (SystemConfigDbContext).
+- FE: `frontend/src/components/backoffice/dynamic-data-table.tsx` fetches a `TableViewDefinition` by `Key`, renders columns generically (currency/number/date/boolean/badge/text formatters), supports sort. Column show/hide + reorder persisted via `table-view-config-modal.tsx` → `PUT /api/config/table-views/{id}`.
+- First consumer: `pages/admin/ProductsPage.tsx` — card/table view toggle, table mode uses `viewKey="admin.products"`.
+
+---
+
 **Last updated**: 2026-08-19  
 **Maintained by**: docs-manager agent  
 **See also**: `docs/development-roadmap.md`, `docs/system-architecture.md`, `docs/modules-features-roles-matrix.md`, `docs/hacom-design-reference.md`
