@@ -940,6 +940,12 @@ public static class ContentEndpoints
 
     private static void MapMenuEndpoints(RouteGroupBuilder adminGroup, RouteGroupBuilder publicGroup)
     {
+        // ASP0022 false positive: analyzer không resolve được prefix "/admin" của adminGroup (biến truyền
+        // qua tham số phương thức) nên báo trùng route với publicGroup.MapGet("/menus") bên dưới. Route thật
+        // KHÁC nhau: /api/content/admin/menus (yêu cầu Admin/Manager) vs /api/content/menus (public, filter
+        // theo location). Giữ nguyên 2 route để không phá tương thích frontend (grep frontend/src/api xác nhận
+        // cả 2 route đang được dùng).
+#pragma warning disable ASP0022
         adminGroup.MapGet("/menus", async (ContentDbContext db) =>
         {
             var menus = await db.Menus
@@ -1084,12 +1090,16 @@ public static class ContentEndpoints
             await cache.SetAsync(cacheKey, menus, TimeSpan.FromHours(1));
             return Results.Ok(menus);
         });
+#pragma warning restore ASP0022
     }
 
     // ==================== HOMEPAGE SECTIONS (Admin) ====================
 
     private static void MapHomepageEndpoints(RouteGroupBuilder adminGroup, RouteGroupBuilder publicGroup)
     {
+        // ASP0022 false positive — cùng lý do MapMenuEndpoints ở trên: route thật khác nhau
+        // (/api/content/admin/homepage/sections vs /api/content/homepage/sections).
+#pragma warning disable ASP0022
         adminGroup.MapGet("/homepage/sections", async (ContentDbContext db) =>
         {
             var sections = await db.HomepageSections
@@ -1167,6 +1177,7 @@ public static class ContentEndpoints
             await cache.SetAsync(cacheKey, sections, TimeSpan.FromMinutes(30));
             return Results.Ok(sections);
         });
+#pragma warning restore ASP0022
     }
 }
 
