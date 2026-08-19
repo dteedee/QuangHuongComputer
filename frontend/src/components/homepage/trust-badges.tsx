@@ -2,10 +2,10 @@ import { motion } from 'framer-motion';
 import { Truck, Shield, HeadphonesIcon, BadgeCheck } from 'lucide-react';
 
 const BADGES = [
-    { icon: BadgeCheck, title: 'Chinh hang 100%', desc: 'Cam ket hang chinh hang', color: 'text-accent bg-red-50' },
-    { icon: Shield, title: 'Bao hanh an tam', desc: 'Bao hanh dai han uy tin', color: 'text-emerald-600 bg-emerald-50' },
-    { icon: Truck, title: 'Giao hang nhanh', desc: 'Mien phi cho don tu 500K', color: 'text-blue-600 bg-blue-50' },
-    { icon: HeadphonesIcon, title: 'Gia tot nhat', desc: 'Hotline: 0904.235.090', color: 'text-amber-600 bg-amber-50' },
+    { icon: BadgeCheck, title: 'Chính hãng 100%', desc: 'Cam kết hàng chính hãng', color: 'text-accent bg-red-50' },
+    { icon: Shield, title: 'Bảo hành an tâm', desc: 'Bảo hành dài hạn uy tín', color: 'text-emerald-600 bg-emerald-50' },
+    { icon: Truck, title: 'Giao hàng nhanh', desc: 'Miễn phí cho đơn từ 500K', color: 'text-blue-600 bg-blue-50' },
+    { icon: HeadphonesIcon, title: 'Giá tốt nhất', desc: 'Hotline: 0904.235.090', color: 'text-amber-600 bg-amber-50' },
 ];
 
 /**

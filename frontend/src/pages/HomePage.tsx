@@ -44,8 +44,8 @@ export const HomePage = () => {
     return (
         <div className="bg-gray-50 min-h-screen pb-20 font-sans selection:bg-red-100">
             <SEO
-                title="Trang chu"
-                description="Quang Huong Computer - Chuyen cung cap linh kien may tinh, laptop, PC gaming chinh hang gia tot tai Hai Phong. He thong ban le may tinh uy tin so 1."
+                title="Trang chủ"
+                description="Quang Hưởng Computer - Chuyên cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt tại Hải Phòng. Hệ thống bán lẻ máy tính uy tín số 1."
             />
 
             {/* Promotional marquee banner */}
@@ -58,7 +58,7 @@ export const HomePage = () => {
                     <Zap className="text-yellow-300 flex-shrink-0" size={18} />
                     <div className="overflow-hidden">
                         <p className="text-sm font-bold tracking-wide whitespace-nowrap animate-marquee">
-                            Mien phi giao hang cho don tu 500K &nbsp;&bull;&nbsp; Tra gop 0% lai suat &nbsp;&bull;&nbsp; Bao hanh chinh hang &nbsp;&bull;&nbsp; Ho tro 24/7 &ensp;|&ensp; Hotline: 0904.235.090
+                            Miễn phí giao hàng cho đơn từ 500K &nbsp;&bull;&nbsp; Trả góp 0% lãi suất &nbsp;&bull;&nbsp; Bảo hành chính hãng &nbsp;&bull;&nbsp; Hỗ trợ 24/7 &ensp;|&ensp; Hotline: 0904.235.090
                         </p>
                     </div>
                     <Zap className="text-yellow-300 flex-shrink-0" size={18} />

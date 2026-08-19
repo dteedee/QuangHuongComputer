@@ -41,13 +41,13 @@ export const RegisterPage = () => {
         e.preventDefault();
         setLoading(true);
         const schema = z.object({
-            fullName: z.string().min(1, msg.requireInput('Ho va ten')),
+            fullName: z.string().min(1, msg.requireInput('Họ và tên')),
             email: z.string().min(1, msg.requireInput('Email')).email(msg.email),
-            password: z.string().min(6, 'Mat khau phai co it nhat 6 ky tu'),
-            confirmPassword: z.string().min(1, msg.requireInput('Xac nhan mat khau')),
-            acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Vui long dong y voi dieu khoan su dung' }) })
+            password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+            confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu')),
+            acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Vui lòng đồng ý với điều khoản sử dụng' }) })
         }).refine((data) => data.password === data.confirmPassword, {
-            message: 'Mat khau xac nhan khong khop', path: ['confirmPassword']
+            message: 'Mật khẩu xác nhận không khớp', path: ['confirmPassword']
         });
 
         const result = schema.safeParse({ fullName, email, password, confirmPassword, acceptTerms });
@@ -73,9 +73,9 @@ export const RegisterPage = () => {
             const axiosError = err as { response?: { data?: { message?: string; errors?: Array<{ description?: string }> } } };
             const errs = axiosError.response?.data?.errors;
             if (errs && errs.length > 0) {
-                setError(errs.map(e => e.description).filter(Boolean).join('. ') || 'Dang ky that bai. Vui long thu lai.');
+                setError(errs.map(e => e.description).filter(Boolean).join('. ') || 'Đăng ký thất bại. Vui lòng thử lại.');
             } else {
-                setError(axiosError.response?.data?.message || 'Dang ky that bai. Vui long thu lai.');
+                setError(axiosError.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
             }
         } finally {
             setLoading(false);
@@ -95,7 +95,7 @@ export const RegisterPage = () => {
                     {/* Brand */}
                     <Link to="/" className="flex items-center justify-center gap-2 mb-8 cursor-pointer">
                         <div className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center font-black text-lg">QH</div>
-                        <span className="text-lg font-black text-gray-900 tracking-tight">QUANG HUONG</span>
+                        <span className="text-lg font-black text-gray-900 tracking-tight">QUANG HƯỞNG</span>
                     </Link>
 
                     <AnimatePresence mode="wait">
@@ -104,28 +104,28 @@ export const RegisterPage = () => {
                                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle2 size={32} className="text-emerald-600" />
                                 </div>
-                                <h2 className="text-xl font-bold text-gray-900 mb-1">Dang ky thanh cong!</h2>
-                                <p className="text-sm text-gray-500">Dang chuyen huong den trang dang nhap...</p>
+                                <h2 className="text-xl font-bold text-gray-900 mb-1">Đăng ký thành công!</h2>
+                                <p className="text-sm text-gray-500">Đang chuyển hướng đến trang đăng nhập...</p>
                             </motion.div>
                         ) : (
                             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Tao tai khoan moi</h1>
-                                <p className="text-sm text-gray-500 text-center mb-8">Dang ky de tro thanh thanh vien cua Quang Huong.</p>
+                                <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Tạo tài khoản mới</h1>
+                                <p className="text-sm text-gray-500 text-center mb-8">Đăng ký để trở thành thành viên của Quang Hưởng.</p>
 
                                 <form onSubmit={handleSubmit} className="space-y-4">
-                                    <Input label="Ho va ten" type="text" icon={User} placeholder="Nhap ho va ten cua ban" value={fullName} onChange={e => setFullName(e.target.value)} error={errors.fullName} />
-                                    <Input label="Dia chi Email" type="email" icon={Mail} placeholder="name@gmail.com" value={email} onChange={e => setEmail(e.target.value)} error={errors.email} />
-                                    <Input label="Mat khau" type={showPassword ? 'text' : 'password'} icon={Lock} placeholder="Toi thieu 6 ky tu" value={password} onChange={e => setPassword(e.target.value)} error={errors.password} hint="Mat khau can it nhat 6 ky tu" suffix={<PasswordToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
-                                    <Input label="Xac nhan mat khau" type={showConfirmPassword ? 'text' : 'password'} icon={Lock} placeholder="Nhap lai mat khau" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} error={errors.confirmPassword} suffix={<PasswordToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
+                                    <Input label="Họ và tên" type="text" icon={User} placeholder="Nhập họ và tên của bạn" value={fullName} onChange={e => setFullName(e.target.value)} error={errors.fullName} />
+                                    <Input label="Địa chỉ Email" type="email" icon={Mail} placeholder="name@gmail.com" value={email} onChange={e => setEmail(e.target.value)} error={errors.email} />
+                                    <Input label="Mật khẩu" type={showPassword ? 'text' : 'password'} icon={Lock} placeholder="Tối thiểu 6 ký tự" value={password} onChange={e => setPassword(e.target.value)} error={errors.password} hint="Mật khẩu cần ít nhất 6 ký tự" suffix={<PasswordToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+                                    <Input label="Xác nhận mật khẩu" type={showConfirmPassword ? 'text' : 'password'} icon={Lock} placeholder="Nhập lại mật khẩu" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} error={errors.confirmPassword} suffix={<PasswordToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
 
                                     {/* Terms checkbox */}
                                     <div className="flex items-start gap-3">
                                         <input type="checkbox" id="acceptTerms" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)}
                                             className="mt-1 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent cursor-pointer" />
                                         <label htmlFor="acceptTerms" className="text-sm text-gray-600 cursor-pointer">
-                                            Toi dong y voi{' '}
-                                            <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Dieu khoan su dung</Link>
-                                            {' '}cua Quang Huong Computer
+                                            Tôi đồng ý với{' '}
+                                            <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Điều khoản sử dụng</Link>
+                                            {' '}của Quang Hưởng Computer
                                         </label>
                                     </div>
                                     {errors.acceptTerms && <p className="text-red-500 text-sm ml-7 -mt-2">{errors.acceptTerms}</p>}
@@ -140,13 +140,13 @@ export const RegisterPage = () => {
                                     </AnimatePresence>
 
                                     <Button type="submit" variant="primary" size="lg" loading={loading} icon={ArrowRight} iconPosition="right" className="w-full cursor-pointer">
-                                        Dang ky tai khoan
+                                        Đăng ký tài khoản
                                     </Button>
                                 </form>
 
                                 <p className="mt-8 text-center text-sm text-gray-500">
-                                    Da co tai khoan?{' '}
-                                    <Link to="/login" className="text-accent font-bold hover:underline cursor-pointer">Dang nhap ngay</Link>
+                                    Đã có tài khoản?{' '}
+                                    <Link to="/login" className="text-accent font-bold hover:underline cursor-pointer">Đăng nhập ngay</Link>
                                 </p>
                             </motion.div>
                         )}

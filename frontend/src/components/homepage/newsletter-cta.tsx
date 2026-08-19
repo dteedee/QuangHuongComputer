@@ -27,17 +27,17 @@ export const NewsletterCta = () => {
             >
                 <div className="flex-1 text-center md:text-left">
                     <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                        Nhan uu dai doc quyen
+                        Nhận ưu đãi độc quyền
                     </h3>
                     <p className="text-sm text-gray-400">
-                        Dang ky nhan thong bao khuyen mai, san pham moi va deal hap dan moi ngay.
+                        Đăng ký nhận thông báo khuyến mãi, sản phẩm mới và deal hấp dẫn mỗi ngày.
                     </p>
                 </div>
 
                 {submitted ? (
                     <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
                         <Mail size={18} />
-                        Cam on ban da dang ky!
+                        Cảm ơn bạn đã đăng ký!
                     </div>
                 ) : (
                     <form
@@ -48,7 +48,7 @@ export const NewsletterCta = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email cua ban..."
+                            placeholder="Email của bạn..."
                             required
                             className="flex-1 md:w-72 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
                         />
@@ -56,7 +56,7 @@ export const NewsletterCta = () => {
                             type="submit"
                             className="px-5 py-3 bg-accent text-white rounded-xl font-semibold text-sm hover:bg-accent-hover transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap"
                         >
-                            Dang ky
+                            Đăng ký
                             <ArrowRight size={16} />
                         </button>
                     </form>

@@ -62,13 +62,13 @@ export const HeaderNavBar = ({ headerMenu, isScrolled }: HeaderNavBarProps) => {
                     ) : (
                         <>
                             <Link to="/products" className={getLinkClass('/products')}>
-                                <MenuIcon size={15} /> Danh muc san pham
+                                <MenuIcon size={15} /> Danh mục sản phẩm
                             </Link>
                             <Link to="/repairs" className={getLinkClass('/repairs')}>
-                                <Wrench size={15} /> Dich vu sua chua
+                                <Wrench size={15} /> Dịch vụ sửa chữa
                             </Link>
                             <Link to="/warranty" className={getLinkClass('/warranty')}>
-                                <Monitor size={15} /> Bao hanh
+                                <Monitor size={15} /> Bảo hành
                             </Link>
                         </>
                     )}
@@ -79,7 +79,7 @@ export const HeaderNavBar = ({ headerMenu, isScrolled }: HeaderNavBarProps) => {
                     className="flex items-center gap-1 text-xs font-bold text-accent bg-red-50 px-3 py-1.5 rounded-md border border-red-100 hover:bg-red-100 transition-colors cursor-pointer whitespace-nowrap"
                 >
                     <Zap size={13} className="fill-accent" />
-                    SIEU SALE
+                    SIÊU SALE
                 </Link>
             </div>
         </div>

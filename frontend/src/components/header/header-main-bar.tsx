@@ -73,7 +73,7 @@ export const HeaderMainBar = ({
                     <button
                         onClick={() => navigate('/products?q=')}
                         className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-accent transition-colors cursor-pointer"
-                        aria-label="Tim kiem"
+                        aria-label="Tìm kiếm"
                     >
                         <Search size={20} />
                     </button>
@@ -120,7 +120,7 @@ export const HeaderMainBar = ({
                                 </span>
                             )}
                         </div>
-                        <span className="text-sm font-semibold text-accent hidden sm:block">Gio hang</span>
+                        <span className="text-sm font-semibold text-accent hidden sm:block">Giỏ hàng</span>
                     </button>
                 </div>
             </div>

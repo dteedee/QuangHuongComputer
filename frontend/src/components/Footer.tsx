@@ -106,26 +106,26 @@ export const Footer = () => {
                 <div>
                     <h4 className="text-sm font-bold text-white uppercase mb-4 pb-2 border-b border-gray-800">Về Quang Hưởng</h4>
                     <ul className="space-y-0.5">
-                        <FL to="/about" label="Gioi thieu chung" />
-                        <FL to="/policy/news" label="Tin tuc cong nghe" />
-                        <FL to="/policy/promotions" label="Tin khuyen mai" />
-                        <FL to="/recruitment" label="Tuyen dung" />
-                        <FL to="/contact" label="Lien he" />
+                        <FL to="/about" label="Giới thiệu chung" />
+                        <FL to="/policy/news" label="Tin tức công nghệ" />
+                        <FL to="/policy/promotions" label="Tin khuyến mãi" />
+                        <FL to="/recruitment" label="Tuyển dụng" />
+                        <FL to="/contact" label="Liên hệ" />
                     </ul>
                 </div>
 
                 {/* Sản phẩm kinh doanh */}
-                <MenuCol title="San pham kinh doanh" menu={categoryMenu} fallback={
-                    <><FL to="/products" label="Tat ca san pham" /><FL to="/repairs" label="Dich vu sua chua" /><FL to="/warranty" label="Bao hanh" /></>
+                <MenuCol title="Sản phẩm kinh doanh" menu={categoryMenu} fallback={
+                    <><FL to="/products" label="Tất cả sản phẩm" /><FL to="/repairs" label="Dịch vụ sửa chữa" /><FL to="/warranty" label="Bảo hành" /></>
                 } />
 
                 {/* Chính sách & hỗ trợ */}
                 <div>
-                    <MenuCol title="Chinh sach & ho tro" menu={supportMenu} fallback={
-                        <><FL to="/policy/warranty" label="Chinh sach bao hanh" /><FL to="/policy/return" label="Chinh sach doi tra" /><FL to="/policy/shipping" label="Chinh sach van chuyen" /><FL to="/policy/payment" label="Huong dan thanh toan" /></>
+                    <MenuCol title="Chính sách & hỗ trợ" menu={supportMenu} fallback={
+                        <><FL to="/policy/warranty" label="Chính sách bảo hành" /><FL to="/policy/return" label="Chính sách đổi trả" /><FL to="/policy/shipping" label="Chính sách vận chuyển" /><FL to="/policy/payment" label="Hướng dẫn thanh toán" /></>
                     } />
                     <div className="mt-5">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Thanh toan</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Thanh toán</p>
                         <div className="flex flex-wrap gap-1.5">
                             {['VISA', 'MASTER', 'NAPAS', 'VNPAY', 'COD'].map(m => (
                                 <span key={m} className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-[10px] font-bold text-gray-300">{m}</span>

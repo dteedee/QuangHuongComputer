@@ -50,7 +50,7 @@ export const LoginPage = () => {
             triggerConfetti();
             setTimeout(() => navigate(getRedirectPath(roles)), 1500);
         } catch (error: any) {
-            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Tai khoan hoac mat khau khong chinh xac');
+            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Tài khoản hoặc mật khẩu không chính xác');
         } finally {
             setIsLoading(false);
         }
@@ -64,7 +64,7 @@ export const LoginPage = () => {
             const userObj = savedUser ? JSON.parse(savedUser) : null;
             navigate(getRedirectPath(userObj?.roles || []));
         } catch (error: any) {
-            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Dang nhap Google that bai');
+            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Đăng nhập Google thất bại');
         } finally {
             setIsLoading(false);
         }
@@ -82,7 +82,7 @@ export const LoginPage = () => {
                     {/* Brand */}
                     <Link to="/" className="flex items-center justify-center gap-2 mb-8 cursor-pointer">
                         <div className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center font-black text-lg">QH</div>
-                        <span className="text-lg font-black text-gray-900 tracking-tight">QUANG HUONG</span>
+                        <span className="text-lg font-black text-gray-900 tracking-tight">QUANG HƯỞNG</span>
                     </Link>
 
                     <AnimatePresence mode="wait">
@@ -91,21 +91,21 @@ export const LoginPage = () => {
                                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle2 size={32} className="text-emerald-600" />
                                 </div>
-                                <h2 className="text-xl font-bold text-gray-900 mb-1">Dang nhap thanh cong!</h2>
-                                <p className="text-sm text-gray-500">Dang chuyen huong...</p>
+                                <h2 className="text-xl font-bold text-gray-900 mb-1">Đăng nhập thành công!</h2>
+                                <p className="text-sm text-gray-500">Đang chuyển hướng...</p>
                             </motion.div>
                         ) : (
                             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Dang nhap tai khoan</h1>
-                                <p className="text-sm text-gray-500 text-center mb-8">Chao mung ban quay tro lai voi Quang Huong Computer.</p>
+                                <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Đăng nhập tài khoản</h1>
+                                <p className="text-sm text-gray-500 text-center mb-8">Chào mừng bạn quay trở lại với Quang Hưởng Computer.</p>
 
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                                    <Input label="Dia chi Email" type="email" icon={Mail} placeholder="name@gmail.com" error={errors.email?.message} {...register('email')} />
+                                    <Input label="Địa chỉ Email" type="email" icon={Mail} placeholder="name@gmail.com" error={errors.email?.message} {...register('email')} />
 
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center px-1">
-                                            <label className="text-xs font-semibold text-gray-500">Mat khau</label>
-                                            <Link to="/forgot-password" className="text-xs text-accent hover:underline font-semibold cursor-pointer">Quen mat khau?</Link>
+                                            <label className="text-xs font-semibold text-gray-500">Mật khẩu</label>
+                                            <Link to="/forgot-password" className="text-xs text-accent hover:underline font-semibold cursor-pointer">Quên mật khẩu?</Link>
                                         </div>
                                         <Input
                                             type={showPassword ? 'text' : 'password'}
@@ -131,14 +131,14 @@ export const LoginPage = () => {
                                     </AnimatePresence>
 
                                     <Button type="submit" variant="primary" size="lg" loading={isLoading} icon={ArrowRight} iconPosition="right" className="w-full cursor-pointer">
-                                        Dang nhap
+                                        Đăng nhập
                                     </Button>
 
                                     {/* Divider */}
                                     <div className="relative my-6">
                                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
                                         <div className="relative flex justify-center text-xs font-medium text-gray-400">
-                                            <span className="px-3 bg-white">Hoac</span>
+                                            <span className="px-3 bg-white">Hoặc</span>
                                         </div>
                                     </div>
 
@@ -147,20 +147,20 @@ export const LoginPage = () => {
                                         {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
                                             <GoogleLogin
                                                 onSuccess={handleGoogleSuccess}
-                                                onError={() => setLoginError('Dang nhap Google that bai. Vui long thu lai.')}
+                                                onError={() => setLoginError('Đăng nhập Google thất bại. Vui lòng thử lại.')}
                                                 useOneTap={false} theme="outline" size="large" text="signin_with" shape="rectangular" logo_alignment="left"
                                             />
                                         ) : (
                                             <button type="button" disabled className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 rounded-lg text-sm cursor-not-allowed">
-                                                Google (Chua cau hinh)
+                                                Google (Chưa cấu hình)
                                             </button>
                                         )}
                                     </div>
                                 </form>
 
                                 <p className="mt-8 text-center text-sm text-gray-500">
-                                    Chua co tai khoan?{' '}
-                                    <Link to="/register" className="text-accent font-bold hover:underline cursor-pointer">Dang ky ngay</Link>
+                                    Chưa có tài khoản?{' '}
+                                    <Link to="/register" className="text-accent font-bold hover:underline cursor-pointer">Đăng ký ngay</Link>
                                 </p>
                             </motion.div>
                         )}

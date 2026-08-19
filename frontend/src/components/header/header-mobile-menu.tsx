@@ -80,7 +80,7 @@ export const HeaderMobileMenu = ({
                     <form onSubmit={handleSearch} className="flex h-9">
                         <input
                             type="text"
-                            placeholder="Tim kiem san pham..."
+                            placeholder="Tìm kiếm sản phẩm..."
                             className="flex-1 px-3 bg-gray-50 text-gray-900 text-sm rounded-l-lg border border-r-0 border-gray-200 focus:outline-none focus:border-accent placeholder:text-gray-400"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -95,22 +95,22 @@ export const HeaderMobileMenu = ({
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-2 space-y-0.5">
                         <Link to="/" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
-                            <Home size={18} /> Trang chu
+                            <Home size={18} /> Trang chủ
                         </Link>
                         <Link to="/products" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
-                            <MenuIcon size={18} /> Danh muc san pham
+                            <MenuIcon size={18} /> Danh mục sản phẩm
                         </Link>
                         <Link to="/repairs" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
-                            <Wrench size={18} /> Dich vu sua chua
+                            <Wrench size={18} /> Dịch vụ sửa chữa
                         </Link>
                         <Link to="/warranty" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
-                            <Monitor size={18} /> Bao hanh
+                            <Monitor size={18} /> Bảo hành
                         </Link>
                     </div>
 
                     {/* Categories */}
                     <div className="mt-3 pt-3 border-t border-gray-100">
-                        <h4 className="px-5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Danh muc</h4>
+                        <h4 className="px-5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Danh mục</h4>
                         <div className="px-2 space-y-0.5">
                             {categories.slice(0, 8).map((cat) => (
                                 <Link
@@ -128,16 +128,16 @@ export const HeaderMobileMenu = ({
 
                     {/* Quick links */}
                     <div className="mt-3 pt-3 border-t border-gray-100">
-                        <h4 className="px-5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Ho tro</h4>
+                        <h4 className="px-5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Hỗ trợ</h4>
                         <div className="px-2 space-y-0.5">
                             <Link to="/contact" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
-                                <Phone size={15} /> Lien he
+                                <Phone size={15} /> Liên hệ
                             </Link>
                             <Link to="/recruitment" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
-                                <Briefcase size={15} /> Tuyen dung
+                                <Briefcase size={15} /> Tuyển dụng
                             </Link>
                             <Link to="/about" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
-                                <FileText size={15} /> Gioi thieu
+                                <FileText size={15} /> Giới thiệu
                             </Link>
                         </div>
                     </div>
@@ -154,16 +154,16 @@ export const HeaderMobileMenu = ({
                                 <span className="truncate max-w-[150px]">{user?.fullName}</span>
                             </Link>
                             <button onClick={handleLogout} className="text-sm text-red-500 font-semibold hover:underline flex items-center gap-1 cursor-pointer">
-                                <LogOut size={14} /> Dang xuat
+                                <LogOut size={14} /> Đăng xuất
                             </button>
                         </div>
                     ) : (
                         <div className="flex gap-2">
                             <Link to="/login" onClick={onClose} className="flex-1 text-center py-2 bg-accent text-white font-bold rounded-lg text-sm hover:bg-accent-hover transition-colors cursor-pointer">
-                                Dang nhap
+                                Đăng nhập
                             </Link>
                             <Link to="/register" onClick={onClose} className="flex-1 text-center py-2 bg-gray-200 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-300 transition-colors cursor-pointer">
-                                Dang ky
+                                Đăng ký
                             </Link>
                         </div>
                     )}

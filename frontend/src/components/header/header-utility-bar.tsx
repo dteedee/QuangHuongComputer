@@ -39,25 +39,25 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
     const handleLogout = () => { logout(); setShowUserMenu(false); };
 
     const getRoleLabel = (roles: string[] = []) => {
-        if (roles.includes('Admin')) return 'Quan tri vien';
-        if (roles.includes('Manager')) return 'Quan ly';
-        if (roles.includes('Sale')) return 'Nhan vien ban hang';
-        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Ky thuat vien';
-        if (roles.includes('Accountant')) return 'Ke toan';
-        if (roles.includes('Supplier')) return 'Nha cung cap';
+        if (roles.includes('Admin')) return 'Quản trị viên';
+        if (roles.includes('Manager')) return 'Quản lý';
+        if (roles.includes('Sale')) return 'Nhân viên bán hàng';
+        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Kỹ thuật viên';
+        if (roles.includes('Accountant')) return 'Kế toán';
+        if (roles.includes('Supplier')) return 'Nhà cung cấp';
         if (roles.includes('Marketing')) return 'Marketing';
-        return 'Khach hang';
+        return 'Khách hàng';
     };
 
     const getDashboardLabel = (roles: string[] = []) => {
-        if (roles.includes('Admin')) return 'Quan tri he thong';
-        if (roles.includes('Manager')) return 'Bang dieu khien quan ly';
-        if (roles.includes('Sale')) return 'Quan ly ban hang';
-        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Bang dieu khien ky thuat';
-        if (roles.includes('Accountant')) return 'Quan ly tai chinh';
-        if (roles.includes('Supplier')) return 'Quan ly kho hang';
-        if (roles.includes('Marketing')) return 'Quan ly marketing';
-        return 'Quan tri';
+        if (roles.includes('Admin')) return 'Quản trị hệ thống';
+        if (roles.includes('Manager')) return 'Bảng điều khiển quản lý';
+        if (roles.includes('Sale')) return 'Quản lý bán hàng';
+        if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Bảng điều khiển kỹ thuật';
+        if (roles.includes('Accountant')) return 'Quản lý tài chính';
+        if (roles.includes('Supplier')) return 'Quản lý kho hàng';
+        if (roles.includes('Marketing')) return 'Quản lý marketing';
+        return 'Quản trị';
     };
 
     const isStaffRole = (roles: string[] = []) =>
@@ -77,7 +77,7 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button onClick={toggleMode} className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer" title="Giao dien Sang/Toi">
+                    <button onClick={toggleMode} className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer" title="Giao diện Sáng/Tối">
                         {isDark ? <Sun size={13} /> : <Moon size={13} />}
                     </button>
 
@@ -105,11 +105,11 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                                     </div>
                                     <div className="p-1">
                                         <Link to="/account" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
-                                            <User size={15} /> Tai khoan cua toi
+                                            <User size={15} /> Tài khoản của tôi
                                         </Link>
                                         {!isStaffRole(user?.roles) && (
                                             <Link to="/account?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
-                                                <Package size={15} /> Don hang
+                                                <Package size={15} /> Đơn hàng
                                             </Link>
                                         )}
                                         {isStaffRole(user?.roles) && (
@@ -121,7 +121,7 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                                     <div className="h-px bg-gray-100 mx-1" />
                                     <div className="p-1">
                                         <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-rose-50 rounded-lg transition-colors text-rose-600 font-medium cursor-pointer">
-                                            <LogOut size={15} /> Dang xuat
+                                            <LogOut size={15} /> Đăng xuất
                                         </button>
                                     </div>
                                 </div>
@@ -129,8 +129,8 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                         </div>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link to="/login" className="hover:text-accent transition-colors cursor-pointer">Dang nhap</Link>
-                            <Link to="/register" className="hover:text-accent transition-colors cursor-pointer">Dang ky</Link>
+                            <Link to="/login" className="hover:text-accent transition-colors cursor-pointer">Đăng nhập</Link>
+                            <Link to="/register" className="hover:text-accent transition-colors cursor-pointer">Đăng ký</Link>
                         </div>
                     )}
                 </div>

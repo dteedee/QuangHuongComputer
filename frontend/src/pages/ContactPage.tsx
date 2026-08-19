@@ -21,23 +21,23 @@ export const ContactPage = () => {
         systemConfigApi.getConfigs().then(data => setConfigs(data || [])).catch(() => {});
     }, []);
 
-    const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Huong Computer', (v) => v);
+    const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Hưởng Computer', (v) => v);
     const address = getConfigValue(configs, 'COMPANY_ADDRESS', 'Số 179 khu phố 3/2, Thị Trấn Vĩnh Bảo, Huyện Vĩnh Bảo, TP Hải Phòng', (v) => v);
     const phone = getConfigValue(configs, 'COMPANY_PHONE', '031 3823769', (v) => v);
     const phone2 = getConfigValue(configs, 'COMPANY_PHONE_2', '0904.235.090', (v) => v);
     const email = getConfigValue(configs, 'COMPANY_EMAIL', 'quanghuongvbhp@gmail.com', (v) => v);
-    const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '7:00 - 17h15 (Tu thu 2 den thu 7)', (v) => v);
+    const workingHours = getConfigValue(configs, 'COMPANY_WORKING_HOURS', '7:00 - 17h15 (Từ thứ 2 đến thứ 7)', (v) => v);
 
     const validateForm = (): boolean => {
         const e: FormErrors = {};
-        if (!formData.fullName.trim()) e.fullName = 'Vui long nhap ho ten';
-        else if (formData.fullName.trim().length < 2) e.fullName = 'Ho ten phai co it nhat 2 ky tu';
-        if (!formData.phone.trim()) e.phone = 'Vui long nhap so dien thoai';
-        else if (!/^(0|\+84)[0-9]{9,10}$/.test(formData.phone.replace(/\s/g, ''))) e.phone = 'So dien thoai khong hop le';
-        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Email khong hop le';
-        if (!formData.subject.trim()) e.subject = 'Vui long nhap tieu de';
-        if (!formData.message.trim()) e.message = 'Vui long nhap noi dung tin nhan';
-        else if (formData.message.trim().length < 10) e.message = 'Noi dung phai co it nhat 10 ky tu';
+        if (!formData.fullName.trim()) e.fullName = 'Vui lòng nhập họ tên';
+        else if (formData.fullName.trim().length < 2) e.fullName = 'Họ tên phải có ít nhất 2 ký tự';
+        if (!formData.phone.trim()) e.phone = 'Vui lòng nhập số điện thoại';
+        else if (!/^(0|\+84)[0-9]{9,10}$/.test(formData.phone.replace(/\s/g, ''))) e.phone = 'Số điện thoại không hợp lệ';
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Email không hợp lệ';
+        if (!formData.subject.trim()) e.subject = 'Vui lòng nhập tiêu đề';
+        if (!formData.message.trim()) e.message = 'Vui lòng nhập nội dung tin nhắn';
+        else if (formData.message.trim().length < 10) e.message = 'Nội dung phải có ít nhất 10 ký tự';
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -59,7 +59,7 @@ export const ContactPage = () => {
             setFormData({ fullName: '', phone: '', email: '', subject: '', message: '' });
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } } };
-            setSubmitError(err.response?.data?.message || 'Co loi xay ra. Vui long thu lai sau.');
+            setSubmitError(err.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
         } finally {
             setIsSubmitting(false);
         }
@@ -68,21 +68,21 @@ export const ContactPage = () => {
     const inputCls = (hasError: boolean) => `w-full bg-white border rounded-xl px-4 py-3 text-sm outline-none transition-all focus:ring-2 focus:ring-accent/20 focus:border-accent ${hasError ? 'border-red-400' : 'border-gray-200'}`;
 
     const infoItems = [
-        { icon: MapPin, label: 'Dia chi', value: address },
+        { icon: MapPin, label: 'Địa chỉ', value: address },
         { icon: Phone, label: 'Hotline', value: `${phone2} - ${phone}`, accent: true },
         { icon: Mail, label: 'Email', value: email },
-        { icon: Clock, label: 'Gio lam viec', value: workingHours },
+        { icon: Clock, label: 'Giờ làm việc', value: workingHours },
     ];
 
     if (submitSuccess) {
         return (
             <div className="bg-gray-50 min-h-screen pb-10">
-                <SEO title="Lien he" description={`Lien he voi ${companyName}`} />
+                <SEO title="Liên hệ" description={`Liên hệ với ${companyName}`} />
                 <div className="bg-white py-3 border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                        <Link to="/" className="hover:text-accent cursor-pointer">Trang chu</Link>
+                        <Link to="/" className="hover:text-accent cursor-pointer">Trang chủ</Link>
                         <ChevronRight size={14} className="text-gray-400" />
-                        <span className="text-gray-900 font-medium">Lien he</span>
+                        <span className="text-gray-900 font-medium">Liên hệ</span>
                     </div>
                 </div>
                 <div className="max-w-lg mx-auto px-4 mt-12">
@@ -90,11 +90,11 @@ export const ContactPage = () => {
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <CheckCircle className="w-8 h-8 text-green-600" />
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Gui lien he thanh cong!</h1>
-                        <p className="text-gray-500 text-sm mb-6">Chung toi se phan hoi trong thoi gian som nhat.</p>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Gửi liên hệ thành công!</h1>
+                        <p className="text-gray-500 text-sm mb-6">Chúng tôi sẽ phản hồi trong thời gian sớm nhất.</p>
                         <div className="flex gap-3 justify-center">
-                            <Link to="/" className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition text-sm cursor-pointer">Ve trang chu</Link>
-                            <button onClick={() => setSubmitSuccess(false)} className="px-5 py-2.5 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition text-sm cursor-pointer">Gui lien he khac</button>
+                            <Link to="/" className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition text-sm cursor-pointer">Về trang chủ</Link>
+                            <button onClick={() => setSubmitSuccess(false)} className="px-5 py-2.5 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition text-sm cursor-pointer">Gửi liên hệ khác</button>
                         </div>
                     </div>
                 </div>
@@ -104,32 +104,32 @@ export const ContactPage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen pb-16">
-            <SEO title="Lien he" description={`Lien he voi ${companyName} - Hotline: ${phone}. Dia chi: ${address}.`} />
+            <SEO title="Liên hệ" description={`Liên hệ với ${companyName} - Hotline: ${phone}. Địa chỉ: ${address}.`} />
             <div className="bg-white py-3 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 text-sm text-gray-500 flex items-center gap-1">
-                    <Link to="/" className="hover:text-accent cursor-pointer">Trang chu</Link>
+                    <Link to="/" className="hover:text-accent cursor-pointer">Trang chủ</Link>
                     <ChevronRight size={14} className="text-gray-400" />
-                    <span className="text-gray-900 font-medium">Lien he</span>
+                    <span className="text-gray-900 font-medium">Liên hệ</span>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 mt-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">Lien he voi <span className="text-accent">Quang Huong</span></h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-8">Liên hệ với <span className="text-accent">Quang Hưởng</span></h1>
 
                 <div className="grid md:grid-cols-5 gap-6">
                     {/* Contact Form - 3 cols */}
                     <div className="md:col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
-                        <h2 className="text-lg font-bold text-gray-900 mb-6">Gui tin nhan tu van</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-6">Gửi tin nhắn tư vấn</h2>
                         {submitError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{submitError}</div>}
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ho ten *</label>
-                                    <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={inputCls(!!errors.fullName)} placeholder="Nguyen Van A" />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Họ tên *</label>
+                                    <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={inputCls(!!errors.fullName)} placeholder="Nguyễn Văn A" />
                                     {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Dien thoai *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Điện thoại *</label>
                                     <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className={inputCls(!!errors.phone)} placeholder="09xxx..." />
                                     {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                                 </div>
@@ -140,27 +140,27 @@ export const ContactPage = () => {
                                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Tieu de *</label>
-                                <SearchableSelect name="subject" value={formData.subject} onChange={(val) => handleInputChange({ target: { name: 'subject', value: val } } as any)} error={!!errors.subject} placeholder="-- Chon chu de --"
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Tiêu đề *</label>
+                                <SearchableSelect name="subject" value={formData.subject} onChange={(val) => handleInputChange({ target: { name: 'subject', value: val } } as any)} error={!!errors.subject} placeholder="-- Chọn chủ đề --"
                                     options={[
-                                        { value: 'Tu van mua hang', label: 'Tu van mua hang' },
-                                        { value: 'Ho tro ky thuat', label: 'Ho tro ky thuat' },
-                                        { value: 'Bao hanh san pham', label: 'Bao hanh san pham' },
-                                        { value: 'Khieu nai', label: 'Khieu nai' },
-                                        { value: 'Hop tac kinh doanh', label: 'Hop tac kinh doanh' },
-                                        { value: 'Khac', label: 'Khac' },
+                                        { value: 'Tư vấn mua hàng', label: 'Tư vấn mua hàng' },
+                                        { value: 'Hỗ trợ kỹ thuật', label: 'Hỗ trợ kỹ thuật' },
+                                        { value: 'Bảo hành sản phẩm', label: 'Bảo hành sản phẩm' },
+                                        { value: 'Khiếu nại', label: 'Khiếu nại' },
+                                        { value: 'Hợp tác kinh doanh', label: 'Hợp tác kinh doanh' },
+                                        { value: 'Khác', label: 'Khác' },
                                     ]}
                                 />
                                 {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Noi dung *</label>
-                                <textarea name="message" value={formData.message} onChange={handleInputChange} className={`${inputCls(!!errors.message)} h-28 resize-none`} placeholder="Noi dung can tu van..." />
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nội dung *</label>
+                                <textarea name="message" value={formData.message} onChange={handleInputChange} className={`${inputCls(!!errors.message)} h-28 resize-none`} placeholder="Nội dung cần tư vấn..." />
                                 {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
                             </div>
                             <button type="submit" disabled={isSubmitting}
                                 className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer">
-                                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Dang gui...</> : <><Send className="w-4 h-4" /> Gui lien he</>}
+                                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang gửi...</> : <><Send className="w-4 h-4" /> Gửi liên hệ</>}
                             </button>
                         </form>
                     </div>

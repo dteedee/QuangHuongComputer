@@ -18,11 +18,11 @@ interface ProductReviewsTabProps {
 }
 
 const SORT_OPTIONS = [
-  { value: 'newest', label: 'Moi nhat' },
-  { value: 'oldest', label: 'Cu nhat' },
-  { value: 'highest', label: 'Cao nhat' },
-  { value: 'lowest', label: 'Thap nhat' },
-  { value: 'helpful', label: 'Huu ich' },
+  { value: 'newest', label: 'Mới nhất' },
+  { value: 'oldest', label: 'Cũ nhất' },
+  { value: 'highest', label: 'Cao nhất' },
+  { value: 'lowest', label: 'Thấp nhất' },
+  { value: 'helpful', label: 'Hữu ích' },
 ] as const;
 
 export default function ProductReviewsTab({
@@ -58,7 +58,7 @@ export default function ProductReviewsTab({
 
   const renderWriteReviewButton = () => {
     if (checkingPurchase) {
-      return <div className="text-gray-500 text-sm">Dang kiem tra...</div>;
+      return <div className="text-gray-500 text-sm">Đang kiểm tra...</div>;
     }
     if (hasPurchased) {
       return (
@@ -66,7 +66,7 @@ export default function ProductReviewsTab({
           onClick={onWriteReview}
           className="px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-all cursor-pointer"
         >
-          Viet danh gia
+          Viết đánh giá
         </button>
       );
     }
@@ -77,10 +77,10 @@ export default function ProductReviewsTab({
             disabled
             className="px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed"
           >
-            Viet danh gia
+            Viết đánh giá
           </button>
           <span className="text-xs text-gray-500 hidden sm:flex items-center gap-1">
-            Mua de danh gia
+            Mua để đánh giá
           </span>
         </div>
       );
@@ -90,7 +90,7 @@ export default function ProductReviewsTab({
         onClick={onWriteReview}
         className="px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-all cursor-pointer"
       >
-        Dang nhap de danh gia
+        Đăng nhập để đánh giá
       </button>
     );
   };
@@ -100,7 +100,7 @@ export default function ProductReviewsTab({
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-xl font-bold text-gray-900">
-          Danh gia tu khach hang ({reviews.length})
+          Đánh giá từ khách hàng ({reviews.length})
         </h3>
         {renderWriteReviewButton()}
       </div>
@@ -118,7 +118,7 @@ export default function ProductReviewsTab({
       {reviews.length > 1 && (
         <div className="flex items-center gap-3 pt-2">
           <Filter className="w-4 h-4 text-gray-400" />
-          <span className="text-sm font-medium text-gray-500">Sap xep:</span>
+          <span className="text-sm font-medium text-gray-500">Sắp xếp:</span>
           <div className="flex flex-wrap gap-2">
             {SORT_OPTIONS.map((option) => (
               <button
@@ -141,7 +141,7 @@ export default function ProductReviewsTab({
       {loadingReviews ? (
         <div className="py-10 text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent mx-auto" />
-          <p className="mt-4 text-gray-500 font-medium">Dang tai danh gia...</p>
+          <p className="mt-4 text-gray-500 font-medium">Đang tải đánh giá...</p>
         </div>
       ) : sortedReviews.length > 0 ? (
         <div className="space-y-4">
@@ -154,33 +154,33 @@ export default function ProductReviewsTab({
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white text-gray-300 mb-4">
             <Star size={32} />
           </div>
-          <h4 className="text-gray-900 font-bold mb-2">Chua co danh gia nao</h4>
+          <h4 className="text-gray-900 font-bold mb-2">Chưa có đánh giá nào</h4>
           {hasPurchased ? (
             <>
               <p className="text-gray-500 text-sm mb-4">
-                Hay la nguoi dau tien chia se cam nhan ve san pham nay!
+                Hãy là người đầu tiên chia sẻ cảm nhận về sản phẩm này!
               </p>
               <button
                 onClick={onWriteReview}
                 className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-all cursor-pointer"
               >
-                Viet danh gia dau tien
+                Viết đánh giá đầu tiên
               </button>
             </>
           ) : isAuthenticated ? (
             <p className="text-gray-500 text-sm">
-              Mua san pham nay de tro thanh nguoi dau tien danh gia!
+              Mua sản phẩm này để trở thành người đầu tiên đánh giá!
             </p>
           ) : (
             <>
               <p className="text-gray-500 text-sm mb-4">
-                Dang nhap va mua san pham de danh gia!
+                Đăng nhập và mua sản phẩm để đánh giá!
               </p>
               <button
                 onClick={onWriteReview}
                 className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-all cursor-pointer"
               >
-                Dang nhap ngay
+                Đăng nhập ngay
               </button>
             </>
           )}
