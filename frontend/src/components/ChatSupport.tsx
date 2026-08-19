@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
+import { useCompanyInfo } from '../hooks/use-company-info';
 import { Users, Send, Info, AlertCircle, Phone, X, RefreshCw } from 'lucide-react';
 import { MessageBubble, type MessageData } from './chat/MessageBubble';
 import { TypingIndicator } from './chat/TypingIndicator';
@@ -16,6 +17,7 @@ interface QueuedMessage {
 
 export const ChatSupport = () => {
   const { isAuthenticated, user } = useAuth();
+  const { companyInfo } = useCompanyInfo();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [input, setInput] = useState('');
@@ -284,12 +286,12 @@ export const ChatSupport = () => {
                 <p className="font-bold text-gray-900 mb-1">Bắt đầu cuộc trò chuyện</p>
                 <p className="text-xs text-gray-500 max-w-xs">Đội ngũ kỹ thuật viên của Quang Hưởng Computer luôn sẵn sàng hỗ trợ bạn.</p>
               </div>
-              <button
-                onClick={() => handleSendMessage()} // Mock action
+              <a
+                href={`tel:${companyInfo.hotline.replace(/\D/g, '')}`}
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase text-gray-600 shadow-sm hover:border-accent hover:text-accent transition-all"
               >
-                <Phone size={14} /> Hotline: 0904.235.090
-              </button>
+                <Phone size={14} /> Hotline: {companyInfo.hotline}
+              </a>
             </div>
           )}
 

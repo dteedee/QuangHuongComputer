@@ -3,6 +3,8 @@ import {
     Truck, RotateCcw, ShieldCheck, Calculator,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { useSystemConfig } from '../../context/SystemConfigContext';
+import { useCompanyInfo } from '../../hooks/use-company-info';
 
 interface ProductBuyingGuideTabProps {
     price: number;
@@ -13,11 +15,20 @@ const INSTALLMENT_MIN = 5_000_000;
 const INSTALLMENT_TERMS = [6, 9, 12] as const;
 
 /**
- * Tab hướng dẫn mua & trả góp — nội dung tĩnh giai đoạn 1.
- * Dữ liệu phí ship / đổi trả / trả góp là mock; sẽ nối chính sách backend ở phase sau.
+ * Tab hướng dẫn mua & trả góp.
+ * Phí ship / ngưỡng freeship / số ngày đổi trả đọc từ System Config
+ * (khoá: SHIPPING_COST, FREESHIP_THRESHOLD, RETURN_WINDOW_DAYS — GET /api/config/public),
+ * hotline đọc từ useCompanyInfo. Trả góp vẫn là ước tính minh hoạ (đã ghi chú rõ trong UI).
  */
 export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBuyingGuideTabProps) {
+    const { getNumber } = useSystemConfig();
+    const { companyInfo } = useCompanyInfo();
     const showInstallment = price >= INSTALLMENT_MIN;
+
+    const shippingCost = getNumber('SHIPPING_COST', 30000);
+    // FREESHIP_THRESHOLD là key chuẩn (FREE_SHIPPING_THRESHOLD đã xóa khỏi seed vì trùng lặp)
+    const freeShipThreshold = getNumber('FREESHIP_THRESHOLD', 500000);
+    const returnWindowDays = getNumber('RETURN_WINDOW_DAYS', 7);
 
     return (
         <div className="space-y-5">
@@ -116,16 +127,16 @@ export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBu
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
                     <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 flex justify-between">
-                        <span>Nội thành Hải Phòng</span>
-                        <span className="font-semibold text-gray-900">30.000đ</span>
+                        <span>Nội thành / Tỉnh</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(shippingCost)}</span>
                     </div>
                     <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 flex justify-between">
-                        <span>Ngoại thành / Tỉnh</span>
-                        <span className="font-semibold text-gray-900">50.000đ</span>
+                        <span>Hotline hỗ trợ giao hàng</span>
+                        <span className="font-semibold text-gray-900">{companyInfo.hotline}</span>
                     </div>
                 </div>
                 <p className="text-[11px] text-gray-500 mt-2">
-                    Miễn phí vận chuyển cho đơn từ 5.000.000đ trở lên. Giao trong 24h nội thành.
+                    Miễn phí vận chuyển cho đơn từ {formatCurrency(freeShipThreshold)} trở lên.
                 </p>
             </section>
 
@@ -134,11 +145,11 @@ export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBu
                 <div className="bg-white rounded-xl border border-gray-100 p-5">
                     <h4 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-2">
                         <RotateCcw className="w-4 h-4 text-[var(--accent-primary)]" />
-                        Đổi trả 7 ngày
+                        Đổi trả {returnWindowDays} ngày
                     </h4>
                     <p className="text-xs leading-relaxed text-gray-600">
-                        Đổi trả miễn phí trong 7 ngày nếu sản phẩm còn nguyên tem, hộp, phụ kiện. Lỗi nhà sản
-                        xuất được đổi mới trong 15 ngày đầu.
+                        Đổi trả miễn phí trong {returnWindowDays} ngày nếu sản phẩm còn nguyên tem, hộp, phụ kiện.
+                        Lỗi nhà sản xuất được đổi mới theo chính sách bảo hành.
                     </p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-100 p-5">

@@ -494,10 +494,9 @@ export async function issueEInvoice(
     orderId: string,
     buyerInfo: { taxCode: string; name: string; address: string; email: string }
 ) {
-    const { data } = await client.post(`/accounting/einvoice/issue/${orderId}`, {
-        provider: 'Mock',
-        ...buyerInfo,
-    });
+    // Backend chọn provider (MISA/Mock) qua cấu hình DI theo môi trường, không đọc field
+    // "provider" từ request — body chỉ cần thông tin người mua.
+    const { data } = await client.post(`/accounting/einvoice/issue/${orderId}`, buyerInfo);
     return data;
 }
 

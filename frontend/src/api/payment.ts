@@ -49,8 +49,11 @@ export const paymentApi = {
         return response.data;
     },
 
-    // Mock webhook (for testing)
+    // Mock webhook — chỉ dùng khi dev/test local, endpoint test backend không tồn tại ở production.
     mockWebhook: async (data: { paymentId: string; success: boolean }): Promise<void> => {
+        if (!import.meta.env.DEV) {
+            throw new Error('mockWebhook chỉ khả dụng trong môi trường development.');
+        }
         await client.post('/payments/webhook/mock', data);
     },
 

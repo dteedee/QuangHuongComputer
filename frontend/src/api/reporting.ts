@@ -202,6 +202,35 @@ export async function getDashboardKPIs() {
     return data;
 }
 
+// ============================================
+// System Health (GET /api/reports/system-health)
+// ============================================
+export interface SystemHealthMetrics {
+    cpu: number;
+    memory: number;
+    storage: number;
+    network: number;
+}
+
+export interface SystemHealthService {
+    name: string;
+    status: 'operational' | 'degraded' | 'outage';
+    latency: number;
+    uptime: string;
+}
+
+export interface SystemHealthReport {
+    status: 'healthy' | 'degraded';
+    updatedAt: string;
+    metrics: SystemHealthMetrics;
+    services: SystemHealthService[];
+}
+
+export async function getSystemHealth(): Promise<SystemHealthReport> {
+    const { data } = await client.get<SystemHealthReport>('/reports/system-health');
+    return data;
+}
+
 // Helper functions
 function downloadBlob(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);

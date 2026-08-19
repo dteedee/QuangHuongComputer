@@ -1,62 +1,17 @@
-import { useState, useEffect } from 'react';
-import { 
-    Activity, Server, Database, HardDrive, Cpu, 
-    Wifi, AlertTriangle, CheckCircle2, Clock, 
-    RefreshCw, Shield, Globe, Terminal
+import {
+    Activity, Server, Database, HardDrive, Cpu,
+    Wifi, AlertTriangle, CheckCircle2,
+    RefreshCw, Shield, Globe, Loader2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-// In a real app, this would use a real system health API endpoint
-// For now we'll mock the data since the endpoint might not exist yet
-
-interface HealthMetrics {
-    cpu: number;
-    memory: number;
-    storage: number;
-    network: number;
-}
-
-interface ServiceStatus {
-    name: string;
-    status: 'operational' | 'degraded' | 'outage';
-    latency: number;
-    uptime: string;
-}
+import { getSystemHealth } from '../../api/reporting';
 
 export default function SystemHealthPage() {
-    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-    
-    // Mock simulation for live metrics
-    const [metrics, setMetrics] = useState<HealthMetrics>({
-        cpu: 24,
-        memory: 68,
-        storage: 45,
-        network: 15
+    const { data, isLoading, isError, dataUpdatedAt, refetch, isFetching } = useQuery({
+        queryKey: ['system-health'],
+        queryFn: getSystemHealth,
+        refetchInterval: 10000,
     });
-
-    useEffect(() => {
-        // Simulate live metric updates
-        const interval = setInterval(() => {
-            setMetrics(prev => ({
-                cpu: Math.min(100, Math.max(0, prev.cpu + (Math.random() * 10 - 5))),
-                memory: Math.min(100, Math.max(0, prev.memory + (Math.random() * 4 - 2))),
-                storage: prev.storage, // Storage rarely changes quickly
-                network: Math.min(100, Math.max(0, prev.network + (Math.random() * 20 - 10)))
-            }));
-            setLastUpdated(new Date());
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const services: ServiceStatus[] = [
-        { name: 'API Gateway', status: 'operational', latency: 45, uptime: '99.99%' },
-        { name: 'Database (PostgreSQL)', status: 'operational', latency: 12, uptime: '99.95%' },
-        { name: 'Authentication Service', status: 'operational', latency: 25, uptime: '99.99%' },
-        { name: 'Payment Gateway', status: 'operational', latency: 120, uptime: '99.90%' },
-        { name: 'Background Workers', status: 'degraded', latency: 450, uptime: '98.50%' },
-        { name: 'Cache Layer (Redis)', status: 'operational', latency: 2, uptime: '99.99%' },
-        { name: 'Search Service', status: 'operational', latency: 65, uptime: '99.95%' },
-        { name: 'Notification Service', status: 'operational', latency: 40, uptime: '99.95%' }
-    ];
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -79,7 +34,7 @@ export default function SystemHealthPage() {
     const MetricCard = ({ title, value, icon, unit = '%' }: { title: string, value: number, icon: React.ReactNode, unit?: string }) => {
         const isWarning = value > 80;
         const isDanger = value > 90;
-        
+
         return (
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -95,23 +50,53 @@ export default function SystemHealthPage() {
                         <Activity className="w-5 h-5 text-green-500" />
                     )}
                 </div>
-                
+
                 <div className="flex items-end gap-2 mb-2">
                     <span className="text-3xl font-semibold text-gray-900">{value.toFixed(1)}</span>
                     <span className="text-gray-500 text-lg mb-1">{unit}</span>
                 </div>
 
                 <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div 
+                    <div
                         className={`h-full rounded-full transition-all duration-500 ${
                             isDanger ? 'bg-red-500' : isWarning ? 'bg-orange-500' : 'bg-accent'
                         }`}
-                        style={{ width: `${value}%` }}
+                        style={{ width: `${Math.min(100, value)}%` }}
                     />
                 </div>
             </div>
         );
     };
+
+    if (isLoading) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto flex items-center justify-center h-96 text-gray-400">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                Đang tải dữ liệu hệ thống...
+            </div>
+        );
+    }
+
+    if (isError || !data) {
+        return (
+            <div className="p-6 max-w-7xl mx-auto">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+                    <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                    <p className="text-red-700 font-semibold mb-1">Không thể tải dữ liệu tình trạng hệ thống</p>
+                    <p className="text-sm text-red-500 mb-4">Vui lòng kiểm tra kết nối đến máy chủ báo cáo.</p>
+                    <button
+                        onClick={() => refetch()}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-700 rounded-xl font-bold hover:bg-red-50 transition-colors"
+                    >
+                        <RefreshCw className="w-4 h-4" /> Thử lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const { metrics, services, status } = data;
+    const isHealthy = status === 'healthy';
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -123,15 +108,15 @@ export default function SystemHealthPage() {
                         System Health
                     </h1>
                     <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        Hệ thống đang hoạt động bình thường • Cập nhật: {lastUpdated.toLocaleTimeString()}
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${isHealthy ? 'bg-green-500' : 'bg-orange-500'}`}></span>
+                        {isHealthy ? 'Hệ thống đang hoạt động bình thường' : 'Hệ thống đang gặp suy giảm'} • Cập nhật: {new Date(dataUpdatedAt).toLocaleTimeString()}
                     </p>
                 </div>
-                <button 
-                    onClick={() => setLastUpdated(new Date())}
+                <button
+                    onClick={() => refetch()}
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm"
                 >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
                     Làm mới
                 </button>
             </div>
@@ -194,9 +179,8 @@ export default function SystemHealthPage() {
                     </div>
                 </div>
 
-                {/* System Info & Logs */}
+                {/* Environment Info */}
                 <div className="space-y-6">
-                    {/* Environment Info */}
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-gray-500" />
@@ -204,51 +188,18 @@ export default function SystemHealthPage() {
                         </h2>
                         <div className="space-y-3 text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                                <span className="text-gray-500">Trạng thái tổng quan</span>
+                                <span className={`font-bold px-2 py-0.5 rounded ${isHealthy ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {isHealthy ? 'Healthy' : 'Degraded'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
                                 <span className="text-gray-500">Môi trường</span>
-                                <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">Production</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                <span className="text-gray-500">Phiên bản API</span>
-                                <span className="font-medium text-gray-900">v1.2.4</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                <span className="text-gray-500">Phiên bản Frontend</span>
-                                <span className="font-medium text-gray-900">v2.1.0</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                                <span className="text-gray-500">Khu vực</span>
-                                <span className="font-medium text-gray-900">ap-southeast-1</span>
+                                <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{import.meta.env.MODE}</span>
                             </div>
                             <div className="flex justify-between items-center py-2">
-                                <span className="text-gray-500">Thời gian chạy</span>
-                                <span className="font-medium text-gray-900">45 ngày, 12 giờ</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Logs */}
-                    <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                                <Terminal className="w-4 h-4 text-gray-400" />
-                                System Events
-                            </h2>
-                        </div>
-                        <div className="p-4 space-y-2 font-mono text-xs overflow-y-auto max-h-[250px]">
-                            <div className="text-gray-400">
-                                <span className="text-blue-400">[{new Date(Date.now() - 50000).toLocaleTimeString()}]</span> INFO: Backup completed successfully
-                            </div>
-                            <div className="text-gray-400">
-                                <span className="text-blue-400">[{new Date(Date.now() - 120000).toLocaleTimeString()}]</span> INFO: User sync finished (452 records)
-                            </div>
-                            <div className="text-orange-400">
-                                <span className="text-orange-400">[{new Date(Date.now() - 240000).toLocaleTimeString()}]</span> WARN: Background worker high latency detected
-                            </div>
-                            <div className="text-gray-400">
-                                <span className="text-blue-400">[{new Date(Date.now() - 360000).toLocaleTimeString()}]</span> INFO: Cache invalidated for /api/products
-                            </div>
-                            <div className="text-gray-400">
-                                <span className="text-blue-400">[{new Date(Date.now() - 480000).toLocaleTimeString()}]</span> INFO: Service restarted: EmailWorker
+                                <span className="text-gray-500">Cập nhật lần cuối</span>
+                                <span className="font-medium text-gray-900">{new Date(data.updatedAt).toLocaleString('vi-VN')}</span>
                             </div>
                         </div>
                     </div>

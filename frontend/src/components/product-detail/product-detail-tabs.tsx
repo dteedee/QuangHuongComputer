@@ -120,7 +120,7 @@ export default function ProductDetailTabs({
                         onMarkHelpful={onMarkHelpful}
                     />
                 )}
-                {activeTab === 'qa' && <ProductQaTab productId={product.id} />}
+                {activeTab === 'qa' && <ProductQaTab productId={product.id} productName={product.name} />}
             </div>
         </div>
     );

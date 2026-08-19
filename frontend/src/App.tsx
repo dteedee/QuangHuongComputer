@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -7,6 +7,7 @@ import { CartProvider } from './context/CartContext';
 import { ComparisonProvider } from './context/ComparisonContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ConfirmProvider } from './context/ConfirmContext';
+import { SystemConfigProvider } from './context/SystemConfigContext';
 import { ComparisonBar } from './components/comparison';
 import { RequireAuth } from './components/RequireAuth';
 import { Toaster } from 'react-hot-toast';
@@ -207,17 +208,23 @@ const queryClient = new QueryClient();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-function App() {
-  const effectiveClientId = GOOGLE_CLIENT_ID || 'placeholder.apps.googleusercontent.com';
+// Bọc children bằng GoogleOAuthProvider chỉ khi có client id thật — tránh
+// render provider với placeholder gây lỗi console + nút đăng nhập Google giả.
+function OptionalGoogleOAuthProvider({ children }: { children: ReactNode }) {
+  if (!GOOGLE_CLIENT_ID) return <>{children}</>;
+  return <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{children}</GoogleOAuthProvider>;
+}
 
+function App() {
   return (
-    <GoogleOAuthProvider clientId={effectiveClientId}>
+    <OptionalGoogleOAuthProvider>
       <QueryClientProvider client={queryClient}>
         <Toaster position="top-right" reverseOrder={false} />
 
         <BrowserRouter>
           <AnalyticsTracker />
           <ScrollToTop />
+          <SystemConfigProvider>
           <ConfirmProvider>
           <AuthProvider>
             <ThemeProvider>
@@ -263,7 +270,6 @@ function App() {
                         <Route path="laptop" element={<CategoryPage />} />
                         <Route path="pc-gaming" element={<CategoryPage />} />
                         <Route path="workstation" element={<CategoryPage />} />
-                        <Route path="office" element={<CategoryPage />} />
                         <Route path="components" element={<CategoryPage />} />
                         <Route path="screens" element={<CategoryPage />} />
                         <Route path="search" element={<CategoryPage />} />
@@ -421,10 +427,11 @@ function App() {
             </ThemeProvider>
           </AuthProvider>
           </ConfirmProvider>
+          </SystemConfigProvider>
           <AiChatWidget />
         </BrowserRouter>
       </QueryClientProvider>
-    </GoogleOAuthProvider>
+    </OptionalGoogleOAuthProvider>
   );
 }
 
