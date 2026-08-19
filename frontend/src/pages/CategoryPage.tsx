@@ -200,7 +200,7 @@ export const CategoryPage = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                 {/* Header Banner */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6 flex items-center gap-4">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-small p-5 mb-6 flex items-center gap-4">
                     <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center text-accent flex-shrink-0">
                         <Monitor size={28} />
                     </div>
@@ -213,7 +213,7 @@ export const CategoryPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Sidebar Filters */}
                     <div className="hidden lg:block">
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-small p-5 space-y-5">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
                                     <Filter size={15} />
@@ -229,20 +229,23 @@ export const CategoryPage = () => {
                                 )}
                             </div>
 
-                            {/* Brands */}
+                            {/* Brands — filter pills (border, radius full, hover đỏ) */}
                             <div>
                                 <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Thương hiệu</h4>
-                                <div className="flex flex-col gap-2 text-sm text-gray-600 max-h-60 overflow-y-auto pr-1">
+                                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
                                     {brands.map((brand) => (
-                                        <label key={brand.id} className="flex items-center gap-2 cursor-pointer hover:text-accent transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedBrandId === brand.id}
-                                                onChange={() => handleBrandSelect(brand.id)}
-                                                className="rounded border-gray-300 text-accent focus:ring-accent"
-                                            />
-                                            <span>{brand.name}</span>
-                                        </label>
+                                        <button
+                                            key={brand.id}
+                                            type="button"
+                                            onClick={() => handleBrandSelect(brand.id)}
+                                            className={`px-3 py-1 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
+                                                selectedBrandId === brand.id
+                                                    ? 'bg-accent border-accent text-white'
+                                                    : 'border-gray-200 text-gray-600 hover:border-accent hover:text-accent'
+                                            }`}
+                                        >
+                                            {brand.name}
+                                        </button>
                                     ))}
                                     {brands.length === 0 && (
                                         <p className="text-xs text-gray-400 italic">Đang tải thương hiệu...</p>
@@ -316,7 +319,7 @@ export const CategoryPage = () => {
                     {/* Products Grid */}
                     <div className="lg:col-span-3">
                         {/* Sort Bar */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 mb-4 flex justify-end items-center gap-3">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-small px-4 py-3 mb-4 flex justify-end items-center gap-3">
                             <span className="text-sm text-gray-500">Sắp xếp theo:</span>
                             <SearchableSelect
                                 value={sortBy}
@@ -332,9 +335,9 @@ export const CategoryPage = () => {
                         </div>
 
                         {isLoading ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                    <div key={i} className="bg-white h-[300px] rounded-xl animate-pulse border border-gray-100" />
+                                    <div key={i} className="bg-white h-[300px] rounded-lg animate-pulse border border-gray-200" />
                                 ))}
                             </div>
                         ) : (
@@ -344,14 +347,14 @@ export const CategoryPage = () => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.4 }}
-                                        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+                                        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
                                     >
                                         {products.map((product) => (
                                             <ProductCard key={product.id} product={product} />
                                         ))}
                                     </motion.div>
                                 ) : (
-                                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+                                    <div className="bg-white rounded-lg border border-gray-200 shadow-small p-12 text-center">
                                         <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                                         <p className="text-gray-500 mb-3">Không tìm thấy sản phẩm nào phù hợp.</p>
                                         <button
@@ -369,7 +372,7 @@ export const CategoryPage = () => {
                                         <button
                                             disabled={page === 1}
                                             onClick={() => setPage(p => p - 1)}
-                                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all cursor-pointer flex items-center gap-1"
+                                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all cursor-pointer flex items-center gap-1"
                                         >
                                             <ChevronLeft size={16} /> Trước
                                         </button>
@@ -378,10 +381,10 @@ export const CategoryPage = () => {
                                                 <button
                                                     key={i}
                                                     onClick={() => setPage(i + 1)}
-                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-sm transition-all cursor-pointer ${
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold text-sm transition-all cursor-pointer ${
                                                         page === i + 1
-                                                            ? 'bg-accent text-white shadow-sm'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                            ? 'bg-accent text-white shadow-medium'
+                                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-accent hover:text-accent'
                                                     }`}
                                                 >
                                                     {i + 1}
@@ -391,7 +394,7 @@ export const CategoryPage = () => {
                                         <button
                                             disabled={page === totalPages}
                                             onClick={() => setPage(p => p + 1)}
-                                            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all cursor-pointer flex items-center gap-1"
+                                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all cursor-pointer flex items-center gap-1"
                                         >
                                             Sau <ChevronRight size={16} />
                                         </button>

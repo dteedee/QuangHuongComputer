@@ -77,7 +77,7 @@ export default function StoresPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Hero */}
-            <section className="bg-gradient-to-br from-[var(--accent-primary,#dc2626)] to-red-700 text-white">
+            <section className="bg-gradient-to-br from-[var(--accent-primary)] to-red-700 text-white">
                 <div className="max-w-6xl mx-auto px-4 py-12 md:py-16">
                     <div className="flex items-center gap-3 text-white/80 text-sm mb-3">
                         <Building2 className="w-4 h-4" />
@@ -95,7 +95,7 @@ export default function StoresPage() {
 
             <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
                 {/* Filter bar */}
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-small flex flex-col md:flex-row gap-3">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -103,7 +103,7 @@ export default function StoresPage() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Tìm theo tên hoặc địa chỉ..."
-                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[var(--accent-primary,#dc2626)]/20 outline-none placeholder:text-gray-400"
+                            className="w-full pl-11 pr-10 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[var(--accent-primary)]/20 outline-none placeholder:text-gray-400"
                         />
                         {search && (
                             <button
@@ -119,7 +119,7 @@ export default function StoresPage() {
                     <select
                         value={province}
                         onChange={e => setProvince(e.target.value)}
-                        className="min-w-[180px] px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[var(--accent-primary,#dc2626)]/20 outline-none"
+                        className="min-w-[180px] px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[var(--accent-primary)]/20 outline-none"
                     >
                         <option value="">Tất cả tỉnh/thành</option>
                         {provinces.map(p => (
@@ -132,15 +132,15 @@ export default function StoresPage() {
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[0, 1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-56 rounded-2xl bg-white border border-gray-100 animate-pulse" />
+                            <div key={i} className="h-56 rounded-lg bg-white border border-gray-200 animate-pulse" />
                         ))}
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
+                    <div className="bg-red-50 border border-red-100 rounded-lg p-8 text-center">
                         <p className="text-red-700 font-medium">{error}</p>
                     </div>
                 ) : visible.length === 0 ? (
-                    <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center">
+                    <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
                         <StoreIcon className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                         <h3 className="font-bold text-gray-900 mb-1">Không tìm thấy cửa hàng phù hợp</h3>
                         <p className="text-sm text-gray-500">
@@ -154,10 +154,11 @@ export default function StoresPage() {
                             {province ? ` tại ${province}` : ''}.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {visible.map(store => (
+                            {visible.map((store, index) => (
                                 <StoreCard
                                     key={store.id}
                                     store={store}
+                                    index={index}
                                     onOpen={() => setSelected(store)}
                                 />
                             ))}
@@ -177,7 +178,7 @@ export default function StoresPage() {
 // Card
 // ---------------------------------------------------------------------------
 
-function StoreCard({ store, onOpen }: { store: Store; onOpen: () => void }) {
+function StoreCard({ store, index, onOpen }: { store: Store; index: number; onOpen: () => void }) {
     const fullAddress = [store.address, store.ward, store.district, store.province]
         .filter(Boolean)
         .join(', ');
@@ -190,12 +191,13 @@ function StoreCard({ store, onOpen }: { store: Store; onOpen: () => void }) {
         <button
             type="button"
             onClick={onOpen}
-            className="text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all p-5 flex flex-col gap-3"
+            className="text-left bg-white rounded-lg border border-gray-200 hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200 p-5 flex flex-col gap-3"
         >
+            {/* Header: số thứ tự tròn đỏ + tên — pattern hệ thống showroom hacom footer */}
             <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-red-50 text-[var(--accent-primary,#dc2626)] flex items-center justify-center">
-                        <StoreIcon className="w-5 h-5" />
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {index + 1}
                     </div>
                     <div>
                         <h3 className="font-bold text-gray-900 leading-tight line-clamp-1">{store.name}</h3>
@@ -206,6 +208,7 @@ function StoreCard({ store, onOpen }: { store: Store; onOpen: () => void }) {
                         )}
                     </div>
                 </div>
+                <StoreIcon className="w-5 h-5 text-gray-300 flex-shrink-0" />
             </div>
 
             <div className="text-sm text-gray-600 space-y-1.5">
@@ -219,7 +222,7 @@ function StoreCard({ store, onOpen }: { store: Store; onOpen: () => void }) {
                         <a
                             href={`tel:${store.phone}`}
                             onClick={e => e.stopPropagation()}
-                            className="hover:text-[var(--accent-primary,#dc2626)]"
+                            className="hover:text-[var(--accent-primary)]"
                         >
                             {store.phone}
                         </a>
@@ -243,7 +246,7 @@ function StoreCard({ store, onOpen }: { store: Store; onOpen: () => void }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
-                    className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-primary,#dc2626)] hover:underline"
+                    className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-primary)] hover:underline"
                 >
                     <ExternalLink className="w-4 h-4" />
                     Chỉ đường Google Maps
@@ -277,7 +280,7 @@ function StoreDetailModal({ store, onClose }: { store: Store; onClose: () => voi
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-red-50 text-[var(--accent-primary,#dc2626)] flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 text-[var(--accent-primary)] flex items-center justify-center flex-shrink-0">
                             <StoreIcon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
@@ -307,14 +310,14 @@ function StoreDetailModal({ store, onClose }: { store: Store; onClose: () => voi
                         </InfoRow>
                         <InfoRow icon={<Phone className="w-4 h-4" />} label="Điện thoại">
                             {store.phone ? (
-                                <a href={`tel:${store.phone}`} className="hover:text-[var(--accent-primary,#dc2626)]">
+                                <a href={`tel:${store.phone}`} className="hover:text-[var(--accent-primary)]">
                                     {store.phone}
                                 </a>
                             ) : '—'}
                         </InfoRow>
                         {store.email && (
                             <InfoRow icon={<Mail className="w-4 h-4" />} label="Email">
-                                <a href={`mailto:${store.email}`} className="hover:text-[var(--accent-primary,#dc2626)]">
+                                <a href={`mailto:${store.email}`} className="hover:text-[var(--accent-primary)]">
                                     {store.email}
                                 </a>
                             </InfoRow>
@@ -345,7 +348,7 @@ function StoreDetailModal({ store, onClose }: { store: Store; onClose: () => voi
                                             isToday ? 'bg-red-50/70 font-semibold' : ''
                                         }`}
                                     >
-                                        <span className={isToday ? 'text-[var(--accent-primary,#dc2626)]' : 'text-gray-700'}>
+                                        <span className={isToday ? 'text-[var(--accent-primary)]' : 'text-gray-700'}>
                                             {DAY_LABELS[day]}{isToday ? ' (hôm nay)' : ''}
                                         </span>
                                         <span className={value === 'closed' || !value ? 'text-gray-400 italic' : 'text-gray-800'}>

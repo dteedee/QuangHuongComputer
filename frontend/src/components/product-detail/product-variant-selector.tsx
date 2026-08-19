@@ -104,7 +104,7 @@ export default function ProductVariantSelector({
                         <select
                             value={currentSelection[group.typeId] || ''}
                             onChange={(e) => handlePick(group.typeId, e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:border-[var(--accent-primary,#e11d48)]"
+                            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:border-[var(--accent-primary)]"
                         >
                             {group.values.map((val) => {
                                 const variant = findVariant(group.typeId, val.valueId);
@@ -124,7 +124,7 @@ export default function ProductVariantSelector({
                                 const outOfStock = !variant || variant.status !== 'Active' || variant.stockQuantity <= 0;
                                 const baseCls = `relative px-3 py-2 rounded-lg border text-sm transition-all cursor-pointer ${
                                     isSelected
-                                        ? 'border-[var(--accent-primary,#e11d48)] text-[var(--accent-primary,#e11d48)] bg-red-50/60 font-semibold'
+                                        ? 'border-[var(--accent-primary)] text-[var(--accent-primary)] bg-red-50/60 font-semibold'
                                         : 'border-gray-200 text-gray-700 hover:border-gray-400 bg-white'
                                 } ${outOfStock ? 'opacity-45 line-through' : ''}`;
 
@@ -138,7 +138,7 @@ export default function ProductVariantSelector({
                                             onClick={() => handlePick(group.typeId, val.valueId)}
                                             className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
                                                 isSelected
-                                                    ? 'border-[var(--accent-primary,#e11d48)] ring-2 ring-[var(--accent-primary,#e11d48)]/30'
+                                                    ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/30'
                                                     : 'border-gray-200 hover:border-gray-400'
                                             } ${outOfStock ? 'opacity-45' : ''}`}
                                             style={{ backgroundColor: val.colorHex }}

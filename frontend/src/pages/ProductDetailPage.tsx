@@ -10,7 +10,7 @@ import client from '../api/client';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
-import { formatCurrency } from '../utils/format';
+import { formatNumber } from '../utils/format';
 import { generateProductSchema, generateBreadcrumbSchema } from '../utils/structuredData';
 
 import SEO from '../components/SEO';
@@ -342,9 +342,9 @@ export default function ProductDetailPage() {
             <div className="bg-white border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
                     <nav className="flex items-center gap-2 text-sm">
-                        <button onClick={() => navigate('/')} className="text-gray-500 hover:text-[var(--accent-primary)] transition-colors cursor-pointer">Trang chủ</button>
+                        <button onClick={() => navigate('/')} className="text-gray-500 hover:text-accent transition-colors cursor-pointer">Trang chủ</button>
                         <ChevronRight className="w-4 h-4 text-gray-300" />
-                        <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-[var(--accent-primary)] transition-colors cursor-pointer">Sản phẩm</button>
+                        <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-accent transition-colors cursor-pointer">Sản phẩm</button>
                         <ChevronRight className="w-4 h-4 text-gray-300" />
                         <span className="text-gray-900 font-semibold truncate max-w-xs">{product.name}</span>
                     </nav>
@@ -353,7 +353,7 @@ export default function ProductDetailPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-8 pb-32 lg:pb-10">
                 {/* Grid 2 cột: gallery + info */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-small overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
                         {/* Cột trái: gallery — 60% desktop */}
                         <div className="lg:col-span-3 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-gray-100">
@@ -418,7 +418,7 @@ export default function ProductDetailPage() {
                         <h2 className="text-2xl font-bold text-gray-900">Sản phẩm liên quan</h2>
                         <button
                             onClick={() => navigate(product.categoryId ? `/products?category=${product.categoryId}` : '/products')}
-                            className="text-[var(--accent-primary)] text-sm font-semibold hover:text-[var(--accent-primary-hover)] transition-colors flex items-center gap-1 cursor-pointer"
+                            className="text-accent text-sm font-semibold hover:text-accent-hover transition-colors flex items-center gap-1 cursor-pointer"
                         >
                             Xem tất cả <ChevronRight className="w-4 h-4" />
                         </button>
@@ -428,12 +428,12 @@ export default function ProductDetailPage() {
                             {[1, 2, 3, 4].map((i) => <div key={i} className="aspect-[4/5] bg-gray-100 rounded-xl animate-pulse" />)}
                         </div>
                     ) : relatedProducts.length > 0 ? (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                             {relatedProducts.map((p) => (
                                 <div
                                     key={p.id}
                                     onClick={() => navigate(`/san-pham/${p.slug || p.id}`)}
-                                    className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group overflow-hidden"
+                                    className="bg-white rounded-lg border border-gray-200 hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group overflow-hidden"
                                 >
                                     <div className="aspect-[4/3] bg-white p-4 flex items-center justify-center relative overflow-hidden">
                                         {p.imageUrl ? (
@@ -443,13 +443,15 @@ export default function ProductDetailPage() {
                                         )}
                                     </div>
                                     <div className="p-3 border-t border-gray-50 space-y-1">
-                                        <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm group-hover:text-[var(--accent-primary)] transition-colors leading-snug min-h-[2.5rem]">
+                                        <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm group-hover:text-accent transition-colors leading-snug min-h-[2.5rem]">
                                             {p.name}
                                         </h3>
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-[var(--accent-primary)] font-bold">{formatCurrency(p.price)}</span>
+                                            <span className="text-accent font-bold">
+                                                {formatNumber(p.price)}<sup className="text-[10px] font-bold ml-0.5">₫</sup>
+                                            </span>
                                             {p.oldPrice && p.oldPrice > p.price && (
-                                                <span className="text-gray-400 line-through text-xs">{formatCurrency(p.oldPrice)}</span>
+                                                <span className="text-gray-400 line-through text-xs">{formatNumber(p.oldPrice)}₫</span>
                                             )}
                                         </div>
                                     </div>
@@ -494,21 +496,21 @@ export default function ProductDetailPage() {
                                 </div>
                                 <div className="min-w-0">
                                     <h3 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h3>
-                                    <span className="text-[var(--accent-primary)] font-bold text-sm">{formatCurrency(displayPrice)}</span>
+                                    <span className="text-accent font-bold text-sm">{formatNumber(displayPrice)}<sup className="text-[10px] font-bold ml-0.5">₫</sup></span>
                                 </div>
                             </div>
                             <div className="flex gap-3 w-full md:w-auto">
                                 <button
                                     onClick={handleBuyNow}
                                     disabled={(selectedVariant?.stockQuantity ?? product.stockQuantity) === 0}
-                                    className="flex-1 md:flex-none bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                                    className="flex-1 md:flex-none bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
                                 >
                                     MUA NGAY
                                 </button>
                                 <button
                                     onClick={handleAddToCart}
                                     disabled={(selectedVariant?.stockQuantity ?? product.stockQuantity) === 0 || addingToCart}
-                                    className="flex-1 md:flex-none border-2 border-[var(--accent-primary)] text-[var(--accent-primary)] px-6 py-3 rounded-xl hover:bg-red-50 font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                                    className="flex-1 md:flex-none border-2 border-accent text-accent px-6 py-3 rounded-lg hover:bg-red-50 font-bold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
                                 >
                                     <ShoppingCart className="w-4 h-4" />
                                     <span className="hidden sm:inline">{addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}</span>

@@ -4,6 +4,7 @@ import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api
 import { catalogApi, type Category } from '../api/catalog';
 import { contentApi, type Menu } from '../api/content';
 import { HeaderTopBar } from './header/header-top-bar';
+import { HeaderUtilityBar } from './header/header-utility-bar';
 import { HeaderMainBar } from './header/header-main-bar';
 import { HeaderNavBar } from './header/header-nav-bar';
 import { HeaderMobileMenu } from './header/header-mobile-menu';
@@ -77,7 +78,8 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     return (
         <>
             <header className={`flex flex-col w-full z-50 sticky top-0 bg-white font-sans transition-shadow duration-200 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`}>
-                <HeaderTopBar isScrolled={isScrolled} configs={configs} />
+                <HeaderTopBar isScrolled={isScrolled} />
+                <HeaderUtilityBar isScrolled={isScrolled} configs={configs} />
                 <HeaderMainBar
                     isScrolled={isScrolled}
                     companyBrand1={companyBrand1}
@@ -87,7 +89,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                     onChatClick={onChatClick}
                     onMobileMenuOpen={() => setShowMobileMenu(true)}
                 />
-                <HeaderNavBar headerMenu={headerMenu} />
+                <HeaderNavBar headerMenu={headerMenu} isScrolled={isScrolled} />
             </header>
 
             <HeaderMobileMenu

@@ -1,134 +1,126 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, PackageCheck, Truck } from 'lucide-react';
+import { ShoppingCart, Star, Gift, Ticket } from 'lucide-react';
 import type { Product } from '../api/catalog';
-import { formatCurrency } from '../utils/format';
+import { formatNumber } from '../utils/format';
 import { useCart } from '../context/CartContext';
 
 interface ProductListItemProps {
     product: Product;
 }
 
+/**
+ * ProductListItem — hàng danh sách theo cùng anatomy với ProductCard (ProductCard.tsx),
+ * chỉ đổi bố cục sang ngang (ảnh trái, thông tin giữa, giá + CTA phải).
+ */
 export const ProductListItem = ({ product }: ProductListItemProps) => {
     const { addToCart } = useCart();
     const [imgError, setImgError] = useState(false);
 
-    useEffect(() => {
-        setImgError(false);
-    }, [product.imageUrl]);
+    useEffect(() => { setImgError(false); }, [product.imageUrl]);
 
-    const discount = product.oldPrice && product.oldPrice > product.price
-        ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-        : null;
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart(product);
+    };
+
+    const hasOldPrice = !!product.oldPrice && product.oldPrice > product.price;
+    const savingsPercent = hasOldPrice
+        ? Math.round((1 - product.price / (product.oldPrice as number)) * 100)
+        : 0;
+    const isOutOfStock = product.stockQuantity <= 0;
+    const productUrl = product.slug ? `/san-pham/${product.slug}` : `/product/${product.id}`;
+    const rating = Math.round(product.averageRating || 0);
+    const hasGift = (product as { soldCount?: number }).soldCount != null && (product as { soldCount?: number }).soldCount! > 20;
 
     return (
-        <div className="group bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all p-4 flex flex-col sm:flex-row gap-6">
-            {/* Image */}
-            <div className="relative w-full sm:w-56 h-56 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-                <Link to={`/product/${product.id}`} className="block w-full h-full flex items-center justify-center p-4">
-                    {product.imageUrl && !imgError ? (
-                        <img
-                            src={product.imageUrl}
-                            alt={product.name}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                            onError={() => setImgError(true)}
-                        />
-                    ) : (
-                        <div className="text-gray-300 font-bold text-4xl select-none">
-                            {product?.name?.charAt(0) || '?'}
-                        </div>
-                    )}
-                </Link>
-
-                {discount && (
-                    <div className="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-                        -{discount}%
-                    </div>
+        <Link
+            to={productUrl}
+            className="group bg-white rounded-lg border border-gray-200 hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200 p-4 flex flex-col sm:flex-row gap-5"
+        >
+            {/* Ảnh */}
+            <div className="relative w-full sm:w-44 h-44 flex-shrink-0 bg-white rounded-lg overflow-hidden border border-gray-100 p-3 flex items-center justify-center">
+                {hasGift && (
+                    <span className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        <Gift size={10} /> Quà tặng
+                    </span>
+                )}
+                {product.imageUrl && !imgError ? (
+                    <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        loading="lazy"
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <span className="text-gray-300 font-black text-4xl select-none">{product.name?.charAt(0) || '?'}</span>
                 )}
             </div>
 
-            {/* Content */}
-            <div className="flex-1 flex flex-col">
-                <div className="flex justify-between items-start gap-4">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium">
-                                {product.sku || 'N/A'}
-                            </span>
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} size={10} fill={i < (product.averageRating || 5) ? "currentColor" : "none"} className={i >= (product.averageRating || 5) ? "text-gray-300" : ""} />
-                                ))}
-                                <span className="text-gray-400 ml-1">({product.reviewCount || 0})</span>
-                            </div>
-                        </div>
-
-                        <Link to={`/product/${product.id}`} className="block">
-                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-accent transition-colors leading-tight">
-                                {product.name}
-                            </h3>
-                        </Link>
-
-                        <div className="text-sm text-gray-500 line-clamp-2">
-                            {product.description}
-                        </div>
-
-                        {/* Tech specs preview if available */}
-                        {product.specifications && (
-                            <div className="flex flex-wrap gap-2 pt-2">
-                                {/* Just a mock or parsing minimal specs if needed. For now hiding to keep clean or showing a few badges */}
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-50 text-xs text-gray-600 border border-gray-100">
-                                    <Truck size={12} /> Miễn phí vận chuyển
-                                </span>
-                            </div>
-                        )}
+            {/* Thông tin */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Rating + SKU */}
+                <div className="flex items-center gap-1 mb-1 text-[12px]">
+                    <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <Star key={i} size={11} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
+                        ))}
                     </div>
-
-                    <div className="text-right flex-shrink-0">
-                        {product.priceFrom != null && product.priceFrom < product.price ? (
-                            <div className="flex items-baseline gap-1 justify-end">
-                                <span className="text-xs text-gray-500">Từ</span>
-                                <span className="text-2xl font-bold text-accent leading-none">
-                                    {formatCurrency(product.priceFrom)}
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="text-2xl font-bold text-accent leading-none">
-                                {formatCurrency(product.price)}
-                            </div>
-                        )}
-                        {product.oldPrice && (
-                            <div className="text-sm text-gray-400 line-through mt-1">
-                                {formatCurrency(product.oldPrice)}
-                            </div>
-                        )}
-                    </div>
+                    <span className="text-gray-400 ml-1">Mã: {product.sku}</span>
                 </div>
 
-                <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
-                    <div className={`flex items-center gap-1.5 text-sm font-medium ${product.stockQuantity > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                        <PackageCheck size={16} />
-                        {product.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'}
+                {/* Tên */}
+                <h3 className="text-[15px] font-semibold text-gray-800 line-clamp-2 leading-snug mb-1.5 group-hover:text-accent transition-colors">
+                    {product.name}
+                </h3>
+
+                {product.description && (
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-2">{product.description}</p>
+                )}
+
+                <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-2">
+                    <div>
+                        {/* Giá cũ + tiết kiệm */}
+                        <div className="min-h-[16px] flex items-center gap-2 text-[12px] mb-0.5">
+                            {hasOldPrice && (
+                                <>
+                                    <span className="text-gray-400 line-through">{formatNumber(product.oldPrice as number)}₫</span>
+                                    <span className="text-accent font-semibold">(Tiết kiệm {savingsPercent}%)</span>
+                                </>
+                            )}
+                        </div>
+                        {/* Giá bán */}
+                        <span className="text-[20px] font-bold text-accent leading-none">
+                            {formatNumber(product.price)}
+                            <sup className="text-[12px] font-bold ml-0.5">₫</sup>
+                        </span>
+                        <div className={`mt-1.5 text-[12px] font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-stock'}`}>
+                            {isOutOfStock ? 'Hết hàng' : '✓ Sẵn hàng'}
+                        </div>
                     </div>
 
-                    <div className="flex gap-3">
-                        <Link
-                            to={`/product/${product.id}`}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors"
-                        >
-                            Xem chi tiết
-                        </Link>
-                        <button
-                            onClick={() => addToCart(product)}
-                            disabled={product.stockQuantity === 0}
-                            className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-bold hover:bg-[#b5001a] transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ShoppingCart size={16} />
-                            Thêm vào giỏ
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={isOutOfStock}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                            isOutOfStock
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-accent text-white hover:bg-accent-hover shadow-sm'
+                        }`}
+                    >
+                        <ShoppingCart size={16} />
+                        Thêm vào giỏ
+                    </button>
                 </div>
+
+                {hasOldPrice && (
+                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-50">
+                        <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Ticket size={11} /> Voucher</span>
+                    </div>
+                )}
             </div>
-        </div>
+        </Link>
     );
 };

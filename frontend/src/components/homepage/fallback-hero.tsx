@@ -7,7 +7,7 @@ import { ShoppingBag, Star, Cpu } from 'lucide-react';
  * Full-width gradient (brand red to dark) with headline, tagline, and CTA buttons.
  */
 export const FallbackHero = () => (
-    <div className="max-w-[1400px] mx-auto px-4 pt-6">
+    <div className="w-full">
         <div className="relative bg-gradient-to-br from-slate-900 via-red-900 to-black rounded-2xl overflow-hidden shadow-2xl h-[380px] md:h-[480px]">
             {/* Animated background blobs */}
             <div className="absolute inset-0 overflow-hidden opacity-40">

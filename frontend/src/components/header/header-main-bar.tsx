@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { FontSizeToggle } from '../ui/font-size-toggle';
+import { HeaderSearchPill } from './header-search-pill';
 import {
-    Search, ShoppingCart, Menu as MenuIcon, ChevronDown,
-    MessageCircle
+    Search, ShoppingCart, Menu as MenuIcon,
+    MessageCircle, Cpu, PackageSearch
 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
 import type { Category } from '../../api/catalog';
 
 interface HeaderMainBarProps {
@@ -18,33 +18,15 @@ interface HeaderMainBarProps {
     onMobileMenuOpen: () => void;
 }
 
+/** Main header (74px) theo hacom.vn: logo | search pill bo tron vien do | Xay dung PC | Tra cuu don hang | Gio hang. */
 export const HeaderMainBar = ({
     isScrolled, companyBrand1, companyBrand2,
     categories, onCartClick, onChatClick, onMobileMenuOpen
 }: HeaderMainBarProps) => {
     const navigate = useNavigate();
     const { itemCount } = useCart();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showCategoryMenu, setShowCategoryMenu] = useState(false);
-    const categoryMenuRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
-                setShowCategoryMenu(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
-            setSearchQuery('');
-        }
-    };
+    const handleSearch = (query: string) => navigate(`/products?q=${encodeURIComponent(query)}`);
 
     return (
         <div className={`bg-white border-b border-gray-100 transition-all duration-200 ${isScrolled ? 'py-2' : 'py-3'}`}>
@@ -80,62 +62,9 @@ export const HeaderMainBar = ({
                     </div>
                 </Link>
 
-                {/* Search bar - desktop */}
+                {/* Search bar - desktop, bo tron vien do theo hacom.vn */}
                 <div className="flex-1 max-w-2xl hidden md:block">
-                    <form onSubmit={handleSearch} className="flex h-10">
-                        <div className="relative" ref={categoryMenuRef}>
-                            <button
-                                type="button"
-                                onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-                                className="h-full px-3.5 flex items-center gap-1 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-                            >
-                                Danh muc <ChevronDown size={13} className={`transition-transform duration-200 ${showCategoryMenu ? 'rotate-180' : ''}`} />
-                            </button>
-                            {showCategoryMenu && (
-                                <div className="absolute top-full left-0 mt-1 w-60 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-[100] max-h-72 overflow-y-auto animate-scale-in">
-                                    <Link
-                                        to="/products"
-                                        onClick={() => setShowCategoryMenu(false)}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 text-gray-700 font-medium border-b border-gray-50 cursor-pointer"
-                                    >
-                                        <MenuIcon size={15} className="text-accent" />
-                                        Tat ca san pham
-                                    </Link>
-                                    {categories.map((cat) => (
-                                        <Link
-                                            key={cat.id}
-                                            to={`/products?categoryId=${cat.id}`}
-                                            onClick={() => setShowCategoryMenu(false)}
-                                            className="flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-50 text-gray-600 hover:text-accent transition-colors cursor-pointer"
-                                        >
-                                            <span>{cat.name}</span>
-                                            {cat.productCount !== undefined && cat.productCount > 0 && (
-                                                <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
-                                                    {cat.productCount}
-                                                </span>
-                                            )}
-                                        </Link>
-                                    ))}
-                                    {categories.length === 0 && (
-                                        <div className="px-4 py-3 text-sm text-gray-400 text-center">Dang tai...</div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Tim laptop, PC, linh kien..."
-                            className="flex-1 px-4 bg-white text-gray-900 text-sm border border-gray-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <button
-                            type="submit"
-                            className="bg-accent text-white px-5 rounded-r-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                        >
-                            <Search size={18} />
-                        </button>
-                    </form>
+                    <HeaderSearchPill categories={categories} onSubmit={handleSearch} />
                 </div>
 
                 {/* Right actions */}
@@ -151,6 +80,22 @@ export const HeaderMainBar = ({
 
                     {/* Font-size toggle — chỉ khu khách hàng, giúp người lớn tuổi đọc dễ hơn */}
                     <FontSizeToggle />
+
+                    {/* Build PC + tra cứu đơn hàng — desktop only */}
+                    <Link
+                        to="/products?tag=build-pc"
+                        className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-accent transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                        <Cpu size={18} />
+                        <span className="text-sm font-medium">Xây dựng cấu hình PC</span>
+                    </Link>
+                    <Link
+                        to="/account/orders"
+                        className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-accent transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                        <PackageSearch size={18} />
+                        <span className="text-sm font-medium">Tra cứu đơn hàng</span>
+                    </Link>
 
                     {/* Chat button - desktop */}
                     <button

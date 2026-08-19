@@ -16,9 +16,11 @@ const IconComponents: Record<string, React.ElementType> = {
 
 interface HeaderNavBarProps {
     headerMenu: Menu | null;
+    isScrolled?: boolean;
 }
 
-export const HeaderNavBar = ({ headerMenu }: HeaderNavBarProps) => {
+/** Category nav row — ẩn khi cuộn để header thu gọn (sticky compact), category vẫn truy cập qua search pill "Danh mục". */
+export const HeaderNavBar = ({ headerMenu, isScrolled }: HeaderNavBarProps) => {
     const location = useLocation();
 
     const isActive = (path: string) => {
@@ -43,7 +45,7 @@ export const HeaderNavBar = ({ headerMenu }: HeaderNavBarProps) => {
     };
 
     return (
-        <div className="bg-white border-b border-gray-100 hidden lg:block">
+        <div className={`bg-white border-b border-gray-100 hidden lg:block overflow-hidden transition-all duration-200 ${isScrolled ? 'max-h-0 opacity-0' : 'max-h-12 opacity-100'}`}>
             <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
                 <nav className="flex items-center gap-1 py-1.5 overflow-x-auto scrollbar-hide">
                     {headerMenu?.items ? (

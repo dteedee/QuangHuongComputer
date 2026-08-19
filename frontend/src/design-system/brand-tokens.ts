@@ -61,6 +61,28 @@ export const accentDefaults = {
 /** Regex to validate hex color from admin input (chống CSS injection). */
 export const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 
+/**
+ * ADDITIVE — hacom.vn-inspired layout tokens (phase 03 customer UI redesign).
+ * Only new keys added here; existing token values above are untouched.
+ */
+export const radius = {
+    sm: '8px',
+    md: '12px',
+    lg: '14px',
+} as const;
+
+export const shadow = {
+    small: '0 0 5px #00000005, 0 2px 10px #0000000f, 0 0 1px #0000004d',
+    medium: '0 0 15px #00000008, 0 2px 30px #00000014, 0 0 1px #0000004d',
+    large: '0 0 30px #0000000a, 0 30px 60px #0000001f, 0 0 1px #0000004d',
+} as const;
+
+/** "Sẵn hàng" stock indicator green — distinct key, does not alter `status.success`. */
+export const stockGreen = '#2CC067';
+
+/** Savings/discount badge background (matches brand[50], kept as explicit alias for card anatomy). */
+export const savingsBg = '#FEF2F2';
+
 /** Type helpers */
 export type BrandScale = typeof brand;
 export type InkScale = typeof ink;
@@ -71,6 +93,10 @@ export const brandTokens = {
     surface,
     status,
     accentDefaults,
+    radius,
+    shadow,
+    stockGreen,
+    savingsBg,
 } as const;
 
 export default brandTokens;

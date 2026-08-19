@@ -102,6 +102,9 @@ export default {
           900: '#7C2D12',
           DEFAULT: '#EA580C',
         },
+
+        // Stock indicator green ("✓ Sẵn hàng") — hacom.vn card anatomy, additive.
+        stock: '#2CC067',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -112,6 +115,10 @@ export default {
       boxShadow: {
         'brand': '0 4px 16px rgba(210, 43, 43, 0.15)',
         'brand-lg': '0 8px 32px rgba(210, 43, 43, 0.2)',
+        // hacom.vn-style layered shadows (additive)
+        'small': '0 0 5px #00000005, 0 2px 10px #0000000f, 0 0 1px #0000004d',
+        'medium': '0 0 15px #00000008, 0 2px 30px #00000014, 0 0 1px #0000004d',
+        'large': '0 0 30px #0000000a, 0 30px 60px #0000001f, 0 0 1px #0000004d',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

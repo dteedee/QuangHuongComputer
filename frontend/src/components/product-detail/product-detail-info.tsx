@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Minus, Plus, ShoppingCart, ShoppingBag, Check, Star, Truck, Shield, Headphones } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ShoppingBag, Check, Star, Truck, Shield, Headphones, BadgeCheck } from 'lucide-react';
 import type { Product, ProductVariant, StockByBranch } from '../../api/catalog';
-import { formatCurrency } from '../../utils/format';
+import { formatNumber } from '../../utils/format';
 import ProductVariantSelector from './product-variant-selector';
 import ProductStockByBranch from './product-stock-by-branch';
 
@@ -62,27 +62,26 @@ export default function ProductDetailInfo({
                 </div>
             </div>
 
-            {/* Giá */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <div className="flex items-baseline gap-3 flex-wrap">
-                    {showPriceFrom != null && !selectedVariant ? (
-                        <>
-                            <span className="text-sm text-gray-500">Từ</span>
-                            <span className="text-2xl font-bold text-[var(--accent-primary)]">{formatCurrency(showPriceFrom)}</span>
-                        </>
-                    ) : (
-                        <span className="text-2xl font-bold text-[var(--accent-primary)]">{formatCurrency(displayPrice)}</span>
-                    )}
+            {/* Giá — pattern hacom: giá cũ gạch + tiết kiệm % → giá bán đỏ bold, ₫ superscript */}
+            <div className="bg-red-50/40 rounded-lg p-4 border border-gray-200">
+                <div className="min-h-[18px] flex items-center gap-2 text-[13px] mb-1">
                     {displayOldPrice && displayOldPrice > displayPrice && (
                         <>
-                            <span className="text-gray-400 line-through text-sm">{formatCurrency(displayOldPrice)}</span>
-                            {discount && (
-                                <span className="bg-red-50 text-[var(--accent-primary)] border border-red-100 px-2 py-0.5 rounded text-xs font-semibold">
-                                    -{discount}%
-                                </span>
+                            <span className="text-gray-400 line-through">{formatNumber(displayOldPrice)}₫</span>
+                            {discount != null && (
+                                <span className="text-accent font-semibold">(Tiết kiệm {discount}%)</span>
                             )}
                         </>
                     )}
+                </div>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                    {showPriceFrom != null && !selectedVariant && (
+                        <span className="text-sm text-gray-500">Từ</span>
+                    )}
+                    <span className="text-[28px] font-bold text-accent leading-none">
+                        {formatNumber(showPriceFrom != null && !selectedVariant ? showPriceFrom : displayPrice)}
+                        <sup className="text-sm font-bold ml-0.5">₫</sup>
+                    </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1.5">Giá đã bao gồm VAT</p>
             </div>
@@ -96,18 +95,18 @@ export default function ProductDetailInfo({
                 />
             )}
 
-            {/* Trạng thái tồn */}
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold ${
+            {/* Trạng thái tồn — "✓ Sẵn hàng" xanh theo pattern hacom */}
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold border ${
                 availableStock > 10
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                    ? 'bg-emerald-50 text-stock border-emerald-100'
                     : availableStock > 0
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                        : 'bg-red-50 text-red-600 border border-red-100'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-red-50 text-red-600 border-red-100'
             }`}>
                 {availableStock > 10 && <Check className="w-4 h-4" />}
                 <span>
                     {availableStock > 10
-                        ? 'Còn hàng'
+                        ? '✓ Sẵn hàng'
                         : availableStock > 0
                             ? `Chỉ còn ${availableStock} sản phẩm`
                             : 'Hết hàng'}
@@ -143,22 +142,22 @@ export default function ProductDetailInfo({
                 <span className="text-gray-500 text-xs">{availableStock} sản phẩm có sẵn</span>
             </div>
 
-            {/* Nút hành động */}
+            {/* Nút hành động — CTA đỏ theo pattern hacom */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <button
                     onClick={onBuyNow}
                     disabled={availableStock === 0}
-                    className="flex-[2] bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white px-6 py-3 rounded-xl font-semibold transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-[2] bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-bold transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                     <ShoppingBag className="w-5 h-5" /> MUA NGAY
                 </button>
                 <button
                     onClick={onAddToCart}
                     disabled={availableStock === 0 || addingToCart}
-                    className="flex-1 border border-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-50 hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold cursor-pointer"
+                    className="flex-1 border-2 border-accent text-accent px-4 py-3 rounded-lg hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 flex items-center justify-center gap-2 font-bold cursor-pointer"
                 >
                     <ShoppingCart className="w-5 h-5" />
-                    {addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}
+                    {addingToCart ? 'ĐANG THÊM...' : 'THÊM VÀO GIỎ'}
                 </button>
             </div>
 
@@ -175,10 +174,24 @@ export default function ProductDetailInfo({
                     { icon: Shield, title: 'Bảo hành chính hãng', sub: product.warrantyInfo || '12 tháng' },
                     { icon: Headphones, title: 'Hỗ trợ 24/7', sub: '0904.235.090' },
                 ].map(({ icon: Icon, title, sub }) => (
-                    <div key={title} className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div key={title} className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <Icon className="w-5 h-5 text-gray-400 mb-1.5" />
                         <span className="text-xs font-semibold text-gray-900 leading-tight">{title}</span>
                         <span className="text-[11px] text-gray-500 mt-0.5">{sub}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Cam kết / chính sách */}
+            <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+                {[
+                    'Sản phẩm chính hãng 100%, đầy đủ giấy tờ',
+                    'Đổi trả trong 7 ngày nếu lỗi do nhà sản xuất',
+                    'Hỗ trợ trả góp 0% qua thẻ tín dụng',
+                ].map((text) => (
+                    <div key={text} className="flex items-start gap-2 px-4 py-2.5 text-sm text-gray-700">
+                        <BadgeCheck className="w-4 h-4 text-stock flex-shrink-0 mt-0.5" />
+                        <span>{text}</span>
                     </div>
                 ))}
             </div>

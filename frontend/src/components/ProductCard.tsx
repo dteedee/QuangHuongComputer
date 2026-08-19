@@ -2,45 +2,28 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Star, Heart } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import { ShoppingCart, Star, Gift, Ticket } from 'lucide-react';
+import { formatNumber } from '../utils/format';
 
 interface ProductCardProps {
     product: Product;
 }
 
+/**
+ * ProductCard — 7-tier anatomy theo hacom.vn pattern (giữ brand đỏ Quang Hưởng qua token `accent`):
+ * 1. Ảnh (ratio vuông) + badge quà tặng
+ * 2. Rating + "Mã: SKU"
+ * 3. Tên SP 3 dòng ellipsis
+ * 4. Giá cũ gạch + "(Tiết kiệm x%)"
+ * 5. Giá bán đỏ bold, ₫ superscript
+ * 6. "✓ Sẵn hàng" xanh + nút giỏ tròn đỏ
+ * 7. Row promo icons
+ */
 export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
     const [imgError, setImgError] = useState(false);
-    const [isWishlisted, setIsWishlisted] = useState(false);
 
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem('qh_wishlist');
-            if (stored) {
-                const list = JSON.parse(stored);
-                setIsWishlisted(list.includes(product.id));
-            }
-        } catch { /* ignore */ }
-    }, [product.id]);
-
-    useEffect(() => {
-        setImgError(false);
-    }, [product.imageUrl]);
-
-    const toggleWishlist = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-            const stored = localStorage.getItem('qh_wishlist');
-            let list: string[] = stored ? JSON.parse(stored) : [];
-            list = isWishlisted
-                ? list.filter(id => id !== product.id)
-                : [...list, product.id];
-            localStorage.setItem('qh_wishlist', JSON.stringify(list));
-            setIsWishlisted(!isWishlisted);
-        } catch { /* ignore */ }
-    };
+    useEffect(() => { setImgError(false); }, [product.imageUrl]);
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -48,51 +31,27 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         addToCart(product, 1);
     };
 
-    const oldPrice = product.oldPrice || product.price * 1.15;
-    const discount = product.oldPrice
-        ? Math.round((1 - product.price / product.oldPrice) * 100)
-        : 15;
-    const isOutOfStock = product.stockQuantity <= 0;
-    const productUrl = product.slug
-        ? `/san-pham/${product.slug}`
-        : `/product/${product.id}`;
+    const hasOldPrice = !!product.oldPrice && product.oldPrice > product.price;
+    const savingsPercent = hasOldPrice
+        ? Math.round((1 - product.price / (product.oldPrice as number)) * 100)
+        : 0;
+    const isOutOfStock = product.stockQuantity <= 0 || product.status === 'OutOfStock';
+    const productUrl = product.slug ? `/san-pham/${product.slug}` : `/product/${product.id}`;
     const rating = Math.round(product.averageRating || 0);
-
-    // Badge logic
-    let badge: { label: string; className: string } | null = null;
-    if (isOutOfStock) {
-        badge = { label: 'Het hang', className: 'bg-gray-500 text-white' };
-    } else if (discount >= 10 && product.oldPrice) {
-        badge = { label: `-${discount}%`, className: 'bg-red-500 text-white' };
-    } else if (product.soldCount > 10) {
-        badge = { label: 'Ban chay', className: 'bg-amber-500 text-white' };
-    }
+    const hasGift = product.soldCount > 20;
 
     return (
         <Link
             to={productUrl}
-            className="group relative flex flex-col bg-white rounded-xl border border-gray-100 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-accent/30 h-full"
+            className="group relative flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5 h-full"
         >
-            {/* Badge - top left */}
-            {badge && (
-                <span className={`absolute top-2.5 left-2.5 z-10 text-[11px] font-bold px-2 py-0.5 rounded-md ${badge.className}`}>
-                    {badge.label}
-                </span>
-            )}
-
-            {/* Wishlist - top right */}
-            <button
-                onClick={toggleWishlist}
-                className={`absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm transition-all duration-200 hover:scale-110 active:scale-95 ${
-                    isWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'
-                }`}
-                title={isWishlisted ? 'Bo yeu thich' : 'Them vao yeu thich'}
-            >
-                <Heart size={16} className={isWishlisted ? 'fill-red-500' : ''} />
-            </button>
-
-            {/* Image */}
-            <div className="relative aspect-[4/3] bg-white p-3 overflow-hidden">
+            {/* Tier 1 — image + gift badge */}
+            <div className="relative aspect-square bg-white p-3 overflow-hidden">
+                {hasGift && (
+                    <span className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        <Gift size={10} /> Quà tặng
+                    </span>
+                )}
                 {product.imageUrl && !imgError ? (
                     <img
                         src={product.imageUrl}
@@ -103,74 +62,75 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg text-gray-300">
-                        <span className="text-4xl font-black">
-                            {product.name?.charAt(0) || '?'}
-                        </span>
+                        <span className="text-4xl font-black">{product.name?.charAt(0) || '?'}</span>
                     </div>
                 )}
             </div>
 
-            {/* Content */}
-            <div className="flex flex-col flex-1 p-3 pt-2 border-t border-gray-50">
-                {/* Rating */}
-                {rating > 0 && (
-                    <div className="flex items-center gap-1 mb-1.5">
+            <div className="flex flex-col flex-1 px-3 pb-3 pt-1.5 border-t border-gray-100">
+                {/* Tier 2 — rating + SKU */}
+                <div className="flex items-center gap-1 mb-1 text-[11px]">
+                    <div className="flex items-center">
                         {[1, 2, 3, 4, 5].map(i => (
-                            <Star
-                                key={i}
-                                size={11}
-                                className={i <= rating
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'fill-gray-200 text-gray-200'}
-                            />
+                            <Star key={i} size={10} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
                         ))}
-                        {product.reviewCount > 0 && (
-                            <span className="text-[10px] text-gray-400 ml-0.5">
-                                ({product.reviewCount})
-                            </span>
-                        )}
                     </div>
-                )}
+                    <span className="text-gray-400 ml-1 truncate">Mã: {product.sku}</span>
+                </div>
 
-                {/* Product name */}
-                <h3 className="text-sm font-medium text-gray-800 line-clamp-2 min-h-[2.5rem] leading-snug mb-2 group-hover:text-accent transition-colors">
+                {/* Tier 3 — name, 3 lines */}
+                <h3 className="text-[13px] font-medium text-gray-800 line-clamp-3 min-h-[3.1em] leading-snug mb-1.5 group-hover:text-accent transition-colors">
                     {product.name}
                 </h3>
 
-                {/* Price */}
-                <div className="mt-auto space-y-0.5">
-                    {product.priceFrom != null && product.priceFrom < product.price ? (
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-[11px] text-gray-500">Từ</span>
-                            <span className="text-lg font-bold text-accent leading-tight">
-                                {formatCurrency(product.priceFrom)}
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="text-lg font-bold text-accent leading-tight">
-                            {formatCurrency(product.price)}
-                        </div>
-                    )}
-                    {product.oldPrice && product.oldPrice > product.price && (
-                        <div className="text-xs text-gray-400 line-through">
-                            {formatCurrency(oldPrice)}
-                        </div>
+                {/* Tier 4 — old price + savings */}
+                <div className="min-h-[16px] flex items-center gap-2 text-[12px]">
+                    {hasOldPrice && (
+                        <>
+                            <span className="text-gray-400 line-through">{formatNumber(product.oldPrice as number)}₫</span>
+                            <span className="text-accent font-semibold">(Tiết kiệm {savingsPercent}%)</span>
+                        </>
                     )}
                 </div>
 
-                {/* Add to cart */}
-                <button
-                    onClick={handleAddToCart}
-                    disabled={isOutOfStock}
-                    className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                        isOutOfStock
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-accent text-white hover:bg-accent-hover active:scale-[0.98] shadow-sm'
-                    }`}
-                >
-                    <ShoppingCart size={15} />
-                    {isOutOfStock ? 'Het hang' : 'Them vao gio'}
-                </button>
+                {/* Tier 5 — sale price, red bold, superscript đ */}
+                <div className="mt-0.5 mb-2">
+                    <span className="text-[18px] font-bold text-accent leading-none">
+                        {formatNumber(product.price)}
+                        <sup className="text-[11px] font-bold ml-0.5">₫</sup>
+                    </span>
+                </div>
+
+                {/* Tier 6 — stock status + cart button */}
+                <div className="mt-auto flex items-center justify-between">
+                    <span className={`text-[12px] font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-stock'}`}>
+                        {isOutOfStock ? 'Hết hàng' : '✓ Sẵn hàng'}
+                    </span>
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={isOutOfStock}
+                        aria-label="Thêm vào giỏ hàng"
+                        className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+                            isOutOfStock
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-accent text-white hover:bg-accent-hover active:scale-95 shadow-sm'
+                        }`}
+                    >
+                        <ShoppingCart size={16} />
+                    </button>
+                </div>
+
+                {/* Tier 7 — promo icons */}
+                {(hasOldPrice || hasGift) && (
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
+                        {hasOldPrice && (
+                            <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Ticket size={11} /> Voucher</span>
+                        )}
+                        {hasGift && (
+                            <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Gift size={11} /> Quà tặng</span>
+                        )}
+                    </div>
+                )}
             </div>
         </Link>
     );

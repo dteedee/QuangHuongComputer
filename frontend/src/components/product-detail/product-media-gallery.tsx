@@ -100,7 +100,7 @@ export default function ProductMediaGallery({
 
     if (displayMedias.length === 0) {
         return (
-            <div className="w-full aspect-[4/3] bg-white rounded-xl border border-gray-100 flex items-center justify-center text-gray-300">
+            <div className="w-full aspect-[4/3] bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-300">
                 <span className="text-6xl font-black">{productName?.charAt(0) || '?'}</span>
             </div>
         );
@@ -116,7 +116,7 @@ export default function ProductMediaGallery({
                 <div className="flex-1 min-w-0">
                     <div
                         ref={mainRef}
-                        className="relative aspect-[4/3] bg-white rounded-xl overflow-hidden border border-gray-100 select-none"
+                        className="relative aspect-[4/3] bg-white rounded-lg overflow-hidden border border-gray-200 select-none"
                         onTouchStart={handleTouchStart}
                         onTouchEnd={handleTouchEnd}
                         onMouseMove={isImage ? handleMouseMove : undefined}
@@ -147,7 +147,7 @@ export default function ProductMediaGallery({
                         )}
 
                         {discountBadge && (
-                            <span className="absolute top-3 left-3 bg-[var(--accent-primary,#e11d48)] text-white px-2.5 py-1 rounded-lg font-bold text-xs">
+                            <span className="absolute top-3 left-3 bg-[var(--accent-primary)] text-white px-2.5 py-1 rounded-lg font-bold text-xs">
                                 -{discountBadge}%
                             </span>
                         )}
@@ -193,7 +193,7 @@ export default function ProductMediaGallery({
                                     onClick={() => setSelectedIndex(index)}
                                     className={`relative w-16 h-16 lg:w-full lg:h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                                         isSelected
-                                            ? 'border-[var(--accent-primary,#e11d48)] ring-1 ring-[var(--accent-primary,#e11d48)]/30'
+                                            ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]/30'
                                             : 'border-gray-200 hover:border-gray-400'
                                     }`}
                                     aria-label={`Xem media ${index + 1}`}

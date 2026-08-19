@@ -204,7 +204,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
         <div className="mt-3 md:hidden flex items-center justify-between">
           <button
             onClick={() => setShowMobileFilter(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-sm active:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-small active:bg-gray-50"
           >
             <Filter size={16} />
             Bộ lọc {activeFiltersCount > 0 && `(${activeFiltersCount})`}
@@ -316,7 +316,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
             )}
 
             {/* Toolbar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between">
+            <div className="bg-white rounded-lg shadow-small border border-gray-200 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between">
               <div className="hidden md:block text-gray-500 text-sm">
                 Hiển thị <strong>{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)}</strong> trong <strong>{total}</strong> sản phẩm
               </div>
@@ -364,7 +364,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
             {loading ? (
               <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-4"}>
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse h-80">
+                  <div key={i} className="bg-white rounded-lg shadow-small border border-gray-200 p-4 animate-pulse h-80">
                     <div className="bg-gray-100 h-40 rounded-lg mb-4 w-full"></div>
                     <div className="bg-gray-100 h-4 rounded w-3/4 mb-2"></div>
                     <div className="bg-gray-100 h-4 rounded w-1/2 mb-4"></div>
@@ -373,7 +373,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                 ))}
               </div>
             ) : products.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
+              <div className="bg-white rounded-lg shadow-small border border-gray-200 p-16 text-center">
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search size={32} className="text-gray-300" />
                 </div>
@@ -397,7 +397,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -417,7 +417,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                   <button
                     onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     disabled={page === 1}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all shadow-small"
                   >
                     Trước
                   </button>
@@ -443,9 +443,9 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                         <button
                           key={pageNum}
                           onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                          className={`min-w-[40px] h-10 rounded-lg font-medium text-sm transition-all shadow-sm ${page === pageNum
-                            ? 'bg-accent text-white shadow-md transform scale-105'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                          className={`min-w-[40px] h-10 rounded-lg font-medium text-sm transition-all ${page === pageNum
+                            ? 'bg-accent text-white shadow-medium scale-105'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-accent hover:text-accent shadow-small'
                             }`}
                         >
                           {pageNum}
@@ -457,7 +457,7 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
                   <button
                     onClick={() => { setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     disabled={page === Math.ceil(total / pageSize)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all shadow-small"
                   >
                     Sau
                   </button>
