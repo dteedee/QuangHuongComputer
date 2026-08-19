@@ -1,6 +1,6 @@
 import client from './client';
 
-export type ColumnType = 'text' | 'number' | 'currency' | 'date' | 'boolean' | 'badge';
+export type ColumnType = 'text' | 'number' | 'currency' | 'date' | 'boolean' | 'badge' | 'image';
 
 export interface TableColumnDef {
     key: string;

@@ -426,7 +426,7 @@ export default function PurchaseOrdersPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-[#ff4d6a] rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent-hover rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                             <ShoppingCart size={22} className="text-white" />
                         </div>
                         Đơn mua hàng
@@ -448,7 +448,7 @@ export default function PurchaseOrdersPage() {
                 <StatCard icon={FileText} label="Nháp" value={stats.draft} color="bg-gradient-to-br from-gray-400 to-gray-500" />
                 <StatCard icon={Truck} label="Đã gửi" value={stats.sent} color="bg-gradient-to-br from-orange-400 to-orange-500" />
                 <StatCard icon={CheckCircle} label="Đã nhận" value={stats.received} color="bg-gradient-to-br from-green-500 to-green-600" />
-                <StatCard icon={Package} label="Tổng giá trị" value={`${(stats.totalValue / 1e6).toFixed(1)}tr`} color="bg-gradient-to-br from-accent to-[#ff4d6a]" />
+                <StatCard icon={Package} label="Tổng giá trị" value={`${(stats.totalValue / 1e6).toFixed(1)}tr`} color="bg-gradient-to-br from-accent to-accent-hover" />
             </div>
 
             {/* Filters */}

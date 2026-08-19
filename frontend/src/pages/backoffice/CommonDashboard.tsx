@@ -202,23 +202,12 @@ export const CommonDashboard = () => {
                                     <span className={`text-xs text-slate-400 ${i === new Date().getMonth() ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
                                 </div>
                             );
-                        }) : [40, 70, 45, 90, 65, 80, 50, 85, 95, 60, 75, 100].map((h, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full justify-end">
-                                <div className="relative w-full h-full flex flex-col justify-end">
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: `${h}%` }}
-                                        transition={{ duration: 1.5, delay: i * 0.05, ease: "circOut" }}
-                                        className={`w-full rounded-t-2xl transition-all duration-300 relative ${i === 11 ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-md' : 'bg-gradient-to-t from-blue-100 to-blue-200 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:shadow-brand-lg'}`}
-                                    >
-                                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-xs font-semibold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-gray-800 shadow-md z-20">
-                                            {h}%
-                                        </div>
-                                    </motion.div>
-                                </div>
-                                <span className={`text-xs text-slate-400 ${i === 11 ? 'text-accent scale-125 underline decoration-4 underline-offset-4' : 'text-gray-300'}`}>T{i + 1}</span>
+                        }) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-3">
+                                <TrendingUp size={40} strokeWidth={1.5} />
+                                <p className="text-xs font-medium text-slate-400">Chưa có doanh thu nào trong năm {new Date().getFullYear()}</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
 
@@ -232,6 +221,12 @@ export const CommonDashboard = () => {
                     </div>
 
                     <div className="space-y-10 flex-1">
+                        {activities.length === 0 && (
+                            <div className="flex flex-col items-center justify-center text-slate-300 gap-3 py-10">
+                                <ShoppingCart size={32} strokeWidth={1.5} />
+                                <p className="text-xs font-medium text-slate-400">Chưa có đơn hàng gần đây</p>
+                            </div>
+                        )}
                         {activities.map((act, i) => (
                             <div key={i} className="flex gap-6 group cursor-pointer items-start transition-all hover:translate-x-2">
                                 <div className={`w-14 h-14 rounded-xl ${act.color} flex-shrink-0 flex items-center justify-center text-white shadow-sm shadow-gray-200 group-hover:rotate-12 group-hover:scale-110 transition-all`}>

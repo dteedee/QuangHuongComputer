@@ -23,6 +23,12 @@ function formatCell(value: unknown, column: TableColumnDef): React.ReactNode {
             );
         case 'badge':
             return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">{String(value)}</span>;
+        case 'image':
+            return (
+                <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+                    <img src={String(value)} alt="" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                </div>
+            );
         default:
             return String(value);
     }
@@ -48,6 +54,8 @@ interface DynamicDataTableProps<T extends Record<string, unknown>> {
     onRowClick?: (row: T) => void;
     /** Show the "Cấu hình bảng" (configure columns) button — admin only */
     allowConfig?: boolean;
+    /** Per-column-key custom cell renderer, overrides the default type-based formatter (e.g. resolve a FK id to a display name). */
+    columnRenderers?: Partial<Record<string, (row: T) => React.ReactNode>>;
 }
 
 /**
@@ -63,6 +71,7 @@ export function DynamicDataTable<T extends Record<string, unknown>>({
     renderActions,
     onRowClick,
     allowConfig = true,
+    columnRenderers,
 }: DynamicDataTableProps<T>) {
     const queryClient = useQueryClient();
     const [showConfig, setShowConfig] = useState(false);
@@ -160,7 +169,7 @@ export function DynamicDataTable<T extends Record<string, unknown>>({
                                 >
                                     {visibleColumns.map(col => (
                                         <td key={col.key} className="px-4 py-3 text-gray-800 font-medium">
-                                            {formatCell(getValueByKey(row, col.key), col)}
+                                            {columnRenderers?.[col.key] ? columnRenderers[col.key]!(row) : formatCell(getValueByKey(row, col.key), col)}
                                         </td>
                                     ))}
                                     {renderActions && (

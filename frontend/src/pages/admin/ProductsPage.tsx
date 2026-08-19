@@ -442,6 +442,14 @@ export const AdminProductsPage = () => {
                         isLoading={isLoading}
                         rowKey={(p) => p.id}
                         onRowClick={(p) => handleOpenModal(p)}
+                        columnRenderers={{
+                            categoryId: (p) => uniqueCategories?.find(c => c.id === p.categoryId)?.name || <span className="text-gray-300">—</span>,
+                            imageUrl: (p) => p.imageUrl ? (
+                                <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
+                                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                                </div>
+                            ) : <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-200"><Box size={16} /></div>,
+                        }}
                         renderActions={(p) => (
                             <div className="flex items-center justify-end gap-2">
                                 <button onClick={() => handleOpenModal(p)} className="p-2 text-gray-400 hover:text-accent transition-colors">
