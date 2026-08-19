@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -43,11 +43,17 @@ export const BackofficeLayout = () => {
         pendingCount, salesStats,
     } = useBackofficeMenu();
 
+    // useNotifications' internal callbacks depend on `roles` by reference — `user?.roles || []`
+    // creates a brand-new array every render (when user is falsy), which cascades into an
+    // unstable fetchNotifications callback and can trigger a "Maximum update depth exceeded"
+    // render loop. Memoize by content so the reference is stable across renders.
+    const userRoles = useMemo(() => user?.roles ?? [], [user?.roles?.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const {
         notifications, loading: notificationsLoading, unreadCount,
         markAsRead, markAllAsRead, refresh: refreshNotifications, isRealtimeConnected,
     } = useNotifications({
-        roles: user?.roles || [],
+        roles: userRoles,
         refreshInterval: 120000,
         enableRealtime: true,
         showToastOnNewNotification: true,

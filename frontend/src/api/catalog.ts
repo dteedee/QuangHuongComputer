@@ -581,10 +581,43 @@ export const catalogApi = {
     },
 
     getCategoryFilters: async (categoryId: string, currentFilters?: Record<string, string>) => {
-        const response = await client.get<CategoryFilter[]>(`/catalog/categories/${categoryId}/filters`, {
+        // Backend trả về raw facet shape (attributeKey/attributeName + values:[{value,count}]),
+        // khác với CategoryFilter UI cần (key/name + options/numberRange). Map lại ở đây.
+        const response = await client.get<Array<{
+            attributeId: string;
+            attributeKey: string;
+            attributeName: string;
+            unit?: string;
+            dataType: SpecDataType;
+            values: Array<{ value: unknown; count: number }>;
+        }>>(`/catalog/categories/${categoryId}/filters`, {
             params: currentFilters,
         });
-        return response.data;
+
+        const mapped: CategoryFilter[] = response.data.map((f) => {
+            const base: CategoryFilter = {
+                attributeId: f.attributeId,
+                key: f.attributeKey,
+                name: f.attributeName,
+                unit: f.unit,
+                dataType: f.dataType,
+            };
+
+            if (f.dataType === 'Number') {
+                const nums = f.values.map((v) => Number(v.value)).filter((n) => !Number.isNaN(n));
+                if (nums.length > 0) {
+                    base.numberRange = { min: Math.min(...nums), max: Math.max(...nums) };
+                }
+            } else if (f.dataType === 'Enum' || f.dataType === 'Text') {
+                base.options = f.values
+                    .filter((v) => v.value !== null && v.value !== undefined)
+                    .map((v) => ({ value: String(v.value), label: String(v.value), count: v.count }));
+            }
+
+            return base;
+        });
+
+        return mapped;
     },
 
     // Inventory (proxied from Inventory service)

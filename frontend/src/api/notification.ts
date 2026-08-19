@@ -27,7 +27,7 @@ export const notificationApi = {
      * Get notifications for current user
      */
     getNotifications: async (page: number = 1, pageSize: number = 50): Promise<NotificationDto[]> => {
-        const response = await client.get<NotificationDto[]>('/api/notifications', {
+        const response = await client.get<NotificationDto[]>('/notifications', {
             params: { page, pageSize }
         });
         return response.data;
@@ -37,7 +37,7 @@ export const notificationApi = {
      * Get unread notification count
      */
     getUnreadCount: async (): Promise<number> => {
-        const response = await client.get<UnreadCountResponse>('/api/notifications/unread-count');
+        const response = await client.get<UnreadCountResponse>('/notifications/unread-count');
         return response.data.count;
     },
 
@@ -45,14 +45,14 @@ export const notificationApi = {
      * Mark a single notification as read
      */
     markAsRead: async (notificationId: string): Promise<void> => {
-        await client.post<MarkAsReadResponse>(`/api/notifications/${notificationId}/read`);
+        await client.post<MarkAsReadResponse>(`/notifications/${notificationId}/read`);
     },
 
     /**
      * Mark all notifications as read
      */
     markAllAsRead: async (): Promise<void> => {
-        await client.post<MarkAsReadResponse>('/api/notifications/read-all');
+        await client.post<MarkAsReadResponse>('/notifications/read-all');
     }
 };
 

@@ -52,7 +52,7 @@ export default function ProductFilterSpecSection({
                             className="flex items-center justify-between w-full mb-2 group"
                         >
                             <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wide group-hover:text-accent transition-colors">
-                                {f.name}{f.unit ? ` (${f.unit})` : ''}
+                                {f.name || f.key}{f.unit ? ` (${f.unit})` : ''}
                             </h4>
                             {isOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
                         </button>
@@ -64,7 +64,7 @@ export default function ProductFilterSpecSection({
                                         type="text"
                                         value={currentValue}
                                         onChange={(e) => onChange(f.key, e.target.value)}
-                                        placeholder={`Tìm theo ${f.name.toLowerCase()}`}
+                                        placeholder={`Tìm theo ${(f.name || f.key || '').toLowerCase()}`}
                                         className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-accent"
                                     />
                                 )}

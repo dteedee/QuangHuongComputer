@@ -29,6 +29,10 @@ const initialFilters: OrderFilters = {
     dateRange: { from: '', to: '' }
 };
 
+// Stable empty-array reference — see usage at `rawOrders` below for why this
+// matters (prevents an infinite render loop while the orders query loads).
+const EMPTY_ORDERS: Order[] = [];
+
 // Kanban Stages Configuration
 const KANBAN_STAGES = [
     { id: 'Pending', label: 'Chờ xác nhận', color: '#f97316', bg: 'bg-orange-50' },
@@ -155,12 +159,16 @@ export const AdminOrdersPage = () => {
         }
     }, [urlOrderId]);
 
-    // Scroll to highlighted order
+    // Scroll to highlighted order.
+    // Note: refs must not be listed as effect deps (mutating .current doesn't
+    // trigger re-renders, so React can't reliably react to it — this was
+    // previously `[highlightedOrderId, highlightedRowRef.current]`, an
+    // anti-pattern that risked unpredictable extra render passes).
     useEffect(() => {
         if (highlightedOrderId && highlightedRowRef.current) {
             highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    }, [highlightedOrderId, highlightedRowRef.current]);
+    }, [highlightedOrderId]);
 
     // Debounce search term
     useEffect(() => {
@@ -210,7 +218,13 @@ export const AdminOrdersPage = () => {
         onError: () => toast.error('Tạo đơn hàng thất bại!')
     });
 
-    const rawOrders = response?.orders || [];
+    // `response?.orders || []` would create a brand-new array reference on every
+    // render while `response` is undefined (loading). That reference then flows
+    // into the `orders` useMemo below and the `localOrders` sync effect further
+    // down, causing setLocalOrders → re-render → new [] → effect fires → ...
+    // an infinite "Maximum update depth exceeded" loop. Reuse a stable empty
+    // array so the identity doesn't change across renders while loading.
+    const rawOrders = response?.orders || EMPTY_ORDERS;
 
     // Apply client-side filters for payment status and date range
     const orders = useMemo(() => {

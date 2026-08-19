@@ -253,18 +253,20 @@ function App() {
                         <Route path="products/:id" element={<ProductDetailPage />} />
                         <Route path="catalog" element={<ProductCatalogPage />} />
                         <Route path="compare" element={<ComparePage />} />
-                        <Route path="profile" element={<AccountPage />} />
-                        <Route path="account" element={<AccountPage />} />
                         <Route path="recruitment" element={<RecruitmentPage />} />
                         <Route path="recruitment/:id" element={<JobDetailPage />} />
 
-                        {/* Account Routes */}
-                        <Route path="account/orders" element={<OrdersPage />} />
-                        <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
-                        <Route path="account/returns/new" element={<NewReturnRequestPage />} />
-                        <Route path="account/returns/:id" element={<ReturnRequestDetailPage />} />
-                        <Route path="account/loyalty" element={<LoyaltyPage />} />
-                        <Route path="account/addresses" element={<AddressBookPage />} />
+                        {/* Account Routes — bắt buộc đăng nhập (mọi role), tránh 401 spam khi guest truy cập */}
+                        <Route element={<RequireAuth />}>
+                            <Route path="profile" element={<AccountPage />} />
+                            <Route path="account" element={<AccountPage />} />
+                            <Route path="account/orders" element={<OrdersPage />} />
+                            <Route path="account/orders/:orderId" element={<OrderDetailPage />} />
+                            <Route path="account/returns/new" element={<NewReturnRequestPage />} />
+                            <Route path="account/returns/:id" element={<ReturnRequestDetailPage />} />
+                            <Route path="account/loyalty" element={<LoyaltyPage />} />
+                            <Route path="account/addresses" element={<AddressBookPage />} />
+                        </Route>
 
                         {/* Category Routes */}
                         <Route path="laptop" element={<CategoryPage />} />

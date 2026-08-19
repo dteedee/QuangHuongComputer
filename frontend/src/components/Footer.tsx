@@ -17,8 +17,9 @@ const MenuCol = ({ title, menu, fallback }: { title: string; menu: Menu | null; 
     <div>
         <h4 className="text-sm font-bold text-white uppercase mb-4 pb-2 border-b border-gray-800">{menu?.name || title}</h4>
         <ul className="space-y-0.5">
-            {menu?.items?.map(item => (
-                <FL key={item.id} to={item.url || '/'} label={item.label} />
+            {/* key kèm index: item.id từ API có thể rỗng/trùng giữa các menu → React dup-key warning */}
+            {menu?.items?.map((item, idx) => (
+                <FL key={`${item.id || item.label}-${idx}`} to={item.url || '/'} label={item.label} />
             )) || fallback}
         </ul>
     </div>
@@ -94,8 +95,8 @@ export const Footer = () => {
                         <div className="flex gap-2"><Clock size={15} className="text-accent flex-shrink-0" /><span>{workingHours}</span></div>
                     </div>
                     <div className="flex gap-2 pt-1">
-                        {socials.map(({ url, Icon, hover }) => (
-                            <a key={url} href={url} target="_blank" rel="noopener noreferrer" className={`w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 ${hover} hover:text-white transition-all cursor-pointer`}>
+                        {socials.map(({ url, Icon, hover }, idx) => (
+                            <a key={`${url || 'social'}-${idx}`} href={url} target="_blank" rel="noopener noreferrer" className={`w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 ${hover} hover:text-white transition-all cursor-pointer`}>
                                 <Icon size={16} />
                             </a>
                         ))}

@@ -18,7 +18,8 @@ export const ContactPage = () => {
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     useEffect(() => {
-        systemConfigApi.getConfigs().then(data => setConfigs(data || [])).catch(() => {});
+        // Trang public — dùng /config/public (không cần auth) thay vì /config (admin-only).
+        systemConfigApi.config.getPublic().then(data => setConfigs(data || [])).catch(() => {});
     }, []);
 
     const companyName = getConfigValue(configs, 'COMPANY_NAME', 'Quang Hưởng Computer', (v) => v);

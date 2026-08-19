@@ -14,15 +14,19 @@ type TabType = 'all' | 'unread' | 'order' | 'repair' | 'warranty' | 'inventory' 
 
 export default function NotificationCenter() {
     const { user } = useAuth();
+    // `user?.roles || []` would create a new array reference every render,
+    // destabilizing useNotifications' internal callbacks (risk of a
+    // "Maximum update depth exceeded" render loop). Memoize by content.
+    const userRoles = useMemo(() => user?.roles ?? [], [user?.roles?.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
     // Enable realtime but disable toast to avoid duplicate toasts if the Bell component already shows them
-    const { 
-        notifications, 
-        loading, 
-        markAsRead, 
-        markAllAsRead, 
-        refresh 
-    } = useNotifications({ 
-        roles: user?.roles || [],
+    const {
+        notifications,
+        loading,
+        markAsRead,
+        markAllAsRead,
+        refresh
+    } = useNotifications({
+        roles: userRoles,
         showToastOnNewNotification: false
     });
     

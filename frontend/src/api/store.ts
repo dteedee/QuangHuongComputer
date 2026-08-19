@@ -138,10 +138,29 @@ export const storeApi = {
         await client.delete(`/stores/${id}`);
     },
 
-    /** PUBLIC — chỉ trả nhãn InStock/LowStock/OutOfStock, không lộ số. */
+    /**
+     * PUBLIC — chỉ trả nhãn InStock/LowStock/OutOfStock, không lộ số.
+     * Backend không có endpoint gộp "tồn theo mọi chi nhánh cho 1 sản phẩm" —
+     * chỉ có `/stores/{id}/stock/{productId}` cho từng chi nhánh. Nên lấy danh
+     * sách chi nhánh trước rồi gọi song song endpoint tồn kho cho từng chi nhánh.
+     */
     getStockByProduct: async (productId: string): Promise<StockByStore[]> => {
-        const { data } = await client.get<StockByStore[]>(`/stores/products/${productId}/stock`);
-        return Array.isArray(data) ? data : [];
+        const { data: stores } = await client.get<Store[]>('/stores');
+        if (!Array.isArray(stores) || stores.length === 0) return [];
+
+        const results = await Promise.all(
+            stores.map(async (store) => {
+                try {
+                    const { data } = await client.get<{ status: StockAvailability }>(
+                        `/stores/${store.id}/stock/${productId}`
+                    );
+                    return { storeId: store.id, storeName: store.name, availability: data.status };
+                } catch {
+                    return { storeId: store.id, storeName: store.name, availability: 'OutOfStock' as StockAvailability };
+                }
+            })
+        );
+        return results;
     },
 };
 
