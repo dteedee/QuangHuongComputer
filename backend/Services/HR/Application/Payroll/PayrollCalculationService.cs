@@ -114,9 +114,17 @@ public class PayrollCalculationService
             .ToListAsync(ct);
         var activeAllowances = allowances.Where(a => a.IsEffectiveOn(effectiveDate)).ToList();
 
+        // Phase 08: join AllowanceType để tách taxable/exempt theo TaxFreeMonthlyLimit (cap miễn thuế).
+        var allowanceTypeIds = activeAllowances.Select(a => a.AllowanceTypeId).Distinct().ToList();
+        var allowanceTypes = allowanceTypeIds.Count == 0
+            ? new Dictionary<Guid, AllowanceType>()
+            : await _db.AllowanceTypes
+                .Where(t => allowanceTypeIds.Contains(t.Id))
+                .ToDictionaryAsync(t => t.Id, ct);
+
         // 6. Tính — hằng số thuế động từ SystemConfig (category "Tax"), fallback luật định
         var taxSettings = _taxSettingsProvider is null ? null : await _taxSettingsProvider.GetAsync(ct);
-        var result = ComputeCore(ts, effective, activeAllowances, effectiveDependents, taxSettings: taxSettings);
+        var result = ComputeCore(ts, effective, activeAllowances, effectiveDependents, taxSettings: taxSettings, allowanceTypes: allowanceTypes);
 
         // 7. Ghi kết quả + line items
         payroll.SetInsurableSalary(result.InsurableSalary);
@@ -152,7 +160,8 @@ public class PayrollCalculationService
         IReadOnlyCollection<Allowance> allowances,
         int numberOfDependents,
         decimal lateFinePerMinute = 0,
-        TaxSettings? taxSettings = null)
+        TaxSettings? taxSettings = null,
+        IReadOnlyDictionary<Guid, AllowanceType>? allowanceTypes = null)
     {
         var lines = new List<(PayrollLineType, string, decimal, bool, bool)>();
 
@@ -181,18 +190,44 @@ public class PayrollCalculationService
                 $"OT: {ts.OvertimeHoursWeekday}h thường + {ts.OvertimeHoursSunday}h CN + {ts.OvertimeHoursHoliday}h lễ + {ts.OvertimeHoursNight}h đêm",
                 overtimePay, true, false));
 
-        // 5. Phụ cấp — chia taxable / exempt
+        // 5. Phụ cấp — chia taxable / exempt theo AllowanceType.TaxFreeMonthlyLimit (Phase 08).
+        // Quy ước (xem AllowanceType.cs): IsTaxable=true → toàn bộ chịu thuế (cap không áp dụng);
+        // IsTaxable=false & TaxFreeMonthlyLimit=0 → miễn hoàn toàn (không giới hạn, vd công tác phí);
+        // IsTaxable=false & TaxFreeMonthlyLimit>0 → phần ≤ cap miễn thuế, phần vượt tính vào chịu thuế.
         var taxableAllowances = 0m;
         var exemptAllowances = 0m;
-        // Chỉ tách theo TaxExemptCap trên loại — model đơn giản hoá vì phase 06 chưa có AllowanceType master
         foreach (var a in allowances)
         {
-            // Toàn bộ Amount cộng vào gross
             var amount = a.Amount;
-            // Hiện tại Allowance chưa có TaxExemptCap → default all taxable
-            // TODO(Phase 08): join với AllowanceType để lấy cap
-            taxableAllowances += amount;
-            lines.Add((PayrollLineType.Allowance, $"Phụ cấp ({a.Id.ToString()[..8]})", amount, true, false));
+            var type = allowanceTypes != null && allowanceTypes.TryGetValue(a.AllowanceTypeId, out var t) ? t : null;
+            bool insurable;
+
+            if (type == null)
+            {
+                // Không xác định được loại (dữ liệu cũ/thiếu) — an toàn: coi toàn bộ chịu thuế như trước đây.
+                taxableAllowances += amount;
+                insurable = false;
+            }
+            else if (type.IsTaxable)
+            {
+                taxableAllowances += amount;
+                insurable = type.IsInsurable;
+            }
+            else if (type.TaxFreeMonthlyLimit <= 0)
+            {
+                exemptAllowances += amount;
+                insurable = type.IsInsurable;
+            }
+            else
+            {
+                var exempt = Math.Min(amount, type.TaxFreeMonthlyLimit);
+                var taxablePart = amount - exempt;
+                exemptAllowances += exempt;
+                if (taxablePart > 0) taxableAllowances += taxablePart;
+                insurable = type.IsInsurable;
+            }
+
+            lines.Add((PayrollLineType.Allowance, $"Phụ cấp {(type?.Name ?? a.Id.ToString()[..8])}", amount, type?.IsTaxable ?? true, insurable));
         }
 
         // 6. Gross
