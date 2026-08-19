@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using SystemConfig.Infrastructure;
 using BuildingBlocks.Database;
 
@@ -13,9 +14,15 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection not found");
 
+        // EnableDynamicJson: cần cho map List<string>/POCO → jsonb (BackofficeMenuItem.AllowedRoles...)
+        // Npgsql 8 tắt dynamic JSON mặc định — thiếu sẽ fail khi seed/ghi các cột jsonb kiểu động.
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        dataSourceBuilder.EnableDynamicJson();
+        var dataSource = dataSourceBuilder.Build();
+
         services.AddDbContext<SystemConfigDbContext>((serviceProvider, options) =>
         {
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+            options.UseNpgsql(dataSource, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
                 npgsqlOptions.EnableRetryOnFailure(
@@ -31,7 +38,7 @@ public static class DependencyInjection
 
         services.AddDbContext<CustomFieldDbContext>((serviceProvider, options) =>
         {
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+            options.UseNpgsql(dataSource, npgsqlOptions =>
             {
                 npgsqlOptions.CommandTimeout(30);
                 npgsqlOptions.EnableRetryOnFailure(

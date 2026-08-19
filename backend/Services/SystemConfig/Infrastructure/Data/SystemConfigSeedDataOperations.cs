@@ -16,6 +16,8 @@ public static class SystemConfigSeedDataOperations
             Entry("TAX_RATE", "0.08", "Thuế VAT áp dụng cho đơn hàng (8%)", "Sales & Tax", now),
             Entry("COMMISSION_RATE", "0.05", "Hoa hồng nhân viên bán hàng (5%)", "Sales & Tax", now),
             Entry("FREE_SHIPPING_THRESHOLD", "1000000", "Đơn hàng trên 1 triệu được miễn phí ship", "Sales & Tax", now),
+            // JSON extensibility: public-facing key dùng bởi FE FreeShippingProgress (Number, public category)
+            Entry("FREESHIP_THRESHOLD", "500000", "Ngưỡng đơn hàng được miễn phí vận chuyển (VNĐ)", "Sales & Tax", now, ConfigValueType.Number),
             Entry("SHIPPING_COST", "30000", "Phí vận chuyển cơ bản (VNĐ)", "Sales & Tax", now),
             Entry("MIN_ORDER_VALUE", "100000", "Giá trị đơn hàng tối thiểu", "Sales & Tax", now),
             Entry("MAX_DISCOUNT_PERCENT", "30", "Giảm giá tối đa cho phép (%)", "Sales & Tax", now),
@@ -43,12 +45,13 @@ public static class SystemConfigSeedDataOperations
         };
     }
 
-    private static ConfigurationEntry Entry(string key, string value, string description, string category, DateTime now) => new()
+    private static ConfigurationEntry Entry(string key, string value, string description, string category, DateTime now, ConfigValueType valueType = ConfigValueType.String) => new()
     {
         Key = key,
         Value = value,
         Description = description,
         Category = category,
+        ValueType = valueType,
         LastUpdated = now
     };
 }
