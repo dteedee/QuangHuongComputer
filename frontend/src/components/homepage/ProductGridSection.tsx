@@ -26,8 +26,18 @@ export const ProductGridSection: React.FC<ProductGridSectionProps> = ({ title, c
     );
 
     const brandPills = useMemo(() => {
-        const ids = Array.from(new Set(categoryProducts.map(p => p.brandId).filter(Boolean)));
-        return ids.slice(0, 5).map(id => ({ label: id, value: id }));
+        // Map brandId -> tên brand thật (API trả kèm brandName trên mỗi product) — tránh in GUID thô ra UI.
+        const seen = new Map<string, string>();
+        categoryProducts.forEach(p => {
+            const brandId = p.brandId;
+            const brandName = (p as unknown as { brandName?: string }).brandName;
+            if (brandId && brandName && !seen.has(brandId)) {
+                seen.set(brandId, brandName);
+            }
+        });
+        return Array.from(seen.entries())
+            .slice(0, 5)
+            .map(([id, name]) => ({ label: name, value: id }));
     }, [categoryProducts]);
 
     const filteredProducts = useMemo(() => {
@@ -47,7 +57,8 @@ export const ProductGridSection: React.FC<ProductGridSectionProps> = ({ title, c
                 activeBrand={activeBrand}
                 onBrandChange={setActiveBrand}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+            {/* auto-fit + max cố định: card không bị stretch khi ít sản phẩm hơn số cột (tránh cột trống) */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,200px))] gap-3 md:gap-4">
                 {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                 ))}

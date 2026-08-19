@@ -61,59 +61,59 @@ export const ProductGridWithPanels: React.FC<ProductGridWithPanelsProps> = ({ ti
     }).slice(0, limit) || [];
 
     if (isLoading && filteredProducts.length === 0) return null;
+    // Không có sản phẩm sau khi tải xong → không render gì (tránh block trống mid-page).
+    if (!isLoading && filteredProducts.length === 0) return null;
 
     const Icon = (LucideIcons as any)[icon] || LucideIcons.Monitor;
-    const gridCols = `grid-cols-2 md:grid-cols-3 lg:grid-cols-${Math.min(columns, 5)}`;
+    void columns; // giữ prop cho tương thích config cũ; layout thực tế dùng auto-fit bên dưới
 
     return (
         <div
             className="max-w-[1400px] mx-auto px-4 mt-8"
             style={backgroundColor ? { backgroundColor } : undefined}
         >
-            {/* Section Header */}
-            <div className="bg-white rounded-t-2xl border-2 border-b-4 border-accent py-3 px-6 flex items-center justify-between shadow-md">
-                <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
+            {/* Section Header — 1 hàng: title | brand tabs (cuộn ngang nếu dài) | Xem tất cả, không wrap */}
+            <div className="bg-white rounded-t-2xl border-2 border-b-4 border-accent py-3 px-4 md:px-6 flex flex-nowrap items-center gap-3 shadow-md overflow-hidden">
+                <h2 className="shrink-0 text-lg md:text-xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-2 md:gap-3">
                     <span className="text-accent"><Icon size={24} /></span>
                     {title}
                 </h2>
-                <div className="flex items-center gap-4">
-                    {brandTabs.length > 0 && (
-                        <div className="hidden md:flex items-center gap-1">
+                {brandTabs.length > 0 && (
+                    <div className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide min-w-0">
+                        <button
+                            onClick={() => setActiveBrand('all')}
+                            className={`shrink-0 px-3 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
+                                activeBrand === 'all'
+                                    ? 'bg-accent text-white'
+                                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                        >
+                            Tất cả
+                        </button>
+                        {brandTabs.map(tab => (
                             <button
-                                onClick={() => setActiveBrand('all')}
-                                className={`px-3 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
-                                    activeBrand === 'all'
+                                key={tab.brandId}
+                                onClick={() => setActiveBrand(tab.brandId)}
+                                className={`shrink-0 px-3 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
+                                    activeBrand === tab.brandId
                                         ? 'bg-accent text-white'
                                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                             >
-                                Tất cả
+                                {tab.name}
                             </button>
-                            {brandTabs.map(tab => (
-                                <button
-                                    key={tab.brandId}
-                                    onClick={() => setActiveBrand(tab.brandId)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
-                                        activeBrand === tab.brandId
-                                            ? 'bg-accent text-white'
-                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                    }`}
-                                >
-                                    {tab.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                    {showViewAll && (
-                        <Link
-                            to={categoryId ? `/products?category=${categoryId}` : '/products'}
-                            className="text-sm font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
-                        >
-                            Tất cả
-                            <ChevronRight size={16} />
-                        </Link>
-                    )}
-                </div>
+                        ))}
+                    </div>
+                )}
+                {showViewAll && (
+                    <Link
+                        to={categoryId ? `/products?category=${categoryId}` : '/products'}
+                        className="shrink-0 ml-auto text-sm font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
+                    >
+                        Tất cả
+                        <ChevronRight size={16} />
+                    </Link>
+                )}
             </div>
 
             {/* Content with Side Panels */}
@@ -132,18 +132,13 @@ export const ProductGridWithPanels: React.FC<ProductGridWithPanelsProps> = ({ ti
                         </div>
                     )}
 
-                    {/* Product Grid */}
+                    {/* Product Grid — auto-fit + max cố định: card không stretch khi thiếu sản phẩm */}
                     <div className="flex-1 p-4 md:p-6">
-                        <div className={`grid ${gridCols} gap-4`}>
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,200px))] gap-4">
                             {filteredProducts.map(product => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
                         </div>
-                        {filteredProducts.length === 0 && (
-                            <div className="text-center py-12 text-gray-400">
-                                <p className="font-semibold">Chưa có sản phẩm</p>
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Panel */}

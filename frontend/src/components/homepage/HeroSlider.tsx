@@ -116,18 +116,21 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                                         className="absolute inset-0 bg-cover bg-center"
                                         style={{ backgroundImage: `url(${slide.image && slide.image.startsWith('/uploads') ? `http://localhost:5000${slide.image}` : slide.image})` }}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-red-700 to-amber-600 opacity-80" />
+                                        {/* Overlay đỏ đậm bên trái (làm nổi chữ) fade dần sang phải để lộ ảnh nền, thay vì phủ kín 1 màu */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-800/95 via-red-700/70 to-red-900/20" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                                     </div>
 
                                     <div className="relative h-full flex items-center p-8 md:p-16 text-white z-10">
                                         <div className="max-w-4xl w-full">
                                             {slide.badge && (
                                                 <motion.div
-                                                    initial={{ scale: 0 }}
-                                                    whileInView={{ scale: 1 }}
-                                                    className="inline-flex bg-yellow-400 text-red-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg mb-4 items-center gap-2"
+                                                    initial={{ scale: 0.6, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                                                    className="inline-flex bg-yellow-400 text-red-700 px-5 py-2 rounded-full text-sm font-black uppercase tracking-wider shadow-xl ring-2 ring-white/40 mb-5 items-center gap-2"
                                                 >
-                                                    <Star size={14} className="fill-current" />
+                                                    <Star size={16} className="fill-current" />
                                                     {slide.badge}
                                                 </motion.div>
                                             )}

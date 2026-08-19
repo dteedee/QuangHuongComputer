@@ -49,10 +49,10 @@ export const DynamicHomepage: React.FC<DynamicHomepageProps> = ({ sections }) =>
                 return (
                     <motion.section
                         key={section.id}
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                        viewport={{ once: true, amount: 0.05 }}
+                        transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
                         className={section.cssClass || undefined}
                     >
                         <Component 

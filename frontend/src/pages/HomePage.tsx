@@ -75,11 +75,9 @@ export const HomePage = () => {
                 </div>
             </motion.div>
 
-            {/* Audience switcher strip — nằm dưới Header, trên nội dung động */}
-            <div className="bg-white border-b" style={{ borderColor: 'var(--border, #E5E5E5)' }}>
-                <div className="max-w-6xl mx-auto px-4 py-3">
-                    <AudienceSwitcher />
-                </div>
+            {/* Audience switcher — gọn, sát hero thay vì dải trắng riêng chiếm hết chiều rộng */}
+            <div className="max-w-[1400px] mx-auto px-4 pt-3">
+                <AudienceSwitcher className="justify-start scale-90 origin-left" />
             </div>
 
             {/* Section top hardcode theo audience (student/business) */}

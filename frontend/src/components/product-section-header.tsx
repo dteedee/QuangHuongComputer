@@ -30,34 +30,32 @@ export const ProductSectionHeader = ({
     onBrandChange,
 }: ProductSectionHeaderProps) => {
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-lg md:text-xl font-black text-gray-900 uppercase tracking-tight">
-                    {title}
-                </h2>
-                {brandPills && brandPills.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {brandPills.map((pill) => (
-                            <button
-                                key={pill.value}
-                                type="button"
-                                onClick={() => onBrandChange?.(pill.value)}
-                                className={`px-3 py-1 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
-                                    activeBrand === pill.value
-                                        ? 'bg-accent border-accent text-white'
-                                        : 'border-gray-200 text-gray-600 hover:border-accent hover:text-accent'
-                                }`}
-                            >
-                                {pill.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+        <div className="flex flex-nowrap items-center gap-3 mb-4 overflow-hidden">
+            <h2 className="shrink-0 text-lg md:text-xl font-black text-gray-900 uppercase tracking-tight">
+                {title}
+            </h2>
+            {brandPills && brandPills.length > 0 && (
+                <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto scrollbar-hide min-w-0">
+                    {brandPills.map((pill) => (
+                        <button
+                            key={pill.value}
+                            type="button"
+                            onClick={() => onBrandChange?.(pill.value)}
+                            className={`shrink-0 px-3 py-1 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
+                                activeBrand === pill.value
+                                    ? 'bg-accent border-accent text-white'
+                                    : 'border-gray-200 text-gray-600 hover:border-accent hover:text-accent'
+                            }`}
+                        >
+                            {pill.label}
+                        </button>
+                    ))}
+                </div>
+            )}
             {viewAllHref && (
                 <Link
                     to={viewAllHref}
-                    className="flex items-center gap-1 text-sm font-bold text-accent hover:text-accent-hover transition-colors cursor-pointer whitespace-nowrap"
+                    className="shrink-0 ml-auto flex items-center gap-1 text-sm font-bold text-accent hover:text-accent-hover transition-colors cursor-pointer whitespace-nowrap"
                 >
                     Xem tất cả <ChevronRight size={16} />
                 </Link>
