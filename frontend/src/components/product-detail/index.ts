@@ -11,3 +11,8 @@ export { default as ProductStockByBranch } from './product-stock-by-branch';
 export { default as ProductDetailInfo } from './product-detail-info';
 export { default as ProductDetailTabs } from './product-detail-tabs';
 export type { ProductDetailTabKey } from './product-detail-tabs';
+export { default as ProductDetailRelatedSection } from './product-detail-related-section';
+export { default as ProductDetailStickyBuyBar } from './product-detail-sticky-buy-bar';
+export { default as ProductDetailBreadcrumb } from './product-detail-breadcrumb';
+export { default as ProductDetailAddedToCartToast } from './product-detail-added-to-cart-toast';
+export { ProductDetailLoadingState, ProductDetailNotFoundState } from './product-detail-status-states';

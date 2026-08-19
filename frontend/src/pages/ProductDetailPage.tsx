@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, Check, ShoppingCart } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 import { catalogApi, type Product, type ProductReview, type ProductVariant, type ProductMedia, type ProductDetailBundle, type SpecificationGroup, type ProductSpecificationValue, type StockByBranch } from '../api/catalog';
@@ -10,8 +8,8 @@ import client from '../api/client';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
-import { formatNumber } from '../utils/format';
 import { generateProductSchema, generateBreadcrumbSchema } from '../utils/structuredData';
+import { parseLegacySpecifications, PRODUCT_ID_UUID_REGEX } from '../utils/parse-legacy-product-specifications';
 
 import SEO from '../components/SEO';
 import { WriteReviewModal } from '../components/reviews';
@@ -21,42 +19,14 @@ import {
     ProductMediaGallery,
     ProductDetailInfo,
     ProductDetailTabs,
+    ProductDetailRelatedSection,
+    ProductDetailStickyBuyBar,
+    ProductDetailBreadcrumb,
+    ProductDetailAddedToCartToast,
+    ProductDetailLoadingState,
+    ProductDetailNotFoundState,
     type ProductDetailTabKey,
 } from '../components/product-detail';
-
-interface LegacySpecs { [key: string]: string; }
-
-/** Parse legacy JSON string specifications to key→value map. */
-function parseLegacySpecifications(specString?: string): LegacySpecs {
-    if (!specString) return {};
-    try {
-        const parsed = JSON.parse(specString);
-        if (Array.isArray(parsed)) {
-            const res: LegacySpecs = {};
-            parsed.forEach((item: { label?: string; value?: string }) => {
-                if (item?.label) res[item.label] = item.value ?? '';
-            });
-            return res;
-        }
-        if (parsed && typeof parsed === 'object') {
-            const res: LegacySpecs = {};
-            Object.entries(parsed as Record<string, unknown>).forEach(([k, v]) => {
-                res[k] = String(v);
-            });
-            return res;
-        }
-        return {};
-    } catch {
-        const specs: LegacySpecs = {};
-        specString.split('\n').forEach((line) => {
-            const [key, ...valueParts] = line.split(':');
-            if (key && valueParts.length > 0) specs[key.trim()] = valueParts.join(':').trim();
-        });
-        return specs;
-    }
-}
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function ProductDetailPage() {
     const { slug, id } = useParams<{ slug?: string; id?: string }>();
@@ -145,7 +115,7 @@ export default function ProductDetailPage() {
         setLoading(true);
         try {
             // Bước 1: lấy product cơ bản (theo slug/id) — luôn phải có
-            const base = UUID_REGEX.test(productParam)
+            const base = PRODUCT_ID_UUID_REGEX.test(productParam)
                 ? await catalogApi.getProduct(productParam)
                 : await catalogApi.getProductBySlug(productParam);
             setProduct(base);
@@ -278,30 +248,11 @@ export default function ProductDetailPage() {
 
     // ============ Render ============
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[var(--accent-primary)] mx-auto" />
-                    <p className="mt-4 text-gray-600 text-sm">Đang tải...</p>
-                </div>
-            </div>
-        );
+        return <ProductDetailLoadingState />;
     }
 
     if (!product) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy sản phẩm</h2>
-                    <button
-                        onClick={() => navigate('/products')}
-                        className="bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
-                    >
-                        Quay lại danh sách
-                    </button>
-                </div>
-            </div>
-        );
+        return <ProductDetailNotFoundState onBackToList={() => navigate('/products')} />;
     }
 
     return (
@@ -324,32 +275,10 @@ export default function ProductDetailPage() {
             />
 
             {/* Notification added to cart */}
-            <AnimatePresence>
-                {showAddedNotification && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 z-50"
-                    >
-                        <Check className="w-5 h-5" />
-                        <span className="font-medium text-sm">Đã thêm vào giỏ hàng!</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <ProductDetailAddedToCartToast show={showAddedNotification} />
 
             {/* Breadcrumb */}
-            <div className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-                    <nav className="flex items-center gap-2 text-sm">
-                        <button onClick={() => navigate('/')} className="text-gray-500 hover:text-accent transition-colors cursor-pointer">Trang chủ</button>
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
-                        <button onClick={() => navigate('/products')} className="text-gray-500 hover:text-accent transition-colors cursor-pointer">Sản phẩm</button>
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
-                        <span className="text-gray-900 font-semibold truncate max-w-xs">{product.name}</span>
-                    </nav>
-                </div>
-            </div>
+            <ProductDetailBreadcrumb productName={product.name} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-8 pb-32 lg:pb-10">
                 {/* Grid 2 cột: gallery + info */}
@@ -413,57 +342,11 @@ export default function ProductDetailPage() {
                 {product.id && <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />}
 
                 {/* Related */}
-                <section>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">Sản phẩm liên quan</h2>
-                        <button
-                            onClick={() => navigate(product.categoryId ? `/products?category=${product.categoryId}` : '/products')}
-                            className="text-accent text-sm font-semibold hover:text-accent-hover transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                            Xem tất cả <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                    {loadingRelated ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[1, 2, 3, 4].map((i) => <div key={i} className="aspect-[4/5] bg-gray-100 rounded-xl animate-pulse" />)}
-                        </div>
-                    ) : relatedProducts.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                            {relatedProducts.map((p) => (
-                                <div
-                                    key={p.id}
-                                    onClick={() => navigate(`/san-pham/${p.slug || p.id}`)}
-                                    className="bg-white rounded-lg border border-gray-200 hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group overflow-hidden"
-                                >
-                                    <div className="aspect-[4/3] bg-white p-4 flex items-center justify-center relative overflow-hidden">
-                                        {p.imageUrl ? (
-                                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                                        ) : (
-                                            <span className="text-gray-300 text-4xl font-black">{p.name?.charAt(0) || '?'}</span>
-                                        )}
-                                    </div>
-                                    <div className="p-3 border-t border-gray-50 space-y-1">
-                                        <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm group-hover:text-accent transition-colors leading-snug min-h-[2.5rem]">
-                                            {p.name}
-                                        </h3>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-accent font-bold">
-                                                {formatNumber(p.price)}<sup className="text-[10px] font-bold ml-0.5">₫</sup>
-                                            </span>
-                                            {p.oldPrice && p.oldPrice > p.price && (
-                                                <span className="text-gray-400 line-through text-xs">{formatNumber(p.oldPrice)}₫</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200">
-                            <p className="text-gray-500 text-sm">Không tìm thấy sản phẩm liên quan</p>
-                        </div>
-                    )}
-                </section>
+                <ProductDetailRelatedSection
+                    loading={loadingRelated}
+                    relatedProducts={relatedProducts}
+                    categoryId={product.categoryId}
+                />
 
                 {/* Recently viewed */}
                 <RecentlyViewedProducts currentProductId={product.id} title="Bạn đã xem gần đây" />
@@ -481,45 +364,18 @@ export default function ProductDetailPage() {
             )}
 
             {/* Sticky bar mobile */}
-            <AnimatePresence>
-                {showStickyBar && product && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-                    >
-                        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-                            <div className="hidden md:flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-10 h-10 bg-gray-50 rounded-lg p-0.5 flex-shrink-0">
-                                    {displayMedias[0] && <img src={displayMedias[0].url} alt="" className="w-full h-full object-contain" />}
-                                </div>
-                                <div className="min-w-0">
-                                    <h3 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h3>
-                                    <span className="text-accent font-bold text-sm">{formatNumber(displayPrice)}<sup className="text-[10px] font-bold ml-0.5">₫</sup></span>
-                                </div>
-                            </div>
-                            <div className="flex gap-3 w-full md:w-auto">
-                                <button
-                                    onClick={handleBuyNow}
-                                    disabled={(selectedVariant?.stockQuantity ?? product.stockQuantity) === 0}
-                                    className="flex-1 md:flex-none bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-bold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
-                                >
-                                    MUA NGAY
-                                </button>
-                                <button
-                                    onClick={handleAddToCart}
-                                    disabled={(selectedVariant?.stockQuantity ?? product.stockQuantity) === 0 || addingToCart}
-                                    className="flex-1 md:flex-none border-2 border-accent text-accent px-6 py-3 rounded-lg hover:bg-red-50 font-bold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
-                                >
-                                    <ShoppingCart className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {product && (
+                <ProductDetailStickyBuyBar
+                    show={showStickyBar}
+                    product={product}
+                    displayMedia={displayMedias[0]}
+                    displayPrice={displayPrice}
+                    stockQuantity={selectedVariant?.stockQuantity ?? product.stockQuantity}
+                    addingToCart={addingToCart}
+                    onBuyNow={handleBuyNow}
+                    onAddToCart={handleAddToCart}
+                />
+            )}
         </div>
     );
 }

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { catalogApi, type Product, type Category, type Brand } from '../api/catalog';
 import { aiApi } from '../api/ai';
-import { Filter, Grid, List, ChevronRight, Home, Search, X, Sparkles } from 'lucide-react';
-import { ProductCard } from '../components/ProductCard';
 import { ProductFilter } from '../components/ProductFilter';
-import { ProductListItem } from '../components/ProductListItem';
 import SEO from '../components/SEO';
+import CatalogBreadcrumbHeader from '../components/catalog/catalog-breadcrumb-header';
+import CatalogMobileFilterDrawer from '../components/catalog/catalog-mobile-filter-drawer';
+import CatalogAiSearchBanner from '../components/catalog/catalog-ai-search-banner';
+import CatalogToolbar from '../components/catalog/catalog-toolbar';
+import CatalogProductsGrid from '../components/catalog/catalog-products-grid';
+import CatalogPagination from '../components/catalog/catalog-pagination';
 
 interface ProductCatalogProps {
   categorySlug?: string;
@@ -155,12 +157,6 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
     setSearchParams(params);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    updateURL({ page: 1, q: searchQuery });
-  };
-
   const activeFiltersCount = [
     selectedCategory,
     selectedBrand,
@@ -175,6 +171,38 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
     ? `${currentBrandName} - ${currentCategoryName}`
     : currentCategoryName;
 
+  const resetFilters = () => {
+    setSelectedCategory('');
+    setSelectedBrand('');
+    setPriceRange({ min: 0, max: 100000000 });
+    setInStockOnly(false);
+    setSearchQuery('');
+    setPage(1);
+    setSearchParams({});
+  };
+
+  const visibleCategories = categories.filter(c => (c.productCount ?? 0) > 0);
+  const visibleBrands = brands.filter(b => (b.productCount ?? 0) > 0);
+
+  const handleCategoryChange = (id: string) => {
+    const next = id === selectedCategory ? '' : id;
+    setSelectedCategory(next);
+    updateURL({ category: next, page: 1 });
+  };
+  const handleBrandChange = (id: string) => {
+    const next = id === selectedBrand ? '' : id;
+    setSelectedBrand(next);
+    updateURL({ brand: next, page: 1 });
+  };
+  const handlePriceChange = (range: { min: number; max: number }) => {
+    setPriceRange(range);
+    updateURL({ minPrice: range.min, maxPrice: range.max, page: 1 });
+  };
+  const handleInStockChange = (checked: boolean) => {
+    setInStockOnly(checked);
+    updateURL({ inStock: checked, page: 1 });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       <SEO
@@ -182,39 +210,14 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
         description={`Danh mục ${seoTitle} tại Quang Hưởng Computer. Cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt nhất.`}
       />
 
-      {/* Breadcrumb + Title */}
-      <div className="container mx-auto px-4 pt-4 pb-2">
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <Link to="/" className="hover:text-accent flex items-center gap-1 transition-colors"><Home size={14} /> Trang chủ</Link>
-          <ChevronRight size={14} />
-          <span className="text-gray-900 font-medium">Sản phẩm</span>
-        </nav>
-        <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          {searchQuery ? (
-            <span>Kết quả tìm kiếm cho <span className="text-accent">"{searchQuery}"</span></span>
-          ) : (
-            <>
-              {currentCategoryName}
-              {currentBrandName && <span className="text-gray-400 font-normal">/ {currentBrandName}</span>}
-            </>
-          )}
-        </h1>
-
-        {/* Mobile Filter Toggle */}
-        <div className="mt-3 md:hidden flex items-center justify-between">
-          <button
-            onClick={() => setShowMobileFilter(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium shadow-small active:bg-gray-50"
-          >
-            <Filter size={16} />
-            Bộ lọc {activeFiltersCount > 0 && `(${activeFiltersCount})`}
-          </button>
-
-          <span className="text-sm text-gray-500">
-            {total} sản phẩm
-          </span>
-        </div>
-      </div>
+      <CatalogBreadcrumbHeader
+        searchQuery={searchQuery}
+        currentCategoryName={currentCategoryName}
+        currentBrandName={currentBrandName}
+        total={total}
+        activeFiltersCount={activeFiltersCount}
+        onOpenMobileFilter={() => setShowMobileFilter(true)}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -222,248 +225,66 @@ export default function ProductCatalogPage({ }: ProductCatalogProps) {
           {/* Desktop Sidebar */}
           <div className="hidden lg:block sticky top-24 h-fit">
             <ProductFilter
-              categories={categories.filter(c => (c.productCount ?? 0) > 0)}
-              brands={brands.filter(b => (b.productCount ?? 0) > 0)}
+              categories={visibleCategories}
+              brands={visibleBrands}
               selectedCategory={selectedCategory}
               selectedBrand={selectedBrand}
               priceRange={priceRange}
               inStockOnly={inStockOnly}
-              onCategoryChange={(id) => { setSelectedCategory(id === selectedCategory ? '' : id); updateURL({ category: id === selectedCategory ? '' : id, page: 1 }); }}
-              onBrandChange={(id) => { setSelectedBrand(id === selectedBrand ? '' : id); updateURL({ brand: id === selectedBrand ? '' : id, page: 1 }); }}
-              onPriceChange={(range) => { setPriceRange(range); updateURL({ minPrice: range.min, maxPrice: range.max, page: 1 }); }}
-              onInStockChange={(checked) => { setInStockOnly(checked); updateURL({ inStock: checked, page: 1 }); }}
-              onReset={() => {
-                setSelectedCategory('');
-                setSelectedBrand('');
-                setPriceRange({ min: 0, max: 100000000 });
-                setInStockOnly(false);
-                setSearchQuery('');
-                setPage(1);
-                setSearchParams({});
-              }}
+              onCategoryChange={handleCategoryChange}
+              onBrandChange={handleBrandChange}
+              onPriceChange={handlePriceChange}
+              onInStockChange={handleInStockChange}
+              onReset={resetFilters}
             />
           </div>
 
           {/* Mobile Filter Drawer */}
           {showMobileFilter && (
-            <div className="fixed inset-0 z-50 lg:hidden font-sans">
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setShowMobileFilter(false)} />
-              <div className="absolute inset-y-0 left-0 w-[80%] max-w-sm bg-white shadow-xl transform transition-transform duration-300 ease-in-out h-full overflow-y-auto flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-                  <h2 className="font-bold text-lg text-gray-900">Bộ lọc tìm kiếm</h2>
-                  <button onClick={() => setShowMobileFilter(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="p-4 flex-1">
-                  <ProductFilter
-                    categories={categories.filter(c => (c.productCount ?? 0) > 0)}
-                    brands={brands.filter(b => (b.productCount ?? 0) > 0)}
-                    selectedCategory={selectedCategory}
-                    selectedBrand={selectedBrand}
-                    priceRange={priceRange}
-                    inStockOnly={inStockOnly}
-                    onCategoryChange={(id) => { setSelectedCategory(id === selectedCategory ? '' : id); updateURL({ category: id === selectedCategory ? '' : id, page: 1 }); }}
-                    onBrandChange={(id) => { setSelectedBrand(id === selectedBrand ? '' : id); updateURL({ brand: id === selectedBrand ? '' : id, page: 1 }); }}
-                    onPriceChange={(range) => { setPriceRange(range); updateURL({ minPrice: range.min, maxPrice: range.max, page: 1 }); }}
-                    onInStockChange={(checked) => { setInStockOnly(checked); updateURL({ inStock: checked, page: 1 }); }}
-                    onReset={() => {
-                      setSelectedCategory('');
-                      setSelectedBrand('');
-                      setPriceRange({ min: 0, max: 100000000 });
-                      setInStockOnly(false);
-                      setSearchQuery('');
-                      setPage(1);
-                      setSearchParams({});
-                      setShowMobileFilter(false);
-                    }}
-                  />
-                </div>
-                <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
-                  <button
-                    onClick={() => setShowMobileFilter(false)}
-                    className="w-full py-3 bg-accent text-white font-bold rounded-lg shadow-lg hover:bg-accent-hover transition-colors"
-                  >
-                    Xem {total} kết quả
-                  </button>
-                </div>
-              </div>
-            </div>
+            <CatalogMobileFilterDrawer
+              categories={visibleCategories}
+              brands={visibleBrands}
+              selectedCategory={selectedCategory}
+              selectedBrand={selectedBrand}
+              priceRange={priceRange}
+              inStockOnly={inStockOnly}
+              total={total}
+              onCategoryChange={handleCategoryChange}
+              onBrandChange={handleBrandChange}
+              onPriceChange={handlePriceChange}
+              onInStockChange={handleInStockChange}
+              onReset={() => { resetFilters(); setShowMobileFilter(false); }}
+              onClose={() => setShowMobileFilter(false)}
+            />
           )}
 
           {/* Main Content */}
           <main className="flex-1 min-w-0">
-            {/* AI Search Banner */}
-            {(aiResult || loadingAiResult) && searchQuery && (
-              <div className="mb-6 bg-gradient-to-r from-red-50 to-white p-5 rounded-2xl border border-red-100 shadow-sm animate-fade-in-down relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2 text-accent">
-                    <Sparkles className="w-5 h-5 flex-shrink-0" />
-                    <h3 className="font-bold text-sm uppercase tracking-wide">Trợ lý AI phân tích</h3>
-                  </div>
-                  {loadingAiResult ? (
-                    <div className="space-y-2">
-                      <div className="h-4 bg-red-100/50 rounded w-3/4 animate-pulse"></div>
-                      <div className="h-4 bg-red-100/50 rounded w-1/2 animate-pulse"></div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{aiResult}</p>
-                  )}
-                </div>
-                {/* Decorative blob */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-              </div>
-            )}
+            <CatalogAiSearchBanner aiResult={aiResult} loadingAiResult={loadingAiResult} searchQuery={searchQuery} />
 
-            {/* Toolbar */}
-            <div className="bg-white rounded-lg shadow-small border border-gray-200 p-3 mb-6 flex flex-wrap gap-4 items-center justify-between">
-              <div className="hidden md:block text-gray-500 text-sm">
-                Hiển thị <strong>{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)}</strong> trong <strong>{total}</strong> sản phẩm
-              </div>
+            <CatalogToolbar
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              sortBy={sortBy}
+              onSortChange={(val) => { setSortBy(val); setPage(1); updateURL({ sortBy: val }); }}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
 
-              <div className="flex items-center gap-3 ml-auto w-full md:w-auto">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 whitespace-nowrap">Sắp xếp:</span>
-                  <SearchableSelect
-                    value={sortBy}
-                    onChange={(val) => {
-                      setSortBy(val);
-                      setPage(1);
-                      updateURL({ sortBy: val });
-                    }}
-                    options={[
-                      { value: 'newest', label: 'Mới nhất' },
-                      { value: 'price_asc', label: 'Giá tăng dần' },
-                      { value: 'price_desc', label: 'Giá giảm dần' },
-                      { value: 'name', label: 'Tên A-Z' },
-                    ]}
-                    className="w-44"
-                  />
-                </div>
+            <CatalogProductsGrid
+              loading={loading}
+              products={products}
+              viewMode={viewMode}
+              onClearFilters={resetFilters}
+            />
 
-                <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                    title="Lưới"
-                  >
-                    <Grid size={18} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-accent shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                    title="Danh sách"
-                  >
-                    <List size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Products Grid/List */}
-            {loading ? (
-              <div className={viewMode === 'grid' ? "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-4"}>
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-small border border-gray-200 p-4 animate-pulse h-80">
-                    <div className="bg-gray-100 h-40 rounded-lg mb-4 w-full"></div>
-                    <div className="bg-gray-100 h-4 rounded w-3/4 mb-2"></div>
-                    <div className="bg-gray-100 h-4 rounded w-1/2 mb-4"></div>
-                    <div className="bg-gray-100 h-8 rounded w-full"></div>
-                  </div>
-                ))}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-small border border-gray-200 p-16 text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search size={32} className="text-gray-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Không tìm thấy sản phẩm nào</h3>
-                <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                  Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn để tìm thấy sản phẩm mong muốn.
-                </p>
-                <button
-                  onClick={() => {
-                    setSelectedCategory('');
-                    setSelectedBrand('');
-                    setPriceRange({ min: 0, max: 100000000 });
-                    setInStockOnly(false);
-                    setSearchQuery('');
-                    setPage(1);
-                    setSearchParams({});
-                  }}
-                  className="px-8 py-3 bg-accent text-white rounded-full hover:bg-accent-hover font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                >
-                  Xóa tất cả bộ lọc
-                </button>
-              </div>
-            ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {products.map((product) => (
-                  <ProductListItem key={product.id} product={product} />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {total > pageSize && (
-              <div className="mt-10 flex justify-center pb-8">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    disabled={page === 1}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all shadow-small"
-                  >
-                    Trước
-                  </button>
-
-                  <div className="hidden sm:flex gap-1">
-                    {[...Array(Math.ceil(total / pageSize))].map((_, i) => {
-                      const pageNum = i + 1;
-                      const showPage =
-                        pageNum === 1 ||
-                        pageNum === Math.ceil(total / pageSize) ||
-                        (pageNum >= page - 1 && pageNum <= page + 1);
-
-                      if (!showPage) {
-                        if (pageNum === page - 2 || pageNum === page + 2) {
-                          return (
-                            <span key={pageNum} className="px-3 py-2 text-gray-400">...</span>
-                          );
-                        }
-                        return null;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                          className={`min-w-[40px] h-10 rounded-lg font-medium text-sm transition-all ${page === pageNum
-                            ? 'bg-accent text-white shadow-medium scale-105'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-accent hover:text-accent shadow-small'
-                            }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => { setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    disabled={page === Math.ceil(total / pageSize)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 hover:border-accent hover:text-accent transition-all shadow-small"
-                  >
-                    Sau
-                  </button>
-                </div>
-              </div>
-            )}
+            <CatalogPagination
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={setPage}
+            />
           </main>
         </div>
       </div>
