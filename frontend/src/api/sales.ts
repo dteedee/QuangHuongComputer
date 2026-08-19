@@ -322,7 +322,8 @@ export const salesApi = {
         },
 
         applyCoupon: async (couponCode: string) => {
-            const response = await client.post<{ message: string; discount: number }>('/sales/cart/apply-coupon', { couponCode });
+            // Backend trả về { message, discountAmount, totalAmount } (SalesEndpoints.cs /cart/apply-coupon).
+            const response = await client.post<{ message: string; discountAmount: number; totalAmount: number }>('/sales/cart/apply-coupon', { couponCode });
             return response.data;
         },
 

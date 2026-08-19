@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BuildingBlocks.Validation;
+using Catalog.Infrastructure;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Sales.Application.Checkout;
+using Sales.Application.Pricing;
 using Sales.Domain;
 using Sales.Infrastructure;
 using System.Text.Json;
@@ -18,14 +20,20 @@ namespace Sales;
 /// Phase 04 — Endpoints cho luồng checkout hợp nhất:
 /// - POST /api/sales/checkout/session      → giữ chỗ 15 phút
 /// - POST /api/sales/checkout/session/{id}/extend → gia hạn 1 lần
-/// - POST /api/sales/checkout               → orchestrator (thay thế /checkout cũ + /fast-checkout)
+/// - POST /api/sales/checkout/orchestrate    → orchestrator (chưa wire frontend, giữ cho luồng CartId+Shipping)
 /// - POST /api/sales/fast-checkout          → alias tương thích, chuyển sang orchestrator
+/// - POST /api/promotions/evaluate          → preview khuyến mãi cho CheckoutPage (bug fix: endpoint này
+///   trước đây KHÔNG tồn tại — frontend gọi vào khoảng trống, luôn fallback im lặng, bước "Khuyến mãi"
+///   ở checkout không bao giờ hiển thị ưu đãi tự động/preview giảm giá thật.)
 /// </summary>
 public static class CheckoutEndpoints
 {
     public static void MapCheckoutEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/sales/checkout");
+
+        // ---- Preview khuyến mãi (Content.Promotions engine) cho CheckoutPage bước 2 ----
+        app.MapPost("/api/promotions/evaluate", EvaluatePromotionsAsync);
 
         // ---- Session giữ chỗ tồn ----
         group.MapPost("/session", CreateSessionAsync).RequireAuthorization();
@@ -34,7 +42,10 @@ public static class CheckoutEndpoints
         group.MapGet("/session/{id:guid}", GetSessionAsync).RequireAuthorization();
 
         // ---- Checkout orchestrator ----
-        group.MapPost("/", async (
+        // NOTE: route "/orchestrate" (không phải "/") để tránh AmbiguousMatchException với
+        // POST /api/sales/checkout (SalesEndpoints.cs) — endpoint mà frontend thực sự gọi.
+        // Orchestrator này hiện chưa được frontend wire (frontend dùng CheckoutDto cũ qua salesApi.orders.create).
+        group.MapPost("/orchestrate", async (
             CheckoutOrchestratorRequestDto model,
             CheckoutOrchestrator orchestrator,
             ClaimsPrincipal user,
@@ -96,6 +107,94 @@ public static class CheckoutEndpoints
                 ? Results.Ok(new { result.OrderId, result.OrderNumber, result.TotalAmount })
                 : Results.BadRequest(new { Error = result.ErrorMessage });
         }).RequireAuthorization().WithValidation<CheckoutOrchestratorRequestDto>();
+    }
+
+    // ============= Promotion preview =============
+
+    /// <summary>
+    /// Tính trước khuyến mãi (tự động + mã nhập tay) cho giỏ hàng CHƯA đặt — dùng ở CheckoutPage bước 2.
+    /// Xây Cart tạm (không lưu DB) từ items request, tái dùng IPricingEngine — cùng công thức với lúc
+    /// đặt hàng thật (CheckoutOrchestrator) để tránh preview khác số tiền lúc submit.
+    /// LƯU Ý: promotionCode ở đây là mã Content.Promotions (tự động/nhập tay theo Priority/Exclusive),
+    /// KHÁC với Coupon Content.Coupons dùng ở /cart/apply-coupon và CheckoutDto.CouponCode (hệ cũ).
+    /// </summary>
+    private static async Task<IResult> EvaluatePromotionsAsync(
+        EvaluatePromotionRequestDto model,
+        IPricingEngine pricingEngine,
+        CatalogDbContext catalogDb,
+        CancellationToken ct)
+    {
+        if (model.Items == null || model.Items.Count == 0)
+            return Results.Ok(new
+            {
+                Subtotal = 0m,
+                DiscountTotal = 0m,
+                ShippingDiscount = 0m,
+                FinalTotal = 0m,
+                AppliedPromotions = Array.Empty<object>(),
+                FreeGifts = Array.Empty<object>()
+            });
+
+        // Cart tạm — không SaveChanges, chỉ dùng làm input cho PricingEngine.
+        var tempCart = new Cart(model.CustomerId ?? Guid.Empty);
+        foreach (var item in model.Items)
+        {
+            if (item.Quantity <= 0) continue;
+            tempCart.AddItem(item.ProductId, productName: string.Empty, item.UnitPrice, item.Quantity,
+                item.VariantId, variantName: null, variantSku: null);
+        }
+        tempCart.SetShippingAmount(Math.Max(0, model.ShippingAmount ?? 0));
+
+        var customerContext = model.CustomerId.HasValue
+            ? new CustomerContext(model.CustomerId.Value, CustomerGroup: null, PreviousOrderCount: 0, IsFirstOrder: false)
+            : null;
+        var manualCodes = string.IsNullOrWhiteSpace(model.CouponCode)
+            ? Array.Empty<string>()
+            : new[] { model.CouponCode.Trim() };
+
+        var pricing = await pricingEngine.CalculateAsync(tempCart, customerContext, manualCodes, ct);
+
+        // Lookup tên/ảnh sản phẩm tặng (PricingResult.FreeGifts chỉ có Id/Quantity).
+        var giftIds = pricing.FreeGifts.Select(g => g.ProductId).Distinct().ToList();
+        var giftProducts = giftIds.Count == 0
+            ? new List<(Guid Id, string Name, string? ImageUrl)>()
+            : (await catalogDb.Products.AsNoTracking()
+                .Where(p => giftIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.Name, p.ImageUrl })
+                .ToListAsync(ct))
+                .Select(p => (p.Id, p.Name, p.ImageUrl))
+                .ToList();
+
+        var codesUpper = manualCodes.Select(c => c.ToUpperInvariant()).ToHashSet();
+
+        return Results.Ok(new
+        {
+            pricing.Subtotal,
+            DiscountTotal = pricing.TotalDiscount,
+            pricing.ShippingDiscount,
+            FinalTotal = pricing.Total,
+            AppliedPromotions = pricing.AppliedPromotions.Select(p => new
+            {
+                Id = p.PromotionId,
+                p.Code,
+                p.Name,
+                p.DiscountType,
+                p.DiscountAmount,
+                LineProductId = p.AppliesTo.StartsWith("Line:") ? p.AppliesTo["Line:".Length..] : null,
+                IsAutomatic = !codesUpper.Contains(p.Code.ToUpperInvariant())
+            }),
+            FreeGifts = pricing.FreeGifts.Select(g =>
+            {
+                var product = giftProducts.FirstOrDefault(p => p.Id == g.ProductId);
+                return new
+                {
+                    g.ProductId,
+                    ProductName = product.Name ?? "Quà tặng",
+                    g.Quantity,
+                    ImageUrl = product.ImageUrl
+                };
+            })
+        });
     }
 
     // ============= Session handlers =============
@@ -230,3 +329,16 @@ public record CheckoutOrchestratorRequestDto(
     Guid? CheckoutSessionId = null,
     string? GuestPhone = null,
     string? GuestEmail = null);
+
+// ---- POST /api/promotions/evaluate — khớp frontend EvaluatePromotionRequest (frontend/src/api/promotion.ts) ----
+public record EvaluatePromotionRequestDto(
+    List<EvaluatePromotionItemDto> Items,
+    string? CouponCode = null,
+    Guid? CustomerId = null,
+    decimal? ShippingAmount = null);
+
+public record EvaluatePromotionItemDto(
+    Guid ProductId,
+    Guid? VariantId,
+    int Quantity,
+    decimal UnitPrice);

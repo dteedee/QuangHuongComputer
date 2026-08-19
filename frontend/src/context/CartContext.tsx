@@ -237,7 +237,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await salesApi.cart.applyCoupon(code);
             setCouponCode(code.toUpperCase());
-            setDiscountAmount(result.discount);
+            setDiscountAmount(result.discountAmount);
             toast.success(result.message, {
                 icon: '🎉',
                 style: { borderRadius: '15px' }

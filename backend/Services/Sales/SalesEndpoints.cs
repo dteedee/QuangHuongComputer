@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -99,7 +100,8 @@ public static class SalesEndpoints
                 }
 
                 var subtotal = orderItems.Sum(i => i.LineTotal);
-                var taxRate = 0.1m;
+                // BUG pháp lý (giống Cart.cs): VAT VN hiện hành 8%, không phải 10%.
+                var taxRate = TaxRates.VatStandard;
                 var taxAmount = subtotal * taxRate;
 
                 // Apply coupon if provided
@@ -116,7 +118,10 @@ public static class SalesEndpoints
                     }
                 }
 
-                var shippingAmount = subtotal >= 5000000 ? 0 : 50000; // Free shipping over 5M
+                // Đồng bộ ngưỡng freeship với luồng đã đăng nhập (CartContext.tsx / /checkout): 500K → miễn phí, else 30K.
+                // TRƯỚC: 5.000.000đ / 50.000đ — sai lệch 10x so với badge "Miễn phí vận chuyển" hiển thị ở giỏ hàng,
+                // khiến khách guest bị tính phí ship dù giỏ đã qua ngưỡng miễn phí hiển thị trên UI.
+                var shippingAmount = (subtotal - discountAmount) >= 500000 ? 0 : 30000;
 
                 // Build shipping address with guest info
                 var shippingInfo = new
@@ -835,9 +840,9 @@ public static class SalesEndpoints
                 var order = new Order(
                     customerId: customerId, 
                     shippingAddress: model.IsPickup ? (model.PickupStoreName ?? "Nhận tại cửa hàng") : (model.ShippingAddress ?? ""), 
-                    items: orderItems, 
-                    taxRate: 0.1m, 
-                    notes: model.Notes ?? "", 
+                    items: orderItems,
+                    taxRate: TaxRates.VatStandard, // BUG pháp lý: hardcode 0.1m thu dư 2% VAT so với 8% hiện hành.
+                    notes: model.Notes ?? "",
                     customerIp: httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     customerUserAgent: httpContext.Request.Headers.UserAgent.ToString().Length > 0 ? httpContext.Request.Headers.UserAgent.ToString() : "unknown",
                     sourceId: Guid.Parse("00000000-0000-0000-0000-000000000001") // Default web source
@@ -849,10 +854,18 @@ public static class SalesEndpoints
                 }
                 else
                 {
-                    // Set default shipping if not provided
-                    if (!model.ShippingAddress?.Contains("Miễn phí vận chuyển") ?? true)
+                    // BUG cũ: check chuỗi "Miễn phí vận chuyển" trong địa chỉ (không bao giờ đúng) rồi
+                    // luôn set 30000 — bỏ qua model.ShippingFee (phí GHN thật do frontend tính) và ngưỡng
+                    // freeship 500K (CartContext.tsx). Giờ ưu tiên ShippingFee từ client (GHN/POS truyền lên);
+                    // nếu không có, fallback công thức chuẩn: subtotal-discount ≥ 500K → 0, else 30000.
+                    if (model.ShippingFee > 0)
                     {
-                        order.SetShippingAmount(30000); // Default shipping fee
+                        order.SetShippingAmount(model.ShippingFee);
+                    }
+                    else
+                    {
+                        var subtotalForShip = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+                        order.SetShippingAmount(subtotalForShip >= 500000 ? 0 : 30000);
                     }
                 }
                 

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Sales.Infrastructure;
@@ -11,9 +12,11 @@ using Sales.Infrastructure;
 namespace Sales.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(SalesDbContext))]
-    partial class SalesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260819073000_RestoreOrdersDeliveryTimestamps")]
+    partial class RestoreOrdersDeliveryTimestamps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -830,7 +833,7 @@ namespace Sales.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Sales.Domain.Cart", b =>
                 {
-                    b.OwnsMany("Sales.Domain.Cart.Items#Sales.Domain.CartItem", "Items", b1 =>
+                    b.OwnsMany("Sales.Domain.CartItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("CartId")
                                 .HasColumnType("uuid");
@@ -891,7 +894,7 @@ namespace Sales.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Sales.Domain.Order", b =>
                 {
-                    b.OwnsMany("Sales.Domain.Order.Items#Sales.Domain.OrderItem", "Items", b1 =>
+                    b.OwnsMany("Sales.Domain.OrderItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
                                 .HasColumnType("uuid");
