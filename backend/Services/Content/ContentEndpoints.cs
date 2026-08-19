@@ -229,7 +229,12 @@ public static class ContentEndpoints
         group.MapGet("/pages/{slug}", async (string slug, ContentDbContext db, ICacheService cache) =>
         {
             var cacheKey = $"cache:page:{slug}";
-            var cachedPage = await cache.GetAsync<dynamic>(cacheKey);
+            // NOTE: was `cache.GetAsync<dynamic>` — System.Text.Json deserializes an
+            // unknown/dynamic target as a `JsonElement` struct, which has no `!=`
+            // operator overload. Comparing it to `null` through `dynamic` binding
+            // throws a RuntimeBinderException on every cache hit. Use the concrete
+            // entity type instead so equality works normally.
+            var cachedPage = await cache.GetAsync<Content.Domain.CMSPage>(cacheKey);
             if (cachedPage != null) return Results.Ok(cachedPage);
 
             var page = await db.Pages.FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished);

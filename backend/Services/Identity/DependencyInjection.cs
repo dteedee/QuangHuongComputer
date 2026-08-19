@@ -63,6 +63,23 @@ public static class DependencyInjection
                 ValidAudience = jwtSettings["Audience"] ?? "QuangHuongComputer",
                 IssuerSigningKey = new SymmetricSecurityKey(key)
             };
+
+            // SignalR clients cannot set the Authorization header on WebSocket/SSE
+            // handshake requests — they pass the JWT via the `access_token` query
+            // string instead. Without this, all /hubs/* connections return 401.
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         services.AddAuthorization();

@@ -104,29 +104,30 @@ public static class AccountingEndpoints
              return Results.Content(html, "text/html");
         });
 
-        // Summary Stats - Optimized with parallel queries
+        // Summary Stats
         group.MapGet("/stats", async (AccountingDbContext db) =>
         {
             var today = DateTime.UtcNow.Date;
 
-            // Run all queries in parallel for better performance
-            var receivablesTask = db.Invoices
+            // NOTE: a single DbContext instance is NOT thread-safe — running these
+            // queries concurrently via Task.WhenAll (as before) throws
+            // "A second operation was started on this context instance before a
+            // previous operation completed." Must await sequentially.
+            var totalReceivables = await db.Invoices
                 .Where(i => i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled)
                 .SumAsync(i => i.TotalAmount - i.PaidAmount);
-            var revenueTodayTask = db.Invoices
+            var revenueToday = await db.Invoices
                 .Where(i => i.IssueDate >= today && i.Status != InvoiceStatus.Cancelled)
                 .SumAsync(i => i.TotalAmount);
-            var totalInvoicesTask = db.Invoices.CountAsync();
-            var activeAccountsTask = db.Accounts.CountAsync();
-
-            await Task.WhenAll(receivablesTask, revenueTodayTask, totalInvoicesTask, activeAccountsTask);
+            var totalInvoices = await db.Invoices.CountAsync();
+            var activeAccounts = await db.Accounts.CountAsync();
 
             var stats = new
             {
-                TotalReceivables = await receivablesTask,
-                RevenueToday = await revenueTodayTask,
-                TotalInvoices = await totalInvoicesTask,
-                ActiveAccounts = await activeAccountsTask
+                TotalReceivables = totalReceivables,
+                RevenueToday = revenueToday,
+                TotalInvoices = totalInvoices,
+                ActiveAccounts = activeAccounts
             };
             return Results.Ok(stats);
         });
