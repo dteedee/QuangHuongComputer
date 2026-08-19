@@ -70,9 +70,13 @@ public static class SystemConfigEndpoints
             var cachedConfigs = await cache.GetAsync<List<ConfigurationEntry>>(cacheKey);
             if (cachedConfigs != null) return Results.Ok(cachedConfigs);
 
+            // "Tax" giữ để tương thích ngược; danh mục seed thật là "Sales & Tax" (nhiều field trong đó
+            // vẫn cần public cho storefront, vd FREESHIP_THRESHOLD/SHIPPING_COST) nên lọc thêm theo key
+            // cho các giá trị nội bộ (hoa hồng NV) không nên lộ ra public API.
             var sensitiveCats = new List<string> { "Security", "HR & Payroll", "Admin Only", "Tax" };
+            var sensitiveKeys = new List<string> { "COMMISSION_RATE" };
             var configs = await db.Configurations.AsNoTracking()
-                .Where(c => !sensitiveCats.Contains(c.Category) && c.ValueType != ConfigValueType.Secret)
+                .Where(c => !sensitiveCats.Contains(c.Category) && !sensitiveKeys.Contains(c.Key) && c.ValueType != ConfigValueType.Secret)
                 .OrderBy(c => c.SortOrder)
                 .ToListAsync();
 
