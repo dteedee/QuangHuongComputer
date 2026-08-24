@@ -17,7 +17,7 @@ export default function SystemHealthPage() {
         switch (status) {
             case 'operational': return 'text-green-500';
             case 'degraded': return 'text-orange-500';
-            case 'outage': return 'text-red-500';
+            case 'down': return 'text-red-500';
             default: return 'text-gray-500';
         }
     };
@@ -26,12 +26,29 @@ export default function SystemHealthPage() {
         switch (status) {
             case 'operational': return 'bg-green-50 border-green-200';
             case 'degraded': return 'bg-orange-50 border-orange-200';
-            case 'outage': return 'bg-red-50 border-red-200';
+            case 'down': return 'bg-red-50 border-red-200';
             default: return 'bg-gray-50 border-gray-200';
         }
     };
 
-    const MetricCard = ({ title, value, icon, unit = '%' }: { title: string, value: number, icon: React.ReactNode, unit?: string }) => {
+    const MetricCard = ({ title, value, icon, unit = '%' }: { title: string, value: number | null, icon: React.ReactNode, unit?: string }) => {
+        if (value === null) {
+            return (
+                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-gray-500 font-medium">
+                            {icon}
+                            {title}
+                        </div>
+                    </div>
+                    <div className="flex items-end gap-2 mb-2">
+                        <span className="text-3xl font-semibold text-gray-400">N/A</span>
+                    </div>
+                    <p className="text-xs text-gray-400">Không đo được</p>
+                </div>
+            );
+        }
+
         const isWarning = value > 80;
         const isDanger = value > 90;
 
@@ -97,6 +114,7 @@ export default function SystemHealthPage() {
 
     const { metrics, services, status } = data;
     const isHealthy = status === 'healthy';
+    const isOutage = status === 'outage';
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -108,8 +126,8 @@ export default function SystemHealthPage() {
                         System Health
                     </h1>
                     <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${isHealthy ? 'bg-green-500' : 'bg-orange-500'}`}></span>
-                        {isHealthy ? 'Hệ thống đang hoạt động bình thường' : 'Hệ thống đang gặp suy giảm'} • Cập nhật: {new Date(dataUpdatedAt).toLocaleTimeString()}
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${isHealthy ? 'bg-green-500' : isOutage ? 'bg-red-500' : 'bg-orange-500'}`}></span>
+                        {isHealthy ? 'Hệ thống đang hoạt động bình thường' : isOutage ? 'Hệ thống đang gián đoạn' : 'Hệ thống đang gặp suy giảm'} • Cập nhật: {new Date(dataUpdatedAt).toLocaleTimeString()}
                     </p>
                 </div>
                 <button
@@ -126,7 +144,7 @@ export default function SystemHealthPage() {
                 <MetricCard title="CPU Usage" value={metrics.cpu} icon={<Cpu className="w-4 h-4" />} />
                 <MetricCard title="Memory Usage" value={metrics.memory} icon={<Server className="w-4 h-4" />} />
                 <MetricCard title="Storage" value={metrics.storage} icon={<HardDrive className="w-4 h-4" />} />
-                <MetricCard title="Network Traffic" value={metrics.network} icon={<Wifi className="w-4 h-4" />} />
+                <MetricCard title="Memory (MB)" value={metrics.memoryMb} icon={<Wifi className="w-4 h-4" />} unit="MB" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -149,9 +167,13 @@ export default function SystemHealthPage() {
                                         <div>
                                             <h3 className="font-bold text-gray-900">{service.name}</h3>
                                             <p className="text-xs text-gray-500 flex items-center gap-2">
-                                                <span>Uptime: {service.uptime}</span>
-                                                <span>•</span>
-                                                <span>{service.latency}ms latency</span>
+                                                {service.uptime && (
+                                                    <>
+                                                        <span>Uptime: {service.uptime}</span>
+                                                        <span>•</span>
+                                                    </>
+                                                )}
+                                                <span>{service.latencyMs !== null ? `${service.latencyMs}ms latency` : 'N/A'}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -166,10 +188,14 @@ export default function SystemHealthPage() {
                                                 <AlertTriangle className="w-3 h-3" />
                                                 Suy giảm
                                             </span>
-                                        ) : (
+                                        ) : service.status === 'down' ? (
                                             <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1">
                                                 <AlertTriangle className="w-3 h-3" />
                                                 Gián đoạn
+                                            </span>
+                                        ) : (
+                                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full flex items-center gap-1">
+                                                Không xác định
                                             </span>
                                         )}
                                     </div>
@@ -189,8 +215,8 @@ export default function SystemHealthPage() {
                         <div className="space-y-3 text-sm">
                             <div className="flex justify-between items-center py-2 border-b border-gray-50">
                                 <span className="text-gray-500">Trạng thái tổng quan</span>
-                                <span className={`font-bold px-2 py-0.5 rounded ${isHealthy ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                    {isHealthy ? 'Healthy' : 'Degraded'}
+                                <span className={`font-bold px-2 py-0.5 rounded ${isHealthy ? 'bg-green-100 text-green-700' : isOutage ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {isHealthy ? 'Healthy' : isOutage ? 'Outage' : 'Degraded'}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-gray-50">

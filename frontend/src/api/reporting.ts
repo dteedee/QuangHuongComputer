@@ -206,21 +206,22 @@ export async function getDashboardKPIs() {
 // System Health (GET /api/reports/system-health)
 // ============================================
 export interface SystemHealthMetrics {
-    cpu: number;
-    memory: number;
-    storage: number;
-    network: number;
+    cpu: number | null;
+    memory: number | null;
+    memoryMb: number | null;
+    storage: number | null;
+    network: number | null;
 }
 
 export interface SystemHealthService {
     name: string;
-    status: 'operational' | 'degraded' | 'outage';
-    latency: number;
-    uptime: string;
+    status: 'operational' | 'degraded' | 'down' | 'unknown';
+    latencyMs: number | null;
+    uptime: string | null;
 }
 
 export interface SystemHealthReport {
-    status: 'healthy' | 'degraded';
+    status: 'healthy' | 'degraded' | 'outage';
     updatedAt: string;
     metrics: SystemHealthMetrics;
     services: SystemHealthService[];
