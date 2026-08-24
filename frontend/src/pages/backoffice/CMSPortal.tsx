@@ -57,12 +57,13 @@ export const CMSPortal = () => {
     });
 
     const deleteMutation = useMutation<any, Error, string>({
-        mutationFn: (id: string) => activeTab === 'Pages' ? Promise.reject('Không thể xóa trang hệ thống') : contentApi.admin.deletePost(id),
+        mutationFn: (id: string) => activeTab === 'Pages' ? contentApi.admin.deletePage(id) : contentApi.admin.deletePost(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-posts'] });
+            queryClient.invalidateQueries({ queryKey: [activeTab === 'Pages' ? 'admin-pages' : 'admin-posts'] });
             toast.success('Đã xóa!');
         },
-        onError: (err) => toast.error(String(err))
+        // BE trả { error: "Không thể xóa trang hệ thống" } khi PageType != Custom
+        onError: (err: any) => toast.error(err?.response?.data?.error || err?.message || 'Xóa thất bại!')
     });
 
     const seedMutation = useMutation({
@@ -105,19 +106,14 @@ export const CMSPortal = () => {
         }
         setErrors({});
 
-        let data: any = {
+        const data: any = {
             title: formData.get('title'),
             slug: formData.get('slug'),
             content: editorContent,
             body: editorContent,
-            isPublished: formData.get('isPublished') === 'true'
+            isPublished: formData.get('isPublished') === 'true',
+            type: formData.get('type'),
         };
-
-        if (activeTab === 'Pages') {
-            data.type = formData.get('type');
-        } else {
-            data.type = formData.get('type');
-        }
 
         if (editingItem) {
             updateMutation.mutate({ id: editingItem.id, data });
@@ -149,13 +145,16 @@ export const CMSPortal = () => {
                     </p>
                 </div>
                 <div className="flex gap-4">
-                    <button
-                        onClick={() => seedMutation.mutate()}
-                        className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-xl transition-all shadow-sm active:scale-95"
-                    >
-                        <RefreshCcw size={20} className={seedMutation.isPending ? 'animate-spin' : ''} />
-                        Khởi tạo dữ liệu
-                    </button>
+                    {/* D5: ẩn nút Seed ở môi trường production — BE gate seed = Admin + IsDevelopment() */}
+                    {!import.meta.env.PROD && (
+                        <button
+                            onClick={() => seedMutation.mutate()}
+                            className="flex items-center gap-3 px-6 py-4 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-xl transition-all shadow-sm active:scale-95"
+                        >
+                            <RefreshCcw size={20} className={seedMutation.isPending ? 'animate-spin' : ''} />
+                            Khởi tạo dữ liệu
+                        </button>
+                    )}
                     <button
                         onClick={() => handleOpenModal()}
                         className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-xl transition-all shadow-sm shadow-blue-500/15 active:scale-95 group"

@@ -1,3 +1,7 @@
+// TECH DEBT (D9, phase-05): reorder/update items ở đây gọi N request tuần tự thay vì
+// batch. BE đã có PUT /api/content/admin/menus/{menuId}/items/reorder
+// (ContentEndpoints.cs:1027, xem contentApi.admin.reorderMenuItems) có thể thay thế
+// để giảm round-trip. Giữ nguyên hành vi hiện tại — không tối ưu trong phase này.
 import React, { useState, useEffect } from 'react';
 import { 
     DndContext, 

@@ -338,6 +338,16 @@ export const catalogApi = {
         return response.data;
     },
 
+    getCategoryById: async (id: string) => {
+        const response = await client.get<Category>(`/catalog/categories/${id}`);
+        return response.data;
+    },
+
+    getBrandById: async (id: string) => {
+        const response = await client.get<Brand>(`/catalog/brands/${id}`);
+        return response.data;
+    },
+
     createProduct: async (data: CreateProductDto) => {
         const response = await client.post<Product>(
             '/catalog/products',
@@ -627,4 +637,27 @@ export const catalogApi = {
         });
         return response.data;
     },
+
+    // Bundles — CatalogBundleEndpoints.cs (chưa nối UI, dùng khi có màn quản lý combo)
+    bundles: {
+        updateBundle: async (id: string, data: UpdateBundleRequest) => {
+            const response = await client.put(`/catalog/bundles/${id}`, data);
+            return response.data;
+        },
+        deleteBundle: async (id: string) => {
+            const response = await client.delete<{ message: string }>(`/catalog/bundles/${id}`);
+            return response.data;
+        },
+    },
 };
+
+export interface UpdateBundleRequest {
+    name: string;
+    description?: string;
+    totalPrice: number;
+    originalPrice: number;
+    imageUrl?: string;
+    validFrom?: string;
+    validTo?: string;
+    items: Array<{ productId: string; isMainItem: boolean; quantity: number; discountPercentage: number }>;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User, Mail, Shield, CheckCircle2 } from 'lucide-react';
+import { X, Save, User, Mail, Shield, CheckCircle2, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type User as UserType } from '../../api/admin';
 import { z } from 'zod';
@@ -17,6 +17,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
     const [formData, setFormData] = useState({
         email: '',
         fullName: '',
+        password: '',
         roles: [] as string[],
         isActive: true
     });
@@ -40,6 +41,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
         const schema = z.object({
             fullName: z.string().min(1, msg.requireInput('Họ và tên')),
             email: z.string().min(1, msg.requireInput('Email')).email('Email không hợp lệ'),
+            password: user ? z.string().optional() : z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
         });
 
         const result = schema.safeParse(formData);
@@ -54,7 +56,9 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
         }
 
         setErrors({});
-        onSubmit(formData);
+        // Update chỉ nhận {email, fullName} (UpdateUserDto); create cần thêm password.
+        const { password, isActive, ...rest } = formData;
+        onSubmit(user ? rest : { ...rest, password });
     };
 
     return (
@@ -105,6 +109,23 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
                             </div>
                             {errors.email && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.email}</p>}
                         </div>
+
+                        {!user && (
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Mật khẩu</label>
+                                <div className="relative">
+                                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-gray-400"
+                                        placeholder="Tối thiểu 6 ký tự"
+                                    />
+                                </div>
+                                {errors.password && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.password}</p>}
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Vai trò</label>

@@ -107,6 +107,7 @@ export const adminApi = {
       return response.data;
     },
 
+    // = soft delete, trùng toggleStatus (BE set IsActive=false, không xóa cứng)
     delete: async (id: string): Promise<{ message: string }> => {
       const response = await client.delete<{ message: string }>(`/auth/users/${id}`);
       return response.data;
@@ -153,6 +154,12 @@ export const adminApi = {
       return response.data;
     },
 
+    // BE PUT /auth/roles/{id} — id là RoleId (Guid string), name = tên mới; chặn đổi tên role hệ thống
+    update: async (id: string, name: string): Promise<{ message: string; id: string; name: string }> => {
+      const response = await client.put<{ message: string; id: string; name: string }>(`/auth/roles/${id}`, { name });
+      return response.data;
+    },
+
     getPermissions: async (roleId: string): Promise<string[]> => {
       const response = await client.get<string[]>(`/auth/roles/${roleId}/permissions`);
       return response.data;
@@ -177,6 +184,13 @@ export async function getPermissionRegistry(): Promise<PermissionModule[]> {
   const { data } = await client.get<PermissionModule[]>('/auth/permissions/registry');
   return data;
 }
+
+// Vai trò hệ thống — BE không chặn DELETE /roles/{roleName} cho các role này
+// (chỉ chặn đổi tên ở PUT /roles/{id}), nên FE tự chặn xóa để tránh vỡ phân quyền.
+export const SYSTEM_ROLES = [
+  'Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant',
+  'Sale', 'Customer', 'Marketing', 'Supplier', 'InventoryStaff', 'HR',
+];
 
 // ============================================
 // Helper Functions

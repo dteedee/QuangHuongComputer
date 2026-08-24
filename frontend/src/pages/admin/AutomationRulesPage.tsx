@@ -270,7 +270,7 @@ export function AutomationRulesPage() {
                                     </td>
                                     <td className="px-4 py-2 text-right whitespace-nowrap">
                                         <button onClick={() => setEditing({ rule })} className="text-indigo-600 dark:text-indigo-400 hover:underline mr-3 text-xs">Edit</button>
-                                        <button onClick={() => deleteMut.mutate(rule.id)} className="text-red-500 hover:underline text-xs">Delete</button>
+                                        <button onClick={() => { if (window.confirm(`Xóa rule "${rule.name}"? Không thể hoàn tác.`)) deleteMut.mutate(rule.id); }} className="text-red-500 hover:underline text-xs">Delete</button>
                                     </td>
                                 </tr>
                             ))}

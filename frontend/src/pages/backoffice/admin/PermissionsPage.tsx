@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronRight, Shield, Save, Grid, List, Check, Search, Filter, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Shield, Save, Grid, List, Check, Search, Filter, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { adminApi, type Permission, type Role } from '@api/admin';
+import { adminApi, SYSTEM_ROLES, type Permission, type Role } from '@api/admin';
 import { usePermissions } from '@hooks/usePermissions';
 import { useConfirm } from '@context/ConfirmContext';
 import toast from 'react-hot-toast';
@@ -200,6 +200,8 @@ export function PermissionsPage() {
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [hasChanges, setHasChanges] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [isAddingRole, setIsAddingRole] = useState(false);
+  const [newRoleName, setNewRoleName] = useState('');
   const confirm = useConfirm();
 
   // Permissions check
@@ -240,6 +242,46 @@ export function PermissionsPage() {
       setHasChanges(false);
     },
   });
+
+  // Create role mutation
+  const createRoleMutation = useMutation({
+    mutationFn: (name: string) => adminApi.roles.create(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles', 'all'] });
+      toast.success('Đã tạo vai trò mới');
+      setNewRoleName('');
+      setIsAddingRole(false);
+    },
+    onError: (err: any) => toast.error(err?.response?.data || err?.response?.data?.error || 'Tạo vai trò thất bại'),
+  });
+
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: (roleName: string) => adminApi.roles.delete(roleName),
+    onSuccess: (_data, roleName) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles', 'all'] });
+      toast.success('Đã xóa vai trò');
+      if (roles?.find((r) => r.name === roleName)?.id === selectedRole) setSelectedRole(null);
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.error || err?.response?.data || 'Xóa vai trò thất bại'),
+  });
+
+  const handleCreateRole = () => {
+    const name = newRoleName.trim();
+    if (!name) return;
+    createRoleMutation.mutate(name);
+  };
+
+  const handleDeleteRole = async (e: React.MouseEvent, role: Role) => {
+    e.stopPropagation();
+    if (SYSTEM_ROLES.includes(role.name)) {
+      toast.error('Không thể xóa vai trò hệ thống');
+      return;
+    }
+    const ok = await confirm({ message: `Xóa vai trò "${role.name}"? Người dùng đang giữ vai trò này sẽ mất quyền tương ứng.`, variant: 'danger' });
+    if (!ok) return;
+    deleteRoleMutation.mutate(role.name);
+  };
 
   // Handlers
   const toggleModule = (module: string) => {
@@ -377,12 +419,41 @@ export function PermissionsPage() {
           {/* Role Selector */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-8">
-              <div className="p-5 border-b border-gray-50 bg-gray-50/30">
+              <div className="p-5 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <Shield size={18} className="text-blue-500" />
                   Vai trò hiện có
                 </h3>
+                {canManagePermissions && (
+                  <button
+                    onClick={() => setIsAddingRole((v) => !v)}
+                    className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                    title="Thêm vai trò"
+                  >
+                    {isAddingRole ? <X size={16} /> : <Plus size={16} />}
+                  </button>
+                )}
               </div>
+              {isAddingRole && (
+                <div className="p-3 border-b border-gray-50 flex items-center gap-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateRole(); }}
+                    placeholder="Tên vai trò mới..."
+                    className="flex-1 px-3 py-2 bg-gray-50 border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button
+                    onClick={handleCreateRole}
+                    disabled={createRoleMutation.isPending || !newRoleName.trim()}
+                    className="px-3 py-2 bg-accent text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                  >
+                    {createRoleMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : 'Tạo'}
+                  </button>
+                </div>
+              )}
               <div className="p-3 space-y-1">
                 {roles?.map((role) => (
                   <motion.button
@@ -396,7 +467,19 @@ export function PermissionsPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold">{role.name}</span>
-                      {selectedRole === role.id && <ChevronRight size={16} className="text-blue-500" />}
+                      <div className="flex items-center gap-1">
+                        {canManagePermissions && !SYSTEM_ROLES.includes(role.name) && (
+                          <span
+                            role="button"
+                            onClick={(e) => handleDeleteRole(e, role)}
+                            className="p-1 rounded-md text-gray-300 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Xóa vai trò"
+                          >
+                            <Trash2 size={14} />
+                          </span>
+                        )}
+                        {selectedRole === role.id && <ChevronRight size={16} className="text-blue-500" />}
+                      </div>
                     </div>
                     {role.description && (
                       <div className={`text-xs mt-1 truncate ${selectedRole === role.id ? 'text-blue-400' : 'text-gray-400 group-hover:text-gray-500'}`}>

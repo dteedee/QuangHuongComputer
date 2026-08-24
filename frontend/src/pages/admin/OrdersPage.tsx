@@ -208,6 +208,26 @@ export const AdminOrdersPage = () => {
         onError: () => toast.error('Cập nhật thất bại!')
     });
 
+    const cancelMutation = useMutation({
+        mutationFn: ({ id, reason }: { id: string; reason: string }) => salesApi.orders.cancel(id, reason),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-orders-stats'] });
+            toast.success('Đã hủy đơn hàng!');
+            setSelectedOrder(null);
+        },
+        onError: (err: any) => toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Hủy đơn thất bại!')
+    });
+
+    // Trạng thái không thể hủy — đơn đã hoàn tất/kết thúc vòng đời.
+    const NON_CANCELLABLE_STATUSES = ['Delivered', 'Completed', 'Cancelled'];
+    const handleCancelOrder = (order: Order) => {
+        const reason = window.prompt(`Nhập lý do hủy đơn #${order.orderNumber}:`);
+        if (reason === null) return; // user bấm Hủy prompt
+        if (!window.confirm(`Xác nhận hủy đơn #${order.orderNumber}?`)) return;
+        cancelMutation.mutate({ id: order.id, reason: reason || 'Hủy bởi quản trị viên' });
+    };
+
     const createOrderMutation = useMutation({
         mutationFn: (data: any) => salesApi.orders.create(data),
         onSuccess: () => {
@@ -588,12 +608,24 @@ export const AdminOrdersPage = () => {
                                                         {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                                                     </td>
                                                     <td className="px-8 py-6 text-right">
-                                                        <button
-                                                            onClick={() => setSelectedOrder(order)}
-                                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-gray-100"
-                                                        >
-                                                            <Eye size={18} />
-                                                        </button>
+                                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                            {!NON_CANCELLABLE_STATUSES.includes(order.status) && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleCancelOrder(order); }}
+                                                                    disabled={cancelMutation.isPending}
+                                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 disabled:opacity-50"
+                                                                    title="Hủy đơn"
+                                                                >
+                                                                    <XCircle size={18} />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setSelectedOrder(order)}
+                                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-blue-50 transition-all shadow-sm border border-gray-100"
+                                                            >
+                                                                <Eye size={18} />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
@@ -728,9 +760,20 @@ export const AdminOrdersPage = () => {
                                             ]}
                                         />
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Tổng giá trị</p>
-                                        <p className="text-2xl font-semibold text-accent italic">{formatCurrency(selectedOrder.totalAmount)}</p>
+                                    <div className="text-right flex items-center gap-4">
+                                        <div>
+                                            <p className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Tổng giá trị</p>
+                                            <p className="text-2xl font-semibold text-accent italic">{formatCurrency(selectedOrder.totalAmount)}</p>
+                                        </div>
+                                        {!NON_CANCELLABLE_STATUSES.includes(selectedOrder.status) && (
+                                            <button
+                                                onClick={() => handleCancelOrder(selectedOrder)}
+                                                disabled={cancelMutation.isPending}
+                                                className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-semibold text-xs hover:bg-rose-100 transition-all disabled:opacity-50"
+                                            >
+                                                <XCircle size={16} /> Hủy đơn
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 

@@ -205,9 +205,9 @@ export const AdminProductsPage = () => {
         mutationFn: (id: string) => catalogApi.deleteProduct(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            toast.success('Đã ẩn sản phẩm!');
+            toast.success('Đã xóa sản phẩm!');
         },
-        onError: () => toast.error('Thao tác thất bại!')
+        onError: (err: any) => toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Xóa sản phẩm thất bại!')
     });
 
     const toggleStatusMutation = useMutation({
@@ -458,6 +458,14 @@ export const AdminProductsPage = () => {
                                 <button onClick={() => toggleStatusMutation.mutate(p.id)} className="p-2 text-gray-400 hover:text-amber-600 transition-colors">
                                     {p.isActive ? <PowerOff size={16} /> : <Power size={16} />}
                                 </button>
+                                <button
+                                    onClick={() => { if (window.confirm(`Xóa sản phẩm "${p.name}"? Không thể hoàn tác.`)) deleteMutation.mutate(p.id); }}
+                                    disabled={deleteMutation.isPending}
+                                    className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                                    title="Xóa sản phẩm"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         )}
                     />
@@ -506,6 +514,14 @@ export const AdminProductsPage = () => {
                                             title={product.isActive ? 'Ẩn sản phẩm' : 'Kích hoạt sản phẩm'}
                                         >
                                             {product.isActive ? <PowerOff size={18} /> : <Power size={18} />}
+                                        </button>
+                                        <button
+                                            onClick={() => { if (window.confirm(`Xóa sản phẩm "${product.name}"? Không thể hoàn tác.`)) deleteMutation.mutate(product.id); }}
+                                            disabled={deleteMutation.isPending}
+                                            className="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-700 hover:text-red-600 transition-colors disabled:opacity-50"
+                                            title="Xóa sản phẩm"
+                                        >
+                                            <Trash2 size={18} />
                                         </button>
                                     </div>
                                     {/* Inactive overlay */}

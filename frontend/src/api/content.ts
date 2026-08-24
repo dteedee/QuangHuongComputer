@@ -235,6 +235,11 @@ export const contentApi = {
             const response = await client.put<Page>(`/content/admin/pages/${id}`, data);
             return response.data;
         },
+        // BE chặn xóa page != PageType.Custom (BadRequest { error })
+        deletePage: async (id: string) => {
+            const response = await client.delete<void>(`/content/admin/pages/${id}`);
+            return response.data;
+        },
 
         // Posts
         getPosts: async (params?: { status?: string; category?: string; search?: string }) => {

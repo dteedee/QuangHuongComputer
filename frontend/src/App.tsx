@@ -79,7 +79,6 @@ const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ defaul
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
-const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const StoresPage = lazy(() => import('./pages/StoresPage'));
 
 // Auth pages
@@ -171,7 +170,6 @@ const HomepageBuilder = lazy(() => import('./pages/admin/HomepageBuilder').then(
 const BackofficeMenuEditor = lazy(() => import('./pages/backoffice/admin/BackofficeMenuEditor').then(m => ({ default: m.BackofficeMenuEditor })));
 const TwoFactorSetupPage = lazy(() => import('./pages/backoffice/admin/two-factor-setup-page'));
 const SessionsPage = lazy(() => import('./pages/backoffice/admin/sessions-page'));
-const DynamicPermissionsPage = lazy(() => import('./pages/backoffice/admin/dynamic-permissions-page'));
 const RolesPage = lazy(() => import('./pages/backoffice/admin/PermissionsPage').then(m => ({ default: m.PermissionsPage })));
 const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').then(m => ({ default: m.UsersPage })));
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
@@ -362,36 +360,45 @@ function App() {
                           <Route path="warranty" element={<WarrantyPortal />} />
                           <Route path="warranty/reports" element={<WarrantyReportsPage />} />
                           <Route path="crm/reports" element={<CRMReportsPage />} />
-                          <Route path="cms" element={<CMSPortal />} />
                           {/* Admin & Report Routes */}
                           <Route path="reports" element={<ReportsPortal />} />
                           <Route path="reports/comparison" element={<ComparisonPage />} />
-                          <Route path="users" element={<AdminUsersPage />} />
-                          <Route path="roles" element={<RolesPage />} />
-                          <Route path="products" element={<AdminProductsPage />} />
-                          <Route path="categories" element={<CategoriesPage />} />
-                          <Route path="brands" element={<BrandsPage />} />
                           <Route path="orders" element={<AdminOrdersPage />} />
                           <Route path="reviews" element={<ReviewsManagementPage />} />
-                          <Route path="coupons" element={<CouponsPage />} />
-                          <Route path="config" element={<ConfigPortal />} />
                           <Route path="admin" element={<AdminPortal />} />
                           <Route path="admin/2fa" element={<TwoFactorSetupPage />} />
                           <Route path="admin/sessions" element={<SessionsPage />} />
-                          <Route path="admin/dynamic-permissions" element={<DynamicPermissionsPage />} />
-                          <Route path="admin/menu-editor" element={<BackofficeMenuEditor />} />
-                          <Route path="audit-logs" element={<AuditLogsPage />} />
+                          {/* Dynamic-permissions hợp nhất vào PermissionsPage (D2) */}
+                          <Route path="admin/dynamic-permissions" element={<Navigate to="/backoffice/roles" replace />} />
                           <Route path="manager" element={<ManagerPortal />} />
                           <Route path="notifications" element={<NotificationCenter />} />
-                          <Route path="system-health" element={<SystemHealthPage />} />
-                          <Route path="menus" element={<MenuManager />} />
-                          <Route path="homepage-builder" element={<HomepageBuilder />} />
-                          <Route path="flash-sales" element={<FlashSalesPage />} />
-                          <Route path="promotions" element={<PromotionsPage />} />
                           <Route path="payments/sepay" element={<SePayAdminPage />} />
-                          <Route path="custom-fields" element={<CustomFieldsManager />} />
-                          <Route path="form-builder" element={<FormBuilderPage />} />
-                          <Route path="automation-rules" element={<AutomationRulesPage />} />
+
+                          {/* Admin-only: quản trị người dùng/vai trò/cấu hình/nhật ký/menu-editor */}
+                          <Route element={<RequireAuth allowedRoles={['Admin']} />}>
+                              <Route path="users" element={<AdminUsersPage />} />
+                              <Route path="roles" element={<RolesPage />} />
+                              <Route path="config" element={<ConfigPortal />} />
+                              <Route path="audit-logs" element={<AuditLogsPage />} />
+                              <Route path="admin/menu-editor" element={<BackofficeMenuEditor />} />
+                          </Route>
+
+                          {/* Admin + Manager: nghiệp vụ catalog/nội dung/marketing */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                              <Route path="products" element={<AdminProductsPage />} />
+                              <Route path="categories" element={<CategoriesPage />} />
+                              <Route path="brands" element={<BrandsPage />} />
+                              <Route path="menus" element={<MenuManager />} />
+                              <Route path="homepage-builder" element={<HomepageBuilder />} />
+                              <Route path="promotions" element={<PromotionsPage />} />
+                              <Route path="flash-sales" element={<FlashSalesPage />} />
+                              <Route path="coupons" element={<CouponsPage />} />
+                              <Route path="cms" element={<CMSPortal />} />
+                              <Route path="custom-fields" element={<CustomFieldsManager />} />
+                              <Route path="form-builder" element={<FormBuilderPage />} />
+                              <Route path="automation-rules" element={<AutomationRulesPage />} />
+                              <Route path="system-health" element={<SystemHealthPage />} />
+                          </Route>
 
                           {/* CRM Routes */}
                           <Route path="crm" element={<CrmPortal />} />
