@@ -17,7 +17,8 @@ public static class InventoryEndpoints
 {
     public static void MapInventoryEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory").RequireAuthorization();
+        var group = app.MapGroup("/api/inventory")
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "InventoryStaff", "Sale"));
 
         // Stock Management
         group.MapGet("/stock", async (InventoryDbContext db) =>

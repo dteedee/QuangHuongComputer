@@ -144,7 +144,7 @@ public static class CommunicationEndpoints
             {
                 return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
-        }); // In production, add .RequireAuthorization("Admin") or similar
+        }).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager));
 
         // Chat conversation endpoints
         var chatGroup = app.MapGroup("/api/chat").RequireAuthorization();

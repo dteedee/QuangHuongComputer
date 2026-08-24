@@ -41,28 +41,7 @@ await DatabaseMigrationRunner.RunAsync(app);
 MiddlewarePipeline.Configure(app);
 
 // -- Media upload endpoint -----------------------------------------------------
-app.MapPost("/api/media/upload", async (IFormFile file, IWebHostEnvironment env, HttpContext context) =>
-{
-    if (file == null || file.Length == 0)
-        return Results.BadRequest("No file uploaded");
-
-    var uploadsFolder = Path.Combine(env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot"), "uploads");
-    if (!Directory.Exists(uploadsFolder))
-        Directory.CreateDirectory(uploadsFolder);
-
-    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-    var filePath = Path.Combine(uploadsFolder, fileName);
-
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await file.CopyToAsync(stream);
-    }
-
-    var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
-    var fileUrl = $"{baseUrl}/uploads/{fileName}";
-
-    return Results.Ok(new { Url = fileUrl });
-}).DisableAntiforgery();
+// Handled by Content.MediaEndpoints (MapCatalogMediaEndpoints) with auth + FileValidator.
 
 // -- SignalR hubs --------------------------------------------------------------
 app.MapHub<Communication.Hubs.ChatHub>("/hubs/chat");
@@ -89,6 +68,7 @@ app.MapAiPCBuilderEndpoints();
 app.MapCatalogPCBuilderEndpoints();
 app.MapCatalogBundleEndpoints();
 app.MapCatalogMediaEndpoints();
+app.MapMediaEndpoints();
 app.MapCatalogVariantEndpoints();
 app.MapCatalogSpecificationEndpoints();
 app.MapIdentityEndpoints();

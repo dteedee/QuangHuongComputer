@@ -16,7 +16,8 @@ public static class WarehouseEndpoints
 {
     public static void MapWarehouseEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory").RequireAuthorization();
+        var group = app.MapGroup("/api/inventory")
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "InventoryStaff"));
 
         // ============================
         // WAREHOUSE MANAGEMENT

@@ -12,6 +12,13 @@ public static class RolePermissionSeeder
         // Admin - Full access to everything
         await AssignPermissionsToRole(roleManager, Roles.Admin, Perms.GetAllPermissions());
 
+        // Revoke permissions over-granted to Manager by earlier seeds (databases seeded before 2026-08-24)
+        await RemovePermissionsFromRole(roleManager, Roles.Manager, new[]
+        {
+            Perms.Users.Create,
+            Perms.Users.ManageRoles,
+        });
+
         // Manager - Can manage most things except system config
         await AssignPermissionsToRole(roleManager, Roles.Manager, new[]
         {
@@ -75,11 +82,9 @@ public static class RolePermissionSeeder
             Perms.Content.ManageBanners,
             Perms.Content.ManageMedia,
             
-            // Users & Roles
+            // Users: view/edit only — creating accounts and assigning roles is Admin-only
             Perms.Users.View,
-            Perms.Users.Create,
             Perms.Users.Edit,
-            Perms.Users.ManageRoles,
             
             // Reporting
             Perms.Reporting.ViewSales,
@@ -295,6 +300,26 @@ public static class RolePermissionSeeder
             Perms.HR.ViewPayroll,
             Perms.HR.ManagePayroll,
         });
+    }
+
+    private static async Task RemovePermissionsFromRole(
+        RoleManager<IdentityRole> roleManager,
+        string roleName,
+        IEnumerable<string> permissions)
+    {
+        var role = await roleManager.FindByNameAsync(roleName);
+        if (role == null) return;
+
+        var currentClaims = await roleManager.GetClaimsAsync(role);
+
+        foreach (var permission in permissions)
+        {
+            var claim = currentClaims.FirstOrDefault(c => c.Type == Perms.PermissionType && c.Value == permission);
+            if (claim != null)
+            {
+                await roleManager.RemoveClaimAsync(role, claim);
+            }
+        }
     }
 
     private static async Task AssignPermissionsToRole(

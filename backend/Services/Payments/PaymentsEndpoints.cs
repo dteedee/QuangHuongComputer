@@ -1,6 +1,8 @@
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Payments.Domain;
@@ -439,8 +441,12 @@ public static class PaymentsEndpoints
         app.MapPost("/api/payments/webhook/mock", async (
             WebhookDto model,
             PaymentsDbContext db,
-            IPublishEndpoint publishEndpoint) =>
+            IPublishEndpoint publishEndpoint,
+            IWebHostEnvironment env) =>
         {
+            if (!env.IsDevelopment())
+                return Results.NotFound();
+
             var payment = await db.PaymentIntents.FirstOrDefaultAsync(p => p.Id == model.PaymentId);
             if (payment == null) return Results.NotFound();
 

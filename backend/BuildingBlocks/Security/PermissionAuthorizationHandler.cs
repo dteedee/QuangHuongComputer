@@ -18,11 +18,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         AuthorizationHandlerContext context, 
         PermissionRequirement requirement)
     {
-        // In a real app, you would fetch permissions from the user's claims 
-        // or a database based on their role.
-        // For now, we assume permissions are stored as claims of type "permission".
-        
-        var permissions = context.User.FindAll("permission").Select(x => x.Value);
+        // Permissions are stored as claims of type Permissions.PermissionType ("Permission").
+        var permissions = context.User.FindAll(Permissions.PermissionType).Select(x => x.Value);
 
         if (permissions.Contains(requirement.Permission))
         {

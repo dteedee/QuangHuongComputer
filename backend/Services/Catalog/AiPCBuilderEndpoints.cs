@@ -109,7 +109,7 @@ public static class AiPCBuilderEndpoints
                 WithinBudget = totalPrice <= request.Budget,
                 Components = components
             });
-        });
+        }).RequireAuthorization();
     }
 }
 
