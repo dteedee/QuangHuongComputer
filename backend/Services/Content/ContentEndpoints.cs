@@ -1,11 +1,14 @@
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Content.Domain;
 using Content.Infrastructure;
 using BuildingBlocks.Caching;
+using BuildingBlocks.Endpoints;
 
 namespace Content;
 
@@ -276,9 +279,12 @@ public static class ContentEndpoints
 
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
 
-        // Temporarily expose public seed
-        group.MapPost("/seed", async (ContentDbContext db, ICacheService cache) =>
+        // Seed Data Endpoint (Development only)
+        group.MapPost("/seed", async (ContentDbContext db, ICacheService cache, IWebHostEnvironment env) =>
         {
+            if (!env.IsDevelopment())
+                return Results.NotFound();
+
             await Content.Infrastructure.Data.ContentDbSeeder.SeedAsync(db);
 
             // Invalidate all content caches
@@ -289,7 +295,7 @@ public static class ContentEndpoints
             await cache.RemoveByPatternAsync("cache:homepage*");
 
             return Results.Ok(new { Message = "Content seeded successfully" });
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Register Dynamic System Endpoints
         MapMenuEndpoints(adminGroup, group);
@@ -328,6 +334,19 @@ public static class ContentEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(page);
+        });
+
+        adminGroup.MapDelete("/pages/{id:guid}", async (Guid id, ContentDbContext db, HttpContext httpContext) =>
+        {
+            var page = await db.Pages.FindAsync(id);
+            if (page == null) return Results.NotFound();
+            if (page.Type != PageType.Custom)
+                return Results.BadRequest(new { error = "Không thể xóa trang hệ thống" });
+
+            db.Pages.Remove(page);
+            await db.SaveChangesAsync();
+            await httpContext.LogAuditAsync("Delete", "CMSPage", id.ToString(), $"Title: {page.Title}, Slug: {page.Slug}");
+            return Results.NoContent();
         });
 
         // Post Management

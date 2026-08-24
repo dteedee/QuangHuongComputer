@@ -1275,6 +1275,9 @@ public static class SalesEndpoints
         });
 
         // Admin Endpoints - Allow Admin, Manager, and Sale roles for order management
+        // NOTE (D3): Không thêm POST /api/sales/admin/orders — admin tạo đơn dùng chung
+        // POST /api/sales/checkout (qua promotion/inventory pipeline) để đảm bảo tính nhất quán
+        // giá/khuyến mãi/tồn kho. Luồng POS riêng cho nhân viên tạo đơn tại quầy chưa cần thiết ở giai đoạn này.
         var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
 
         adminGroup.MapGet("/orders", async (SalesDbContext db, int page = 1, int pageSize = 20, string? search = null, string? status = null) =>

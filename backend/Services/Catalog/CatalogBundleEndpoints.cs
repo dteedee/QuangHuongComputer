@@ -187,6 +187,51 @@ public static class CatalogBundleEndpoints
 
             return Results.Created($"/api/catalog/bundles/{bundle.Id}", bundle.Id);
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapPut("/{id:guid}", async (Guid id, CreateBundleRequest request, CatalogDbContext db) =>
+        {
+            var bundle = await db.ProductBundles
+                .Include(b => b.Items)
+                .FirstOrDefaultAsync(b => b.Id == id);
+            if (bundle == null) return Results.NotFound();
+
+            var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
+            var products = await db.Products
+                .Where(p => productIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id);
+
+            bundle.UpdateDetails(
+                request.Name,
+                request.Description ?? "",
+                request.TotalPrice,
+                request.OriginalPrice,
+                request.ImageUrl,
+                request.ValidFrom,
+                request.ValidTo
+            );
+
+            bundle.ClearItems();
+            foreach (var item in request.Items)
+            {
+                if (products.TryGetValue(item.ProductId, out var product))
+                {
+                    bundle.AddItem(item.ProductId, item.IsMainItem, item.Quantity, product.Price, item.DiscountPercentage);
+                }
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { bundle.Id });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+        group.MapDelete("/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        {
+            var bundle = await db.ProductBundles.FindAsync(id);
+            if (bundle == null) return Results.NotFound();
+
+            db.ProductBundles.Remove(bundle);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
 }
 

@@ -468,11 +468,37 @@ public static class IdentityEndpoints
             }
         });
 
+        group.MapPost("/users", async (CreateUserDto model, UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        {
+            if (await userManager.FindByEmailAsync(model.Email) != null)
+                return Results.BadRequest(new { Error = "Email đã tồn tại" });
+
+            var user = new ApplicationUser { Email = model.Email, UserName = model.Email, FullName = model.FullName, IsActive = true, EmailConfirmed = true };
+            var result = await userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            var assignedRoles = new List<string>();
+            if (model.Roles?.Length > 0)
+            {
+                foreach (var role in model.Roles)
+                {
+                    if (await roleManager.RoleExistsAsync(role)) assignedRoles.Add(role);
+                }
+                if (assignedRoles.Count > 0) await userManager.AddToRolesAsync(user, assignedRoles);
+            }
+
+            var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+            await auditService.LogAsync(performedBy, "CreateUser", "ApplicationUser", user.Id, $"Created user {user.Email} with roles: {string.Join(", ", assignedRoles)}");
+
+            return Results.Created($"/api/auth/users/{user.Id}", new { user.Id, user.Email, user.FullName, Roles = assignedRoles });
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Users.Create));
+
         group.MapGet("/users/{id}", async (string id, UserManager<ApplicationUser> userManager) =>
         {
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return Results.NotFound("User not found");
-            
+
             var roles = await userManager.GetRolesAsync(user);
             return Results.Ok(new
             {
@@ -600,6 +626,32 @@ public static class IdentityEndpoints
 
             return Results.Ok(new { Message = "Role deleted" });
         }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Delete));
+
+        group.MapPut("/roles/{id}", async (string id, UpdateRoleDto model, RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        {
+            var role = await roleManager.FindByIdAsync(id);
+            if (role == null) return Results.NotFound("Role not found");
+
+            var systemRoles = new[]
+            {
+                BuildingBlocks.Security.Roles.Admin, BuildingBlocks.Security.Roles.Manager, BuildingBlocks.Security.Roles.TechnicianInShop,
+                BuildingBlocks.Security.Roles.TechnicianOnSite, BuildingBlocks.Security.Roles.Accountant, BuildingBlocks.Security.Roles.Sale,
+                BuildingBlocks.Security.Roles.Customer, BuildingBlocks.Security.Roles.Marketing, BuildingBlocks.Security.Roles.Supplier,
+                BuildingBlocks.Security.Roles.InventoryStaff, BuildingBlocks.Security.Roles.HR
+            };
+            if (systemRoles.Contains(role.Name))
+                return Results.BadRequest(new { Error = "Không thể đổi tên vai trò hệ thống" });
+
+            var oldName = role.Name;
+            role.Name = model.Name;
+            var result = await roleManager.UpdateAsync(role);
+            if (!result.Succeeded) return Results.BadRequest(result.Errors);
+
+            var performedBy = currentUser.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+            await auditService.LogAsync(performedBy, "UpdateRole", "IdentityRole", role.Id, $"Renamed role {oldName} to {model.Name}");
+
+            return Results.Ok(new { Message = "Role updated", role.Id, role.Name });
+        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Edit));
 
         // Permission Management
         // We allow Permissions.Roles.View to see available permissions, or maybe we need a separate 'System.Config' but 'Roles.View' is fine for now
@@ -1073,3 +1125,5 @@ public record UpdateUserDto(string Email, string FullName);
 public record GoogleLoginDto(string? IdToken);
 public record ForgotPasswordDto(string Email);
 public record ResetPasswordDto(string Token, string NewPassword);
+public record CreateUserDto(string Email, string Password, string FullName, string[]? Roles);
+public record UpdateRoleDto(string Name);

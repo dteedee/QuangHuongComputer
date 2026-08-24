@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
 using Catalog.Domain;
@@ -257,6 +259,25 @@ public static class CatalogEndpoints
             return Results.Ok(categories);
         });
 
+        group.MapGet("/categories/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        {
+            var category = await db.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+            if (category is null) return Results.NotFound();
+
+            var productCount = await db.Products.CountAsync(p => p.IsActive && p.CategoryId == id);
+            return Results.Ok(new
+            {
+                id = category.Id,
+                name = category.Name,
+                description = category.Description,
+                isActive = category.IsActive,
+                createdAt = category.CreatedAt,
+                updatedAt = category.UpdatedAt,
+                productCount,
+                slug = category.Slug
+            });
+        });
+
         group.MapGet("/brands", async (CatalogDbContext db, ICacheService cache) =>
         {
             var cacheKey = CacheKeys.BrandsKey + "_v6_deduplicated";
@@ -295,6 +316,24 @@ public static class CatalogEndpoints
 
             await cache.SetAsync(cacheKey, brands, TimeSpan.FromHours(1));
             return Results.Ok(brands);
+        });
+
+        group.MapGet("/brands/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        {
+            var brand = await db.Brands.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+            if (brand is null) return Results.NotFound();
+
+            var productCount = await db.Products.CountAsync(p => p.IsActive && p.BrandId == id);
+            return Results.Ok(new
+            {
+                id = brand.Id,
+                name = brand.Name,
+                description = brand.Description,
+                isActive = brand.IsActive,
+                createdAt = brand.CreatedAt,
+                updatedAt = brand.UpdatedAt,
+                productCount
+            });
         });
 
         // Advanced Search & Filter
@@ -859,8 +898,11 @@ public static class CatalogEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Seed Data Endpoint (Development only)
-        group.MapPost("/seed", async (CatalogDbContext db) =>
+        group.MapPost("/seed", async (CatalogDbContext db, IWebHostEnvironment env) =>
         {
+            if (!env.IsDevelopment())
+                return Results.NotFound();
+
             // Check if data already exists
             if (await db.Categories.AnyAsync() || await db.Brands.AnyAsync())
             {
@@ -1073,7 +1115,7 @@ public static class CatalogEndpoints
                 Brands = brands.Count,
                 Products = products.Count
             });
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // ============================================
         // Product Reviews Endpoints
