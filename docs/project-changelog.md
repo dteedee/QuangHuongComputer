@@ -2,6 +2,38 @@
 
 All notable changes to Quang Hưởng Computer project documented here. Format: date | category | summary.
 
+## [2026-08-24] — Admin Workflow Completion, CRUD & System Config
+
+### Added
+- **BE Endpoints**: DELETE `/admin/cms-pages/{id}`, POST `/api/auth/users` (user creation), PUT `/api/auth/roles/{id}` (role update), GET `/api/catalog/categories/{id}`, `/api/catalog/brands/{id}`, PUT/DELETE `/api/catalog/bundles/{id}`, POST `/api/config/bulk` (batch config update)
+- **ConfigPortal enhancements**: Dynamic category selection, add/delete config keys UI, bulk save via POST `/api/config/bulk`, removed hardcoded DEFAULT_CONFIGS (now seeded in BE)
+- **FE UI**: Delete product button (inventory), Cancel order button (sales), Role create/delete buttons (admin), CMS page delete button, route guards for Admin/Manager-only pages
+
+### Changed
+- **FE API wiring fixes** (HIGH): Promotions/Store endpoints had double `/api` prefix + wrong base URL, fixed all 6 API client modules (`promotions-api.ts`, `stores-api.ts`, `2fa-api.ts`, `sessions-api.ts`, `inventory-api.ts`, `hr-api.ts`)
+- **Authorization hardening** (HIGH): Fixed claim case inconsistency (`permission` → `Permission`) in `PermissionAuthorizationHandler`; removed redundant 401 interceptor from `client.ts` (kept `auth.ts` DRY); seed/webhook-mock endpoints gated with `IsDevelopment()` check; tightened role requirements for Inventory/Communication modules
+- **Media upload cleanup**: Removed duplicate unauthed upload endpoint from ApiGateway, kept `MediaEndpoints.cs` version with `RequireRole + FileValidator`
+- **System-health metrics** (IMPROVED): Replaced mock `Random()` data with real measurements: process CPU time, working set, DB connectivity check, Redis/RabbitMQ ping; returns `null` when metric unavailable
+
+### Fixed
+- **Dead code removal** (SECURITY): Removed 4 unused MVC controllers (`OrdersController`, `CartController`, `AccountingController`, `RepairController`); verified FE not calling them via grep
+- **CRM AutomationRuleEndpoints**: Confirmed dead code (namespace resolution issue), deleted file instead of adding policy
+- **FE cleanup**: Removed 3 orphan files (`admin/AdminDashboard.tsx`, `admin/RolesPage.tsx`, `admin/UsersPage.tsx`); redirected `/backoffice/admin/dynamic-permissions` → `/backoffice/roles`
+
+### Security
+- **HIGH**: Authorization policy gap closed (claim case mismatch prevented valid admin access in edge cases)
+- **HIGH**: Media upload enforces auth + file validation (was public endpoint in Gateway)
+- **HIGH**: Seed/development endpoints gated by `IsDevelopment()` to prevent accidental exposure
+- **MEDIUM**: Removed 4 dead MVC controllers (attack surface reduction)
+
+### Quality
+- `dotnet build` ✓
+- `npm run build` ✓
+- Full endpoint audit completed; no orphan routes
+- Config seeder idempotent (admin edits preserved)
+
+---
+
 ## [2026-08-19] — Company Info + UI Redesign + API Hardening
 
 ### Added

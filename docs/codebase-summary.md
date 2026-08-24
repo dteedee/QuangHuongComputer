@@ -17,7 +17,7 @@ Quick reference for Quang Hưởng Computer architecture, module inventory, role
 - **React 18** (hooks, suspense, startTransition)
 - **TypeScript 5.x** (strict mode)
 - **Tailwind CSS 3.x** + custom design tokens (`brand-tokens.ts`)
-- **API client library** (module-scoped: catalogApi, salesApi, etc.) with fallback mock
+- **API client library** (module-scoped: catalogApi, salesApi, etc.); no fallback mocks (all dynamic via config)
 
 ### Shared
 - **BuildingBlocks** (NuGet: shared utilities, validation, security, messaging, db base classes)
@@ -82,8 +82,8 @@ All in `backend/Services/{ModuleName}/`, each with:
 8. **Warranty** — Claims (RMA), loaner device checkout, public serial lookup
 9. **HR** — Payroll, attendance, OT, contracts, PIT withholding, self-service
 10. **Content** — CMS (pages, blog, banners), coupons, media, promo
-11. **Reporting** — Cross-module dashboards, exports (CSV/PDF)
-12. **SystemConfig** — Key-value configuration, theme, custom fields, menu, store
+11. **Reporting** — Cross-module dashboards, exports (CSV/PDF); system-health real-time metrics (process CPU/memory, DB/Redis/RabbitMQ connectivity)
+12. **SystemConfig** — Key-value configuration (CRUD + bulk `POST /api/config/bulk`), theme, custom fields, menu, store
 13. **Payments** — Payment gateway integration (VNPay, Momo), webhook, reconciliation
 14. **Communication** — Email/SMS sending, templates, notification hub
 15. **Ai** — Semantic search, recommendations, chatbot
