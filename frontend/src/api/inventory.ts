@@ -170,7 +170,7 @@ export interface CreateSupplierDto {
     brands?: string;
 }
 
-export interface UpdateSupplierDto extends CreateSupplierDto {}
+export type UpdateSupplierDto = CreateSupplierDto;
 
 export interface SupplierStatistics {
     totalSuppliers: number;
@@ -488,7 +488,7 @@ export interface CreateWarehouseDto {
     isDefault?: boolean;
 }
 
-export interface UpdateWarehouseDto extends Omit<CreateWarehouseDto, 'code'> {}
+export type UpdateWarehouseDto = Omit<CreateWarehouseDto, 'code'>;
 
 export interface SerialNumberItem {
     id: string;
@@ -649,22 +649,22 @@ export const formatCurrency = (amount: number): string => {
 // GOODS RECEIVED NOTES (GRN)
 // ============================================
 export async function getGoodsReceivedNotes(page = 1, pageSize = 20) {
-    const { data } = await client.get('/api/inventory/grn', { params: { page, pageSize } });
+    const { data } = await client.get('/inventory/grn', { params: { page, pageSize } });
     return data;
 }
 
 export async function getGoodsReceivedNote(id: string) {
-    const { data } = await client.get(`/api/inventory/grn/${id}`);
+    const { data } = await client.get(`/inventory/grn/${id}`);
     return data;
 }
 
 export async function createGoodsReceivedNote(grn: any) {
-    const { data } = await client.post('/api/inventory/grn', grn);
+    const { data } = await client.post('/inventory/grn', grn);
     return data;
 }
 
 export async function confirmGoodsReceivedNote(id: string) {
-    const { data } = await client.post(`/api/inventory/grn/${id}/confirm`);
+    const { data } = await client.post(`/inventory/grn/${id}/confirm`);
     return data;
 }
 
@@ -672,17 +672,17 @@ export async function confirmGoodsReceivedNote(id: string) {
 // DELIVERY NOTES (DN)
 // ============================================
 export async function getDeliveryNotes(page = 1, pageSize = 20) {
-    const { data } = await client.get('/api/inventory/dn', { params: { page, pageSize } });
+    const { data } = await client.get('/inventory/dn', { params: { page, pageSize } });
     return data;
 }
 
 export async function createDeliveryNote(dn: any) {
-    const { data } = await client.post('/api/inventory/dn', dn);
+    const { data } = await client.post('/inventory/dn', dn);
     return data;
 }
 
 export async function confirmDeliveryNote(id: string) {
-    const { data } = await client.post(`/api/inventory/dn/${id}/confirm`);
+    const { data } = await client.post(`/inventory/dn/${id}/confirm`);
     return data;
 }
 
@@ -690,27 +690,27 @@ export async function confirmDeliveryNote(id: string) {
 // INVENTORY COUNT
 // ============================================
 export async function getInventoryCounts(page = 1, pageSize = 20) {
-    const { data } = await client.get('/api/inventory/count', { params: { page, pageSize } });
+    const { data } = await client.get('/inventory/count', { params: { page, pageSize } });
     return data;
 }
 
 export async function createInventoryCount(session: any) {
-    const { data } = await client.post('/api/inventory/count', session);
+    const { data } = await client.post('/inventory/count', session);
     return data;
 }
 
 export async function getInventoryCount(id: string) {
-    const { data } = await client.get(`/api/inventory/count/${id}`);
+    const { data } = await client.get(`/inventory/count/${id}`);
     return data;
 }
 
 export async function recordInventoryCount(id: string, items: any[]) {
-    const { data } = await client.post(`/api/inventory/count/${id}/record`, { items });
+    const { data } = await client.post(`/inventory/count/${id}/record`, { items });
     return data;
 }
 
 export async function approveInventoryCount(id: string) {
-    const { data } = await client.post(`/api/inventory/count/${id}/approve`);
+    const { data } = await client.post(`/inventory/count/${id}/approve`);
     return data;
 }
 

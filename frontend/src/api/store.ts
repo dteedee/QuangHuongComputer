@@ -124,18 +124,34 @@ export const storeApi = {
         return data;
     },
 
+    /** ADMIN — kể cả chi nhánh đã tắt (IsActive=false). */
+    adminList: async (): Promise<Store[]> => {
+        const { data } = await client.get<Store[]>('/admin/stores');
+        return Array.isArray(data) ? data : [];
+    },
+
+    adminGet: async (id: string): Promise<StoreDetail> => {
+        const { data } = await client.get<StoreDetail>(`/admin/stores/${id}`);
+        return data;
+    },
+
     create: async (dto: CreateStoreDto): Promise<Store> => {
-        const { data } = await client.post<Store>('/stores', dto);
+        const { data } = await client.post<Store>('/admin/stores', dto);
         return data;
     },
 
     update: async (id: string, dto: UpdateStoreDto): Promise<Store> => {
-        const { data } = await client.put<Store>(`/stores/${id}`, dto);
+        const { data } = await client.put<Store>(`/admin/stores/${id}`, dto);
         return data;
     },
 
     remove: async (id: string): Promise<void> => {
-        await client.delete(`/stores/${id}`);
+        await client.delete(`/admin/stores/${id}`);
+    },
+
+    /** Bật/tắt trạng thái hoạt động chi nhánh (server-side, tránh race GET+PUT). */
+    toggleActive: async (id: string): Promise<void> => {
+        await client.post(`/admin/stores/${id}/toggle-active`);
     },
 
     /**

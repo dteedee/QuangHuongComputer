@@ -363,22 +363,22 @@ export const authApi = {
 // 2FA API
 // ========================================
 export async function setup2FA() {
-    const { data } = await client.post('/api/identity/2fa/setup');
+    const { data } = await client.post('/identity/2fa/setup');
     return data as { secret: string; qrUri: string };
 }
 
 export async function verify2FASetup(code: string) {
-    const { data } = await client.post('/api/identity/2fa/verify-setup', { code });
+    const { data } = await client.post('/identity/2fa/verify-setup', { code });
     return data as { enabled: boolean; backupCodes: string[] };
 }
 
 export async function disable2FA() {
-    const { data } = await client.post('/api/identity/2fa/disable');
+    const { data } = await client.post('/identity/2fa/disable');
     return data;
 }
 
 export async function get2FAStatus() {
-    const { data } = await client.get('/api/identity/2fa/status');
+    const { data } = await client.get('/identity/2fa/status');
     return data as { isEnabled: boolean; enabledDate?: string };
 }
 
@@ -386,17 +386,17 @@ export async function get2FAStatus() {
 // Sessions API
 // ========================================
 export async function getActiveSessions() {
-    const { data } = await client.get('/api/identity/sessions');
+    const { data } = await client.get('/identity/sessions');
     return data as Array<{ id: string; deviceInfo: string; ipAddress: string; userAgent: string; lastActiveAt: string; createdAt: string }>;
 }
 
 export async function revokeSession(sessionId: string) {
-    const { data } = await client.delete(`/api/identity/sessions/${sessionId}`);
+    const { data } = await client.delete(`/identity/sessions/${sessionId}`);
     return data;
 }
 
 export async function revokeAllOtherSessions() {
-    const { data } = await client.delete('/api/identity/sessions/all-others');
+    const { data } = await client.delete('/identity/sessions/all-others');
     return data;
 }
 

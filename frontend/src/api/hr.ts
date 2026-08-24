@@ -415,74 +415,74 @@ const _cancelShiftAssignment = async (id: string) => {
 
 // --- Attendance APIs ---
 const _checkIn = async () => {
-    const { data } = await client.post('/api/hr/attendance/check-in');
+    const { data } = await client.post('/hr/attendance/check-in');
     return data;
 };
 
 const _checkOut = async () => {
-    const { data } = await client.post('/api/hr/attendance/check-out');
+    const { data } = await client.post('/hr/attendance/check-out');
     return data;
 };
 
 const _getAttendanceToday = async () => {
-    const { data } = await client.get('/api/hr/attendance/today');
+    const { data } = await client.get('/hr/attendance/today');
     return data;
 };
 
 const _getAttendanceReport = async (month: string) => {
-    const { data } = await client.get('/api/hr/attendance/report', { params: { month } });
+    const { data } = await client.get('/hr/attendance/report', { params: { month } });
     return data;
 };
 
 const _getMyAttendanceReport = async (month: string) => {
-    const { data } = await client.get('/api/hr/attendance/my-report', { params: { month } });
+    const { data } = await client.get('/hr/attendance/my-report', { params: { month } });
     return data;
 };
 
 // --- Approval APIs ---
 const _getPendingApprovals = async () => {
-    const { data } = await client.get('/api/hr/approvals/pending');
+    const { data } = await client.get('/hr/approvals/pending');
     return data;
 };
 
 const _getMyApprovalRequests = async () => {
-    const { data } = await client.get('/api/hr/approvals/my-requests');
+    const { data } = await client.get('/hr/approvals/my-requests');
     return data;
 };
 
 const _approveRequest = async (id: string, comments?: string) => {
-    const { data } = await client.post(`/api/hr/approvals/${id}/approve`, { comments });
+    const { data } = await client.post(`/hr/approvals/${id}/approve`, { comments });
     return data;
 };
 
 const _rejectRequest = async (id: string, reason: string) => {
-    const { data } = await client.post(`/api/hr/approvals/${id}/reject`, { reason });
+    const { data } = await client.post(`/hr/approvals/${id}/reject`, { reason });
     return data;
 };
 
 // --- Self-service APIs ---
 const _getMyProfile = async () => {
-    const { data } = await client.get('/api/hr/self-service/profile');
+    const { data } = await client.get('/hr/self-service/profile');
     return data;
 };
 
 const _updateMyProfile = async (profile: any) => {
-    const { data } = await client.put('/api/hr/self-service/profile', profile);
+    const { data } = await client.put('/hr/self-service/profile', profile);
     return data;
 };
 
 const _getLeaveBalance = async () => {
-    const { data } = await client.get('/api/hr/self-service/leave-balance');
+    const { data } = await client.get('/hr/self-service/leave-balance');
     return data;
 };
 
 const _getMyPayslips = async () => {
-    const { data } = await client.get('/api/hr/self-service/payslips');
+    const { data } = await client.get('/hr/self-service/payslips');
     return data;
 };
 
 const _getHolidays = async (year: number) => {
-    const { data } = await client.get('/api/hr/self-service/holidays', { params: { year } });
+    const { data } = await client.get('/hr/self-service/holidays', { params: { year } });
     return data;
 };
 
@@ -1572,29 +1572,29 @@ export interface PayslipDetail {
 
 // ---------- Attendance (Phase 06) ----------
 const _attendanceCheckIn = async (data: CheckInRequest): Promise<AttendanceRecord> => {
-    const response = await client.post<AttendanceRecord>('/api/hr/attendance/check-in', data);
+    const response = await client.post<AttendanceRecord>('/hr/attendance/check-in', data);
     return response.data;
 };
 
 const _attendanceCheckOut = async (data: CheckOutRequest): Promise<AttendanceRecord> => {
-    const response = await client.post<AttendanceRecord>('/api/hr/attendance/check-out', data);
+    const response = await client.post<AttendanceRecord>('/hr/attendance/check-out', data);
     return response.data;
 };
 
 const _attendanceQrCode = async (storeId?: string): Promise<AttendanceQrCode> => {
-    const response = await client.get<AttendanceQrCode>('/api/hr/attendance/qr-code', {
+    const response = await client.get<AttendanceQrCode>('/hr/attendance/qr-code', {
         params: storeId ? { storeId } : undefined,
     });
     return response.data;
 };
 
 const _attendanceManual = async (data: ManualAttendanceRequest): Promise<AttendanceRecord> => {
-    const response = await client.post<AttendanceRecord>('/api/hr/attendance/manual', data);
+    const response = await client.post<AttendanceRecord>('/hr/attendance/manual', data);
     return response.data;
 };
 
 const _attendanceList = async (params: { employeeId?: string; year?: number; month?: number; storeId?: string }): Promise<AttendanceRecord[]> => {
-    const response = await client.get<AttendanceRecord[] | { items: AttendanceRecord[] }>('/api/hr/attendance', { params });
+    const response = await client.get<AttendanceRecord[] | { items: AttendanceRecord[] }>('/hr/attendance', { params });
     const data = response.data;
     if (Array.isArray(data)) return data;
     return data?.items ?? [];
@@ -1602,38 +1602,38 @@ const _attendanceList = async (params: { employeeId?: string; year?: number; mon
 
 // ---------- Overtime ----------
 const _overtimeCreate = async (data: CreateOvertimeRequestDto): Promise<OvertimeRequest> => {
-    const response = await client.post<OvertimeRequest>('/api/hr/overtime', data);
+    const response = await client.post<OvertimeRequest>('/hr/overtime', data);
     return response.data;
 };
 
 const _overtimePending = async (): Promise<OvertimeRequest[]> => {
-    const response = await client.get<OvertimeRequest[]>('/api/hr/overtime/pending');
+    const response = await client.get<OvertimeRequest[]>('/hr/overtime/pending');
     return Array.isArray(response.data) ? response.data : [];
 };
 
 const _overtimeApprove = async (id: string): Promise<{ message: string }> => {
-    const response = await client.post(`/api/hr/overtime/${id}/approve`);
+    const response = await client.post(`/hr/overtime/${id}/approve`);
     return response.data;
 };
 
 const _overtimeReject = async (id: string, reason: string): Promise<{ message: string }> => {
-    const response = await client.post(`/api/hr/overtime/${id}/reject`, { reason });
+    const response = await client.post(`/hr/overtime/${id}/reject`, { reason });
     return response.data;
 };
 
 const _overtimeMine = async (): Promise<OvertimeRequest[]> => {
-    const response = await client.get<OvertimeRequest[]>('/api/hr/overtime/mine');
+    const response = await client.get<OvertimeRequest[]>('/hr/overtime/mine');
     return Array.isArray(response.data) ? response.data : [];
 };
 
 // ---------- Leave (self-service extras) ----------
 const _leaveMine = async (): Promise<LeaveRequest[]> => {
-    const response = await client.get<LeaveRequest[]>('/api/hr/leave/mine');
+    const response = await client.get<LeaveRequest[]>('/hr/leave/mine');
     return Array.isArray(response.data) ? response.data : [];
 };
 
 const _leavePending = async (): Promise<LeaveRequest[]> => {
-    const response = await client.get<LeaveRequest[]>('/api/hr/leave/pending');
+    const response = await client.get<LeaveRequest[]>('/hr/leave/pending');
     return Array.isArray(response.data) ? response.data : [];
 };
 
@@ -1643,30 +1643,30 @@ const _leaveCreatePhase06 = async (data: {
     endDate: string;
     reason?: string;
 }): Promise<LeaveRequest> => {
-    const response = await client.post<LeaveRequest>('/api/hr/leave', data);
+    const response = await client.post<LeaveRequest>('/hr/leave', data);
     return response.data;
 };
 
 const _leaveApprovePhase06 = async (id: string): Promise<{ message: string }> => {
-    const response = await client.post(`/api/hr/leave/${id}/approve`);
+    const response = await client.post(`/hr/leave/${id}/approve`);
     return response.data;
 };
 
 const _leaveRejectPhase06 = async (id: string, reason: string): Promise<{ message: string }> => {
-    const response = await client.post(`/api/hr/leave/${id}/reject`, { reason });
+    const response = await client.post(`/hr/leave/${id}/reject`, { reason });
     return response.data;
 };
 
 // ---------- Timesheet ----------
 const _timesheetGet = async (employeeId: string, year: number, month: number): Promise<TimesheetDetail> => {
-    const response = await client.get<TimesheetDetail>(`/api/hr/timesheet/${employeeId}`, {
+    const response = await client.get<TimesheetDetail>(`/hr/timesheet/${employeeId}`, {
         params: { year, month },
     });
     return response.data;
 };
 
 const _timesheetAggregate = async (employeeId: string, year: number, month: number): Promise<TimesheetDetail> => {
-    const response = await client.post<TimesheetDetail>(`/api/hr/timesheet/${employeeId}/aggregate`, null, {
+    const response = await client.post<TimesheetDetail>(`/hr/timesheet/${employeeId}/aggregate`, null, {
         params: { year, month },
     });
     return response.data;
@@ -1674,19 +1674,19 @@ const _timesheetAggregate = async (employeeId: string, year: number, month: numb
 
 // ---------- Payroll self-service ----------
 const _payrollMine = async (year?: number): Promise<Payroll[]> => {
-    const response = await client.get<Payroll[]>('/api/hr/payroll/mine', {
+    const response = await client.get<Payroll[]>('/hr/payroll/mine', {
         params: year ? { year } : undefined,
     });
     return Array.isArray(response.data) ? response.data : [];
 };
 
 const _payrollGetById = async (payrollId: string): Promise<Payroll> => {
-    const response = await client.get<Payroll>(`/api/hr/payroll/${payrollId}`);
+    const response = await client.get<Payroll>(`/hr/payroll/${payrollId}`);
     return response.data;
 };
 
 const _payslipGet = async (payrollId: string): Promise<PayslipDetail> => {
-    const response = await client.get<PayslipDetail>(`/api/hr/payroll/${payrollId}/payslip`);
+    const response = await client.get<PayslipDetail>(`/hr/payroll/${payrollId}/payslip`);
     return response.data;
 };
 

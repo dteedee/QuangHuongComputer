@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosError } from 'axios';
 
 // Create axios instance
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -26,38 +26,13 @@ client.interceptors.request.use(
 );
 
 // Response interceptor
+// LƯU Ý: interceptor refresh-token 401 nằm ở `auth.ts` (setupTokenRefreshInterceptor,
+// gọi trong AuthContext) — dùng đúng path `/auth/refresh-token` và lưu lại refreshToken
+// mới (BE rotate refresh token). Không lặp lại logic đó ở đây để tránh 2 interceptor
+// tranh nhau xử lý cùng 1 lỗi 401.
 client.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // Handle 401 Unauthorized - try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const { data } = await axios.post(`${API_BASE_URL}/api/auth/refresh`, { refreshToken });
-          const { token } = data;
-
-          localStorage.setItem('token', token);
-
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-          }
-
-          return client(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, logout user
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
     // Handle network errors
     if (!error.response) {
       console.error('Network Error: Unable to connect to the API.');

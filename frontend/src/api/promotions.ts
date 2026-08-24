@@ -168,11 +168,13 @@ export interface PricingResult {
 // API
 // ---------------------------------------------------------------------------
 const BASE = '/promotions';
+const ADMIN = '/promotions/admin';
 
 export const promotionsApi = {
+  /** Admin list — BE trả `{items,total,page,pageSize}`, unwrap về mảng cho tương thích call-site hiện tại. */
   list: async (filter?: PromotionListFilter): Promise<Promotion[]> => {
-    const res = await client.get<Promotion[]>(BASE, { params: filter });
-    return res.data;
+    const res = await client.get<{ items: Promotion[]; total: number; page: number; pageSize: number }>(ADMIN, { params: filter });
+    return res.data?.items ?? [];
   },
 
   get: async (id: string): Promise<Promotion> => {
@@ -181,21 +183,21 @@ export const promotionsApi = {
   },
 
   create: async (dto: CreatePromotionDto): Promise<Promotion> => {
-    const res = await client.post<Promotion>(BASE, dto);
+    const res = await client.post<Promotion>(ADMIN, dto);
     return res.data;
   },
 
   update: async (id: string, dto: UpdatePromotionDto): Promise<Promotion> => {
-    const res = await client.put<Promotion>(`${BASE}/${id}`, dto);
+    const res = await client.put<Promotion>(`${ADMIN}/${id}`, dto);
     return res.data;
   },
 
   activate: async (id: string): Promise<void> => {
-    await client.post(`${BASE}/${id}/activate`);
+    await client.post(`${ADMIN}/${id}/activate`);
   },
 
   pause: async (id: string): Promise<void> => {
-    await client.post(`${BASE}/${id}/pause`);
+    await client.post(`${ADMIN}/${id}/pause`);
   },
 
   evaluate: async (req: EvaluateRequest): Promise<PricingResult> => {

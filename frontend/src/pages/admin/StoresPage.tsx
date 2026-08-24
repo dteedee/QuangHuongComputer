@@ -49,7 +49,7 @@ export default function StoresPage() {
     const loadStores = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await storeApi.list();
+            const data = await storeApi.adminList();
             // Sắp xếp theo sortOrder rồi theo tên
             data.sort((a, b) => (a.sortOrder - b.sortOrder) || a.name.localeCompare(b.name, 'vi'));
             setStores(data);
@@ -100,27 +100,8 @@ export default function StoresPage() {
     const handleToggleActive = async (store: Store) => {
         setTogglingId(store.id);
         try {
-            // Lấy detail để giữ nguyên link warehouses/employees, tránh mất dữ liệu.
-            const detail = await storeApi.get(store.id);
-            await storeApi.update(store.id, {
-                code: detail.code,
-                name: detail.name,
-                address: detail.address,
-                ward: detail.ward,
-                district: detail.district,
-                province: detail.province,
-                phone: detail.phone,
-                email: detail.email,
-                openingHoursJson: detail.openingHoursJson,
-                latitude: detail.latitude,
-                longitude: detail.longitude,
-                isActive: !detail.isActive,
-                isPickupPoint: detail.isPickupPoint,
-                sortOrder: detail.sortOrder,
-                warehouseIds: detail.warehouses.map(w => w.warehouseId),
-                employeeIds: detail.employees.map(e => e.employeeId),
-            });
-            toast.success(detail.isActive ? 'Đã tạm ngưng chi nhánh' : 'Đã kích hoạt chi nhánh');
+            await storeApi.toggleActive(store.id);
+            toast.success(store.isActive ? 'Đã tạm ngưng chi nhánh' : 'Đã kích hoạt chi nhánh');
             loadStores();
         } catch (err) {
             const anyErr = err as { response?: { data?: { message?: string } } };
