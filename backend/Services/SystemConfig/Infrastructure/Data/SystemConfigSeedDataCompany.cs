@@ -30,7 +30,8 @@ public static class SystemConfigSeedDataCompany
             Entry("COMPANY_ESTABLISHED_DATE", "2008-04-18", "Ngày thành lập / hoạt động", "Company", now, ConfigValueType.String),
             Entry("COMPANY_SINCE", "2008", "Năm thành lập — dùng cho tagline SINCE", "Company", now),
             Entry("COMPANY_WEBSITE", "https://quanghuong.com", "Website chính thức", "Company", now, ConfigValueType.Url),
-            Entry("COMPANY_BANK_ACCOUNT", "1234567890 - Vietcombank", "Tài khoản ngân hàng nhận thanh toán (công khai để chuyển khoản)", "Company", now),
+            // Seeded empty on purpose — real bank account must be entered by admin via ConfigPortal, never a fake placeholder
+            Entry("COMPANY_BANK_ACCOUNT", "", "Tài khoản ngân hàng nhận thanh toán (công khai để chuyển khoản)", "Company", now),
             Entry("COMPANY_BUSINESS_HOURS", "8:00 - 21:00 (T2 - CN)", "[Alias cũ] Giờ làm việc — dùng COMPANY_WORKING_HOURS cho code mới", "Company", now),
 
             Entry("TAX_PERSONAL_DEDUCTION", "11000000", "Giảm trừ gia cảnh bản thân (TNCN, VNĐ/tháng)", "Tax", now, ConfigValueType.Number),

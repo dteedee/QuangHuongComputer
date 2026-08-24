@@ -183,6 +183,11 @@ export const systemConfigApi = {
         delete: async (key: string): Promise<void> => {
             await client.delete(`/config/${key}`);
         },
+
+        bulkUpsert: async (entries: ConfigurationEntry[]): Promise<{ updated: number }> => {
+            const response = await client.post('/config/bulk', entries);
+            return response.data;
+        },
     },
 
     // ============ Backoffice Menu ============
@@ -242,10 +247,9 @@ export const systemConfigApi = {
     },
 
     updateConfigs: async (configs: ConfigurationEntry[]): Promise<void> => {
-        // Batch update all configs
-        await Promise.all(
-            configs.map(config => systemConfigApi.config.upsert(config))
-        );
+        // Batch update all configs in a single request (BE: POST /config/bulk)
+        if (configs.length === 0) return;
+        await systemConfigApi.config.bulkUpsert(configs);
     },
 };
 

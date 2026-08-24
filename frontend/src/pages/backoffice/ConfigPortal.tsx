@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     Settings, Save, RefreshCw, Info,
-    Globe, Shield, MessageCircle, Truck,
-    AlertTriangle, Bell, Zap, Database, Building2,
-    DollarSign, Users, Clock, Percent, Phone,
-    Mail, MapPin, Award, ShoppingBag, Wrench,
+    AlertTriangle, Database,
+    DollarSign, Clock, Percent, Phone,
+    Mail, MapPin, Award,
     CheckCircle, XCircle, ToggleLeft, ToggleRight,
-    Download, Upload, History
+    Download, Upload, History, Plus, Trash2, LayoutGrid
 } from 'lucide-react';
 import { systemConfigApi } from '../../api/systemConfig';
 import type { ConfigurationEntry, ConfigValueType } from '../../api/systemConfig';
+import { ConfigKeyEditorDialog } from '../../components/admin/config-key-editor-dialog';
 
 import toast from 'react-hot-toast';
 
@@ -101,7 +101,7 @@ const validateConfig = (key: string, value: string): string | null => {
 };
 
 // ============================================
-// Default config seeds
+// Import helpers
 // ============================================
 
 // Ánh xạ kiểu suy luận trên UI sang ConfigValueType mà backend lưu trữ.
@@ -115,28 +115,6 @@ const CONFIG_TYPE_TO_VALUE_TYPE: Record<ConfigType, ConfigValueType> = {
     phone: 'String',
     text: 'String',
 };
-
-/** Mỗi mục chỉ khai báo phần khác nhau; các trường còn lại được suy ra trong buildDefaults. */
-type ConfigSeed = Pick<ConfigurationEntry, 'key' | 'value' | 'description'>;
-
-/**
- * Bổ sung đủ trường của ConfigurationEntry cho các mục mặc định.
- * - `module`: backend đặt mặc định "Global" (SystemConfig.Domain.ConfigurationEntry),
- *   giữ đúng giá trị này để không sinh ra module ma khi upsert.
- * - `valueType`: suy ra từ getConfigType để backend lưu đúng kiểu.
- * - `isSystem`: false — đây là tham số nghiệp vụ, người dùng được phép sửa.
- * - `sortOrder`: theo thứ tự khai báo (backend sắp xếp Module -> SortOrder).
- */
-const buildDefaults = (category: string, seeds: ConfigSeed[]): ConfigurationEntry[] =>
-    seeds.map((seed, index) => ({
-        ...seed,
-        category,
-        module: 'Global',
-        valueType: CONFIG_TYPE_TO_VALUE_TYPE[getConfigType(seed.key, seed.value)],
-        isSystem: false,
-        sortOrder: index,
-        lastUpdated: new Date().toISOString(),
-    }));
 
 /**
  * Chuẩn hoá 1 mục đọc từ file JSON import về đúng ConfigurationEntry.
@@ -152,7 +130,7 @@ const normalizeImportedConfig = (raw: unknown, index: number): ConfigurationEntr
         key: entry.key,
         value: entry.value,
         description: entry.description ?? '',
-        category: entry.category ?? 'Company',
+        category: entry.category ?? 'Khác',
         module: entry.module ?? 'Global',
         valueType: entry.valueType ?? CONFIG_TYPE_TO_VALUE_TYPE[getConfigType(entry.key, entry.value)],
         jsonValue: entry.jsonValue ?? null,
@@ -162,86 +140,21 @@ const normalizeImportedConfig = (raw: unknown, index: number): ConfigurationEntr
     };
 };
 
-// Extended config structure with default values
-const DEFAULT_CONFIGS: Record<string, ConfigurationEntry[]> = {
-    'Company': buildDefaults('Company', [
-        { key: 'COMPANY_NAME', value: 'Quang Hưởng Computer', description: 'Tên công ty hiển thị trên website' },
-        { key: 'COMPANY_FULL_NAME', value: 'CÔNG TY TNHH QUANG HƯỞNG COMPUTER', description: 'Tên đầy đủ công ty (dùng cho hóa đơn)' },
-        { key: 'COMPANY_ADDRESS', value: 'Số 179 Thôn 3/2 Xã Vĩnh Bảo Thành phố Hải Phòng', description: 'Địa chỉ công ty' },
-        { key: 'COMPANY_PHONE', value: '0904.235.090', description: 'Số điện thoại chính' },
-        { key: 'COMPANY_PHONE_2', value: '02253.xxx.xxx', description: 'Số điện thoại phụ' },
-        { key: 'COMPANY_EMAIL', value: 'quanghuongvbhp@gmail.com', description: 'Email liên hệ chính' },
-        { key: 'COMPANY_TAX_CODE', value: '0123456789', description: 'Mã số thuế' },
-        { key: 'COMPANY_WEBSITE', value: 'https://quanghuongcomputer.vn', description: 'Website chính thức' },
-        { key: 'COMPANY_SLOGAN', value: 'Uy Tín - Chất Lượng - Giá Tốt', description: 'Slogan công ty' },
-        { key: 'COMPANY_WORKING_HOURS', value: '7:00 - 17h15 (Từ thứ 2 đến thứ 7)', description: 'Thời gian làm việc' },
-        { key: 'COMPANY_BRAND_TEXT_1', value: 'QUANG HƯỞNG', description: 'Tên thương hiệu dòng 1 (Header)' },
-        { key: 'COMPANY_BRAND_TEXT_2', value: 'COMPUTER', description: 'Tên thương hiệu dòng 2 (Header)' },
-    ]),
-    'Sales & Tax': buildDefaults('Sales & Tax', [
-        { key: 'TAX_RATE', value: '0.08', description: 'Thuế VAT (%) - Mặc định 8%' },
-        { key: 'COMMISSION_RATE', value: '0.05', description: 'Hoa hồng bán hàng (%) - Mặc định 5%' },
-        { key: 'VIP_DISCOUNT_RATE', value: '0.10', description: 'Chiết khấu khách VIP (%) - Mặc định 10%' },
-        { key: 'MIN_ORDER_AMOUNT', value: '100000', description: 'Giá trị đơn hàng tối thiểu (VNĐ)' },
-        { key: 'FREESHIP_THRESHOLD', value: '500000', description: 'Ngưỡng freeship (VNĐ)' },
-        { key: 'SHIPPING_FEE', value: '30000', description: 'Phí ship cơ bản (VNĐ)' },
-        { key: 'RETURN_PERIOD_DAYS', value: '7', description: 'Thời gian đổi trả (ngày)' },
-        { key: 'WARRANTY_PERIOD_MONTHS', value: '36', description: 'Thời gian bảo hành cơ bản (tháng)' },
-    ]),
-    'HR & Payroll': buildDefaults('HR & Payroll', [
-        { key: 'BASE_SALARY', value: '5000000', description: 'Lương cơ bản nhân viên (VNĐ)' },
-        { key: 'OVERTIME_RATE', value: '1.5', description: 'Hệ số làm thêm giờ' },
-        { key: 'BONUS_RATE', value: '0.15', description: 'Tỷ lệ thưởng (%) trên doanh số' },
-        { key: 'SOCIAL_INSURANCE_RATE', value: '0.105', description: 'Tỷ lệ BHXH (%) - 10.5%' },
-        { key: 'HEALTH_INSURANCE_RATE', value: '0.03', description: 'Tỷ lệ BHYT (%) - 3%' },
-        { key: 'UNEMPLOYMENT_INSURANCE_RATE', value: '0.01', description: 'Tỷ lệ BHTN (%) - 1%' },
-        { key: 'WORKING_HOURS_PER_DAY', value: '8', description: 'Số giờ làm việc/ngày' },
-        { key: 'WORKING_DAYS_PER_MONTH', value: '26', description: 'Số ngày làm việc/tháng' },
-        { key: 'ANNUAL_LEAVE_DAYS', value: '12', description: 'Số ngày phép năm' },
-    ]),
-    'Repair SLA': buildDefaults('Repair SLA', [
-        { key: 'REPAIR_WARRANTY_MONTHS', value: '3', description: 'Bảo hành dịch vụ sửa chữa (tháng)' },
-        { key: 'REPAIR_RESPONSE_TIME', value: '24', description: 'Thời gian phản hồi yêu cầu (giờ)' },
-        { key: 'REPAIR_COMPLETION_TIME', value: '72', description: 'Thời gian hoàn thành sửa chữa (giờ)' },
-        { key: 'DIAGNOSTIC_FEE', value: '100000', description: 'Phí kiểm tra chẩn đoán (VNĐ)' },
-        { key: 'URGENT_REPAIR_FEE', value: '200000', description: 'Phí sửa chữa khẩn cấp (VNĐ)' },
-    ]),
-    'Security': buildDefaults('Security', [
-        { key: 'SESSION_TIMEOUT', value: '3600', description: 'Thời gian timeout phiên (giây)' },
-        { key: 'MAX_LOGIN_ATTEMPTS', value: '5', description: 'Số lần đăng nhập sai tối đa' },
-        { key: 'PASSWORD_MIN_LENGTH', value: '8', description: 'Độ dài mật khẩu tối thiểu' },
-        { key: 'REQUIRE_2FA', value: 'false', description: 'Bắt buộc xác thực 2 yếu tố (true/false)' },
-        { key: 'PASSWORD_EXPIRY_DAYS', value: '90', description: 'Thời gian hết hạn mật khẩu (ngày)' },
-    ]),
-    'AI Chatbot': buildDefaults('AI Chatbot', [
-        { key: 'CHATBOT_ENABLED', value: 'true', description: 'Bật/tắt chatbot (true/false)' },
-        { key: 'CHATBOT_GREETING', value: 'Xin chào! Tôi có thể giúp gì cho bạn?', description: 'Tin nhắn chào mừng' },
-        { key: 'CHATBOT_RESPONSE_DELAY', value: '1500', description: 'Độ trễ phản hồi (ms)' },
-        { key: 'CHATBOT_MAX_MESSAGES', value: '50', description: 'Số tin nhắn tối đa lưu trữ' },
-    ]),
-    'Notifications': buildDefaults('Notifications', [
-        { key: 'EMAIL_NOTIFICATIONS', value: 'true', description: 'Gửi thông báo qua email (true/false)' },
-        { key: 'SMS_NOTIFICATIONS', value: 'false', description: 'Gửi thông báo qua SMS (true/false)' },
-        { key: 'ORDER_CONFIRMATION_EMAIL', value: 'true', description: 'Email xác nhận đơn hàng (true/false)' },
-        { key: 'LOW_STOCK_ALERT_THRESHOLD', value: '5', description: 'Ngưỡng cảnh báo hết hàng' },
-    ]),
-    'Social Media': buildDefaults('Social Media', [
-        { key: 'FACEBOOK_URL', value: 'https://facebook.com/quanghuongcomputer', description: 'Link Facebook fanpage' },
-        { key: 'YOUTUBE_URL', value: 'https://youtube.com/@quanghuongcomputer', description: 'Link Youtube channel' },
-        { key: 'INSTAGRAM_URL', value: 'https://instagram.com/quanghuongcomputer', description: 'Link Instagram' },
-        { key: 'TIKTOK_URL', value: 'https://tiktok.com/@quanghuongcomputer', description: 'Link TikTok' },
-        { key: 'ZALO_PHONE', value: '0904235090', description: 'Số Zalo hỗ trợ' },
-    ]),
-};
+const ALL_CATEGORY = '__all__';
+const UNCATEGORIZED = 'Khác';
 
 export const ConfigPortal = () => {
     const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeCategory, setActiveCategory] = useState('Company');
+    const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
     const [hasChanges, setHasChanges] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
     const [searchQuery, setSearchQuery] = useState('');
+    const [showAddDialog, setShowAddDialog] = useState(false);
+    const [deletingKey, setDeletingKey] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    // Bản gốc từ backend — dùng để tính diff (dirty entries) khi Save bulk, tránh gửi cả list.
+    const originalConfigsRef = useRef<Map<string, ConfigurationEntry>>(new Map());
 
     const handleExport = () => {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configs, null, 2));
@@ -290,41 +203,33 @@ export const ConfigPortal = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchConfigs = async () => {
-            setIsLoading(true);
-            try {
-                const data = await systemConfigApi.getConfigs();
-
-                // Merge with default configs if backend is empty
-                if (!data || data.length === 0) {
-                    const allDefaults = Object.values(DEFAULT_CONFIGS).flat();
-                    setConfigs(allDefaults);
-                } else {
-                    setConfigs(data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch configs', error);
-                // Use default configs on error
-                const allDefaults = Object.values(DEFAULT_CONFIGS).flat();
-                setConfigs(allDefaults);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchConfigs();
+    const fetchConfigs = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await systemConfigApi.getConfigs();
+            setConfigs(data ?? []);
+            originalConfigsRef.current = new Map((data ?? []).map(c => [c.key, c]));
+        } catch (error) {
+            console.error('Failed to fetch configs', error);
+            toast.error('Không tải được cấu hình từ máy chủ');
+            setConfigs([]);
+            originalConfigsRef.current = new Map();
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
-    const categories = [
-        { name: 'Company', label: 'Thông tin công ty', icon: <Building2 size={20} />, color: 'text-blue-600' },
-        { name: 'Sales & Tax', label: 'Bán hàng & Thuế', icon: <ShoppingBag size={20} />, color: 'text-emerald-600' },
-        { name: 'HR & Payroll', label: 'Nhân sự & Lương', icon: <Users size={20} />, color: 'text-purple-600' },
-        { name: 'Repair SLA', label: 'SLA Sửa chữa', icon: <Wrench size={20} />, color: 'text-amber-600' },
-        { name: 'Security', label: 'Bảo mật', icon: <Shield size={20} />, color: 'text-red-600' },
-        { name: 'AI Chatbot', label: 'Hỗ trợ AI', icon: <MessageCircle size={20} />, color: 'text-indigo-600' },
-        { name: 'Notifications', label: 'Thông báo', icon: <Bell size={20} />, color: 'text-orange-600' },
-        { name: 'Social Media', label: 'Mạng xã hội', icon: <Globe size={20} />, color: 'text-pink-600' },
-    ];
+    useEffect(() => {
+        fetchConfigs();
+    }, [fetchConfigs]);
+
+    // Danh mục sinh động từ dữ liệu backend — không lọc mất key thuộc category lạ.
+    const categories = useMemo(() => {
+        const names = Array.from(new Set(configs.map(c => c.category?.trim() || UNCATEGORIZED))).sort();
+        return [ALL_CATEGORY, ...names];
+    }, [configs]);
+
+    const categoryLabel = (name: string) => name === ALL_CATEGORY ? 'Tất cả' : name;
 
     const handleSave = async () => {
         // Validate all configs before saving
@@ -339,9 +244,21 @@ export const ConfigPortal = () => {
             toast.error('Vui lòng sửa các lỗi cấu hình trước khi lưu!');
             return;
         }
+
+        // Chỉ gửi các entry đã thay đổi so với bản gốc — giảm payload + đúng ngữ nghĩa bulk.
+        const original = originalConfigsRef.current;
+        const dirtyConfigs = configs.filter(c => {
+            const orig = original.get(c.key);
+            return !orig || JSON.stringify(orig) !== JSON.stringify(c);
+        });
+        if (dirtyConfigs.length === 0) {
+            setHasChanges(false);
+            return;
+        }
+
         try {
             await toast.promise(
-                systemConfigApi.updateConfigs(configs),
+                systemConfigApi.updateConfigs(dirtyConfigs),
                 {
                     loading: 'Đang lưu cấu hình...',
                     success: 'Cấu hình đã được cập nhật thành công!',
@@ -353,6 +270,7 @@ export const ConfigPortal = () => {
                 }
             );
             setHasChanges(false);
+            await fetchConfigs();
         } catch (error) {
             console.error('Failed to save configs', error);
         }
@@ -370,10 +288,36 @@ export const ConfigPortal = () => {
         setHasChanges(true);
     }, []);
 
-    const filteredConfigs = configs.filter(config =>
-        config.category === activeCategory &&
-        (searchQuery === '' || config.key.toLowerCase().includes(searchQuery.toLowerCase()) || config.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    const handleAddKey = async (entry: ConfigurationEntry) => {
+        try {
+            await systemConfigApi.config.upsert(entry);
+            toast.success(`Đã thêm cấu hình "${entry.key}"`);
+            setShowAddDialog(false);
+            await fetchConfigs();
+        } catch (error) {
+            console.error('Failed to add config', error);
+            toast.error('Không thêm được cấu hình mới');
+        }
+    };
+
+    const handleDeleteKey = async (key: string) => {
+        try {
+            await systemConfigApi.config.delete(key);
+            toast.success(`Đã xóa cấu hình "${key}"`);
+            setDeletingKey(null);
+            await fetchConfigs();
+        } catch (error) {
+            console.error('Failed to delete config', error);
+            toast.error('Không xóa được cấu hình (có thể là cấu hình hệ thống)');
+        }
+    };
+
+    const filteredConfigs = configs.filter(config => {
+        const cat = config.category?.trim() || UNCATEGORIZED;
+        const matchesCategory = activeCategory === ALL_CATEGORY || cat === activeCategory;
+        const matchesSearch = searchQuery === '' || config.key.toLowerCase().includes(searchQuery.toLowerCase()) || config.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
     const getConfigIcon = (key: string) => {
         if (key.includes('PHONE')) return <Phone size={16} />;
@@ -411,20 +355,20 @@ export const ConfigPortal = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
                 {/* Categories */}
                 <div className="space-y-3">
-                    {categories.map((cat, i) => (
+                    {categories.map((cat) => (
                         <button
-                            key={i}
-                            onClick={() => setActiveCategory(cat.name)}
-                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-xl transition-all border-2 duration-300 font-semibold text-xs tracking-tight shadow-sm ${activeCategory === cat.name
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            className={`w-full flex items-center gap-5 px-6 py-5 rounded-xl transition-all border-2 duration-300 font-semibold text-xs tracking-tight shadow-sm ${activeCategory === cat
                                 ? 'bg-gray-950 border-gray-950 text-white translate-x-3 shadow-sm'
                                 : 'bg-white border-gray-50 text-gray-400 hover:text-gray-900 hover:border-gray-200'
                                 }`}
                         >
-                            <span className={activeCategory === cat.name ? 'text-accent' : cat.color}>
-                                {cat.icon}
+                            <span className={activeCategory === cat ? 'text-accent' : 'text-gray-500'}>
+                                {cat === ALL_CATEGORY ? <LayoutGrid size={20} /> : <Settings size={20} />}
                             </span>
-                            {cat.label}
-                            {activeCategory === cat.name && (
+                            {categoryLabel(cat)}
+                            {activeCategory === cat && (
                                 <span className="ml-auto bg-accent text-white px-2 py-1 rounded-full text-xs">
                                     {filteredConfigs.length}
                                 </span>
@@ -439,11 +383,11 @@ export const ConfigPortal = () => {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b-2 border-gray-50 pb-10">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className={categories.find(c => c.name === activeCategory)?.color || 'text-gray-600'}>
-                                        {categories.find(c => c.name === activeCategory)?.icon}
+                                    <span className="text-gray-600">
+                                        {activeCategory === ALL_CATEGORY ? <LayoutGrid size={24} /> : <Settings size={24} />}
                                     </span>
                                     <h3 className="text-3xl font-semibold text-gray-950 ">
-                                        {categories.find(c => c.name === activeCategory)?.label || activeCategory}
+                                        {categoryLabel(activeCategory)}
                                     </h3>
                                 </div>
                                 <p className="text-sm font-medium text-slate-500">
@@ -495,6 +439,16 @@ export const ConfigPortal = () => {
                                     <History size={18} />
                                 </button>
 
+                                {/* Add key */}
+                                <button
+                                    onClick={() => setShowAddDialog(true)}
+                                    className="flex items-center gap-2 px-5 py-3 text-emerald-700 bg-emerald-50 border-2 border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all text-sm font-medium"
+                                    title="Thêm cấu hình mới"
+                                >
+                                    <Plus size={18} />
+                                    Thêm cấu hình
+                                </button>
+
                                 {/* Save Button */}
                                 <button
                                     onClick={handleSave}
@@ -542,10 +496,21 @@ export const ConfigPortal = () => {
                                                 'Văn bản'
                                             }</span>
                                         </label>
-                                        <span className="text-xs text-slate-400 flex items-center gap-2">
-                                            <Clock size={12} />
-                                            {new Date(config.lastUpdated).toLocaleDateString('vi-VN')}
-                                        </span>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xs text-slate-400 flex items-center gap-2">
+                                                <Clock size={12} />
+                                                {new Date(config.lastUpdated).toLocaleDateString('vi-VN')}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDeletingKey(config.key)}
+                                                disabled={config.isSystem}
+                                                title={config.isSystem ? 'Không thể xóa cấu hình hệ thống' : 'Xóa cấu hình'}
+                                                className={`p-2 rounded-lg transition-colors ${config.isSystem ? 'text-gray-200 cursor-not-allowed' : 'text-red-400 hover:bg-red-50 hover:text-red-600'}`}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Boolean Toggle */}
@@ -629,11 +594,29 @@ export const ConfigPortal = () => {
                                 </div>
                             )}
 
-                            {!isLoading && filteredConfigs.length === 0 && (
+                            {!isLoading && filteredConfigs.length === 0 && configs.length === 0 && (
+                                <div className="py-24 text-center bg-gray-50 rounded-[2rem] border-4 border-dashed border-gray-100">
+                                    <Database className="mx-auto text-gray-200 mb-6" size={80} />
+                                    <p className="text-sm text-gray-500 font-semibold mb-2">
+                                        Chưa có cấu hình nào
+                                    </p>
+                                    <p className="text-xs text-gray-400 mb-6">
+                                        Kiểm tra kết nối backend hoặc chạy seeder cấu hình hệ thống.
+                                    </p>
+                                    <button
+                                        onClick={() => setShowAddDialog(true)}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl text-sm font-medium hover:bg-accent-hover transition-all"
+                                    >
+                                        <Plus size={18} /> Thêm cấu hình
+                                    </button>
+                                </div>
+                            )}
+
+                            {!isLoading && filteredConfigs.length === 0 && configs.length > 0 && (
                                 <div className="py-24 text-center bg-gray-50 rounded-[2rem] border-4 border-dashed border-gray-100">
                                     <Database className="mx-auto text-gray-200 mb-6" size={80} />
                                     <p className="text-sm text-gray-400 font-medium">
-                                        {searchQuery ? 'Không tìm thấy kết quả phù hợp' : 'Chưa có cấu hình nào'}
+                                        Không tìm thấy kết quả phù hợp
                                     </p>
                                 </div>
                             )}
@@ -649,7 +632,7 @@ export const ConfigPortal = () => {
                         </div>
                         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200">
                             <Award className="text-emerald-600 mb-3" size={32} />
-                            <h4 className="text-2xl font-semibold text-emerald-900">{categories.length}</h4>
+                            <h4 className="text-2xl font-semibold text-emerald-900">{categories.length - 1}</h4>
                             <p className="text-xs font-bold text-emerald-700 uppercase">Danh mục</p>
                         </div>
                         <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-amber-200">
@@ -662,6 +645,37 @@ export const ConfigPortal = () => {
                     </div>
                 </div>
             </div>
+
+            {showAddDialog && (
+                <ConfigKeyEditorDialog
+                    existingCategories={categories.filter(c => c !== ALL_CATEGORY)}
+                    nextSortOrder={configs.length}
+                    onClose={() => setShowAddDialog(false)}
+                    onSubmit={handleAddKey}
+                />
+            )}
+
+            {deletingKey && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8 space-y-5 text-center">
+                        <AlertTriangle className="mx-auto text-red-500" size={40} />
+                        <p className="text-sm font-semibold text-gray-800">
+                            Xóa cấu hình "{deletingKey}"? Hành động này không thể hoàn tác.
+                        </p>
+                        <div className="flex justify-center gap-3 pt-2">
+                            <button onClick={() => setDeletingKey(null)} className="px-5 py-3 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => handleDeleteKey(deletingKey)}
+                                className="px-5 py-3 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                            >
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

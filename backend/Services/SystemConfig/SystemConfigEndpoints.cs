@@ -198,6 +198,49 @@ public static class SystemConfigEndpoints
             return Results.Ok(existing);
         });
 
+        adminGroup.MapPost("/bulk", async (List<ConfigurationEntry> entries, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        {
+            if (entries is null || entries.Count == 0) return Results.BadRequest(new { error = "Danh sách rỗng" });
+            if (entries.Count > 500) return Results.BadRequest(new { error = "Tối đa 500 mục mỗi lần" });
+
+            foreach (var e in entries)
+            {
+                var (ok, err) = ConfigValidator.Validate(e);
+                if (!ok) return Results.BadRequest(new { error = $"{e.Key}: {err}" });
+            }
+
+            await using var tx = await db.Database.BeginTransactionAsync();
+            var keys = entries.Select(e => e.Key).ToList();
+            var existingMap = await db.Configurations.Where(c => keys.Contains(c.Key)).ToDictionaryAsync(c => c.Key);
+            foreach (var e in entries)
+            {
+                if (existingMap.TryGetValue(e.Key, out var ex))
+                {
+                    ex.Value = e.Value;
+                    ex.Description = e.Description;
+                    ex.Category = e.Category;
+                    ex.Module = e.Module;
+                    ex.ValueType = e.ValueType;
+                    ex.JsonValue = e.JsonValue;
+                    ex.SortOrder = e.SortOrder;
+                    ex.LastUpdated = DateTime.UtcNow;
+                    // IsSystem không cho bulk chỉnh — chỉ do seeder đặt.
+                }
+                else
+                {
+                    e.IsSystem = false;
+                    e.LastUpdated = DateTime.UtcNow;
+                    db.Configurations.Add(e);
+                }
+            }
+            await db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            await httpContext.LogAuditAsync("BulkUpdate", "Configuration", string.Join(",", keys.Take(20)), $"{entries.Count} keys");
+            await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
+            return Results.Ok(new { updated = entries.Count });
+        });
+
         adminGroup.MapDelete("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var existing = await db.Configurations.FindAsync(key);

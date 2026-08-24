@@ -16,5 +16,7 @@ public static class SystemConfigSeedPlaceholders
         ["COMPANY_EMAIL"] = new[] { "contact@quanghuong.com" },
         ["COMPANY_HOTLINE"] = new[] { "1900 xxxx" },
         ["COMPANY_TAX_CODE"] = new[] { "0123456789" },
+        // Fake bank account shipped by earlier seeds — customer-facing, must be blanked until admin enters the real one
+        ["COMPANY_BANK_ACCOUNT"] = new[] { "1234567890 - Vietcombank" },
     };
 }
