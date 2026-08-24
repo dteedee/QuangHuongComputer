@@ -43,7 +43,7 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
         }
     };
 
-    useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [productId]);
+    useEffect(() => { void load(); }, [productId]);
 
     const handleUpload = async (files: FileList | null) => {
         if (!files || files.length === 0) return;

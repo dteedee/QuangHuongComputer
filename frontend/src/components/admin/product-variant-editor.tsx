@@ -39,7 +39,7 @@ export default function ProductVariantEditor({ productId }: ProductVariantEditor
         }
     };
 
-    useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [productId]);
+    useEffect(() => { void load(); }, [productId]);
 
     const toggleType = (id: string) => {
         setSelectedTypeIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);

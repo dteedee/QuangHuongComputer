@@ -60,7 +60,9 @@ export function CheckoutPage() {
     useEffect(() => { if (step === 4) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY); }, [step]);
 
     // Redirect nếu giỏ rỗng
-    if (items.length === 0 && step !== 4) { navigate('/cart'); return null; }
+    useEffect(() => {
+        if (items.length === 0 && step !== 4) { navigate('/cart'); }
+    }, [items.length, step, navigate]);
 
     // Evaluate promotion (debounce 300ms) — tránh spam evaluate khi user gõ mã
     useEffect(() => {

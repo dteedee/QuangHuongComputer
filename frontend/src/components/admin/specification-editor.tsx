@@ -48,7 +48,7 @@ export default function SpecificationEditor({ productId, categoryId }: Specifica
         }
     };
 
-    useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [productId, categoryId]);
+    useEffect(() => { void load(); }, [productId, categoryId]);
 
     const updateAttr = (attrId: string, patch: ValueDraft) => {
         setDraft((prev) => ({ ...prev, [attrId]: { ...prev[attrId], ...patch } }));

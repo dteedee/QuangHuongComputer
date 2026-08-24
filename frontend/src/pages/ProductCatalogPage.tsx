@@ -16,7 +16,7 @@ interface ProductCatalogProps {
   brandSlug?: string;
 }
 
-export default function ProductCatalogPage({ }: ProductCatalogProps) {
+export default function ProductCatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

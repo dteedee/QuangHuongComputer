@@ -142,7 +142,7 @@ export const ContactPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Tiêu đề *</label>
-                                <SearchableSelect name="subject" value={formData.subject} onChange={(val) => handleInputChange({ target: { name: 'subject', value: val } } as any)} error={!!errors.subject} placeholder="-- Chọn chủ đề --"
+                                <SearchableSelect name="subject" value={formData.subject} onChange={(val) => handleInputChange({ target: { name: 'subject', value: val } } as React.ChangeEvent<HTMLInputElement>)} error={!!errors.subject} placeholder="-- Chọn chủ đề --"
                                     options={[
                                         { value: 'Tư vấn mua hàng', label: 'Tư vấn mua hàng' },
                                         { value: 'Hỗ trợ kỹ thuật', label: 'Hỗ trợ kỹ thuật' },
