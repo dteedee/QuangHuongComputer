@@ -28,6 +28,7 @@ export function UserFormModal({ user, roles, onClose, onSubmit, isLoading }: Use
             setFormData({
                 email: user.email,
                 fullName: user.fullName,
+                password: '',
                 roles: user.roles,
                 isActive: user.isActive
             });

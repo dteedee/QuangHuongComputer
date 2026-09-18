@@ -1,13 +1,13 @@
 import ProductFilterSpecSection from '../product-filter-spec-section';
 import type { Brand } from '../../api/catalog';
 
-const PRICE_RANGES = [
+const PRICE_RANGES: ReadonlyArray<{ label: string; min?: number; max?: number }> = [
   { label: 'Dưới 10 triệu', max: 10000000 },
   { label: '10 - 15 triệu', min: 10000000, max: 15000000 },
   { label: '15 - 20 triệu', min: 15000000, max: 20000000 },
   { label: '20 - 30 triệu', min: 20000000, max: 30000000 },
   { label: 'Trên 30 triệu', min: 30000000 },
-] as const;
+];
 
 interface CategoryFilterPanelBodyProps {
   brands: Brand[];

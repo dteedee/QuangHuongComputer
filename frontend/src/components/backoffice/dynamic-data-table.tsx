@@ -34,7 +34,7 @@ function formatCell(value: unknown, column: TableColumnDef): React.ReactNode {
     }
 }
 
-function getValueByKey(row: Record<string, unknown>, key: string): unknown {
+function getValueByKey(row: object, key: string): unknown {
     // Support dotted paths (e.g. "category.name") without a heavy lodash dep.
     return key.split('.').reduce<unknown>((acc, part) => {
         if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[part];
@@ -42,7 +42,7 @@ function getValueByKey(row: Record<string, unknown>, key: string): unknown {
     }, row);
 }
 
-interface DynamicDataTableProps<T extends Record<string, unknown>> {
+interface DynamicDataTableProps<T extends object> {
     /** TableViewDefinition.Key, e.g. "admin.products" */
     viewKey: string;
     rows: T[];
@@ -63,7 +63,7 @@ interface DynamicDataTableProps<T extends Record<string, unknown>> {
  * instead of hard-coded JSX columns. Column show/hide + reorder is persisted back to
  * the API so every admin sees the same layout without a redeploy.
  */
-export function DynamicDataTable<T extends Record<string, unknown>>({
+export function DynamicDataTable<T extends object>({
     viewKey,
     rows,
     isLoading,
