@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Content.Domain;
 using Content.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -19,8 +20,11 @@ public static class PromotionEndpoints
     {
         var group = app.MapGroup("/api/promotions");
         // W0-3: thêm Marketing — role này dựng chương trình khuyến mãi nhưng trước đây bị chặn.
+        // W1-10: khuyến mãi/mã giảm giá -> Content.ManageCoupons (Admin/Manager/Marketing),
+        // đúng bằng danh sách role cũ. Một quyền duy nhất cho mọi verb vì GET ở đây là
+        // danh sách quản trị (gồm cả khuyến mãi chưa chạy), không phải dữ liệu storefront.
         var adminGroup = app.MapGroup("/api/promotions/admin")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Marketing"));
+            .RequirePermission(Permissions.Content.ManageCoupons);
 
         // ---------- Public / Read ----------
 
@@ -221,7 +225,9 @@ public static class PromotionEndpoints
                 discountAmount = discount,
                 message = "Áp dụng thành công",
             });
-        });
+            // W1-10: alias cũ của tra cứu mã giảm giá ở giỏ hàng, khách chưa đăng nhập dùng được
+            // (đồng bộ với /api/promotions/{code} đã có trong allow-list). IR W1: thêm rule.
+        }).AllowAnonymous();
     }
 
     private static object ToDto(Promotion p) => new

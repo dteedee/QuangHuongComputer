@@ -7,20 +7,25 @@ interface UseFormSubmitOptions<T> {
   errorMessage?: string;
 }
 
-interface UseFormSubmitReturn {
+interface UseFormSubmitReturn<T> {
   isSubmitting: boolean;
   error: string | null;
-  handleSubmit: (data: any) => Promise<void>;
+  handleSubmit: (data: T) => Promise<void>;
 }
 
 /**
- * Custom hook for handling form submission with loading and error states
+ * Generic "wrap an async submit with loading/error/toast state" hook for
+ * plain imperative submit handlers (a button click, a non-RHF form). For a
+ * form built on `react-hook-form` + zod, prefer `<Form>`
+ * (`components/form/form.tsx`, W1-9) instead — it wires `isSubmitting` from
+ * RHF's own `formState` and adds `applyServerErrors` field-level mapping,
+ * which this hook (no RHF instance in scope) cannot do.
  */
-export function useFormSubmit<T = any>({
+export function useFormSubmit<T = unknown>({
   onSubmit,
   successMessage = 'Thao tác thành công!',
   errorMessage = 'Có lỗi xảy ra. Vui lòng thử lại.',
-}: UseFormSubmitOptions<T>): UseFormSubmitReturn {
+}: UseFormSubmitOptions<T>): UseFormSubmitReturn<T> {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

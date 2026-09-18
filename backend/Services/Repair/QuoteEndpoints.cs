@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,7 +15,9 @@ public static class QuoteEndpoints
 {
     public static void MapQuoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/repair").RequireAuthorization();
+        // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
+        // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
+        var group = app.MapGroup("/api/repair").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // Technician: Create quote for work order
         group.MapPost("/work-orders/{id:guid}/quote", async (
@@ -83,7 +86,7 @@ public static class QuoteEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
+        .RequireAuthorization(Permissions.Repair.UpdateStatus);
 
         // Customer: Get quote details
         group.MapGet("/quotes/{id:guid}", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
@@ -277,7 +280,7 @@ public static class QuoteEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
+        .RequireAuthorization(Permissions.Repair.UpdateStatus);
 
         // Mark quote as awaiting approval
         group.MapPut("/quotes/{id:guid}/await-approval", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
@@ -328,7 +331,7 @@ public static class QuoteEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
+        .RequireAuthorization(Permissions.Repair.UpdateStatus);
     }
 }
 

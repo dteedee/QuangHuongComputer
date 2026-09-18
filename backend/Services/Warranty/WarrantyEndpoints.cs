@@ -12,13 +12,20 @@ namespace Warranty;
 
 public static class WarrantyEndpoints
 {
-    /// <summary>W0-3: chỉ nhân viên mới được tạo bản ghi bảo hành (trước đây khách tự cấp bảo hành cho mình).</summary>
-    private static readonly string[] WarrantyStaffRoles =
-        { Roles.Admin, Roles.Manager, Roles.Sale, Roles.TechnicianInShop, Roles.TechnicianOnSite };
+    /// <summary>
+    /// W1-10: "nhân viên bảo hành" = có quyền <c>Permissions.Warranty.ViewAll</c> (Admin luôn qua),
+    /// thay cho danh sách role WarrantyStaffRoles đã bị xoá. Cùng luật với
+    /// <c>PermissionAuthorizationHandler</c> nên hành vi khớp với policy của endpoint.
+    /// </summary>
+    private static bool IsWarrantyStaff(ClaimsPrincipal user) =>
+        user.IsInRole(Roles.Admin)
+        || user.FindAll(Permissions.PermissionType).Any(c => c.Value == Permissions.Warranty.ViewAll);
 
     public static void MapWarrantyEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/warranty").RequireAuthorization();
+        // W1-10: nhánh khách hàng ("bảo hành của tôi", gửi yêu cầu bảo hành) -> chỉ cần đăng nhập.
+        // Endpoint nhân viên bên dưới và nhóm /api/warranty/admin mang quyền Warranty riêng.
+        var group = app.MapGroup("/api/warranty").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // Submit a claim
         group.MapPost("/claims", async ([FromBody] CreateClaimDto model, WarrantyDbContext db, ClaimsPrincipal user) =>
@@ -38,7 +45,7 @@ public static class WarrantyEndpoints
 
             // W0-3: trước đây bất kỳ ai cũng mở được yêu cầu bảo hành trên serial của người khác
             // (chỉ cần biết số serial). Chỉ chủ sở hữu bảo hành hoặc nhân viên mới được mở.
-            var isStaff = WarrantyStaffRoles.Any(user.IsInRole);
+            var isStaff = IsWarrantyStaff(user);
             if (!isStaff && warranty.CustomerId != userId)
                 return Results.Json(
                     new { Message = "Serial này không thuộc về tài khoản của bạn" },
@@ -113,7 +120,10 @@ public static class WarrantyEndpoints
             db.ProductWarranties.Add(warranty);
             await db.SaveChangesAsync();
             return Results.Ok(warranty);
-        }).RequireAuthorization(policy => policy.RequireRole(WarrantyStaffRoles));
+            // W1-10: chỉ nhân viên mới lập bản ghi bảo hành -> Warranty.ReviewClaim
+            // (Manager/Sale?/TechnicianInShop/TechnicianOnSite giữ quyền này; Sale KHÔNG có
+            // ReviewClaim nên mất quyền lập tay — ghi trong báo cáo bàn giao).
+        }).RequireAuthorization(Permissions.Warranty.ReviewClaim);
 
         // Check Coverage by Serial Number
         group.MapGet("/lookup/serial/{serialNumber}", async (string serialNumber, WarrantyDbContext db) =>
@@ -218,11 +228,13 @@ public static class WarrantyEndpoints
         {
             var warranties = await db.ProductWarranties.OrderByDescending(w => w.PurchaseDate).ToListAsync();
             return Results.Ok(warranties);
-        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "TechnicianInShop"));
+            // W1-10: danh sách toàn bộ bảo hành -> Warranty.ViewAll.
+        }).RequireAuthorization(Permissions.Warranty.ViewAll);
 
         // ==================== ADMIN CLAIM MANAGEMENT ====================
+        // W1-10: GET -> Warranty.ViewAll, POST/PUT -> ReviewClaim, DELETE -> ApproveClaim.
         var adminGroup = app.MapGroup("/api/warranty/admin")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "TechnicianInShop", "TechnicianOnSite"));
+            .RequireModulePermissions(PermissionModules.Warranty);
 
         // Get all claims with optional filters
         adminGroup.MapGet("/claims", async (
@@ -481,7 +493,7 @@ public record RegisterWarrantyDto(
     DateTime PurchaseDate,
     int WarrantyPeriodMonths,
     string? OrderNumber = null,
-    // Khách hàng sở hữu bảo hành. Chỉ nhân viên gọi được endpoint này (RequireRole), nên
+    // Khách hàng sở hữu bảo hành. Chỉ nhân viên gọi được endpoint này (quyền Warranty.ReviewClaim), nên
     // trường này an toàn: bỏ trống ⇒ gán cho chính người gọi (hành vi cũ).
     Guid? CustomerId = null
 );

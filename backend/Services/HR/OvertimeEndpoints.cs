@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -12,7 +13,8 @@ public static class OvertimeEndpoints
 {
     public static void MapOvertimeEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr/overtime").RequireAuthorization();
+        // W1-10: nhân viên tự đăng ký tăng ca -> Staff; duyệt/tổng hợp có quyền riêng bên dưới.
+        var group = app.MapGroup("/api/hr/overtime").RequireAuthorization(SecurityPolicies.Staff);
 
         // POST /api/hr/overtime — nhân viên đăng ký OT trước khi làm
         group.MapPost("/", async (CreateOvertimeRequestDto dto, HttpContext ctx, HRDbContext db) =>
@@ -38,7 +40,7 @@ public static class OvertimeEndpoints
                 .Where(o => o.Status == OvertimeStatus.Pending)
                 .OrderBy(o => o.Date)
                 .ToListAsync())
-        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
+        ).RequireAuthorization(Permissions.HR.ViewAttendance);
 
         // GET /api/hr/overtime/my — của chính nhân viên
         group.MapGet("/my", async (ClaimsPrincipal user, HRDbContext db) =>
@@ -68,7 +70,7 @@ public static class OvertimeEndpoints
                 return Results.Ok(new { message = "Đã duyệt OT.", req.Status });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
+        }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         group.MapPost("/{id:guid}/reject",
             async (Guid id, RejectOvertimeDto dto, HRDbContext db, ClaimsPrincipal user) =>
@@ -86,7 +88,7 @@ public static class OvertimeEndpoints
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
                     { return Results.BadRequest(new { error = ex.Message }); }
-            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
+            }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         // IDOR guard: previously open to ANY authenticated user with no role check at all —
         // recording actual OT hours is a manager/HR-only action.
@@ -103,7 +105,7 @@ public static class OvertimeEndpoints
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
                     { return Results.BadRequest(new { error = ex.Message }); }
-            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR"));
+            }).RequireAuthorization(Permissions.HR.ManageAttendance);
     }
 }
 

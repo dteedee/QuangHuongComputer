@@ -33,7 +33,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
@@ -57,14 +57,24 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(5,4)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Carts", "public");
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_carts_customer_id");
+
+                    b.ToTable("Carts", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_Carts_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Carts_ShippingAmount_NonNegative", "\"ShippingAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Carts_TaxRate_Fraction", "\"TaxRate\" >= 0 AND \"TaxRate\" <= 1");
+                        });
                 });
 
             modelBuilder.Entity("Sales.Domain.CheckoutSession", b =>
@@ -275,7 +285,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
@@ -284,7 +294,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastActivityAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("LifetimePoints")
                         .HasColumnType("integer");
@@ -293,13 +303,13 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("TierExpiresAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("TotalPoints")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
@@ -307,6 +317,12 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -333,7 +349,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
@@ -358,7 +374,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
@@ -398,13 +414,13 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("CancelledAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("ConfirmedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CouponCode")
                         .HasColumnType("text");
@@ -413,7 +429,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
@@ -440,7 +456,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DeliveredAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DeliveryCarrier")
                         .HasColumnType("text");
@@ -459,7 +475,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("FulfilledAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("FulfillmentStatus")
                         .HasColumnType("integer");
@@ -477,14 +493,14 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
@@ -503,7 +519,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ShippedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
@@ -520,7 +536,8 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasDefaultValue(0m);
 
                     b.Property<decimal>("ShippingFee")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("ShippingProvider")
                         .HasColumnType("text");
@@ -540,7 +557,8 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("TaxRate")
-                        .HasColumnType("numeric");
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
@@ -550,7 +568,7 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
@@ -562,6 +580,9 @@ namespace Sales.Infrastructure.Data.Migrations
 
                     b.HasIndex("TotalAmount")
                         .HasDatabaseName("ix_orders_total_amount");
+
+                    b.HasIndex("CustomerId", "CreatedAt")
+                        .HasDatabaseName("ix_orders_customer_id_created_at");
 
                     b.HasIndex("CustomerId", "OrderDate")
                         .HasDatabaseName("ix_orders_customer_id_order_date");
@@ -575,7 +596,24 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "OrderDate")
                         .HasDatabaseName("ix_orders_status_order_date");
 
-                    b.ToTable("Orders", "public");
+                    b.ToTable("Orders", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_ShippingAmount_NonNegative", "\"ShippingAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_ShippingDiscount_NonNegative", "\"ShippingDiscount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_ShippingFee_NonNegative", "\"ShippingFee\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_SubtotalAmount_NonNegative", "\"SubtotalAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_TaxAmount_NonNegative", "\"TaxAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_TaxRate_Fraction", "\"TaxRate\" >= 0 AND \"TaxRate\" <= 1");
+
+                            t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "\"TotalAmount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Sales.Domain.OrderHistory", b =>
@@ -892,7 +930,15 @@ namespace Sales.Infrastructure.Data.Migrations
 
                             b1.HasKey("CartId", "Id");
 
-                            b1.ToTable("CartItem", "public");
+                            b1.HasIndex("ProductId")
+                                .HasDatabaseName("ix_cart_item_product_id");
+
+                            b1.ToTable("CartItem", "public", t =>
+                                {
+                                    t.HasCheckConstraint("CK_CartItem_Price_NonNegative", "\"Price\" >= 0");
+
+                                    t.HasCheckConstraint("CK_CartItem_Quantity_Positive", "\"Quantity\" > 0");
+                                });
 
                             b1.WithOwner()
                                 .HasForeignKey("CartId");
@@ -918,7 +964,7 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasColumnName("AppliedPromotionCode");
 
                             b1.Property<DateTime>("CreatedAt")
-                                .HasColumnType("timestamp without time zone");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<string>("CreatedBy")
                                 .HasColumnType("text");
@@ -962,7 +1008,7 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasColumnType("numeric(18,2)");
 
                             b1.Property<DateTime?>("UpdatedAt")
-                                .HasColumnType("timestamp without time zone");
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<string>("UpdatedBy")
                                 .HasColumnType("text");
@@ -981,7 +1027,19 @@ namespace Sales.Infrastructure.Data.Migrations
 
                             b1.HasKey("OrderId", "Id");
 
-                            b1.ToTable("OrderItem", "public");
+                            b1.HasIndex("ProductId")
+                                .HasDatabaseName("ix_order_item_product_id");
+
+                            b1.ToTable("OrderItem", "public", t =>
+                                {
+                                    t.HasCheckConstraint("CK_OrderItem_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_LineTotal_NonNegative", "\"LineTotal\" >= 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_Quantity_Positive", "\"Quantity\" > 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                                });
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");

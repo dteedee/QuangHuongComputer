@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -109,7 +110,9 @@ public static class AiPCBuilderEndpoints
                 WithinBudget = totalPrice <= request.Budget,
                 Components = components
             });
-        }).RequireAuthorization();
+            // W1-10: gợi ý cấu hình bằng AI tốn tài nguyên -> bắt buộc đăng nhập (giữ nguyên
+            // hành vi cũ, chỉ đổi sang policy có tên để convention nhận diện được).
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
     }
 }
 

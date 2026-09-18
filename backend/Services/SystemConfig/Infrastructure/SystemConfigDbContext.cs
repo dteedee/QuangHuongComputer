@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SystemConfig.Domain;
+using BuildingBlocks.Database;
 
 namespace SystemConfig.Infrastructure;
 
@@ -166,5 +167,10 @@ public class SystemConfigDbContext : DbContext
         });
 
         base.OnModelCreating(modelBuilder);
+
+        // W1-11 / audit db-schema-migrations-07: module này chưa gọi
+        // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho mọi cột
+        // DateTime, trong khi CSDL thật là `timestamp without time zone`. Ghim lại đúng thực tế.
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
     }
 }

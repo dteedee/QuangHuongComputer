@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -66,25 +67,37 @@ public static class SystemConfigEndpoints
 
         group.MapGet("/public", async (SystemConfigDbContext db, ICacheService cache) =>
         {
-            var cacheKey = "cache:systemconfigs:public";
+            // W1-10 (verifier): khoá cache PHẢI mang dấu vân tay của allow-list.
+            // Redis giữ bản cũ 1 giờ và KHÔNG có đường nào xoá nó (grep "cache:systemconfigs"
+            // -> chỉ 2 chỗ đọc/ghi, 0 chỗ invalidate). Đo được lúc 15:01 ngày 2026-09-18:
+            // :5050 chạy mã allow-list mới vẫn trả AI_MODEL/AI_TEMPERATURE/AI_MAX_TOKENS/
+            // MAX_DISCOUNT_PERCENT/SPARE_PARTS_MARKUP vì đọc bản cache của mã danh-sách-đen cũ
+            // => bản vá bảo mật fail-open tới 1 giờ sau mỗi lần triển khai.
+            // Gắn hash của allow-list vào khoá: đổi allow-list => khoá đổi => cache tự hết hiệu lực.
+            var cacheKey = SystemConfigPublicEndpointsKeys.CacheKey;
             var cachedConfigs = await cache.GetAsync<List<ConfigurationEntry>>(cacheKey);
             if (cachedConfigs != null) return Results.Ok(cachedConfigs);
 
-            // "Tax" giữ để tương thích ngược; danh mục seed thật là "Sales & Tax" (nhiều field trong đó
-            // vẫn cần public cho storefront, vd FREESHIP_THRESHOLD/SHIPPING_COST) nên lọc thêm theo key
-            // cho các giá trị nội bộ (hoa hồng NV) không nên lộ ra public API.
-            var sensitiveCats = new List<string> { "Security", "HR & Payroll", "Admin Only", "Tax" };
-            var sensitiveKeys = new List<string> { "COMMISSION_RATE" };
+            // W1-10: ĐẢO danh sách đen thành DANH SÁCH TRẮNG (SystemConfigPublicEndpointsKeys).
+            // Danh sách đen cũ ("Security", "HR & Payroll", "Admin Only", "Tax") khiến mọi khoá
+            // seed vào một category mới tự động lộ ra Internet — finding
+            // audit-be-identity-config-platform-11. Giờ khoá nào không nằm trong allow-list thì
+            // không bao giờ ra public. Vẫn giữ thêm chặn ValueType=Secret cho chắc.
+            var publicKeys = SystemConfigPublicEndpointsKeys.Keys.ToList();
             var configs = await db.Configurations.AsNoTracking()
-                .Where(c => !sensitiveCats.Contains(c.Category) && !sensitiveKeys.Contains(c.Key) && c.ValueType != ConfigValueType.Secret)
+                .Where(c => publicKeys.Contains(c.Key) && c.ValueType != ConfigValueType.Secret)
                 .OrderBy(c => c.SortOrder)
                 .ToListAsync();
 
             await cache.SetAsync(cacheKey, configs, TimeSpan.FromHours(1));
             return Results.Ok(configs);
-        });
+            // W1-10: endpoint này CỐ Ý công khai (storefront đọc trước khi đăng nhập).
+            // Cần rule GET /api/config/public trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
-        var adminGroup = group.MapGroup("/").RequireAuthorization(policy => policy.RequireRole("Admin"));
+        // W1-10: cấu hình hệ thống -> GET System.ViewConfig (Admin + Manager),
+        // POST/PUT/DELETE System.ManageConfig (chỉ Admin trong ma trận W1-1).
+        var adminGroup = group.MapGroup("/").RequireModulePermissions(PermissionModules.SystemConfig);
 
         adminGroup.MapGet("/", async (string? category, string? module, SystemConfigDbContext db, ICacheService cache) =>
         {

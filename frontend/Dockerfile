@@ -1,63 +1,48 @@
 # ============================================
-# Quang Huong Computer - Frontend Dockerfile
-# Multi-stage build: Node build → Nginx serve
+# Quang Huong Computer — web image: build the SPA, serve it with Caddy (D05 / phase-64 W1-14)
 # ============================================
+# Build context is the REPO ROOT (docker-compose.yml: `context: .`, `dockerfile:
+# frontend/Dockerfile`), not ./frontend — the final stage needs deploy/Caddyfile, which lives
+# outside frontend/ and therefore outside a ./frontend-scoped build context.
+#
+# Replaces the previous nginx-based image: same "build the SPA" stage, but the runtime stage is
+# now caddy:2-alpine (see deploy/Caddyfile for routing — same-origin API proxy, WebSocket, SPA
+# fallthrough) instead of nginx + a hand-written nginx.conf.
 
-# ----- Build Stage -----
+# ----- Build stage -----
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Define build arguments for Vite
-ARG VITE_API_URL
+# Root-relative defaults (same-origin, D05 §3) so this image builds correctly even when a caller
+# (e.g. .github/workflows/deploy.yml, which has no per-environment SITE_URL to pass) supplies no
+# build args at all — see docker-compose.yml's `web` service for the full explanation.
+ARG VITE_API_URL=/api
 ARG VITE_NODE_ENV=production
 ARG VITE_GOOGLE_CLIENT_ID
 ARG VITE_FACEBOOK_APP_ID
-ARG VITE_CLOUDINARY_CLOUD_NAME
-ARG VITE_VNPAY_RETURN_URL
-ARG VITE_MOMO_RETURN_URL
-ARG VITE_ZALOPAY_RETURN_URL
-ARG VITE_SIGNALR_HUB_URL
-ARG VITE_SOCKET_URL
+ARG VITE_SIGNALR_HUB_URL=/hubs/chat
 
-# Set env vars for Vite build
 ENV VITE_API_URL=$VITE_API_URL \
     VITE_NODE_ENV=$VITE_NODE_ENV \
     VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
     VITE_FACEBOOK_APP_ID=$VITE_FACEBOOK_APP_ID \
-    VITE_CLOUDINARY_CLOUD_NAME=$VITE_CLOUDINARY_CLOUD_NAME \
-    VITE_VNPAY_RETURN_URL=$VITE_VNPAY_RETURN_URL \
-    VITE_MOMO_RETURN_URL=$VITE_MOMO_RETURN_URL \
-    VITE_ZALOPAY_RETURN_URL=$VITE_ZALOPAY_RETURN_URL \
-    VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL \
-    VITE_SOCKET_URL=$VITE_SOCKET_URL
+    VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL
 
-# Install dependencies (cached layer)
-COPY package.json package-lock.json ./
+# Layer caching: dependencies only reinstall when the lockfile changes.
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --prefer-offline --no-audit --no-fund
 
-# Copy source and build
-COPY . .
+COPY frontend/ .
 RUN npm run build
 
-# ----- Production Stage -----
-FROM nginx:1.27-alpine AS production
+# ----- Runtime stage: Caddy serves the built SPA + reverse-proxies the API -----
+FROM caddy:2-alpine AS production
 
-# Remove default nginx config
-RUN rm -rf /etc/nginx/conf.d/default.conf
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80 443
 
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Security: remove server version header
-RUN sed -i 's/# server_tokens off;/server_tokens off;/' /etc/nginx/nginx.conf || true
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:80/ || exit 1
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# No ENTRYPOINT/CMD override: the base image already runs
+# `caddy run --config /etc/caddy/Caddyfile --adapter caddyfile`, which is exactly the file and
+# docroot copied in above.

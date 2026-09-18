@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,13 +17,15 @@ public static class WarehouseEndpoints
 {
     public static void MapWarehouseEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: kho/serial/chuyển kho -> quyền theo verb của module Inventory.
         var group = app.MapGroup("/api/inventory")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "InventoryStaff"));
+            .RequireModulePermissions(PermissionModules.Inventory);
 
         // ============================
         // WAREHOUSE MANAGEMENT
         // ============================
-        var warehouseGroup = group.MapGroup("/warehouses");
+        // W1-10: mỗi nhóm lồng tự khai báo quyền của chính nó (fail-closed, không phụ thuộc nhóm cha).
+        var warehouseGroup = group.MapGroup("/warehouses").RequireModulePermissions(PermissionModules.Inventory);
 
         // GET /api/inventory/warehouses
         warehouseGroup.MapGet("", async (InventoryDbContext db) =>
@@ -194,7 +197,7 @@ public static class WarehouseEndpoints
         // ============================
         // SERIAL NUMBER MANAGEMENT
         // ============================
-        var serialGroup = group.MapGroup("/serials");
+        var serialGroup = group.MapGroup("/serials").RequireModulePermissions(PermissionModules.Inventory);
 
         // GET /api/inventory/serials
         serialGroup.MapGet("", async (
@@ -387,7 +390,7 @@ public static class WarehouseEndpoints
         // ============================
         // STOCK TRANSFERS
         // ============================
-        var transferGroup = group.MapGroup("/transfers");
+        var transferGroup = group.MapGroup("/transfers").RequireModulePermissions(PermissionModules.Inventory);
 
         // GET /api/inventory/transfers
         transferGroup.MapGet("", async (string? status, InventoryDbContext db) =>

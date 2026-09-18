@@ -1,0 +1,78 @@
+# Quang Huong Computer — edge proxy (D05 / phase-64 W1-14)
+#
+# Replaces the 267-line broken nginx.prod.conf (commented-out HTTPS block, no certbot, wrong
+# uploads path) with automatic HTTPS + HTTP/1.1↔2↔3 + WebSocket proxying, no extra config.
+#
+# ONE variable drives the site address: SITE_URL (same variable also feeds VITE_API_URL,
+# Storage:PublicBaseUrl, Cors:AllowedOrigins:0, Frontend:Url and payment return URLs — see
+# docker-compose.yml / .env.prod.example). Local default is plain HTTP on :8080 (no domain, no
+# cert to request); a real domain here (docker-compose.prod.yml) switches Caddy to automatic
+# HTTPS + HTTP->HTTPS redirect + HSTS with zero other changes.
+#
+# In wave 2, W2-17 (D11) takes ownership of this file and replaces the final `handle` (SPA
+# fallthrough) with the SEO-shell rule (`/_shell{uri}` + static index.html fallback so a restart
+# never blanks the page for 30s — see the api_and_hubs `lb_try_duration` note below).
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$SITE_URL:http://localhost:8080} {
+	encode zstd gzip
+
+	# /api/* and /hubs/* (SignalR) are the only routes allowed to hold a request open while the
+	# api container restarts (D05 mục 12) — everything else must fail fast to the static SPA
+	# instead of hanging for 30s. lb_try_interval is the poll cadence inside that window.
+	handle /api/* {
+		reverse_proxy api:8080 {
+			lb_try_duration 30s
+			lb_try_interval 500ms
+		}
+	}
+	# WebSocket upgrade (SignalR) needs no special config: reverse_proxy detects and proxies
+	# `Connection: Upgrade` automatically (Caddy docs — "WebSocket support").
+	handle /hubs/* {
+		reverse_proxy api:8080 {
+			lb_try_duration 30s
+			lb_try_interval 500ms
+		}
+	}
+	# /media/* is the D02 runtime + seed image route; /uploads/* is kept only as a legacy alias.
+	handle /media/* {
+		reverse_proxy api:8080
+	}
+	handle /uploads/* {
+		reverse_proxy api:8080
+	}
+	handle /health* {
+		reverse_proxy api:8080
+	}
+	handle /sitemap.xml {
+		reverse_proxy api:8080
+	}
+	handle /robots.txt {
+		reverse_proxy api:8080
+	}
+
+	# Everything else: the built SPA. W1's rule is a plain fallthrough — W2-17 (D11) replaces
+	# this block with the SEO-shell rule; it must keep excluding the paths above (D02 §Tác động
+	# lên plan #13: the shell rule's exclude list is currently missing /media, /sitemap.xml,
+	# /robots.txt — flagged for W2-17 in the integration request).
+	handle {
+		root * /srv
+		@assets path *.js *.css *.svg *.woff2 *.png *.jpg *.webp *.ico
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

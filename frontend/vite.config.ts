@@ -28,18 +28,17 @@ export default defineConfig({
     // Rollup options for code splitting
     rollupOptions: {
       output: {
+        // Only list packages that are actually imported from src/. A name that
+        // no module imports is a phantom entry: Rollup cannot resolve it and
+        // the chunk silently never materialises. The five @radix-ui packages
+        // that used to sit in `vendor-ui` had 0 importers (grep -rn "from
+        // '@radix-ui/…'" src/ -> 0); they go back in when the UI kit (W1-12)
+        // starts using them.
         manualChunks: {
           // Vendor chunk for React and related
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           // UI components chunk
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            'lucide-react',
-          ],
+          'vendor-ui': ['lucide-react'],
           // Data fetching & forms
           'vendor-data': [
             '@tanstack/react-query',
@@ -51,8 +50,8 @@ export default defineConfig({
           'vendor-charts': ['recharts'],
           // Rich text editor
           'vendor-editor': ['react-quill', 'dompurify'],
-          // Real-time communication
-          'vendor-realtime': ['@microsoft/signalr', 'socket.io-client'],
+          // Real-time communication ('socket.io-client' dropped: 0 importers)
+          'vendor-realtime': ['@microsoft/signalr'],
           // Animation
           'vendor-animation': ['framer-motion'],
         },

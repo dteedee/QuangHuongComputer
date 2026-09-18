@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
@@ -63,7 +64,7 @@ public static class CatalogProductAdminEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
 
             return Results.Created($"/api/catalog/products/{product.Id}", CatalogResponses.ProductPayload(product));
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapPut("/products/{id:guid}", async (
             Guid id,
@@ -142,19 +143,19 @@ public static class CatalogProductAdminEndpoints
                 Message = "Product updated",
                 Product = CatalogResponses.ProductPayload(product)
             });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapDelete("/products/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
             await CatalogProductHelpers.SetProductActiveAsync(id, db, cache, httpContext, active: false))
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(Permissions.Catalog.Delete);
 
         group.MapPost("/products/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
             await CatalogProductHelpers.SetProductActiveAsync(id, db, cache, httpContext, active: true))
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapPost("/products/{id:guid}/toggle-status", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
             await CatalogProductHelpers.SetProductActiveAsync(id, db, cache, httpContext, active: null))
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(Permissions.Catalog.Edit);
     }
 
     /// <summary>Đổi slug sản phẩm có kiểm tra trùng (Slug là unique có filter ở DB).</summary>

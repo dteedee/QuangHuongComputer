@@ -107,9 +107,19 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("IX_Expenses_CategoryId");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_Expenses_EmployeeId");
 
                     b.HasIndex("ExpenseDate");
 
@@ -118,7 +128,17 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Expenses");
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("IX_Expenses_SupplierId");
+
+                    b.ToTable("Expenses", t =>
+                        {
+                            t.HasCheckConstraint("CK_Expenses_Amount_NonNegative", "\"Amount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Expenses_TotalAmount_NonNegative", "\"TotalAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Expenses_VatAmount_NonNegative", "\"VatAmount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Accounting.Domain.ExpenseCategory", b =>
@@ -262,9 +282,47 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Invoices");
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("IX_Invoices_CustomerId");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoices_InvoiceNumber_Unique");
+
+                    b.HasIndex("OrganizationAccountId")
+                        .HasDatabaseName("IX_Invoices_OrganizationAccountId");
+
+                    b.HasIndex("PurchaseOrderId")
+                        .HasDatabaseName("IX_Invoices_PurchaseOrderId");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("IX_Invoices_SupplierId");
+
+                    b.HasIndex("Status", "DueDate")
+                        .HasDatabaseName("IX_Invoices_Status_DueDate");
+
+                    b.ToTable("Invoices", t =>
+                        {
+                            t.HasCheckConstraint("CK_Invoices_PaidAmount_LteTotal", "\"PaidAmount\" <= \"TotalAmount\"");
+
+                            t.HasCheckConstraint("CK_Invoices_PaidAmount_NonNegative", "\"PaidAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Invoices_SubTotal_NonNegative", "\"SubTotal\" >= 0");
+
+                            t.HasCheckConstraint("CK_Invoices_TotalAmount_NonNegative", "\"TotalAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Invoices_VatAmount_NonNegative", "\"VatAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Invoices_VatRate_Percent", "\"VatRate\" >= 0 AND \"VatRate\" <= 100");
+                        });
                 });
 
             modelBuilder.Entity("Accounting.Domain.OrganizationAccount", b =>
@@ -348,7 +406,10 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                     b.HasIndex("PaymentIntentId");
 
-                    b.ToTable("PaymentApplications");
+                    b.ToTable("PaymentApplications", t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentApplications_Amount_NonNegative", "\"Amount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Accounting.Domain.ShiftSession", b =>
@@ -403,7 +464,12 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.HasIndex("CashierId", "WarehouseId", "OpenedAt", "Status")
                         .HasDatabaseName("IX_ShiftSession_UniqueOpenShift");
 
-                    b.ToTable("ShiftSessions");
+                    b.ToTable("ShiftSessions", t =>
+                        {
+                            t.HasCheckConstraint("CK_ShiftSessions_ClosingBalance_NonNegative", "\"ClosingBalance\" IS NULL OR \"ClosingBalance\" >= 0");
+
+                            t.HasCheckConstraint("CK_ShiftSessions_OpeningBalance_NonNegative", "\"OpeningBalance\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Accounting.Domain.Expense", b =>
@@ -448,7 +514,14 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                             b1.HasIndex("InvoiceId");
 
-                            b1.ToTable("InvoiceLine");
+                            b1.ToTable("InvoiceLine", t =>
+                                {
+                                    t.HasCheckConstraint("CK_InvoiceLine_Quantity_Positive", "\"Quantity\" > 0");
+
+                                    t.HasCheckConstraint("CK_InvoiceLine_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+
+                                    t.HasCheckConstraint("CK_InvoiceLine_VatRate_Percent", "\"VatRate\" >= 0 AND \"VatRate\" <= 100");
+                                });
 
                             b1.WithOwner()
                                 .HasForeignKey("InvoiceId");
@@ -481,7 +554,10 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                             b1.HasIndex("InvoiceId");
 
-                            b1.ToTable("Payment");
+                            b1.ToTable("Payment", t =>
+                                {
+                                    t.HasCheckConstraint("CK_Payment_Amount_NonNegative", "\"Amount\" >= 0");
+                                });
 
                             b1.WithOwner()
                                 .HasForeignKey("InvoiceId");

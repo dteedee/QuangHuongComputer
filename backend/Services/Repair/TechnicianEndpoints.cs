@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -13,8 +14,10 @@ public static class TechnicianEndpoints
 {
     public static void MapTechnicianEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: khu vực kỹ thuật viên -> GET Repair.ViewAll, POST Repair.CreateQuote,
+        // PUT/PATCH/DELETE Repair.UpdateStatus. Cả hai role kỹ thuật viên đều giữ đủ các quyền này.
         var group = app.MapGroup("/api/repair/tech")
-            .RequireAuthorization(policy => policy.RequireRole("TechnicianInShop", "TechnicianOnSite", "Admin", "Manager"));
+            .RequireModulePermissions(PermissionModules.Repair);
 
         group.MapTechnicianWorkOrderQueryEndpoints();
         group.MapTechnicianWorkOrderActionEndpoints();

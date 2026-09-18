@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Identity.Infrastructure;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Security;
 using System.Globalization;
 using System.Text;
 
@@ -13,8 +14,13 @@ public static class AuditLogEndpoints
 {
     public static void MapAuditLogEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-2 (thẩm định): trước đây là `policy => policy.RequireRole("Admin")` - một policy
+        // lambda vô danh, đúng thứ mà bước 10 của phase file yêu cầu bỏ. Đổi sang policy quyền
+        // có tên: đọc = System.ViewLogs, xoá/xuất = System.ManageLogs.
+        // Không nới quyền cho ai: trong RolePermissionMatrixData chỉ Admin giữ hai quyền này, và
+        // PermissionAuthorizationHandler vẫn cho Admin qua mọi requirement.
         var group = app.MapGroup("/api/audit-logs")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(Permissions.System.ViewLogs);
 
         // ==================== GET AUDIT LOGS (PAGED) ====================
         group.MapGet("/", async (
@@ -273,7 +279,9 @@ public static class AuditLogEndpoints
 
             var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
             return Results.File(bytes, "text/csv", $"audit-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
-        }).WithName("ExportAuditLogs");
+        // Xuất CSV = mang nhật ký ra khỏi hệ thống, cùng mức với xoá (registry:
+        // "Xoá/xuất nhật ký hệ thống").
+        }).WithName("ExportAuditLogs").RequireAuthorization(Permissions.System.ManageLogs);
 
         // ==================== DELETE OLD AUDIT LOGS ====================
         group.MapDelete("/cleanup", async (int? daysToKeep, IdentityDbContext db, HttpContext httpContext) =>
@@ -290,6 +298,6 @@ public static class AuditLogEndpoints
                 module: "System");
 
             return Results.Ok(new { deletedCount, cutoffDate, daysKept = keepDays });
-        }).WithName("CleanupAuditLogs");
+        }).WithName("CleanupAuditLogs").RequireAuthorization(Permissions.System.ManageLogs);
     }
 }

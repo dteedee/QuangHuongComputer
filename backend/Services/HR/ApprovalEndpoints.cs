@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,7 +14,7 @@ public static class ApprovalEndpoints
     public static void MapApprovalEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/approvals")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.HR);
 
         // GET /api/hr/approvals/pending — pending approvals for current manager
         group.MapGet("/pending", async (ClaimsPrincipal user, HRDbContext db) =>

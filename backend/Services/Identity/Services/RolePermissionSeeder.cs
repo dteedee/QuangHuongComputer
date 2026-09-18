@@ -1,342 +1,127 @@
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using BuildingBlocks.Security;
+using Microsoft.AspNetCore.Identity;
 using Perms = BuildingBlocks.Security.Permissions;
 
 namespace Identity.Services;
 
+/// <summary>
+/// Áp <see cref="RolePermissionMatrix"/> vào claim của role — CHỈ THÊM, không bao giờ thu hồi.
+///
+/// Mỗi role mang một claim <see cref="RolePermissionMatrix.SeedVersionClaimType"/>. Lần chạy
+/// sau chỉ cấp những quyền mới hơn phiên bản đã lưu, nên quyền admin gỡ tay KHÔNG bị
+/// seeder cấp lại ở lần khởi động kế tiếp (lỗi cũ: seeder ghi đè mọi chỉnh sửa).
+/// Muốn quay về mặc định thì gọi <see cref="ResetRoleToDefaultsAsync"/> một cách tường minh.
+///
+/// Lưu ý về DB cũ: DB chưa có claim phiên bản được coi là version 0, nên lần chạy đầu
+/// sẽ cấp trọn ma trận một lần (kể cả quyền v1 từng bị gỡ tay trước đây) rồi đóng dấu v2.
+/// Từ lần thứ hai trở đi mọi thao tác gỡ tay đều sống sót.
+/// </summary>
 public static class RolePermissionSeeder
 {
     public static async Task SeedRolePermissionsAsync(RoleManager<IdentityRole> roleManager)
     {
-        // Admin - Full access to everything
-        await AssignPermissionsToRole(roleManager, Roles.Admin, Perms.GetAllPermissions());
-
-        // Revoke permissions over-granted to Manager by earlier seeds (databases seeded before 2026-08-24)
-        await RemovePermissionsFromRole(roleManager, Roles.Manager, new[]
+        foreach (var roleName in RolePermissionMatrix.RoleNames())
         {
-            Perms.Users.Create,
-            Perms.Users.ManageRoles,
-        });
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null) continue;
 
-        // Manager - Can manage most things except system config
-        await AssignPermissionsToRole(roleManager, Roles.Manager, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            Perms.Catalog.Create,
-            Perms.Catalog.Edit,
-            Perms.Catalog.Delete,
-            Perms.Catalog.Manage,
-            
-            // Sales
-            Perms.Sales.ViewAll,
-            Perms.Sales.ManageAll,
-            Perms.Sales.UpdateStatus,
-            Perms.Sales.CancelOrder,
-            Perms.Sales.ViewReturns,
-            Perms.Sales.ManageReturns,
-            
-            // Repair
-            Perms.Repair.ViewAll,
-            Perms.Repair.UpdateStatus,
-            Perms.Repair.AssignTechnician,
-            Perms.Repair.CreateQuote,
-            Perms.Repair.ApproveQuote,
-            Perms.Repair.Complete,
-            
-            // Inventory
-            Perms.Inventory.ViewSupplier,
-            Perms.Inventory.CreateSupplier,
-            Perms.Inventory.UpdateSupplier,
-            Perms.Inventory.DeleteSupplier,
-            Perms.Inventory.ViewStock,
-            Perms.Inventory.ManageStock,
-            Perms.Inventory.AdjustStock,
-            Perms.Inventory.ViewPurchaseOrder,
-            Perms.Inventory.CreatePurchaseOrder,
-            Perms.Inventory.ApprovePurchaseOrder,
-            Perms.Inventory.ReceivePurchaseOrder,
-            Perms.Inventory.ViewReservations,
-            
-            // Accounting
-            Perms.Accounting.ViewInvoices,
-            Perms.Accounting.CreateInvoice,
-            Perms.Accounting.EditInvoice,
-            Perms.Accounting.ViewReports,
-            Perms.Accounting.ManageDebt,
-            
-            // Warranty
-            Perms.Warranty.ViewAll,
-            Perms.Warranty.ReviewClaim,
-            Perms.Warranty.ApproveClaim,
-            
-            // Content
-            Perms.Content.ViewPages,
-            Perms.Content.ManagePages,
-            Perms.Content.ViewPosts,
-            Perms.Content.ManagePosts,
-            Perms.Content.ViewCoupons,
-            Perms.Content.ManageCoupons,
-            Perms.Content.ViewBanners,
-            Perms.Content.ManageBanners,
-            Perms.Content.ManageMedia,
-            
-            // Users: view/edit only — creating accounts and assigning roles is Admin-only
-            Perms.Users.View,
-            Perms.Users.Edit,
-            
-            // Reporting
-            Perms.Reporting.ViewSales,
-            Perms.Reporting.ViewInventory,
-            Perms.Reporting.ViewFinancial,
-            Perms.Reporting.ViewRepair,
-            Perms.Reporting.ExportReports,
-            
-            // HR
-            Perms.HR.ViewEmployees,
-            Perms.HR.ManageEmployees,
-            Perms.HR.ViewAttendance,
-            Perms.HR.ManageAttendance,
-            Perms.HR.ViewPayroll,
-            Perms.HR.ManagePayroll,
-            
-            // System
-            Perms.System.ViewConfig,
-        });
+            var claims = await roleManager.GetClaimsAsync(role);
+            var storedVersion = ReadSeedVersion(claims);
+            if (storedVersion >= RolePermissionMatrix.CurrentVersion && roleName != Roles.Admin)
+            {
+                continue;
+            }
 
-        // Sale - Sales and customer management
-        await AssignPermissionsToRole(roleManager, Roles.Sale, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            
-            // Sales
-            Perms.Sales.ViewAll,
-            Perms.Sales.Checkout,
-            Perms.Sales.UpdateStatus,
-            Perms.Sales.ViewReturns,
-            
-            // Inventory
-            Perms.Inventory.ViewStock,
-            
-            // Repair
-            Perms.Repair.Book,
-            Perms.Repair.ViewAll,
-            
-            // Warranty
-            Perms.Warranty.SubmitClaim,
-            Perms.Warranty.ViewAll,
-            
-            // Content
-            Perms.Content.ViewPages,
-            Perms.Content.ViewPosts,
-            Perms.Content.ViewCoupons,
-            
-            // Reporting
-            Perms.Reporting.ViewSales,
-        });
+            // DB chưa từng đóng dấu phiên bản: dọn những quyền cấp nhầm ở bản seed cũ.
+            if (storedVersion < RolePermissionMatrix.CurrentVersion &&
+                RolePermissionMatrix.LegacyRevocations.TryGetValue(roleName, out var revoke))
+            {
+                await RemovePermissionsAsync(roleManager, role, claims, revoke);
+                claims = await roleManager.GetClaimsAsync(role);
+            }
 
-        // TechnicianInShop - Repair work in shop
-        await AssignPermissionsToRole(roleManager, Roles.TechnicianInShop, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            
-            // Repair
-            Perms.Repair.ViewOwn,
-            Perms.Repair.ViewAll,
-            Perms.Repair.UpdateStatus,
-            Perms.Repair.CreateQuote,
-            Perms.Repair.Complete,
-            
-            // Inventory
-            Perms.Inventory.ViewStock,
-            Perms.Inventory.ViewReservations,
-            
-            // Warranty
-            Perms.Warranty.ViewAll,
-            Perms.Warranty.ReviewClaim,
-            
-            // Reporting
-            Perms.Reporting.ViewRepair,
-        });
-
-        // TechnicianOnSite - Repair work on-site
-        await AssignPermissionsToRole(roleManager, Roles.TechnicianOnSite, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            
-            // Repair
-            Perms.Repair.ViewOwn,
-            Perms.Repair.UpdateStatus,
-            Perms.Repair.CreateQuote,
-            Perms.Repair.Complete,
-            
-            // Inventory
-            Perms.Inventory.ViewStock,
-            
-            // Warranty
-            Perms.Warranty.ViewOwn,
-            Perms.Warranty.ReviewClaim,
-        });
-
-        // Accountant - Financial management
-        await AssignPermissionsToRole(roleManager, Roles.Accountant, new[]
-        {
-            // Sales
-            Perms.Sales.ViewAll,
-            
-            // Accounting
-            Perms.Accounting.ViewInvoices,
-            Perms.Accounting.CreateInvoice,
-            Perms.Accounting.EditInvoice,
-            Perms.Accounting.DeleteInvoice,
-            Perms.Accounting.ApproveCredit,
-            Perms.Accounting.ViewReports,
-            Perms.Accounting.ManageDebt,
-            
-            // Inventory
-            Perms.Inventory.ViewStock,
-            Perms.Inventory.ViewPurchaseOrder,
-            Perms.Inventory.ViewSupplier,
-            
-            // Reporting
-            Perms.Reporting.ViewSales,
-            Perms.Reporting.ViewInventory,
-            Perms.Reporting.ViewFinancial,
-            Perms.Reporting.ExportReports,
-            
-            // HR
-            Perms.HR.ViewEmployees,
-            Perms.HR.ViewPayroll,
-            Perms.HR.ManagePayroll,
-        });
-
-        // Marketing - Content and promotions
-        await AssignPermissionsToRole(roleManager, Roles.Marketing, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            
-            // Content
-            Perms.Content.ViewPages,
-            Perms.Content.ManagePages,
-            Perms.Content.ViewPosts,
-            Perms.Content.ManagePosts,
-            Perms.Content.ViewCoupons,
-            Perms.Content.ManageCoupons,
-            Perms.Content.ViewBanners,
-            Perms.Content.ManageBanners,
-            Perms.Content.ManageMedia,
-            
-            // Sales
-            Perms.Sales.ViewAll,
-            
-            // Reporting
-            Perms.Reporting.ViewSales,
-        });
-
-        // Customer - Basic customer permissions
-        await AssignPermissionsToRole(roleManager, Roles.Customer, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-            
-            // Sales
-            Perms.Sales.ViewOwn,
-            Perms.Sales.Checkout,
-            
-            // Repair
-            Perms.Repair.Book,
-            Perms.Repair.ViewOwn,
-            
-            // Warranty
-            Perms.Warranty.SubmitClaim,
-            Perms.Warranty.ViewOwn,
-            
-            // Content
-            Perms.Content.ViewPages,
-            Perms.Content.ViewPosts,
-        });
-
-        // Supplier - Limited access for suppliers
-        await AssignPermissionsToRole(roleManager, Roles.Supplier, new[]
-        {
-            // Inventory
-            Perms.Inventory.ViewPurchaseOrder,
-
-            // Catalog
-            Perms.Catalog.View,
-        });
-
-        // InventoryStaff - Kho vận: nhập/xuất kho, kiểm kê, không đụng tài chính/duyệt PO
-        await AssignPermissionsToRole(roleManager, Roles.InventoryStaff, new[]
-        {
-            // Catalog
-            Perms.Catalog.View,
-
-            // Inventory (toàn bộ nghiệp vụ kho — GRN, delivery note, inventory count, landed cost)
-            Perms.Inventory.ViewStock,
-            Perms.Inventory.ManageStock,
-            Perms.Inventory.AdjustStock,
-            Perms.Inventory.ViewPurchaseOrder,
-            Perms.Inventory.ReceivePurchaseOrder,
-            Perms.Inventory.ViewReservations,
-            Perms.Inventory.ViewSupplier,
-
-            // Reporting
-            Perms.Reporting.ViewInventory,
-        });
-
-        // HR - Nhân sự: toàn quyền module HR, không chạm Accounting/Sales
-        await AssignPermissionsToRole(roleManager, Roles.HR, new[]
-        {
-            Perms.HR.ViewEmployees,
-            Perms.HR.ManageEmployees,
-            Perms.HR.ViewAttendance,
-            Perms.HR.ManageAttendance,
-            Perms.HR.ViewPayroll,
-            Perms.HR.ManagePayroll,
-        });
+            var toGrant = RolePermissionMatrix.GrantsSince(roleName, storedVersion);
+            await AddPermissionsAsync(roleManager, role, claims, toGrant);
+            await WriteSeedVersionAsync(roleManager, role, RolePermissionMatrix.CurrentVersion);
+        }
     }
 
-    private static async Task RemovePermissionsFromRole(
-        RoleManager<IdentityRole> roleManager,
-        string roleName,
-        IEnumerable<string> permissions)
+    /// <summary>
+    /// Hành động quản trị tường minh: xoá sạch quyền hiện có của role rồi cấp lại đúng
+    /// ma trận mặc định. Đây là cách DUY NHẤT để "khôi phục mặc định" — seeder không
+    /// bao giờ tự làm việc này.
+    /// </summary>
+    public static async Task<bool> ResetRoleToDefaultsAsync(RoleManager<IdentityRole> roleManager, string roleName)
     {
         var role = await roleManager.FindByNameAsync(roleName);
-        if (role == null) return;
+        if (role == null) return false;
 
-        var currentClaims = await roleManager.GetClaimsAsync(role);
+        var claims = await roleManager.GetClaimsAsync(role);
+        var defaults = RolePermissionMatrix.For(roleName).ToHashSet(StringComparer.Ordinal);
 
+        foreach (var claim in claims.Where(c => c.Type == Perms.PermissionType && !defaults.Contains(c.Value)))
+        {
+            await roleManager.RemoveClaimAsync(role, claim);
+        }
+
+        claims = await roleManager.GetClaimsAsync(role);
+        await AddPermissionsAsync(roleManager, role, claims, defaults);
+        await WriteSeedVersionAsync(roleManager, role, RolePermissionMatrix.CurrentVersion);
+        return true;
+    }
+
+    private static int ReadSeedVersion(IEnumerable<Claim> claims)
+    {
+        var claim = claims.FirstOrDefault(c => c.Type == RolePermissionMatrix.SeedVersionClaimType);
+        return claim != null && int.TryParse(claim.Value, out var version) ? version : 0;
+    }
+
+    private static async Task WriteSeedVersionAsync(RoleManager<IdentityRole> roleManager, IdentityRole role, int version)
+    {
+        var claims = await roleManager.GetClaimsAsync(role);
+        foreach (var stale in claims.Where(c => c.Type == RolePermissionMatrix.SeedVersionClaimType))
+        {
+            if (stale.Value == version.ToString()) return;
+            await roleManager.RemoveClaimAsync(role, stale);
+        }
+
+        await roleManager.AddClaimAsync(role,
+            new Claim(RolePermissionMatrix.SeedVersionClaimType, version.ToString()));
+    }
+
+    private static async Task AddPermissionsAsync(
+        RoleManager<IdentityRole> roleManager,
+        IdentityRole role,
+        IList<Claim> currentClaims,
+        IEnumerable<string> permissions)
+    {
+        var existing = currentClaims
+            .Where(c => c.Type == Perms.PermissionType)
+            .Select(c => c.Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var permission in permissions.Distinct(StringComparer.Ordinal))
+        {
+            if (existing.Add(permission))
+            {
+                await roleManager.AddClaimAsync(role, new Claim(Perms.PermissionType, permission));
+            }
+        }
+    }
+
+    private static async Task RemovePermissionsAsync(
+        RoleManager<IdentityRole> roleManager,
+        IdentityRole role,
+        IList<Claim> currentClaims,
+        IEnumerable<string> permissions)
+    {
         foreach (var permission in permissions)
         {
             var claim = currentClaims.FirstOrDefault(c => c.Type == Perms.PermissionType && c.Value == permission);
             if (claim != null)
             {
                 await roleManager.RemoveClaimAsync(role, claim);
-            }
-        }
-    }
-
-    private static async Task AssignPermissionsToRole(
-        RoleManager<IdentityRole> roleManager,
-        string roleName,
-        IEnumerable<string> permissions)
-    {
-        var role = await roleManager.FindByNameAsync(roleName);
-        if (role == null) return;
-
-        var currentClaims = await roleManager.GetClaimsAsync(role);
-        
-        foreach (var permission in permissions)
-        {
-            if (!currentClaims.Any(c => c.Type == Perms.PermissionType && c.Value == permission))
-            {
-                await roleManager.AddClaimAsync(role, new Claim(Perms.PermissionType, permission));
             }
         }
     }

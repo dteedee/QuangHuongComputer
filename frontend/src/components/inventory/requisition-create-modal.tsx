@@ -10,9 +10,12 @@ import type {
 import { catalogApi } from '../../api/catalog';
 import type { Product } from '../../api/catalog';
 
+// W1-9 fix (wave-0 IR #58): `UrgencyLevel` no longer has `'Normal'` — it never
+// matched the backend enum (`Inventory/Domain/PurchaseRequisition.cs:145`),
+// so "Tạo đề nghị" always 400'd. Default + key renamed to `'Medium'`.
 const URGENCY_META: Record<UrgencyLevel, { label: string; className: string }> = {
     Low: { label: 'Thấp', className: 'bg-gray-100 text-gray-700' },
-    Normal: { label: 'Thường', className: 'bg-blue-100 text-blue-700' },
+    Medium: { label: 'Thường', className: 'bg-blue-100 text-blue-700' },
     High: { label: 'Cao', className: 'bg-orange-100 text-orange-700' },
     Urgent: { label: 'Khẩn cấp', className: 'bg-red-100 text-red-700' },
 };
@@ -26,7 +29,7 @@ interface Props {
  * Modal tạo đề nghị mua hàng. Chọn nhiều SP + số lượng + mức khẩn + lý do.
  */
 export default function RequisitionCreateModal({ onClose, onCreated }: Props) {
-    const [urgency, setUrgency] = useState<UrgencyLevel>('Normal');
+    const [urgency, setUrgency] = useState<UrgencyLevel>('Medium');
     const [reason, setReason] = useState('');
     const [productSearch, setProductSearch] = useState('');
     const [productOptions, setProductOptions] = useState<Product[]>([]);

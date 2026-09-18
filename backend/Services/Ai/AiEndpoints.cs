@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -19,7 +20,9 @@ public static class AiEndpoints
 
             var response = await aiService.AskAsync(request.Message);
             return Results.Ok(new { response });
-        });
+            // W1-10: chatbot storefront cho khách vãng lai.
+            // Cần rule POST /api/ai/chat trong PublicEndpointAllowList + rate limit (IR W1, xem W0 #110).
+        }).AllowAnonymous();
 
         // NOTE: /recommendations/* handled by RecommendationEndpoints
         // NOTE: /search handled by SemanticSearchEndpoints

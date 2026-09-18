@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Payments.Domain;
@@ -26,7 +27,10 @@ public static class PaymentsEndpoints
         // Nguồn sự thật DUY NHẤT cho checkout/footer/PDP/POS — public (D04 R1).
         app.MapPaymentMethodsEndpoint();
 
-        var group = app.MapGroup("/api/payments").RequireAuthorization();
+        // W1-10: nhánh /api/payments là "thanh toán đơn của tôi" — initiate và GET /{id}
+        // đều tự kiểm tra quyền sở hữu đơn trong handler, nên chỉ cần đăng nhập.
+        // Các nhóm con (/admin, /cod/confirm) tự khai báo policy permission tường minh.
+        var group = app.MapGroup("/api/payments").RequireAuthorization(SecurityPolicies.Authenticated);
 
         group.MapInitiatePaymentEndpoint();
         group.MapPaymentQueryEndpoints();

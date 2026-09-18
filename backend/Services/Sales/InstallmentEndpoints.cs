@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -17,9 +18,12 @@ public static class InstallmentEndpoints
 {
     public static void MapInstallmentEndpoints(this IEndpointRouteBuilder app)
     {
-        var user = app.MapGroup("/api/installment").RequireAuthorization();
+        // Khách tự nộp/tra hồ sơ của chính mình -> chỉ cần đăng nhập (handler lọc theo userId).
+        var user = app.MapGroup("/api/installment").RequireAuthorization(SecurityPolicies.Authenticated);
+        // Duyệt/từ chối hồ sơ trả góp là quyết định tín dụng -> Sales.ManageInstallments
+        // (Admin + Manager). Sale KHÔNG còn duyệt được: ma trận W1-1 không cấp quyền này cho Sale.
         var admin = app.MapGroup("/api/admin/installment")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Sale"));
+            .RequirePermission(Permissions.Sales.ManageInstallments);
 
         // Khách nộp hồ sơ trả góp cho đơn.
         user.MapPost("/apply", async (

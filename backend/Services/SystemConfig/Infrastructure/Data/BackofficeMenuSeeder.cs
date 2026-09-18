@@ -4,13 +4,104 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SystemConfig.Infrastructure.Data;
 
+/// <summary>
+/// The backoffice sidebar. Rows are reference data: a role that is not listed in
+/// <c>AllowedRoles</c> sees no link at all, so a missing role here is a staff member staring at
+/// an empty shell even when every route guard and every API already lets them in.
+/// </summary>
 public static class BackofficeMenuSeeder
 {
-    public static async Task SeedAsync(SystemConfigDbContext context)
+    /// <summary>
+    /// Integration request #55 (W0 gate): the "Nội dung &amp; Marketing" group excluded the
+    /// <c>Marketing</c> role from every one of its items, so <c>marketing@</c> reached all six
+    /// pages through the router and got 200 from all six admin APIs while the sidebar rendered
+    /// nothing. Backfill applies ONLY where the stored value still equals the previously seeded
+    /// value, so an administrator's own edit in the menu editor is never overwritten.
+    ///
+    /// Deliberately NOT extended to custom-fields / form-builder / automation-rules: those call
+    /// <c>/api/config/*</c>, which is Admin-only and returns 403 for Marketing.
+    /// </summary>
+    private static readonly (string Path, string[] Was, string[] Now)[] RoleBackfill =
     {
-        if (await context.BackofficeMenuGroups.AnyAsync()) return;
+        ("/backoffice",                     new[]{"Admin","Manager","Sale"}, new[]{"Admin","Manager","Sale","Marketing"}),
+        ("/backoffice/cms",                 new[]{"Admin","Manager","Sale"}, new[]{"Admin","Manager","Sale","Marketing"}),
+        ("/backoffice/homepage-builder",    new[]{"Admin","Manager"},        new[]{"Admin","Manager","Marketing"}),
+        ("/backoffice/menus",               new[]{"Admin","Manager"},        new[]{"Admin","Manager","Marketing"}),
+        ("/backoffice/flash-sales",         new[]{"Admin","Manager"},        new[]{"Admin","Manager","Marketing"}),
+        ("/backoffice/coupons",             new[]{"Admin","Manager"},        new[]{"Admin","Manager","Marketing"}),
+        ("/backoffice/promotions",          new[]{"Admin","Manager"},        new[]{"Admin","Manager","Marketing"}),
+    };
 
-        var groups = new List<BackofficeMenuGroup>
+    /// <returns>Number of rows created or changed. 0 means the menu is already correct.</returns>
+    public static async Task<int> SeedAsync(SystemConfigDbContext context, CancellationToken ct = default)
+    {
+        var changes = await SeedGroupsAsync(context, ct);
+        changes += await ApplyRoleBackfillAsync(context, ct);
+        return changes;
+    }
+
+    /// <summary>
+    /// Re-runs safely: a group is inserted only when its deterministic id is absent, and a single
+    /// missing item is inserted into an existing group by <c>Path</c>. The previous version bailed
+    /// out entirely as soon as ANY group existed, which is why a later menu addition could never
+    /// reach a database that had already been seeded once.
+    /// </summary>
+    private static async Task<int> SeedGroupsAsync(SystemConfigDbContext context, CancellationToken ct)
+    {
+        var groups = BuildGroups();
+        var existing = await context.BackofficeMenuGroups
+            .Include(g => g.Items)
+            .ToDictionaryAsync(g => g.Id, ct);
+
+        var changes = 0;
+
+        foreach (var group in groups)
+        {
+            if (!existing.TryGetValue(group.Id, out var current))
+            {
+                context.BackofficeMenuGroups.Add(group);
+                changes++;
+                continue;
+            }
+
+            var paths = current.Items.Select(i => i.Path).ToHashSet();
+            foreach (var item in group.Items.Where(i => !paths.Contains(i.Path)))
+            {
+                item.GroupId = current.Id;
+                context.BackofficeMenuItems.Add(item);
+                changes++;
+            }
+        }
+
+        if (changes > 0) await context.SaveChangesAsync(ct);
+        return changes;
+    }
+
+    private static async Task<int> ApplyRoleBackfillAsync(SystemConfigDbContext context, CancellationToken ct)
+    {
+        var paths = RoleBackfill.Select(b => b.Path).ToList();
+        var items = await context.BackofficeMenuItems.Where(i => paths.Contains(i.Path)).ToListAsync(ct);
+        var changes = 0;
+
+        foreach (var item in items)
+        {
+            var rule = RoleBackfill.First(b => b.Path == item.Path);
+            var roles = (item.AllowedRoles ?? new List<string>()).OrderBy(r => r).ToList();
+
+            if (roles.SequenceEqual(rule.Now.OrderBy(r => r))) continue;
+            if (!roles.SequenceEqual(rule.Was.OrderBy(r => r))) continue; // admin edited it
+
+            item.AllowedRoles = rule.Now.ToList();
+            changes++;
+        }
+
+        if (changes > 0) await context.SaveChangesAsync(ct);
+        return changes;
+    }
+
+    private static List<BackofficeMenuGroup> BuildGroups()
+    {
+        return new List<BackofficeMenuGroup>
         {
             new()
             {
@@ -22,7 +113,7 @@ public static class BackofficeMenuSeeder
                 IsActive = true,
                 Items = new List<BackofficeMenuItem>
                 {
-                    new() { Title = "Dashboard",        IconName = "LayoutDashboard", Path = "/backoffice",                                AllowedRoles = ["Admin","Manager","Sale"],                               DisplayOrder = 0, Description = "Tổng quan hệ thống" },
+                    new() { Title = "Dashboard",        IconName = "LayoutDashboard", Path = "/backoffice",                                AllowedRoles = ["Admin","Manager","Sale","Marketing"],                   DisplayOrder = 0, Description = "Tổng quan hệ thống" },
                     new() { Title = "Bán hàng (POS)",   IconName = "Store",           Path = "/backoffice/pos",                            AllowedRoles = ["Admin","Manager","Sale"],                               DisplayOrder = 1, Description = "Quầy thu ngân" },
                     new() { Title = "Đơn hàng",         IconName = "Receipt",         Path = "/backoffice/orders",                         AllowedRoles = ["Admin","Manager","Sale"],                               DisplayOrder = 2, Description = "Quản lý đơn hàng", BadgeSource = "pendingOrders" },
                     new() { Title = "Sản phẩm",         IconName = "Package",         Path = "/backoffice/products",                       AllowedRoles = ["Admin","Manager"],                                     DisplayOrder = 3, Description = "Danh sách sản phẩm" },
@@ -72,12 +163,15 @@ public static class BackofficeMenuSeeder
                 IsActive = true,
                 Items = new List<BackofficeMenuItem>
                 {
-                    new() { Title = "Quản lý Nội dung", IconName = "FileText",  Path = "/backoffice/cms",                 AllowedRoles = ["Admin","Manager","Sale"],  DisplayOrder = 0, Description = "Bài viết & trang" },
-                    new() { Title = "Homepage Builder",  IconName = "Sparkles",  Path = "/backoffice/homepage-builder",    AllowedRoles = ["Admin","Manager"],         DisplayOrder = 1, Description = "Xây dựng trang chủ" },
-                    new() { Title = "Menu Manager",      IconName = "Menu",      Path = "/backoffice/menus",               AllowedRoles = ["Admin","Manager"],         DisplayOrder = 2, Description = "Quản lý menu" },
-                    new() { Title = "Flash Sales",       IconName = "Zap",       Path = "/backoffice/flash-sales",         AllowedRoles = ["Admin","Manager"],         DisplayOrder = 3, Description = "Giảm giá chớp nhoáng" },
-                    new() { Title = "Mã giảm giá",       IconName = "Ticket",    Path = "/backoffice/coupons",             AllowedRoles = ["Admin","Manager"],         DisplayOrder = 4, Description = "Voucher & coupon" },
-                    new() { Title = "Đánh giá",          IconName = "Star",      Path = "/backoffice/reviews",             AllowedRoles = ["Admin","Manager"],         DisplayOrder = 5, Description = "Review sản phẩm" },
+                    // Marketing is present here per integration request #55 — the routes and the
+                    // admin APIs already allow it (ContentEndpoints.cs:281-282, PromotionEndpoints.cs:21-23).
+                    new() { Title = "Quản lý Nội dung", IconName = "FileText",  Path = "/backoffice/cms",                 AllowedRoles = ["Admin","Manager","Sale","Marketing"], DisplayOrder = 0, Description = "Bài viết & trang" },
+                    new() { Title = "Homepage Builder",  IconName = "Sparkles",  Path = "/backoffice/homepage-builder",    AllowedRoles = ["Admin","Manager","Marketing"],        DisplayOrder = 1, Description = "Xây dựng trang chủ" },
+                    new() { Title = "Menu Manager",      IconName = "Menu",      Path = "/backoffice/menus",               AllowedRoles = ["Admin","Manager","Marketing"],        DisplayOrder = 2, Description = "Quản lý menu" },
+                    new() { Title = "Flash Sales",       IconName = "Zap",       Path = "/backoffice/flash-sales",         AllowedRoles = ["Admin","Manager","Marketing"],        DisplayOrder = 3, Description = "Giảm giá chớp nhoáng" },
+                    new() { Title = "Mã giảm giá",       IconName = "Ticket",    Path = "/backoffice/coupons",             AllowedRoles = ["Admin","Manager","Marketing"],        DisplayOrder = 4, Description = "Voucher & coupon" },
+                    new() { Title = "Khuyến mãi",        IconName = "Percent",   Path = "/backoffice/promotions",          AllowedRoles = ["Admin","Manager","Marketing"],        DisplayOrder = 5, Description = "Chương trình khuyến mãi" },
+                    new() { Title = "Đánh giá",          IconName = "Star",      Path = "/backoffice/reviews",             AllowedRoles = ["Admin","Manager"],                    DisplayOrder = 6, Description = "Review sản phẩm" },
                 }
             },
             new()
@@ -119,8 +213,5 @@ public static class BackofficeMenuSeeder
                 }
             },
         };
-
-        await context.BackofficeMenuGroups.AddRangeAsync(groups);
-        await context.SaveChangesAsync();
     }
 }

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -186,7 +187,7 @@ public static class CatalogBundleEndpoints
             await db.SaveChangesAsync();
 
             return Results.Created($"/api/catalog/bundles/{bundle.Id}", bundle.Id);
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapPut("/{id:guid}", async (Guid id, CreateBundleRequest request, CatalogDbContext db) =>
         {
@@ -221,7 +222,7 @@ public static class CatalogBundleEndpoints
 
             await db.SaveChangesAsync();
             return Results.Ok(new { bundle.Id });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapDelete("/{id:guid}", async (Guid id, CatalogDbContext db) =>
         {
@@ -231,7 +232,7 @@ public static class CatalogBundleEndpoints
             db.ProductBundles.Remove(bundle);
             await db.SaveChangesAsync();
             return Results.NoContent();
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Delete);
     }
 }
 

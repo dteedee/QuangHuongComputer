@@ -1,122 +1,96 @@
 # ===========================================
-# Quang Huong Computer - Makefile
+# Quang Huong Computer — Makefile (D05 / phase-64 W1-14)
 # ===========================================
-# Quick commands for development & deployment
-# Usage: make <target>
+# ONE stack, two entry points: `make up` (Docker-only, local demo) and `make deploy` (server) run
+# the SAME images through the SAME migrate-then-serve sequence (scripts/stack-up.sh) — every local
+# demo is a deployment rehearsal.
+#
+# COMPOSE_PROJECT_NAME defaults to "quanghuong"; override it for a second, isolated stack (a
+# rehearsal, or a second demo on the same machine) — see scripts/stack-up.sh's safety stop, which
+# refuses to touch a Postgres container that belongs to a DIFFERENT project than the one you asked
+# for, so `make up` can never accidentally seize someone else's database.
+#
+# ENV_FILE defaults to .env.prod for every prod-shaped target — UAT is the SAME compose file with
+# a different .env (D05 §2: "UAT = cùng file prod với .env khác"), so `ENV_FILE=.env.uat make
+# deploy TAG=vX` deploys to UAT with no other change.
 # ===========================================
 
-.PHONY: help dev up down build run-api run-frontend clean restore test \
-        uat-up uat-down uat-build uat-logs \
-        prod-up prod-down prod-build prod-logs prod-status \
-        backup db-shell docker-prune
+SHELL := /bin/bash
+COMPOSE_PROJECT_NAME ?= quanghuong
+ENV_FILE ?= .env.prod
+export COMPOSE_PROJECT_NAME
 
-# ============================================
-# HELP
-# ============================================
+PROD_COMPOSE := docker compose -p $(COMPOSE_PROJECT_NAME) -f docker-compose.yml -f docker-compose.prod.yml --env-file $(ENV_FILE)
+DEV_COMPOSE  := docker compose -p $(COMPOSE_PROJECT_NAME) -f docker-compose.yml --env-file .env.docker
+
+.PHONY: help up dev down reset-demo logs backup restore-drill deploy prod-build prod-status \
+        db-shell docker-prune docker-size
+
 help: ## Show available commands
 	@echo ""
-	@echo "╔════════════════════════════════════════════════════════════╗"
-	@echo "║       Quang Hưởng Computer — Makefile Commands            ║"
-	@echo "╚════════════════════════════════════════════════════════════╝"
+	@echo "Quang Huong Computer — Makefile"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 	@echo ""
 
 # ============================================
-# DEVELOPMENT (Local)
+# LOCAL DEMO / DEV
 # ============================================
-dev: up run-api run-frontend ## Start everything for local dev
+up: ## Bring up the whole stack from a clean clone (Docker only): migrated + seeded (demo), prints the URL
+	@[ -f .env.docker ] || scripts/gen-secrets.sh --target .env.docker --from .env.docker.example
+	scripts/stack-up.sh
 
-up: ## Start Docker infra (Postgres, Redis, RabbitMQ)
-	docker compose --env-file .env.docker up -d
+dev: ## Infra in Docker (migrated + seeded demo) + API :5000 and Vite :5174 in the foreground (Ctrl-C stops both)
+	@[ -f .env.docker ] || scripts/gen-secrets.sh --target .env.docker --from .env.docker.example
+	$(DEV_COMPOSE) up -d --wait postgres redis rabbitmq
+	$(DEV_COMPOSE) run --rm --entrypoint sh migrate -c \
+		"dotnet ApiGateway.dll db migrate && dotnet ApiGateway.dll db seed --profile demo"
+	@mkdir -p .run
+	@echo "API log: .run/api.log · Frontend log: .run/frontend.log · Ctrl-C stops both"
+	@trap 'kill 0' EXIT INT TERM; \
+		(cd backend/ApiGateway && ASPNETCORE_ENVIRONMENT=Development dotnet run > ../../.run/api.log 2>&1) & \
+		(cd frontend && npm run dev > ../.run/frontend.log 2>&1) & \
+		wait
 
-down: ## Stop Docker infra
-	docker compose down
+down: ## Stop the local stack (containers only — volumes/data are kept; add PRUNE=1 to also remove volumes)
+	$(DEV_COMPOSE) --profile app --profile tools down $(if $(PRUNE),-v,)
 
-build: ## Build backend .NET solution
-	dotnet build backend/ApiGateway/ApiGateway.csproj
+reset-demo: ## Wipe transactional data and re-seed the demo profile (db reset --demo's own name guard: only *_test/*_demo databases)
+	$(DEV_COMPOSE) run --rm --entrypoint sh migrate -c "dotnet ApiGateway.dll db reset --demo"
 
-run-api: ## Run backend API (development)
-	cd backend/ApiGateway && ASPNETCORE_ENVIRONMENT=Development dotnet run &
-
-run-frontend: ## Run frontend Vite dev server
-	cd frontend && npm run dev &
-
-restore: ## Restore NuGet packages
-	dotnet restore backend/ApiGateway/ApiGateway.csproj
-
-test: ## Run backend tests
-	dotnet test backend/ApiGateway/ApiGateway.csproj
-
-clean: ## Clean build artifacts
-	dotnet clean backend/ApiGateway/ApiGateway.csproj
-	rm -rf backend/**/bin backend/**/obj
-	rm -rf frontend/dist frontend/node_modules/.vite
+logs: ## Tail every running container's logs
+	$(DEV_COMPOSE) --profile app logs -f --tail=200
 
 # ============================================
-# UAT ENVIRONMENT
+# BACKUP / RESTORE DRILL (deploy/backup/*, D05 §6/§7 — prod stack only)
 # ============================================
-uat-up: ## Deploy UAT stack
-	docker compose -f docker-compose.uat.yml --env-file .env.uat up -d --build
+backup: ## Run an on-demand backup through the sidecar
+	$(PROD_COMPOSE) exec backup /scripts/backup.sh manual
 
-uat-down: ## Tear down UAT stack
-	docker compose -f docker-compose.uat.yml --env-file .env.uat down
-
-uat-build: ## Build UAT images without starting
-	docker compose -f docker-compose.uat.yml --env-file .env.uat build --no-cache
-
-uat-logs: ## Tail UAT logs
-	docker compose -f docker-compose.uat.yml --env-file .env.uat logs -f --tail=100
-
-uat-status: ## Show UAT container status
-	docker compose -f docker-compose.uat.yml --env-file .env.uat ps
+restore-drill: ## Prove the latest backup restores (pass AGE_PRIVATE_KEY=<key> if dumps are encrypted)
+	$(PROD_COMPOSE) exec -e BACKUP_AGE_PRIVATE_KEY=$(AGE_PRIVATE_KEY) backup /scripts/restore-drill.sh
 
 # ============================================
-# PRODUCTION ENVIRONMENT
+# PRODUCTION (and UAT, via ENV_FILE — see file header)
 # ============================================
-prod-up: ## Deploy Production stack
-	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+deploy: ## Pull ONLY api+web (never infra), migrate, restart — make deploy TAG=v1.2.3
+	@[ -n "$(TAG)" ] || (echo "usage: make deploy TAG=v1.2.3" >&2; exit 2)
+	APP_VERSION=$(TAG) $(PROD_COMPOSE) pull api web
+	APP_VERSION=$(TAG) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) scripts/stack-up.sh --prod --env-file $(ENV_FILE)
 
-prod-down: ## Tear down Production stack (⚠️  CAREFUL)
-	@echo "⚠️  You are about to stop PRODUCTION. Press Ctrl+C to cancel."
-	@sleep 5
-	docker compose -f docker-compose.prod.yml --env-file .env.prod down
+prod-build: ## Build prod images locally instead of pulling (fallback when CI/registry is unavailable)
+	$(PROD_COMPOSE) build api web
 
-prod-build: ## Build Production images without starting
-	docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache
-
-prod-logs: ## Tail Production logs
-	docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f --tail=200
-
-prod-status: ## Show Production container status & health
-	@echo "=== Container Status ==="
-	docker compose -f docker-compose.prod.yml --env-file .env.prod ps
-	@echo ""
-	@echo "=== Health Checks ==="
-	@docker inspect --format='{{.Name}}: {{.State.Health.Status}}' $$(docker compose -f docker-compose.prod.yml --env-file .env.prod ps -q) 2>/dev/null || true
-
-prod-restart-backend: ## Restart only backend container (zero-downtime on nginx layer)
-	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --no-deps backend
-
-prod-restart-frontend: ## Rebuild & restart frontend only
-	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --no-deps frontend
+prod-status: ## Show prod container status + health
+	$(PROD_COMPOSE) ps
 
 # ============================================
-# DATABASE & BACKUP
+# UTILITIES
 # ============================================
-backup: ## Backup database
-	./scripts/backup-database.sh backup
+db-shell: ## Open a psql shell against the local dev database
+	docker exec -it $(COMPOSE_PROJECT_NAME)-postgres psql -U postgres -d quanghuongdb
 
-backup-list: ## List available backups
-	./scripts/backup-database.sh list
-
-db-shell: ## Open PostgreSQL shell (dev)
-	docker exec -it quanghuong-postgres psql -U postgres -d quanghuongdb
-
-# ============================================
-# DOCKER MAINTENANCE
-# ============================================
 docker-prune: ## Remove dangling images and stopped containers
 	docker system prune -f
 	docker image prune -f

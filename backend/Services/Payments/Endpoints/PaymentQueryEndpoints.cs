@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BuildingBlocks.Messaging.IntegrationEvents;
+using BuildingBlocks.Security;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -41,7 +42,9 @@ public static class PaymentQueryEndpoints
                 new PaymentSucceededEvent(payment.Id, payment.OrderId, payment.Amount, DateTime.UtcNow), ct);
 
             return Results.Ok(new { message = "Đã xác nhận thu tiền COD", orderId, amount = payment.Amount });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale", "Accountant"));
+            // W1-10: thu tiền mặt khi giao hàng -> Payments.CollectCod
+            // (Manager/Sale/Accountant giữ quyền này; giữ nguyên phạm vi role cũ).
+        }).RequireAuthorization(Permissions.Payments.CollectCod);
 
         group.MapGet("/{id:guid}", async (
             Guid id,

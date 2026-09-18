@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
@@ -9,9 +7,11 @@ using Microsoft.Extensions.Logging;
 namespace BuildingBlocks.Endpoints;
 
 /// <summary>
-/// Standard error response format for the entire system. Kept as a type for callers that build one
-/// by hand; the middleware writes the same fields plus the RFC 7807 ProblemDetails ones.
+/// Legacy hand-rolled error shape. Superseded by <see cref="ProblemDetailsFactory"/>, which is now
+/// the ONE place an error body is built (W1-3). Kept only so a call site written before this track
+/// still compiles; it has zero references in the backend today.
 /// </summary>
+[Obsolete("Throw a DomainException (or one of its subtypes) and let the middleware build the body via ProblemDetailsFactory.")]
 public class ErrorResponse
 {
     public string Message { get; set; } = string.Empty;
@@ -37,8 +37,6 @@ public class GlobalExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
     private readonly IHostEnvironment _env;
-
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     public GlobalExceptionHandlingMiddleware(
         RequestDelegate next,
@@ -78,93 +76,124 @@ public class GlobalExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var (status, title, message) = Classify(exception);
+        var classified = Classify(exception);
 
         // 5xx is a fault we must fix; 4xx is the caller's problem and must not flood the error log.
-        if (status >= 500)
+        if (classified.Status >= 500)
         {
             _logger.LogError(exception, "Unhandled exception at {Method} {Path} -> {Status}",
-                context.Request.Method, context.Request.Path, status);
+                context.Request.Method, context.Request.Path, classified.Status);
         }
         else
         {
             _logger.LogWarning(exception, "Request rejected at {Method} {Path} -> {Status}: {Title}",
-                context.Request.Method, context.Request.Path, status, title);
+                context.Request.Method, context.Request.Path, classified.Status, classified.Title);
         }
-
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
-
-        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
-        var body = new Dictionary<string, object?>
-        {
-            ["type"] = $"https://httpstatuses.io/{status}",
-            ["title"] = title,
-            ["status"] = status,
-            ["instance"] = context.Request.Path.Value,
-            ["traceId"] = traceId,
-            // Legacy keys the SPA already reads. Same text, no new shape to learn.
-            ["error"] = message,
-            ["message"] = message
-        };
 
         // Exception text is a Development-only affordance: it can carry SQL, table names and paths.
-        if (_env.IsDevelopment())
-        {
-            body["detail"] = exception.ToString();
-        }
+        var detail = _env.IsDevelopment() ? exception.ToString() : null;
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(body, SerializerOptions));
+        await ProblemDetailsFactory.WriteAsync(
+            context,
+            classified.Status,
+            classified.Title,
+            classified.Code,
+            classified.Message,
+            classified.Errors,
+            detail);
     }
 
-    private (int Status, string Title, string Message) Classify(Exception exception)
+    private readonly record struct ClassifiedError(
+        int Status,
+        string Title,
+        string Code,
+        string Message,
+        IReadOnlyList<ApiFieldError>? Errors = null);
+
+    private ClassifiedError Classify(Exception exception)
     {
-        // 1. Database constraint violations are client errors (409/400), never 500.
+        // 1. Raised on purpose by a handler / service / aggregate. Its message IS user copy and is
+        //    shown in every environment, so it must never be built from exception or SQL text.
+        if (exception is DomainException domain)
+        {
+            return new ClassifiedError(domain.StatusCode, TitleForStatus(domain.StatusCode),
+                domain.Code, domain.Message, domain.Errors);
+        }
+
+        // 2. Database constraint violations are client errors (409/400), never 500.
         var dbMapping = DatabaseExceptionMapper.Map(exception);
         if (dbMapping is not null)
         {
-            return (dbMapping.Value.StatusCode, dbMapping.Value.Title, dbMapping.Value.Message);
+            return new ClassifiedError(dbMapping.Value.StatusCode, dbMapping.Value.Title,
+                dbMapping.Value.Code, dbMapping.Value.Message);
         }
 
         switch (exception)
         {
             // Malformed JSON body / missing required query parameter — the caller's mistake.
             case BadHttpRequestException badRequest:
-                return (badRequest.StatusCode, "Bad Request",
+                return new ClassifiedError(badRequest.StatusCode, "Bad Request", ApiErrorCodes.BadRequest,
                     "Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại định dạng.");
 
             case UnauthorizedAccessException:
-                return ((int)HttpStatusCode.Unauthorized, "Unauthorized", "Bạn không có quyền truy cập.");
+                return new ClassifiedError((int)HttpStatusCode.Unauthorized, "Unauthorized",
+                    ApiErrorCodes.Unauthorized, "Bạn không có quyền truy cập.");
 
             case KeyNotFoundException:
-                return ((int)HttpStatusCode.NotFound, "Not Found", "Không tìm thấy dữ liệu yêu cầu.");
+                return new ClassifiedError((int)HttpStatusCode.NotFound, "Not Found",
+                    ApiErrorCodes.NotFound, "Không tìm thấy dữ liệu yêu cầu.");
 
             // Thrown deliberately by validators and guard clauses; the message is written for the user.
             case ArgumentException argument:
-                return ((int)HttpStatusCode.BadRequest, "Invalid Argument", argument.Message);
+                return new ClassifiedError((int)HttpStatusCode.BadRequest, "Invalid Argument",
+                    ApiErrorCodes.ValidationFailed, argument.Message,
+                    string.IsNullOrEmpty(argument.ParamName)
+                        ? null
+                        : new[]
+                        {
+                            new ApiFieldError(
+                                ProblemDetailsFactory.ToCamelCasePath(argument.ParamName),
+                                ApiErrorCodes.InvalidValue,
+                                argument.Message)
+                        });
 
             // ObjectDisposedException derives from InvalidOperationException but is always our bug
             // (a scoped service used after the request ended) — it must stay a loud 500.
             case ObjectDisposedException:
-                return ((int)HttpStatusCode.InternalServerError, "Internal Server Error",
-                    "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.");
+                return new ClassifiedError((int)HttpStatusCode.InternalServerError, "Internal Server Error",
+                    ApiErrorCodes.InternalError, "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.");
 
             // InvalidOperationException also comes out of EF and other libraries, where the message
             // can name tables and expressions — so it is only surfaced in Development.
             case InvalidOperationException invalidOperation:
-                return ((int)HttpStatusCode.BadRequest, "Invalid Operation",
+                return new ClassifiedError((int)HttpStatusCode.BadRequest, "Invalid Operation",
+                    ApiErrorCodes.DomainRule,
                     _env.IsDevelopment() ? invalidOperation.Message : "Yêu cầu không thực hiện được ở trạng thái hiện tại.");
 
             case TimeoutException:
-                return ((int)HttpStatusCode.GatewayTimeout, "Timeout", "Hệ thống phản hồi quá chậm. Vui lòng thử lại.");
+                return new ClassifiedError((int)HttpStatusCode.GatewayTimeout, "Timeout",
+                    ApiErrorCodes.Timeout, "Hệ thống phản hồi quá chậm. Vui lòng thử lại.");
 
             default:
-                return ((int)HttpStatusCode.InternalServerError, "Internal Server Error",
+                return new ClassifiedError((int)HttpStatusCode.InternalServerError, "Internal Server Error",
+                    ApiErrorCodes.InternalError,
                     _env.IsDevelopment()
                         ? exception.Message
                         : "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.");
         }
     }
+
+    /// <summary>Stable English title for a <see cref="DomainException"/>, derived from its status.</summary>
+    private static string TitleForStatus(int status) => status switch
+    {
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        422 => "Unprocessable Entity",
+        _ => "Request Failed"
+    };
 }
 
 /// <summary>

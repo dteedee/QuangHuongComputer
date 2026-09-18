@@ -1,5 +1,4 @@
-using Minio;
-using Minio.DataModel.Args;
+using BuildingBlocks.Storage;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
@@ -7,35 +6,25 @@ using SixLabors.ImageSharp.Processing;
 namespace Catalog.Application.Media;
 
 /// <summary>
-/// Tải file lên MinIO + sinh 3 kích thước WebP cho ảnh (200 / 800 / 1600).
-/// Bucket: quanghuong-media (không public — phục vụ qua PublicBaseUrl / signed URL).
-/// Key format: products/{productId}/{uuid}.{ext}
-/// Idempotent: nếu key trùng (rất hiếm), sinh UUID mới và thử lại.
+/// Xử lý ảnh (ImageSharp) rồi ghi xuống đĩa qua <see cref="IFileStorage"/> (W1-6 / D02 — MinIO đã gỡ).
+/// Đúng 2 rendition cho MỌI ảnh: 400w (thumbnail: card/list/giỏ) và 1600w (main: PDP/zoom) —
+/// D02 siết từ {200,800,1600} xuống {400,1600} để khớp ngân sách dung lượng seed.
+/// Key/URL do <see cref="IFileStorage"/> quyết định (area "products", layout
+/// <c>products/{yyyy}/{MM}/{guid}-{slug}.webp</c>) — service này không còn tự dựng object key.
 /// </summary>
 public sealed class MediaUploadService
 {
-    private readonly IMinioClient _minio;
-    private readonly MediaStorageOptions _options;
+    private readonly IFileStorage _storage;
 
-    private static readonly int[] ImageWidths = { 200, 800, 1600 };
+    /// <summary>D02: đúng 2 kích thước — index 0 = thumbnail, index 1 = main.</summary>
+    private static readonly int[] ImageWidths = { 400, 1600 };
 
-    public MediaUploadService(IMinioClient minio, MediaStorageOptions options)
+    public MediaUploadService(IFileStorage storage)
     {
-        _minio = minio;
-        _options = options;
+        _storage = storage;
     }
 
-    /// <summary>Đảm bảo bucket tồn tại — gọi ở startup (không throw nếu MinIO down, chỉ log).</summary>
-    public async Task EnsureBucketAsync(CancellationToken ct = default)
-    {
-        var exists = await _minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(_options.Bucket), ct);
-        if (!exists)
-        {
-            await _minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(_options.Bucket), ct);
-        }
-    }
-
-    /// <summary>Upload ảnh: sinh thumb-200 / md-800 / lg-1600 WebP. Trả URL gốc + URL thumbnail 200.</summary>
+    /// <summary>Sinh 2 rendition WebP (400/1600) từ ảnh gốc và ghi qua <see cref="IFileStorage"/>. Trả URL main + URL thumbnail (tương đối).</summary>
     public async Task<MediaUploadResult> UploadImageAsync(
         Stream source,
         Guid productId,
@@ -45,41 +34,38 @@ public sealed class MediaUploadService
     {
         source.Position = 0;
         using var image = await Image.LoadAsync(source, ct);
+        var slug = ProductSlug(productId);
+        var originalFileSize = source.Length;
 
-        var basePath = $"products/{productId}";
-        var uuid = Guid.NewGuid().ToString("N");
-        var originalKey = $"{basePath}/{uuid}.{SanitizeExtension(extension)}";
-
-        // Upload bản gốc
-        source.Position = 0;
-        await PutObjectAsync(originalKey, source, source.Length, mimeType, ct);
-
-        // Sinh 3 kích thước WebP
         string? thumbnailUrl = null;
+        string? mainUrl = null;
+
         foreach (var width in ImageWidths)
         {
-            var variantKey = $"{basePath}/{uuid}-w{width}.webp";
             using var variantStream = new MemoryStream();
             using (var clone = image.Clone(ctx => Resize(ctx, image.Width, image.Height, width)))
             {
+                // D02 / phản biện #5: KHÔNG gọi .withMetadata() ở đây — sharp/ImageSharp giữ metadata
+                // mặc định khác nhau; ImageSharp WebpEncoder ĐÃ giữ EXIF/IPTC/XMP mặc định (không
+                // phải sửa gì, xem D02 dòng "MediaUploadService dùng ImageSharp WebpEncoder, giữ
+                // metadata mặc định - không phải sửa").
                 await clone.SaveAsync(variantStream, new WebpEncoder { Quality = 85 }, ct);
             }
             variantStream.Position = 0;
-            await PutObjectAsync(variantKey, variantStream, variantStream.Length, "image/webp", ct);
+            var stored = await _storage.SaveAsync(variantStream, "products", "webp", "image/webp", $"{slug}-w{width}", ct);
 
-            if (width == 200)
-                thumbnailUrl = BuildPublicUrl(variantKey);
+            if (width == ImageWidths[0]) thumbnailUrl = stored.RelativeUrl;
+            else mainUrl = stored.RelativeUrl;
         }
 
         return new MediaUploadResult(
-            Url: BuildPublicUrl(originalKey),
+            Url: mainUrl ?? thumbnailUrl ?? string.Empty,
             ThumbnailUrl: thumbnailUrl,
-            FileSize: source.Length,
-            MimeType: mimeType,
-            ObjectKey: originalKey);
+            FileSize: originalFileSize,
+            MimeType: "image/webp");
     }
 
-    /// <summary>Upload video (không xử lý transcode): giữ nguyên, chỉ đổi tên thành UUID.</summary>
+    /// <summary>Upload video (không transcode): ghi nguyên văn qua <see cref="IFileStorage"/>.</summary>
     public async Task<MediaUploadResult> UploadVideoAsync(
         Stream source,
         Guid productId,
@@ -88,51 +74,26 @@ public sealed class MediaUploadService
         CancellationToken ct = default)
     {
         source.Position = 0;
-        var key = $"products/{productId}/{Guid.NewGuid():N}.{SanitizeExtension(extension)}";
-        await PutObjectAsync(key, source, source.Length, mimeType, ct);
+        var slug = ProductSlug(productId);
+        var stored = await _storage.SaveAsync(source, "products", extension, mimeType, slug, ct);
         return new MediaUploadResult(
-            Url: BuildPublicUrl(key),
+            Url: stored.RelativeUrl,
             ThumbnailUrl: null,
-            FileSize: source.Length,
-            MimeType: mimeType,
-            ObjectKey: key);
+            FileSize: stored.FileSize,
+            MimeType: mimeType);
     }
 
-    public async Task DeleteAsync(string objectKey, CancellationToken ct = default)
-    {
-        await _minio.RemoveObjectAsync(
-            new RemoveObjectArgs().WithBucket(_options.Bucket).WithObject(objectKey), ct);
-    }
+    /// <summary>Xoá một file runtime theo URL tương đối đã lưu trên <c>ProductMedia</c>. Best-effort — no-op an toàn nếu URL không phải của storage này (seed/legacy/YouTube).</summary>
+    public Task DeleteAsync(string relativeUrl, CancellationToken ct = default) => _storage.DeleteAsync(relativeUrl, ct);
 
-    private async Task PutObjectAsync(string key, Stream data, long size, string contentType, CancellationToken ct)
-    {
-        await _minio.PutObjectAsync(new PutObjectArgs()
-            .WithBucket(_options.Bucket)
-            .WithObject(key)
-            .WithStreamData(data)
-            .WithObjectSize(size)
-            .WithContentType(contentType), ct);
-    }
-
-    private string BuildPublicUrl(string objectKey)
-    {
-        var baseUrl = _options.PublicBaseUrl.TrimEnd('/');
-        return $"{baseUrl}/{_options.Bucket}/{objectKey}";
-    }
-
-    private static string SanitizeExtension(string ext)
-    {
-        var e = (ext ?? "bin").Trim().TrimStart('.').ToLowerInvariant();
-        return string.IsNullOrEmpty(e) ? "bin" : e;
-    }
+    private static string ProductSlug(Guid productId) => productId.ToString("N")[..8];
 
     /// <summary>Resize giữ tỉ lệ: chỉ scale-down (không upscale ảnh nhỏ hơn target).</summary>
     private static void Resize(IImageProcessingContext ctx, int origW, int origH, int targetWidth)
     {
         if (origW <= targetWidth)
         {
-            // giữ nguyên
-            return;
+            return; // giữ nguyên
         }
         var ratio = (double)targetWidth / origW;
         var newH = (int)Math.Round(origH * ratio);
@@ -144,19 +105,8 @@ public sealed class MediaUploadService
     }
 }
 
-public sealed class MediaStorageOptions
-{
-    public string Endpoint { get; set; } = "localhost:9000";
-    public string AccessKey { get; set; } = string.Empty;
-    public string SecretKey { get; set; } = string.Empty;
-    public string Bucket { get; set; } = "quanghuong-media";
-    public bool UseSSL { get; set; }
-    public string PublicBaseUrl { get; set; } = "http://localhost:9000";
-}
-
 public readonly record struct MediaUploadResult(
     string Url,
     string? ThumbnailUrl,
     long FileSize,
-    string MimeType,
-    string ObjectKey);
+    string MimeType);

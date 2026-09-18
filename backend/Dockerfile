@@ -56,8 +56,11 @@ WORKDIR /app
 # Copy published output
 COPY --from=build /app/publish .
 
-# Create uploads directory
-RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
+# W1-6 / D02: runtime media root lives OUTSIDE wwwroot (mounted by `media-data` volume in prod —
+# see D05) so it can never obscure the versioned seed images baked into the image under
+# wwwroot/media/seed/**. MUST run before chown (chown -R below only fixes ownership of what
+# already exists at that point).
+RUN mkdir -p /app/data/media && chown -R appuser:appgroup /app
 
 # Environment defaults
 ENV ASPNETCORE_URLS=http://+:8080 \

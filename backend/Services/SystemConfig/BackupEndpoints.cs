@@ -2,18 +2,52 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using BuildingBlocks.Endpoints;
-using System.Diagnostics;
-using System.Text.Json;
+using BuildingBlocks.Security;
 
 namespace SystemConfig;
 
+/// <summary>
+/// Admin listing/download/delete for the Postgres dumps that the offsite `backup`
+/// sidecar (deploy/backup/backup.sh, D05 mục 6) writes hourly to the shared backup
+/// directory. The API itself no longer shells out to `pg_dump`: the alpine runtime
+/// image never had the binary (that was the original bug — D05 bối cảnh), and now
+/// the sidecar container is the only thing that ever writes a dump.
+///
+/// Whole group is OFF by default (`Backup:Enabled=false`, phase-64 bước 8). Note:
+/// `frontend/src/pages/backoffice/admin/AuditLogsPage.tsx`'s "Tạo backup" button IS
+/// a live consumer of `POST /` (`backupApi.create()`, adversarial verification found
+/// this — an earlier draft of this comment claimed 0 consumers, which was wrong).
+/// `POST /` is kept below returning 410 Gone so that button gets a deliberate,
+/// explained failure instead of a bare framework 405; removing/hiding the button is
+/// frontend work outside this file's glob (flagged in integration-requests-w1.md).
+/// Every route requires <see cref="Permissions.System.ManageBackups"/> (W1-1's policy
+/// for this module, per phase-64's ownership note — was `RequireRole("Admin")` before).
+/// </summary>
 public static class BackupEndpoints
 {
     public static void MapBackupEndpoints(this IEndpointRouteBuilder app)
     {
+        var configuration = app.ServiceProvider.GetRequiredService<IConfiguration>();
+
         var group = app.MapGroup("/api/system/backups")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(Permissions.System.ManageBackups);
+
+        // Gate the whole group at request time (not just at startup) so a config
+        // reload / restart with Backup:Enabled=true takes effect without a redeploy,
+        // and so every route — not just the ones we remember to guard — is covered.
+        group.AddEndpointFilter(async (context, next) =>
+        {
+            if (!configuration.GetValue("Backup:Enabled", false))
+            {
+                return Results.Json(
+                    new { error = "Backup:Enabled is false. Dumps are produced by the deploy/backup sidecar (D05); this admin UI is still in the backlog." },
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            return await next(context);
+        });
 
         // ==================== LIST BACKUPS ====================
         group.MapGet("/", (IConfiguration configuration) =>
@@ -32,7 +66,6 @@ public static class BackupEndpoints
                     var sqlGzFile = Path.Combine(backupDir, baseName + ".sql.gz");
                     var metaFile = Path.Combine(backupDir, baseName + ".meta.json");
 
-                    // Parse metadata if exists
                     string? metadata = null;
                     if (File.Exists(metaFile))
                     {
@@ -66,70 +99,27 @@ public static class BackupEndpoints
             });
         }).WithName("ListBackups");
 
-        // ==================== CREATE BACKUP (MANUAL) ====================
-        group.MapPost("/", async (IConfiguration configuration, HttpContext httpContext) =>
-        {
-            var backupScript = GetBackupScript(configuration);
-            if (!File.Exists(backupScript))
+        // ==================== CREATE BACKUP (deliberately unsupported) ====================
+        // Manual on-demand creation used to shell out to `pg_dump` inside this container, which
+        // never had the binary (the original bug this track fixed — D05 bối cảnh). Dumps now come
+        // only from the `deploy/backup` sidecar (hourly/nightly cron + `make backup`/`make
+        // restore-drill` for on-demand). Kept as a real route (not deleted) so the still-live
+        // frontend button (AuditLogsPage.tsx `backupApi.create()`) gets an explained 410 instead
+        // of an unexplained 405 Method Not Allowed.
+        group.MapPost("/", () => Results.Json(
+            new
             {
-                return Results.BadRequest(new { error = "Backup script not found", path = backupScript });
-            }
-
-            try
-            {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/bash",
-                        Arguments = $"{backupScript} backup",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                process.Start();
-                var output = await process.StandardOutput.ReadToEndAsync();
-                var error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode == 0)
-                {
-                    await httpContext.LogAuditAsync("Create", "Backup", "system",
-                        "Manual database backup created",
-                        module: "System");
-
-                    return Results.Ok(new
-                    {
-                        message = "Backup tạo thành công!",
-                        output,
-                        exitCode = process.ExitCode
-                    });
-                }
-                else
-                {
-                    return Results.BadRequest(new
-                    {
-                        error = "Backup failed",
-                        output,
-                        errorOutput = error,
-                        exitCode = process.ExitCode
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        }).WithName("CreateBackup");
+                error = "Tạo backup thủ công qua API đã được thay bằng sidecar tự động (deploy/backup/backup.sh). " +
+                         "Dùng `make backup` trên máy chủ, hoặc đợi lần chạy cron tiếp theo.",
+                errorEn = "Manual backup creation via this API is no longer supported. Dumps are produced by the deploy/backup sidecar (cron) or `make backup` on the server."
+            },
+            statusCode: StatusCodes.Status410Gone)).WithName("CreateBackupUnsupported");
 
         // ==================== DOWNLOAD BACKUP ====================
         group.MapGet("/download/{fileName}", (string fileName, IConfiguration configuration) =>
         {
             var backupDir = GetBackupDir(configuration);
-            
+
             // Sanitize filename to prevent path traversal
             fileName = Path.GetFileName(fileName);
             var filePath = Path.Combine(backupDir, fileName);
@@ -147,10 +137,10 @@ public static class BackupEndpoints
         group.MapDelete("/{baseName}", async (string baseName, IConfiguration configuration, HttpContext httpContext) =>
         {
             var backupDir = GetBackupDir(configuration);
-            
+
             // Sanitize to prevent path traversal
             baseName = Path.GetFileNameWithoutExtension(baseName);
-            
+
             var deletedFiles = new List<string>();
             var extensions = new[] { ".dump", ".sql.gz", ".meta.json" };
 
@@ -226,17 +216,6 @@ public static class BackupEndpoints
             backupDir = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "..", "..", "backups", "postgres"));
         }
         return backupDir;
-    }
-
-    private static string GetBackupScript(IConfiguration configuration)
-    {
-        var scriptPath = configuration["Backup:ScriptPath"];
-        if (string.IsNullOrEmpty(scriptPath))
-        {
-            var contentRoot = AppDomain.CurrentDomain.BaseDirectory;
-            scriptPath = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "..", "..", "scripts", "backup-database.sh"));
-        }
-        return scriptPath;
     }
 
     private static string FormatFileSize(long bytes)

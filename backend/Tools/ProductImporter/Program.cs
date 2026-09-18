@@ -2,6 +2,7 @@ using Catalog.Infrastructure;
 using Catalog.Infrastructure.Data;
 using Catalog.Infrastructure.Data.Import;
 using InventoryModule.Infrastructure;
+using InventoryModule.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 
 namespace QuangHuong.Tools.ProductImporter;
@@ -107,8 +108,11 @@ public static class Program
                 .Select(p => new { p.Id, p.Sku, p.StockQuantity, p.CostPrice })
                 .ToListAsync();
 
-            await new OpeningBalanceWriter(inventory).RunAsync(
-                balances.Select(b => (b.Id, b.Sku, b.StockQuantity, b.CostPrice)).ToList(), summary);
+            // Warehouse topology + opening balances moved to Inventory/Infrastructure/Seed by W1-4,
+            // so this tool and `db seed --profile reference` run exactly the same code.
+            await WarehouseSeeder.SeedAsync(inventory);
+            await OpeningBalanceSeeder.SeedAsync(
+                inventory, balances.Select(b => (b.Id, b.Sku, b.StockQuantity, b.CostPrice)).ToList(), summary);
 
             Console.WriteLine(summary);
             return summary.ProductsFailed == 0 ? 0 : 1;

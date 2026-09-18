@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Upload, Calculator, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calculator } from 'lucide-react';
 import { installmentApi, type InstallmentProvider, type InstallmentCalculationResponse } from '../../api/installment';
 import { formatCurrency } from '../../utils/format';
-import toast from 'react-hot-toast';
 
+/**
+ * [W1-9 / D10] `installmentApi.uploadDocument` + the CMND/CCCD upload UI that
+ * used to live here were removed (D10 rule 6, Luật 91/2025: hồ sơ trả góp
+ * không thu CCCD qua web — làm tại quầy/cổng CTTC). This left `idFrontFileId`
+ * / `idBackFileId` as inert pass-through props (still accepted so
+ * `use-checkout-submit.ts` compiles unchanged; they are always `undefined`
+ * now). Integration request filed for W3-2 (owns this file): replace the old
+ * upload block below with the D10-mandated consent checkbox ("cho phép cửa
+ * hàng liên hệ và chuyển thông tin cho công ty tài chính đã chọn") — see
+ * `reports/integration-requests-w1.md`.
+ */
 interface InstallmentFormProps {
     totalAmount: number;
     providerCode?: string;
@@ -22,13 +32,11 @@ interface InstallmentFormProps {
 
 const TERMS: Array<6 | 9 | 12> = [6, 9, 12];
 
-export function InstallmentForm({ totalAmount, providerCode, term, idFrontFileId, idBackFileId, onChange }: InstallmentFormProps) {
+export function InstallmentForm({ totalAmount, providerCode, term, onChange }: InstallmentFormProps) {
     const [providers, setProviders] = useState<InstallmentProvider[]>([]);
     const [loadingProviders, setLoadingProviders] = useState(true);
     const [calc, setCalc] = useState<InstallmentCalculationResponse | null>(null);
     const [calculating, setCalculating] = useState(false);
-    const [uploadingFront, setUploadingFront] = useState(false);
-    const [uploadingBack, setUploadingBack] = useState(false);
 
     useEffect(() => {
         setLoadingProviders(true);
@@ -61,20 +69,6 @@ export function InstallmentForm({ totalAmount, providerCode, term, idFrontFileId
             .finally(() => setCalculating(false));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [providerCode, term, totalAmount, providers]);
-
-    const handleUpload = async (file: File, side: 'front' | 'back') => {
-        const setLoading = side === 'front' ? setUploadingFront : setUploadingBack;
-        setLoading(true);
-        try {
-            const { fileId } = await installmentApi.uploadDocument(file);
-            onChange(side === 'front' ? { installmentIdFrontFileId: fileId } : { installmentIdBackFileId: fileId });
-            toast.success(`Đã tải ${side === 'front' ? 'mặt trước' : 'mặt sau'} CMND/CCCD`);
-        } catch {
-            toast.error('Không tải được ảnh, thử lại nhé');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="mt-4 bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-4">
@@ -127,27 +121,13 @@ export function InstallmentForm({ totalAmount, providerCode, term, idFrontFileId
                 </div>
             ) : null}
 
-            {/* Upload */}
-            <div className="grid grid-cols-2 gap-3">
-                {(['front', 'back'] as const).map(side => {
-                    const done = side === 'front' ? idFrontFileId : idBackFileId;
-                    const loading = side === 'front' ? uploadingFront : uploadingBack;
-                    return (
-                        <label key={side}
-                            className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
-                                done ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-gray-300 bg-white text-gray-500 hover:border-blue-300'
-                            }`}>
-                            <input type="file" accept="image/*" className="hidden"
-                                onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], side)} disabled={loading} />
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : done ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
-                            <span className="text-xs font-semibold">CMND/CCCD {side === 'front' ? 'mặt trước' : 'mặt sau'}</span>
-                        </label>
-                    );
-                })}
-            </div>
+            {/* TODO (W3-2, D10 rule 6): consent checkbox — "Tôi đồng ý cho Quang Hưởng
+                liên hệ và chuyển thông tin cho công ty tài chính đã chọn để làm hồ sơ
+                trả góp" — replaces the old CMND/CCCD upload UI removed here (W1-9). */}
 
             <p className="text-[11px] text-gray-500">
-                Giấy tờ được lưu bảo mật, chỉ nhân viên duyệt hồ sơ xem được. Đơn sẽ ở trạng thái <b>chờ duyệt</b> tới khi bộ phận tài chính xử lý.
+                Hồ sơ trả góp được hoàn tất tại quầy hoặc qua cổng của công ty tài chính — không thu CMND/CCCD qua website.
+                Đơn sẽ ở trạng thái <b>chờ duyệt</b> tới khi bộ phận tài chính xử lý.
             </p>
         </div>
     );

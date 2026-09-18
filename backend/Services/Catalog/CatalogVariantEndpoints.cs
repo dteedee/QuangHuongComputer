@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Catalog.Domain;
 using Catalog.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -97,7 +98,7 @@ public static class CatalogVariantEndpoints
             }
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { createdCount = createdIds.Count, variantIds = createdIds });
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         // Tạo 1 biến thể tay
         group.MapPost("/products/{id:guid}/variants/single", async (
@@ -117,7 +118,7 @@ public static class CatalogVariantEndpoints
             }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         // Sửa biến thể
         group.MapPut("/products/{id:guid}/variants/{vid:guid}", async (
@@ -135,7 +136,7 @@ public static class CatalogVariantEndpoints
                 return Results.NoContent();
             }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         // Soft delete: chuyển sang Discontinued
         group.MapDelete("/products/{id:guid}/variants/{vid:guid}", async (
@@ -146,7 +147,7 @@ public static class CatalogVariantEndpoints
             variant.SetStatus(VariantStatus.Discontinued);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Delete);
 
         // ============ OPTION TYPES ============
         group.MapGet("/option-types", async (CatalogDbContext db, CancellationToken ct) =>
@@ -169,7 +170,7 @@ public static class CatalogVariantEndpoints
                 return Results.Ok(new { id = type.Id });
             }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapGet("/option-types/{id:guid}/values", async (Guid id, CatalogDbContext db, CancellationToken ct) =>
         {
@@ -194,7 +195,7 @@ public static class CatalogVariantEndpoints
                 return Results.Ok(new { id = value.Id });
             }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
     }
 
     /// <summary>Tích Descartes N chiều: [[1,2],[3,4]] → [[1,3],[1,4],[2,3],[2,4]].</summary>

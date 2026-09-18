@@ -20,15 +20,14 @@ namespace InventoryModule;
 /// </summary>
 public static class PoApprovalEndpoints
 {
-    /// <summary>W0-3: mua hàng là nghiệp vụ nội bộ. W1-1 sẽ thay bằng permission policy.</summary>
-    internal static readonly string[] ProcurementRoles =
-        { Roles.Admin, Roles.Manager, Roles.InventoryStaff };
-
     public static void MapPoApprovalEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: RequireAuthorization() trống ⇒ token Customer duyệt được PO cần Manager.
+        // W1-10: danh sách role ProcurementRoles (Admin/Manager/InventoryStaff) đã bị xoá —
+        // GET -> Inventory.ViewPurchaseOrder, POST -> Inventory.CreatePurchaseOrder
+        // (duyệt/từ chối khai báo riêng ApprovePurchaseOrder bên dưới).
         var group = app.MapGroup("/api/inventory")
-            .RequireAuthorization(p => p.RequireRole(ProcurementRoles));
+            .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
         group.MapPost("/po/{id:guid}/submit", async (Guid id, ClaimsPrincipal user, PoApprovalService svc) =>
         {
@@ -54,7 +53,9 @@ public static class PoApprovalEndpoints
             }
             catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        });
+            // W1-10: duyệt PO -> Inventory.ApprovePurchaseOrder (InventoryStaff KHÔNG có quyền này).
+            // Kiểm tra role bắt buộc theo hạn mức vẫn do PoApprovalService làm thêm một lớp nữa.
+        }).RequireAuthorization(Permissions.Inventory.ApprovePurchaseOrder);
 
         group.MapPost("/po/{id:guid}/reject", async (Guid id, RejectPoDto dto, ClaimsPrincipal user, PoApprovalService svc) =>
         {
@@ -68,7 +69,7 @@ public static class PoApprovalEndpoints
             catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        });
+        }).RequireAuthorization(Permissions.Inventory.ApprovePurchaseOrder);
 
         // Đơn PO đang chờ duyệt — lọc theo role người dùng.
         group.MapGet("/po-approvals/pending", async (ClaimsPrincipal user, InventoryDbContext db) =>
@@ -98,8 +99,10 @@ public static class PoApprovalEndpoints
         });
 
         // === CRUD POApprovalRule (chỉ Admin) ===
+        // W1-10: System.ManageConfig — trong ma trận W1-1 chỉ Admin giữ quyền này
+        // (Manager chỉ có System.ViewConfig), tức giữ nguyên phạm vi "chỉ Admin" như trước.
         var ruleGroup = app.MapGroup("/api/inventory/po-approval-rules")
-            .RequireAuthorization(p => p.RequireRole("Admin"));
+            .RequirePermission(Permissions.System.ManageConfig);
 
         ruleGroup.MapGet("", async (InventoryDbContext db) =>
         {

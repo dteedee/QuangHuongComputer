@@ -1,5 +1,14 @@
 import { client } from './client';
 
+/**
+ * Address book functions moved to `api/addresses.ts` (W1-9, step 7a) — this
+ * file is AI (recommendations/search/chat/PC-builder), addresses never
+ * belonged here. Re-exported for `pages/account/address-book-page.tsx` and
+ * `components/address-book-selector.tsx`, which keep importing from here
+ * unchanged; new code should import `api/addresses.ts` directly.
+ */
+export { getAddresses, addAddress, updateAddress, deleteAddress, setDefaultAddress } from './addresses';
+
 export interface AiRecommendation {
   id: string;
   name: string;
@@ -52,30 +61,5 @@ export async function chatWithAI(message: string, history: Array<{ role: string;
 // AI PC Builder
 export async function getAIPCBuildSuggestion(budget: number, useCase: string) {
   const { data } = await client.post('/catalog/pc-builder/ai-suggest', { budget, useCase });
-  return data;
-}
-
-// Address book
-export async function getAddresses() {
-  const { data } = await client.get('/sales/addresses');
-  return data;
-}
-
-export async function addAddress(address: any) {
-  const { data } = await client.post('/sales/addresses', address);
-  return data;
-}
-
-export async function updateAddress(id: string, address: any) {
-  const { data } = await client.put(`/sales/addresses/${id}`, address);
-  return data;
-}
-
-export async function deleteAddress(id: string) {
-  await client.delete(`/sales/addresses/${id}`);
-}
-
-export async function setDefaultAddress(id: string) {
-  const { data } = await client.post(`/sales/addresses/${id}/set-default`);
   return data;
 }

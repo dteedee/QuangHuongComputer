@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -16,12 +17,13 @@ public static class HRLeaveEndpoints
 {
     public static void MapHRLeaveEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+        var group = app.MapGroup("/api/hr").RequireModulePermissions(PermissionModules.HR);
 
         // ============================
         // LEAVE REQUESTS
         // ============================
-        var leaveGroup = group.MapGroup("/leaves");
+        // W1-10: nghỉ phép = dữ liệu nhân sự -> GET HR.ViewEmployees, ghi HR.ManageEmployees.
+        var leaveGroup = group.MapGroup("/leaves").RequireModulePermissions(PermissionModules.HR);
 
         // GET /api/hr/leaves
         leaveGroup.MapGet("", async (
@@ -242,7 +244,8 @@ public static class HRLeaveEndpoints
         // ============================
         // SHIFTS
         // ============================
-        var shiftGroup = group.MapGroup("/shifts");
+        // W1-10: ca làm việc -> GET HR.ViewAttendance, ghi HR.ManageAttendance.
+        var shiftGroup = group.MapGroup("/shifts").RequireModulePermissions(PermissionModules.Attendance);
 
         // GET /api/hr/shifts
         shiftGroup.MapGet("", async (HRDbContext db) =>
@@ -300,7 +303,8 @@ public static class HRLeaveEndpoints
         // ============================
         // SHIFT ASSIGNMENTS
         // ============================
-        var assignmentGroup = group.MapGroup("/shift-assignments");
+        // W1-10: phân ca + check-in/out -> quyền chấm công.
+        var assignmentGroup = group.MapGroup("/shift-assignments").RequireModulePermissions(PermissionModules.Attendance);
 
         // GET /api/hr/shift-assignments
         assignmentGroup.MapGet("", async (

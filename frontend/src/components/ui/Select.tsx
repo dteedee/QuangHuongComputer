@@ -1,5 +1,14 @@
-import { forwardRef } from 'react';
+/**
+ * Select — labelled wrapper around `SearchableSelect`.
+ *
+ * Keeps the event-shaped `onChange({ target: { value } })` signature because 35
+ * wave-0 call sites were written against a native `<select>` and pass the
+ * handler straight through. New code should prefer `Combobox`
+ * (= `SearchableSelect`), whose `onChange` is just `(value: string) => void`.
+ */
+import { forwardRef, useId } from 'react';
 import { SearchableSelect } from './SearchableSelect';
+import { labelClass, errorClass } from './variants';
 
 export interface SelectOption {
   value: string;
@@ -20,43 +29,52 @@ export interface SelectProps {
   placeholder?: string;
 }
 
-export const Select = forwardRef<HTMLDivElement, SelectProps>(
-  ({ className, label, error, options, id, value, defaultValue, onChange, name, disabled, placeholder, ...props }, ref) => {
-    const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
-    const hasError = !!error;
+export const Select = forwardRef<HTMLDivElement, SelectProps>(function Select(
+  {
+    className,
+    label,
+    error,
+    options,
+    id,
+    value,
+    defaultValue,
+    onChange,
+    name,
+    disabled,
+    placeholder,
+  },
+  ref,
+) {
+  const reactId = useId();
+  const selectId = id ?? `sel-${reactId}`;
 
-    return (
-      <div className="space-y-2" ref={ref}>
-        {label && (
-          <label htmlFor={selectId} className="block text-sm font-semibold text-gray-700">
-            {label}
-          </label>
-        )}
+  return (
+    <div className="w-full" ref={ref}>
+      {label && (
+        <label htmlFor={selectId} className={labelClass}>
+          {label}
+        </label>
+      )}
 
-        <SearchableSelect
-          id={selectId}
-          name={name}
-          options={options}
-          value={value ?? defaultValue ?? ''}
-          onChange={(val) => onChange?.({ target: { value: val } })}
-          disabled={disabled}
-          error={hasError}
-          placeholder={placeholder}
-          className={className}
-        />
+      <SearchableSelect
+        id={selectId}
+        name={name}
+        options={options}
+        value={value ?? defaultValue ?? ''}
+        onChange={(val) => onChange?.({ target: { value: val } })}
+        disabled={disabled}
+        error={!!error}
+        placeholder={placeholder}
+        className={className}
+      />
 
-        {error && (
-          <p
-            id={`${selectId}-error`}
-            className="text-danger-500 text-xs font-bold ml-1"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
-);
+      {error && (
+        <p id={`${selectId}-error`} role="alert" className={errorClass}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+});
 
-Select.displayName = 'Select';
+export default Select;

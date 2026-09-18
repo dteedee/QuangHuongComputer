@@ -16,10 +16,15 @@ public class ProductMedia : Entity<Guid>
 
     public MediaType Type { get; private set; }
 
-    /// <summary>URL đầy đủ tới file media (MinIO signed URL hoặc URL YouTube embed).</summary>
+    /// <summary>
+    /// URL tới file media. W1-6 / D02: TƯƠNG ĐỐI (<c>/media/seed/...</c> cho ảnh seed,
+    /// <c>/media/u/...</c> cho upload runtime) — TUYỆT ĐỐI chỉ khi là nhúng YouTube
+    /// (<c>https://www.youtube.com/embed/...</c>). Đổi sang tuyệt đối chỉ ở
+    /// <c>IMediaUrlResolver.ToAbsolute()</c> (email/sitemap/OG/JSON-LD/PDF), không ở đây.
+    /// </summary>
     public string Url { get; private set; } = string.Empty;
 
-    /// <summary>URL thumbnail (200px WebP cho ảnh, YouTube thumbnail cho video nhúng).</summary>
+    /// <summary>URL thumbnail (400px WebP cho ảnh, YouTube thumbnail cho video nhúng) — cùng quy ước tương đối/tuyệt đối với <see cref="Url"/>.</summary>
     public string? ThumbnailUrl { get; private set; }
 
     /// <summary>Alt text mô tả — chú ý escape HTML khi hiển thị (chống XSS lưu trữ).</summary>

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +17,9 @@ public static class AddressBookEndpoints
 
     public static void MapAddressBookEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sales/addresses").RequireAuthorization();
+        // Sổ địa chỉ là dữ liệu "của chính tôi": mọi handler bên dưới đều lọc theo
+        // userId lấy từ ClaimsPrincipal, nên chỉ cần đăng nhập (W1-10 self-service).
+        var group = app.MapGroup("/api/sales/addresses").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // GET /api/sales/addresses
         group.MapGet("/", async (ClaimsPrincipal user, SalesDbContext db) =>

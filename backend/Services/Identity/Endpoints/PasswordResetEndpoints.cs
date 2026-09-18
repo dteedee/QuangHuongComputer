@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using BuildingBlocks.Validation;
 
 namespace Identity.Endpoints;
 
@@ -111,7 +112,7 @@ public static class PasswordResetEndpoints
             }
 
             return Results.Ok(new { Message = GenericForgotResponse });
-        });
+        }).WithValidation<ForgotPasswordDto>().RequireRateLimiting("auth");
 
         group.MapPost("/reset-password", async (
             ResetPasswordDto model,
@@ -211,6 +212,6 @@ public static class PasswordResetEndpoints
             await rateLimitService.ResetAsync(rateLimitKey);
 
             return Results.Ok(new { Message = "Mật khẩu đã được đặt lại thành công." });
-        });
+        }).WithValidation<ResetPasswordDto>().RequireRateLimiting("auth");
     }
 }

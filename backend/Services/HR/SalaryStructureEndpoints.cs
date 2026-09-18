@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +16,7 @@ public static class SalaryStructureEndpoints
     public static void MapSalaryStructureEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/employees/{eid:guid}/salary-structures")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.Payroll);
 
         group.MapGet("", async (Guid eid, HRDbContext db) =>
         {
@@ -63,7 +64,7 @@ public static class SalaryStructureEndpoints
 
         // ===== Allowances (gắn cùng route employee) =====
         var allowanceGroup = app.MapGroup("/api/hr/employees/{eid:guid}/allowances")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.Payroll);
 
         allowanceGroup.MapGet("", async (Guid eid, HRDbContext db) =>
         {
@@ -95,7 +96,7 @@ public static class SalaryStructureEndpoints
 
         // ===== AllowanceType (catalog toàn hệ thống) =====
         var typeGroup = app.MapGroup("/api/hr/allowance-types")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.Payroll);
 
         typeGroup.MapGet("", async (HRDbContext db) =>
             Results.Ok(await db.AllowanceTypes.OrderBy(t => t.Code).ToListAsync()));

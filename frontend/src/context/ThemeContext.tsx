@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { systemConfigApi, type ConfigurationEntry } from '../api/systemConfig';
+import type { ConfigurationEntry } from '../api/systemConfig';
 import { HEX_COLOR_REGEX, accentDefaults } from '../design-system/brand-tokens';
+import { usePublicConfig } from '../lib/use-public-config';
+import { browserStorage } from '../lib/browser-storage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AccentColor = 'red' | 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'amber';
@@ -29,9 +31,14 @@ interface AccentColorConfig {
 
 const accentColors: Record<AccentColor, AccentColorConfig> = {
     red: {
-        // Quang Hưởng brand (source: design-system/brand-tokens.ts)
-        primary: accentDefaults.primary,
-        primaryHover: accentDefaults.primaryHover,
+        // Quang Hưởng brand. `accentDefaults` (design-system/brand-tokens.ts,
+        // not owned by this track) is a hair off the canonical brand token
+        // (`--brand: 215 32 47` / #D7202F in styles/tokens.css, W1-7) — #D22B2B
+        // vs #D7202F, exactly the "off-brand red" anti-pattern design-direction.md
+        // §9.2 calls out. Hardcoded here to the canonical value (w1-7 IR #8);
+        // primaryLight/primaryDark are unaffected, left on the old scale.
+        primary: '#D7202F',
+        primaryHover: '#B3141F',
         primaryLight: accentDefaults.primaryLight,
         primaryDark: accentDefaults.primaryDark,
         gradient: 'from-red-500 to-rose-600',
@@ -107,12 +114,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const [mode, setModeState] = useState<ThemeMode>(() => {
-        const saved = localStorage.getItem('theme-mode');
+        const saved = browserStorage.getItem('theme-mode');
         return (saved as ThemeMode) || 'light';
     });
 
     const [accent, setAccentState] = useState<AccentColor>(() => {
-        const saved = localStorage.getItem('theme-accent');
+        const saved = browserStorage.getItem('theme-accent');
         return (saved as AccentColor) || 'red';
     });
 
@@ -124,7 +131,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     } | null>(null);
 
     const [sidebarCollapsed, setSidebarCollapsedState] = useState(() => {
-        const saved = localStorage.getItem('sidebar-collapsed');
+        const saved = browserStorage.getItem('sidebar-collapsed');
         return saved === 'true';
     });
 
@@ -141,29 +148,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     const isDark = mode === 'dark' || (mode === 'system' && systemDark);
 
-    // Fetch admin-configurable theme overrides from SystemConfig once at mount.
-    // Fail silent — if API is down we keep local defaults.
+    // Admin-configurable theme overrides from SystemConfig — shares the single
+    // `/api/config/public` request with every other `usePublicConfig()` consumer
+    // instead of firing its own fetch. Fail silent: no data yet / request failed
+    // both just keep the local preset (`remoteAccent` stays null).
+    const { data: publicConfigEntries } = usePublicConfig();
     useEffect(() => {
-        let cancelled = false;
-        const load = async () => {
-            try {
-                const entries = await systemConfigApi.config.getPublic();
-                if (cancelled || !Array.isArray(entries)) return;
-                const pick = (key: string) =>
-                    entries.find((e: ConfigurationEntry) => e.key === key)?.value;
-                const primary = pick('theme.accentPrimary');
-                const hover = pick('theme.accentPrimaryHover');
-                const next: { primary?: string; primaryHover?: string } = {};
-                if (primary && HEX_COLOR_REGEX.test(primary)) next.primary = primary;
-                if (hover && HEX_COLOR_REGEX.test(hover)) next.primaryHover = hover;
-                if (next.primary || next.primaryHover) setRemoteAccent(next);
-            } catch {
-                // Ignore — fallback to defaults.
-            }
-        };
-        load();
-        return () => { cancelled = true; };
-    }, []);
+        if (!publicConfigEntries) return;
+        const pick = (key: string) =>
+            publicConfigEntries.find((e: ConfigurationEntry) => e.key === key)?.value;
+        const primary = pick('theme.accentPrimary');
+        const hover = pick('theme.accentPrimaryHover');
+        const next: { primary?: string; primaryHover?: string } = {};
+        if (primary && HEX_COLOR_REGEX.test(primary)) next.primary = primary;
+        if (hover && HEX_COLOR_REGEX.test(hover)) next.primaryHover = hover;
+        if (next.primary || next.primaryHover) setRemoteAccent(next);
+    }, [publicConfigEntries]);
 
     useEffect(() => {
         document.documentElement.classList.toggle('dark', isDark);
@@ -183,17 +183,17 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     const setMode = (newMode: ThemeMode) => {
         setModeState(newMode);
-        localStorage.setItem('theme-mode', newMode);
+        browserStorage.setItem('theme-mode', newMode);
     };
 
     const setAccent = (color: AccentColor) => {
         setAccentState(color);
-        localStorage.setItem('theme-accent', color);
+        browserStorage.setItem('theme-accent', color);
     };
 
     const setSidebarCollapsed = (collapsed: boolean) => {
         setSidebarCollapsedState(collapsed);
-        localStorage.setItem('sidebar-collapsed', String(collapsed));
+        browserStorage.setItem('sidebar-collapsed', String(collapsed));
     };
 
     const toggleMode = () => {

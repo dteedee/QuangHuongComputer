@@ -1,3 +1,14 @@
+/**
+ * @deprecated SHIM — not part of the UI kit.
+ *
+ * W1-12 planned to delete this file; it turned out to still have two importers
+ * (`components/kpi-dashboard-widgets.tsx`, `pages/backoffice/manager/ManagerPortal.tsx`),
+ * and pages are frozen this wave, so it stays untouched for now.
+ *
+ * Migration (owner: W3-4 admin-orders-dashboard / W3-8 backoffice): rebuild
+ * those two dashboards on `StatCard` + `Card` + `QueryBoundary` from
+ * `@/components/ui`, then delete this file. Nothing new may import it.
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 import {

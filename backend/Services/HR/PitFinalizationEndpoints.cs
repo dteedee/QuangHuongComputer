@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -14,7 +15,7 @@ public static class PitFinalizationEndpoints
     public static void MapPitFinalizationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/tax/pit-finalization")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.Payroll);
 
         // GET /api/hr/tax/pit-finalization/{employeeId}?year=2026
         group.MapGet("/{employeeId:guid}", async (Guid employeeId, int year, HRDbContext db) =>

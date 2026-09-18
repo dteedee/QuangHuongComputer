@@ -7,7 +7,13 @@ namespace BuildingBlocks.Endpoints;
 /// <param name="StatusCode">HTTP status to return.</param>
 /// <param name="Title">Short, stable English title for the ProblemDetails <c>title</c> field.</param>
 /// <param name="Message">User-facing Vietnamese message. Never contains schema or SQL text.</param>
-public readonly record struct DatabaseErrorMapping(int StatusCode, string Title, string Message);
+/// <param name="Code">Stable machine code for the body's <c>code</c> field (see <see cref="ApiErrorCodes"/>).
+/// Optional so the three-argument constructor existing callers use keeps compiling.</param>
+public readonly record struct DatabaseErrorMapping(
+    int StatusCode,
+    string Title,
+    string Message,
+    string Code = ApiErrorCodes.BadRequest);
 
 /// <summary>
 /// Maps PostgreSQL constraint violations onto 4xx.
@@ -35,7 +41,8 @@ public static class DatabaseExceptionMapper
         if (exception is DbUpdateConcurrencyException)
         {
             return new DatabaseErrorMapping(409, "Concurrency Conflict",
-                "Dữ liệu đã được người khác thay đổi. Vui lòng tải lại và thử lại.");
+                "Dữ liệu đã được người khác thay đổi. Vui lòng tải lại và thử lại.",
+                ApiErrorCodes.ConcurrencyConflict);
         }
 
         var pg = FindPostgresException(exception);
@@ -44,17 +51,17 @@ public static class DatabaseExceptionMapper
         return pg.SqlState switch
         {
             PostgresErrorCodes.UniqueViolation => new DatabaseErrorMapping(409, "Duplicate Value",
-                "Giá trị này đã tồn tại. Vui lòng dùng giá trị khác."),
+                "Giá trị này đã tồn tại. Vui lòng dùng giá trị khác.", ApiErrorCodes.DuplicateValue),
             PostgresErrorCodes.ExclusionViolation => new DatabaseErrorMapping(409, "Conflicting Value",
-                "Giá trị này xung đột với một bản ghi đã có."),
+                "Giá trị này xung đột với một bản ghi đã có.", ApiErrorCodes.Conflict),
             PostgresErrorCodes.ForeignKeyViolation => new DatabaseErrorMapping(400, "Invalid Reference",
-                "Dữ liệu tham chiếu không hợp lệ hoặc đang được sử dụng ở nơi khác."),
+                "Dữ liệu tham chiếu không hợp lệ hoặc đang được sử dụng ở nơi khác.", ApiErrorCodes.InvalidReference),
             PostgresErrorCodes.NotNullViolation => new DatabaseErrorMapping(400, "Missing Required Field",
-                "Thiếu thông tin bắt buộc. Vui lòng kiểm tra lại biểu mẫu."),
+                "Thiếu thông tin bắt buộc. Vui lòng kiểm tra lại biểu mẫu.", ApiErrorCodes.MissingRequiredField),
             PostgresErrorCodes.CheckViolation => new DatabaseErrorMapping(400, "Invalid Value",
-                "Giá trị gửi lên không hợp lệ."),
+                "Giá trị gửi lên không hợp lệ.", ApiErrorCodes.InvalidValue),
             PostgresErrorCodes.StringDataRightTruncation => new DatabaseErrorMapping(400, "Value Too Long",
-                "Nội dung quá dài so với giới hạn cho phép."),
+                "Nội dung quá dài so với giới hạn cho phép.", ApiErrorCodes.ValueTooLong),
             _ => null
         };
     }

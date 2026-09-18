@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
@@ -96,7 +97,8 @@ public static class CatalogReviewEndpoints
                 isVerifiedPurchase,
                 message = "Đánh giá của bạn đang chờ duyệt"
             });
-        }).RequireAuthorization().WithValidation<CreateProductReviewDto>();
+            // W1-10: khách viết đánh giá của chính mình -> chỉ cần đăng nhập.
+        }).RequireAuthorization(SecurityPolicies.Authenticated).WithValidation<CreateProductReviewDto>();
 
         // Mark review as helpful (Public endpoint)
         group.MapPost("/reviews/{reviewId:guid}/helpful", async (Guid reviewId, CatalogDbContext db) =>
@@ -109,7 +111,9 @@ public static class CatalogReviewEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Đã đánh dấu đánh giá là hữu ích", helpfulCount = review.HelpfulCount });
-        });
+            // W1-10: nút "hữu ích" ở trang sản phẩm, khách chưa đăng nhập cũng bấm được.
+            // Cần thêm rule POST /api/catalog/reviews/{id}/helpful vào PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // Rating statistics for a product
         group.MapGet("/products/{productId:guid}/reviews/stats", async (Guid productId, CatalogDbContext db) =>
@@ -140,7 +144,7 @@ public static class CatalogReviewEndpoints
     private static void MapReviewAdmin(IEndpointRouteBuilder group)
     {
         var reviewsAdmin = group.MapGroup("/reviews/admin")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequirePermission(Permissions.Catalog.Manage);
 
         reviewsAdmin.MapPost("/{reviewId:guid}/approve", async (Guid reviewId, CatalogDbContext db, HttpContext context) =>
         {

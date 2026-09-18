@@ -18,8 +18,9 @@ public static class LandedCostEndpoints
 {
     public static void MapLandedCostEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: chi phí nhập hàng gắn với phiếu nhập -> quyền theo verb của module Inventory.
         var group = app.MapGroup("/api/inventory/grn/{grnId:guid}/landed-costs")
-            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
+            .RequireModulePermissions(PermissionModules.Inventory);
 
         // GET — liệt kê chi phí nhập của GRN
         group.MapGet("", async (Guid grnId, InventoryDbContext db) =>

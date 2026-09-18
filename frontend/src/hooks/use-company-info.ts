@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { systemConfigApi, getConfigValue, configParsers, type ConfigurationEntry } from '../api/systemConfig';
+import { getConfigValue, configParsers, type ConfigurationEntry } from '../api/systemConfig';
+import { usePublicConfig } from '../lib/use-public-config';
 
 export interface CompanyInfo {
     name: string;
@@ -22,7 +22,8 @@ export interface CompanyInfo {
 }
 
 // Fallback = giá trị thật của công ty (dùng khi API chưa trả về / lỗi mạng).
-// Nguồn: docs/hacom-design-reference.md §"Company info" (masothue.com/0200807633).
+// Nguồn: decisions/D09-cua-hang-kho-va-thong-tin-cong-ty.md mục "QUYẾT ĐỊNH" §5
+// (đối chiếu masothue.com/0200807633) + `SystemConfigSeedDataCompany.cs` (seed đích).
 const FALLBACK_COMPANY_INFO: CompanyInfo = {
     name: 'Công ty TNHH Máy Tính Quang Hưởng',
     nameEn: 'Quang Huong Computer Limited Company',
@@ -31,16 +32,20 @@ const FALLBACK_COMPANY_INFO: CompanyInfo = {
     address: 'Số 179 khu phố 3/2, Thị Trấn Vĩnh Bảo, Huyện Vĩnh Bảo, TP Hải Phòng',
     taxAddress: 'Số 179 Khu phố 13/2 - TT Vĩnh Bảo, Xã Vĩnh Bảo, TP Hải Phòng',
     representative: 'Dương Thị Hạnh',
-    phone: '031 3823769',
+    // D09 mục 5: mã vùng ĐT cố định Hải Phòng sau sáp nhập là 0225 (031 là mã cũ).
+    phone: '0225 3823769',
     phone2: '0904.235.090',
     email: 'quanghuongvbhp@gmail.com',
     hotline: '0904.235.090',
     website: 'https://quanghuong.com',
-    workingHours: '8:00 - 21:00 (T2 - CN)',
+    // D09 mục 5: giờ mở cửa đích là 7:00-17:15 T2-T7 (git f659837), không phải
+    // "8:00-21:00 (T2-CN)" — giá trị đó là một phiên AI sau ghi đè nhầm (33e7e1e).
+    workingHours: '7:00 - 17:15 (Thứ 2 - Thứ 7)',
     brandText1: 'QUANG HƯỞNG',
     brandText2: 'COMPUTER',
     since: '2008',
-    bankAccount: '1234567890 - Vietcombank',
+    // D09 mục 5: xoá số tài khoản giả — không có nguồn thật, không bịa.
+    bankAccount: '',
 };
 
 function mapConfigsToCompanyInfo(configs: ConfigurationEntry[]): CompanyInfo {
@@ -68,49 +73,16 @@ function mapConfigsToCompanyInfo(configs: ConfigurationEntry[]): CompanyInfo {
     };
 }
 
-// Cache module-level: tránh mỗi component gọi lại API public config riêng.
-let cachedInfo: CompanyInfo | null = null;
-let inFlightRequest: Promise<CompanyInfo> | null = null;
-
-async function loadCompanyInfo(): Promise<CompanyInfo> {
-    if (cachedInfo) return cachedInfo;
-    if (!inFlightRequest) {
-        inFlightRequest = systemConfigApi.config
-            .getPublic()
-            .then((configs) => {
-                cachedInfo = mapConfigsToCompanyInfo(configs);
-                return cachedInfo;
-            })
-            .catch(() => FALLBACK_COMPANY_INFO)
-            .finally(() => {
-                inFlightRequest = null;
-            });
-    }
-    return inFlightRequest;
-}
-
 /**
  * Hook duy nhất cho thông tin công ty (tên, địa chỉ, MST, liên hệ...).
- * Đọc từ `GET /api/config/public`, cache ở module-level, fallback = dữ liệu thật đã xác minh.
+ * Đọc từ `GET /api/config/public` qua `usePublicConfig()` — chia sẻ cùng 1
+ * request/cache với `ThemeContext`/`SystemConfigContext` thay vì tự fetch +
+ * tự cache ở module-level như trước (loại bỏ một request `/config/public`
+ * riêng). Không có dữ liệu (đang tải lần đầu / lỗi mạng) -> dùng fallback đã
+ * xác minh, không bịa.
  */
 export function useCompanyInfo(): { companyInfo: CompanyInfo; isLoading: boolean } {
-    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(cachedInfo ?? FALLBACK_COMPANY_INFO);
-    const [isLoading, setIsLoading] = useState(!cachedInfo);
-
-    useEffect(() => {
-        if (cachedInfo) return;
-        let cancelled = false;
-        setIsLoading(true);
-        loadCompanyInfo().then((info) => {
-            if (!cancelled) {
-                setCompanyInfo(info);
-                setIsLoading(false);
-            }
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
+    const { data, isLoading } = usePublicConfig();
+    const companyInfo = mapConfigsToCompanyInfo(data ?? []);
     return { companyInfo, isLoading };
 }

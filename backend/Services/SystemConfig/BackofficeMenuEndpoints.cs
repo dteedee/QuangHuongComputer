@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,13 +16,14 @@ public static class BackofficeMenuEndpoints
     {
         var group = app.MapGroup("/api/config");
 
-        // Public: menu filtered by user roles (auth required)
+        // W1-10: menu back-office của CHÍNH người đang đăng nhập (handler tự lọc theo role/quyền)
+        // -> policy Staff: phải là nhân viên nội bộ, khách hàng không thấy cây menu quản trị.
         group.MapGet("/backoffice-menu", GetMenuForUser)
-            .RequireAuthorization();
+            .RequireAuthorization(SecurityPolicies.Staff);
 
-        // Admin group — all require Admin role
+        // W1-10: chỉnh sửa cây menu = cấu hình hệ thống.
         var adminGroup = group.MapGroup("/admin/backoffice-menu")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         adminGroup.MapGet("", GetAdminMenu);
         adminGroup.MapPost("/groups", CreateGroup);

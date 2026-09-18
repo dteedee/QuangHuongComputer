@@ -1,6 +1,13 @@
 // ================================================
-// 🎨 DESIGN SYSTEM - QUANG HƯỞNG COMPUTER
-// Foundation cho toàn bộ hệ thống UI
+// @deprecated LEGACY THEME OBJECT — DO NOT IMPORT IN NEW CODE
+//
+// Superseded by the semantic tokens in `src/styles/tokens.css` (consumed as
+// Tailwind classes: bg-surface, text-fg-muted, border-line, …) and by
+// `@/design-system/motion` for anything animated.
+//
+// Still here only because `components/atoms/index.tsx` (owned by W1-12) imports
+// it; deleting it now would break the typecheck. Removal ticket: W1-12 kit
+// demolition — see integration-requests-w1.md, w1-7 #2.
 // ================================================
 
 export const designSystem = {

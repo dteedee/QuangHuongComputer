@@ -1,0 +1,11 @@
+# Placeholder rclone config (deliberately empty).
+#
+# docker-compose.prod.yml always bind-mounts a config file into the `backup` sidecar at
+# /run/secrets/rclone.conf so the mount never fails on a missing host path. This file is the
+# default when the operator has not set BACKUP_S3_RCLONE_CONF_HOST — offsite push then stays off
+# (backup.sh only calls rclone when BACKUP_S3_REMOTE is also set; see D05 §6: "not configured yet"
+# is a valid, safe default). To enable offsite backup, put a real rclone remote definition in a
+# file OUTSIDE this repo (it holds bucket credentials) and set:
+#   BACKUP_S3_RCLONE_CONF_HOST=/absolute/path/to/your/rclone.conf
+#   BACKUP_S3_REMOTE=<remote-name>:<bucket>/quanghuong
+# in .env.prod. Never fill in real credentials here — this file is committed to git.

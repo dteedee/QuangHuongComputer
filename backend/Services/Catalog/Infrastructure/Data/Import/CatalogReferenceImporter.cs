@@ -18,6 +18,30 @@ public sealed class CatalogReferenceImporter
 
     public CatalogReferenceImporter(CatalogDbContext db) => _db = db;
 
+    /// <summary>
+    /// Reverts entities whose ONLY pending modification is a bookkeeping timestamp.
+    ///
+    /// Both upserts below call <c>SetSlug</c> / <c>UpdatePresentation</c> / <c>UpdatePolicy</c> /
+    /// <c>UpdateDetails</c> unconditionally and every one of those stamps <c>UpdatedAt</c>. On an
+    /// already-imported catalogue nothing else differs, so the summary counters (which compare a
+    /// snapshot that excludes UpdatedAt) correctly reported 0 while EF still wrote 10 categories
+    /// and 39 brands on every run. `db seed` then printed "0 row(s) changed" over 49 row writes.
+    /// An entity with a genuine field change keeps it; only the timestamp-only ones are dropped.
+    /// </summary>
+    private void DiscardTimestampOnlyChanges()
+    {
+        _db.ChangeTracker.DetectChanges();
+
+        foreach (var entry in _db.ChangeTracker.Entries().ToList())
+        {
+            if (entry.State != EntityState.Modified) continue;
+
+            var modified = entry.Properties.Where(p => p.IsModified).Select(p => p.Metadata.Name).ToList();
+            if (modified.Count > 0 && modified.All(n => n is "UpdatedAt" or "UpdatedBy"))
+                entry.State = EntityState.Unchanged;
+        }
+    }
+
     /// <summary>Enriches the 10 real categories in place. Never creates one - a new row would
     /// mean the dataset named a category the shop does not have, which is a data error.</summary>
     public async Task<Dictionary<string, Category>> UpsertCategoriesAsync(
@@ -47,6 +71,7 @@ public sealed class CatalogReferenceImporter
             byFolded[folded] = row;
         }
 
+        DiscardTimestampOnlyChanges();
         await _db.SaveChangesAsync(ct);
         return byFolded;
     }
@@ -107,6 +132,7 @@ public sealed class CatalogReferenceImporter
             result[folded] = row;
         }
 
+        DiscardTimestampOnlyChanges();
         await _db.SaveChangesAsync(ct);
         return result;
     }

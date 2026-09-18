@@ -45,4 +45,44 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // W1-8 / D11: mọi URL phải đi qua ROUTES/paths (frontend/src/routes) thay vì chuỗi cứng —
+    // trước đợt này có ~110 chỗ hard-code (/products, /login, /catalog, /policy/, ...) rải khắp
+    // FE, khiến đổi 1 route phải sửa N file. `routes/**` (nơi ROUTES/paths ĐƯỢC khai báo) và
+    // `standalone.routes.ts`-style literal path definitions tự loại trừ vì rule chỉ bật ngoài
+    // `routes/**`. Severity 'warn' — hàng trăm chỗ hiện có (W3-* dọn dần), 'error' sẽ chặn
+    // `fe-lint` của mọi track khác ngay lập tức.
+    files: ['src/pages/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}', 'src/layouts/**/*.{ts,tsx}'],
+    ignores: ['src/routes/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          // esquery's attribute-regex parser mis-terminates on an escaped `/` inside the
+          // pattern (`/^\//` throws "Invalid regular expression") — `\x2F` sidesteps it.
+          selector: "CallExpression[callee.name='navigate'][arguments.0.type='Literal'][arguments.0.value=/^\\x2F/]",
+          message: 'Dùng `paths.*`/`ROUTES` từ frontend/src/routes thay vì chuỗi route hard-code trong navigate(...).',
+        },
+        {
+          selector: "JSXAttribute[name.name='to'] > Literal[value=/^\\x2F/]",
+          message: 'Dùng `paths.*`/`ROUTES` từ frontend/src/routes thay vì chuỗi route hard-code trong to="...".',
+        },
+      ],
+    },
+  },
+  {
+    // D11: localStorage/sessionStorage trần có thể throw (Safari private mode, site data bị
+    // chặn, quota đầy) — mọi nơi ngoài lib/** phải qua wrapper an toàn `lib/browser-storage.ts`
+    // (W1-13, mọi read/write đã bọc try/catch). Severity 'warn' — nhiều file khác đang dùng
+    // trực tiếp ngoài phạm vi track này.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/lib/**'],
+    rules: {
+      'no-restricted-globals': [
+        'warn',
+        { name: 'localStorage', message: 'Dùng browserStorage từ lib/browser-storage.ts thay vì localStorage trực tiếp.' },
+        { name: 'sessionStorage', message: 'Dùng sessionBrowserStorage từ lib/browser-storage.ts thay vì sessionStorage trực tiếp.' },
+      ],
+    },
+  },
 )

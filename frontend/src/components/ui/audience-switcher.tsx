@@ -21,15 +21,18 @@ interface AudienceSwitcherProps {
 // `CSSProperties` không khai báo chúng. Mở rộng kiểu tại chỗ để tránh cast.
 type CSSVarStyle = CSSProperties & Record<`--${string}`, string>;
 
+// W1-12: moved off the legacy `--surface-alt/--ink-900/--border` variables (which
+// carried raw hex fallbacks and never followed dark mode) onto the semantic
+// tokens from styles/tokens.css. Only the ring colour still needs a style object.
 const activeStyle: CSSVarStyle = {
-    backgroundColor: 'var(--accent-primary)',
-    '--tw-ring-color': 'var(--accent-primary)',
+    backgroundColor: 'rgb(var(--brand))',
+    '--tw-ring-color': 'rgb(var(--brand))',
 };
 
 const inactiveStyle: CSSVarStyle = {
-    backgroundColor: 'var(--surface-alt, #FAFAFA)',
-    color: 'var(--ink-900, #1A1A1A)',
-    borderColor: 'var(--border, #E5E5E5)',
+    backgroundColor: 'rgb(var(--surface))',
+    color: 'rgb(var(--fg))',
+    borderColor: 'rgb(var(--line))',
 };
 
 /**
@@ -60,7 +63,7 @@ export const AudienceSwitcher = ({ className }: AudienceSwitcherProps) => {
                         onClick={() => setAudience(option.value)}
                         className={[
                             'min-h-[44px] px-4 py-2 rounded-full text-sm font-medium',
-                            'transition-colors duration-150',
+                            'transition-colors duration-140',
                             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                             active
                                 ? 'text-white shadow-sm'

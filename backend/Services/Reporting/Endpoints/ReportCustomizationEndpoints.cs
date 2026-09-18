@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -81,7 +82,8 @@ public static class ReportCustomizationEndpoints
             db.ReportDefinitions.Add(def);
             await db.SaveChangesAsync();
             return Results.Created($"/api/reports/definitions/{def.Code}", new { def.Id, def.Code });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+            // W1-10: khai báo định nghĩa báo cáo mới = cấu hình hệ thống -> System.ManageConfig (Admin).
+        }).RequireAuthorization(Permissions.System.ManageConfig);
 
         // ── Saved Presets ────────────────────────────────────────────────────
         group.MapGet("/{code}/presets", async (

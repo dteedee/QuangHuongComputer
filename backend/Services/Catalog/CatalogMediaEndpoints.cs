@@ -13,17 +13,15 @@ namespace Catalog;
 
 /// <summary>
 /// Endpoint quản lý media (ảnh/video/nhúng YouTube) của sản phẩm.
-/// Upload đi qua MediaValidator (magic bytes) + MediaUploadService (MinIO).
+/// Upload đi qua MediaValidator (magic bytes) + MediaUploadService (đĩa local qua IFileStorage,
+/// W1-6 / D02 — MinIO đã gỡ hoàn toàn). Request/response record types: <c>CatalogMediaEndpointRequests.cs</c> (giữ file dưới 200 dòng).
 /// </summary>
-public static class CatalogMediaEndpoints
+public static partial class CatalogMediaEndpoints
 {
     /// <summary>Regex YouTube: chỉ chấp `youtube.com/watch?v=`, `youtube.com/embed/`, `youtu.be/`.</summary>
     private static readonly Regex YoutubeRegex = new(
         @"^(?:https?://)?(?:www\.)?(?:youtube\.com/(?:embed/|watch\?v=)|youtu\.be/)([A-Za-z0-9_-]{6,})",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    /// <summary>W0-3: upload ghi file lên server ⇒ chỉ nhân viên nội dung. W1-1 thay bằng permission.</summary>
-    private static readonly string[] MediaRoles = { Roles.Admin, Roles.Manager, Roles.Marketing };
 
     public static void MapCatalogMediaEndpoints(this IEndpointRouteBuilder app)
     {
@@ -83,8 +81,14 @@ public static class CatalogMediaEndpoints
             });
         })
         .DisableAntiforgery()
-        // W0-3: trước đây chỉ RequireAuthorization() ⇒ mọi token (kể cả Customer) ghi file lên server.
-        .RequireAuthorization(p => p.RequireRole(MediaRoles));
+        // W1-6 (adversarial-verification fix, 2026-09-18): the first cut used
+        // Permissions.Catalog.Manage here, which Marketing does NOT hold (only Catalog.View) —
+        // a real regression vs. the pre-existing RequireRole(Admin,Manager,Marketing) (W0-3), and
+        // the opposite of what integration-requests-w1.md's W1-10 section B.1 and wave-0 IR #43/#44
+        // both ask for on this exact file: Permissions.Content.ManageMedia (Admin/Manager/Marketing
+        // all hold it), which also finally aligns the attach/edit/delete/reorder endpoints below
+        // (previously Admin-only) so Marketing can attach what it uploads — closing IR #44 for real.
+        .RequirePermission(Permissions.Content.ManageMedia);
 
         // ---- Thêm media (record) vào sản phẩm ----
         group.MapPost("/products/{id:guid}/media", async (
@@ -93,6 +97,15 @@ public static class CatalogMediaEndpoints
             var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
             if (product == null) return Results.NotFound();
 
+            // W1-6 found a pre-existing defect here while verifying this track (reproduced on TEST
+            // 2026-09-18, see reports/integration-requests-w1.md and w1-6-report.md "Unresolved"):
+            // product.AddMedia(media) below never persists (SaveChangesAsync silently writes 0 rows)
+            // because `_medias` (PropertyAccessMode.Field) is never loaded here. The obvious fix —
+            // `db.Entry(product).Collection("_medias").LoadAsync(ct)`, the exact pattern the PUT
+            // handler below already uses — throws InvalidOperationException at runtime ("The
+            // property 'Product._medias' could not be found"), so the real fix is deeper than this
+            // file (Catalog/Infrastructure/CatalogDbContext.cs + Domain/Product.cs, W2-1 ownership,
+            // not W1-6's). Left AS-IS (not W1-6's regression to introduce) — flagged, not patched.
             ProductMedia media;
             if (req.Type == MediaType.YoutubeEmbed)
             {
@@ -117,7 +130,7 @@ public static class CatalogMediaEndpoints
             product.AddMedia(media);
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { id = media.Id });
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequirePermission(Permissions.Content.ManageMedia);
 
         // ---- Sửa alt / sortOrder / isPrimary ----
         group.MapPut("/products/{id:guid}/media/{mid:guid}", async (
@@ -138,7 +151,7 @@ public static class CatalogMediaEndpoints
             }
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequirePermission(Permissions.Content.ManageMedia);
 
         // ---- Xoá media ----
         group.MapDelete("/products/{id:guid}/media/{mid:guid}", async (
@@ -148,18 +161,20 @@ public static class CatalogMediaEndpoints
             if (media == null) return Results.NotFound();
             db.ProductMedias.Remove(media);
             await db.SaveChangesAsync(ct);
-            // Best-effort xoá file vật lý (không chặn nếu MinIO down)
+            // Best-effort xoá file vật lý — DeleteAsync tự no-op an toàn nếu URL không phải của
+            // storage runtime (ảnh seed /media/seed/**, legacy /uploads/**, nhúng YouTube).
             try
             {
-                if (media.Type != MediaType.YoutubeEmbed && !string.IsNullOrEmpty(media.Url))
+                if (media.Type != MediaType.YoutubeEmbed)
                 {
-                    var key = ExtractObjectKey(media.Url);
-                    if (!string.IsNullOrEmpty(key)) await uploader.DeleteAsync(key, ct);
+                    if (!string.IsNullOrEmpty(media.Url)) await uploader.DeleteAsync(media.Url, ct);
+                    if (!string.IsNullOrEmpty(media.ThumbnailUrl) && media.ThumbnailUrl != media.Url)
+                        await uploader.DeleteAsync(media.ThumbnailUrl, ct);
                 }
             }
-            catch { /* ignore — record đã xoá khỏi DB */ }
+            catch { /* ignore — record đã xoá khỏi DB, xoá file chỉ là dọn dẹp best-effort */ }
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequirePermission(Permissions.Content.ManageMedia);
 
         // ---- Sắp xếp lại: body { ids: [uuid, uuid, ...] } — vị trí = index ----
         group.MapPost("/products/{id:guid}/media/reorder", async (
@@ -172,28 +187,6 @@ public static class CatalogMediaEndpoints
                 if (order.TryGetValue(m.Id, out var pos)) m.UpdateSortOrder(pos);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequirePermission(Permissions.Content.ManageMedia);
     }
-
-    /// <summary>Trích object key từ URL public dạng {base}/{bucket}/{key}.</summary>
-    private static string? ExtractObjectKey(string url)
-    {
-        if (string.IsNullOrEmpty(url)) return null;
-        var idx = url.IndexOf("/products/", StringComparison.OrdinalIgnoreCase);
-        return idx < 0 ? null : url.Substring(idx + 1); // bỏ dấu '/' đầu
-    }
-
-    public record AddMediaRequest(
-        MediaType Type,
-        string Url,
-        string? ThumbnailUrl,
-        string? AltText,
-        int SortOrder,
-        bool IsPrimary,
-        long? FileSize,
-        int? DurationSeconds,
-        Guid? VariantId);
-
-    public record UpdateMediaRequest(string? AltText, int? SortOrder, bool? IsPrimary);
-    public record ReorderRequest(List<Guid> Ids);
 }

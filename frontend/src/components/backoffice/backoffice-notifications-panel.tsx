@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, Bell, Box, Loader2, Receipt, RefreshCw, ShieldCheck, Users, Wrench } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import type { Notification } from '../../hooks/useNotifications';
+import { paths } from '../../routes';
 
 interface BackofficeNotificationsPanelProps {
     notifications: Notification[];
@@ -135,7 +136,7 @@ export const BackofficeNotificationsPanel = ({
             {notifications.length > 0 && (
                 <div className={`p-3 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
                     <button
-                        onClick={() => { onClose(); navigate('/backoffice/notifications'); }}
+                        onClick={() => { onClose(); navigate(paths.backoffice.notifications()); }}
                         className="flex items-center justify-center w-full py-2.5 px-4 text-sm font-bold text-white rounded-xl transition-all hover:opacity-90 active:scale-[0.98]"
                         style={{ backgroundColor: colors.primary }}
                     >

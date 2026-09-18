@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +16,7 @@ public static class PayrollEndpoints
 {
     public static void MapPayrollEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr/payroll").RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+        var group = app.MapGroup("/api/hr/payroll").RequireModulePermissions(PermissionModules.Payroll);
 
         // ==================== PAYROLL RUNS ====================
 
@@ -195,7 +196,7 @@ public static class PayrollEndpoints
                 return Results.File(bytes, "text/csv", $"bank-transfer-{id}.csv");
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Accountant", "HR")); // TODO(W1-1)
+        }).RequireAuthorization(Permissions.HR.ViewPayroll);
     }
 }
 

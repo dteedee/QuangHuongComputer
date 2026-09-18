@@ -1,0 +1,81 @@
+# ===========================================
+# Deploy — build + push api/web images to GHCR on a tag (D05 / phase-64 W1-14)
+# ===========================================
+# CI's whole job here is producing the two images `make deploy TAG=vX` pulls on the server — the
+# actual deploy (dump, migrate, restart) runs MANUALLY on the server via `make deploy TAG=vX`
+# (D05 §12: no SSH-from-CI blue/green pipeline; a soft restart behind Caddy is the whole story).
+# Replaces cd-production.yml / cd-uat.yml / cd-test.yml / reusable-docker-build.yml, none of which
+# ever produced a running deploy (Overview) — UAT and production both pull from this one workflow,
+# they just point `make deploy` at a different `.env` (D05 §2).
+#
+# Trigger: push a tag `vX.Y.Z`. Builds ONLY api + web (never the pinned infra images — D05 §12:
+# `make deploy` never pulls postgres/redis/rabbitmq, so a deploy can never bump RabbitMQ's minor
+# version underneath a durable volume).
+
+name: Deploy - Build & Push
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    name: Build & push ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: api
+            dockerfile: backend/Dockerfile
+            context: .
+          - image: web
+            dockerfile: frontend/Dockerfile
+            context: .
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+          # No build-args passed for `web`: frontend/Dockerfile's ARG defaults are already the
+          # root-relative /api + /hubs/chat that same-origin (D05 §3) needs, so this ONE image is
+          # correct for prod, UAT and a rehearsal alike — nothing here is SITE_URL-specific.
+
+      - name: Image reference
+        run: echo "${{ matrix.image }} -> ${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"

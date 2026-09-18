@@ -64,6 +64,13 @@ GoogleService-Info.plist
 **/bin/
 *.log
 
+# === Runtime media uploads (W1-6 / D02) ===
+# Storage:RootPath default (backend/BuildingBlocks/Storage/FileStorageOptions.cs). OUTSIDE wwwroot
+# on purpose — seed assets stay versioned under backend/ApiGateway/wwwroot/media/seed/** (W0-6),
+# only runtime uploads written here are git-ignored. Added BEFORE the first local upload happens
+# (verified 2026-09-18 with `git check-ignore` — nothing matched App_Data before this line).
+backend/ApiGateway/App_Data/
+
 # === Database files ===
 prisma/dev.db
 

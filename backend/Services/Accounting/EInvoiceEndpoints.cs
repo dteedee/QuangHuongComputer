@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Accounting.Domain;
 using Accounting.Infrastructure;
 using Accounting.Infrastructure.EInvoice;
@@ -13,7 +14,7 @@ public static class EInvoiceEndpoints
 {
     public static void MapEInvoiceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/accounting/einvoice").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/accounting/einvoice").RequireModulePermissions(PermissionModules.Accounting);
 
         // 1. Issue an E-Invoice (Phát hành HĐĐT)
         group.MapPost("/issue/{invoiceId:guid}", async (

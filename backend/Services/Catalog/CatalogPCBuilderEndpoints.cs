@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -55,7 +56,9 @@ public static class CatalogPCBuilderEndpoints
 
             var result = PCBuilderEngine.Evaluate(components!);
             return Results.Ok(result);
-        });
+            // W1-10: công cụ kiểm tra tương thích ở storefront, không đụng dữ liệu người dùng.
+            // Cần rule POST /api/catalog/pc-builder/check-compatibility trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         group.MapPost("/builds", async (SavePcBuildRequest request, CatalogDbContext db, ClaimsPrincipal user) =>
         {
@@ -106,7 +109,9 @@ public static class CatalogPCBuilderEndpoints
                 TotalWattage = build.TotalWattage,
                 Issues = evaluation.Issues
             });
-        });
+            // W1-10: lưu cấu hình ghi dữ liệu vào DB -> fail-closed, bắt buộc đăng nhập.
+            // (Trước đây ẩn danh: bất kỳ ai cũng bơm được bản ghi SavedPcBuilds.)
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
 
         group.MapGet("/builds/{code}", async (string code, CatalogDbContext db) =>
         {
@@ -180,7 +185,9 @@ public static class CatalogPCBuilderEndpoints
                 .ToListAsync();
 
             return Results.Ok(builds);
-        });
+            // W1-10: "cấu hình của tôi" -> bắt buộc đăng nhập. Không dựa vào allow-list
+            // /api/catalog/** (chỉ dùng cho audit), vì handler đọc dữ liệu theo danh tính.
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
     }
 }
 

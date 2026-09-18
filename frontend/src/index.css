@@ -2,21 +2,34 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* ==================== Accent Color System ==================== */
-/* These CSS variables are dynamically set by ThemeContext.tsx    */
-/* Default = Quang Hưởng brand red (see design-system/brand-tokens.ts) */
+/* Design-system foundation (W1-7) — semantic tokens + base layer.
+   Contract: plans/.../design/design-direction.md. Must stay above every rule
+   below so utilities can still override the base layer where intended. */
+@import "./styles/tokens.css";
+@import "./styles/base.css";
+
+/* ==================== Accent Color System (legacy alias) ==================== */
+/* These CSS variables are dynamically set by ThemeContext.tsx.                 */
+/* Kept because ~230 var(--accent-*) call sites + Tailwind `accent` colour rely */
+/* on them. New code uses the semantic tokens (--brand / --brand-text).         */
+/* The pre-JS fallback must be the SAME red as `--brand` (215 32 47 = #D7202F),
+   not the legacy #D22B2B — two brand reds side by side is anti-pattern §9.2.
+   ThemeContext's `red` preset was aligned to this value by w1-7 IR #8; the
+   seeded `theme.accentPrimary` SystemConfig row still overrides both at runtime
+   with #D22B2B (see integration-requests-w1.md, w1-7 #9). */
 :root {
-  --accent-primary: #D22B2B;
-  --accent-primary-hover: #B02020;
+  --accent-primary: #D7202F;
+  --accent-primary-hover: #B3141F;
   --accent-primary-light: #FEF2F2;
   --accent-primary-dark: #8C1919;
   /* rgba components of the primary for use in shadow/glow effects */
-  --accent-primary-rgb: 210, 43, 43;
+  --accent-primary-rgb: 215, 32, 47;
 
-  /* Neutral system — sync với design-system/brand-tokens.ts */
+  /* Neutral system — legacy hex aliases still read by a few inline styles.
+     NOTE: `--surface` is NOT defined here any more — it is a semantic rgb
+     triple in styles/tokens.css and a hex value would break rgb(var(--surface)). */
   --ink-900: #1A1A1A;
   --ink-600: #525252;
-  --surface: #FFFFFF;
   --surface-alt: #FAFAFA;
   --border: #E5E5E5;
 }
@@ -87,10 +100,10 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Page background/foreground come from the semantic tokens — they already flip
+   in dark mode, so no `dark:` variant and no isDark ternary is needed. */
 body {
-  @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  @apply bg-bg text-fg;
 }
 
 /* Smooth transitions cho tất cả elements */
@@ -210,11 +223,8 @@ textarea::placeholder {
   border-color: var(--accent-primary);
 }
 
-/* Focus ring for accessibility */
-*:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
+/* Focus ring: single source of truth is styles/base.css (`:focus-visible`,
+   2px solid rgb(var(--brand))). Do not re-declare it here. */
 
 /* Smooth image loading — fade-in via CSS animation without needing a JS-set attr.
    Previous impl relied on `img[loaded]` toggled by JS which never fired, so
@@ -720,22 +730,16 @@ img {
   }
 }
 
-/* Reduced motion preference */
+/* Reduced motion: the global rule lives in styles/base.css. Only the infinite
+   legacy animations need a hard stop (duration alone would still loop). */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-float,
   .animate-pulse-glow,
   .animate-spin-slow,
-  .animate-gradient {
-    animation: none !important;
-  }
-  
+  .animate-gradient,
   .shimmer-fast {
     animation: none !important;
-  }
-  
-  * {
-    transition-duration: 0.01ms !important;
   }
 }
 

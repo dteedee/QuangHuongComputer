@@ -1,4 +1,5 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import { isChunkLoadError, reloadOnceForChunkError } from '../lib/chunk-load-recovery';
 
 interface Props {
     children: ReactNode;
@@ -49,17 +50,22 @@ class ErrorBoundary extends Component<Props, State> {
             error,
             errorInfo
         });
+
+        // A lazy-chunk load failure (stale deploy, flaky network) is not an app
+        // bug — one automatic reload usually fixes it. Guarded to fire at most
+        // once per tab session so it can never reload-loop.
+        if (isChunkLoadError(error)) {
+            reloadOnceForChunkError();
+        }
     }
 
+    /** Clears the error state so children re-render fresh, without a full page reload. */
     handleReset = () => {
         this.setState({
             hasError: false,
             error: null,
             errorInfo: null
         });
-
-        // Refresh the page to reset state
-        window.location.reload();
     };
 
     render() {
@@ -87,7 +93,7 @@ class ErrorBoundary extends Component<Props, State> {
                             </p>
                             <div className="flex gap-3 justify-center">
                                 <button
-                                    onClick={this.handleReset}
+                                    onClick={() => window.location.reload()}
                                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                 >
                                     Tải lại trang

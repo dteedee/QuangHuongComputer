@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Payments.Domain;
+using BuildingBlocks.Database;
 
 namespace Payments.Infrastructure;
 
@@ -22,6 +23,9 @@ public class PaymentsDbContext : DbContext
         modelBuilder.Entity<PaymentIntent>(entity =>
         {
             entity.HasKey(e => e.Id);
+            // W1-11: xmin - webhook nhà cung cấp và người dùng bấm "đã thanh toán" có thể
+            // cập nhật cùng một PaymentIntent đồng thời; ghi đè lặng lẽ là mất tiền.
+            entity.UseXminAsConcurrencyToken();
             entity.Property(e => e.Amount).HasPrecision(18, 2);
             entity.Property(e => e.Currency).HasMaxLength(3);
             entity.Property(e => e.IdempotencyKey).IsRequired().HasMaxLength(100);
@@ -29,6 +33,20 @@ public class PaymentsDbContext : DbContext
             entity.HasIndex(e => e.IdempotencyKey).IsUnique();
             entity.HasIndex(e => e.OrderId);
             entity.HasIndex(e => e.ExternalId);
+            entity.HasIndex(e => new { e.Status, e.CreatedAt })
+                .HasDatabaseName("IX_PaymentIntents_Status_CreatedAt");
+            entity.ToTable(t =>
+                t.HasCheckConstraint("CK_PaymentIntents_Amount_NonNegative", "\"Amount\" >= 0"));
+        });
+
+        // W1-11 / audit db-schema-migrations-23: TransferAmount + Accumulated còn thả nổi kiểu,
+        // và RelatedOrderId là cột đối soát nóng nhưng chưa có index.
+        modelBuilder.Entity<SePayTransaction>(entity =>
+        {
+            entity.Property(e => e.TransferAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Accumulated).HasPrecision(18, 2);
+            entity.HasIndex(e => e.RelatedOrderId)
+                .HasDatabaseName("IX_SePayTransactions_RelatedOrderId");
         });
 
         // Phase 04: ProcessedWebhooks — chống xử lý lặp theo (Provider, TransactionId).
@@ -43,5 +61,10 @@ public class PaymentsDbContext : DbContext
                 .HasDatabaseName("IX_ProcessedWebhooks_Provider_TxnId");
             entity.HasIndex(e => e.OrderId).HasDatabaseName("IX_ProcessedWebhooks_OrderId");
         });
+
+        // W1-11 / audit db-schema-migrations-07: module này chưa gọi ConfigureCommonColumnProperties
+        // nên model của Npgsql 8 đòi timestamptz cho mọi cột DateTime trong khi CSDL thật là
+        // `timestamp without time zone`. Ghim lại đúng thực tế (chuyển đổi hàng loạt: backlog).
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
     }
 }

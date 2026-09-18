@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Accounting;
 using ApiGateway;
 using ApiGateway.Startup;
@@ -24,7 +25,13 @@ Env.TraversePath().Load();
 // Preserve legacy PostgreSQL timestamp behavior (DateTime → "timestamp without time zone")
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-var builder = WebApplication.CreateBuilder(args);
+// The command-line configuration provider treats a `--flag` that carries no `=` as a KEY whose
+// value is the NEXT token. `db reset --demo --ConnectionStrings:DefaultConnection=<X>` therefore
+// made `--demo` swallow the connection string, and the destructive verb ran against the database
+// in appsettings instead of the one the operator named - the exact "reset pointed at the wrong
+// database" accident the name guard exists to catch. Hide the verb's valueless flags from the
+// builder; DatabaseMigrationRunner still parses the untouched `args`.
+var builder = WebApplication.CreateBuilder(DatabaseMigrationRunner.ConfigurationArgs(args));
 
 // -- Structured logging --------------------------------------------------------
 LoggingSetup.Configure(builder);
@@ -35,9 +42,19 @@ AuthenticationSetup.Configure(builder);
 
 var app = builder.Build();
 
+// -- Maintenance CLI -----------------------------------------------------------
+// `dotnet ApiGateway.dll db migrate | db seed --profile <p> | db reset --demo` runs the verb and
+// exits with its status code WITHOUT starting the HTTP server: a fresh machine has to be able to
+// build its database before anything can listen on a port. See DatabaseMigrationRunner and
+// docs/deployment-guide.md.
+if (DatabaseMigrationRunner.IsDbCommand(args))
+{
+    return await DatabaseMigrationRunner.RunCommandAsync(app, args);
+}
+
 // -- Database migrations + seeding --------------------------------------------
-// Runs in every environment (gated by Database:AutoMigrate config; default true in Dev, false in Prod).
-// In Production a migration failure aborts startup — see DatabaseMigrationRunner.
+// Runs in every environment (gated by Database:AutoMigrate / Database:AutoSeed; both default to
+// true in Development, false elsewhere). In Production a migration failure aborts startup.
 await DatabaseMigrationRunner.RunAsync(app);
 
 // -- Schema drift guard --------------------------------------------------------
@@ -148,4 +165,15 @@ app.MapBackupEndpoints();
 
 app.MapControllers();
 
+// Kiểm tra phân quyền toàn bộ route NGAY SAU khi mọi app.Map* đã chạy (W1-1, IR w1-1 #7).
+// Bắt buộc gọi ở đây: WebApplication giữ EndpointDataSource trong chính nó
+// (IEndpointRouteBuilder.DataSources) chứ KHÔNG đăng ký vào DI, nên một hosted service
+// đọc DI sẽ luôn thấy 0 endpoint và âm thầm bỏ qua — trông y hệt một bảng route sạch.
+// Cờ Security:EndpointAuthorizationAudit:FailOnViolation biến cảnh báo thành chặn khởi động.
+EndpointAuthorizationAuditor.RunOn(
+    app,
+    app.Services.GetRequiredService<ILogger<EndpointAuthorizationAuditor>>(),
+    app.Configuration.GetValue("Security:EndpointAuthorizationAudit:FailOnViolation", false));
+
 app.Run();
+return 0;

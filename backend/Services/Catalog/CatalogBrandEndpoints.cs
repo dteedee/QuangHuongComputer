@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
@@ -88,7 +89,7 @@ public static class CatalogBrandEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
 
             return Results.Created($"/api/catalog/brands/{brand.Id}", CatalogResponses.BrandPayload(brand, 0));
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapPut("/brands/{id:guid}", async (Guid id, UpdateBrandDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -122,7 +123,7 @@ public static class CatalogBrandEndpoints
 
             var count = await db.Products.CountAsync(p => p.BrandId == id);
             return Results.Ok(new { Message = "Brand updated", Brand = CatalogResponses.BrandPayload(brand, count) });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -142,7 +143,7 @@ public static class CatalogBrandEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Brand deactivated" });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Delete);
 
         group.MapPost("/brands/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -158,7 +159,7 @@ public static class CatalogBrandEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Brand activated" });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
     }
 
     /// <summary>Đổi slug thương hiệu có kiểm tra trùng (uq_brands_slug là unique có filter).</summary>

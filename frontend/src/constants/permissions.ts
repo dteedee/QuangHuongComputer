@@ -1,243 +1,180 @@
-// Định nghĩa và dịch các quyền hạn trong hệ thống
+// GENERATED FILE - do not hand-edit the PERMISSIONS block below.
+// Source: plans/260917-2100-full-system-overhaul/reports/w1-1-permissions.json via
+// constants/permissions-catalog.ts. Every route def, <Can permission="...">, and RequireAuth
+// check must import a key from here instead of hand-typing the 'Permissions.X.Y' string
+// (phase-17-w1-fe-app-shell.md Risk Assessment: "Permission strings drifting from the backend").
+import { PERMISSIONS_CATALOG, type PermissionCatalogEntry } from './permissions-catalog';
 
-export interface PermissionInfo {
-    key: string;
-    name: string;
-    description: string;
-    category: string;
+export type { PermissionCatalogEntry } from './permissions-catalog';
+export { PERMISSIONS_CATALOG } from './permissions-catalog';
+
+/** Flat map of SCREAMING_SNAKE const name -> literal backend permission key. */
+export const PERMISSIONS = {
+  CATALOG_VIEW: 'Permissions.Catalog.View',
+  CATALOG_CREATE: 'Permissions.Catalog.Create',
+  CATALOG_EDIT: 'Permissions.Catalog.Edit',
+  CATALOG_DELETE: 'Permissions.Catalog.Delete',
+  CATALOG_MANAGE: 'Permissions.Catalog.Manage',
+  CATALOG_EXPORT: 'Permissions.Catalog.Export',
+  CATALOG_IMPORT: 'Permissions.Catalog.Import',
+  CATALOG_BULK_PRICE: 'Permissions.Catalog.BulkPrice',
+  SALES_VIEW_OWN: 'Permissions.Sales.ViewOwn',
+  SALES_VIEW_ALL: 'Permissions.Sales.ViewAll',
+  SALES_MANAGE_ALL: 'Permissions.Sales.ManageAll',
+  SALES_CHECKOUT: 'Permissions.Sales.Checkout',
+  SALES_UPDATE_STATUS: 'Permissions.Sales.UpdateStatus',
+  SALES_CANCEL_ORDER: 'Permissions.Sales.CancelOrder',
+  SALES_VIEW_RETURNS: 'Permissions.Sales.ViewReturns',
+  SALES_MANAGE_RETURNS: 'Permissions.Sales.ManageReturns',
+  SALES_POS: 'Permissions.Sales.Pos',
+  SALES_EXPORT: 'Permissions.Sales.Export',
+  SALES_SELL_ON_CREDIT: 'Permissions.Sales.SellOnCredit',
+  SALES_TAKE_DEPOSIT: 'Permissions.Sales.TakeDeposit',
+  SALES_MANAGE_INSTALLMENTS: 'Permissions.Sales.ManageInstallments',
+  SALES_QUOTATIONS_VIEW: 'Permissions.Sales.Quotations.View',
+  SALES_QUOTATIONS_CREATE: 'Permissions.Sales.Quotations.Create',
+  SALES_QUOTATIONS_EDIT: 'Permissions.Sales.Quotations.Edit',
+  SALES_QUOTATIONS_APPROVE: 'Permissions.Sales.Quotations.Approve',
+  INVENTORY_VIEW_STOCK: 'Permissions.Inventory.ViewStock',
+  INVENTORY_MANAGE_STOCK: 'Permissions.Inventory.ManageStock',
+  INVENTORY_ADJUST_STOCK: 'Permissions.Inventory.AdjustStock',
+  INVENTORY_VIEW_SUPPLIER: 'Permissions.Inventory.ViewSupplier',
+  INVENTORY_CREATE_SUPPLIER: 'Permissions.Inventory.CreateSupplier',
+  INVENTORY_UPDATE_SUPPLIER: 'Permissions.Inventory.UpdateSupplier',
+  INVENTORY_DELETE_SUPPLIER: 'Permissions.Inventory.DeleteSupplier',
+  INVENTORY_VIEW_PURCHASE_ORDER: 'Permissions.Inventory.ViewPurchaseOrder',
+  INVENTORY_CREATE_PURCHASE_ORDER: 'Permissions.Inventory.CreatePurchaseOrder',
+  INVENTORY_APPROVE_PURCHASE_ORDER: 'Permissions.Inventory.ApprovePurchaseOrder',
+  INVENTORY_RECEIVE_PURCHASE_ORDER: 'Permissions.Inventory.ReceivePurchaseOrder',
+  INVENTORY_VIEW_RESERVATIONS: 'Permissions.Inventory.ViewReservations',
+  INVENTORY_APPROVE: 'Permissions.Inventory.Approve',
+  INVENTORY_IMPORT_OPENING: 'Permissions.Inventory.ImportOpening',
+  INVENTORY_QUICK_RECEIVE: 'Permissions.Inventory.QuickReceive',
+  INVENTORY_EXPORT: 'Permissions.Inventory.Export',
+  PAYMENTS_VIEW: 'Permissions.Payments.View',
+  PAYMENTS_RECONCILE: 'Permissions.Payments.Reconcile',
+  PAYMENTS_REFUND: 'Permissions.Payments.Refund',
+  PAYMENTS_COLLECT_COD: 'Permissions.Payments.CollectCod',
+  PAYMENTS_CONFIGURE: 'Permissions.Payments.Configure',
+  REPAIR_BOOK: 'Permissions.Repair.Book',
+  REPAIR_VIEW_OWN: 'Permissions.Repair.ViewOwn',
+  REPAIR_VIEW_ALL: 'Permissions.Repair.ViewAll',
+  REPAIR_UPDATE_STATUS: 'Permissions.Repair.UpdateStatus',
+  REPAIR_ASSIGN_TECHNICIAN: 'Permissions.Repair.AssignTechnician',
+  REPAIR_CREATE_QUOTE: 'Permissions.Repair.CreateQuote',
+  REPAIR_APPROVE_QUOTE: 'Permissions.Repair.ApproveQuote',
+  REPAIR_COMPLETE: 'Permissions.Repair.Complete',
+  WARRANTY_SUBMIT_CLAIM: 'Permissions.Warranty.SubmitClaim',
+  WARRANTY_VIEW_OWN: 'Permissions.Warranty.ViewOwn',
+  WARRANTY_VIEW_ALL: 'Permissions.Warranty.ViewAll',
+  WARRANTY_REVIEW_CLAIM: 'Permissions.Warranty.ReviewClaim',
+  WARRANTY_APPROVE_CLAIM: 'Permissions.Warranty.ApproveClaim',
+  WARRANTY_MODERATE: 'Permissions.Warranty.Moderate',
+  CONTENT_VIEW_PAGES: 'Permissions.Content.ViewPages',
+  CONTENT_MANAGE_PAGES: 'Permissions.Content.ManagePages',
+  CONTENT_VIEW_POSTS: 'Permissions.Content.ViewPosts',
+  CONTENT_MANAGE_POSTS: 'Permissions.Content.ManagePosts',
+  CONTENT_VIEW_COUPONS: 'Permissions.Content.ViewCoupons',
+  CONTENT_MANAGE_COUPONS: 'Permissions.Content.ManageCoupons',
+  CONTENT_VIEW_BANNERS: 'Permissions.Content.ViewBanners',
+  CONTENT_MANAGE_BANNERS: 'Permissions.Content.ManageBanners',
+  CONTENT_MANAGE_MEDIA: 'Permissions.Content.ManageMedia',
+  CONTENT_MANAGE_MENUS: 'Permissions.Content.ManageMenus',
+  CONTENT_MANAGE_CONTACTS: 'Permissions.Content.ManageContacts',
+  CRM_VIEW_CUSTOMERS: 'Permissions.CRM.ViewCustomers',
+  CRM_MANAGE_CUSTOMERS: 'Permissions.CRM.ManageCustomers',
+  CRM_VIEW_LEADS: 'Permissions.CRM.ViewLeads',
+  CRM_MANAGE_LEADS: 'Permissions.CRM.ManageLeads',
+  CRM_VIEW_SEGMENTS: 'Permissions.CRM.ViewSegments',
+  CRM_MANAGE_SEGMENTS: 'Permissions.CRM.ManageSegments',
+  CRM_VIEW_ANALYTICS: 'Permissions.CRM.ViewAnalytics',
+  CRM_MANAGE_TASKS: 'Permissions.CRM.ManageTasks',
+  CRM_VIEW_CAMPAIGNS: 'Permissions.CRM.ViewCampaigns',
+  CRM_MANAGE_CAMPAIGNS: 'Permissions.CRM.ManageCampaigns',
+  CRM_SEND_CAMPAIGNS: 'Permissions.CRM.SendCampaigns',
+  ACCOUNTING_VIEW_INVOICES: 'Permissions.Accounting.ViewInvoices',
+  ACCOUNTING_CREATE_INVOICE: 'Permissions.Accounting.CreateInvoice',
+  ACCOUNTING_EDIT_INVOICE: 'Permissions.Accounting.EditInvoice',
+  ACCOUNTING_DELETE_INVOICE: 'Permissions.Accounting.DeleteInvoice',
+  ACCOUNTING_MANAGE_INVOICES: 'Permissions.Accounting.ManageInvoices',
+  ACCOUNTING_APPROVE_CREDIT: 'Permissions.Accounting.ApproveCredit',
+  ACCOUNTING_MANAGE_DEBT: 'Permissions.Accounting.ManageDebt',
+  ACCOUNTING_MANAGE_EXPENSE: 'Permissions.Accounting.ManageExpense',
+  ACCOUNTING_VIEW_REPORTS: 'Permissions.Accounting.ViewReports',
+  ACCOUNTING_EXPORT: 'Permissions.Accounting.Export',
+  HR_VIEW_EMPLOYEES: 'Permissions.HR.ViewEmployees',
+  HR_MANAGE_EMPLOYEES: 'Permissions.HR.ManageEmployees',
+  HR_VIEW_ATTENDANCE: 'Permissions.HR.ViewAttendance',
+  HR_MANAGE_ATTENDANCE: 'Permissions.HR.ManageAttendance',
+  HR_APPROVE_LEAVE: 'Permissions.HR.ApproveLeave',
+  HR_VIEW_PAYROLL: 'Permissions.HR.ViewPayroll',
+  HR_MANAGE_PAYROLL: 'Permissions.HR.ManagePayroll',
+  HR_MANAGE_STATUTORY_PARAMETERS: 'Permissions.HR.ManageStatutoryParameters',
+  USERS_VIEW: 'Permissions.Users.View',
+  USERS_CREATE: 'Permissions.Users.Create',
+  USERS_EDIT: 'Permissions.Users.Edit',
+  USERS_DELETE: 'Permissions.Users.Delete',
+  USERS_MANAGE_ROLES: 'Permissions.Users.ManageRoles',
+  ROLES_VIEW: 'Permissions.Roles.View',
+  ROLES_CREATE: 'Permissions.Roles.Create',
+  ROLES_EDIT: 'Permissions.Roles.Edit',
+  ROLES_DELETE: 'Permissions.Roles.Delete',
+  REPORTING_VIEW_SALES: 'Permissions.Reporting.ViewSales',
+  REPORTING_VIEW_INVENTORY: 'Permissions.Reporting.ViewInventory',
+  REPORTING_VIEW_FINANCIAL: 'Permissions.Reporting.ViewFinancial',
+  REPORTING_VIEW_REPAIR: 'Permissions.Reporting.ViewRepair',
+  REPORTING_VIEW_HR: 'Permissions.Reporting.ViewHR',
+  REPORTING_EXPORT_REPORTS: 'Permissions.Reporting.ExportReports',
+  SYSTEM_VIEW_CONFIG: 'Permissions.System.ViewConfig',
+  SYSTEM_MANAGE_CONFIG: 'Permissions.System.ManageConfig',
+  SYSTEM_VIEW_LOGS: 'Permissions.System.ViewLogs',
+  SYSTEM_MANAGE_LOGS: 'Permissions.System.ManageLogs',
+  SYSTEM_MANAGE_BACKUPS: 'Permissions.System.ManageBackups',
+} as const;
+
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+/** Roles the backend grants a permission to today (mirrors `PERMISSIONS_CATALOG[].roles`). */
+export function rolesForPermission(permission: string): readonly string[] {
+  return PERMISSIONS_CATALOG.find((p) => p.key === permission)?.roles ?? [];
 }
 
-// Tên các nhóm quyền bằng tiếng Việt
-export const PERMISSION_CATEGORIES: Record<string, string> = {
-    'Users': 'Quản lý người dùng',
-    'Roles': 'Quản lý vai trò',
-    'Catalog': 'Quản lý sản phẩm',
-    'Sales': 'Quản lý bán hàng',
-    'Repairs': 'Quản lý sửa chữa',
-    'Inventory': 'Quản lý kho',
-    'Procurement': 'Quản lý mua hàng',
-    'Accounting': 'Kế toán',
-    'Marketing': 'Marketing',
-    'Reporting': 'Báo cáo',
-    'System': 'Hệ thống',
-};
+/** True if `userRoles` contains at least one role the catalog grants `permission` to. */
+export function roleListHasPermission(userRoles: readonly string[], permission: string): boolean {
+  const granted = rolesForPermission(permission);
+  return userRoles.some((r) => granted.includes(r));
+}
 
-// Chi tiết từng quyền với tên và mô tả tiếng Việt
-export const PERMISSION_DETAILS: Record<string, { name: string; description: string }> = {
-    // Quản lý người dùng
-    'Permissions.Users.View': {
-        name: 'Xem người dùng',
-        description: 'Xem danh sách và thông tin người dùng'
-    },
-    'Permissions.Users.Create': {
-        name: 'Tạo người dùng',
-        description: 'Tạo tài khoản người dùng mới'
-    },
-    'Permissions.Users.Edit': {
-        name: 'Sửa người dùng',
-        description: 'Chỉnh sửa thông tin người dùng'
-    },
-    'Permissions.Users.Delete': {
-        name: 'Xóa/Khóa người dùng',
-        description: 'Khóa hoặc vô hiệu hóa tài khoản'
-    },
-    'Permissions.Users.ManageRoles': {
-        name: 'Phân quyền người dùng',
-        description: 'Gán vai trò cho người dùng'
-    },
+/** Vietnamese module display name + description for one permission key (admin UI use). */
+export function getPermissionInfo(key: string): Pick<PermissionCatalogEntry, 'key' | 'displayName' | 'module' | 'moduleDisplayName'> {
+  const entry = PERMISSIONS_CATALOG.find((p) => p.key === key);
+  if (entry) return entry;
+  const parts = key.split('.');
+  return { key, displayName: parts[parts.length - 1] ?? key, module: parts[1] ?? 'Khác', moduleDisplayName: parts[1] ?? 'Khác' };
+}
 
-    // Quản lý vai trò
-    'Permissions.Roles.View': {
-        name: 'Xem vai trò',
-        description: 'Xem danh sách vai trò và quyền hạn'
-    },
-    'Permissions.Roles.Create': {
-        name: 'Tạo vai trò',
-        description: 'Tạo vai trò mới trong hệ thống'
-    },
-    'Permissions.Roles.Edit': {
-        name: 'Sửa vai trò',
-        description: 'Chỉnh sửa quyền hạn của vai trò'
-    },
-    'Permissions.Roles.Delete': {
-        name: 'Xóa vai trò',
-        description: 'Xóa vai trò khỏi hệ thống'
-    },
+/** Groups a flat permission-key list by module, in catalog module order (admin UI use). */
+export function groupPermissionsByModule(keys: readonly string[]): Record<string, PermissionCatalogEntry[]> {
+  const grouped: Record<string, PermissionCatalogEntry[]> = {};
+  for (const key of keys) {
+    const entry = PERMISSIONS_CATALOG.find((p) => p.key === key);
+    if (!entry) continue;
+    (grouped[entry.moduleDisplayName] ??= []).push(entry);
+  }
+  return grouped;
+}
 
-    // Quản lý sản phẩm
-    'Permissions.Catalog.View': {
-        name: 'Xem sản phẩm',
-        description: 'Xem danh mục, sản phẩm, thương hiệu'
-    },
-    'Permissions.Catalog.Create': {
-        name: 'Thêm sản phẩm',
-        description: 'Tạo sản phẩm, danh mục, thương hiệu mới'
-    },
-    'Permissions.Catalog.Edit': {
-        name: 'Sửa sản phẩm',
-        description: 'Chỉnh sửa thông tin sản phẩm'
-    },
-    'Permissions.Catalog.Delete': {
-        name: 'Xóa sản phẩm',
-        description: 'Xóa hoặc ẩn sản phẩm'
-    },
-
-    // Quản lý bán hàng
-    'Permissions.Sales.ViewOrders': {
-        name: 'Xem đơn hàng',
-        description: 'Xem danh sách và chi tiết đơn hàng'
-    },
-    'Permissions.Sales.ManageOrders': {
-        name: 'Quản lý đơn hàng',
-        description: 'Chỉnh sửa, hủy đơn hàng'
-    },
-    'Permissions.Sales.UpdateStatus': {
-        name: 'Cập nhật trạng thái',
-        description: 'Thay đổi trạng thái đơn hàng'
-    },
-
-    // Quản lý sửa chữa
-    'Permissions.Repairs.View': {
-        name: 'Xem phiếu sửa chữa',
-        description: 'Xem danh sách phiếu sửa chữa'
-    },
-    'Permissions.Repairs.Create': {
-        name: 'Tạo phiếu sửa chữa',
-        description: 'Tiếp nhận máy sửa chữa'
-    },
-    'Permissions.Repairs.Edit': {
-        name: 'Cập nhật sửa chữa',
-        description: 'Chẩn đoán, báo giá sửa chữa'
-    },
-    'Permissions.Repairs.Complete': {
-        name: 'Hoàn thành sửa chữa',
-        description: 'Đánh dấu hoàn thành và trả máy'
-    },
-
-    // Quản lý kho
-    'Permissions.Inventory.View': {
-        name: 'Xem tồn kho',
-        description: 'Xem số lượng tồn kho sản phẩm'
-    },
-    'Permissions.Inventory.Adjust': {
-        name: 'Điều chỉnh kho',
-        description: 'Nhập/xuất kho, điều chỉnh số lượng'
-    },
-    'Permissions.Inventory.Stocktake': {
-        name: 'Kiểm kê kho',
-        description: 'Thực hiện kiểm kê định kỳ'
-    },
-
-    // Quản lý mua hàng
-    'Permissions.Procurement.ViewPO': {
-        name: 'Xem đơn mua hàng',
-        description: 'Xem danh sách đơn đặt hàng NCC'
-    },
-    'Permissions.Procurement.CreatePO': {
-        name: 'Tạo đơn mua hàng',
-        description: 'Lập đơn đặt hàng nhà cung cấp'
-    },
-    'Permissions.Procurement.ApprovePO': {
-        name: 'Duyệt đơn mua hàng',
-        description: 'Phê duyệt đơn đặt hàng'
-    },
-
-    // Kế toán
-    'Permissions.Accounting.View': {
-        name: 'Xem kế toán',
-        description: 'Xem dữ liệu kế toán, công nợ'
-    },
-    'Permissions.Accounting.ManageInvoices': {
-        name: 'Quản lý hóa đơn',
-        description: 'Tạo, sửa hóa đơn, phiếu thu chi'
-    },
-    'Permissions.Accounting.ApproveDebt': {
-        name: 'Duyệt công nợ',
-        description: 'Phê duyệt công nợ khách hàng'
-    },
-
-    // Marketing
-    'Permissions.Marketing.Manage': {
-        name: 'Quản lý Marketing',
-        description: 'Quản lý khuyến mãi, voucher, CMS'
-    },
-
-    // Báo cáo
-    'Permissions.Reporting.View': {
-        name: 'Xem báo cáo',
-        description: 'Xem các báo cáo tổng hợp'
-    },
-    'Permissions.Reporting.ViewFinancial': {
-        name: 'Xem báo cáo tài chính',
-        description: 'Xem doanh thu, lợi nhuận (nhạy cảm)'
-    },
-
-    // Hệ thống
-    'Permissions.System.Config': {
-        name: 'Cấu hình hệ thống',
-        description: 'Thay đổi cài đặt hệ thống'
-    },
-};
-
-// Hàm lấy tên category tiếng Việt
-export const getCategoryName = (permissionKey: string): string => {
-    const parts = permissionKey.split('.');
-    if (parts.length >= 2) {
-        return PERMISSION_CATEGORIES[parts[1]] || parts[1];
-    }
-    return 'Khác';
-};
-
-// Hàm lấy thông tin permission
-export const getPermissionInfo = (permissionKey: string): PermissionInfo => {
-    const details = PERMISSION_DETAILS[permissionKey];
-    const category = getCategoryName(permissionKey);
-
-    if (details) {
-        return {
-            key: permissionKey,
-            name: details.name,
-            description: details.description,
-            category
-        };
-    }
-
-    // Fallback nếu không tìm thấy
-    const parts = permissionKey.split('.');
-    return {
-        key: permissionKey,
-        name: parts[parts.length - 1],
-        description: permissionKey,
-        category
-    };
-};
-
-// Hàm nhóm permissions theo category
-export const groupPermissionsByCategory = (permissions: string[]): Record<string, PermissionInfo[]> => {
-    const grouped: Record<string, PermissionInfo[]> = {};
-
-    permissions.forEach(perm => {
-        const info = getPermissionInfo(perm);
-        if (!grouped[info.category]) {
-            grouped[info.category] = [];
-        }
-        grouped[info.category].push(info);
-    });
-
-    return grouped;
-};
-
-// Thứ tự hiển thị các category
-export const CATEGORY_ORDER = [
-    'Quản lý người dùng',
-    'Quản lý vai trò',
-    'Quản lý sản phẩm',
-    'Quản lý bán hàng',
-    'Quản lý sửa chữa',
-    'Quản lý kho',
-    'Quản lý mua hàng',
-    'Kế toán',
-    'Marketing',
-    'Báo cáo',
-    'Hệ thống',
-];
+/**
+ * The ONE permission check, shared by `AuthContext.hasPermission` and `usePermissions().hasPermission`
+ * (previously two copies of the same three lines — DRY). Admin bypasses every check, matching the
+ * backend's own `Admin` superuser behaviour (see `BuildingBlocks/Security/PermissionRegistry.cs`).
+ */
+export function userHasPermission(
+  roles: readonly string[] | undefined,
+  permissions: readonly string[] | undefined,
+  permission: string,
+): boolean {
+  if (!roles || roles.length === 0) return false;
+  if (roles.includes('Admin')) return true;
+  return permissions?.includes(permission) ?? false;
+}

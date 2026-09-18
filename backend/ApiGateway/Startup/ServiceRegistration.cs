@@ -4,7 +4,7 @@ using Ai.Application;
 using BuildingBlocks.Caching.Redis;
 using BuildingBlocks.Database;
 using BuildingBlocks.Email;
-using BuildingBlocks.Messaging.Outbox;
+using BuildingBlocks.Messaging;
 using BuildingBlocks.Validation;
 using Catalog;
 using Communication;
@@ -40,6 +40,7 @@ public static class ServiceRegistration
         RegisterCors(builder);
         RegisterCachingAndLocalization(builder);
         RegisterModules(builder);
+        RegisterEmail(builder);
         RegisterMessagingAndBackgroundJobs(builder);
         RegisterJsonAndControllers(builder);
         // Chạy sau RegisterModules để đảm bảo mọi assembly Services.* đã được load vào AppDomain
@@ -87,6 +88,14 @@ public static class ServiceRegistration
         RegisterForwardedHeaders(builder);
         RateLimitingSetup.Register(builder);
 
+        // D11: nothing registered OutputCache/ResponseCaching anywhere in the repo before this.
+        // W1-6's MiddlewarePipeline.cs still needs app.UseOutputCache() and W2-17's SEO shell adds
+        // the named policy that keys on path+page+filtered - both integration requests filed
+        // (see reports/integration-requests-w1.md). AddSeoShell() itself is NOT called here: it is
+        // an extension method on BuildingBlocks/Seo, which does not exist yet in this wave (W2-17,
+        // wave 2) - calling it now would not compile.
+        builder.Services.AddOutputCache();
+
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         // Tagged "ready": /health/ready filters on this tag and matched NOTHING before, so it always
         // reported Healthy even with the database down. /health/live stays dependency-free (it answers
@@ -95,9 +104,10 @@ public static class ServiceRegistration
         // are hard dependencies — decision D05.
         builder.Services.AddHealthChecks()
             .AddNpgSql(connectionString!, name: "postgres", tags: new[] { "ready", "db" })
-            .AddRabbitMQ(
-                rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672",
-                name: "rabbitmq",
+            .AddCheck(
+                "rabbitmq",
+                new RabbitMqHealthCheck(builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672"),
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
                 tags: new[] { "ready", "bus" })
             .AddRedis(
                 builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379",
@@ -233,8 +243,16 @@ public static class ServiceRegistration
         builder.Services.AddTaxSettings();
         builder.Services.AddReportingModule();
         builder.Services.AddCrmModule(builder.Configuration);
+    }
 
-        builder.Services.AddSingleton<IEmailService, EmailService>();
+    /// <summary>
+    /// D12 unification: one queued SMTP pipeline (BuildingBlocks/Email) behind IEmailSender, bound
+    /// to "Email:Smtp:*". Both BuildingBlocks.Email.IEmailService and Identity.Services.IEmailService
+    /// now delegate to it - see the comment atop Identity/Services/EmailService.cs.
+    /// </summary>
+    private static void RegisterEmail(WebApplicationBuilder builder)
+    {
+        builder.Services.AddQuangHuongEmail(builder.Configuration);
     }
 
     private static void RegisterMessagingAndBackgroundJobs(WebApplicationBuilder builder)
@@ -247,19 +265,25 @@ public static class ServiceRegistration
             x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
             x.AddConsumers(typeof(Identity.DependencyInjection).Assembly);
 
+            // phase-14 step 2: custom outbox (BuildingBlocks/Messaging/Outbox/**) deleted - it was
+            // dead code (grepped: 0 live callers besides itself). Its replacement,
+            // MassTransit.AddEntityFrameworkOutbox<TDbContext>, is NOT wired here: from
+            // MassTransit.EntityFrameworkCore 8.5.0 onward (including the D05-pinned 8.5.10) its
+            // net8.0 dependency group requires Microsoft.EntityFrameworkCore.Relational >= 9.0.1,
+            // binary-incompatible with this repo's EF Core 8.0.2 pin (Directory.Build.props) -
+            // referencing the package reproducibly crashes EVERY DbContext at startup with
+            // TypeLoadException on NpgsqlHistoryRepository.get_LockReleaseBehavior (confirmed
+            // against the TEST stack, see w1-5-report.md). Publishing inside these five contexts'
+            // scope today is fire-and-forget again, same as before this track - flagged RED, not
+            // silently "fixed". See report for the options this blocks on.
+
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost", builder.Configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/", h =>
-                {
-                    h.Username("guest");
-                    h.Password("guest");
-                });
-
+                MassTransitRegistration.ConfigureHost(cfg, builder.Configuration, builder.Environment);
                 cfg.ConfigureEndpoints(context);
             });
         });
 
-        builder.Services.AddHostedService<OutboxProcessorBackgroundService>();
         builder.Services.AddHostedService<CRM.BackgroundServices.AutomationJobService>();
     }
 

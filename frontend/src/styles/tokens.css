@@ -1,0 +1,115 @@
+/* ============================================================================
+ * QUANG HƯỞNG COMPUTER — SEMANTIC DESIGN TOKENS
+ * Contract: plans/260917-2100-full-system-overhaul/design/design-direction.md §2, §8
+ * Owner: W1-7. Every value here is copied verbatim from that document — do not
+ * invent new tokens, do not hardcode hex in components.
+ *
+ * All colours are **rgb triples** so Tailwind can apply `<alpha-value>`:
+ *     colors: { surface: 'rgb(var(--surface) / <alpha-value>)' }
+ *     usage:  class="bg-surface/60 text-fg-muted border-line"
+ *
+ * Light = :root · Dark = .dark (Tailwind darkMode: 'class', toggled by
+ * context/ThemeContext.tsx on <html>).
+ * ========================================================================== */
+
+:root {
+  /* --- surfaces ------------------------------------------------------- */
+  --bg: 247 247 248;
+  --surface: 255 255 255;
+  --sunken: 244 244 245;
+  --stage: 245 245 246;          /* product-image frame */
+
+  /* --- lines ---------------------------------------------------------- */
+  --line: 228 228 231;
+  --line-strong: 212 212 216;
+  --control-line: 138 138 148;   /* input/select/checkbox border — WCAG 1.4.11 ≥3:1 */
+
+  /* --- text ----------------------------------------------------------- */
+  --fg: 24 24 27;
+  --fg-muted: 82 82 91;
+  --fg-subtle: 107 107 116;
+
+  /* --- brand ---------------------------------------------------------- */
+  --brand: 215 32 47;
+  --brand-hover: 179 20 31;
+  --brand-subtle: 255 241 242;
+  --brand-line: 255 205 210;
+  --brand-text: 200 24 40;       /* red text on light surfaces (prices) */
+
+  /* --- dark panels (flash sale, footer) ------------------------------- */
+  --ink: 17 17 19;
+  --ink-soft: 30 30 34;
+  --ink-line: 46 46 52;
+  --on-ink: 250 250 250;
+  --on-ink-muted: 161 161 170;
+
+  /* --- status --------------------------------------------------------- */
+  --success: 21 128 61;
+  --success-subtle: 240 253 244;
+  --warning: 180 83 9;
+  --warning-subtle: 255 251 235;
+  --danger: 194 65 12;
+  --danger-subtle: 255 247 237;
+  --info: 29 78 216;
+  --info-subtle: 239 246 255;
+  --violet: 109 40 217;
+  --violet-subtle: 245 243 255;
+  --rating: 194 116 10;          /* star gold — never the only information channel */
+
+  /* --- elevation (5 steps, do not invent a 6th) ----------------------- */
+  --shadow-xs: 0 1px 2px rgb(24 24 27 / .05);
+  --shadow-sm: 0 1px 2px rgb(24 24 27 / .04), 0 2px 6px rgb(24 24 27 / .05);
+  --shadow-md: 0 2px 4px rgb(24 24 27 / .04), 0 8px 20px -4px rgb(24 24 27 / .09);
+  --shadow-lg: 0 4px 8px rgb(24 24 27 / .04), 0 18px 40px -8px rgb(24 24 27 / .14);
+  --shadow-xl: 0 8px 16px rgb(24 24 27 / .05), 0 32px 64px -12px rgb(24 24 27 / .22);
+}
+
+/* Admin shell sits one step greyer than the storefront (design-direction §8). */
+[data-shell='admin'] {
+  --bg: 244 244 245;
+}
+
+.dark {
+  --bg: 12 12 14;
+  --surface: 21 21 24;
+  --sunken: 30 30 34;
+  /* deliberate exception: --stage stays LIGHT in dark mode so white-background
+     product photos with mix-blend-mode:multiply do not invert (§2 note). */
+  --stage: 236 236 239;
+
+  --line: 42 42 48;
+  --line-strong: 63 63 70;
+  --control-line: 107 107 116;
+
+  --fg: 244 244 245;
+  --fg-muted: 161 161 170;
+  --fg-subtle: 138 138 148;
+
+  --brand: 224 38 53;
+  --brand-hover: 240 66 79;
+  --brand-subtle: 58 16 20;
+  --brand-line: 110 26 34;
+  --brand-text: 255 107 117;
+
+  --ink: 0 0 0;
+  --ink-soft: 21 21 24;
+  --ink-line: 42 42 48;
+
+  --success: 74 222 128;
+  --success-subtle: 16 44 28;
+  --warning: 251 191 36;
+  --warning-subtle: 50 36 10;
+  --danger: 251 146 60;
+  --danger-subtle: 54 26 10;
+  --info: 96 165 250;
+  --info-subtle: 18 32 60;
+  --violet: 167 139 250;
+  --violet-subtle: 36 24 66;
+  --rating: 245 158 11;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / .4);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / .5);
+  --shadow-md: 0 8px 20px -4px rgb(0 0 0 / .6);
+  --shadow-lg: 0 18px 40px -8px rgb(0 0 0 / .7);
+  --shadow-xl: 0 32px 64px -12px rgb(0 0 0 / .8);
+}

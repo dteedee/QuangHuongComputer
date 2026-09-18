@@ -6,6 +6,29 @@ namespace Content.Infrastructure.Data;
 
 public static class ContentDbSeeder
 {
+    /// <summary>
+    /// Reverts entities whose ONLY pending modification is a bookkeeping timestamp.
+    ///
+    /// The seeders here reconcile by calling a domain Update* method unconditionally; those
+    /// methods stamp <c>UpdatedAt</c>, so EF sees a modified entity even when every real field is
+    /// already correct. That turns "re-seeding changes nothing" into a row write per seeded post
+    /// on every single run. An entity with a genuine field change keeps it - only the
+    /// timestamp-only ones are discarded.
+    /// </summary>
+    private static void DiscardTimestampOnlyChanges(ContentDbContext context)
+    {
+        context.ChangeTracker.DetectChanges();
+
+        foreach (var entry in context.ChangeTracker.Entries().ToList())
+        {
+            if (entry.State != Microsoft.EntityFrameworkCore.EntityState.Modified) continue;
+
+            var modified = entry.Properties.Where(p => p.IsModified).Select(p => p.Metadata.Name).ToList();
+            if (modified.Count > 0 && modified.All(n => n is "UpdatedAt" or "UpdatedBy"))
+                entry.State = Microsoft.EntityFrameworkCore.EntityState.Unchanged;
+        }
+    }
+
     public static async Task SeedAsync(ContentDbContext context)
     {
         // 1. Pages Upsert
@@ -14,6 +37,10 @@ public static class ContentDbSeeder
             new CMSPage("Chính sách bảo hành", "bao-hanh", DefaultWarrantyContent, PageType.Warranty),
             new CMSPage("Chính sách đổi trả", "doi-tra", DefaultReturnContent, PageType.Returns),
             new CMSPage("Chính sách vận chuyển", "van-chuyen", DefaultShippingContent, PageType.Shipping),
+            // D08: hai trang bắt buộc theo NĐ 248/2026 Đ.7 (khiếu nại: kênh trực tuyến + các bước
+            // + thời hạn phản hồi ban đầu và thời hạn giải quyết) và đồng kiểm khi nhận hàng.
+            new CMSPage("Chính sách kiểm hàng", "kiem-hang", DefaultInspectionContent, PageType.Custom),
+            new CMSPage("Chính sách tiếp nhận và giải quyết khiếu nại", "khieu-nai", DefaultComplaintContent, PageType.Custom),
             new CMSPage("Hướng dẫn thanh toán", "huong-dan-thanh-toan", DefaultPaymentContent, PageType.Custom),
             new CMSPage("Giới thiệu", "gioi-thieu", DefaultAboutContent, PageType.About),
             new CMSPage("Liên hệ", "lien-he", DefaultContactContent, PageType.Contact)
@@ -46,7 +73,7 @@ public static class ContentDbSeeder
                 PromotionFlashSale,
                 PostType.Promotion,
                 "Khuyến mãi hot",
-                "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&q=80"
+                null
             ),
             new Post(
                 "Mua Laptop Tặng Ngay Balo + Chuột Gaming Trị Giá 1.5 Triệu",
@@ -54,7 +81,7 @@ public static class ContentDbSeeder
                 PromotionLaptopGift,
                 PostType.Promotion,
                 "Khuyến mãi hot",
-                "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80"
+                null
             ),
             new Post(
                 "Trade-in VGA Cũ - Lên Đời RTX 50 Series Giảm Thêm 2 Triệu",
@@ -62,7 +89,7 @@ public static class ContentDbSeeder
                 PromotionTradeIn,
                 PostType.Promotion,
                 "Khuyến mãi hot",
-                "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&q=80"
+                null
             ),
             new Post(
                 "Back To School 2026 - Sinh Viên Giảm Ngay 10% Khi Mua PC/Laptop",
@@ -70,7 +97,7 @@ public static class ContentDbSeeder
                 PromotionBackToSchool,
                 PostType.Promotion,
                 "Khuyến mãi",
-                "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80"
+                null
             ),
             new Post(
                 "Combo Build PC Gaming - Tiết Kiệm Đến 5 Triệu",
@@ -78,7 +105,7 @@ public static class ContentDbSeeder
                 PromotionComboPC,
                 PostType.Promotion,
                 "Khuyến mãi",
-                "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80"
+                null
             ),
             new Post(
                 "Mở Thẻ Tín Dụng MB Bank - Giảm Thêm 500K Cho Đơn Từ 10 Triệu",
@@ -86,7 +113,7 @@ public static class ContentDbSeeder
                 PromotionMBBank,
                 PostType.Promotion,
                 "Khuyến mãi",
-                "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80"
+                null
             ),
 
             // ==================== NEWS (Tin tức) ====================
@@ -96,7 +123,7 @@ public static class ContentDbSeeder
                 NewsKhaiTruong,
                 PostType.News,
                 "Tin tức",
-                "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80"
+                null
             ),
             new Post(
                 "NVIDIA Ra Mắt RTX 5090 - Hiệu Năng Gấp 2 Lần Thế Hệ Trước",
@@ -104,7 +131,7 @@ public static class ContentDbSeeder
                 NewsRTX5090,
                 PostType.News,
                 "Tin công nghệ",
-                "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&q=80"
+                null
             ),
             new Post(
                 "AMD Zen 5 Chính Thức Lộ Diện - Đối Thủ Xứng Tầm Intel",
@@ -112,7 +139,7 @@ public static class ContentDbSeeder
                 NewsAMDZen5,
                 PostType.News,
                 "Tin công nghệ",
-                "https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=800&q=80"
+                null
             ),
             new Post(
                 "Cảnh Báo: Xuất Hiện Trang Web Giả Mạo Quang Hưởng Computer",
@@ -120,7 +147,7 @@ public static class ContentDbSeeder
                 NewsCanhBao,
                 PostType.News,
                 "Thông báo",
-                "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80"
+                null
             ),
 
             // ==================== ARTICLES (Bài viết) ====================
@@ -130,7 +157,7 @@ public static class ContentDbSeeder
                 ArticleTop10Laptop,
                 PostType.Article,
                 "Review",
-                "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&q=80"
+                null
             ),
             new Post(
                 "Hướng Dẫn Build PC Gaming 25 Triệu Chiến Mọi Game 2026",
@@ -138,7 +165,7 @@ public static class ContentDbSeeder
                 ArticleBuildPC,
                 PostType.Article,
                 "Hướng dẫn",
-                "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=800&q=80"
+                null
             ),
             new Post(
                 "So Sánh Intel Core Ultra vs AMD Ryzen 9000 - Ai Là Vua?",
@@ -146,7 +173,7 @@ public static class ContentDbSeeder
                 ArticleCompare,
                 PostType.Article,
                 "So sánh",
-                "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=800&q=80"
+                null
             ),
             new Post(
                 "5 Sai Lầm Phổ Biến Khi Build PC Và Cách Khắc Phục",
@@ -154,7 +181,7 @@ public static class ContentDbSeeder
                 ArticleMistakes,
                 PostType.Article,
                 "Tips & Tricks",
-                "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80"
+                null
             )
         };
 
@@ -172,26 +199,20 @@ public static class ContentDbSeeder
                 existingPost.UpdateTags(post.Tags);
             }
         }
-        
+
+        // UpdateDetails/UpdateTags are called unconditionally above, and both stamp UpdatedAt.
+        // On an already-seeded database nothing else differs, so every `db seed` used to issue 14
+        // "UPDATE content.posts SET UpdatedAt" statements while the run reported 0 rows changed -
+        // the exact drift the seed contract exists to make visible. Drop the timestamp-only edits.
+        DiscardTimestampOnlyChanges(context);
         await context.SaveChangesAsync();
 
         // 2.5 Fill Mock/Empty Posts with generic rich content template
         var emptyPosts = await context.Posts.Where(p => p.Content.Length < 100).ToListAsync();
-        var promoImagesArray = new[] {
-            "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80",  // original red bag
-            "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&q=80",  // yellow sale
-            "https://images.unsplash.com/photo-1481437156560-3205f6a55735?w=800&q=80",  // store
-            "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=800&q=80",  // tags
-            "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",     // cart
-            "https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=800&q=80"   // bags
-        };
-        var articleImagesArray = new[] {
-            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80", // code
-            "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80", // chip
-            "https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=800&q=80",    // cpu
-            "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&q=80", // gpu
-            "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&q=80"  // setup
-        };
+        // D02: the six promo + five article thumbnails used to be Unsplash stock photos of
+        // unrelated hardware. Stock imagery of a product the shop does not sell is a claim about
+        // the goods, so it is removed rather than replaced. A post with no thumbnail renders the
+        // storefront's own placeholder (lib/media-url.ts returns "" and the caller decides).
 
         foreach (var p in emptyPosts)
         {
@@ -225,8 +246,7 @@ public static class ContentDbSeeder
         </div>
     </div>
 </div>";
-                var chosenPromoImg = promoImagesArray[hashValue % promoImagesArray.Length];
-                p.UpdateDetails(p.Title, promoHtml, p.Category, string.IsNullOrEmpty(p.ThumbnailUrl) ? chosenPromoImg : p.ThumbnailUrl);
+                p.UpdateDetails(p.Title, promoHtml, p.Category, p.ThumbnailUrl);
             }
             else
             {
@@ -251,8 +271,7 @@ public static class ContentDbSeeder
         </div>
     </div>
 </div>";
-                var chosenArticleImg = articleImagesArray[hashValue % articleImagesArray.Length];
-                p.UpdateDetails(p.Title, articleHtml, p.Category, string.IsNullOrEmpty(p.ThumbnailUrl) ? chosenArticleImg : p.ThumbnailUrl);
+                p.UpdateDetails(p.Title, articleHtml, p.Category, p.ThumbnailUrl);
             }
         }
         await context.SaveChangesAsync();
@@ -371,8 +390,27 @@ public static class ContentDbSeeder
             footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách đổi trả", url: "/policy/doi-tra", displayOrder: 2));
             footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách vận chuyển", url: "/policy/van-chuyen", displayOrder: 3));
             footerBottom.AddItem(new MenuItem(footerBottom.Id, "Hướng dẫn thanh toán", url: "/policy/huong-dan-thanh-toan", displayOrder: 4));
-            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Giới thiệu", url: "/policy/gioi-thieu", displayOrder: 5));
+            // D08 / NĐ 248/2026 Đ.7: kênh khiếu nại và hướng dẫn đồng kiểm phải công khai ở vị trí dễ thấy.
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Chính sách kiểm hàng", url: "/policy/kiem-hang", displayOrder: 5));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Tiếp nhận & giải quyết khiếu nại", url: "/policy/khieu-nai", displayOrder: 6));
+            footerBottom.AddItem(new MenuItem(footerBottom.Id, "Giới thiệu", url: "/policy/gioi-thieu", displayOrder: 7));
             context.Menus.Add(footerBottom);
+        }
+        else
+        {
+            // The block above only ever ran on an empty Menus table, so the two pages D08 adds
+            // would never appear in a footer that was seeded before this change.
+            var footer = await context.Menus
+                .Include(m => m.Items)
+                .FirstOrDefaultAsync(m => m.Location == MenuLocation.FooterBottom);
+            if (footer is not null)
+            {
+                var urls = footer.Items.Select(i => i.Url).ToHashSet();
+                if (!urls.Contains("/policy/kiem-hang"))
+                    footer.AddItem(new MenuItem(footer.Id, "Chính sách kiểm hàng", url: "/policy/kiem-hang", displayOrder: 5));
+                if (!urls.Contains("/policy/khieu-nai"))
+                    footer.AddItem(new MenuItem(footer.Id, "Tiếp nhận & giải quyết khiếu nại", url: "/policy/khieu-nai", displayOrder: 6));
+            }
         }
 
         // 4. Homepage Sections Upsert
@@ -385,7 +423,7 @@ public static class ContentDbSeeder
                         ""title"": ""CHÀO XUÂN BÍNH NGỌ 2026"",
                         ""subtitle"": ""DEALS TẾT KHỦNG - QUÀ TẶNG HOT"",
                         ""description"": ""Giảm đến 50% + Tặng kèm quà tặng trị giá 5 triệu"",
-                        ""image"": ""https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=1200&h=500&fit=crop"",
+                        ""image"": """",
                         ""gradient"": ""from-red-600 via-red-700 to-amber-600"",
                         ""link"": ""/products"",
                         ""badge"": ""HOT TẾT""
@@ -394,7 +432,7 @@ public static class ContentDbSeeder
                         ""title"": ""PC GAMING CHIẾN MỌI GAME"",
                         ""subtitle"": ""RTX 40 SERIES - SIÊU MẠNH"",
                         ""description"": ""Build PC Gaming từ 15 triệu - Trả góp 0%"",
-                        ""image"": ""https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=1200&h=500&fit=crop"",
+                        ""image"": """",
                         ""gradient"": ""from-blue-600 via-purple-600 to-pink-600"",
                         ""link"": ""/products?category=pc-gaming"",
                         ""badge"": ""GAMING""
@@ -468,153 +506,160 @@ public static class ContentDbSeeder
         await context.SaveChangesAsync();
     }
 
+    // ======================================================================================
+    // D08 - Chính sách bảo hành / đổi trả / kiểm hàng / khiếu nại.
+    //
+    // Bản cũ bịa ra một "Trung tâm bảo hành Hà Nội" tại 91 Nguyễn Xiển và một hotline
+    // 1800.6321 - cả hai đều không tồn tại (D09 bảng dấu chân công khai: shop có ĐÚNG MỘT
+    // mặt bằng tại số 179, Khu phố 3/2, Xã Vĩnh Bảo, Thành phố Hải Phòng). Công bố sai địa
+    // chỉ/kênh liên hệ của thương nhân vi phạm Luật TMĐT 2025 Đ.11.1 + NĐ 248/2026 Đ.4.
+    // Nội dung dưới đây KHÔNG chứa địa chỉ hay số điện thoại cứng: trang Liên hệ và footer
+    // đọc từ config (COMPANY_*) nên chủ shop sửa một chỗ là đúng ở mọi nơi.
+    // ======================================================================================
+
     private const string DefaultWarrantyContent = @"
-<div class='space-y-8 text-gray-700 font-sans'>
-    <div class='p-6 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl'>
-        <p class='text-lg font-medium text-blue-900'>
-            <strong>Quang Hưởng Computer</strong> cam kết bảo hành các sản phẩm theo đúng quy định của nhà sản xuất và tiêu chuẩn chất lượng cao nhất. 
-            Mọi sự cố kỹ thuật sẽ được đội ngũ kỹ thuật viên giàu kinh nghiệm của chúng tôi xử lý nhanh chóng.
-        </p>
-    </div>
+<div class='space-y-6'>
+    <p><em>Áp dụng từ ngày 18/09/2026 - phiên bản 2026.1</em></p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 border-b border-gray-200 pb-2 uppercase'>1. Điều kiện bảo hành hợp lệ</h2>
-        <ul class='list-none space-y-3 pl-2'>
-            <li class='flex items-start gap-3'>
-                <span class='text-green-500 font-bold text-xl'>✓</span>
-                <span>Sản phẩm đang trong thời hạn bảo hành. Thời hạn bảo hành được tính từ ngày mua hàng in trên hóa đơn hoặc tem bảo hành.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-green-500 font-bold text-xl'>✓</span>
-                <span>Tem bảo hành của Quang Hưởng Computer và nhà phân phối phải còn nguyên vẹn, không rách, rời, chắp vá, tẩy xóa.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-green-500 font-bold text-xl'>✓</span>
-                <span>Sản phẩm phát sinh lỗi kỹ thuật do nhà sản xuất.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-green-500 font-bold text-xl'>✓</span>
-                <span>Mã vạch (Serial Number) trên sản phẩm phải trùng khớp với thông tin trên hệ thống bảo hành hoặc phiếu bảo hành.</span>
-            </li>
-        </ul>
-    </section>
+    <h2 class='text-2xl font-bold'>1. Thời hạn bảo hành</h2>
+    <p>Thời hạn bảo hành của từng sản phẩm là thời hạn do <strong>nhà sản xuất</strong> công bố và được ghi trên trang sản phẩm. Khi sản phẩm chưa khai báo số tháng riêng, áp dụng mức mặc định <strong>12 tháng</strong>. Máy bộ do Quang Hưởng lắp ráp được bảo hành <strong>24 tháng</strong> theo hình thức mang tới cửa hàng.</p>
+    <p>Mốc tính bảo hành là <strong>ngày giao hàng thành công</strong> hoặc ngày mua tại quầy. Số ngày cửa hàng giữ máy để bảo hành được <strong>cộng bù</strong> vào thời hạn. Nếu sản phẩm được đổi mới, thời hạn được tính lại đầy đủ từ ngày đổi.</p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 border-b border-gray-200 pb-2 uppercase'>2. Những trường hợp từ chối bảo hành</h2>
-        <p class='mb-4 italic text-sm text-gray-500'>Lưu ý: Những trường hợp sau đây sẽ không được bảo hành nhưng có thể được hỗ trợ sửa chữa có tính phí.</p>
-        <ul class='list-none space-y-3 pl-2'>
-            <li class='flex items-start gap-3'>
-                <span class='text-red-500 font-bold text-xl'>✗</span>
-                <span>Sản phẩm hết thời hạn bảo hành.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-red-500 font-bold text-xl'>✗</span>
-                <span>Hư hỏng do tác động vật lý: Rơi vỡ, móp méo, trầy xước nặng, biến dạng khung vỏ.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-red-500 font-bold text-xl'>✗</span>
-                <span>Hư hỏng do thiên tai, hỏa hoạn, lũ lụt, sét đánh, côn trùng xâm nhập (chuột, gián...).</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-red-500 font-bold text-xl'>✗</span>
-                <span>Sử dụng sai điện áp quy định, gây cháy nổ linh kiện, mạch điện.</span>
-            </li>
-            <li class='flex items-start gap-3'>
-                <span class='text-red-500 font-bold text-xl'>✗</span>
-                <span>Sản phẩm đã bị can thiệp, tháo lắp, sửa chữa bởi các đơn vị không được ủy quyền.</span>
-            </li>
-        </ul>
-    </section>
+    <h2 class='text-2xl font-bold'>2. Bảo hành điện tử - không cần phiếu giấy</h2>
+    <p>Tra cứu bảo hành bằng <strong>số serial</strong>, <strong>số điện thoại</strong> đặt hàng hoặc <strong>mã đơn hàng</strong> ngay trên website. Sản phẩm không quản lý theo serial được cấp mã bảo hành in trên hóa đơn kèm tem Quang Hưởng dán trên sản phẩm.</p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 border-b border-gray-200 pb-2 uppercase'>3. Chính sách đổi mới 1-1</h2>
-        <div class='bg-yellow-50 p-6 rounded-xl border border-yellow-100'>
-            <h3 class='font-bold text-yellow-800 mb-2 uppercase text-sm tracking-wider'>Áp dụng trong 15 ngày đầu</h3>
-            <p>
-                Đối với các sản phẩm mới mua trong vòng <strong>15 ngày</strong> đầu tiên, nếu phát sinh lỗi phần cứng do nhà sản xuất, 
-                Quang Hưởng Computer cam kết <strong>đổi mới ngay lập tức</strong> (đổi sản phẩm cùng loại, mới 100%).
-            </p>
-            <p class='mt-2 text-sm italic'>* Yêu cầu: Sản phẩm phải còn đầy đủ hộp, phụ kiện, không trầy xước.</p>
-        </div>
-    </section>
+    <h2 class='text-2xl font-bold'>3. Nơi tiếp nhận</h2>
+    <p>Quang Hưởng là đầu mối tiếp nhận <strong>mọi sản phẩm đã bán</strong>. Khách hàng mang sản phẩm tới cửa hàng, hoặc gửi qua đơn vị chuyển phát - trường hợp đủ điều kiện bảo hành, cửa hàng chịu cước cả hai chiều. Khách hàng cũng có thể tự mang tới trung tâm bảo hành của hãng nếu muốn nhanh hơn.</p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 border-b border-gray-200 pb-2 uppercase'>4. Địa điểm & Thời gian bảo hành</h2>
-        <div class='grid md:grid-cols-2 gap-6'>
-            <div class='bg-gray-50 p-5 rounded-xl'>
-                <h3 class='font-bold text-gray-900 mb-2'>Trung tâm bảo hành Hà Nội</h3>
-                <p>Địa chỉ: 91 Nguyễn Xiển, Thanh Xuân, Hà Nội</p>
-                <p>Hotline: 1800.6321 (Nhánh 2)</p>
-            </div>
-            <div class='bg-gray-50 p-5 rounded-xl'>
-                <h3 class='font-bold text-gray-900 mb-2'>Thời gian tiếp nhận</h3>
-                <p>Sáng: 8h30 - 12h00</p>
-                <p>Chiều: 13h30 - 17h30</p>
-                <p class='text-sm text-gray-500'>(Từ thứ 2 đến thứ 7, nghỉ Chủ Nhật và Lễ Tết)</p>
-            </div>
-        </div>
-    </section>
+    <h2 class='text-2xl font-bold'>4. Quy trình và thời hạn</h2>
+    <ol class='list-decimal pl-6 space-y-1'>
+        <li><strong>Tiếp nhận</strong> - lập biên nhận ghi rõ tình trạng máy và thời hạn xử lý của chính ca đó.</li>
+        <li><strong>Thẩm định</strong> - phản hồi kết quả trong tối đa <strong>03 ngày làm việc</strong>.</li>
+        <li><strong>Xử lý</strong> - sửa tại cửa hàng tối đa <strong>15 ngày</strong>; gửi trung tâm bảo hành hãng trong nước tối đa <strong>30 ngày</strong>. Hãng nước ngoài theo thông báo của hãng, ghi cụ thể trên biên nhận.</li>
+        <li><strong>Bàn giao</strong> - thông báo và trả máy, ghi nhận số ngày giữ máy để cộng bù bảo hành.</li>
+    </ol>
+    <p>Trong thời gian chờ, cửa hàng cho mượn máy thay thế <em>nếu có sẵn</em>.</p>
+
+    <h2 class='text-2xl font-bold'>5. Đổi mới và hoàn tiền</h2>
+    <p>Nếu quá thời hạn đã ghi trên biên nhận, hoặc sản phẩm đã bảo hành <strong>từ 3 lần</strong> mà vẫn lỗi, khách hàng được đổi sản phẩm mới tương đương hoặc cao hơn, hoặc được thu hồi sản phẩm và hoàn lại tiền.</p>
+
+    <h2 class='text-2xl font-bold'>6. Trường hợp không được bảo hành</h2>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li>Hết thời hạn bảo hành.</li>
+        <li>Tem hoặc số serial bị mờ, rách, bị sửa chữa.</li>
+        <li>Rơi vỡ, móp méo, vào nước, cháy nổ do điện áp.</li>
+        <li>Hư hỏng do côn trùng, thiên tai.</li>
+        <li>Tự ý tháo, sửa chữa ở nơi khác.</li>
+        <li>Hàng thanh lý, hàng trưng bày đã thỏa thuận riêng.</li>
+        <li>Phần mềm và dữ liệu - cửa hàng không bảo hành và không chịu trách nhiệm về dữ liệu; khách hàng vui lòng sao lưu trước khi gửi máy.</li>
+    </ul>
+    <p>Sản phẩm hư hỏng ngoài phạm vi bảo hành vẫn được nhận sửa chữa có tính phí, báo giá trước khi thực hiện.</p>
+
+    <h2 class='text-2xl font-bold'>7. Liên hệ</h2>
+    <p>Xem địa chỉ cửa hàng, số điện thoại, email và giờ mở cửa tại trang <a href='/lien-he'>Liên hệ</a>. Khiếu nại về bảo hành: xem <a href='/policy/khieu-nai'>Chính sách tiếp nhận và giải quyết khiếu nại</a>.</p>
 </div>";
 
     private const string DefaultReturnContent = @"
-<div class='space-y-8 text-gray-700 font-sans'>
-    <p class='text-lg'>
-        Để đảm bảo quyền lợi của khách hàng và uy tín của doanh nghiệp, Quang Hưởng Computer ban hành chính sách đổi trả hàng hóa cụ thể như sau:
-    </p>
+<div class='space-y-6'>
+    <p><em>Áp dụng từ ngày 18/09/2026 - phiên bản 2026.1</em></p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 uppercase'>1. Thời gian đổi trả</h2>
-        <div class='overflow-x-auto'>
-            <table class='w-full border-collapse border border-gray-200 rounded-lg overflow-hidden'>
-                <thead class='bg-gray-100'>
-                    <tr>
-                        <th class='border border-gray-200 p-4 text-left font-bold text-gray-900'>Loại sản phẩm</th>
-                        <th class='border border-gray-200 p-4 text-left font-bold text-gray-900'>Thời gian áp dụng</th>
-                        <th class='border border-gray-200 p-4 text-left font-bold text-gray-900'>Phí đổi trả</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class='border border-gray-200 p-4'>Linh kiện máy tính (VGA, CPU, RAM...)</td>
-                        <td class='border border-gray-200 p-4'>3 ngày đầu (Lỗi NSX)</td>
-                        <td class='border border-gray-200 p-4 text-green-600 font-bold'>Miễn phí</td>
-                    </tr>
-                    <tr>
-                        <td class='border border-gray-200 p-4'>Linh kiện máy tính</td>
-                        <td class='border border-gray-200 p-4'>Sau 3 ngày - 15 ngày</td>
-                        <td class='border border-gray-200 p-4'>Giảm 10-20% giá trị</td>
-                    </tr>
-                    <tr>
-                        <td class='border border-gray-200 p-4'>Laptop, PC đồng bộ</td>
-                        <td class='border border-gray-200 p-4'>7 ngày đầu (Lỗi NSX)</td>
-                        <td class='border border-gray-200 p-4 text-green-600 font-bold'>Miễn phí</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
+    <h2 class='text-2xl font-bold'>1. Hai nhóm lý do, hai cách xử lý khác nhau</h2>
+    <p>Quang Hưởng tách rõ <strong>quyền luật định của khách hàng</strong> và <strong>chính sách mua lại tự nguyện</strong> của cửa hàng. Hai nhóm này không dùng chung thời hạn và không dùng chung mức phí.</p>
 
-    <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 uppercase'>2. Điều kiện chấp nhận đổi trả</h2>
-        <ul class='list-disc pl-5 space-y-2'>
-            <li>Sản phẩm còn nguyên tem niêm phong của Quang Hưởng Computer và nhà sản xuất.</li>
-            <li>Sản phẩm còn đầy đủ hộp (box), xốp đệm, sách hướng dẫn, đĩa driver và các phụ kiện đi kèm.</li>
-            <li>Sản phẩm không bị trầy xước, móp méo, nứt vỡ, ẩm ướt, dính hóa chất.</li>
-            <li>Hóa đơn mua hàng (VAT) và phiếu xuất kho còn nguyên vẹn.</li>
-            <li><strong>Quà tặng khuyến mãi (nếu có)</strong> phải được hoàn trả đầy đủ. Nếu mất hoặc đã sử dụng, sẽ trừ phí theo giá trị quà tặng.</li>
-        </ul>
-    </section>
+    <h2 class='text-2xl font-bold'>2. Nhóm luật định - miễn phí hoàn toàn</h2>
+    <p>Áp dụng khi sản phẩm <strong>lỗi của nhà sản xuất</strong>, <strong>giao sai sản phẩm</strong>, <strong>hư hỏng do vận chuyển</strong>, hoặc <strong>không đúng mô tả/quảng cáo/cam kết</strong>.</p>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li>Khách hàng <strong>không chịu bất kỳ khoản phí nào</strong>; cửa hàng chịu chi phí vận chuyển cả hai chiều.</li>
+        <li>Giao sai sản phẩm và không đúng mô tả <strong>không bị giới hạn bởi cửa sổ 7 ngày</strong> - cửa hàng nhận lại trong suốt thời hạn bảo hành của sản phẩm.</li>
+        <li>Hư hỏng do vận chuyển hoặc thiếu hàng khi nhận: vui lòng báo trong <strong>48 giờ</strong> kèm ảnh/video mở hộp để cửa hàng làm việc với đơn vị vận chuyển.</li>
+        <li>Lỗi nhà sản xuất: đổi 1 đổi 1 trong <strong>07 ngày</strong> kể từ ngày nhận hàng, sau đó chuyển sang chế độ bảo hành.</li>
+    </ul>
+    <p>Nếu cửa hàng công bố thiếu hoặc sai thông tin bắt buộc về sản phẩm hay giao dịch, khách hàng được đơn phương chấm dứt hợp đồng trong <strong>30 ngày</strong> kể từ ngày giao kết và <strong>không chịu bất kỳ khoản phí nào</strong>.</p>
 
-     <section>
-        <h2 class='text-2xl font-black text-gray-900 mb-4 uppercase'>3. Quy trình thực hiện</h2>
-        <ol class='list-decimal pl-5 space-y-3'>
-            <li>Khách hàng liên hệ Hotline <strong>1800.6321</strong> hoặc mang sản phẩm trực tiếp đến cửa hàng để kiểm tra.</li>
-            <li>Kỹ thuật viên sẽ thẩm định tình trạng sản phẩm (trong vòng 30 phút - 1 tiếng).</li>
-            <li>Nếu đủ điều kiện đổi trả, nhân viên sẽ lập phiếu đổi trả và hoàn tiền hoặc đổi sản phẩm khác theo yêu cầu.</li>
-        </ol>
-    </section>
+    <h2 class='text-2xl font-bold'>3. Chính sách mua lại (nhập lại) hàng đã bán</h2>
+    <p>Khi sản phẩm không có lỗi nhưng khách hàng đổi ý, cửa hàng <strong>chào mua lại</strong> món hàng đó. Đây là chính sách tự nguyện, không phải nghĩa vụ luật định.</p>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li>Thời hạn mặc định: <strong>07 ngày</strong> kể từ ngày nhận hàng, và chỉ nhận lại sản phẩm <strong>còn nguyên seal</strong> - mức khấu trừ 0%.</li>
+        <li>Một số nhóm hàng có điều kiện rộng hơn (nhận cả hàng đã mở hộp, khấu trừ theo tình trạng) - xem bảng thời hạn theo nhóm hiển thị trên trang sản phẩm.</li>
+        <li>Phần mềm, key bản quyền đã bàn giao: không mua lại.</li>
+        <li>Khách hàng chịu cước gửi trả; cước vận chuyển của đơn gốc không được hoàn.</li>
+    </ul>
+
+    <h2 class='text-2xl font-bold'>4. Các bước và thời hạn</h2>
+    <ol class='list-decimal pl-6 space-y-1'>
+        <li>Gửi yêu cầu đổi/trả trong tài khoản hoặc liên hệ cửa hàng.</li>
+        <li>Cửa hàng duyệt trong tối đa <strong>01 ngày làm việc</strong>.</li>
+        <li>Khách hàng gửi hàng hoặc mang tới cửa hàng.</li>
+        <li>Kiểm tra hàng trong tối đa <strong>02 ngày</strong>.</li>
+        <li>Hoàn tiền theo phương thức thanh toán gốc trong tối đa <strong>03 ngày làm việc</strong> sau khi kiểm hàng đạt (thẻ và ví điện tử có thể mất thêm 7-15 ngày theo cổng thanh toán).</li>
+    </ol>
+
+    <h2 class='text-2xl font-bold'>5. Hóa đơn giá trị gia tăng</h2>
+    <p>Đơn hàng đã xuất hóa đơn cho doanh nghiệp: cần biên bản điều chỉnh hoặc thu hồi hóa đơn trước khi hoàn tiền.</p>
+
+    <h2 class='text-2xl font-bold'>6. Liên hệ</h2>
+    <p>Đầu mối tiếp nhận: xem trang <a href='/lien-he'>Liên hệ</a>. Quy trình khiếu nại và thời hạn phản hồi: xem <a href='/policy/khieu-nai'>Chính sách tiếp nhận và giải quyết khiếu nại</a>. Hướng dẫn đồng kiểm khi nhận hàng: xem <a href='/policy/kiem-hang'>Chính sách kiểm hàng</a>.</p>
 </div>";
 
+    private const string DefaultInspectionContent = @"
+<div class='space-y-6'>
+    <p><em>Áp dụng từ ngày 18/09/2026 - phiên bản 2026.1</em></p>
+
+    <h2 class='text-2xl font-bold'>1. Khách hàng được đồng kiểm khi nhận hàng</h2>
+    <p>Với mọi đơn giao tận nơi, khách hàng có quyền <strong>mở hộp kiểm tra trước khi thanh toán</strong>: đối chiếu đúng mẫu mã, đúng số lượng, kiểm tra tình trạng bên ngoài và phụ kiện kèm theo.</p>
+
+    <h2 class='text-2xl font-bold'>2. Nên quay video khi mở hộp</h2>
+    <p>Video mở hộp liền mạch từ lúc kiện hàng còn nguyên niêm phong là <strong>chứng cứ</strong> giúp xử lý nhanh nhất khi hàng thiếu hoặc vỡ. Đây là điều kiện về chứng cứ, không phải điều kiện để phát sinh quyền: thiếu video, cửa hàng vẫn tiếp nhận và xác minh với đơn vị vận chuyển.</p>
+
+    <h2 class='text-2xl font-bold'>3. Phát hiện sai, thiếu hoặc hư hỏng</h2>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li>Hàng vỡ, móp hoặc sai sản phẩm: <strong>từ chối nhận hàng</strong> và báo ngay cho cửa hàng.</li>
+        <li>Đã nhận rồi mới phát hiện: báo trong <strong>48 giờ</strong> kèm ảnh/video.</li>
+        <li>Toàn bộ chi phí xử lý trong nhóm này do cửa hàng chịu.</li>
+    </ul>
+
+    <h2 class='text-2xl font-bold'>4. Những gì không thuộc phạm vi đồng kiểm</h2>
+    <p>Đồng kiểm là kiểm tra hình thức và số lượng. Việc cài đặt, chạy thử hiệu năng hay kiểm tra điểm chết màn hình được thực hiện sau đó và xử lý theo <a href='/policy/bao-hanh'>Chính sách bảo hành</a> hoặc <a href='/policy/doi-tra'>Chính sách đổi trả</a>.</p>
+
+    <h2 class='text-2xl font-bold'>5. Liên hệ</h2>
+    <p>Đầu mối tiếp nhận: xem trang <a href='/lien-he'>Liên hệ</a>.</p>
+</div>";
+
+    private const string DefaultComplaintContent = @"
+<div class='space-y-6'>
+    <p><em>Áp dụng từ ngày 18/09/2026 - phiên bản 2026.1</em></p>
+
+    <h2 class='text-2xl font-bold'>1. Kênh tiếp nhận</h2>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li><strong>Trực tuyến</strong> - biểu mẫu trên trang <a href='/lien-he'>Liên hệ</a> và email của cửa hàng (địa chỉ email hiển thị tại trang Liên hệ và ở chân trang).</li>
+        <li><strong>Điện thoại</strong> - số điện thoại công bố tại trang Liên hệ, trong giờ mở cửa.</li>
+        <li><strong>Trực tiếp</strong> - tại cửa hàng, địa chỉ công bố tại trang Liên hệ.</li>
+    </ul>
+
+    <h2 class='text-2xl font-bold'>2. Thông tin cần cung cấp</h2>
+    <p>Mã đơn hàng hoặc số điện thoại đặt hàng, tên sản phẩm, mô tả sự việc, và ảnh/video nếu có. Thiếu thông tin, cửa hàng sẽ liên hệ đề nghị bổ sung và thời hạn giải quyết được tính lại từ khi nhận đủ.</p>
+
+    <h2 class='text-2xl font-bold'>3. Thời hạn</h2>
+    <ul class='list-disc pl-6 space-y-1'>
+        <li><strong>Xác nhận đã tiếp nhận</strong>: trong tối đa <strong>03 ngày làm việc</strong> kể từ khi nhận được khiếu nại.</li>
+        <li><strong>Trả lời kết quả giải quyết</strong>: trong tối đa <strong>15 ngày làm việc</strong> kể từ ngày xác nhận tiếp nhận. Vụ việc cần giám định của hãng có thể kéo dài hơn; cửa hàng thông báo bằng văn bản kèm thời hạn dự kiến mới.</li>
+    </ul>
+
+    <h2 class='text-2xl font-bold'>4. Các bước xử lý</h2>
+    <ol class='list-decimal pl-6 space-y-1'>
+        <li>Tiếp nhận và cấp mã theo dõi.</li>
+        <li>Xác minh: đối chiếu đơn hàng, chứng từ, tình trạng sản phẩm.</li>
+        <li>Đề xuất phương án: sửa chữa, đổi mới, hoàn tiền hoặc giải thích.</li>
+        <li>Thống nhất với khách hàng và thực hiện.</li>
+        <li>Đóng hồ sơ và lưu kết quả trong tài khoản khách hàng.</li>
+    </ol>
+
+    <h2 class='text-2xl font-bold'>5. Thứ tự ưu tiên</h2>
+    <p>Khiếu nại liên quan đến an toàn (cháy nổ, điện giật) được xử lý trước tiên, sau đó tới các vụ việc đã quá thời hạn cam kết, rồi tới các vụ việc còn lại theo thứ tự tiếp nhận.</p>
+
+    <h2 class='text-2xl font-bold'>6. Nếu chưa đồng ý với kết quả</h2>
+    <p>Khách hàng có quyền đề nghị xem xét lại, hoặc gửi vụ việc tới cơ quan bảo vệ quyền lợi người tiêu dùng, tổ chức hòa giải, trọng tài hoặc tòa án theo quy định pháp luật.</p>
+</div>";
     private const string DefaultShippingContent = @"
 <div class='space-y-8 text-gray-700 font-sans'>
     <p class='text-lg'>
@@ -625,7 +670,7 @@ public static class ContentDbSeeder
         <h2 class='text-2xl font-black text-gray-900 mb-4 uppercase'>1. Phạm vi & Phí giao hàng</h2>
         <div class='grid md:grid-cols-2 gap-6'>
             <div class='border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow'>
-                <h3 class='text-xl font-bold text-[#D70018] mb-2'>Nội thành Hà Nội</h3>
+                <h3 class='text-xl font-bold text-[#D70018] mb-2'>Khu vực Vĩnh Bảo, Hải Phòng</h3>
                 <ul class='list-disc pl-5 space-y-2 text-sm'>
                     <li><strong>Miễn phí</strong> cho đơn hàng > 2.000.000 VND.</li>
                     <li>Phí ship 30.000 VND cho đơn hàng < 2.000.000 VND.</li>
@@ -652,7 +697,7 @@ public static class ContentDbSeeder
             <ul class='list-disc pl-5 space-y-2'>
                 <li>Quý khách được phép mở hộp kiểm tra ngoại quan (không trầy xước, bể vỡ) và số lượng sản phẩm.</li>
                 <li>Không hỗ trợ cắm điện, dùng thử sản phẩm khi nhận hàng (do quy định của đơn vị vận chuyển).</li>
-                <li>Nếu phát hiện hàng hóa hư hỏng hoặc sai thiếu, vui lòng <strong>TỪ CHỐI NHẬN HÀNG</strong> và gọi ngay Hotline 1800.6321.</li>
+                <li>Nếu phát hiện hàng hóa hư hỏng hoặc sai thiếu, vui lòng <strong>TỪ CHỐI NHẬN HÀNG</strong> và báo ngay cho cửa hàng theo số điện thoại ở trang <a href='/lien-he'>Liên hệ</a>.</li>
             </ul>
         </div>
     </section>
@@ -713,7 +758,10 @@ public static class ContentDbSeeder
 </div>";
 
     private const string DefaultAboutContent = "<p>Chào mừng đến với Quang Hưởng Computer! Thế giới công nghệ hàng đầu...</p>";
-    private const string DefaultContactContent = "<p>Địa chỉ: 91 Nguyễn Xiển, Thanh Xuân, Hà Nội.</p>";
+    // Địa chỉ/điện thoại/giờ mở cửa KHÔNG hardcode ở đây: trang Liên hệ đọc từ config
+    // COMPANY_* và từ bản ghi Store (D09), nên chủ shop sửa một chỗ là đúng ở mọi nơi.
+    private const string DefaultContactContent =
+        "<p>Quang Hưởng Computer - Vĩnh Bảo. Địa chỉ, số điện thoại, email và giờ mở cửa được hiển thị ngay bên dưới, lấy trực tiếp từ thông tin cửa hàng.</p>";
 
     // ==================== PROMOTION CONTENTS ====================
     private const string PromotionFlashSale = @"
@@ -1039,7 +1087,7 @@ public static class ContentDbSeeder
         <ul class='space-y-2'>
             <li>Website: <strong>quanghuong.vn</strong></li>
             <li>Facebook: <strong>fb.com/QuangHuongComputer</strong> (Tick xanh)</li>
-            <li>Hotline: <strong>1800.6321</strong> (Miễn phí)</li>
+            <li>Số điện thoại và email chính thức: xem trang <a href='/lien-he'>Liên hệ</a></li>
         </ul>
     </div>
 </div>";

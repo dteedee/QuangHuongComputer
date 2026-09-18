@@ -12,11 +12,14 @@ public class PermissionsAndRolesTests
     [Fact]
     public void Roles_AllRolesDefined_Count11()
     {
-        // Lấy tất cả role constants
-        var roleFields = typeof(Roles).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-        var roles = roleFields.Select(f => f.GetValue(null) as string).ToList();
+        // Chỉ đếm hằng số chuỗi: Roles còn có các mảng tiện ích (Staff, All) không phải role.
+        var roleFields = typeof(Roles)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(f => f.IsLiteral && f.FieldType == typeof(string));
+        var roles = roleFields.Select(f => (string)f.GetValue(null)!).ToList();
 
         roles.Should().HaveCount(11);
+        roles.Should().BeEquivalentTo(Roles.All);
     }
 
     [Fact]

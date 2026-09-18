@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background: #f4f7f9; margin: 0; padding: 0; }
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 30px; text-align: center; border-radius: 16px 16px 0 0; }
+  .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+  .content { background: #fff; padding: 30px; border-radius: 0 0 16px 16px; }
+  .success-box { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #10b981; }
+  .footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 12px; }
+  .button { display: inline-block; padding: 12px 30px; background: #10b981; color: #fff; text-decoration: none; border-radius: 10px; margin: 20px 0; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Thanh toán thành công</h1></div>
+    <div class="content">
+      <p>Xin chào <strong>{{ customer_name }}</strong>,</p>
+      <p>Thanh toán của bạn đã được xử lý thành công!</p>
+      <div class="success-box">
+        <p><strong>Mã đơn hàng:</strong> {{ order_number }}</p>
+        <p><strong>Số hóa đơn:</strong> {{ invoice_number }}</p>
+        <p><strong>Trạng thái:</strong> Đã thanh toán</p>
+      </div>
+      <p>Hóa đơn điện tử đã được tạo, bạn có thể xem chi tiết trong tài khoản của mình.</p>
+      <p>Sản phẩm của bạn đã được tự động đăng ký bảo hành.</p>
+      <center><a href="{{ orders_url }}" class="button">Xem hóa đơn</a></center>
+      <p>Cảm ơn bạn đã tin tưởng và mua sắm tại Quang Huong Computer!</p>
+      <p>Trân trọng,<br><strong>Quang Huong Computer</strong></p>
+    </div>
+    <div class="footer">
+      <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+      <p>&copy; 2026 Quang Huong Computer.</p>
+    </div>
+  </div>
+</body>
+</html>

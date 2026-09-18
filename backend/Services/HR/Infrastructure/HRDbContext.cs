@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using HR.Domain;
+using BuildingBlocks.Database;
 
 namespace HR.Infrastructure;
 
@@ -8,8 +9,8 @@ public class HRDbContext : DbContext
     public HRDbContext(DbContextOptions<HRDbContext> options) : base(options) { }
 
     // Seed data must be deterministic, otherwise every "migrations add" detects a model change
-    private static readonly DateTime SeedCreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime SeedExpiryDate = new(2027, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime SeedCreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+    private static readonly DateTime SeedExpiryDate = new(2027, 12, 31, 0, 0, 0, DateTimeKind.Unspecified);
 
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Timesheet> Timesheets => Set<Timesheet>();
@@ -48,6 +49,11 @@ public class HRDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.BaseSalary).HasPrecision(18, 2);
             entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Employees_BaseSalary_NonNegative", "\"BaseSalary\" >= 0");
+                t.HasCheckConstraint("CK_Employees_HourlyRate_NonNegative", "\"HourlyRate\" >= 0");
+            });
             entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
@@ -59,7 +65,9 @@ public class HRDbContext : DbContext
             entity.Property(e => e.IdCardIssuePlace).HasMaxLength(200);
 
             entity.HasIndex(e => e.EmployeeCode).IsUnique();
-            entity.HasIndex(e => e.Email);
+            // W1-11: email nhân sự là khoá nghiệp vụ (đăng nhập, phiếu lương, thuế TNCN) -
+            // trước đây chỉ là index thường nên hai nhân viên trùng email vẫn tạo được.
+            entity.HasIndex(e => e.Email).IsUnique().HasDatabaseName("IX_Employees_Email_Unique");
             entity.HasIndex(e => new { e.Department, e.Status })
                 .HasDatabaseName("IX_Employee_Department_Status");
             entity.HasIndex(e => new { e.Status, e.HireDate });
@@ -227,8 +235,29 @@ public class HRDbContext : DbContext
             entity.Property(e => e.AttendanceBonus).HasPrecision(18, 2);
             entity.Property(e => e.RegularHours).HasPrecision(8, 2);
             entity.Property(e => e.OvertimeHours).HasPrecision(8, 2);
+            // W1-11 / audit db-schema-migrations-23: 3 cột lương còn là `numeric` không giới hạn.
+            entity.Property(e => e.GrossPay).HasPrecision(18, 2);
+            entity.Property(e => e.InsurableSalary).HasPrecision(18, 2);
+            entity.Property(e => e.TaxableIncome).HasPrecision(18, 2);
 
-            entity.HasIndex(e => new { e.EmployeeId, e.Year, e.Month });
+            // W1-11: một nhân viên chỉ có ĐÚNG MỘT bảng lương cho mỗi tháng.
+            // Trước đây chỉ là index thường -> chạy bảng lương hai lần tạo bản ghi trùng.
+            entity.HasIndex(e => new { e.EmployeeId, e.Year, e.Month })
+                .IsUnique()
+                .HasDatabaseName("IX_Payrolls_Employee_Year_Month_Unique");
+
+            entity.HasIndex(e => e.PayrollRunId).HasDatabaseName("IX_Payrolls_PayrollRunId");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Payrolls_BaseSalary_NonNegative", "\"BaseSalary\" >= 0");
+                t.HasCheckConstraint("CK_Payrolls_GrossPay_NonNegative", "\"GrossPay\" >= 0");
+                t.HasCheckConstraint("CK_Payrolls_NetPay_NonNegative", "\"NetPay\" >= 0");
+                t.HasCheckConstraint("CK_Payrolls_InsurableSalary_NonNegative", "\"InsurableSalary\" >= 0");
+                t.HasCheckConstraint("CK_Payrolls_TaxableIncome_NonNegative", "\"TaxableIncome\" >= 0");
+                t.HasCheckConstraint("CK_Payrolls_Month_Range", "\"Month\" >= 1 AND \"Month\" <= 12");
+                t.HasCheckConstraint("CK_Payrolls_Year_Range", "\"Year\" >= 2000 AND \"Year\" <= 2100");
+            });
         });
 
         // Shift configuration
@@ -279,8 +308,25 @@ public class HRDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.WorkHours).HasPrecision(8, 2);
             entity.Property(e => e.OvertimeHours).HasPrecision(8, 2);
+            // W1-11 / audit db-schema-migrations-23: 3 cột numeric còn thả nổi.
+            entity.Property(e => e.ApprovedOvertimeHours).HasPrecision(8, 2);
+            entity.Property(e => e.CheckInLatitude).HasPrecision(9, 6);
+            entity.Property(e => e.CheckInLongitude).HasPrecision(9, 6);
+            // Giờ vào/ra là MỘT THỜI ĐIỂM (so sánh với ca làm, tính đi muộn/về sớm) nên phải là
+            // timestamptz. `Date` KHÔNG đổi: nó là NGÀY công, không phải thời điểm, và khoá
+            // duy nhất (EmployeeId, Date) sẽ đổi nghĩa nếu quy đổi múi giờ.
+            entity.Property(e => e.CheckInTime).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.CheckOutTime).HasColumnType("timestamp with time zone");
             entity.HasIndex(e => new { e.EmployeeId, e.Date }).IsUnique();
             entity.HasIndex(e => e.Date);
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_AttendanceRecords_WorkHours_NonNegative", "\"WorkHours\" >= 0");
+                t.HasCheckConstraint("CK_AttendanceRecords_OvertimeHours_NonNegative", "\"OvertimeHours\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_AttendanceRecords_CheckOut_AfterCheckIn",
+                    "\"CheckOutTime\" IS NULL OR \"CheckInTime\" IS NULL OR \"CheckOutTime\" >= \"CheckInTime\"");
+            });
         });
 
         // JobListing configuration
@@ -395,5 +441,16 @@ public class HRDbContext : DbContext
                 }
             );
         });
+
+        // W1-11 / audit db-schema-migrations-07: module HR chưa từng gọi
+        // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho MỌI cột
+        // DateTime, trong khi CSDL thật là `timestamp without time zone`. Ghim lại đúng thực tế,
+        // rồi trả CheckInTime/CheckOutTime về timestamptz - đó là hai cột duy nhất trong HR
+        // biểu diễn một THỜI ĐIỂM thật (chuyển đổi hàng loạt nằm trong backlog).
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
+        modelBuilder.Entity<AttendanceRecord>()
+            .Property(e => e.CheckInTime).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<AttendanceRecord>()
+            .Property(e => e.CheckOutTime).HasColumnType("timestamp with time zone");
     }
 }

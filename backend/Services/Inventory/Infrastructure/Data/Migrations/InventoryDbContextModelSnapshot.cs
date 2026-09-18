@@ -190,7 +190,18 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("GoodsReceivedNoteId");
 
-                    b.ToTable("GRNItems");
+                    b.ToTable("GRNItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_GRNItems_AcceptedQty_NonNegative", "\"AcceptedQty\" >= 0");
+
+                            t.HasCheckConstraint("CK_GRNItems_Inspected_LteQuantity", "\"AcceptedQty\" + \"RejectedQty\" <= \"Quantity\"");
+
+                            t.HasCheckConstraint("CK_GRNItems_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_GRNItems_RejectedQty_NonNegative", "\"RejectedQty\" >= 0");
+
+                            t.HasCheckConstraint("CK_GRNItems_UnitCost_NonNegative", "\"UnitCost\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.GoodsReceivedNote", b =>
@@ -255,11 +266,20 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_GRN_DocumentNumber");
 
+                    b.HasIndex("PurchaseOrderId")
+                        .HasDatabaseName("IX_GRN_PurchaseOrderId");
+
                     b.HasIndex("Source")
                         .HasDatabaseName("IX_GRN_Source");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_GRN_Status");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("IX_GRN_SupplierId");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("IX_GRN_WarehouseId");
 
                     b.ToTable("GoodsReceivedNotes");
                 });
@@ -454,6 +474,12 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<Guid?>("WarehouseId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Barcode")
@@ -461,6 +487,9 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasIndex("BatchNumber")
                         .HasDatabaseName("IX_Inventory_BatchNumber");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("IX_Inventory_WarehouseId");
 
                     b.HasIndex("ProductId", "WarehouseId")
                         .HasDatabaseName("IX_Inventory_Product_Warehouse");
@@ -474,7 +503,18 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_Inventory_Product_Variant_Warehouse_Unique")
                         .HasFilter("\"VariantId\" IS NOT NULL");
 
-                    b.ToTable("InventoryItems");
+                    b.ToTable("InventoryItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_InventoryItems_AverageCost_NonNegative", "\"AverageCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_InventoryItems_QuantityOnHand_NonNegative", "\"QuantityOnHand\" >= 0");
+
+                            t.HasCheckConstraint("CK_InventoryItems_ReorderQuantity_NonNegative", "\"ReorderQuantity\" >= 0");
+
+                            t.HasCheckConstraint("CK_InventoryItems_ReservedQuantity_NonNegative", "\"ReservedQuantity\" >= 0");
+
+                            t.HasCheckConstraint("CK_InventoryItems_Reserved_LteOnHand", "\"ReservedQuantity\" <= \"QuantityOnHand\"");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.LandedCost", b =>
@@ -530,7 +570,10 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("GRNId", "IsAllocated")
                         .HasDatabaseName("IX_LandedCost_GRN_Allocated");
 
-                    b.ToTable("LandedCosts");
+                    b.ToTable("LandedCosts", t =>
+                        {
+                            t.HasCheckConstraint("CK_LandedCosts_Amount_NonNegative", "\"Amount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.POApprovalRequest", b =>
@@ -738,7 +781,10 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("SupplierId", "CreatedAt")
                         .HasDatabaseName("IX_PurchaseOrder_Supplier_Date");
 
-                    b.ToTable("PurchaseOrders");
+                    b.ToTable("PurchaseOrders", t =>
+                        {
+                            t.HasCheckConstraint("CK_PurchaseOrders_TotalAmount_NonNegative", "\"TotalAmount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.PurchaseRequisition", b =>
@@ -1350,6 +1396,9 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InventoryItemId")
+                        .HasDatabaseName("IX_StockMovement_InventoryItemId");
+
                     b.HasIndex("ReferenceId")
                         .HasDatabaseName("IX_StockMovement_Reference");
 
@@ -1433,7 +1482,10 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_StockReservation_Product_Variant_Status")
                         .HasFilter("\"VariantId\" IS NOT NULL");
 
-                    b.ToTable("StockReservations");
+                    b.ToTable("StockReservations", t =>
+                        {
+                            t.HasCheckConstraint("CK_StockReservations_Quantity_NonNegative", "\"Quantity\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockTransfer", b =>
@@ -1945,9 +1997,14 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_Warehouse_Code");
 
                     b.HasIndex("IsDefault")
-                        .HasDatabaseName("IX_Warehouse_Default");
+                        .IsUnique()
+                        .HasDatabaseName("IX_Warehouse_Default")
+                        .HasFilter("\"IsDefault\"");
 
-                    b.ToTable("Warehouses");
+                    b.ToTable("Warehouses", t =>
+                        {
+                            t.HasCheckConstraint("CK_Warehouses_Capacity_NonNegative", "\"Capacity\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.DNItem", b =>
@@ -2007,7 +2064,12 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                             b1.HasKey("PurchaseOrderId", "Id");
 
-                            b1.ToTable("PurchaseOrderItem");
+                            b1.ToTable("PurchaseOrderItem", t =>
+                                {
+                                    t.HasCheckConstraint("CK_PurchaseOrderItem_Quantity_Positive", "\"Quantity\" > 0");
+
+                                    t.HasCheckConstraint("CK_PurchaseOrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                                });
 
                             b1.WithOwner()
                                 .HasForeignKey("PurchaseOrderId");

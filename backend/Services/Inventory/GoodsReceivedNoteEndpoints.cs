@@ -13,7 +13,8 @@ public static class GoodsReceivedNoteEndpoints
 {
     public static void MapGoodsReceivedNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/grn").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
+        // W1-10: phiếu nhập kho -> quyền theo verb của module Inventory.
+        var group = app.MapGroup("/api/inventory/grn").RequireModulePermissions(PermissionModules.Inventory);
 
         // POST /api/inventory/grn — create GRN
         group.MapPost("", async (CreateGRNDto dto, InventoryDbContext db) =>

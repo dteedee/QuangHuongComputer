@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Warranty.Domain;
+using BuildingBlocks.Database;
 
 namespace Warranty.Infrastructure;
 
@@ -33,6 +34,12 @@ public class WarrantyDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ClaimType).HasConversion<int?>();
+            // W1-11 / audit db-schema-migrations-12: bảng Claims chỉ có khoá chính, mọi màn
+            // hình tra bảo hành theo khách hàng / trạng thái đều quét toàn bảng.
+            entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_Claims_CustomerId");
+            entity.HasIndex(e => new { e.Status, e.CreatedAt }).HasDatabaseName("IX_Claims_Status_CreatedAt");
+            entity.HasIndex(e => e.WorkOrderId).HasDatabaseName("IX_Claims_WorkOrderId");
+            entity.HasIndex(e => e.RmaId).HasDatabaseName("IX_Claims_RmaId");
         });
 
         modelBuilder.Entity<ProductWarranty>(entity =>
@@ -41,6 +48,10 @@ public class WarrantyDbContext : DbContext
             // Bỏ Unique(SerialNumber) — Phase 07: 1 máy có 2 warranty song song (Manufacturer + Store).
             entity.HasIndex(e => new { e.SerialNumber, e.Provider }).IsUnique();
             entity.Property(e => e.Provider).HasConversion<int>();
+            // W1-11 / audit db-schema-migrations-12: 3 khoá ngoại nóng chưa có index.
+            entity.HasIndex(e => e.CustomerId).HasDatabaseName("IX_ProductWarranties_CustomerId");
+            entity.HasIndex(e => e.ProductId).HasDatabaseName("IX_ProductWarranties_ProductId");
+            entity.HasIndex(e => e.SerialNumberId).HasDatabaseName("IX_ProductWarranties_SerialNumberId");
         });
 
         modelBuilder.Entity<WarrantyRma>(entity =>
@@ -68,6 +79,14 @@ public class WarrantyDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ClaimType).HasConversion<int>();
             entity.HasIndex(e => e.ClaimType).IsUnique();
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_SlaPolicies_WarningAtPercent_Range",
+                "\"WarningAtPercent\" >= 0 AND \"WarningAtPercent\" <= 100"));
         });
+
+        // W1-11 / audit db-schema-migrations-07: module này chưa gọi
+        // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho mọi cột
+        // DateTime, trong khi CSDL thật là `timestamp without time zone`. Ghim lại đúng thực tế.
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
     }
 }

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +16,10 @@ public static class ReturnPolicyEndpoints
 {
     public static void MapReturnPolicyEndpoints(this IEndpointRouteBuilder app)
     {
+        // Chính sách đổi/trả là cấu hình nghiệp vụ Sales -> quyền ManageReturns
+        // (giữ đúng phạm vi cũ Admin/Manager; Sale chỉ có ViewReturns nên không sửa được).
         var admin = app.MapGroup("/api/sales/return-policies")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+            .RequirePermission(Permissions.Sales.ManageReturns);
 
         admin.MapGet("/", async (SalesDbContext db) =>
         {
@@ -60,7 +63,9 @@ public static class ReturnPolicyEndpoints
             return Results.NoContent();
         });
 
-        // Public: hiển thị policy ở trang sản phẩm.
+        // Public: hiển thị policy ở trang sản phẩm (khách chưa đăng nhập cũng phải đọc được).
+        // W1-10: khai báo AllowAnonymous tường minh; cần thêm rule vào PublicEndpointAllowList
+        // (integration request W1 -> chủ file BuildingBlocks/Security/PublicEndpointAllowList.cs).
         var pub = app.MapGroup("/api/sales/return-policies");
         pub.MapGet("/effective", async ([FromQuery] Guid? categoryId, SalesDbContext db) =>
         {
@@ -79,7 +84,7 @@ public static class ReturnPolicyEndpoints
                 policy.RequireOriginalPackaging, policy.RequireAllAccessories,
                 policy.RestockingFeePercent, policy.Notes
             });
-        });
+        }).AllowAnonymous();
     }
 }
 

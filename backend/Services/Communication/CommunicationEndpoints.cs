@@ -92,8 +92,11 @@ public static class CommunicationEndpoints
         });
 
         // Admin endpoints
+        // W1-10: danh sách người đăng ký nhận tin là dữ liệu chiến dịch -> CRM.ManageCampaigns
+        // (Admin/Manager/Marketing). Trước đây chỉ Admin nên Marketing không xem được dữ liệu
+        // của chính mình.
         var newsletterAdmin = app.MapGroup("/api/communication/newsletter/admin")
-            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+            .RequirePermission(Permissions.CRM.ManageCampaigns);
 
         newsletterAdmin.MapGet("/", async (Communication.Infrastructure.CommunicationDbContext db, bool? isActive) =>
         {
@@ -144,10 +147,13 @@ public static class CommunicationEndpoints
             {
                 return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
-        }).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager));
+            // W1-10: gửi email thủ công ra ngoài -> CRM.SendCampaigns (Admin/Manager/Marketing).
+        }).RequireAuthorization(Permissions.CRM.SendCampaigns);
 
         // Chat conversation endpoints
-        var chatGroup = app.MapGroup("/api/chat").RequireAuthorization();
+        // W1-10: hội thoại chat là dữ liệu "của chính tôi" (handler lọc theo danh tính);
+        // endpoint dành cho nhân viên bên dưới khai báo policy riêng.
+        var chatGroup = app.MapGroup("/api/chat").RequireAuthorization(SecurityPolicies.Authenticated);
 
         chatGroup.MapGet("/conversations", async (HttpContext context, IConversationRepository repo) =>
         {
@@ -224,7 +230,9 @@ public static class CommunicationEndpoints
                 c.CreatedAt,
                 MessageCount = c.Messages.Count
             }));
-        }).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Sale));
+            // W1-10: hàng đợi hội thoại chưa ai nhận là màn hình của nhân viên CSKH
+            // -> CRM.ViewCustomers (Admin/Manager/Sale/Marketing).
+        }).RequireAuthorization(Permissions.CRM.ViewCustomers);
 
         // AI chatbot integration
         chatGroup.MapPost("/ai/ask", async (
@@ -254,7 +262,8 @@ public static class NotificationEndpointsExtensions
 {
     public static void MapNotificationEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/notifications").RequireAuthorization();
+        // W1-10: thông báo của chính người dùng đang đăng nhập.
+        var group = app.MapGroup("/api/notifications").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // GET /api/notifications - Get notifications for current user
         group.MapGet("/", async (

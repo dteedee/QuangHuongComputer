@@ -42,9 +42,14 @@ export interface InstallmentApplicationRequest {
     termMonths: number;
     downPaymentAmount: number;
     monthlyPayment: number;
-    /** ID file CMND/CCCD mặt trước đã upload (nếu backend hỗ trợ) */
+    /**
+     * @deprecated D10 rule 6 (Luật 91/2025): hồ sơ không còn thu CMND/CCCD
+     * qua web — làm tại quầy/cổng CTTC. Kept optional (always `undefined`
+     * now) so `components/checkout/use-checkout-submit.ts` (W3-2, not this
+     * track's file) keeps compiling unchanged.
+     */
     idFrontFileId?: string;
-    /** ID file CMND/CCCD mặt sau */
+    /** @deprecated see `idFrontFileId`. */
     idBackFileId?: string;
     /** Ghi chú thêm từ khách */
     notes?: string;
@@ -77,13 +82,6 @@ export const installmentApi = {
         return response.data;
     },
 
-    /** Upload giấy tờ CMND/CCCD, trả về fileId. Backend lưu MinIO bucket riêng. */
-    uploadDocument: async (file: File): Promise<{ fileId: string; url?: string }> => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await client.post<{ fileId: string; url?: string }>('/installment/documents', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data;
-    },
+    // `uploadDocument` removed (D10 rule 6, W1-9) — see `InstallmentApplicationRequest`
+    // doc comment above and `docs/frontend-form-kit.md`.
 };

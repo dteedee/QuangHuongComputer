@@ -21,6 +21,10 @@ frontend/node_modules
 **/bin
 **/obj
 
+# Runtime media uploads (W1-6 / D02) — never bake a dev machine's local uploads into the image;
+# the volume mounted at /app/data/media in prod (D05) is populated at runtime, not build time.
+backend/ApiGateway/App_Data/
+
 # Logs
 *.log
 backend.log

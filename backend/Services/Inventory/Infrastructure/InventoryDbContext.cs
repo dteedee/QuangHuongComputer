@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using InventoryModule.Domain;
+using BuildingBlocks.Database;
 
 namespace InventoryModule.Infrastructure;
 
@@ -52,6 +53,9 @@ public class InventoryDbContext : DbContext
         modelBuilder.Entity<InventoryItem>(entity =>
         {
             entity.HasKey(e => e.Id);
+            // W1-11: xmin - Inventory là NGUỒN SỰ THẬT của tồn kho. Hai lần trừ tồn đồng thời
+            // (checkout song song) phải bị EF phát hiện thay vì mất một lần trừ.
+            entity.UseXminAsConcurrencyToken();
             entity.Property(e => e.AverageCost).HasPrecision(18, 2);
 
             // Indexes for common queries
@@ -75,6 +79,22 @@ public class InventoryDbContext : DbContext
 
             entity.HasIndex(e => e.BatchNumber)
                 .HasDatabaseName("IX_Inventory_BatchNumber");
+
+            // W1-11 / audit db-schema-migrations-12: lọc tồn theo kho không có index riêng.
+            entity.HasIndex(e => e.WarehouseId)
+                .HasDatabaseName("IX_Inventory_WarehouseId");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_InventoryItems_QuantityOnHand_NonNegative", "\"QuantityOnHand\" >= 0");
+                t.HasCheckConstraint("CK_InventoryItems_ReservedQuantity_NonNegative", "\"ReservedQuantity\" >= 0");
+                // Không bao giờ giữ chỗ nhiều hơn số đang có trong kho.
+                t.HasCheckConstraint(
+                    "CK_InventoryItems_Reserved_LteOnHand",
+                    "\"ReservedQuantity\" <= \"QuantityOnHand\"");
+                t.HasCheckConstraint("CK_InventoryItems_AverageCost_NonNegative", "\"AverageCost\" >= 0");
+                t.HasCheckConstraint("CK_InventoryItems_ReorderQuantity_NonNegative", "\"ReorderQuantity\" >= 0");
+            });
         });
 
         modelBuilder.Entity<Supplier>(entity =>
@@ -151,10 +171,21 @@ public class InventoryDbContext : DbContext
 
             entity.HasIndex(e => e.RequisitionId).HasDatabaseName("IX_PurchaseOrder_Requisition");
 
+            entity.ToTable(t =>
+                t.HasCheckConstraint("CK_PurchaseOrders_TotalAmount_NonNegative", "\"TotalAmount\" >= 0"));
+
             entity.OwnsMany(e => e.Items, item =>
             {
                 item.Property(i => i.UnitPrice).HasPrecision(18, 2);
                 item.Property(i => i.ProductName).HasMaxLength(300);
+                // Hai ràng buộc này được thêm dưới dạng NOT VALID trong migration: CSDL đang
+                // chạy còn 1 dòng rác của agent kiểm toán (Id=1, Quantity=-10, UnitPrice=-5).
+                // Dòng mới bị chặn ngay; VALIDATE chạy sau khi D03 dọn dữ liệu thử.
+                item.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_PurchaseOrderItem_Quantity_Positive", "\"Quantity\" > 0");
+                    t.HasCheckConstraint("CK_PurchaseOrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                });
             });
         });
 
@@ -301,6 +332,9 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => new { e.ProductId, e.VariantId, e.Status })
                 .HasFilter("\"VariantId\" IS NOT NULL")
                 .HasDatabaseName("IX_StockReservation_Product_Variant_Status");
+            // >= 0 chứ không > 0: CSDL đang chạy có 2 reservation Released với Quantity = 0.
+            entity.ToTable(t =>
+                t.HasCheckConstraint("CK_StockReservations_Quantity_NonNegative", "\"Quantity\" >= 0"));
         });
 
         modelBuilder.Entity<Warehouse>(entity =>
@@ -317,7 +351,13 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.ManagerEmail).HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.HasIndex(e => e.Code).IsUnique().HasDatabaseName("IX_Warehouse_Code");
-            entity.HasIndex(e => e.IsDefault).HasDatabaseName("IX_Warehouse_Default");
+            // D09: đúng MỘT kho mặc định. Partial unique index thay cho index thường cũ.
+            entity.HasIndex(e => e.IsDefault)
+                .IsUnique()
+                .HasFilter("\"IsDefault\"")
+                .HasDatabaseName("IX_Warehouse_Default");
+            entity.ToTable(t =>
+                t.HasCheckConstraint("CK_Warehouses_Capacity_NonNegative", "\"Capacity\" >= 0"));
         });
 
         modelBuilder.Entity<SerialNumber>(entity =>
@@ -347,6 +387,9 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => new { e.ProductId, e.MovementDate }).HasDatabaseName("IX_StockMovement_Product_Date");
             entity.HasIndex(e => e.Type).HasDatabaseName("IX_StockMovement_Type");
             entity.HasIndex(e => e.ReferenceId).HasDatabaseName("IX_StockMovement_Reference");
+            // W1-11: sổ cái tồn kho luôn được đọc theo InventoryItem (W2-5 sẽ dựng ledger trên đây).
+            // KHÔNG đặt CHECK cho Quantity: phiếu xuất ghi số âm một cách hợp lệ.
+            entity.HasIndex(e => e.InventoryItemId).HasDatabaseName("IX_StockMovement_InventoryItemId");
         });
 
         modelBuilder.Entity<GoodsReceivedNote>(entity =>
@@ -361,6 +404,10 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_GRN_Status");
             entity.HasIndex(e => e.Source).HasDatabaseName("IX_GRN_Source");
             entity.HasMany(e => e.Items).WithOne().HasForeignKey(i => i.GoodsReceivedNoteId);
+            // W1-11 / audit db-schema-migrations-12: 3 cột khoá ngoại nóng chưa có index.
+            entity.HasIndex(e => e.SupplierId).HasDatabaseName("IX_GRN_SupplierId");
+            entity.HasIndex(e => e.WarehouseId).HasDatabaseName("IX_GRN_WarehouseId");
+            entity.HasIndex(e => e.PurchaseOrderId).HasDatabaseName("IX_GRN_PurchaseOrderId");
         });
 
         modelBuilder.Entity<GRNItem>(entity =>
@@ -370,6 +417,18 @@ public class InventoryDbContext : DbContext
             entity.Property(e => e.UnitCost).HasPrecision(18, 2);
             entity.Property(e => e.SerialNumbers).HasMaxLength(2000);
             entity.Property(e => e.RejectReason).HasMaxLength(500);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_GRNItems_Quantity_Positive", "\"Quantity\" > 0");
+                t.HasCheckConstraint("CK_GRNItems_AcceptedQty_NonNegative", "\"AcceptedQty\" >= 0");
+                t.HasCheckConstraint("CK_GRNItems_RejectedQty_NonNegative", "\"RejectedQty\" >= 0");
+                t.HasCheckConstraint("CK_GRNItems_UnitCost_NonNegative", "\"UnitCost\" >= 0");
+                // Đạt + loại không bao giờ vượt quá số lượng nhận.
+                t.HasCheckConstraint(
+                    "CK_GRNItems_Inspected_LteQuantity",
+                    "\"AcceptedQty\" + \"RejectedQty\" <= \"Quantity\"");
+            });
         });
 
         modelBuilder.Entity<DeliveryNote>(entity =>
@@ -418,6 +477,14 @@ public class InventoryDbContext : DbContext
             entity.HasIndex(e => e.GRNId).HasDatabaseName("IX_LandedCost_GRN");
             entity.HasIndex(e => new { e.GRNId, e.IsAllocated })
                 .HasDatabaseName("IX_LandedCost_GRN_Allocated");
+            entity.ToTable(t =>
+                t.HasCheckConstraint("CK_LandedCosts_Amount_NonNegative", "\"Amount\" >= 0"));
         });
+
+        // W1-11 / audit db-schema-migrations-07: module này chưa từng gọi
+        // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho mọi cột
+        // DateTime, trong khi CSDL thật là `timestamp without time zone`. Ghim lại đúng thực tế;
+        // chuyển đổi hàng loạt sang timestamptz nằm trong backlog.
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
     }
 }

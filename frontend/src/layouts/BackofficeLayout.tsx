@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
@@ -11,6 +11,8 @@ import { useBackofficeMenu } from '../components/backoffice/use-backoffice-menu'
 import { useKeyboardShortcut } from '../components/backoffice/use-keyboard-shortcut';
 import { BackofficeSidebar } from '../components/backoffice/backoffice-sidebar';
 import { BackofficeTopbar } from '../components/backoffice/backoffice-topbar';
+import { BackofficeRouteSkeleton } from '../components/backoffice/backoffice-route-skeleton';
+import { RouteOutlet } from './route-outlet';
 
 /**
  * Backoffice/admin shell: composes sidebar + topbar + <Outlet/> and owns only
@@ -123,7 +125,7 @@ export const BackofficeLayout = () => {
 
                 <main className={`flex-1 overflow-y-auto transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
                     <div className="p-4 lg:p-6 max-w-[1700px] mx-auto min-h-full">
-                        <Outlet />
+                        <RouteOutlet skeleton={<BackofficeRouteSkeleton />} />
                     </div>
                 </main>
             </div>

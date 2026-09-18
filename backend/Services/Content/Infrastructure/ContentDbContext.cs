@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Content.Domain;
+using BuildingBlocks.Database;
 
 namespace Content.Infrastructure;
 
@@ -45,12 +46,21 @@ public class ContentDbContext : DbContext
         modelBuilder.Entity<Coupon>(entity =>
         {
             entity.HasKey(e => e.Id);
+            // W1-11: xmin - đếm lượt dùng mã giảm giá là cuộc đua kinh điển; hai đơn cùng
+            // lúc dùng mã cuối cùng phải có một đơn thất bại, không phải cả hai cùng qua.
+            entity.UseXminAsConcurrencyToken();
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.DiscountValue).HasPrecision(18, 2);
             entity.Property(e => e.MinOrderAmount).HasPrecision(18, 2);
             entity.Property(e => e.MaxDiscount).HasPrecision(18, 2);
             entity.HasIndex(e => new { e.IsActive, e.ValidFrom, e.ValidTo })
                 .HasDatabaseName("IX_Coupon_Active_DateRange");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Coupons_DiscountValue_NonNegative", "\"DiscountValue\" >= 0");
+                t.HasCheckConstraint("CK_Coupons_MinOrderAmount_NonNegative", "\"MinOrderAmount\" >= 0");
+                t.HasCheckConstraint("CK_Coupons_UsedCount_NonNegative", "\"UsedCount\" >= 0");
+            });
         });
 #pragma warning restore CS0618
         
@@ -216,5 +226,15 @@ public class ContentDbContext : DbContext
             entity.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("IX_ContactMessage_CreatedAt");
         });
+
+        // W1-11 / audit db-schema-migrations-07: module này chưa gọi
+        // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho MỌI cột
+        // DateTime, trong khi CSDL thật là `timestamp without time zone` - trừ đúng 2 cột của
+        // HomepageSections đã là timestamptz. Ghim lại đúng thực tế cả hai chiều.
+        PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
+        modelBuilder.Entity<HomepageSection>()
+            .Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<HomepageSection>()
+            .Property(e => e.UpdatedAt).HasColumnType("timestamp with time zone");
     }
 }

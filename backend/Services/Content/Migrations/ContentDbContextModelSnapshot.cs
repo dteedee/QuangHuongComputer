@@ -338,6 +338,12 @@ namespace Content.Migrations
                     b.Property<DateTime>("ValidTo")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
@@ -346,7 +352,14 @@ namespace Content.Migrations
                     b.HasIndex("IsActive", "ValidFrom", "ValidTo")
                         .HasDatabaseName("IX_Coupon_Active_DateRange");
 
-                    b.ToTable("Coupons", "content");
+                    b.ToTable("Coupons", "content", t =>
+                        {
+                            t.HasCheckConstraint("CK_Coupons_DiscountValue_NonNegative", "\"DiscountValue\" >= 0");
+
+                            t.HasCheckConstraint("CK_Coupons_MinOrderAmount_NonNegative", "\"MinOrderAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Coupons_UsedCount_NonNegative", "\"UsedCount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Content.Domain.FlashSale", b =>
@@ -456,7 +469,7 @@ namespace Content.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
@@ -485,7 +498,7 @@ namespace Content.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");

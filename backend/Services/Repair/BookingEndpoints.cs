@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,7 +15,9 @@ public static class BookingEndpoints
 {
     public static void MapBookingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/repair").RequireAuthorization();
+        // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
+        // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
+        var group = app.MapGroup("/api/repair").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // Customer Endpoints
         group.MapPost("/book", async ([FromBody] CreateBookingDto model, RepairDbContext db, ClaimsPrincipal user) =>
@@ -157,7 +160,10 @@ public static class BookingEndpoints
         });
 
         // Admin Endpoints
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+        // W1-10: tạo từ `app` chứ không từ `group` — group cha đã mang policy tường minh
+        // (Policy.Authenticated), mà RequireModulePermissions bỏ qua endpoint đã có policy.
+        // Route sinh ra vẫn là /api/repair/admin/...
+        var adminGroup = app.MapGroup("/api/repair/admin").RequireModulePermissions(PermissionModules.Repair);
 
         adminGroup.MapGet("/bookings", async (RepairDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
         {

@@ -11,6 +11,29 @@
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.2" />
   </ItemGroup>
+  <!--
+    Test phân quyền (UnitTests/Security) dựng Endpoint/RouteEndpointBuilder giả nên cần
+    khung ASP.NET Core. Khai báo tường minh thay vì dựa vào truyền từ các project Services.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    W1-1 / IR W0 #45: ReviewValidationMiddleware nằm trong ApiGateway nên test của nó cần
+    project reference này. ĐỂ TẮT MẶC ĐỊNH: UnitTests.csproj là assembly dùng chung cho
+    mọi track, mà ApiGateway.csproj chưa từng được compile trong đợt này (IR W0 #46) —
+    bật lên khi nó còn lỗi sẽ làm hỏng `qh-build.sh be-test` của TẤT CẢ các track.
+    Bật bằng: dotnet test ... -p:IncludeApiGatewayTests=true
+    Cổng W1-G nên đổi thành mặc định true sau lần build ApiGateway sạch đầu tiên.
+  -->
+  <ItemGroup Condition="'$(IncludeApiGatewayTests)' == 'true'">
+    <ProjectReference Include="../../ApiGateway/ApiGateway.csproj" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(IncludeApiGatewayTests)' == 'true'">
+    <DefineConstants>$(DefineConstants);QH_APIGATEWAY</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="../../Services/Accounting/Accounting.csproj" />
     <ProjectReference Include="../../Services/Catalog/Catalog.csproj" />

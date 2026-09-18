@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
 import type { NotificationDto } from '../api/notification';
+import { browserStorage } from '../lib/browser-storage';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 
@@ -43,7 +44,7 @@ export const useRealtimeNotifications = (
 
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(signalRUrl, {
-                accessTokenFactory: () => localStorage.getItem('token') || ''
+                accessTokenFactory: () => browserStorage.getItem('token') || ''
             })
             .withAutomaticReconnect({
                 nextRetryDelayInMilliseconds: (retryContext) => {

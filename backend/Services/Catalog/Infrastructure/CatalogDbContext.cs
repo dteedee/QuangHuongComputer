@@ -66,6 +66,11 @@ public class CatalogDbContext : DbContext
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Price).HasPrecision(18, 2);
             entity.Property(p => p.CostPrice).HasPrecision(18, 2);
+            // W1-11 / audit db-schema-migrations-23: OldPrice còn là numeric không giới hạn.
+            // AverageRating vẫn là `real` vì Product.AverageRating là `float` (Domain/Product.cs:40)
+            // và Npgsql không ánh xạ float sang numeric - đổi kiểu CLR nằm ngoài ownership của
+            // W1-11 (xem integration request W1-11-IR-01). Ở đây chỉ chặn giá trị vô lý bằng CHECK.
+            entity.Property(p => p.OldPrice).HasPrecision(18, 2);
             entity.Property(p => p.Weight).HasPrecision(10, 3);
             entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
             entity.Property(p => p.Sku).IsRequired().HasMaxLength(50);
@@ -149,6 +154,20 @@ public class CatalogDbContext : DbContext
             entity.Ignore(p => p.SpecValues);
             entity.Ignore(p => p.EffectiveImageUrl);
             entity.Ignore(p => p.EffectivePrice);
+
+            // W1-11: CSDL tự chặn tiền âm / tồn âm (audit db-schema-migrations-11: 0 CHECK).
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Products_Price_NonNegative", "\"Price\" >= 0");
+                t.HasCheckConstraint("CK_Products_CostPrice_NonNegative", "\"CostPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Products_OldPrice_NonNegative",
+                    "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
+                t.HasCheckConstraint("CK_Products_StockQuantity_NonNegative", "\"StockQuantity\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Products_AverageRating_Range",
+                    "\"AverageRating\" >= 0 AND \"AverageRating\" <= 5");
+            });
         });
 
         // Category configurations
@@ -165,7 +184,9 @@ public class CatalogDbContext : DbContext
                 .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''")
                 .HasDatabaseName("uq_categories_slug");
 
-            entity.Property(c => c.VatRate).HasPrecision(5, 2).HasDefaultValue(0.10m);
+            // D01: VatRate lưu dưới dạng PHÂN SỐ (0.10 = 10%), nên cần 4 chữ số thập phân để
+            // biểu diễn được các mức 0.08 / 0.0825... và CHECK giữ nó trong [0, 1].
+            entity.Property(c => c.VatRate).HasPrecision(5, 4).HasDefaultValue(0.10m);
             // D01: VatRate là thuế suất THEO LUẬT; cờ này quyết định ngành hàng có được
             // áp mức giảm của kỳ giảm thuế hay không.
             entity.Property(c => c.VatReductionEligible).HasDefaultValue(true);
@@ -183,10 +204,19 @@ public class CatalogDbContext : DbContext
             entity.Property(c => c.Icon).HasMaxLength(100);
             entity.Property(c => c.DisplayOrder).HasDefaultValue(0);
             entity.Property(c => c.MetaTitle).HasMaxLength(200);
-            entity.Property(c => c.MetaDescription).HasMaxLength(500);
+            // ConfigureCommonColumnProperties chạy TRƯỚC khối này và ép mọi cột tên chứa
+            // "description" chưa có MaxLength về `text`; CSDL thật lại là varchar(500)
+            // (migration 20260918090000 của W0-5). Ghim kiểu cột để model khớp CSDL.
+            entity.Property(c => c.MetaDescription)
+                .HasMaxLength(500)
+                .HasColumnType("character varying(500)");
 
             entity.HasIndex(c => new { c.ParentId, c.DisplayOrder })
                 .HasDatabaseName("ix_categories_parent_id_display_order");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_Categories_VatRate_Fraction",
+                "\"VatRate\" >= 0 AND \"VatRate\" <= 1"));
         });
 
         // Brand configurations
@@ -239,6 +269,14 @@ public class CatalogDbContext : DbContext
                 
             entity.HasIndex(pr => pr.Rating)
                 .HasDatabaseName("ix_product_reviews_rating");
+
+            // W1-11 / audit db-schema-migrations-12: "đánh giá của tôi" quét toàn bảng.
+            entity.HasIndex(pr => pr.CustomerId)
+                .HasDatabaseName("ix_product_reviews_customer_id");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_ProductReviews_Rating_Range",
+                "\"Rating\" >= 1 AND \"Rating\" <= 5"));
         });
 
         // ProductAttribute configurations
@@ -299,6 +337,12 @@ public class CatalogDbContext : DbContext
                 .HasForeignKey(pi => pi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_saved_pc_build_items_product_id");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_SavedPcBuildItems_Quantity_Positive", "\"Quantity\" > 0");
+                t.HasCheckConstraint("CK_SavedPcBuildItems_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+            });
         });
 
         // ProductBundle configurations
@@ -316,6 +360,12 @@ public class CatalogDbContext : DbContext
                 
             entity.HasIndex(pb => pb.ValidTo)
                 .HasDatabaseName("ix_product_bundles_valid_to");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
+                t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
+            });
         });
 
         // ProductBundleItem configurations
@@ -340,6 +390,17 @@ public class CatalogDbContext : DbContext
                 
             entity.HasIndex(pbi => new { pbi.ProductId, pbi.IsMainItem })
                 .HasDatabaseName("ix_product_bundle_items_product_id_main");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_ProductBundleItems_Quantity_Positive", "\"Quantity\" > 0");
+                t.HasCheckConstraint(
+                    "CK_ProductBundleItems_OriginalUnitPrice_NonNegative",
+                    "\"OriginalUnitPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_ProductBundleItems_DiscountPercentage_Range",
+                    "\"DiscountPercentage\" >= 0 AND \"DiscountPercentage\" <= 100");
+            });
         });
 
         // ------- Phase 03: ProductMedia / Variant / Specification -------
@@ -437,6 +498,18 @@ public class CatalogDbContext : DbContext
 
             entity.HasIndex(v => new { v.ProductId, v.IsDefault })
                 .HasDatabaseName("ix_product_variants_product_default");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_ProductVariants_Price_NonNegative", "\"Price\" >= 0");
+                t.HasCheckConstraint("CK_ProductVariants_CostPrice_NonNegative", "\"CostPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_ProductVariants_OldPrice_NonNegative",
+                    "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_ProductVariants_StockQuantity_NonNegative",
+                    "\"StockQuantity\" >= 0");
+            });
         });
 
         modelBuilder.Entity<ProductVariantOption>(entity =>

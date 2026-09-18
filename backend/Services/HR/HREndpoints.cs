@@ -1,4 +1,5 @@
 
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +16,7 @@ public static class HREndpoints
 {
     public static void MapHREndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+        var group = app.MapGroup("/api/hr").RequireModulePermissions(PermissionModules.HR);
 
         // ==================== PUBLIC RECRUITMENT ====================
         app.MapGet("/api/recruitment", async (HRDbContext db) =>
@@ -24,13 +25,15 @@ public static class HREndpoints
                 .Where(j => j.Status == JobStatus.Active && j.ExpiryDate > DateTime.UtcNow)
                 .OrderByDescending(j => j.CreatedAt)
                 .ToListAsync();
-        });
+            // W1-10: tin tuyển dụng đang mở — trang tuyển dụng công khai (IR W1: allow-list).
+        }).AllowAnonymous();
 
         app.MapGet("/api/recruitment/{id:guid}", async (Guid id, HRDbContext db) =>
         {
             var job = await db.JobListings.FindAsync(id);
             return job != null ? Results.Ok(job) : Results.NotFound();
-        });
+            // W1-10: chi tiết tin tuyển dụng công khai (IR W1: allow-list).
+        }).AllowAnonymous();
 
         // ==================== EMPLOYEE MANAGEMENT ====================
 

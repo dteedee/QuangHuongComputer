@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShieldAlert, Home, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ROUTES } from '../routes';
 
 /**
  * 403 — người dùng đã đăng nhập nhưng không có role phù hợp cho route đang truy cập.
@@ -24,7 +25,7 @@ export const ForbiddenPage = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link
-                        to="/"
+                        to={ROUTES.HOME}
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-semibold hover:brightness-95 transition-all"
                     >
                         <Home size={18} />
@@ -32,7 +33,7 @@ export const ForbiddenPage = () => {
                     </Link>
                     {!user && (
                         <Link
-                            to="/login"
+                            to={ROUTES.LOGIN}
                             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
                         >
                             <LogIn size={18} />

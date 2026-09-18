@@ -13,7 +13,8 @@ public static class InventoryCountEndpoints
 {
     public static void MapInventoryCountEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/count").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
+        // W1-10: kiểm kê kho -> quyền theo verb của module Inventory.
+        var group = app.MapGroup("/api/inventory/count").RequireModulePermissions(PermissionModules.Inventory);
 
         // POST /api/inventory/count — create session, populate items from current inventory
         group.MapPost("", async (CreateCountSessionDto dto, InventoryDbContext db, CatalogDbContext catalogDb) =>

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -12,7 +13,9 @@ public static class SelfServiceEndpoints
 {
     public static void MapSelfServiceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr/self-service").RequireAuthorization();
+        // W1-10: cổng tự phục vụ của nhân viên (hồ sơ/phiếu lương của chính mình) -> Staff.
+        // Handler lọc theo employeeId lấy từ danh tính người gọi.
+        var group = app.MapGroup("/api/hr/self-service").RequireAuthorization(SecurityPolicies.Staff);
 
         // GET /api/hr/self-service/profile
         group.MapGet("/profile", async (ClaimsPrincipal user, HRDbContext db) =>

@@ -11,8 +11,9 @@ public static class SupplierScorecardEndpoints
 {
     public static void MapSupplierScorecardEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: chấm điểm nhà cung cấp -> quyền theo verb của nhóm nhà cung cấp.
         var group = app.MapGroup("/api/inventory/suppliers")
-            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
+            .RequireModulePermissions(PermissionModules.Suppliers);
 
         // GET /api/inventory/suppliers/scorecards?from=&to= — bảng tổng
         group.MapGet("scorecards", async (DateTime? from, DateTime? to, InventoryDbContext db) =>

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Reporting.Endpoints;
@@ -8,31 +9,29 @@ public static class ReportingEndpoints
 {
     public static void MapReportingEndpoints(this IEndpointRouteBuilder app)
     {
-        // TODO(W1-10): role-string stop-gap so accountant@ isn't 403'd on every
-        // financial/tax report. Not permission-policy based like the rest of the system;
-        // the endpoint-authorization-sweep track should replace this with per-report
-        // permissions (see finding audit-be-crm-comm-ai-reporting.md #-18).
-        var group = app.MapGroup("/api/reports")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
-
-        group.MapSalesReportEndpoints();
-        group.MapFinancialReportEndpoints();
-        group.MapInventoryReportEndpoints();
-        group.MapRepairReportEndpoints();
-        group.MapAnalyticsEndpoints();
-        group.MapSystemHealthEndpoints();
-        group.MapExcelExportEndpoints();
-        group.MapWarrantyReportEndpoints();
-        group.MapCRMReportEndpoints();
-        group.MapTaxReportEndpoints();
-        group.MapComparisonEndpoints();
-        group.MapReportCustomizationEndpoints();
-
-        // HR reports live in their own sub-group (same /api/reports prefix, mapped
-        // separately from `group`) so `HR` role can read HR reports without also being
-        // granted Admin/Manager/Accountant's access to financial/sales/tax reports.
-        var hrGroup = app.MapGroup("/api/reports")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR"));
-        hrGroup.MapHRReportEndpoints();
+        // W1-10: hết stop-gap role-string. Mỗi mảng báo cáo là một nhóm riêng trên cùng
+        // tiền tố /api/reports nhưng mang đúng quyền của mảng đó, nhờ vậy Accountant đọc được
+        // báo cáo tài chính/thuế, HR đọc báo cáo nhân sự, InventoryStaff đọc báo cáo kho,
+        // kỹ thuật viên đọc báo cáo sửa chữa — thay vì một danh sách role chung.
+        Group(app, Permissions.Reporting.ViewSales).MapSalesReportEndpoints();
+        Group(app, Permissions.Reporting.ViewFinancial).MapFinancialReportEndpoints();
+        Group(app, Permissions.Reporting.ViewInventory).MapInventoryReportEndpoints();
+        Group(app, Permissions.Reporting.ViewRepair).MapRepairReportEndpoints();
+        Group(app, Permissions.Reporting.ViewSales).MapAnalyticsEndpoints();
+        Group(app, Permissions.System.ViewConfig).MapSystemHealthEndpoints();
+        Group(app, Permissions.Reporting.ExportReports).MapExcelExportEndpoints();
+        Group(app, Permissions.Reporting.ViewRepair).MapWarrantyReportEndpoints();
+        Group(app, Permissions.CRM.ViewAnalytics).MapCRMReportEndpoints();
+        Group(app, Permissions.Reporting.ViewFinancial).MapTaxReportEndpoints();
+        Group(app, Permissions.Reporting.ViewSales).MapComparisonEndpoints();
+        Group(app, Permissions.Reporting.ExportReports).MapReportCustomizationEndpoints();
+        Group(app, Permissions.Reporting.ViewHR).MapHRReportEndpoints();
     }
+
+    /// <summary>
+    /// Một nhóm /api/reports mang đúng MỘT quyền cho mọi verb. Báo cáo chỉ có thao tác đọc
+    /// và xuất file, nên ánh xạ theo verb (GET/POST/PUT...) không có ý nghĩa ở đây.
+    /// </summary>
+    private static RouteGroupBuilder Group(IEndpointRouteBuilder app, string permission) =>
+        app.MapGroup("/api/reports").RequirePermission(permission);
 }

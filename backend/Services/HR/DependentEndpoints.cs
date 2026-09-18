@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +16,7 @@ public static class DependentEndpoints
     public static void MapDependentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/employees/{eid:guid}/dependents")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.HR);
 
         group.MapGet("", async (Guid eid, HRDbContext db) =>
         {

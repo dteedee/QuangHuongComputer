@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -25,8 +26,9 @@ public static class WarrantyRmaEndpoints
 
     public static void MapWarrantyRmaEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: quy trình RMA -> quyền theo verb của module Warranty.
         var group = app.MapGroup("/api/warranty/rma")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "TechnicianInShop"));
+            .RequireModulePermissions(PermissionModules.Warranty);
 
         group.MapGet("/", async (WarrantyDbContext db, [FromQuery] string? status = null) =>
         {

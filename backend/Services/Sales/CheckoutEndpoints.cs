@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BuildingBlocks.Security;
 using BuildingBlocks.Validation;
 using Catalog.Infrastructure;
 using InventoryModule.Domain;
@@ -34,13 +35,15 @@ public static class CheckoutEndpoints
         var group = app.MapGroup("/api/sales/checkout");
 
         // ---- Preview khuyến mãi (Content.Promotions engine) cho CheckoutPage bước 2 ----
-        app.MapPost("/api/promotions/evaluate", EvaluatePromotionsAsync);
+        // Khách vãng lai (guest-checkout) cũng phải xem được ưu đãi -> công khai tường minh.
+        // W1-10: cần rule tương ứng trong PublicEndpointAllowList (integration request W1).
+        app.MapPost("/api/promotions/evaluate", EvaluatePromotionsAsync).AllowAnonymous();
 
-        // ---- Session giữ chỗ tồn ----
-        group.MapPost("/session", CreateSessionAsync).RequireAuthorization();
-        group.MapPost("/session/{id:guid}/extend", ExtendSessionAsync).RequireAuthorization();
-        group.MapPost("/session/{id:guid}/cancel", CancelSessionAsync).RequireAuthorization();
-        group.MapGet("/session/{id:guid}", GetSessionAsync).RequireAuthorization();
+        // ---- Session giữ chỗ tồn (giỏ hàng "của chính tôi") ----
+        group.MapPost("/session", CreateSessionAsync).RequireAuthorization(SecurityPolicies.Authenticated);
+        group.MapPost("/session/{id:guid}/extend", ExtendSessionAsync).RequireAuthorization(SecurityPolicies.Authenticated);
+        group.MapPost("/session/{id:guid}/cancel", CancelSessionAsync).RequireAuthorization(SecurityPolicies.Authenticated);
+        group.MapGet("/session/{id:guid}", GetSessionAsync).RequireAuthorization(SecurityPolicies.Authenticated);
 
         // ---- Checkout orchestrator ----
         // NOTE: route "/orchestrate" (không phải "/") để tránh AmbiguousMatchException với
@@ -80,7 +83,10 @@ public static class CheckoutEndpoints
                     result.RequiresPaymentGateway
                 })
                 : Results.BadRequest(new { Error = result.ErrorMessage });
-        }).WithValidation<CheckoutOrchestratorRequestDto>();
+            // W1-10: trước đây endpoint này KHÔNG có metadata phân quyền nào (tạo đơn ẩn danh).
+            // Luồng khách vãng lai đã có endpoint công khai riêng /api/sales/public/guest-checkout,
+            // nên ở đây fail-closed: phải đăng nhập. (Nhánh isGuest bên trên thành đường chết.)
+        }).RequireAuthorization(SecurityPolicies.Authenticated).WithValidation<CheckoutOrchestratorRequestDto>();
 
         // ---- Legacy alias: /api/sales/fast-checkout → orchestrator ----
         app.MapPost("/api/sales/fast-checkout", async (
@@ -107,7 +113,7 @@ public static class CheckoutEndpoints
             return result.Success
                 ? Results.Ok(new { result.OrderId, result.OrderNumber, result.TotalAmount })
                 : Results.BadRequest(new { Error = result.ErrorMessage });
-        }).RequireAuthorization().WithValidation<CheckoutOrchestratorRequestDto>();
+        }).RequireAuthorization(SecurityPolicies.Authenticated).WithValidation<CheckoutOrchestratorRequestDto>();
     }
 
     // ============= Promotion preview =============

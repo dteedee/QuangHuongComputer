@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -17,8 +18,9 @@ public static class PurchaseReturnEndpoints
     public static void MapPurchaseReturnEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: trả hàng NCC ghi giảm tồn + công nợ ⇒ chỉ nhân viên kho/quản lý.
+        // W1-10: trả hàng nhà cung cấp -> quyền theo verb của nhóm mua hàng.
         var group = app.MapGroup("/api/inventory/purchase-returns")
-            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
+            .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

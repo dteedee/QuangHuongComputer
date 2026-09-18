@@ -18,7 +18,7 @@ public static class GoogleLoginEndpoint
 {
     public static void MapGoogleLoginEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, IRefreshTokenService refreshTokenService, HttpContext httpContext, IWebHostEnvironment env) =>
+        group.MapPost("/google", async (GoogleLoginDto model, UserManager<ApplicationUser> userManager, IConfiguration configuration, IPublishEndpoint publishEndpoint, ITokenIssuer tokenIssuer, HttpContext httpContext, IWebHostEnvironment env) =>
         {
             try
             {
@@ -43,7 +43,8 @@ public static class GoogleLoginEndpoint
                         UserName = payload.Email,
                         Email = payload.Email,
                         FullName = fullName,
-                        EmailConfirmed = true // Google already verified it
+                        EmailConfirmed = true, // Google already verified it
+                        CreatedAt = DateTime.UtcNow
                     };
                     var result = await userManager.CreateAsync(user);
                     if (!result.Succeeded) return Results.BadRequest(result.Errors);
@@ -74,23 +75,9 @@ public static class GoogleLoginEndpoint
                     if (needsUpdate) await userManager.UpdateAsync(user);
                 }
 
-                var (roles, roleClaims) = await AuthClaimsLoader.LoadAsync(userManager, roleManager, user);
-                var jwtId = Guid.NewGuid().ToString();
-                var jwtToken = JwtTokenFactory.Create(user, roles, roleClaims, configuration, jwtId);
-
-                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                user.LastLoginAt = DateTime.UtcNow;
-                user.LastLoginIp = ipAddress;
-                await userManager.UpdateAsync(user);
-
-                var refreshToken = await refreshTokenService.GenerateRefreshTokenAsync(user.Id, ipAddress, jwtId);
-
-                return Results.Ok(new LoginResponseDto
-                {
-                    Token = jwtToken,
-                    RefreshToken = refreshToken.Token,
-                    User = AuthClaimsLoader.BuildUserInfo(user, roles, roleClaims)
-                });
+                // Same completion path as password login: one session row, one
+                // token pair, one lifetime. This block used to be a third copy.
+                return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
             }
             catch (Exception)
             {

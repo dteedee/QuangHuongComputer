@@ -102,7 +102,7 @@ export const FontSizeToggle = ({ className }: FontSizeToggleProps) => {
             role="radiogroup"
             aria-label="Chọn cỡ chữ"
             className={'inline-flex items-center gap-0.5 rounded-md p-0.5 ' + (className ?? '')}
-            style={{ backgroundColor: 'var(--surface-alt, #FAFAFA)' }}
+            style={{ backgroundColor: 'rgb(var(--sunken))' }}
         >
             {OPTIONS.map((opt) => {
                 const active = opt === size;
@@ -117,13 +117,12 @@ export const FontSizeToggle = ({ className }: FontSizeToggleProps) => {
                         className={[
                             'min-w-[24px] min-h-[24px] px-1 py-0.5 rounded',
                             'text-[11px] font-semibold leading-none',
-                            'transition-colors duration-150',
-                            'focus-visible:outline-none focus-visible:ring-1',
+                            'transition-colors duration-140',
                             active
-                                ? 'bg-white shadow-sm'
-                                : 'text-gray-400 hover:text-gray-600',
+                                ? 'bg-surface shadow-sm'
+                                : 'text-fg-subtle hover:text-fg-muted',
                         ].join(' ')}
-                        style={active ? { color: 'var(--accent-primary)' } : undefined}
+                        style={active ? { color: 'rgb(var(--brand-text))' } : undefined}
                     >
                         {LABEL[opt]}
                     </button>

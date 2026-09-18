@@ -1,51 +1,132 @@
-# Quang Huong Computer - Development Infrastructure
+# Quang Huong Computer — base stack (D05 / phase-64 W1-14)
+#
+# ONE stack, two ways to run it:
+#   make up    -> this file + the `app` profile, ASPNETCORE_ENVIRONMENT=Development, seeded demo
+#   make deploy -> this file + docker-compose.prod.yml, ASPNETCORE_ENVIRONMENT=Production
+# Same images, same migrate-then-serve sequence (scripts/stack-up.sh) either way — every local
+# demo is a deployment rehearsal (D05 §"Ly do").
+#
+# Profiles: services with no `profiles:` key are "infra" and start on a plain `docker compose up`
+# (postgres/redis/rabbitmq — convenient for `dotnet run`/`npm run dev` against them directly).
+# `app` = migrate + api + web (the one-shot job and the two long-running services). `tools` =
+# adminer, opt-in only. `docker compose --profile app up -d --wait` is what scripts/stack-up.sh
+# actually runs.
+#
+# Replaces: 4 compose files, the old S3-compatible object-storage service (dropped — D02: media
+# now on local disk under media-data), the old SEO pre-render service (dropped — D11: SEO shell
+# replaces it in W2-17), the old reverse-proxy service (replaced by Caddy, see deploy/Caddyfile),
+# adminer-always-on (moved behind the `tools` profile).
 
-# ===========================================
-# Quang Huong Computer - Development Infrastructure
-# ===========================================
-# Usage:
-#   1. Copy .env.docker.example to .env.docker
-#   2. Fill in your credentials in .env.docker
-#   3. Run: docker-compose --env-file .env.docker up -d
-# ===========================================
+x-api-image: &api-image
+  image: ${API_IMAGE:-ghcr.io/quanghuongcomputer/api}:${APP_VERSION:-latest}
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  environment: &api-environment
+    ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-quanghuongdb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Timeout=30;Pooling=true;MinPoolSize=2;MaxPoolSize=50"
+    ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD}@rabbitmq:5672/"
+    ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false"
+    Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false"
+    Redis__InstanceName: "quanghc:"
+    Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
+    Jwt__ExpireMinutes: ${JWT_EXPIRE_MINUTES:-60}
+    # D05 §3: ONE variable drives the site address, the SPA's API base, media/CORS/return URLs.
+    # BaseUrl feeds PaymentUrlBuilder's VNPay/MoMo return+notify fallbacks (same-origin design —
+    # PaymentUrlBuilder.cs already derives correct URLs from BaseUrl/Frontend:Url when the
+    # provider-specific *ReturnUrl/*IpnUrl keys are left unset, so this track does not hardcode
+    # per-provider paths that belong to the Payments module).
+    BaseUrl: ${SITE_URL:-http://localhost:8080}
+    Frontend__Url: ${SITE_URL:-http://localhost:8080}
+    Storage__RootPath: /app/data/media
+    Storage__PublicBaseUrl: ${SITE_URL:-http://localhost:8080}
+    Cors__AllowedOrigins__0: ${SITE_URL:-http://localhost:8080}
+    # Database:AutoMigrate/AutoSeed stay OFF everywhere: scripts/stack-up.sh always runs the
+    # one-shot `migrate` job first (`db migrate` + `db seed`) so schema changes are a deliberate
+    # step, never a side effect of `api` restarting (D05 §11, step 1).
+    Database__AutoMigrate: "false"
+    Database__AutoSeed: "false"
+    ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+    ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+    OAuth__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+    OAuth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+    OAuth__Facebook__AppId: ${FACEBOOK_APP_ID:-}
+    OAuth__Facebook__AppSecret: ${FACEBOOK_APP_SECRET:-}
+    # Payment (D04): every key optional — "not configured yet" is a valid state (PaymentConfigGuard
+    # fail-closed). COD is the only method Enabled=true by default in code.
+    Payment__AllowSandbox: ${PAYMENT_ALLOW_SANDBOX:-false}
+    Payment__SePay__Enabled: ${PAYMENT_SEPAY_ENABLED:-false}
+    Payment__SePay__AccountNumber: ${SEPAY_ACCOUNT_NUMBER:-}
+    Payment__SePay__BankCode: ${SEPAY_BANK_CODE:-}
+    Payment__SePay__WebhookSecret: ${SEPAY_WEBHOOK_SECRET:-}
+    Payment__SePay__ApiKey: ${SEPAY_API_KEY:-}
+    Payment__VNPay__Enabled: ${PAYMENT_VNPAY_ENABLED:-false}
+    Payment__VNPay__TmnCode: ${VNPAY_TMN_CODE:-}
+    Payment__VNPay__HashSecret: ${VNPAY_HASH_SECRET:-}
+    Payment__VNPay__PaymentUrl: ${VNPAY_PAYMENT_URL:-https://pay.vnpay.vn/vpcpay.html}
+    Payment__MoMo__Enabled: ${PAYMENT_MOMO_ENABLED:-false}
+    Payment__MoMo__PartnerCode: ${MOMO_PARTNER_CODE:-}
+    Payment__MoMo__AccessKey: ${MOMO_ACCESS_KEY:-}
+    Payment__MoMo__SecretKey: ${MOMO_SECRET_KEY:-}
+    Payment__MoMo__Endpoint: ${MOMO_ENDPOINT:-https://payment.momo.vn/v2/gateway/api/create}
+    Email__Smtp__Host: ${SMTP_HOST:-}
+    Email__Smtp__Port: ${SMTP_PORT:-587}
+    Email__Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+    Email__Smtp__Username: ${SMTP_USERNAME:-}
+    Email__Smtp__Password: ${SMTP_PASSWORD:-}
+    Email__Smtp__FromName: ${SMTP_FROM_NAME:-Quang Huong Computer}
+    Email__Smtp__FromEmail: ${SMTP_FROM_EMAIL:-}
+    AI__Gemini__ApiKey: ${GEMINI_API_KEY:-}
+    Backup__Enabled: "false"
+  volumes:
+    - media-data:/app/data/media
+  networks:
+    - quanghuong-network
 
 services:
   # ============================================
-  # DATABASE - PostgreSQL
+  # DATABASE — PostgreSQL (infra, always on)
   # ============================================
   postgres:
     image: postgres:16-alpine
-    container_name: quanghuong-postgres
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-quanghuongdb}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       PGDATA: /var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c max_connections=100
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - pg-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
       - quanghuong-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quanghuongdb}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
   # ============================================
-  # CACHE - Redis
+  # CACHE — Redis (infra, always on). Cache only: no AOF, no volume — a restart loses the cache
+  # and nothing else (D05 §8/§32: fail-closed reads fall back to Postgres, W1-2 UserStateCache).
   # ============================================
   redis:
     image: redis:7-alpine
-    container_name: quanghuong-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-redis
+    command: >
+      redis-server
+      --appendonly no
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     ports:
       - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
     networks:
       - quanghuong-network
     healthcheck:
@@ -56,11 +137,14 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # MESSAGE QUEUE - RabbitMQ
+  # MESSAGE QUEUE — RabbitMQ (infra, always on)
+  # Pinned MINOR, never a floating `4-` (D05 §"RabbitMQ"): 4.3.0 flips transient_nonexcl_queues +
+  # global_qos to denied-by-default, and a floating tag + a durable volume can leave the broker
+  # unable to boot after a `pull`. `make deploy` pulls only api/web, never this image.
   # ============================================
   rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: quanghuong-rabbitmq
+    image: rabbitmq:4.3-management-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
@@ -68,7 +152,7 @@ services:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - quanghuong-network
     healthcheck:
@@ -79,27 +163,115 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # SEO - Prerender
+  # DB MIGRATE + SEED — one-shot (`app` profile). Never has a fixed `command`: scripts/stack-up.sh
+  # runs it with `docker compose run --rm --entrypoint sh migrate -c "dotnet ApiGateway.dll db
+  # migrate && dotnet ApiGateway.dll db seed --profile <reference|demo>"` so the two-verb sequence
+  # and the seed profile are chosen per invocation, not baked into the image.
   # ============================================
-  prerender:
-    image: tvanro/prerender-alpine:6.4.1
-    container_name: quanghuong-prerender
-    ports:
-      - "3033:3000"
+  migrate:
+    <<: *api-image
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-migrate
+    profiles: ["app"]
     environment:
-      - CACHE_MAXSIZE=500
-      - CACHE_TTL=86400
-      - CHROME_FLAGS=--no-sandbox,--headless,--disable-gpu,--disable-dev-shm-usage
-    networks:
-      - quanghuong-network
-    restart: unless-stopped
+      <<: *api-environment
+      # Must match `api`'s ASPNETCORE_ENVIRONMENT: `db seed --profile demo` silently downgrades to
+      # `reference` outside Development (docs/deployment-guide.md §2) — without this, a local
+      # `make up` (base file only, no prod override) would run migrate as unset/"Production" by
+      # ASP.NET Core's own default and seed the wrong profile.
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
   # ============================================
-  # DATABASE UI - Adminer
+  # API (`app` profile)
+  # ============================================
+  api:
+    <<: *api-image
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-api
+    profiles: ["app"]
+    environment:
+      <<: *api-environment
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================
+  # WEB — Caddy + the built SPA + deploy/Caddyfile (`app` profile). Local default is plain HTTP on
+  # :8080 (SITE_URL default); a real domain in .env.prod switches Caddy to automatic HTTPS with no
+  # other change (see deploy/Caddyfile). docker-compose.prod.yml does not touch `ports` for this
+  # service at all — set WEB_HTTP_PORT=80 / WEB_HTTPS_PORT=443 in .env.prod instead.
+  # ============================================
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/quanghuongcomputer/web}:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Root-relative, NOT ${SITE_URL}/api: same-origin (D05 §3) means the browser resolves
+        # these against whatever domain served the page, so one image works unmodified for
+        # prod/UAT/a rehearsal alike — this is what makes CI's generic build (deploy.yml, no
+        # SITE_URL in scope) safe for `make deploy` to just `pull`. frontend/src/api/client.ts
+        # (axios baseURL) and frontend/src/lib/media-url.ts (falls back to the page's own origin
+        # when the URL has no parseable absolute origin) both already handle this correctly.
+        VITE_API_URL: /api
+        VITE_SIGNALR_HUB_URL: /hubs/chat
+        VITE_NODE_ENV: production
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        VITE_FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-web
+    profiles: ["app"]
+    environment:
+      SITE_URL: ${SITE_URL:-http://localhost:8080}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    ports:
+      - "${WEB_HTTP_PORT:-8080}:80"
+      - "${WEB_HTTPS_PORT:-8443}:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - api
+    networks:
+      - quanghuong-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ============================================
+  # DATABASE UI — Adminer (`tools` profile only, opt-in: `docker compose --profile tools up -d`)
   # ============================================
   adminer:
     image: adminer:latest
-    container_name: quanghuong-adminer
+    container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-adminer
+    profiles: ["tools"]
     ports:
       - "${ADMINER_PORT:-8081}:8080"
     environment:
@@ -110,49 +282,17 @@ services:
       - quanghuong-network
     restart: unless-stopped
 
-  # ============================================
-  # OBJECT STORAGE - MinIO (S3-compatible)
-  # Dùng để lưu ảnh/video sản phẩm (Phase 03).
-  # Bucket khởi tạo bằng ứng dụng khi startup (không public).
-  # ============================================
-  minio:
-    image: minio/minio:latest
-    container_name: quanghuong-minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    volumes:
-      - minio_data:/data
-    networks:
-      - quanghuong-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-# ============================================
-# NETWORKS
-# ============================================
 networks:
   quanghuong-network:
     driver: bridge
     name: quanghuong-network
 
-# ============================================
-# VOLUMES
-# ============================================
 volumes:
-  postgres_data:
-    name: quanghuong-postgres-data
-  redis_data:
-    name: quanghuong-redis-data
-  rabbitmq_data:
-    name: quanghuong-rabbitmq-data
-  minio_data:
-    name: quanghuong-minio-data
+  pg-data:
+    name: ${COMPOSE_PROJECT_NAME:-quanghuong}-postgres-data
+  rabbitmq-data:
+    name: ${COMPOSE_PROJECT_NAME:-quanghuong}-rabbitmq-data
+  media-data:
+    name: ${COMPOSE_PROJECT_NAME:-quanghuong}-media-data
+  caddy-data:
+    name: ${COMPOSE_PROJECT_NAME:-quanghuong}-caddy-data

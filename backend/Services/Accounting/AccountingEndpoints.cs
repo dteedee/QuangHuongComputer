@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -17,7 +18,7 @@ public static class AccountingEndpoints
 {
     public static void MapAccountingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/accounting").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/accounting").RequireModulePermissions(PermissionModules.Accounting);
 
         // Organization Accounts (AR)
         group.MapGet("/accounts", async (AccountingDbContext db) =>
@@ -781,7 +782,9 @@ public static class AccountingEndpoints
         }).WithName("GetExpenseSummary");
 
         // ===== Vietnamese Tax Calculation Endpoints =====
-        var taxGroup = group.MapGroup("/tax");
+        // W1-10: nhóm lồng nhau tự khai báo quyền của chính nó (không dựa vào việc convention
+        // của nhóm cha có lan xuống hay không) — fail-closed nếu framework đổi hành vi.
+        var taxGroup = group.MapGroup("/tax").RequireModulePermissions(PermissionModules.Accounting);
 
         taxGroup.MapPost("/pit", (PitCalculationRequest request) =>
         {

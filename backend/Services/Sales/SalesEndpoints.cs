@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using BuildingBlocks.Security;
 using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
@@ -28,7 +29,10 @@ public static class SalesEndpoints
 
     public static void MapSalesEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sales").RequireAuthorization();
+        // Nhánh "của chính tôi" (giỏ hàng, đơn của tôi, wishlist, điểm thưởng): mọi handler
+        // đều lọc theo userId từ ClaimsPrincipal -> chỉ cần đăng nhập (W1-10 self-service).
+        // Nhánh /admin bên dưới tự khai báo policy permission tường minh và thắng convention này.
+        var group = app.MapGroup("/api/sales").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // ==================== GUEST CHECKOUT (PUBLIC) ====================
         var publicGroup = app.MapGroup("/api/sales/public");
@@ -672,10 +676,21 @@ public static class SalesEndpoints
                     model.RecipientName, model.RecipientPhone,
                     model.CustomerId, model.ManualDiscount, model.ShippingFee),
                 salesDb, catalogDb, inventoryDb, contentDb, user, publishEndpoint, httpContext, config)
-        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Sale"))
+        // Nhân viên lập đơn tại quầy thay khách = nghiệp vụ POS -> Permissions.Sales.Pos
+        // (Admin/Manager/Sale đều giữ quyền này trong ma trận W1-1 => giữ nguyên phạm vi cũ).
+        ).RequireAuthorization(Permissions.Sales.Pos)
          .WithValidation<StaffCheckoutDto>();
 
-        MapRemainingSalesEndpoints(group);
+        // W1-10: adminGroup được tạo từ `app` chứ KHÔNG phải `group.MapGroup("/admin")`.
+        // Lý do: group cha đã gắn policy "Policy.Authenticated"; RequireModulePermissions bỏ qua
+        // endpoint nào đã có policy tường minh, nên nếu kế thừa từ group thì quyền theo verb
+        // sẽ không bao giờ được gắn và /api/sales/admin/** chỉ còn yêu cầu "đã đăng nhập".
+        // Route pattern sinh ra vẫn y hệt: /api/sales/admin/...
+        // GET -> Sales.ViewAll, POST -> Sales.ManageAll, PUT/PATCH -> Sales.UpdateStatus,
+        // DELETE -> Sales.CancelOrder. Marketing có Sales.ViewAll nên /admin/stats hết 403 (IR W0 #56).
+        var adminGroup = app.MapGroup("/api/sales/admin").RequireModulePermissions(PermissionModules.Sales);
+
+        MapRemainingSalesEndpoints(group, adminGroup);
     }
 
     /// <summary>
@@ -1032,7 +1047,7 @@ public static class SalesEndpoints
     }
 
     /// <summary>Phần còn lại của Sales API — tách ra chỉ để ProcessCheckoutAsync dùng chung được.</summary>
-    private static void MapRemainingSalesEndpoints(RouteGroupBuilder group)
+    private static void MapRemainingSalesEndpoints(RouteGroupBuilder group, RouteGroupBuilder adminGroup)
     {
         group.MapGet("/orders", async (SalesDbContext db, ClaimsPrincipal user) =>
         {
@@ -1389,7 +1404,7 @@ public static class SalesEndpoints
         // NOTE (D3): Không thêm POST /api/sales/admin/orders — admin tạo đơn dùng chung
         // POST /api/sales/checkout (qua promotion/inventory pipeline) để đảm bảo tính nhất quán
         // giá/khuyến mãi/tồn kho. Luồng POS riêng cho nhân viên tạo đơn tại quầy chưa cần thiết ở giai đoạn này.
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
+        // adminGroup được truyền từ MapSalesEndpoints (xem ghi chú ở đó).
 
         adminGroup.MapGet("/orders", async (SalesDbContext db, int page = 1, int pageSize = 20, string? search = null, string? status = null) =>
         {
@@ -1829,7 +1844,10 @@ public static class SalesEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request approved", Status = returnRequest.Status.ToString() });
-        });
+            // W1-10: duyệt/từ chối/xử lý đổi-trả cần Sales.ManageReturns (Admin/Manager).
+            // Ma trận W1-1 cố tình KHÔNG cấp quyền này cho Sale ("Sale không duyệt đổi/trả"),
+            // nên không để rơi vào quyền Sales.ManageAll theo verb của group.
+        }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         adminGroup.MapPost("/returns/{id:guid}/reject", async (Guid id, RejectReturnDto dto, SalesDbContext db, ClaimsPrincipal user) =>
         {
@@ -1847,7 +1865,7 @@ public static class SalesEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Return request rejected", Status = returnRequest.Status.ToString() });
-        });
+        }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // Phase 07: Inspect — nhân viên kiểm hàng nhận về, chọn kho nhập.
         adminGroup.MapPost("/returns/{id:guid}/inspect", async (
@@ -1868,7 +1886,7 @@ public static class SalesEndpoints
                 return Results.Ok(new { Message = "Đã kiểm hàng", rr.Id, rr.Status, rr.ReceivedCondition, rr.RestockWarehouseId });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
-        });
+        }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // Phase 07: Complete — chạy Orchestrator (Refund/Exchange/Replace), nhập kho, hoàn tiền/đơn mới.
         adminGroup.MapPost("/returns/{id:guid}/complete", async (
@@ -1884,7 +1902,7 @@ public static class SalesEndpoints
                 return Results.Ok(new { Message = "Đã hoàn tất yêu cầu", result });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
-        });
+        }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // Legacy /refund alias — điều hướng qua Complete cho tương thích cũ.
         adminGroup.MapPost("/returns/{id:guid}/refund", async (
@@ -1900,7 +1918,7 @@ public static class SalesEndpoints
                 return Results.Ok(new { Message = "Return request refunded", Status = "Completed", result });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
-        });
+        }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // ==================== WISHLIST ENDPOINTS ====================
 

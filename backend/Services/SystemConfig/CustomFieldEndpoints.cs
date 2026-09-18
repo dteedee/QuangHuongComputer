@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -17,8 +18,9 @@ public static class CustomFieldEndpoints
 
     public static void MapCustomFieldEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: GET System.ViewConfig (Admin+Manager), ghi System.ManageConfig (Admin).
         var group = app.MapGroup("/api/config/custom-fields")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         // GET /api/config/custom-fields/entity-types
         group.MapGet("/entity-types", () =>

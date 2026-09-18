@@ -785,8 +785,11 @@ export const poApprovalApi = {
 // ============================================
 // PURCHASE REQUISITION (Phase 05C)
 // ============================================
-export type RequisitionStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Converted' | 'Cancelled';
-export type UrgencyLevel = 'Low' | 'Normal' | 'High' | 'Urgent';
+// W1-9 fix (wave-0 IR #57, `Inventory/Domain/PurchaseRequisition.cs:135,145`):
+// these two unions did not match the backend enum at all — `urgency:"Normal"`
+// and `?status=Converted` both 400'd. Corrected to the real values.
+export type RequisitionStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'ConvertedToPO' | 'Cancelled';
+export type UrgencyLevel = 'Low' | 'Medium' | 'High' | 'Urgent';
 
 export interface PurchaseRequisitionItemDto {
     productId: string;
@@ -800,12 +803,17 @@ export interface PurchaseRequisition {
     id: string;
     number: string;
     requestedBy?: string;
+    /** @deprecated backend actually returns `requesterName` — see that field below. Kept for compat. */
     requestedByName?: string;
+    /** The real field name `GET /inventory/purchase-requisitions` returns (`PurchaseRequisition.cs:15`). */
+    requesterName?: string;
     urgency: UrgencyLevel;
     reason?: string;
     status: RequisitionStatus;
-    itemCount: number;
-    estimatedTotal: number;
+    /** Backend list endpoint returns the raw entity — no `itemCount`; derive from `items?.length` when absent. */
+    itemCount?: number;
+    /** Backend does not compute this yet — derive from `items[].estimatedPrice` when absent. */
+    estimatedTotal?: number;
     createdAt: string;
     items?: PurchaseRequisitionItemDto[];
 }
@@ -994,7 +1002,9 @@ export const grnInspectionApi = {
 // ============================================
 // PURCHASE RETURN (Phase 05C)
 // ============================================
-export type PurchaseReturnStatus = 'Draft' | 'Confirmed' | 'Shipped' | 'RefundReceived' | 'Cancelled';
+// W1-9 fix (wave-0 IR #57, `Inventory/Domain/PurchaseReturn.cs:102`): corrected
+// to the real backend enum (was Draft|Confirmed|Shipped|RefundReceived|Cancelled).
+export type PurchaseReturnStatus = 'Draft' | 'Sent' | 'Accepted' | 'Refunded' | 'Cancelled';
 
 export interface PurchaseReturnItem {
     productId: string;
@@ -1041,6 +1051,13 @@ export const purchaseReturnApi = {
     },
     confirm: async (id: string): Promise<{ message: string }> => {
         const { data } = await client.post<{ message: string }>(`/inventory/purchase-returns/${id}/confirm`);
+        return data;
+    },
+    // W1-9 fix (wave-0 IR #59): `POST /inventory/purchase-returns/{id}/accept`
+    // (`PurchaseReturnEndpoints.cs:60`) had no FE wrapper, so a return could
+    // never move Sent -> Accepted -> Refunded from the UI.
+    accept: async (id: string): Promise<{ message: string }> => {
+        const { data } = await client.post<{ message: string }>(`/inventory/purchase-returns/${id}/accept`);
         return data;
     },
     acceptRefund: async (id: string, amount: number): Promise<{ message: string }> => {

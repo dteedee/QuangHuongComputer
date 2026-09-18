@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -18,8 +19,9 @@ public static class AutomationRuleEndpoints
 
     public static void MapAutomationRuleEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: GET System.ViewConfig (Admin+Manager), ghi System.ManageConfig (Admin).
         var group = app.MapGroup("/api/config/automation-rules")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         // GET /api/config/automation-rules?entityType=Lead&activeOnly=true
         group.MapGet("/", async (string? entityType, bool? activeOnly, CustomFieldDbContext db) =>

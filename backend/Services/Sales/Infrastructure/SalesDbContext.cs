@@ -46,10 +46,25 @@ public class SalesDbContext : DbContext
             entity.Property(c => c.DiscountAmount).HasPrecision(18, 2);
             entity.Property(c => c.ShippingAmount).HasPrecision(18, 2);
             entity.Property(c => c.TaxRate).HasPrecision(5, 4); // e.g., 0.1000 for 10%
+            // W1-11 / audit db-schema-migrations-12: mọi lời gọi giỏ hàng lọc theo CustomerId
+            // (SalesEndpoints.cs:283) nhưng cột này chưa từng có index.
+            entity.HasIndex(c => c.CustomerId).HasDatabaseName("ix_carts_customer_id");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Carts_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+                t.HasCheckConstraint("CK_Carts_ShippingAmount_NonNegative", "\"ShippingAmount\" >= 0");
+                t.HasCheckConstraint("CK_Carts_TaxRate_Fraction", "\"TaxRate\" >= 0 AND \"TaxRate\" <= 1");
+            });
             entity.OwnsMany(c => c.Items, item =>
             {
                 item.ToTable("CartItem");
                 item.Property(i => i.Price).HasPrecision(18, 2);
+                item.HasIndex(i => i.ProductId).HasDatabaseName("ix_cart_item_product_id");
+                item.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_CartItem_Price_NonNegative", "\"Price\" >= 0");
+                    t.HasCheckConstraint("CK_CartItem_Quantity_Positive", "\"Quantity\" > 0");
+                });
                 // Biến thể sản phẩm — nullable, snapshot lịch sử.
                 item.Property(i => i.VariantId).HasColumnName("VariantId");
                 item.Property(i => i.VariantName).HasColumnName("VariantName");
@@ -71,6 +86,9 @@ public class SalesDbContext : DbContext
             entity.Property(o => o.TotalAmount).HasPrecision(18, 2);
             entity.Property(o => o.DiscountAmount).HasPrecision(18, 2);
             entity.Property(o => o.ShippingAmount).HasPrecision(18, 2);
+            // W1-11 / audit db-schema-migrations-23: hai cột này còn là `numeric` không giới hạn.
+            entity.Property(o => o.ShippingFee).HasPrecision(18, 2);
+            entity.Property(o => o.TaxRate).HasPrecision(5, 4); // 0.0800 = 8%
             // Phase 04: freeship discount + snapshot promotions đã áp.
             entity.Property(o => o.ShippingDiscount).HasPrecision(18, 2).HasDefaultValue(0m);
             entity.Property(o => o.AppliedPromotionsJson).HasColumnType("text");
@@ -96,11 +114,35 @@ public class SalesDbContext : DbContext
                 
             entity.HasIndex(o => new { o.FulfillmentStatus, o.OrderDate })
                 .HasDatabaseName("ix_orders_fulfillment_status_order_date");
-            
+
+            // W1-11: danh sách đơn của một khách hàng sắp theo ngày tạo (khác OrderDate).
+            entity.HasIndex(o => new { o.CustomerId, o.CreatedAt })
+                .HasDatabaseName("ix_orders_customer_id_created_at");
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Orders_SubtotalAmount_NonNegative", "\"SubtotalAmount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_TaxAmount_NonNegative", "\"TaxAmount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "\"TotalAmount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_ShippingAmount_NonNegative", "\"ShippingAmount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_ShippingFee_NonNegative", "\"ShippingFee\" >= 0");
+                t.HasCheckConstraint("CK_Orders_ShippingDiscount_NonNegative", "\"ShippingDiscount\" >= 0");
+                t.HasCheckConstraint("CK_Orders_TaxRate_Fraction", "\"TaxRate\" >= 0 AND \"TaxRate\" <= 1");
+            });
+
             entity.OwnsMany(o => o.Items, item =>
             {
                 item.ToTable("OrderItem");
                 item.Property(i => i.UnitPrice).HasPrecision(18, 2);
+                item.HasIndex(i => i.ProductId).HasDatabaseName("ix_order_item_product_id");
+                item.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_OrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                    t.HasCheckConstraint("CK_OrderItem_LineTotal_NonNegative", "\"LineTotal\" >= 0");
+                    t.HasCheckConstraint("CK_OrderItem_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+                    t.HasCheckConstraint("CK_OrderItem_Quantity_Positive", "\"Quantity\" > 0");
+                });
                 item.Property(i => i.OriginalPrice).HasPrecision(18, 2);
                 item.Property(i => i.DiscountAmount).HasPrecision(18, 2);
                 item.Property(i => i.LineTotal).HasPrecision(18, 2);
@@ -222,6 +264,9 @@ public class SalesDbContext : DbContext
         {
             entity.ToTable("LoyaltyAccounts");
             entity.HasKey(l => l.Id);
+            // W1-11: xmin - cộng/trừ điểm đồng thời (đặt hàng + đổi điểm) phải bị phát hiện
+            // thay vì ghi đè lặng lẽ.
+            entity.UseXminAsConcurrencyToken();
             entity.HasIndex(l => l.UserId).IsUnique()
                 .HasDatabaseName("ix_loyalty_accounts_user_id");
             entity.HasIndex(l => l.Tier)
@@ -258,5 +303,57 @@ public class SalesDbContext : DbContext
                 .HasDatabaseName("ix_customer_addresses_user_default");
             entity.HasQueryFilter(a => a.IsActive);
         });
+
+        ApplySchemaReality(modelBuilder);
+    }
+
+    /// <summary>
+    /// W1-11: đưa model về đúng thực tế của CSDL sau khi mọi entity đã được cấu hình.
+    ///
+    /// Hai sai lệch có thật (audit db-schema-migrations-07 và diff model/snapshot 2026-09-18):
+    ///  1. 20 cột thời gian của Sales đang là `timestamptz` trong CSDL nhưng snapshot ghi
+    ///     `timestamp without time zone` - migration 20260728073010_FixSalesSchemaAndIndexes
+    ///     chỉ đổi kiểu trong Down(), không đổi trong Up(). Ghim lại đúng 20 cột đó.
+    ///  2. ConfigurePostgreSQL() đặt MỌI khoá ngoại về Restrict, kể cả khoá ngoại sở hữu
+    ///     (owned collection). Bản ghi con của owned type phải xoá theo cha, và CSDL thật
+    ///     đang là CASCADE - trả lại đúng ngữ nghĩa đó.
+    /// </summary>
+    private static void ApplySchemaReality(ModelBuilder modelBuilder)
+    {
+        var timestamptzColumns = new Dictionary<string, string[]>
+        {
+            ["Carts"] = new[] { "CreatedAt", "UpdatedAt" },
+            ["LoyaltyAccounts"] = new[] { "CreatedAt", "UpdatedAt", "LastActivityAt", "TierExpiresAt" },
+            ["LoyaltyTransactions"] = new[] { "CreatedAt", "UpdatedAt" },
+            ["OrderItem"] = new[] { "CreatedAt", "UpdatedAt" },
+            ["Orders"] = new[]
+            {
+                "CreatedAt", "UpdatedAt", "OrderDate", "ConfirmedAt", "PaidAt",
+                "FulfilledAt", "ShippedAt", "DeliveredAt", "CompletedAt", "CancelledAt",
+            },
+        };
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var table = entityType.GetTableName();
+            if (table is not null && timestamptzColumns.TryGetValue(table, out var columns))
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (columns.Contains(property.Name))
+                    {
+                        property.SetColumnType("timestamp with time zone");
+                    }
+                }
+            }
+
+            foreach (var foreignKey in entityType.GetForeignKeys())
+            {
+                if (foreignKey.IsOwnership)
+                {
+                    foreignKey.DeleteBehavior = DeleteBehavior.Cascade;
+                }
+            }
+        }
     }
 }

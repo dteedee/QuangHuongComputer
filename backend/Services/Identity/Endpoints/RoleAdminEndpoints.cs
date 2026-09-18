@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using BuildingBlocks.Security;
+using BuildingBlocks.Validation;
 
 namespace Identity.Endpoints;
 
@@ -26,7 +27,7 @@ public static class RoleAdminEndpoints
         {
             var roles = await roleManager.Roles.Select(r => new { r.Id, r.Name }).ToListAsync();
             return Results.Ok(roles);
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
+        }).RequireAuthorization(Permissions.Roles.View);
 
         // Was `(string roleName, ...)`, which minimal APIs bind from the QUERY
         // STRING - so every JSON call from the admin UI 400'd. Now a real body.
@@ -49,7 +50,7 @@ public static class RoleAdminEndpoints
 
             await auditService.LogAsync(PerformedBy(currentUser), "CreateRole", "IdentityRole", role.Id, $"Created role {name}");
             return Results.Ok(new { Message = "Role created", role.Id, role.Name });
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Create));
+        }).WithValidation<CreateRoleDto>().RequireAuthorization(Permissions.Roles.Create);
 
         group.MapDelete("/roles/{roleName}", async (string roleName, RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -88,7 +89,7 @@ public static class RoleAdminEndpoints
 
             await auditService.LogAsync(PerformedBy(currentUser), "DeleteRole", "IdentityRole", role.Id, $"Deleted role {roleName}");
             return Results.Ok(new { Message = "Role deleted" });
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Delete));
+        }).RequireAuthorization(Permissions.Roles.Delete);
 
         group.MapPut("/roles/{id}", async (string id, UpdateRoleDto model, RoleManager<IdentityRole> roleManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
@@ -129,10 +130,10 @@ public static class RoleAdminEndpoints
 
             await auditService.LogAsync(PerformedBy(currentUser), "UpdateRole", "IdentityRole", role.Id, $"Renamed role {oldName} to {newName}");
             return Results.Ok(new { Message = "Role updated", role.Id, role.Name });
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Edit));
+        }).WithValidation<UpdateRoleDto>().RequireAuthorization(Permissions.Roles.Edit);
 
         group.MapGet("/permissions", () => Results.Ok(Permissions.GetAllPermissions()))
-            .RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
+            .RequireAuthorization(Permissions.Roles.View);
 
         group.MapGet("/permissions/registry", () =>
         {
@@ -150,7 +151,7 @@ public static class RoleAdminEndpoints
                 })
             });
             return Results.Ok(result);
-        }).RequireAuthorization();
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
 
         group.MapGet("/roles/{id}/permissions", async (string id, RoleManager<IdentityRole> roleManager) =>
         {
@@ -162,7 +163,7 @@ public static class RoleAdminEndpoints
                 .Where(c => c.Type == Permissions.PermissionType)
                 .Select(c => c.Value)
                 .ToList());
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.View));
+        }).RequireAuthorization(Permissions.Roles.View);
 
         // `string[] permissions` WITHOUT [FromBody] is bound from the QUERY STRING
         // by minimal APIs (arrays of simple types bind from query since .NET 7),
@@ -170,7 +171,7 @@ public static class RoleAdminEndpoints
         // a JSON array body (frontend/src/api/admin.ts:169), so the parameter
         // arrived EMPTY and this handler then stripped every permission from the
         // role it was asked to update. [FromBody] is what makes it read the body.
-        group.MapPut("/roles/{id}/permissions", async (string id, [Microsoft.AspNetCore.Mvc.FromBody] string[] permissions, RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager, IAuditService auditService, ClaimsPrincipal currentUser) =>
+        group.MapPut("/roles/{id}/permissions", async (string id, [Microsoft.AspNetCore.Mvc.FromBody] string[] permissions, RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager, IUserStateCache stateCache, IAuditService auditService, ClaimsPrincipal currentUser) =>
         {
             var role = await roleManager.FindByIdAsync(id);
             if (role == null) return Results.NotFound(new { Error = "Không tìm thấy vai trò" });
@@ -198,10 +199,21 @@ public static class RoleAdminEndpoints
                 await roleManager.AddClaimAsync(role, new Claim(Permissions.PermissionType, permission));
             }
 
+            // Permissions ride in the access token as claims, so every member of
+            // this role is still carrying the OLD set. Rolling their security
+            // stamp makes those tokens invalid on the next request instead of
+            // leaving a revoked permission usable for the token's lifetime.
+            var members = await userManager.GetUsersInRoleAsync(role.Name!);
+            foreach (var member in members)
+            {
+                await userManager.UpdateSecurityStampAsync(member);
+                await stateCache.InvalidateAsync(member.Id);
+            }
+
             await auditService.LogAsync(PerformedBy(currentUser), "UpdateRolePermissions", "IdentityRole", role.Id,
-                $"Updated permissions for {role.Name} ({validated.Count} granted)");
-            return Results.Ok(new { Message = "Permissions updated successfully" });
-        }).RequireAuthorization(p => p.RequireClaim(Permissions.PermissionType, Permissions.Roles.Edit));
+                $"Updated permissions for {role.Name} ({validated.Count} granted, {members.Count} phiên bị làm mới)");
+            return Results.Ok(new { Message = "Permissions updated successfully", MembersInvalidated = members.Count });
+        }).RequireAuthorization(Permissions.Roles.Edit);
     }
 
     private static string PerformedBy(ClaimsPrincipal user) =>

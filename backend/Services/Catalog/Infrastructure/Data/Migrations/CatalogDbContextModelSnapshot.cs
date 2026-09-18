@@ -175,8 +175,8 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.Property<decimal>("VatRate")
                         .ValueGeneratedOnAdd()
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)")
                         .HasDefaultValue(0.10m);
 
                     b.Property<bool>("VatReductionEligible")
@@ -193,14 +193,17 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasDatabaseName("uq_categories_slug")
                         .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''");
 
-                    b.HasIndex("ParentId", "DisplayOrder")
-                        .HasDatabaseName("ix_categories_parent_id_display_order");
-
                     b.HasIndex("Name", "IsActive")
                         .IsUnique()
                         .HasFilter("\"IsActive\" = TRUE");
 
-                    b.ToTable("Categories", "public");
+                    b.HasIndex("ParentId", "DisplayOrder")
+                        .HasDatabaseName("ix_categories_parent_id_display_order");
+
+                    b.ToTable("Categories", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_Categories_VatRate_Fraction", "\"VatRate\" >= 0 AND \"VatRate\" <= 1");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.Product", b =>
@@ -266,9 +269,6 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<int>("LowStockThreshold")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("WarrantyMonths")
-                        .HasColumnType("integer");
-
                     b.Property<string>("MetaDescription")
                         .HasColumnType("text");
 
@@ -284,7 +284,8 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<decimal?>("OldPrice")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
@@ -336,6 +337,9 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<string>("WarrantyInfo")
                         .HasColumnType("text");
 
+                    b.Property<int?>("WarrantyMonths")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Weight")
                         .HasPrecision(10, 3)
                         .HasColumnType("numeric(10,3)");
@@ -371,7 +375,18 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_products_low_stock")
                         .HasFilter("\"StockQuantity\" <= \"LowStockThreshold\"");
 
-                    b.ToTable("Products", "public");
+                    b.ToTable("Products", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_Products_AverageRating_Range", "\"AverageRating\" >= 0 AND \"AverageRating\" <= 5");
+
+                            t.HasCheckConstraint("CK_Products_CostPrice_NonNegative", "\"CostPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_Products_OldPrice_NonNegative", "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_Products_Price_NonNegative", "\"Price\" >= 0");
+
+                            t.HasCheckConstraint("CK_Products_StockQuantity_NonNegative", "\"StockQuantity\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductAttribute", b =>
@@ -480,7 +495,12 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.HasIndex("ValidTo")
                         .HasDatabaseName("ix_product_bundles_valid_to");
 
-                    b.ToTable("ProductBundles", "public");
+                    b.ToTable("ProductBundles", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductBundleItem", b =>
@@ -531,7 +551,14 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.HasIndex("ProductId", "IsMainItem")
                         .HasDatabaseName("ix_product_bundle_items_product_id_main");
 
-                    b.ToTable("ProductBundleItems", "public");
+                    b.ToTable("ProductBundleItems", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductBundleItems_DiscountPercentage_Range", "\"DiscountPercentage\" >= 0 AND \"DiscountPercentage\" <= 100");
+
+                            t.HasCheckConstraint("CK_ProductBundleItems_OriginalUnitPrice_NonNegative", "\"OriginalUnitPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductBundleItems_Quantity_Positive", "\"Quantity\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductMedia", b =>
@@ -763,13 +790,19 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_product_reviews_customer_id");
+
                     b.HasIndex("Rating")
                         .HasDatabaseName("ix_product_reviews_rating");
 
                     b.HasIndex("ProductId", "IsApproved")
                         .HasDatabaseName("ix_product_reviews_product_id_approved");
 
-                    b.ToTable("ProductReviews", "public");
+                    b.ToTable("ProductReviews", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductReviews_Rating_Range", "\"Rating\" >= 1 AND \"Rating\" <= 5");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductSpecificationValue", b =>
@@ -903,7 +936,16 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("uq_product_variants_product_sku");
 
-                    b.ToTable("ProductVariants", "public");
+                    b.ToTable("ProductVariants", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductVariants_CostPrice_NonNegative", "\"CostPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_OldPrice_NonNegative", "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_Price_NonNegative", "\"Price\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_StockQuantity_NonNegative", "\"StockQuantity\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductVariantOption", b =>
@@ -1053,7 +1095,12 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("SavedPcBuildItems", "public");
+                    b.ToTable("SavedPcBuildItems", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_SavedPcBuildItems_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_SavedPcBuildItems_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.SpecificationAttribute", b =>

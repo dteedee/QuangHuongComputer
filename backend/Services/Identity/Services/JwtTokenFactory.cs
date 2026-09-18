@@ -33,6 +33,9 @@ public static class JwtTokenFactory
     /// <summary>Hard ceiling. Anything above this in config is a typo or a regression, not a choice.</summary>
     public const int MaxExpireMinutes = 1440;
 
+    /// <summary>Claim carrying the <c>UserSessions</c> row (= refresh-token family) this token belongs to.</summary>
+    public const string SessionClaimType = "sid";
+
     /// <summary>
     /// Access-token lifetime from configuration (`Jwt:ExpireMinutes`).
     /// A 7-day access token cannot be revoked - a deactivated account or a
@@ -50,12 +53,22 @@ public static class JwtTokenFactory
         return Math.Min(minutes, MaxExpireMinutes);
     }
 
+    /// <summary>
+    /// Mints an access token.
+    ///
+    /// <paramref name="sessionId"/> and the user's security stamp are both
+    /// embedded: the stamp lets <see cref="AccessTokenStateGuard"/> reject a
+    /// token after a password/role/permission change or a "revoke all", and the
+    /// session id lets a single revoked device be told apart from the others.
+    /// Without them an access token is irrevocable for its whole lifetime.
+    /// </summary>
     public static string Create(
         ApplicationUser user,
         IList<string> roles,
         IEnumerable<Claim> roleClaims,
         IConfiguration configuration,
-        string jwtId)
+        string jwtId,
+        Guid? sessionId = null)
     {
         var jwtSettings = configuration.GetSection("Jwt");
         var key = new SymmetricSecurityKey(
@@ -79,16 +92,33 @@ public static class JwtTokenFactory
                 ClaimValueTypes.Integer64)
         };
 
+        if (!string.IsNullOrEmpty(user.SecurityStamp))
+        {
+            claims.Add(new Claim(AccessTokenStateGuard.StampClaimType, user.SecurityStamp));
+        }
+
+        if (sessionId.HasValue)
+        {
+            claims.Add(new Claim(SessionClaimType, sessionId.Value.ToString()));
+        }
+
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+        // Only PERMISSION claims travel in the token (integration request w1-1 #9).
+        // The builder used to copy every claim a role carried, which put the
+        // seeder's bookkeeping claim `PermissionSeedVersion` into every token
+        // ever issued - dead weight on every request, and it grows with each
+        // bookkeeping claim anyone adds to a role.
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var claim in roleClaims)
         {
+            if (!string.Equals(claim.Type, Permissions.PermissionType, StringComparison.Ordinal)) continue;
+
             // Two roles can carry the same permission; emit it once.
-            if (seen.Add($"{claim.Type}\0{claim.Value}") &&
+            if (seen.Add(claim.Value) &&
                 !claims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
             {
                 claims.Add(claim);

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Accounting.Domain;
 using Accounting.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,7 @@ public static class TaxReportingEndpoints
 {
     public static void MapTaxReportingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/accounting/tax-reports").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/accounting/tax-reports").RequireModulePermissions(PermissionModules.Accounting);
 
         // 1. VAT Ledger (Bảng kê thuế GTGT mua vào / bán ra) — truy vấn thật từ AccountingDbContext
         group.MapGet("/vat-ledger", async (AccountingDbContext db, int month, int year, string type = "out") =>

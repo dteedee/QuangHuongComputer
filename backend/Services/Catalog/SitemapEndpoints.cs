@@ -53,7 +53,9 @@ public static class SitemapEndpoints
 
             sb.AppendLine("</urlset>");
             return Results.Content(sb.ToString(), "application/xml");
-        });
+            // W1-10 (D11 SEO): sitemap phải đọc được bởi Googlebot -> công khai tường minh.
+            // Cần rule GET /sitemap.xml trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         app.MapGet("/robots.txt", (IConfiguration config) =>
         {
@@ -69,6 +71,7 @@ Disallow: /dang-ky
 Sitemap: {baseUrl}/sitemap.xml";
 
             return Results.Content(content, "text/plain");
-        });
+            // W1-10 (D11 SEO): robots.txt phải đọc được bởi crawler -> công khai tường minh.
+        }).AllowAnonymous();
     }
 }

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -66,7 +67,9 @@ public static class SemanticSearchEndpoints
                 .ToList();
 
             return Results.Ok(new { results = sorted, query = request.Query, total = sorted.Count });
-        });
+            // W1-10: tìm kiếm ngữ nghĩa trên storefront, khách chưa đăng nhập phải dùng được.
+            // Cần rule POST /api/ai/search trong PublicEndpointAllowList + rate limit (IR W1, xem W0 #110).
+        }).AllowAnonymous();
     }
 }
 

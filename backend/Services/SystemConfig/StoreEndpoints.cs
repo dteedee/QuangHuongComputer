@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using System.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -21,8 +22,10 @@ public static class StoreEndpoints
     public static void MapStoreEndpoints(this IEndpointRouteBuilder app)
     {
         var publicGroup = app.MapGroup("/api/stores");
+        // W1-10 (D09): quản trị chi nhánh -> System.ViewConfig cho GET (Admin+Manager),
+        // System.ManageConfig cho ghi (Admin). Nhánh /api/stores công khai giữ nguyên.
         var adminGroup = app.MapGroup("/api/admin/stores")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         // === PUBLIC ===
 
@@ -68,7 +71,9 @@ public static class StoreEndpoints
                 _ => "InStock"
             };
             return Results.Ok(new { productId, storeId = id, status });
-        });
+            // W1-10 (D09): khách xem chi nhánh nào còn hàng trước khi tới cửa hàng -> công khai.
+            // Cần rule GET /api/stores/{id}/stock/{productId} trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // === ADMIN CRUD ===
 

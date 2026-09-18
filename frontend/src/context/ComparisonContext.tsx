@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { catalogApi } from '../api/catalog';
 import type { Product } from '../api/catalog';
 import toast from 'react-hot-toast';
+import { browserStorage } from '../lib/browser-storage';
 
 interface ComparisonItem {
   id: string;
@@ -30,17 +30,12 @@ const MAX_COMPARISON_ITEMS = 4;
 const STORAGE_KEY = 'product_comparison';
 
 export function ComparisonProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<ComparisonItem[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [items, setItems] = useState<ComparisonItem[]>(() =>
+    browserStorage.getJSON<ComparisonItem[]>(STORAGE_KEY, [])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    browserStorage.setJSON(STORAGE_KEY, items);
   }, [items]);
 
   const addToComparison = useCallback((product: Product | ComparisonItem) => {

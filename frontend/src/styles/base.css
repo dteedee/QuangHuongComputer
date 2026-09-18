@@ -1,0 +1,160 @@
+/* ============================================================================
+ * QUANG HƯỞNG COMPUTER — BASE LAYER (typography, focus, reveal, skeleton)
+ * Contract: design/design-direction.md §3, §4, §7. Owner: W1-7.
+ * Loaded after tokens.css. Component styles live in the UI kit (W1-12), not here.
+ * ========================================================================== */
+
+/* --- type rendering ------------------------------------------------------ */
+body {
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* cv11 = single-storey `a`, ss03 = disambiguated `l` — easier at 11–13px */
+  font-feature-settings: 'cv11', 'ss03';
+}
+
+/* --- numbers: every price / qty / code / date / % ------------------------ */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.price .cur {
+  font-size: .72em;
+  font-weight: 600;
+  margin-left: 1px;
+  vertical-align: .2em;
+}
+
+/* admin money column — denser than the storefront price */
+.money {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+.money .cur {
+  font-size: .78em;
+  font-weight: 600;
+  margin-left: 1px;
+  vertical-align: .12em;
+}
+
+/* old price next to a discounted one */
+.price-old {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-decoration: line-through;
+  color: rgb(var(--fg-subtle));
+  white-space: nowrap;
+}
+
+/* --- Vietnamese diacritics need room to breathe -------------------------- */
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-top: .14em;
+  margin-top: -.14em;
+}
+
+/* Self-resolving: the prototype reset this with a `loaded` class added to
+ * <body> on window.load, which React never does — a transition that starts
+ * hidden and waits for a class nobody adds is a permanently invisible heading
+ * (the same trap as [data-reveal] without an observer). An animation with
+ * `both` always runs and always ends visible, with no external class. */
+.line-mask > span {
+  display: block;
+  white-space: nowrap;
+  animation: line-mask-in 760ms cubic-bezier(.16, 1, .3, 1) both;
+  animation-delay: calc(120ms + var(--i, 0) * 90ms);
+}
+
+@keyframes line-mask-in {
+  from { transform: translateY(110%); }
+  to { transform: none; }
+}
+
+/* --- one focus rule for the whole app (design-direction §4) -------------- */
+:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
+/* The outline follows the element's own border-radius in every browser we
+ * support, so only elements that declare no radius need one. Applying 8px
+ * unconditionally would square off every focused `rounded-full` avatar, chip
+ * and switch — this file is emitted after the Tailwind utilities, so a bare
+ * `:focus-visible{border-radius:8px}` wins over `.rounded-full`. */
+:focus-visible:not([class*='rounded']) {
+  border-radius: 8px;
+}
+
+/* --- scroll reveal (see components/motion/reveal.tsx) -------------------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 560ms cubic-bezier(.16, 1, .3, 1),
+              transform 560ms cubic-bezier(.16, 1, .3, 1);
+  transition-delay: calc(var(--i, 0) * 40ms);
+}
+
+[data-shell='admin'] [data-reveal] {
+  transform: translateY(12px);
+  transition-duration: 480ms;
+  transition-delay: calc(var(--i, 0) * 50ms);
+}
+
+[data-reveal].in {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- skeleton shimmer (transform only, 1.4s linear) ---------------------- */
+.sk {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--sunken));
+  border-radius: 8px;
+}
+
+.sk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .65), transparent);
+  animation: shimmer 1.4s linear infinite;
+}
+
+.dark .sk::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .06), transparent);
+}
+
+@keyframes shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* --- reduced motion: mandatory, CSS side (JS side = MotionConfig) -------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] { opacity: 1; transform: none; }
+  /* `animation: none` (not just a short duration) — an animation-delay is not
+     covered by the duration override above and would still hide the line. */
+  .line-mask > span { animation: none; transform: none; }
+  .sk::after { display: none; }
+}

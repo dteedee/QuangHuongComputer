@@ -157,7 +157,16 @@ namespace Repair.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RepairRequests");
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("IX_RepairRequests_CustomerId");
+
+                    b.HasIndex("Status", "RequestDate")
+                        .HasDatabaseName("IX_RepairRequests_Status_RequestDate");
+
+                    b.ToTable("RepairRequests", t =>
+                        {
+                            t.HasCheckConstraint("CK_RepairRequests_EstimatedCost_NonNegative", "\"EstimatedCost\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Repair.Domain.ServiceBooking", b =>
@@ -267,7 +276,12 @@ namespace Repair.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("ServiceBookings");
+                    b.ToTable("ServiceBookings", t =>
+                        {
+                            t.HasCheckConstraint("CK_ServiceBookings_EstimatedCost_NonNegative", "\"EstimatedCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_ServiceBookings_OnSiteFee_NonNegative", "\"OnSiteFee\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Repair.Domain.Technician", b =>
@@ -428,7 +442,18 @@ namespace Repair.Migrations
                     b.HasIndex("TicketNumber")
                         .IsUnique();
 
-                    b.ToTable("WorkOrders");
+                    b.ToTable("WorkOrders", t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkOrders_ActualCost_NonNegative", "\"ActualCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_WorkOrders_EstimatedCost_NonNegative", "\"EstimatedCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_WorkOrders_LaborCost_NonNegative", "\"LaborCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_WorkOrders_PartsCost_NonNegative", "\"PartsCost\" >= 0");
+
+                            t.HasCheckConstraint("CK_WorkOrders_ServiceFee_NonNegative", "\"ServiceFee\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Repair.Domain.WorkOrderActivityLog", b =>
@@ -530,7 +555,12 @@ namespace Repair.Migrations
 
                     b.HasIndex("WorkOrderId");
 
-                    b.ToTable("WorkOrderParts");
+                    b.ToTable("WorkOrderParts", t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkOrderParts_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_WorkOrderParts_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Repair.Domain.RepairQuote", b =>

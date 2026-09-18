@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
@@ -97,7 +98,7 @@ public static class CatalogCategoryEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
 
             return Results.Created($"/api/catalog/categories/{category.Id}", CatalogResponses.CategoryPayload(category, 0));
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapPut("/categories/{id:guid}", async (Guid id, UpdateCategoryDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -145,7 +146,7 @@ public static class CatalogCategoryEndpoints
 
             var count = await db.Products.CountAsync(p => p.CategoryId == id);
             return Results.Ok(new { Message = "Category updated", Category = CatalogResponses.CategoryPayload(category, count) });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -174,7 +175,7 @@ public static class CatalogCategoryEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Category deactivated" });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Delete);
 
         group.MapPost("/categories/{id:guid}/activate", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -190,7 +191,7 @@ public static class CatalogCategoryEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.ProductsPattern);
 
             return Results.Ok(new { Message = "Category activated" });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
     }
 
     /// <summary>Đổi slug danh mục có kiểm tra trùng. Trả IResult lỗi, hoặc null nếu OK.</summary>

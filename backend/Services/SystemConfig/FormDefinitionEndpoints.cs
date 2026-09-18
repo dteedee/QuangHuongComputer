@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -11,8 +12,9 @@ public static class FormDefinitionEndpoints
 {
     public static void MapFormDefinitionEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: GET System.ViewConfig (Admin+Manager), ghi System.ManageConfig (Admin).
         var group = app.MapGroup("/api/config/forms")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         // GET /api/config/forms
         group.MapGet("/", async (string? entityType, bool? activeOnly, CustomFieldDbContext db) =>

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,8 +20,9 @@ public static class RfqEndpoints
     public static void MapRfqEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: RFQ lộ giá chào của nhà cung cấp ⇒ chỉ nhân viên mua hàng/quản lý.
+        // W1-10: yêu cầu báo giá nhà cung cấp -> quyền theo verb của nhóm mua hàng.
         var group = app.MapGroup("/api/inventory/rfq")
-            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
+            .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +17,9 @@ public static class LoanerDeviceEndpoints
 {
     public static void MapLoanerDeviceEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: GET -> Warranty.ViewAll, POST/PUT -> Warranty.ReviewClaim, DELETE -> ApproveClaim.
         var group = app.MapGroup("/api/warranty/loaner-devices")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "TechnicianInShop"));
+            .RequireModulePermissions(PermissionModules.Warranty);
 
         group.MapGet("/", async (WarrantyDbContext db, [FromQuery] string? status = null) =>
         {

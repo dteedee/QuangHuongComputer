@@ -263,25 +263,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend image
+      - name: Build api image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./backend/Dockerfile
           push: false
-          tags: quanghuong/backend:ci-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: quanghuong/api:ci-${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
 
-      - name: Build frontend image
+      # Context is the repo root (not ./frontend): frontend/Dockerfile's runtime stage now COPYs
+      # deploy/Caddyfile (D05 / phase-64 W1-14 — Caddy replaced the nginx image this job used to
+      # build).
+      - name: Build web image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: .
           file: ./frontend/Dockerfile
           push: false
-          tags: quanghuong/frontend:ci-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: quanghuong/web:ci-${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
 
   # ============================================
   # Summary

@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Catalog.Application.Specifications;
 using Catalog.Domain;
 using Catalog.Infrastructure;
@@ -172,7 +173,7 @@ public static class CatalogSpecificationEndpoints
             }
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapPut("/products/{id:guid}/specifications/{aid:guid}", async (
             Guid id, Guid aid, UpsertSpecValueRequest req, CatalogDbContext db, CancellationToken ct) =>
@@ -193,7 +194,7 @@ public static class CatalogSpecificationEndpoints
             }
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Edit);
 
         group.MapDelete("/products/{id:guid}/specifications/{aid:guid}", async (
             Guid id, Guid aid, CatalogDbContext db, CancellationToken ct) =>
@@ -204,7 +205,7 @@ public static class CatalogSpecificationEndpoints
             db.ProductSpecificationValues.Remove(existing);
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(Permissions.Catalog.Delete);
     }
 
     public record UpsertSpecValueRequest(

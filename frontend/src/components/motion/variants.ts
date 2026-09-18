@@ -1,8 +1,13 @@
 import type { Variants } from 'framer-motion';
 
 /**
- * Bộ 3 variant chuẩn hoá cho toàn app.
- * Thời lượng 150-300ms để tôn trọng tinh thần "hiệu ứng có chừng mực".
+ * @deprecated Pre-design-system variants. Use `@/design-system/motion`
+ * (`fadeUp`, `drawerRight`, `press`, …) whose values come from
+ * design-direction.md §7/§8. Kept because ~12 wave-0 pages still import
+ * `fadeUp`/`motionSafe` from here; wave 3 removes the last call sites.
+ *
+ * Note the key difference: presets use `hidden`/`show`, these use
+ * `hidden`/`visible` — do not mix the two in one component.
  */
 
 export const fadeUp: Variants = {

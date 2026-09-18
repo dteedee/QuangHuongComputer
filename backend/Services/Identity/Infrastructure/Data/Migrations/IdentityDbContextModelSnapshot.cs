@@ -48,6 +48,15 @@ namespace Identity.Infrastructure.Data.Migrations
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("LastUsedTimeStep")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("TotpSecret")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -70,6 +79,64 @@ namespace Identity.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("TwoFactorConfigs");
+                });
+
+            modelBuilder.Entity("Identity.Domain.TwoFactorChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "IsUsed");
+
+                    b.ToTable("TwoFactorChallenges");
                 });
 
             modelBuilder.Entity("Identity.Domain.UserSession", b =>
@@ -106,6 +173,17 @@ namespace Identity.Infrastructure.Data.Migrations
                     b.Property<string>("RefreshTokenId")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("RevokedByIp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("RevokedReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -144,6 +222,9 @@ namespace Identity.Infrastructure.Data.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -286,80 +367,11 @@ namespace Identity.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EntityName", "EntityId", "Timestamp");
+
+                    b.HasIndex("UserId", "Timestamp");
+
                     b.ToTable("AuditLogs");
-                });
-
-            modelBuilder.Entity("Identity.Infrastructure.CustomerAddress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AddressLabel")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AddressLine")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("District")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("PostalCode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RecipientName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<Guid?>("UserProfileId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Ward")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("City");
-
-                    b.HasIndex("UserProfileId");
-
-                    b.HasIndex("UserId", "IsDefault");
-
-                    b.ToTable("IdentityCustomerAddresses");
                 });
 
             modelBuilder.Entity("Identity.Infrastructure.PasswordResetToken", b =>
@@ -436,8 +448,8 @@ namespace Identity.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ReplacedByToken")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp without time zone");
@@ -446,10 +458,16 @@ namespace Identity.Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Token")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -460,7 +478,11 @@ namespace Identity.Infrastructure.Data.Migrations
 
                     b.HasIndex("JwtId");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.HasIndex("UserId", "IsRevoked", "ExpiresAt");
@@ -668,21 +690,6 @@ namespace Identity.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Infrastructure.CustomerAddress", b =>
-                {
-                    b.HasOne("Identity.Infrastructure.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Identity.Infrastructure.UserProfile", null)
-                        .WithMany("Addresses")
-                        .HasForeignKey("UserProfileId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Identity.Infrastructure.PasswordResetToken", b =>
                 {
                     b.HasOne("Identity.Infrastructure.ApplicationUser", "User")
@@ -767,10 +774,6 @@ namespace Identity.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Identity.Infrastructure.UserProfile", b =>
-                {
-                    b.Navigation("Addresses");
-                });
 #pragma warning restore 612, 618
         }
     }

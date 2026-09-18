@@ -5,7 +5,8 @@ using System.Security.Claims;
 
 namespace Communication.Hubs;
 
-[Authorize]
+// W1-10: policy CÓ TÊN. Mọi phương thức của hub này chỉ đụng thông báo của chính người gọi.
+[Authorize(SecurityPolicies.Authenticated)]
 public class NotificationHub : Hub
 {
     public override async Task OnConnectedAsync()

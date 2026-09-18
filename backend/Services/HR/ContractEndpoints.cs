@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +16,7 @@ public static class ContractEndpoints
     public static void MapContractEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/contracts")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
+            .RequireModulePermissions(PermissionModules.HR);
 
         group.MapGet("", async (HRDbContext db, Guid? employeeId, ContractStatus? status) =>
         {

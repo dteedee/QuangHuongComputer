@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -18,8 +19,10 @@ public static class PurchaseRequisitionEndpoints
     public static void MapPurchaseRequisitionEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: RequireAuthorization() trống ⇒ token Customer tạo/duyệt được đề nghị mua.
+        // W1-10: đề nghị mua hàng -> GET ViewPurchaseOrder, POST CreatePurchaseOrder,
+        // PUT/PATCH CreatePurchaseOrder, DELETE ApprovePurchaseOrder.
         var group = app.MapGroup("/api/inventory/purchase-requisitions")
-            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
+            .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

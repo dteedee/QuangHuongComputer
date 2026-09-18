@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Operator CLI for the database run path (W1-4), and the ONLY way a track can compile and
+    actually execute `db migrate` / `db seed` / `db reset`.
+
+    Why it exists rather than "just run ApiGateway":
+      * `scripts/qh-build.sh` refuses ApiGateway.csproj for everyone but the gate (D12), and
+        `qh-test-env.sh up` short-circuits while :5050 is listening - so an ApiGateway-only
+        change can reach the gate with ZERO compiler passes (integration request #46 records
+        exactly that happening to W0-3).
+      * This project LINKS ApiGateway/Startup/DatabaseMigrationRunner.cs rather than copying it.
+        One source file, two assemblies: whatever compiles and runs here is byte-for-byte what
+        the gate's ApiGateway build gets. It is a compile shadow, not a fork - do not let the two
+        drift by copying the file.
+
+    The DI graph is assembled from the same per-module Add*Module(configuration) extension
+    methods ApiGateway/Startup/ServiceRegistration.cs calls, so the contexts, the Identity stores
+    and the interceptors are the real ones. Nothing HTTP is mapped and app.Run() is never called.
+
+    NOT added to the .sln - that file is frozen until W4-1. Build it explicitly:
+      scripts/qh-build.sh be backend/Tools/DbCli/DbCli.csproj
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>QuangHuong.Tools.DbCli</RootNamespace>
+    <AssemblyName>DbCli</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\ApiGateway\Startup\DatabaseMigrationRunner.cs" Link="DatabaseMigrationRunner.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Services\Catalog\Catalog.csproj" />
+    <ProjectReference Include="..\..\Services\Sales\Sales.csproj" />
+    <ProjectReference Include="..\..\Services\Repair\Repair.csproj" />
+    <ProjectReference Include="..\..\Services\Identity\Identity.csproj" />
+    <ProjectReference Include="..\..\Services\Inventory\Inventory.csproj" />
+    <ProjectReference Include="..\..\Services\Accounting\Accounting.csproj" />
+    <ProjectReference Include="..\..\Services\Warranty\Warranty.csproj" />
+    <ProjectReference Include="..\..\Services\Payments\Payments.csproj" />
+    <ProjectReference Include="..\..\Services\Content\Content.csproj" />
+    <ProjectReference Include="..\..\Services\Ai\Ai.csproj" />
+    <ProjectReference Include="..\..\Services\Communication\Communication.csproj" />
+    <ProjectReference Include="..\..\Services\HR\HR.csproj" />
+    <ProjectReference Include="..\..\Services\SystemConfig\SystemConfig.csproj" />
+    <ProjectReference Include="..\..\Services\Reporting\Reporting.csproj" />
+    <ProjectReference Include="..\..\Services\CRM\CRM.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.2" />
+    <!--
+      REQUIRED PIN, and it is required in ApiGateway.csproj too (raised as an integration request
+      by W1-4, 2026-09-18). BuildingBlocks now references MassTransit.EntityFrameworkCore 8.5.10,
+      which drags in Microsoft.EntityFrameworkCore.Relational 9.0.1. Against the Npgsql provider
+      8.0.2 that every module uses, the first DbContext construction dies with:
+        System.TypeLoadException: Method 'get_LockReleaseBehavior' in type
+        'Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository' ...
+        does not have an implementation
+      i.e. the API cannot start at all. A direct reference wins over the transitive one.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>

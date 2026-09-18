@@ -16,40 +16,50 @@ namespace CRM;
 
 public static class CrmEndpoints
 {
-    /// <summary>W0-3: CRM là dữ liệu nội bộ — chỉ nhân viên mới được vào. W1-1 sẽ thay bằng permission policy.</summary>
-    private static readonly string[] CrmStaffRoles =
-        { Roles.Admin, Roles.Manager, Roles.Sale, Roles.Marketing };
+    /// <summary>Phân khúc khách hàng: đọc = ViewSegments, ghi = ManageSegments (W1-10).</summary>
+    private static readonly ModulePermissionSet SegmentPermissions = new(
+        "CRM", Permissions.CRM.ViewSegments, Permissions.CRM.ManageSegments,
+        Permissions.CRM.ManageSegments, Permissions.CRM.ManageSegments);
 
-    /// <summary>Gửi/xoá chiến dịch email là hành động có hậu quả ra ngoài — hẹp hơn nữa (bỏ Sale).</summary>
-    private static readonly string[] CampaignDispatchRoles =
-        { Roles.Admin, Roles.Manager, Roles.Marketing };
+    /// <summary>Khách hàng tiềm năng + pipeline: đọc = ViewLeads, ghi = ManageLeads (W1-10).</summary>
+    private static readonly ModulePermissionSet LeadPermissions = new(
+        "CRM", Permissions.CRM.ViewLeads, Permissions.CRM.ManageLeads,
+        Permissions.CRM.ManageLeads, Permissions.CRM.ManageLeads);
 
     public static void MapCrmEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: trước đây chỉ có RequireAuthorization() trống ⇒ token Customer đọc/ghi được toàn bộ CRM.
-        var group = app.MapGroup("/api/crm")
-            .RequireAuthorization(p => p.RequireRole(CrmStaffRoles));
+        // W1-10: bỏ hẳn danh sách role. Mỗi vùng nghiệp vụ CRM là một nhóm riêng trên cùng
+        // tiền tố /api/crm nhưng mang quyền của chính vùng đó — nhờ vậy Marketing (có
+        // ManageSegments/ManageCampaigns nhưng không có ManageCustomers) vẫn làm được việc của mình,
+        // còn Sale (có ManageCustomers/ManageLeads/ManageTasks) không đụng được chiến dịch email.
+        var dashboard = app.MapGroup("/api/crm").RequirePermission(Permissions.CRM.ViewCustomers);
+        var customers = app.MapGroup("/api/crm").RequireModulePermissions(PermissionModules.Crm);
+        var segments = app.MapGroup("/api/crm").RequireModulePermissions(SegmentPermissions);
+        var leads = app.MapGroup("/api/crm").RequireModulePermissions(LeadPermissions);
+        var campaigns = app.MapGroup("/api/crm").RequireModulePermissions(PermissionModules.Campaigns);
+        var tasks = app.MapGroup("/api/crm").RequirePermission(Permissions.CRM.ManageTasks);
 
         // Dashboard endpoints
-        MapDashboardEndpoints(group);
+        MapDashboardEndpoints(dashboard);
 
         // Customer endpoints
-        MapCustomerEndpoints(group);
+        MapCustomerEndpoints(customers);
 
         // Segment endpoints
-        MapSegmentEndpoints(group);
+        MapSegmentEndpoints(segments);
 
         // Lead endpoints
-        MapLeadEndpoints(group);
+        MapLeadEndpoints(leads);
 
         // Pipeline endpoints
-        MapPipelineEndpoints(group);
+        MapPipelineEndpoints(leads);
 
         // Campaign endpoints
-        MapCampaignEndpoints(group);
+        MapCampaignEndpoints(campaigns);
 
         // Task endpoints
-        MapTaskEndpoints(group);
+        MapTaskEndpoints(tasks);
 
         // Tracking endpoints (public)
         MapTrackingEndpoints(app);
@@ -853,7 +863,7 @@ public static class CrmEndpoints
         {
             var result = await service.DeleteCampaignAsync(id);
             return result ? Results.Ok() : Results.NotFound();
-        }).RequireAuthorization(p => p.RequireRole(CampaignDispatchRoles));
+        });
 
         group.MapPost("/campaigns/{id:guid}/schedule", async (
             Guid id,
@@ -874,7 +884,8 @@ public static class CrmEndpoints
         {
             var campaign = await service.SendCampaignAsync(id);
             return campaign != null ? Results.Ok() : Results.BadRequest("Failed to send campaign");
-        }).RequireAuthorization(p => p.RequireRole(CampaignDispatchRoles));
+            // W1-10: gửi thật ra ngoài -> quyền riêng CRM.SendCampaigns (Manager/Marketing/Admin).
+        }).RequireAuthorization(Permissions.CRM.SendCampaigns);
 
         group.MapPost("/campaigns/{id:guid}/pause", async (Guid id, IEmailCampaignService service) =>
         {
@@ -1053,7 +1064,9 @@ public static class CrmEndpoints
             // Return 1x1 transparent GIF
             var gif = Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
             return Results.File(gif, "image/gif");
-        });
+            // W1-10: pixel theo dõi mở email — người nhận không đăng nhập, bí mật nằm ở trackingId.
+            // Cần rule GET /api/crm/track/open/{trackingId} trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         app.MapGet("/api/crm/track/click/{trackingId}", async (
             string trackingId,
@@ -1073,7 +1086,8 @@ public static class CrmEndpoints
             await service.TrackClickAsync(trackingId, url, userAgent, ip);
 
             return Results.Redirect(safeUrl);
-        });
+            // W1-10: link trong email, người nhận chưa đăng nhập (IR W1: allow-list).
+        }).AllowAnonymous();
 
         app.MapGet("/api/crm/unsubscribe/{trackingId}", async (
             string trackingId,
@@ -1081,7 +1095,8 @@ public static class CrmEndpoints
         {
             await service.ProcessUnsubscribeAsync(trackingId);
             return Results.Content("<html><body><h1>Bạn đã hủy đăng ký thành công</h1></body></html>", "text/html");
-        });
+            // W1-10: huỷ đăng ký từ link trong email (IR W1: allow-list).
+        }).AllowAnonymous();
     }
 
     /// <summary>

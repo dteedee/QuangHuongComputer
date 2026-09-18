@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using System.Text.Json;
 using BuildingBlocks.Validation;
 using Microsoft.AspNetCore.Builder;
@@ -18,8 +19,9 @@ public static class TableViewEndpoints
 {
     public static void MapTableViewEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: GET System.ViewConfig (Admin+Manager), ghi System.ManageConfig (Admin).
         var group = app.MapGroup("/api/config/table-views")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireModulePermissions(PermissionModules.SystemConfig);
 
         // GET /api/config/table-views
         group.MapGet("/", async (bool? activeOnly, SystemConfigDbContext db) =>

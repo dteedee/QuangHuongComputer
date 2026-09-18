@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { BackofficeSidebarNav } from './backoffice-sidebar-nav';
 import type { ResolvedMenuGroup } from './backoffice-menu-types';
+import { ROUTES } from '../../routes';
 
 interface BackofficeSidebarProps {
     collapsed: boolean;
@@ -76,7 +77,7 @@ export const BackofficeSidebar = ({
             <div className={`p-4 border-t ${isDark ? 'border-gray-800 bg-gray-900/50' : 'border-gray-100 bg-gray-50/50'}`}>
                 {!collapsed && (
                     <Link
-                        to="/"
+                        to={ROUTES.HOME}
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium text-white shadow-sm transition-all hover:opacity-90"
                         style={{ backgroundColor: colors.primary }}
                     >
@@ -99,7 +100,7 @@ export const BackofficeSidebar = ({
                                 </p>
                             </div>
                             <button
-                                onClick={() => { logout(); navigate('/login'); }}
+                                onClick={() => { logout(); navigate(ROUTES.LOGIN); }}
                                 className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400 hover:text-red-400' : 'hover:bg-gray-100 text-gray-400 hover:text-red-500'}`}
                             >
                                 <Power size={18} />

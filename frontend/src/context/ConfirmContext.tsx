@@ -1,168 +1,110 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X, Info, Trash2, ShieldAlert } from 'lucide-react';
+/**
+ * ConfirmContext — promise-based confirm (used in ~39 places already) +
+ * `usePrompt` (W1-9, implementation step 5): the styled replacement for
+ * native `window.prompt`. Extended in place rather than adding a second
+ * dialog system, per the phase spec's Key Insights.
+ *
+ * State + resolve/reject logic lives here; the actual dialog JSX lives in
+ * `components/form/confirm-dialog-view.tsx` and
+ * `components/form/prompt-dialog-view.tsx` (this track's ownership: it is
+ * the sole owner of this file per the phase spec, but not of a
+ * `context/confirm/**` folder, so the heavy visual JSX was split into the
+ * form-kit's own directory instead of ballooning this file past 200 LOC).
+ */
+import { createContext, useContext, useCallback, useRef, useState, type ReactNode } from 'react';
+import { ConfirmDialogView } from '../components/form/confirm-dialog-view';
+import { PromptDialogView } from '../components/form/prompt-dialog-view';
+import type {
+  ConfirmOptions,
+  PromptAmountOptions,
+  PromptSelectOptions,
+  PromptState,
+  PromptTextOptions,
+} from '../components/form/confirm-prompt-types';
 
-// ── Types ───────────────────────────────────────────────────────────────────────
-export type ConfirmVariant = 'danger' | 'warning' | 'info';
-
-export interface ConfirmOptions {
-  title?: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: ConfirmVariant;
-}
+export type { ConfirmVariant, ConfirmOptions } from '../components/form/confirm-prompt-types';
 
 interface ConfirmContextType {
   confirm: (options: ConfirmOptions) => Promise<boolean>;
+  promptText: (options: PromptTextOptions) => Promise<string | null>;
+  promptAmount: (options: PromptAmountOptions) => Promise<number | null>;
+  promptSelect: (options: PromptSelectOptions) => Promise<string | null>;
 }
 
-// ── Context ─────────────────────────────────────────────────────────────────────
 const ConfirmContext = createContext<ConfirmContextType | null>(null);
 
-export function useConfirm() {
+function useConfirmContext() {
   const ctx = useContext(ConfirmContext);
-  if (!ctx) throw new Error('useConfirm must be used within <ConfirmProvider>');
-  return ctx.confirm;
+  if (!ctx) throw new Error('useConfirm/usePrompt must be used within <ConfirmProvider>');
+  return ctx;
 }
 
-// ── Variant Styles ──────────────────────────────────────────────────────────────
-const variantConfig: Record<ConfirmVariant, {
-  icon: typeof AlertTriangle;
-  iconBg: string;
-  iconColor: string;
-  confirmBg: string;
-  confirmHover: string;
-  confirmShadow: string;
-  ringColor: string;
-}> = {
-  danger: {
-    icon: Trash2,
-    iconBg: 'bg-red-100',
-    iconColor: 'text-red-600',
-    confirmBg: 'bg-red-600',
-    confirmHover: 'hover:bg-red-700',
-    confirmShadow: 'shadow-red-500/25',
-    ringColor: 'focus:ring-red-300',
-  },
-  warning: {
-    icon: AlertTriangle,
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-600',
-    confirmBg: 'bg-amber-500',
-    confirmHover: 'hover:bg-amber-600',
-    confirmShadow: 'shadow-amber-500/25',
-    ringColor: 'focus:ring-amber-300',
-  },
-  info: {
-    icon: Info,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    confirmBg: 'bg-blue-600',
-    confirmHover: 'hover:bg-blue-700',
-    confirmShadow: 'shadow-blue-500/25',
-    ringColor: 'focus:ring-blue-300',
-  },
-};
+/** Unchanged from before this track — 39 existing call sites depend on this exact shape. */
+export function useConfirm() {
+  return useConfirmContext().confirm;
+}
 
-// ── Provider ────────────────────────────────────────────────────────────────────
+/**
+ * `usePrompt().promptText/promptAmount/promptSelect` — replaces
+ * `window.prompt` for reason text, a VND amount, or a short pick list.
+ * Resolves `null` on cancel, the typed value on confirm.
+ */
+export function usePrompt() {
+  const { promptText, promptAmount, promptSelect } = useConfirmContext();
+  return { promptText, promptAmount, promptSelect };
+}
+
 export function ConfirmProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<ConfirmOptions | null>(null);
-  const resolveRef = useRef<((v: boolean) => void) | null>(null);
+  const [confirmState, setConfirmState] = useState<ConfirmOptions | null>(null);
+  const confirmResolve = useRef<((v: boolean) => void) | null>(null);
+
+  const [promptState, setPromptState] = useState<PromptState | null>(null);
+  const promptResolve = useRef<((v: string | number | null) => void) | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
-    setState(options);
+    setConfirmState(options);
     return new Promise<boolean>((resolve) => {
-      resolveRef.current = resolve;
+      confirmResolve.current = resolve;
     });
   }, []);
 
-  const handleClose = useCallback((result: boolean) => {
-    resolveRef.current?.(result);
-    resolveRef.current = null;
-    setState(null);
+  const closeConfirm = useCallback((result: boolean) => {
+    confirmResolve.current?.(result);
+    confirmResolve.current = null;
+    setConfirmState(null);
   }, []);
 
-  const variant = state?.variant ?? 'danger';
-  const cfg = variantConfig[variant];
-  const Icon = cfg.icon;
+  const openPrompt = useCallback((state: PromptState) => {
+    setPromptState(state);
+    return new Promise<string | number | null>((resolve) => {
+      promptResolve.current = resolve;
+    });
+  }, []);
+
+  const promptText = useCallback(
+    (options: PromptTextOptions) => openPrompt({ kind: 'text', options }) as Promise<string | null>,
+    [openPrompt],
+  );
+  const promptAmount = useCallback(
+    (options: PromptAmountOptions) => openPrompt({ kind: 'amount', options }) as Promise<number | null>,
+    [openPrompt],
+  );
+  const promptSelect = useCallback(
+    (options: PromptSelectOptions) => openPrompt({ kind: 'select', options }) as Promise<string | null>,
+    [openPrompt],
+  );
+
+  const closePrompt = useCallback((result: string | number | null) => {
+    promptResolve.current?.(result);
+    promptResolve.current = null;
+    setPromptState(null);
+  }, []);
 
   return (
-    <ConfirmContext.Provider value={{ confirm }}>
+    <ConfirmContext.Provider value={{ confirm, promptText, promptAmount, promptSelect }}>
       {children}
-
-      <AnimatePresence>
-        {state && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => handleClose(false)}
-              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => handleClose(false)}
-                className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
-              >
-                <X size={18} />
-              </button>
-
-              {/* Content */}
-              <div className="px-8 pt-8 pb-6 text-center">
-                {/* Icon */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.1 }}
-                  className={`w-16 h-16 mx-auto rounded-2xl ${cfg.iconBg} ${cfg.iconColor} flex items-center justify-center mb-5`}
-                >
-                  <Icon size={28} strokeWidth={2.5} />
-                </motion.div>
-
-                {/* Title */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {state.title || 'Xác nhận'}
-                </h3>
-
-                {/* Message */}
-                <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-line">
-                  {state.message}
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="px-8 pb-8 flex gap-3">
-                <button
-                  onClick={() => handleClose(false)}
-                  className="flex-1 px-6 py-3.5 bg-gray-100 text-gray-700 font-bold text-sm rounded-2xl hover:bg-gray-200 transition-all active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-gray-300"
-                >
-                  {state.cancelText || 'Hủy'}
-                </button>
-                <button
-                  onClick={() => handleClose(true)}
-                  autoFocus
-                  className={`flex-1 px-6 py-3.5 text-white font-bold text-sm rounded-2xl transition-all active:scale-[0.97] shadow-lg focus:outline-none focus:ring-2 ${cfg.confirmBg} ${cfg.confirmHover} ${cfg.confirmShadow} ${cfg.ringColor}`}
-                >
-                  {state.confirmText || 'Xác nhận'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialogView state={confirmState} onClose={closeConfirm} />
+      <PromptDialogView state={promptState} onConfirm={closePrompt} onCancel={() => closePrompt(null)} />
     </ConfirmContext.Provider>
   );
 }

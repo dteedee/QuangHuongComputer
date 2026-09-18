@@ -1,32 +1,42 @@
 using System.Security.Claims;
-using Identity.Infrastructure;
+using BuildingBlocks.Security;
+using BuildingBlocks.Validation;
 using Identity.DTOs;
+using Identity.Infrastructure;
+using Identity.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.Endpoints;
 
-/// <summary>`/api/auth/me` - the signed-in user's own profile and addresses.</summary>
+/// <summary>
+/// `/api/auth/me` - the signed-in user's own profile.
+///
+/// The `/me/addresses` CRUD that used to live here was removed by W1-2: it was a
+/// SECOND address book (`IdentityCustomerAddresses`) next to the Sales one that
+/// checkout actually reads. Both tables were empty in dev and test, so nothing
+/// was migrated; `/api/sales/addresses` is the surviving book - see
+/// docs/api-contracts/identity.md and the integration request to the account UI.
+/// </summary>
 public static class UserProfileEndpoints
 {
     public static void MapUserProfileEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/me", [Authorize] async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        group.MapGet("/me", async (ClaimsPrincipal user, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
         {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = UserId(user);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
             var appUser = await userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
             if (appUser == null) return Results.NotFound(new { Message = "User not found" });
 
             var roles = await userManager.GetRolesAsync(appUser);
-            var profile = await dbContext.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
-            var defaultAddress = await dbContext.CustomerAddresses
-                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault && a.IsActive);
+            var profile = await dbContext.UserProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId);
+            var twoFactorEnabled = await dbContext.TwoFactorConfigs.AsNoTracking()
+                .AnyAsync(t => t.UserId == userId && t.IsEnabled);
 
             return Results.Ok(new
             {
@@ -36,8 +46,11 @@ public static class UserProfileEndpoints
                 phoneNumber = appUser.PhoneNumber,
                 avatarUrl = appUser.AvatarUrl,
                 roles = roles.ToList(),
+                createdAt = appUser.CreatedAt,
                 lastLoginAt = appUser.LastLoginAt,
                 emailVerified = appUser.EmailConfirmed,
+                twoFactorEnabled,
+                forcePasswordChange = appUser.ForcePasswordChange,
                 profile = profile != null ? new
                 {
                     gender = profile.Gender,
@@ -49,23 +62,14 @@ public static class UserProfileEndpoints
                     customerType = profile.CustomerType.ToString(),
                     companyName = profile.CompanyName,
                     taxCode = profile.TaxCode
-                } : null,
-                defaultAddress = defaultAddress != null ? new
-                {
-                    id = defaultAddress.Id,
-                    recipientName = defaultAddress.RecipientName,
-                    phoneNumber = defaultAddress.PhoneNumber,
-                    addressLine = defaultAddress.AddressLine,
-                    city = defaultAddress.City,
-                    district = defaultAddress.District,
-                    ward = defaultAddress.Ward
                 } : null
             });
-        });
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
 
-        group.MapPut("/me", [Authorize] async (UpdateProfileDto model, ClaimsPrincipal user, UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
+        group.MapPut("/me", async (UpdateProfileDto model, ClaimsPrincipal user,
+            UserManager<ApplicationUser> userManager, IdentityDbContext dbContext) =>
         {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = UserId(user);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
             var appUser = await userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
@@ -96,11 +100,13 @@ public static class UserProfileEndpoints
 
             await dbContext.SaveChangesAsync();
             return Results.Ok(new { Message = "Profile updated successfully" });
-        });
+        }).WithValidation<UpdateProfileDto>().RequireAuthorization(SecurityPolicies.Authenticated);
 
-        group.MapPost("/me/change-password", [Authorize] async (ChangePasswordDto model, ClaimsPrincipal user, UserManager<ApplicationUser> userManager, Identity.Services.IRefreshTokenService refreshTokenService) =>
+        group.MapPost("/me/change-password", async (ChangePasswordDto model, ClaimsPrincipal user,
+            UserManager<ApplicationUser> userManager, IRefreshTokenService refreshTokenService,
+            IUserStateCache stateCache, HttpContext httpContext) =>
         {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = UserId(user);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
             var appUser = await userManager.FindByIdAsync(userId);
@@ -117,108 +123,20 @@ public static class UserProfileEndpoints
             }
 
             appUser.PasswordChangedAt = DateTime.UtcNow;
+            appUser.ForcePasswordChange = false;
             await userManager.UpdateAsync(appUser);
 
-            // Same reasoning as a reset: other devices must re-authenticate.
-            await refreshTokenService.RevokeAllUserTokensAsync(appUser.Id);
+            // ChangePasswordAsync already rolled the security stamp, so every
+            // access token minted before this call is rejected within the
+            // user-state TTL. Dropping the cache entry makes it immediate, and
+            // revoking the families makes the refresh tokens useless too.
+            await refreshTokenService.RevokeAllUserTokensAsync(appUser.Id, TokenIssuer.ClientIp(httpContext), "PasswordChange");
+            await stateCache.InvalidateAsync(appUser.Id);
 
             return Results.Ok(new { Message = "Password changed successfully" });
-        });
-
-        group.MapGet("/me/addresses", [Authorize] async (ClaimsPrincipal user, IdentityDbContext dbContext) =>
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-            var addresses = await dbContext.CustomerAddresses
-                .Where(a => a.UserId == userId && a.IsActive)
-                .OrderByDescending(a => a.IsDefault)
-                .ThenByDescending(a => a.CreatedAt)
-                .Select(a => new
-                {
-                    a.Id, a.RecipientName, a.PhoneNumber, a.AddressLine,
-                    a.City, a.District, a.Ward, a.PostalCode, a.IsDefault, a.AddressLabel
-                })
-                .ToListAsync();
-
-            return Results.Ok(addresses);
-        });
-
-        group.MapPost("/me/addresses", [Authorize] async (CustomerAddress model, ClaimsPrincipal user, IdentityDbContext dbContext) =>
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-            if (model.IsDefault) await ClearOtherDefaultsAsync(dbContext, userId, null);
-
-            var address = new CustomerAddress
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                RecipientName = model.RecipientName,
-                PhoneNumber = model.PhoneNumber,
-                AddressLine = model.AddressLine,
-                City = model.City,
-                District = model.District,
-                Ward = model.Ward,
-                PostalCode = model.PostalCode,
-                IsDefault = model.IsDefault,
-                AddressLabel = model.AddressLabel,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            dbContext.CustomerAddresses.Add(address);
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok(new { Message = "Address added successfully", Id = address.Id });
-        });
-
-        group.MapPut("/me/addresses/{id:guid}", [Authorize] async (Guid id, CustomerAddress model, ClaimsPrincipal user, IdentityDbContext dbContext) =>
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-            var address = await dbContext.CustomerAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-            if (address == null) return Results.NotFound(new { Message = "Address not found" });
-
-            if (model.IsDefault && !address.IsDefault) await ClearOtherDefaultsAsync(dbContext, userId, id);
-
-            address.RecipientName = model.RecipientName;
-            address.PhoneNumber = model.PhoneNumber;
-            address.AddressLine = model.AddressLine;
-            address.City = model.City;
-            address.District = model.District;
-            address.Ward = model.Ward;
-            address.PostalCode = model.PostalCode;
-            address.IsDefault = model.IsDefault;
-            address.AddressLabel = model.AddressLabel;
-            address.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return Results.Ok(new { Message = "Address updated successfully" });
-        });
-
-        group.MapDelete("/me/addresses/{id:guid}", [Authorize] async (Guid id, ClaimsPrincipal user, IdentityDbContext dbContext) =>
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
-
-            var address = await dbContext.CustomerAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-            if (address == null) return Results.NotFound(new { Message = "Address not found" });
-
-            address.IsActive = false;
-            await dbContext.SaveChangesAsync();
-            return Results.Ok(new { Message = "Address deleted successfully" });
-        });
+        }).WithValidation<ChangePasswordDto>().RequireAuthorization(SecurityPolicies.Authenticated);
     }
 
-    /// <summary>Exactly one default address per user.</summary>
-    private static async Task ClearOtherDefaultsAsync(IdentityDbContext dbContext, string userId, Guid? exceptId)
-    {
-        var existingDefaults = await dbContext.CustomerAddresses
-            .Where(a => a.UserId == userId && a.IsDefault && (exceptId == null || a.Id != exceptId))
-            .ToListAsync();
-        foreach (var addr in existingDefaults) addr.IsDefault = false;
-    }
+    private static string? UserId(ClaimsPrincipal principal) =>
+        principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue("sub");
 }

@@ -1,129 +1,8 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Identity.Domain;
 
 namespace Identity.Infrastructure;
-
-public class ApplicationUser : IdentityUser
-{
-    public string FullName { get; set; } = string.Empty;
-    public bool IsActive { get; set; } = true;
-    
-    // Phase 1: Enhanced fields
-    public string? AvatarUrl { get; set; }
-    public DateTime? LastLoginAt { get; set; }
-    public string? LastLoginIp { get; set; }
-    public bool ForcePasswordChange { get; set; }
-    public DateTime? PasswordChangedAt { get; set; }
-    public bool TwoFactorEnabled { get; set; }
-    public string? PreferredLanguage { get; set; } = "vi";
-    public string? TimeZone { get; set; } = "Asia/Ho_Chi_Minh";
-    public string? PhoneNumberVerified { get; set; }
-    public DateTime? EmailVerifiedAt { get; set; }
-    public DateTime? PhoneNumberVerifiedAt { get; set; }
-}
-
-/// <summary>
-/// A pending password-reset challenge. The clear-text code is NEVER stored:
-/// only <see cref="CodeHash"/> = SHA-256(Salt : Email : code). <see cref="Email"/>
-/// binds the challenge to one account, which is what stops a code issued for one
-/// user from resetting another. <see cref="Attempts"/> caps brute force.
-/// </summary>
-public class PasswordResetToken
-{
-    public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-
-    /// <summary>Normalised (trimmed, lower-cased) e-mail the code was issued to.</summary>
-    public string Email { get; set; } = string.Empty;
-
-    /// <summary>Base64 SHA-256 of "Salt:Email:code". Never the code itself.</summary>
-    public string CodeHash { get; set; } = string.Empty;
-
-    /// <summary>Per-row salt for <see cref="CodeHash"/>.</summary>
-    public string Salt { get; set; } = string.Empty;
-
-    /// <summary>Failed verification attempts; the row dies at 5.</summary>
-    public int Attempts { get; set; }
-
-    public DateTime ExpiresAt { get; set; }
-    public bool IsUsed { get; set; } = false;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public ApplicationUser? User { get; set; }
-}
-
-public class UserProfile
-{
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string? Gender { get; set; }
-    public DateTime? DateOfBirth { get; set; }
-    public string? NationalId { get; set; }
-    public string? Address { get; set; }
-    public string? City { get; set; }
-    public string? District { get; set; }
-    public string? Ward { get; set; }
-    public string? PostalCode { get; set; }
-    public string? CompanyName { get; set; }
-    public string? TaxCode { get; set; }
-    public string? BusinessType { get; set; }
-    public CustomerType CustomerType { get; set; } = CustomerType.Retail;
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsActive { get; set; } = true;
-    
-    public ApplicationUser User { get; set; } = null!;
-    public ICollection<CustomerAddress> Addresses { get; set; } = new List<CustomerAddress>();
-}
-
-public class CustomerAddress
-{
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string RecipientName { get; set; } = string.Empty;
-    public string PhoneNumber { get; set; } = string.Empty;
-    public string AddressLine { get; set; } = string.Empty;
-    public string City { get; set; } = string.Empty;
-    public string District { get; set; } = string.Empty;
-    public string Ward { get; set; } = string.Empty;
-    public string? PostalCode { get; set; }
-    public bool IsDefault { get; set; }
-    public string? AddressLabel { get; set; } // Nhà, Công ty
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-    public bool IsActive { get; set; } = true;
-
-    public ApplicationUser User { get; set; } = null!;
-}
-
-public class RefreshToken
-{
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
-    public string JwtId { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime ExpiresAt { get; set; }
-    public bool IsRevoked { get; set; } = false;
-    public DateTime? RevokedAt { get; set; }
-    public string? RevokedByIp { get; set; }
-    public string? ReplacedByToken { get; set; }
-    public string CreatedByIp { get; set; } = string.Empty;
-
-    public ApplicationUser User { get; set; } = null!;
-
-    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public bool IsActive => !IsRevoked && !IsExpired;
-}
-
-public enum CustomerType
-{
-    Retail,
-    Wholesale,
-    Corporate
-}
 
 public class IdentityDbContext : IdentityDbContext<ApplicationUser>
 {
@@ -135,8 +14,8 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
-    public DbSet<CustomerAddress> CustomerAddresses { get; set; }
     public DbSet<TwoFactorConfig> TwoFactorConfigs { get; set; }
+    public DbSet<TwoFactorChallenge> TwoFactorChallenges { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -179,46 +58,28 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => new { e.City, e.CustomerType });
         });
 
-        builder.Entity<CustomerAddress>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
-            entity.Property(e => e.RecipientName).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.AddressLine).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.District).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Ward).IsRequired().HasMaxLength(100);
-            
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            entity.HasIndex(e => new { e.UserId, e.IsDefault });
-            entity.HasIndex(e => e.City);
-            // Renamed to avoid collision with Sales domain's unrelated "CustomerAddresses" table
-            // (public.CustomerAddresses, created by Sales migrations, has a different schema/purpose).
-            entity.ToTable("IdentityCustomerAddresses");
-        });
-
         builder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+            // Token is nullable on purpose: only pre-W1-2 rows still carry the
+            // clear-text secret. New rows write TokenHash only.
+            entity.Property(e => e.Token).HasMaxLength(500);
+            entity.Property(e => e.TokenHash).HasMaxLength(128);
             entity.Property(e => e.JwtId).IsRequired().HasMaxLength(500);
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
             entity.Property(e => e.CreatedByIp).IsRequired().HasMaxLength(50);
             entity.Property(e => e.RevokedByIp).HasMaxLength(50);
-            entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(128);
 
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.Token);
             entity.HasIndex(e => e.JwtId);
+            entity.HasIndex(e => e.SessionId);
             entity.HasIndex(e => new { e.UserId, e.IsRevoked, e.ExpiresAt });
         });
 
@@ -231,6 +92,19 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.UserId).IsUnique();
         });
 
+        builder.Entity<TwoFactorChallenge>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasMaxLength(1000);
+            // Lookup is always by hash; the index is unique so a duplicate hash
+            // can never resolve to two accounts.
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.IsUsed });
+        });
+
         builder.Entity<UserSession>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -239,7 +113,19 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.DeviceInfo).HasMaxLength(500);
             entity.Property(e => e.UserAgent).HasMaxLength(1000);
             entity.Property(e => e.RefreshTokenId).HasMaxLength(500);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            entity.Property(e => e.RevokedReason).HasMaxLength(50);
             entity.HasIndex(e => new { e.UserId, e.IsRevoked });
+        });
+
+        // W1-11 owns every other module's DbContext, so the two AuditLogs indexes
+        // the audit console needs have to be declared here. Without them
+        // "history of this entity" and "what did this user do" are sequential
+        // scans over a table that only ever grows.
+        builder.Entity<AuditLog>(entity =>
+        {
+            entity.HasIndex(e => new { e.EntityName, e.EntityId, e.Timestamp });
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
         });
     }
 }

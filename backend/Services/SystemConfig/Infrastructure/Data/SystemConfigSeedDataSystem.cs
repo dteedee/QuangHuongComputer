@@ -31,9 +31,12 @@ public static class SystemConfigSeedDataSystem
             Entry("PUSH_NOTIFICATIONS", "true", "Gửi thông báo đẩy (Push)", "Notifications", now),
 
             // ========== Social Media ==========
-            Entry("FACEBOOK_PAGE", "https://facebook.com/quanghuongcomputer", "Link Facebook Fanpage", "Social Media", now),
-            Entry("ZALO_OA", "https://zalo.me/quanghuongcomputer", "Link Zalo Official Account", "Social Media", now),
-            Entry("YOUTUBE_CHANNEL", "https://youtube.com/@quanghuongcomputer", "Kênh YouTube chính thức", "Social Media", now),
+            // D09: cả ba link đều được kiểm trực tiếp 2026-09-18 — Facebook trả "This content
+            // isn't available", YouTube trả HTTP 404, Zalo chỉ là tường đăng nhập. Seed RỖNG để
+            // FE ẩn icon, thay vì gửi khách vào ba trang chết. Chủ shop điền link thật qua ConfigPortal.
+            Entry("FACEBOOK_PAGE", "", "Link Facebook Fanpage (chủ shop điền)", "Social Media", now),
+            Entry("ZALO_OA", "", "Link Zalo Official Account (chủ shop điền)", "Social Media", now),
+            Entry("YOUTUBE_CHANNEL", "", "Kênh YouTube chính thức (chủ shop điền)", "Social Media", now),
         };
     }
 

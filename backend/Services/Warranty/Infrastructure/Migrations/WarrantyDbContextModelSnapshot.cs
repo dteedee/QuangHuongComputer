@@ -150,6 +150,15 @@ namespace Warranty.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("IX_ProductWarranties_CustomerId");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductWarranties_ProductId");
+
+                    b.HasIndex("SerialNumberId")
+                        .HasDatabaseName("IX_ProductWarranties_SerialNumberId");
+
                     b.HasIndex("SerialNumber", "Provider")
                         .IsUnique();
 
@@ -226,6 +235,18 @@ namespace Warranty.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("IX_Claims_CustomerId");
+
+                    b.HasIndex("RmaId")
+                        .HasDatabaseName("IX_Claims_RmaId");
+
+                    b.HasIndex("WorkOrderId")
+                        .HasDatabaseName("IX_Claims_WorkOrderId");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_Claims_Status_CreatedAt");
 
                     b.ToTable("Claims");
                 });
@@ -384,7 +405,10 @@ namespace Warranty.Infrastructure.Migrations
                     b.HasIndex("ClaimType")
                         .IsUnique();
 
-                    b.ToTable("SlaPolicies");
+                    b.ToTable("SlaPolicies", t =>
+                        {
+                            t.HasCheckConstraint("CK_SlaPolicies_WarningAtPercent_Range", "\"WarningAtPercent\" >= 0 AND \"WarningAtPercent\" <= 100");
+                        });
                 });
 #pragma warning restore 612, 618
         }

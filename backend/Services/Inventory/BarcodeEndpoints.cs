@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -12,8 +13,9 @@ public static class BarcodeEndpoints
     public static void MapBarcodeEndpoints(this IEndpointRouteBuilder app)
     {
         // W0-3: mã vạch/QR lộ SKU + serial nội bộ — chỉ nhân viên kho/quản lý.
+        // W1-10: GET -> Inventory.ViewStock, POST -> ManageStock, PUT/DELETE -> AdjustStock.
         var group = app.MapGroup("/api/inventory")
-            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
+            .RequireModulePermissions(PermissionModules.Inventory);
 
         // GET /api/inventory/barcode/{sku} — mã vạch Code128 thật (quét được)
         group.MapGet("/barcode/{sku}", (string sku) =>

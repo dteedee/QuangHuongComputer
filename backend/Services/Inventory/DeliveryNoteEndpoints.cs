@@ -12,7 +12,8 @@ public static class DeliveryNoteEndpoints
 {
     public static void MapDeliveryNoteEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/dn").RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Manager, Roles.InventoryStaff));
+        // W1-10: phiếu xuất kho -> quyền theo verb của module Inventory.
+        var group = app.MapGroup("/api/inventory/dn").RequireModulePermissions(PermissionModules.Inventory);
 
         // POST /api/inventory/dn — create DN
         group.MapPost("", async (CreateDNDto dto, InventoryDbContext db) =>

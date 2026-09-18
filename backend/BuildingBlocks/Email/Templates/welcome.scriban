@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f7f9; }
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .header { background: #D70018; color: #fff; padding: 30px; text-align: center; border-radius: 16px 16px 0 0; }
+  .content { background: #fff; padding: 30px; border-radius: 0 0 16px 16px; }
+  .footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Chào mừng bạn!</h1></div>
+    <div class="content">
+      <p>Xin chào <strong>{{ full_name }}</strong>,</p>
+      <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>Quang Hưởng Computer</strong>!</p>
+      <p>Chúng tôi rất vui mừng được đồng hành cùng bạn trong việc tìm kiếm các sản phẩm công nghệ chất lượng cao.</p>
+      <p>Với tài khoản của mình, bạn có thể:</p>
+      <ul>
+        <li>Mua sắm trực tuyến dễ dàng</li>
+        <li>Theo dõi đơn hàng</li>
+        <li>Quản lý bảo hành</li>
+        <li>Nhận thông báo về khuyến mãi đặc biệt</li>
+      </ul>
+      <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.</p>
+      <p>Email này được gửi lúc: {{ sent_at }}</p>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 Quang Hưởng Computer. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

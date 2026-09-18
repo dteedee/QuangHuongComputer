@@ -3,7 +3,15 @@ using SystemConfig.Domain;
 namespace SystemConfig.Infrastructure.Data;
 
 /// <summary>
-/// Dữ liệu seed cho các category vận hành: "Sales & Tax", "HR & Payroll", "Repair SLA".
+/// Dữ liệu seed cho các category vận hành: "Sales &amp; Tax", "Repair SLA".
+///
+/// KHÔNG còn category "HR &amp; Payroll": D06 xoá 9 key lương/bảo hiểm tự nghĩ ra
+/// (BASE_SALARY, BONUS_RATE, HEALTH_INSURANCE_RATE, LUNCH_ALLOWANCE, OVERTIME_MULTIPLIER,
+/// PAID_LEAVE_DAYS, PROBATION_PERIOD_DAYS, SOCIAL_INSURANCE_RATE, WORKING_HOURS_PER_DAY) vì
+/// chúng là số mẫu, không phải tham số luật định 2026 — tham số thật do track HR/payroll của
+/// wave 2 seed theo D06. D01 xoá <c>TAX_RATE</c> (chỉ từng tồn tại trong seed này); thuế suất
+/// hiệu lực nay do <c>TAX_VAT_DEFAULT_RATE</c> + cửa sổ giảm quyết định.
+/// Danh sách key bị khai tử nằm ở <see cref="SystemConfigSeedRetiredKeys"/>.
 /// </summary>
 public static class SystemConfigSeedDataOperations
 {
@@ -13,7 +21,6 @@ public static class SystemConfigSeedDataOperations
         return new List<ConfigurationEntry>
         {
             // ========== Sales & Tax ==========
-            Entry("TAX_RATE", "0.08", "Thuế VAT áp dụng cho đơn hàng (8%)", "Sales & Tax", now),
             Entry("COMMISSION_RATE", "0.05", "Hoa hồng nhân viên bán hàng (5%)", "Sales & Tax", now),
             // JSON extensibility: public-facing key dùng bởi FE FreeShippingProgress (Number, public category)
             Entry("FREESHIP_THRESHOLD", "500000", "Ngưỡng đơn hàng được miễn phí vận chuyển (VNĐ)", "Sales & Tax", now, ConfigValueType.Number),
@@ -22,17 +29,6 @@ public static class SystemConfigSeedDataOperations
             Entry("MAX_DISCOUNT_PERCENT", "30", "Giảm giá tối đa cho phép (%)", "Sales & Tax", now),
             Entry("RETURN_WINDOW_DAYS", "7", "Số ngày cho phép đổi trả hàng", "Sales & Tax", now),
             Entry("LOYALTY_POINTS_RATE", "0.01", "Tích điểm thưởng 1% giá trị đơn hàng", "Sales & Tax", now),
-
-            // ========== HR & Payroll ==========
-            Entry("BASE_SALARY", "5000000", "Lương cơ bản nhân viên (VNĐ)", "HR & Payroll", now),
-            Entry("OVERTIME_MULTIPLIER", "1.5", "Hệ số tăng ca (1.5x lương giờ)", "HR & Payroll", now),
-            Entry("BONUS_RATE", "0.15", "Thưởng hiệu suất 15%", "HR & Payroll", now),
-            Entry("PAID_LEAVE_DAYS", "12", "Số ngày nghỉ phép có lương/năm", "HR & Payroll", now),
-            Entry("PROBATION_PERIOD_DAYS", "60", "Thời gian thử việc (ngày)", "HR & Payroll", now),
-            Entry("SOCIAL_INSURANCE_RATE", "0.08", "Tỷ lệ đóng BHXH (8%)", "HR & Payroll", now),
-            Entry("HEALTH_INSURANCE_RATE", "0.015", "Tỷ lệ đóng BHYT (1.5%)", "HR & Payroll", now),
-            Entry("WORKING_HOURS_PER_DAY", "8", "Số giờ làm việc chuẩn mỗi ngày", "HR & Payroll", now),
-            Entry("LUNCH_ALLOWANCE", "30000", "Phụ cấp ăn trưa hằng ngày (VNĐ)", "HR & Payroll", now),
 
             // ========== Repair SLA ==========
             Entry("STANDARD_REPAIR_SLA_HOURS", "48", "Thời gian sửa chữa tiêu chuẩn (giờ)", "Repair SLA", now),

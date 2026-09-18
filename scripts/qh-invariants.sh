@@ -37,9 +37,10 @@ FLOORS="$QH_SCRATCH/invariants-floors.env"
 TREE_BASE="$QH_SCRATCH/tree-baseline.txt"
 ALLOW="$QH_SCRATCH/ownership-allow.txt"
 
-# Hard floors from the state verified on 2026-09-18 (D12). The recorded floors
+# Hard floors. Rebased at the W0 gate: D03 hard-purged 21 test users (30 -> 9 real accounts)
+# and the importer replaced 26 demo products with 68 verified SKUs. The recorded floors
 # may rise above these, never below.
-HARD_ROLES=11; HARD_USERS=30; HARD_ADMINCLAIMS=90; HARD_MIGRATIONS=51; HARD_PRODUCTS=26
+HARD_ROLES=11; HARD_USERS=9; HARD_ADMINCLAIMS=90; HARD_MIGRATIONS=51; HARD_PRODUCTS=68
 
 psql_q() { # read-only, single value
   docker exec -e PGOPTIONS='-c default_transaction_read_only=on' "$PG_CONTAINER" \

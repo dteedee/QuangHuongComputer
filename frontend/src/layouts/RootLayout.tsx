@@ -1,9 +1,12 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { useState, useEffect } from 'react';
 import { CartDrawer } from '../components/CartDrawer';
 import { useCart } from '../context/CartContext';
+import { RouteOutlet } from './route-outlet';
+import { StorefrontRouteSkeleton } from './storefront-route-skeleton';
+import { ROUTES } from '../routes';
 import {
     Home, Search, ShoppingCart, User, ChevronUp,
     LayoutGrid
@@ -41,11 +44,11 @@ const MobileBottomNav = ({ onCartClick }: { onCartClick: () => void }) => {
     };
 
     const navItems = [
-        { path: '/', icon: Home, label: 'Trang chủ' },
-        { path: '/products', icon: LayoutGrid, label: 'Danh mục' },
-        { path: '/products?q=', icon: Search, label: 'Tìm kiếm' },
+        { path: ROUTES.HOME, icon: Home, label: 'Trang chủ' },
+        { path: ROUTES.PRODUCTS, icon: LayoutGrid, label: 'Danh mục' },
+        { path: ROUTES.SEARCH, icon: Search, label: 'Tìm kiếm' },
         { path: '#cart', icon: ShoppingCart, label: 'Giỏ hàng', badge: itemCount },
-        { path: '/account', icon: User, label: 'Tài khoản' },
+        { path: ROUTES.ACCOUNT, icon: User, label: 'Tài khoản' },
     ];
 
     return (
@@ -111,7 +114,7 @@ export const RootLayout = () => {
                 onCartClick={() => setIsCartOpen(true)}
             />
             <main className="animate-fade-in pb-16 lg:pb-0">
-                <Outlet />
+                <RouteOutlet skeleton={<StorefrontRouteSkeleton />} />
             </main>
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
             {/* Chat FAB: chỉ 1 widget toàn cục — <AiChatWidget /> đã mount ở App.tsx.

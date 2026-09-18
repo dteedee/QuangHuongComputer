@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background: #f4f7f9; margin: 0; padding: 0; }
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .header { background: #000; color: #fff; padding: 24px; text-align: center; border-radius: 16px 16px 0 0; }
+  .header img { max-height: 32px; }
+  .content { background: #fff; padding: 30px; border-radius: 0 0 16px 16px; }
+  .footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 11px; }
+  .unsubscribe { color: #94a3b8; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1 style="margin:0;font-size:18px;">Quang Huong Computer</h1></div>
+    <div class="content">
+      {{ content_html }}
+    </div>
+    <div class="footer">
+      <p>Bạn nhận được email này vì đã đăng ký nhận tin từ Quang Huong Computer.</p>
+      <p><a href="{{ unsubscribe_url }}" class="unsubscribe">Hủy đăng ký nhận tin</a></p>
+      <p>&copy; 2026 Quang Huong Computer.</p>
+    </div>
+  </div>
+</body>
+</html>

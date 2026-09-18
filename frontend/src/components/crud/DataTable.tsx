@@ -1,3 +1,15 @@
+/**
+ * @deprecated SHIM — kept alive only for 4 accountant pages.
+ *
+ * The rest of `components/crud/` was deleted by W1-12 (the UI kit). This file
+ * survives because `pages/backoffice/accountant/{AP,AR,Expenses,Shifts}Page.tsx`
+ * still import `{ DataTable, Column }` from here and pages are frozen this wave.
+ *
+ * Migration (owner: W3-9 backoffice-accounting): replace with
+ * `DataTable` + `DataTableColumn` from `@/components/ui` —
+ * `key` → `id`, `label` → `header`, `render` → `cell`, plus the required
+ * `caption` and `rowKey`. Then delete this file and the empty `crud/` folder.
+ */
 import type { ReactNode } from 'react';
 
 export interface Column<T> {

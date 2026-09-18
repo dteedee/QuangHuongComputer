@@ -115,6 +115,12 @@ namespace Payments.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ExternalId");
@@ -124,7 +130,13 @@ namespace Payments.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("PaymentIntents", "payments");
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_PaymentIntents_Status_CreatedAt");
+
+                    b.ToTable("PaymentIntents", "payments", t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentIntents_Amount_NonNegative", "\"Amount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Payments.Domain.ProcessedWebhook", b =>
@@ -196,7 +208,8 @@ namespace Payments.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Accumulated")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Code")
                         .HasColumnType("text");
@@ -240,7 +253,8 @@ namespace Payments.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("TransferAmount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("TransferType")
                         .IsRequired()
@@ -253,6 +267,9 @@ namespace Payments.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RelatedOrderId")
+                        .HasDatabaseName("IX_SePayTransactions_RelatedOrderId");
 
                     b.ToTable("SePayTransactions", "payments");
                 });

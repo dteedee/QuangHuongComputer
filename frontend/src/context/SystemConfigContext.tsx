@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { systemConfigApi, type ConfigurationEntry, getConfigValue, configParsers } from '../api/systemConfig';
+import { createContext, useContext, useCallback, type ReactNode } from 'react';
+import { getConfigValue, configParsers, type ConfigurationEntry } from '../api/systemConfig';
+import { usePublicConfig } from '../lib/use-public-config';
 
 interface SystemConfigContextValue {
   configs: ConfigurationEntry[];
@@ -14,27 +15,11 @@ interface SystemConfigContextValue {
 const SystemConfigContext = createContext<SystemConfigContextValue | undefined>(undefined);
 
 export const SystemConfigProvider = ({ children }: { children: ReactNode }) => {
-  const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const loadConfigs = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      // Use public endpoint which doesn't require admin role
-      const data = await systemConfigApi.config.getPublic();
-      setConfigs(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load system configs', error);
-      // Fallback to empty if failed
-      setConfigs([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadConfigs();
-  }, [loadConfigs]);
+  // Shares the single `/api/config/public` request with every other
+  // `usePublicConfig()` consumer (ThemeContext, useCompanyInfo, ...) instead
+  // of firing its own — this used to be a second, independent fetch.
+  const { data, isLoading, refetch } = usePublicConfig();
+  const configs = data ?? [];
 
   const getValue = (key: string, fallback = ''): string => {
     return getConfigValue(configs, key, fallback, configParsers.string);
@@ -53,6 +38,10 @@ export const SystemConfigProvider = ({ children }: { children: ReactNode }) => {
     return getConfigValue(configs, key, fallback, configParsers.json<T>);
   };
 
+  const refresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   return (
     <SystemConfigContext.Provider value={{
       configs,
@@ -61,7 +50,7 @@ export const SystemConfigProvider = ({ children }: { children: ReactNode }) => {
       getBoolean,
       getJson,
       isLoading,
-      refresh: loadConfigs
+      refresh
     }}>
       {children}
     </SystemConfigContext.Provider>
@@ -75,4 +64,3 @@ export const useSystemConfig = () => {
   }
   return ctx;
 };
-

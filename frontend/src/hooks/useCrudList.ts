@@ -1,24 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import type { PagedResult, QueryParams } from '../types/paging';
 
-export interface QueryParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  sortBy?: string;
-  sortDescending?: boolean;
-  includeInactive?: boolean;
-}
-
-export interface PagedResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-}
+// Re-exported for existing importers of `useCrudList` that destructure these
+// two types from here (W1-9, step 7b — canonical source is `types/paging.ts`).
+export type { PagedResult, QueryParams };
 
 export interface UseCrudListOptions<T> {
   queryKey: string[];

@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using BuildingBlocks.Security;
 using Communication.Domain;
 using Communication.Repositories;
+using System.Linq;
 using System.Security.Claims;
 
 namespace Communication.Hubs;
 
-[Authorize]
+// W1-10: policy CÓ TÊN (không phải [Authorize] trống) để convention phân quyền nhận diện được.
+[Authorize(SecurityPolicies.Authenticated)]
 public class ChatHub : Hub
 {
     private readonly IConversationRepository _conversationRepository;
@@ -22,7 +24,7 @@ public class ChatHub : Hub
         var userId = GetUserId();
         var userRoles = GetUserRoles();
 
-        if (userRoles.Contains(Roles.Admin) || userRoles.Contains(Roles.Sale))
+        if (IsSupportStaff())
         {
             // Support staff join the shared team group only; they are added to a specific
             // conversation_{id} group on demand (AssignConversation), not auto-joined to
@@ -74,7 +76,7 @@ public class ChatHub : Hub
         }
 
         // Determine sender type
-        var senderType = DetermineSenderType(userRoles);
+        var senderType = DetermineSenderType();
 
         // Create and add message. AddMessageAsync stages the message as Added explicitly
         // (see IConversationRepository) instead of Update()-ing the whole aggregate, which
@@ -98,10 +100,15 @@ public class ChatHub : Hub
     {
         var userId = GetUserId();
         var userName = Context.User?.Identity?.Name ?? "Guest";
-        var userRoles = GetUserRoles();
 
-        // Only customers can start new conversations
-        if (!userRoles.Contains(Roles.Customer))
+        // Chỉ khách hàng mở hội thoại mới; nhân viên trả lời chứ không tự mở.
+        //
+        // W1-10 (verifier sửa): bản quét đổi `!userRoles.Contains(Roles.Customer)` thành
+        // `IsSupportStaff()`. Hai điều kiện đó KHÔNG tương đương trong hệ 11 role: mọi nhân viên
+        // KHÔNG có quyền CRM.ViewCustomers (HR, Accountant, InventoryStaff, 2 loại kỹ thuật viên,
+        // Supplier) bỗng mở được hội thoại khách hàng — trái với chính thông báo lỗi bên dưới.
+        // Giữ nguyên luật gốc: phải là tài khoản khách hàng.
+        if (Context.User?.IsInRole(Roles.Customer) != true)
         {
             await Clients.Caller.SendAsync("Error", "Only customers can start conversations");
             return;
@@ -136,10 +143,9 @@ public class ChatHub : Hub
     {
         var userId = GetUserId();
         var userName = Context.User?.Identity?.Name ?? "Guest";
-        var userRoles = GetUserRoles();
 
-        // Only sales/admin can assign conversations
-        if (!userRoles.Contains(Roles.Admin) && !userRoles.Contains(Roles.Sale))
+        // W1-10: nhận hội thoại là hành động của nhân viên CSKH -> quyền CRM.ViewCustomers.
+        if (!IsSupportStaff())
         {
             await Clients.Caller.SendAsync("Error", "Access denied");
             return;
@@ -199,11 +205,24 @@ public class ChatHub : Hub
         return Context.User?.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray() ?? Array.Empty<string>();
     }
 
-    private SenderType DetermineSenderType(string[] roles)
+    // W1-10 (verifier): tham số `roles` đã thành đường chết sau khi hub xét theo quyền — bỏ đi
+    // để người đọc sau không tưởng rằng tên role còn ảnh hưởng tới kết quả.
+    private SenderType DetermineSenderType()
     {
-        if (roles.Contains(Roles.Admin) || roles.Contains(Roles.Sale))
+        if (IsSupportStaff())
             return SenderType.Sale;
 
         return SenderType.Customer;
     }
+
+    /// <summary>
+    /// W1-10: nhân viên hỗ trợ = có quyền <c>Permissions.CRM.ViewCustomers</c>.
+    /// Hub KHÔNG kiểm tra tên role nữa — role chỉ là gói quyền (xem BuildingBlocks/Security/Roles.cs).
+    /// Admin luôn qua, giống <c>PermissionAuthorizationHandler</c>.
+    /// </summary>
+    private bool IsSupportStaff() => HasPermission(Permissions.CRM.ViewCustomers);
+
+    private bool HasPermission(string permission) =>
+        Context.User?.IsInRole(Roles.Admin) == true
+        || Context.User?.FindAll(Permissions.PermissionType).Any(c => c.Value == permission) == true;
 }

@@ -17,24 +17,25 @@ public static class InventoryEndpoints
 {
     public static void MapInventoryEndpoints(this IEndpointRouteBuilder app)
     {
+        // W1-10: bỏ danh sách role Admin/Manager/InventoryStaff/Sale, thay bằng quyền theo verb.
+        // GET -> Inventory.ViewStock, POST -> ManageStock, PUT/PATCH/DELETE -> AdjustStock.
+        // Endpoint nào đã tự khai báo policy tường minh bên dưới thì giữ nguyên policy đó.
         var group = app.MapGroup("/api/inventory")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "InventoryStaff", "Sale"));
+            .RequireModulePermissions(PermissionModules.Inventory);
 
         // Stock Management
         group.MapGet("/stock", async (InventoryDbContext db) =>
         {
             return await db.InventoryItems.ToListAsync();
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ViewStock);
 
         group.MapGet("/stock/{productId:guid}", async (Guid productId, InventoryDbContext db) =>
         {
             var item = await db.InventoryItems.FirstOrDefaultAsync(i => i.ProductId == productId);
             return item != null ? Results.Ok(item) : Results.NotFound();
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ViewStock);
 
         group.MapPut("/stock/{id:guid}/adjust", async (Guid id, AdjustStockDto dto, InventoryDbContext db) =>
         {
@@ -45,8 +46,7 @@ public static class InventoryEndpoints
             await db.SaveChangesAsync();
             return Results.Ok(item);
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.AdjustStock))
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.AdjustStock)
         .WithValidation<AdjustStockDto>();
 
         // ==================== STOCK QUERIES: PRODUCT / VARIANT / BRANCH ====================
@@ -71,7 +71,9 @@ public static class InventoryEndpoints
                 reservedQuantity = totalReserved,
                 availableQuantity = totalOnHand - totalReserved
             });
-        });
+            // W1-10: "còn bao nhiêu hàng" hiển thị ở trang sản phẩm cho khách vãng lai.
+            // Cần rule GET /api/inventory/products/{productId}/stock trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // Tồn của 1 BIẾN THỂ cụ thể — dùng cho product-variant-selector đổi giá + tồn khi chọn RAM/SSD.
         app.MapGet("/api/inventory/products/{productId:guid}/variants/{variantId:guid}/stock", async (
@@ -92,7 +94,9 @@ public static class InventoryEndpoints
                 reservedQuantity = totalReserved,
                 availableQuantity = totalOnHand - totalReserved
             });
-        });
+            // W1-10: dữ liệu storefront cho khách chưa đăng nhập — công khai tường minh.
+            // Cần rule tương ứng trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // Tồn theo CHI NHÁNH — trả list warehouse có tồn của product này.
         // Chỉ trả warehouse Type ∈ {Branch, Showroom} — khách chỉ quan tâm nơi có thể mua/xem trực tiếp.
@@ -142,7 +146,9 @@ public static class InventoryEndpoints
             .ToList();
 
             return Results.Ok(result);
-        });
+            // W1-10: dữ liệu storefront cho khách chưa đăng nhập — công khai tường minh.
+            // Cần rule tương ứng trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // Stock Reservations
         group.MapPost("/stock/{productId:guid}/reserve", async (Guid productId, ReserveStockDto dto, InventoryDbContext db) =>
@@ -174,8 +180,7 @@ public static class InventoryEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ManageStock);
 
         group.MapPost("/reservations/{referenceId}/fulfill", async (string referenceId, InventoryDbContext db) =>
         {
@@ -199,8 +204,7 @@ public static class InventoryEndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, fulfilledCount = reservations.Count });
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ManageStock);
 
         group.MapPost("/reservations/{referenceId}/release", async (string referenceId, ReleaseReservationDto dto, InventoryDbContext db) =>
         {
@@ -224,16 +228,14 @@ public static class InventoryEndpoints
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, releasedCount = reservations.Count });
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ManageStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ManageStock);
 
         // Purchase Orders
         group.MapGet("/po", async (InventoryDbContext db) =>
         {
             return await db.PurchaseOrders.Include(p => p.Items).OrderByDescending(p => p.PONumber).ToListAsync();
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ViewPurchaseOrder));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ViewPurchaseOrder);
 
         group.MapPost("/po", async (CreatePurchaseOrderDto dto, InventoryDbContext db) =>
         {
@@ -244,8 +246,7 @@ public static class InventoryEndpoints
             await db.SaveChangesAsync();
             return Results.Created($"/api/inventory/po/{po.Id}", po);
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder);
 
         group.MapPut("/po/{id:guid}/send", async (Guid id, InventoryDbContext db) =>
         {
@@ -260,8 +261,7 @@ public static class InventoryEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder);
 
         group.MapPut("/po/{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>
         {
@@ -276,8 +276,7 @@ public static class InventoryEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.CreatePurchaseOrder);
 
         group.MapPut("/po/{id:guid}/receive", async (Guid id, InventoryDbContext db) =>
         {
@@ -315,8 +314,7 @@ public static class InventoryEndpoints
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ReceivePurchaseOrder));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ReceivePurchaseOrder);
 
         // Suppliers CRUD
         MapSupplierEndpoints(group);
@@ -428,8 +426,7 @@ public static class InventoryEndpoints
                 timeline = timeline.OrderBy(x => ((DateTime)x.GetType().GetProperty("at")!.GetValue(x)!)).ToList()
             });
         })
-        .RequireAuthorization(policy => policy.RequireClaim(BuildingBlocks.Security.Permissions.PermissionType,
-            BuildingBlocks.Security.Permissions.Inventory.ViewStock));
+        .RequireAuthorization(BuildingBlocks.Security.Permissions.Inventory.ViewStock);
     }
 
     private static async Task<(string? OrderNumber, string? CustomerName)> LookupOrderAsync(InventoryDbContext db, Guid orderId)
@@ -529,7 +526,8 @@ public static class InventoryEndpoints
 
     private static void MapSupplierEndpoints(RouteGroupBuilder group)
     {
-        var supplierGroup = group.MapGroup("/suppliers");
+        // W1-10: nhóm nhà cung cấp có bộ quyền riêng (ViewSupplier/CreateSupplier/...).
+        var supplierGroup = group.MapGroup("/suppliers").RequireModulePermissions(PermissionModules.Suppliers);
 
         // GET /api/inventory/suppliers - List with pagination, search, sort
         supplierGroup.MapGet("", async (

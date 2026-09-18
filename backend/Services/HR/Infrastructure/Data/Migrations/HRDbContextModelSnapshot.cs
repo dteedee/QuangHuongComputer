@@ -187,25 +187,28 @@ namespace HR.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("ApprovedOvertimeHours")
-                        .HasColumnType("numeric");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<string>("CheckInDeviceId")
                         .HasColumnType("text");
 
                     b.Property<decimal?>("CheckInLatitude")
-                        .HasColumnType("numeric");
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
 
                     b.Property<decimal?>("CheckInLongitude")
-                        .HasColumnType("numeric");
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
 
                     b.Property<int>("CheckInMethod")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CheckInTime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("CheckOutTime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -273,7 +276,14 @@ namespace HR.Infrastructure.Data.Migrations
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
 
-                    b.ToTable("AttendanceRecords", "hr");
+                    b.ToTable("AttendanceRecords", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_AttendanceRecords_CheckOut_AfterCheckIn", "\"CheckOutTime\" IS NULL OR \"CheckInTime\" IS NULL OR \"CheckOutTime\" >= \"CheckInTime\"");
+
+                            t.HasCheckConstraint("CK_AttendanceRecords_OvertimeHours_NonNegative", "\"OvertimeHours\" >= 0");
+
+                            t.HasCheckConstraint("CK_AttendanceRecords_WorkHours_NonNegative", "\"WorkHours\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("HR.Domain.AttendanceRule", b =>
@@ -550,7 +560,9 @@ namespace HR.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Employees_Email_Unique");
 
                     b.HasIndex("EmployeeCode")
                         .IsUnique();
@@ -563,7 +575,12 @@ namespace HR.Infrastructure.Data.Migrations
 
                     b.HasIndex("Status", "HireDate");
 
-                    b.ToTable("Employees", "hr");
+                    b.ToTable("Employees", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_Employees_BaseSalary_NonNegative", "\"BaseSalary\" >= 0");
+
+                            t.HasCheckConstraint("CK_Employees_HourlyRate_NonNegative", "\"HourlyRate\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("HR.Domain.EmployeeAsset", b =>
@@ -1164,10 +1181,12 @@ namespace HR.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("GrossPay")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("InsurableSalary")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("InsuranceDeduction")
                         .HasPrecision(18, 2)
@@ -1229,7 +1248,8 @@ namespace HR.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("TaxableIncome")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -1242,9 +1262,29 @@ namespace HR.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId", "Year", "Month");
+                    b.HasIndex("PayrollRunId")
+                        .HasDatabaseName("IX_Payrolls_PayrollRunId");
 
-                    b.ToTable("Payrolls", "hr");
+                    b.HasIndex("EmployeeId", "Year", "Month")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Payrolls_Employee_Year_Month_Unique");
+
+                    b.ToTable("Payrolls", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_Payrolls_BaseSalary_NonNegative", "\"BaseSalary\" >= 0");
+
+                            t.HasCheckConstraint("CK_Payrolls_GrossPay_NonNegative", "\"GrossPay\" >= 0");
+
+                            t.HasCheckConstraint("CK_Payrolls_InsurableSalary_NonNegative", "\"InsurableSalary\" >= 0");
+
+                            t.HasCheckConstraint("CK_Payrolls_Month_Range", "\"Month\" >= 1 AND \"Month\" <= 12");
+
+                            t.HasCheckConstraint("CK_Payrolls_NetPay_NonNegative", "\"NetPay\" >= 0");
+
+                            t.HasCheckConstraint("CK_Payrolls_TaxableIncome_NonNegative", "\"TaxableIncome\" >= 0");
+
+                            t.HasCheckConstraint("CK_Payrolls_Year_Range", "\"Year\" >= 2000 AND \"Year\" <= 2100");
+                        });
                 });
 
             modelBuilder.Entity("HR.Domain.PayrollLineItem", b =>
@@ -1663,6 +1703,10 @@ namespace HR.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HR.Domain.PayrollRun", null)
+                        .WithMany("Payrolls")
+                        .HasForeignKey("PayrollRunId");
+
                     b.Navigation("Employee");
                 });
 
@@ -1698,6 +1742,11 @@ namespace HR.Infrastructure.Data.Migrations
             modelBuilder.Entity("HR.Domain.Payroll", b =>
                 {
                     b.Navigation("LineItems");
+                });
+
+            modelBuilder.Entity("HR.Domain.PayrollRun", b =>
+                {
+                    b.Navigation("Payrolls");
                 });
 #pragma warning restore 612, 618
         }

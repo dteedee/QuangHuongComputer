@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -75,7 +76,7 @@ public static class ShippingEndpoints
                 expectedDelivery = result.ExpectedDeliveryTime,
                 orderStatus = order.Status.ToString()
             });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Sale"));
+        }).RequireAuthorization(Permissions.Sales.UpdateStatus);
 
         // 3. Get tracking info
         group.MapGet("/tracking/{orderId:guid}", async (Guid orderId, SalesDbContext db) =>
@@ -92,7 +93,11 @@ public static class ShippingEndpoints
 
             if (order == null) return Results.NotFound();
             return Results.Ok(order);
-        }).RequireAuthorization();
+            // W1-10 BÀN GIAO W2 (Sales): endpoint "tra vận đơn của tôi" nhưng KHÔNG có kiểm tra
+            // quyền sở hữu — bất kỳ tài khoản đăng nhập nào cũng đọc được địa chỉ giao hàng của
+            // đơn bất kỳ nếu đoán được orderId. Giữ nguyên policy Authenticated để không chặn
+            // khách tra đơn của mình; chủ sở hữu W2 phải thêm điều kiện o.UserId == userId.
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
 
         // 4. GHN webhook — delivery status updates.
         //    W0-10: FAIL-CLOSED. Trước đây `if (!string.IsNullOrEmpty(expectedToken) && ...)` nghĩa là

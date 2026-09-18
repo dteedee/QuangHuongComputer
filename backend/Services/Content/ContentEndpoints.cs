@@ -1,4 +1,5 @@
 
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -273,13 +274,19 @@ public static class ContentEndpoints
                 message = "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.",
                 id = message.Id
             });
-        });
+            // W1-10: form liên hệ ở storefront — khách chưa đăng nhập phải gửi được.
+            // Cần rule POST /api/content/contact trong PublicEndpointAllowList (IR W1).
+        }).AllowAnonymous();
 
         // ==================== ADMIN ENDPOINTS ====================
 
         // W0-3: thêm Marketing — role này quản trị nội dung/khuyến mãi nhưng trước đây không vào được gì.
+        // W1-10: Content.ManagePages là "quyền quản trị nội dung back-office" — trong ma trận W1-1
+        // chỉ Admin/Manager/Marketing giữ nó, tức đúng bằng danh sách role cũ.
+        // KHÔNG dùng RequireModulePermissions ở đây: GET sẽ rơi xuống Content.ViewPages mà
+        // Customer/Sale cũng có, tức là khách hàng đọc được cây nội dung admin.
         var adminGroup = group.MapGroup("/admin")
-            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Marketing"));
+            .RequirePermission(Permissions.Content.ManagePages);
 
         // Seed Data Endpoint (Development only)
         group.MapPost("/seed", async (ContentDbContext db, ICacheService cache, IWebHostEnvironment env) =>
@@ -297,7 +304,8 @@ public static class ContentEndpoints
             await cache.RemoveByPatternAsync("cache:homepage*");
 
             return Results.Ok(new { Message = "Content seeded successfully" });
-        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
+            // W1-10: nạp dữ liệu mẫu = thao tác hệ thống -> System.ManageConfig (chỉ Admin).
+        }).RequireAuthorization(Permissions.System.ManageConfig);
 
         // Register Dynamic System Endpoints
         MapMenuEndpoints(adminGroup, group);
