@@ -53,6 +53,21 @@ public class SalaryStructure : Entity<Guid>
             throw new ArgumentException("EndDate không thể trước EffectiveDate.");
         EndDate = endDate;
     }
+
+    /// <summary>W2-7 khoản 8 (PUT /api/hr/employees/{id}/salary-structures/{sid}) — sửa số liệu,
+    /// không đổi EffectiveDate (đổi mốc hiệu lực = tạo record mới, giữ lịch sử).</summary>
+    public void Update(decimal baseSalary, decimal insurableSalary, decimal? coefficient, DateTime? endDate, string? note)
+    {
+        if (baseSalary <= 0) throw new ArgumentException("BaseSalary phải > 0.");
+        if (insurableSalary <= 0) throw new ArgumentException("InsurableSalary phải > 0.");
+        if (endDate.HasValue && endDate.Value < EffectiveDate)
+            throw new ArgumentException("EndDate không thể trước EffectiveDate.");
+        BaseSalary = baseSalary;
+        InsurableSalary = insurableSalary;
+        Coefficient = coefficient;
+        EndDate = endDate;
+        Note = note;
+    }
 }
 
 public static class SalaryStructureExtensions

@@ -96,6 +96,11 @@ public class ConversationRepository : IConversationRepository
         await Task.CompletedTask;
     }
 
+    public async Task<ChatMessage?> GetMessageByIdAsync(Guid messageId, CancellationToken ct = default)
+    {
+        return await _context.ChatMessages.FirstOrDefaultAsync(m => m.Id == messageId, ct);
+    }
+
     public async Task SaveChangesAsync(CancellationToken ct = default)
     {
         await _context.SaveChangesAsync(ct);

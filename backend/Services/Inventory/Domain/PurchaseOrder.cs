@@ -122,6 +122,59 @@ public class PurchaseOrder : Entity<Guid>
         Status = POStatus.Cancelled;
     }
 
+    /// <summary>
+    /// W2-12: gán số chứng từ do <c>IDocumentNumberService</c> cấp (PO-yyyyMM-#####). Constructor
+    /// vẫn sinh số tạm để code cũ không vỡ, nhưng mọi endpoint tạo PO phải gọi hàm này: bộ đếm
+    /// tĩnh trong process khởi động lại từ 1 sau mỗi lần deploy và đụng unique index thành 500.
+    /// </summary>
+    public void SetNumber(string poNumber)
+    {
+        if (string.IsNullOrWhiteSpace(poNumber))
+            throw new ArgumentException("Số PO không được rỗng.", nameof(poNumber));
+        PONumber = poNumber;
+    }
+
+    /// <summary>
+    /// D10 quy tắc 10 — mua trực tiếp (nhập nhanh): đơn được tạo ĐÃ duyệt bởi chính người nhập
+    /// hàng và ở trạng thái <see cref="POStatus.Sent"/> để phiếu nhập đi tiếp con đường GRN bình
+    /// thường trong CÙNG một transaction. Không mở thêm đường ghi tồn kho thứ hai: giá vốn, serial
+    /// và <c>PoReceived</c> vẫn do GRN sinh ra.
+    /// </summary>
+    public static PurchaseOrder CreateDirectPurchase(Guid supplierId, List<PurchaseOrderItem> items, Guid receivedByUserId)
+    {
+        var po = new PurchaseOrder(supplierId, items, receivedByUserId)
+        {
+            Status = POStatus.Sent,
+            ApprovedBy = receivedByUserId,
+            ApprovedAt = DateTime.UtcNow,
+            SubmittedBy = receivedByUserId,
+            SubmittedAt = DateTime.UtcNow
+        };
+        return po;
+    }
+
+    /// <summary>
+    /// W2-12: sau khi một GRN được xác nhận, đặt lại trạng thái theo số đã nhận của từng dòng.
+    /// Nhận đủ mọi dòng -> <see cref="POStatus.Received"/>; nhận được một phần ->
+    /// <see cref="POStatus.PartialReceived"/>. Không đụng đơn đã huỷ.
+    /// </summary>
+    public void ApplyReceiptProgress()
+    {
+        if (Status == POStatus.Cancelled) return;
+        if (Items.Count == 0) return;
+
+        var receivedSomething = Items.Any(i => i.ReceivedQuantity > 0);
+        if (!receivedSomething) return;
+
+        if (Items.All(i => i.ReceivedQuantity >= i.Quantity))
+        {
+            Status = POStatus.Received;
+            return;
+        }
+
+        Status = POStatus.PartialReceived;
+    }
+
     // === Gán liên kết nguồn ===
     public void LinkToRequisition(Guid requisitionId) => RequisitionId = requisitionId;
     public void LinkToQuotation(Guid quotationId) => SupplierQuotationId = quotationId;
@@ -137,6 +190,13 @@ public class PurchaseOrderItem
     public decimal UnitPrice { get; private set; }
     public string ProductName { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// W2-12: số đã nhận thực tế theo phiếu nhập (GRN). W2-5 đã tạo sẵn cột dưới dạng shadow
+    /// property (<c>InventoryDbContextPurchasing.cs:105</c>); ở đây nâng thành property thật —
+    /// tên và kiểu trùng khít nên model EF không đổi, không phát sinh migration.
+    /// </summary>
+    public int ReceivedQuantity { get; private set; }
+
     public PurchaseOrderItem(Guid productId, int quantity, decimal unitPrice, string productName = "")
     {
         ProductId = productId;
@@ -146,4 +206,21 @@ public class PurchaseOrderItem
     }
 
     protected PurchaseOrderItem() { }
+
+    /// <summary>Ghi nhận số đã nhận (cộng dồn qua nhiều GRN). Không bao giờ âm.</summary>
+    public void Receive(int quantity)
+    {
+        if (quantity <= 0) throw new ArgumentException("Số nhận phải lớn hơn 0.", nameof(quantity));
+        ReceivedQuantity += quantity;
+    }
+
+    /// <summary>Trả lại số đã nhận khi huỷ/đảo phiếu nhập.</summary>
+    public void Unreceive(int quantity)
+    {
+        if (quantity <= 0) throw new ArgumentException("Số hoàn phải lớn hơn 0.", nameof(quantity));
+        ReceivedQuantity = Math.Max(0, ReceivedQuantity - quantity);
+    }
+
+    /// <summary>Số còn lại chưa nhận của dòng này.</summary>
+    public int OutstandingQuantity => Math.Max(0, Quantity - ReceivedQuantity);
 }

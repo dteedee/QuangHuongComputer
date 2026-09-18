@@ -8,7 +8,13 @@ namespace UnitTests.Domain.HR;
 
 /// <summary>
 /// TEST TRỌNG TÂM PHASE 06 — đối chiếu 7 mốc thu nhập theo Luật Thuế TNCN VN.
-/// PayrollCalculationService.ComputeCore dùng VietnameseTaxEngine (không tự tính thuế).
+/// PayrollCalculationService.ComputeCore uỷ quyền toàn bộ phép tính cho PayrollTaxCalculator
+/// (BuildingBlocks, W1-15) — W2-25 không còn gọi VietnameseTaxEngine.
+///
+/// KỲ LƯƠNG CỦA CÁC VECTOR NÀY LÀ 6/2025 (luật CŨ: giảm trừ 11tr/4,4tr, biểu 7 bậc, trần BH 46,8tr,
+/// LTT vùng I 4,96tr). Trước W2-25 chúng ghi kỳ 6/2026 nhưng vẫn kỳ vọng số của luật cũ; từ kỳ 2026
+/// luật đã đổi (D06 §2) nên đưa về đúng kỳ 2025. Vector kỳ 2026 nằm ở
+/// Tests/UnitTests/Kernel/Tax/PayrollTaxCalculatorTests.cs (TV1-TV6) và W4-1 bổ sung test biên.
 ///
 /// Kịch bản: Nhân viên đi làm ĐỦ CÔNG (ratio = 1), không có OT, không có phụ cấp.
 /// InsurableSalary = BaseSalary (không vượt trần 46.8tr trừ khi bậc cuối).
@@ -30,7 +36,7 @@ public class PayrollCalculationServiceTests
     // Helper — tạo MonthlyTimesheet + SalaryStructure đủ công
     // ============================================================
 
-    private static MonthlyTimesheet FullMonthTimesheet(Guid empId, int year = 2026, int month = 6, decimal standardDays = 22m)
+    private static MonthlyTimesheet FullMonthTimesheet(Guid empId, int year = 2025, int month = 6, decimal standardDays = 22m)
     {
         var ts = new MonthlyTimesheet(empId, year, month);
         ts.SetAttendanceAggregation(
@@ -45,7 +51,7 @@ public class PayrollCalculationServiceTests
     }
 
     private static SalaryStructure Salary(Guid empId, decimal baseSalary, decimal? insurable = null)
-        => new(empId, baseSalary, insurable ?? baseSalary, new DateTime(2026, 1, 1));
+        => new(empId, baseSalary, insurable ?? baseSalary, new DateTime(2024, 1, 1));
 
     // ============================================================
     // 7 MỐC THU NHẬP — Table-driven test
@@ -148,7 +154,7 @@ public class PayrollCalculationServiceTests
     public void ComputeCore_LamNuaThang_LuongCoBanChiaDoi()
     {
         var empId = Guid.NewGuid();
-        var ts = new MonthlyTimesheet(empId, 2026, 6);
+        var ts = new MonthlyTimesheet(empId, 2025, 6);
         ts.SetAttendanceAggregation(standardWorkDays: 22, actualWorkDays: 11,
             absentDays: 11, halfDays: 0, totalLateMinutes: 0, totalEarlyLeaveMinutes: 0);
         ts.SetOvertimeBreakdown(0, 0, 0, 0);
@@ -168,7 +174,7 @@ public class PayrollCalculationServiceTests
     public void ComputeCore_OtChuNhat_HeSo200PhanTram()
     {
         var empId = Guid.NewGuid();
-        var ts = new MonthlyTimesheet(empId, 2026, 6);
+        var ts = new MonthlyTimesheet(empId, 2025, 6);
         ts.SetAttendanceAggregation(22, 22, 0, 0, 0, 0);
         ts.SetOvertimeBreakdown(weekday: 0, sunday: 2, holiday: 0, night: 0);
         ts.SetLeaveDays(0, 0);
@@ -187,7 +193,7 @@ public class PayrollCalculationServiceTests
     public void ComputeCore_OtNgayLe_HeSo300PhanTram()
     {
         var empId = Guid.NewGuid();
-        var ts = new MonthlyTimesheet(empId, 2026, 6);
+        var ts = new MonthlyTimesheet(empId, 2025, 6);
         ts.SetAttendanceAggregation(22, 22, 0, 0, 0, 0);
         ts.SetOvertimeBreakdown(weekday: 0, sunday: 0, holiday: 2, night: 0);
         ts.SetLeaveDays(0, 0);
@@ -207,7 +213,7 @@ public class PayrollCalculationServiceTests
     public void ComputeCore_LuongThapPhatCao_NetPayBangKhongKhongAm()
     {
         var empId = Guid.NewGuid();
-        var ts = new MonthlyTimesheet(empId, 2026, 6);
+        var ts = new MonthlyTimesheet(empId, 2025, 6);
         ts.SetAttendanceAggregation(22, 22, 0, 0, totalLateMinutes: 20_000, totalEarlyLeaveMinutes: 0);
         ts.SetOvertimeBreakdown(0, 0, 0, 0);
         ts.SetLeaveDays(0, 0);
@@ -227,11 +233,22 @@ public class PayrollCalculationServiceTests
     public void CalculateGrossFromNet_15TrNet_KhongPhuThuoc_TraGrossHopLy()
     {
         var targetNet = 15_000_000m;
+        var period = new DateOnly(2025, 6, 1);
+        var payDate = new DateOnly(2025, 7, 5);
 
-        var gross = PayrollCalculationService.CalculateGrossFromNet(targetNet, numberOfDependents: 0);
+        var gross = PayrollCalculationService.CalculateGrossFromNet(
+            targetNet, numberOfDependents: 0, periodMonth: period, payDate: payDate);
 
-        var back = VietnameseTaxEngine.CalculatePayroll(gross, 0);
-        back.NetSalary.Should().BeInRange(targetNet - 5000m, targetNet + 5000m);
+        // Đối chiếu bằng CHÍNH engine đã tính bảng lương (trước W2-25 hàm này dùng luật cũ và lấy
+        // gross làm căn cứ bảo hiểm, nên gross↔net không khớp với phiếu lương thật).
+        var back = PayrollTaxCalculator.Calculate(new PayrollTaxInput
+        {
+            PeriodMonth = period,
+            PayDate = payDate,
+            BasePay = gross,
+            InsurableSalary = gross
+        });
+        back.NetPay.Should().BeInRange(targetNet - 5000m, targetNet + 5000m);
     }
 
     [Fact]

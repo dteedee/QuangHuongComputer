@@ -20,6 +20,13 @@ public class WorkOrder : Entity<Guid>
     public DateTime? StartedAt { get; private set; }
     public DateTime? FinishedAt { get; private set; }
 
+    // W2-13: payment + handover
+    public DateTime? PaidAt { get; private set; }
+    public string? PaymentReference { get; private set; }
+    public DateTime? HandoverAt { get; private set; }
+    public string? HandoverReceivedByName { get; private set; }
+    public Guid? HandoverStaffId { get; private set; }
+
     // New properties
     public Guid? ServiceBookingId { get; private set; }
     public Guid? CurrentQuoteId { get; private set; }
@@ -234,6 +241,46 @@ public class WorkOrder : Entity<Guid>
     {
         Status = WorkOrderStatus.Cancelled;
         TechnicalNotes = (TechnicalNotes ?? "") + $"\nCancelled: {reason}";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Completed repair is ready for the customer / POS to collect payment.</summary>
+    public void MarkReadyForPickup()
+    {
+        if (Status != WorkOrderStatus.Completed)
+            throw new InvalidOperationException("Must be completed before it is ready for pickup");
+
+        Status = WorkOrderStatus.ReadyForPickup;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Records payment (POS collection or in-app). <see cref="AllowPayLater"/>-style
+    /// credit is out of scope here per D10/phase-51 decision update - always paid in full now.</summary>
+    public void RecordPayment(string? paymentReference)
+    {
+        if (Status != WorkOrderStatus.ReadyForPickup)
+            throw new InvalidOperationException("Must be ready for pickup before payment can be recorded");
+
+        Status = WorkOrderStatus.Paid;
+        PaidAt = DateTime.UtcNow;
+        PaymentReference = paymentReference;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Hands the device back to whoever collects it (usually the customer,
+    /// sometimes a designated receiver) and records who on staff did the handover.</summary>
+    public void RecordHandover(string receivedByName, Guid handoverStaffId)
+    {
+        if (Status != WorkOrderStatus.Paid)
+            throw new InvalidOperationException("Must be paid before handover");
+
+        if (string.IsNullOrWhiteSpace(receivedByName))
+            throw new ArgumentException("Receiver name is required", nameof(receivedByName));
+
+        Status = WorkOrderStatus.Delivered;
+        HandoverAt = DateTime.UtcNow;
+        HandoverReceivedByName = receivedByName;
+        HandoverStaffId = handoverStaffId;
         UpdatedAt = DateTime.UtcNow;
     }
 

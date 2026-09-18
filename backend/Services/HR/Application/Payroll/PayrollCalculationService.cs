@@ -1,63 +1,45 @@
+using System.Text.Json;
+using BuildingBlocks.Configuration;
 using BuildingBlocks.TaxEngine;
 using HR.Domain;
 using HR.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-// Phase 06 A hotfix: namespace "HR.Application.Payroll" trùng tên với type HR.Domain.Payroll
-// nên C# hiểu 'Payroll' là namespace. Type alias giải quyết mà không đổi API.
-using Payroll = HR.Domain.Payroll;
+// Ghi chú: namespace "HR.Application.Payroll" trùng tên với type HR.Domain.Payroll, và theo
+// quy tắc C# thành viên của namespace bao ngoài THẮNG using-alias -> luôn viết đủ HR.Domain.Payroll.
 
 namespace HR.Application.Payroll;
 
 /// <summary>
-/// Kết quả tính lương trước khi apply lên entity.
+/// W2-25 / D06 — TRUNG TÂM tính lương. Mọi phép tính pháp lý nằm ở
+/// <see cref="PayrollTaxCalculator"/> (BuildingBlocks/W1-15); lớp này chỉ:
+///  1. nạp bảng công đã chốt, cơ cấu lương, phụ cấp, người phụ thuộc, hợp đồng;
+///  2. resolve HAI bộ tham số pháp luật — ngày 01 tháng lương (bảo hiểm, LTT vùng, hệ số OT) và
+///     <c>PayrollRun.PayDate</c> (thuế TNCN) — qua <see cref="IStatutoryParameterProvider"/>;
+///  3. gọi <c>ComputeCore</c> rồi ghi kết quả + line items + SNAPSHOT tham số lên <c>Payroll</c>.
+///
+/// Snapshot là thứ làm một bảng lương ĐÃ TRẢ tái lập được sau nhiều năm: thêm một dòng tham số
+/// mới không bao giờ làm đổi số của kỳ cũ.
 /// </summary>
-public class PayrollCalculationResult
+public partial class PayrollCalculationService
 {
-    public decimal BaseSalaryProrated { get; init; }        // Lương cơ bản × công thực tế/công chuẩn
-    public decimal OvertimePay { get; init; }
-    public decimal TaxableAllowances { get; init; }         // Phụ cấp chịu thuế
-    public decimal ExemptAllowances { get; init; }          // Phụ cấp miễn thuế
-    public decimal Bonuses { get; init; }
-    public decimal GrossPay { get; init; }                  // Tổng thu nhập trước khấu trừ
-    public decimal InsurableSalary { get; init; }
-    public decimal InsuranceEmployee { get; init; }         // BHXH+BHYT+BHTN phần NLĐ
-    public decimal TaxableIncome { get; init; }             // Thu nhập tính thuế sau giảm trừ
-    public decimal Pit { get; init; }                       // Thuế TNCN
-    public decimal LateFine { get; init; }
-    public decimal AdvanceDeduction { get; init; }
-    public decimal OtherDeductions => LateFine + AdvanceDeduction;
-    public decimal NetPay { get; init; }
-    public int NumberOfDependents { get; init; }
-    public List<(PayrollLineType Type, string Desc, decimal Amount, bool Taxable, bool Insurable)> Lines { get; init; } = new();
-}
+    private const string PayDaySettingKey = "PAYROLL_PAY_DAY";
 
-/// <summary>
-/// TRUNG TÂM tính lương — dùng VietnameseTaxEngine cho bảo hiểm + PIT.
-/// Thuật toán 10 bước theo phase-06 plan:
-/// 1. Load Timesheet locked
-/// 2. Load SalaryStructure hiệu lực
-/// 3. Lương cơ bản × (ActualDays / StandardDays) → BaseSalary line
-/// 4. + Tiền OT theo hệ số 150/200/300% × HourlyRate
-/// 5. + Allowances (chia taxable / exempt)
-/// 6. Gross taxable income
-/// 7. − Bảo hiểm ← VietnameseTaxEngine.CalculateInsurance
-/// 8. − Giảm trừ bản thân + người phụ thuộc
-/// 9. Thu nhập tính thuế
-/// 10. − PIT ← VietnameseTaxEngine.CalculateMonthlyPit
-/// 11. − Phạt đi muộn + tạm ứng
-/// 12. NetPay
-/// </summary>
-public class PayrollCalculationService
-{
     private readonly HRDbContext _db;
-    private readonly ITaxSettingsProvider? _taxSettingsProvider;
+    private readonly IStatutoryParameterProvider _parameters;
+    private readonly IAppSettings? _settings;
 
-    // ITaxSettingsProvider optional: null → fallback hằng số luật định trong VietnameseTaxEngine
-    // (giữ backward-compat cho unit test khởi tạo trực tiếp không qua DI).
-    public PayrollCalculationService(HRDbContext db, ITaxSettingsProvider? taxSettingsProvider = null)
+    /// <summary>
+    /// <paramref name="parameters"/> null -> dùng mặc định biên dịch sẵn (unit test khởi tạo trực
+    /// tiếp, và cả trường hợp bảng <c>hr.StatutoryParameters</c> chưa được seed).
+    /// </summary>
+    public PayrollCalculationService(
+        HRDbContext db,
+        IStatutoryParameterProvider? parameters = null,
+        IAppSettings? settings = null)
     {
         _db = db;
-        _taxSettingsProvider = taxSettingsProvider;
+        _parameters = parameters ?? DefaultStatutoryParameterProvider.Instance;
+        _settings = settings;
     }
 
     /// <summary>Tính cho 1 nhân viên. KHÔNG save (caller quản lý transaction).</summary>
@@ -68,7 +50,6 @@ public class PayrollCalculationService
         Guid? payrollRunId = null,
         CancellationToken ct = default)
     {
-        // 1. Timesheet
         var ts = await _db.MonthlyTimesheets
             .FirstOrDefaultAsync(t => t.EmployeeId == employeeId && t.Year == year && t.Month == month, ct)
             ?? throw new InvalidOperationException(
@@ -77,21 +58,17 @@ public class PayrollCalculationService
             throw new InvalidOperationException(
                 $"MonthlyTimesheet {month}/{year} chưa Locked — không thể tính lương.");
 
-        // 2. SalaryStructure hiệu lực đầu tháng
         var effectiveDate = new DateTime(year, month, 1);
-        var salary = await _db.SalaryStructures
-            .Where(s => s.EmployeeId == employeeId)
-            .ToListAsync(ct);
-        var effective = salary.GetEffectiveOn(effectiveDate)
+        var salary = (await _db.SalaryStructures.Where(s => s.EmployeeId == employeeId).ToListAsync(ct))
+            .GetEffectiveOn(effectiveDate)
             ?? throw new InvalidOperationException(
                 $"Không có SalaryStructure hiệu lực tại {effectiveDate:yyyy-MM-dd} cho nhân viên {employeeId}.");
 
-        // 3. Load Payroll draft (hoặc tạo mới)
         var payroll = await _db.Payrolls
             .FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.Year == year && p.Month == month, ct);
         if (payroll == null)
         {
-            payroll = new HR.Domain.Payroll(employeeId, month, year, effective.BaseSalary);
+            payroll = new HR.Domain.Payroll(employeeId, month, year, salary.BaseSalary);
             _db.Payrolls.Add(payroll);
         }
         else if (payroll.Status != PayrollStatus.Draft)
@@ -101,33 +78,35 @@ public class PayrollCalculationService
         }
         if (payrollRunId.HasValue) payroll.AssignToRun(payrollRunId.Value);
 
-        // 4. Số người phụ thuộc active trong tháng
-        var dependents = await _db.Dependents
-            .Where(d => d.EmployeeId == employeeId)
-            .ToListAsync(ct);
-        var effectiveDependents = dependents.Count(d => d.IsActiveOn(effectiveDate));
-        payroll.SetDependents(effectiveDependents);
+        var dependents = (await _db.Dependents.Where(d => d.EmployeeId == employeeId).ToListAsync(ct))
+            .Count(d => d.IsActiveOn(effectiveDate));
+        payroll.SetDependents(dependents);
 
-        // 5. Phụ cấp hiệu lực trong tháng
-        var allowances = await _db.Allowances
-            .Where(a => a.EmployeeId == employeeId)
-            .ToListAsync(ct);
-        var activeAllowances = allowances.Where(a => a.IsEffectiveOn(effectiveDate)).ToList();
-
-        // Phase 08: join AllowanceType để tách taxable/exempt theo TaxFreeMonthlyLimit (cap miễn thuế).
-        var allowanceTypeIds = activeAllowances.Select(a => a.AllowanceTypeId).Distinct().ToList();
-        var allowanceTypes = allowanceTypeIds.Count == 0
+        var allowances = (await _db.Allowances.Where(a => a.EmployeeId == employeeId).ToListAsync(ct))
+            .Where(a => a.IsEffectiveOn(effectiveDate))
+            .ToList();
+        var typeIds = allowances.Select(a => a.AllowanceTypeId).Distinct().ToList();
+        var allowanceTypes = typeIds.Count == 0
             ? new Dictionary<Guid, AllowanceType>()
-            : await _db.AllowanceTypes
-                .Where(t => allowanceTypeIds.Contains(t.Id))
-                .ToDictionaryAsync(t => t.Id, ct);
+            : await _db.AllowanceTypes.Where(t => typeIds.Contains(t.Id)).ToDictionaryAsync(t => t.Id, ct);
 
-        // 6. Tính — hằng số thuế động từ SystemConfig (category "Tax"), fallback luật định
-        var taxSettings = _taxSettingsProvider is null ? null : await _taxSettingsProvider.GetAsync(ct);
-        var result = ComputeCore(ts, effective, activeAllowances, effectiveDependents, taxSettings: taxSettings, allowanceTypes: allowanceTypes);
+        var payDate = await ResolvePayDateAsync(payrollRunId, year, month, ct);
+        var profile = await BuildProfileAsync(employeeId, year, month, effectiveDate, payroll, ct);
 
-        // 7. Ghi kết quả + line items
+        var periodParameters = await _parameters.ResolveAsync(new DateOnly(year, month, 1), ct);
+        var payDateParameters = await _parameters.ResolveAsync(payDate, ct);
+
+        var result = ComputeCore(ts, salary, allowances, dependents,
+            lateFinePerMinute: 0m,
+            allowanceTypes: allowanceTypes,
+            periodParameters: periodParameters,
+            payDateParameters: payDateParameters,
+            profile: profile,
+            payDate: payDate);
+
         payroll.SetInsurableSalary(result.InsurableSalary);
+        payroll.SetStatutorySnapshot(BuildSnapshot(result), payDate, result.PitMethod.ToString(),
+            result.TaxableGrossIncome);
         payroll.ClearLineItems();
         foreach (var (type, desc, amount, taxable, insurable) in result.Lines)
         {
@@ -139,186 +118,132 @@ public class PayrollCalculationService
             baseSalary: result.BaseSalaryProrated,
             overtimePay: result.OvertimePay,
             totalBonuses: result.OvertimePay + result.TaxableAllowances + result.ExemptAllowances + result.Bonuses,
-            insuranceDeduction: result.InsuranceEmployee,
+            insuranceDeduction: result.InsuranceEmployee + result.UnionDuesEmployee,
             taxDeduction: result.Pit,
             otherDeductions: result.OtherDeductions,
             grossPay: result.GrossPay,
             taxableIncome: result.TaxableIncome,
             netPay: result.NetPay,
             regularHours: ts.ActualWorkDays * 8m,
-            overtimeHours: ts.TotalOvertimeHours);
+            overtimeHours: result.OvertimeHours);
 
         return payroll;
     }
 
-    /// <summary>
-    /// Core computation — tách khỏi DB để test độc lập.
-    /// </summary>
-    public static PayrollCalculationResult ComputeCore(
-        MonthlyTimesheet ts,
-        SalaryStructure salary,
-        IReadOnlyCollection<Allowance> allowances,
-        int numberOfDependents,
-        decimal lateFinePerMinute = 0,
-        TaxSettings? taxSettings = null,
-        IReadOnlyDictionary<Guid, AllowanceType>? allowanceTypes = null)
+    /// <summary>Ngày trả của kỳ lương; kỳ chưa đặt -> ngày <c>PAYROLL_PAY_DAY</c> (mặc định 05) tháng sau.</summary>
+    public async Task<DateOnly> ResolvePayDateAsync(Guid? payrollRunId, int year, int month, CancellationToken ct = default)
     {
-        var lines = new List<(PayrollLineType, string, decimal, bool, bool)>();
+        var payDay = _settings?.GetInt(PayDaySettingKey, 5) ?? 5;
 
-        // 3. Lương cơ bản theo công thực tế
-        var standardDays = ts.StandardWorkDays > 0 ? ts.StandardWorkDays : 22m;
-        var attendanceRatio = standardDays > 0
-            ? (ts.ActualWorkDays + (decimal)ts.LeaveDaysPaid) / standardDays
-            : 0m;
-        attendanceRatio = Math.Min(1m, Math.Max(0m, attendanceRatio));
-        var baseSalaryProrated = Math.Round(salary.BaseSalary * attendanceRatio, 0);
-        lines.Add((PayrollLineType.BaseSalary,
-            $"Lương cơ bản {salary.BaseSalary:N0} × {ts.ActualWorkDays + ts.LeaveDaysPaid:F1}/{standardDays:F1}",
-            baseSalaryProrated, true, true));
-
-        // 4. Tiền OT theo hệ số 150/200/300% × HourlyRate
-        // HourlyRate = BaseSalary / (standardDays * 8h). Dùng công chuẩn của tháng.
-        var hourlyRate = standardDays > 0 ? Math.Round(salary.BaseSalary / (standardDays * 8m), 0) : 0m;
-        var otWeekdayPay = Math.Round(ts.OvertimeHoursWeekday * hourlyRate * 1.5m, 0);
-        var otSundayPay = Math.Round(ts.OvertimeHoursSunday * hourlyRate * 2.0m, 0);
-        var otHolidayPay = Math.Round(ts.OvertimeHoursHoliday * hourlyRate * 3.0m, 0);
-        var otNightBonusPay = Math.Round(ts.OvertimeHoursNight * hourlyRate * 0.3m, 0);
-        var overtimePay = otWeekdayPay + otSundayPay + otHolidayPay + otNightBonusPay;
-
-        if (overtimePay > 0)
-            lines.Add((PayrollLineType.Overtime,
-                $"OT: {ts.OvertimeHoursWeekday}h thường + {ts.OvertimeHoursSunday}h CN + {ts.OvertimeHoursHoliday}h lễ + {ts.OvertimeHoursNight}h đêm",
-                overtimePay, true, false));
-
-        // 5. Phụ cấp — chia taxable / exempt theo AllowanceType.TaxFreeMonthlyLimit (Phase 08).
-        // Quy ước (xem AllowanceType.cs): IsTaxable=true → toàn bộ chịu thuế (cap không áp dụng);
-        // IsTaxable=false & TaxFreeMonthlyLimit=0 → miễn hoàn toàn (không giới hạn, vd công tác phí);
-        // IsTaxable=false & TaxFreeMonthlyLimit>0 → phần ≤ cap miễn thuế, phần vượt tính vào chịu thuế.
-        var taxableAllowances = 0m;
-        var exemptAllowances = 0m;
-        foreach (var a in allowances)
+        if (payrollRunId.HasValue)
         {
-            var amount = a.Amount;
-            var type = allowanceTypes != null && allowanceTypes.TryGetValue(a.AllowanceTypeId, out var t) ? t : null;
-            bool insurable;
-
-            if (type == null)
-            {
-                // Không xác định được loại (dữ liệu cũ/thiếu) — an toàn: coi toàn bộ chịu thuế như trước đây.
-                taxableAllowances += amount;
-                insurable = false;
-            }
-            else if (type.IsTaxable)
-            {
-                taxableAllowances += amount;
-                insurable = type.IsInsurable;
-            }
-            else if (type.TaxFreeMonthlyLimit <= 0)
-            {
-                exemptAllowances += amount;
-                insurable = type.IsInsurable;
-            }
-            else
-            {
-                var exempt = Math.Min(amount, type.TaxFreeMonthlyLimit);
-                var taxablePart = amount - exempt;
-                exemptAllowances += exempt;
-                if (taxablePart > 0) taxableAllowances += taxablePart;
-                insurable = type.IsInsurable;
-            }
-
-            lines.Add((PayrollLineType.Allowance, $"Phụ cấp {(type?.Name ?? a.Id.ToString()[..8])}", amount, type?.IsTaxable ?? true, insurable));
+            var run = await _db.PayrollRuns.FirstOrDefaultAsync(r => r.Id == payrollRunId.Value, ct);
+            if (run is not null) return run.ResolvePayDate(payDay);
         }
 
-        // 6. Gross
-        var grossPay = baseSalaryProrated + overtimePay + taxableAllowances + exemptAllowances;
+        return DefaultPayDate(year, month, payDay);
+    }
 
-        // 7. Bảo hiểm — dùng InsurableSalary (không phải grossPay). Trần 46.8tr xử lý trong engine.
-        var insurableSalary = salary.InsurableSalary;
-        var insurance = VietnameseTaxEngine.CalculateInsurance(insurableSalary);
-        var empInsurance = insurance.Employee.Total;
-        lines.Add((PayrollLineType.InsuranceEmployee,
-            $"BHXH 8% + BHYT 1.5% + BHTN 1% trên {insurance.InsurableSalary:N0}",
-            empInsurance, false, false));
+    /// <summary>Hồ sơ thuế/bảo hiểm: cờ trên <c>Employee</c> + hợp đồng hiệu lực + luỹ kế giờ OT năm.</summary>
+    private async Task<PayrollEmployeeProfile> BuildProfileAsync(
+        Guid employeeId, int year, int month, DateTime effectiveDate, HR.Domain.Payroll payroll, CancellationToken ct)
+    {
+        var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId, ct);
 
-        // 8. Giảm trừ (chỉ để hiển thị breakdown — engine đã trừ trong CalculateMonthlyPit)
-        var personalDed = taxSettings?.PersonalDeduction ?? VietnameseTaxEngine.PersonalDeduction;
-        var dependentDedUnit = taxSettings?.DependentDeduction ?? VietnameseTaxEngine.DependentDeduction;
-        var dependentDed = dependentDedUnit * numberOfDependents;
-        lines.Add((PayrollLineType.PersonalDeduction, "Giảm trừ bản thân", personalDed, false, false));
-        if (numberOfDependents > 0)
-            lines.Add((PayrollLineType.DependentDeduction,
-                $"Giảm trừ {numberOfDependents} người phụ thuộc × {dependentDedUnit / 1_000_000m:0.#}tr",
-                dependentDed, false, false));
+        var contract = await _db.EmploymentContracts.AsNoTracking()
+            .Where(c => c.EmployeeId == employeeId
+                        && c.Status == ContractStatus.Active
+                        && c.StartDate <= effectiveDate
+                        && (c.EndDate == null || c.EndDate >= effectiveDate))
+            .OrderByDescending(c => c.StartDate)
+            .FirstOrDefaultAsync(ct);
 
-        // 9-10. PIT — chỉ tính trên phần THU NHẬP CHỊU THUẾ (grossPay - exempt allowances)
-        var taxableGross = baseSalaryProrated + overtimePay + taxableAllowances;
-        var pitResult = VietnameseTaxEngine.CalculateMonthlyPit(
-            grossSalary: taxableGross,
-            numberOfDependents: numberOfDependents,
-            socialInsurance: insurance.Employee.SocialInsurance,
-            healthInsurance: insurance.Employee.HealthInsurance,
-            unemploymentInsurance: insurance.Employee.UnemploymentInsurance,
-            personalDeduction: taxSettings?.PersonalDeduction,
-            dependentDeduction: taxSettings?.DependentDeduction);
-        var pit = pitResult.PitAmount;
-        if (pit > 0)
-            lines.Add((PayrollLineType.Pit,
-                $"Thuế TNCN (TN chịu thuế {pitResult.TaxableIncome:N0})", pit, false, false));
+        // Luỹ kế giờ OT từ đầu năm đến trước tháng này (trần 200h/năm — BLLĐ Đ.107).
+        var ytd = await _db.MonthlyTimesheets.AsNoTracking()
+            .Where(t => t.EmployeeId == employeeId && t.Year == year && t.Month < month)
+            .SumAsync(t => t.OvertimeHoursWeekday + t.OvertimeHoursSunday + t.OvertimeHoursHoliday
+                           + t.OvertimeHoursNight, ct);
 
-        // 11. Phạt đi muộn
-        var lateFine = Math.Round(ts.TotalLateMinutes * lateFinePerMinute, 0);
-        if (lateFine > 0)
-            lines.Add((PayrollLineType.LateFine,
-                $"Phạt đi muộn {ts.TotalLateMinutes} phút × {lateFinePerMinute:N0}",
-                lateFine, false, false));
-
-        // 12. Net pay
-        var netPay = grossPay - empInsurance - pit - lateFine;
-
-        return new PayrollCalculationResult
+        PitMethod? overrideMethod = null;
+        if (!string.IsNullOrWhiteSpace(employee?.PitMethodOverride)
+            && Enum.TryParse<PitMethod>(employee.PitMethodOverride, ignoreCase: true, out var parsed))
         {
-            BaseSalaryProrated = baseSalaryProrated,
-            OvertimePay = overtimePay,
-            TaxableAllowances = taxableAllowances,
-            ExemptAllowances = exemptAllowances,
-            Bonuses = 0m,
-            GrossPay = grossPay,
-            InsurableSalary = insurableSalary,
-            InsuranceEmployee = empInsurance,
-            TaxableIncome = pitResult.TaxableIncome,
-            Pit = pit,
-            LateFine = lateFine,
-            AdvanceDeduction = 0m,
-            NetPay = Math.Max(0m, netPay),
-            NumberOfDependents = numberOfDependents,
-            Lines = lines
+            overrideMethod = parsed;
+        }
+
+        return new PayrollEmployeeProfile
+        {
+            IsStandaloneProbation = contract?.IsStandaloneProbation ?? false,
+            IsProbation = contract?.Type == ContractType.Probation,
+            ContractMonths = contract?.TermMonths ?? 12,
+            IsTaxResident = employee?.IsTaxResident ?? true,
+            HasPitCommitment = employee?.HasPitCommitment ?? false,
+            IsUnionMember = employee?.IsUnionMember ?? false,
+            KeepSiOnUnpaidLeave = payroll.KeepSiOnUnpaidLeave,
+            PitMethodOverride = overrideMethod,
+            OvertimeHoursYearToDate = ytd,
+            Bonuses = payroll.PerformanceBonus + payroll.AttendanceBonus,
+            OfficialSalaryForProbation = 0m,
+            IsFullTime = contract is null || contract.Type != ContractType.Seasonal
         };
     }
 
+    private static string BuildSnapshot(PayrollCalculationResult result)
+        => JsonSerializer.Serialize(new
+        {
+            schema = "D06/1",
+            periodAsOf = result.PeriodMonth,
+            payDate = result.PayDate,
+            pitMethod = result.PitMethod.ToString(),
+            period = result.PeriodParameters,
+            payDateParameters = result.PayDateParameters,
+            notes = result.Notes
+        });
+
     /// <summary>
-    /// Tính ngược Gross từ Net — bisection loop.
-    /// Dùng khi nhân viên thoả thuận lương net và HR cần biết mức đóng BHXH tương ứng.
+    /// Tính ngược Gross từ Net — bisection trên CHÍNH engine đã dùng cho bảng lương (trước W2-25
+    /// hàm này gọi <c>VietnameseTaxEngine.CalculatePayroll</c>, tức luật cũ và lấy gross làm căn
+    /// cứ đóng bảo hiểm, nên ra số khác bảng lương thật).
     /// </summary>
     public static decimal CalculateGrossFromNet(
         decimal targetNet,
         int numberOfDependents = 0,
-        decimal maxIterations = 40)
+        DateOnly? periodMonth = null,
+        DateOnly? payDate = null,
+        StatutoryParameterSet? periodParameters = null,
+        StatutoryParameterSet? payDateParameters = null,
+        int maxIterations = 40)
     {
         if (targetNet <= 0) return 0m;
 
-        decimal low = targetNet;
-        decimal high = targetNet * 3m;  // gross tối đa 3× net (biên trên rộng)
+        var period = periodMonth ?? new DateOnly(2026, 1, 1);
+        var pay = payDate ?? DefaultPayDate(period.Year, period.Month);
+        periodParameters ??= VietnamStatutoryDefaults.Resolve(period);
+        payDateParameters ??= VietnamStatutoryDefaults.Resolve(pay);
+
+        decimal low = targetNet, high = targetNet * 3m;
 
         for (var i = 0; i < maxIterations; i++)
         {
             var mid = (low + high) / 2m;
-            var res = VietnameseTaxEngine.CalculatePayroll(mid, numberOfDependents);
-            var diff = res.NetSalary - targetNet;
-            if (Math.Abs(diff) < 1000m) return Math.Round(mid, 0);   // sai số ≤ 1000đ
-            if (diff > 0) high = mid;
-            else low = mid;
+            var net = NetForGross(mid, numberOfDependents, period, pay, periodParameters, payDateParameters);
+            var diff = net - targetNet;
+            if (Math.Abs(diff) < 1000m) return Math.Round(mid, 0, MidpointRounding.AwayFromZero);
+            if (diff > 0) high = mid; else low = mid;
         }
-        return Math.Round((low + high) / 2m, 0);
+
+        return Math.Round((low + high) / 2m, 0, MidpointRounding.AwayFromZero);
     }
+
+    private static decimal NetForGross(
+        decimal gross, int dependents, DateOnly period, DateOnly pay,
+        StatutoryParameterSet periodParameters, StatutoryParameterSet payDateParameters)
+        => PayrollTaxCalculator.Calculate(new PayrollTaxInput
+        {
+            PeriodMonth = period,
+            PayDate = pay,
+            BasePay = gross,
+            InsurableSalary = gross,
+            NumberOfDependents = dependents
+        }, periodParameters, payDateParameters).NetPay;
 }

@@ -1,3 +1,5 @@
+using BuildingBlocks.Endpoints;
+using UnitTests.TestSupport;
 using Catalog.Domain;
 using Catalog.Infrastructure;
 using FluentAssertions;
@@ -40,7 +42,7 @@ public class ReturnOrchestratorTests : IDisposable
     public void Dispose() { _sales.Dispose(); _catalog.Dispose(); _inventory.Dispose(); }
 
     private RestockService NewRestock() => new(_sales, _inventory);
-    private ReturnOrchestrator NewOrch() => new(_sales, _catalog, NewRestock());
+    private ReturnOrchestrator NewOrch() => new(_sales, _catalog, NewRestock(), new FakePublishEndpoint());
 
     private async Task<(Order order, OrderItem item, Product product, Warehouse mainWh)> SeedSoldAsync(
         Guid customerId, decimal price = 10_000_000m, Guid? categoryId = null)
@@ -52,11 +54,26 @@ public class ReturnOrchestratorTests : IDisposable
 
         var item = new OrderItem(product.Id, product.Name, product.Price, 1, product.Sku);
         var order = new Order(customerId, "HN", new List<OrderItem> { item });
+
+        // D08: quyền đổi trả phát sinh từ NGÀY GIAO (`DeliveredAt`), không phải ngày đặt — đơn đặt
+        // trước có thể giao sau hàng tuần. Nên đơn "đã bán" trong test phải được đưa qua đúng vòng
+        // đời W2-23 tới mốc đã giao, thay vì để nguyên Pending như trước.
+        order.Confirm();
+        order.MarkAsPaid("seed-pay");
+        order.MarkAsShipped("GHN-SEED", "GHN");
+        order.MarkAsDelivered();
         _sales.Orders.Add(order);
 
-        // Default policy
-        _sales.ReturnPolicies.Add(new ReturnPolicy("default",
-            daysForReturn: 7, daysForExchange: 15, daysForDefectReplace: 7));
+        // Chính sách mặc định theo ma trận D08 (`Sales/Infrastructure/Seed/ReturnPolicySeeder.cs:69`):
+        // đã mở hộp còn nguyên vẹn khấu trừ 15%, thiếu phụ kiện +10%.
+        var policy = new ReturnPolicy("default",
+            daysForReturn: 7, daysForExchange: 15, daysForDefectReplace: 7,
+            restockingFeePercent: 15m);
+        _sales.ReturnPolicies.Add(policy);
+        // Ba trường D08 còn là shadow property (cột thật trong CSDL, chưa nâng thành property C#).
+        _sales.Entry(policy).Property("MissingAccessoriesFeePercent").CurrentValue = 10m;
+        _sales.Entry(policy).Property("AllowOpenedBoxReturn").CurrentValue = true;
+        _sales.Entry(policy).Property("DaysForStatutoryReturn").CurrentValue = 0;
 
         var mainWh = new Warehouse("MAIN", "Kho chính", WarehouseType.Main);
         _inventory.Warehouses.Add(mainWh);
@@ -86,7 +103,9 @@ public class ReturnOrchestratorTests : IDisposable
         var stranger = Guid.NewGuid();
         var (order, item, _, _) = await SeedSoldAsync(owner);
         var orch = NewOrch();
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        // W2-10: lỗi nghiệp vụ nay là DomainException có mã HTTP (404 — không tiết lộ đơn có tồn
+        // tại hay không), không còn là InvalidOperationException bị middleware nuốt thành 500.
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await orch.RequestAsync(new CreateReturnRequestInput(order.Id, item.Id, ReturnType.Refund, "x"), stranger));
     }
 
@@ -95,13 +114,15 @@ public class ReturnOrchestratorTests : IDisposable
     {
         var customerId = Guid.NewGuid();
         var (order, item, _, _) = await SeedSoldAsync(customerId);
-        // Rewind OrderDate 30 ngày trước
-        typeof(Order).GetProperty(nameof(Order.OrderDate))!.SetValue(order, DateTime.UtcNow.AddDays(-30));
+        // D08: cửa sổ "đổi ý" 7 ngày đếm từ NGÀY GIAO (`DeliveredAt`), không phải `OrderDate`.
+        // Lùi ngày giao 30 ngày ⇒ quá hạn ⇒ 409.
+        typeof(Order).GetProperty(nameof(Order.DeliveredAt))!.SetValue(order, DateTime.UtcNow.AddDays(-30));
         await _sales.SaveChangesAsync();
 
         var orch = NewOrch();
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () =>
             await orch.RequestAsync(new CreateReturnRequestInput(order.Id, item.Id, ReturnType.Refund, "x"), customerId));
+        ex.Message.Should().Contain("quá hạn");
     }
 
     [Fact]
@@ -140,7 +161,7 @@ public class ReturnOrchestratorTests : IDisposable
     }
 
     [Fact]
-    public async Task Refund_MissingAccessories_HoanTien80Percent()
+    public async Task Refund_DoiY_ThieuPhuKien_TruPhiTheoChinhSach()
     {
         var customerId = Guid.NewGuid();
         var (order, item, _, _) = await SeedSoldAsync(customerId);
@@ -155,7 +176,35 @@ public class ReturnOrchestratorTests : IDisposable
         await _sales.SaveChangesAsync();
 
         var res = await orch.ProcessAfterInspectionAsync(rr.Id, "emp");
-        res.RefundAmount.Should().Be(8_000_000m); // 80% của 10M
+        // D08: phí khấu trừ CHỈ áp cho lý do "đổi ý" (mặc định của `CreateReturnRequestInput`), và
+        // bằng RestockingFeePercent (15%) + MissingAccessoriesFeePercent (10%) = 25% — thay cho
+        // hằng số 0.8 hardcode của bản cũ, vốn trừ 20% cho MỌI lý do kể cả khi shop giao sai.
+        res.RefundAmount.Should().Be(7_500_000m);
+    }
+
+    /// <summary>
+    /// D08 — mặt trái của test trên: hàng thiếu phụ kiện nhưng lý do là GIAO SAI (nghĩa vụ của
+    /// người bán) thì khấu trừ 0%, KHÔNG đọc chính sách. Trừ tiền khách ở ca này là trừ sai luật.
+    /// </summary>
+    [Fact]
+    public async Task Refund_GiaoSai_ThieuPhuKien_VanHoanDuTien()
+    {
+        var customerId = Guid.NewGuid();
+        var (order, item, _, _) = await SeedSoldAsync(customerId);
+        var returnsWh = new Warehouse("RET", "Kho trả", WarehouseType.Returns);
+        _inventory.Warehouses.Add(returnsWh);
+        await _inventory.SaveChangesAsync();
+
+        var orch = NewOrch();
+        var rr = await orch.RequestAsync(new CreateReturnRequestInput(
+            order.Id, item.Id, ReturnType.Refund, "Giao sai model",
+            ReasonCode: ReturnReasonCode.WrongItem), customerId);
+        rr.Approve("emp");
+        rr.RecordInspection(ReceivedCondition.MissingAccessories, returnsWh.Id, Guid.NewGuid());
+        await _sales.SaveChangesAsync();
+
+        var res = await orch.ProcessAfterInspectionAsync(rr.Id, "emp");
+        res.RefundAmount.Should().Be(10_000_000m);
     }
 
     [Fact]

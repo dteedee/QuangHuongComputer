@@ -20,35 +20,6 @@ public record ARInvoiceListDto(
     AgingBucket AgingBucket,
     Currency Currency);
 
-public record ARInvoiceDetailDto(
-    Guid Id,
-    string InvoiceNumber,
-    Guid? CustomerId,
-    Guid? OrganizationAccountId,
-    DateTime IssueDate,
-    DateTime DueDate,
-    decimal SubTotal,
-    decimal VatRate,
-    decimal VatAmount,
-    decimal TotalAmount,
-    decimal PaidAmount,
-    decimal OutstandingAmount,
-    InvoiceStatus Status,
-    AgingBucket AgingBucket,
-    Currency Currency,
-    string? Notes,
-    List<InvoiceLineDto> Lines,
-    List<PaymentApplicationDto> PaymentApplications);
-
-public record InvoiceLineDto(
-    Guid Id,
-    string Description,
-    decimal Quantity,
-    decimal UnitPrice,
-    decimal VatRate,
-    decimal LineTotal,
-    decimal VatAmount);
-
 public record PaymentApplicationDto(
     Guid Id,
     Guid PaymentIntentId,

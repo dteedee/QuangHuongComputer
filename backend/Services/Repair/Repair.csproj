@@ -9,6 +9,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.csproj" />
+    <!-- W2-13: in-process IStockLedger calls for parts reserve/commit/release. One direction only
+         (Repair -> Inventory) - see phase-51 Risk Assessment. -->
+    <ProjectReference Include="..\Inventory\Inventory.csproj" />
   </ItemGroup>
 
   <ItemGroup>

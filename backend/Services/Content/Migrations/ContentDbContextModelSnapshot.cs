@@ -842,6 +842,10 @@ namespace Content.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
+                    b.Property<decimal?>("FlashPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -852,6 +856,12 @@ namespace Content.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("QuantityLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SoldCount")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -868,7 +878,12 @@ namespace Content.Migrations
                     b.HasIndex("PromotionId")
                         .HasDatabaseName("IX_PromotionReward_Promotion");
 
-                    b.ToTable("PromotionRewards", "content");
+                    b.ToTable("PromotionRewards", "content", t =>
+                        {
+                            t.HasCheckConstraint("CK_PromotionRewards_FlashPrice_NonNegative", "\"FlashPrice\" IS NULL OR \"FlashPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_PromotionRewards_SoldCount_NonNegative", "\"SoldCount\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Content.Domain.PromotionUsage", b =>

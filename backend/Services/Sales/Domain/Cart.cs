@@ -3,24 +3,36 @@ using Sales.Application.Pricing;
 
 namespace Sales.Domain;
 
+/// <summary>
+/// Giỏ hàng của một khách (đã đăng nhập hoặc vãng lai).
+///
+/// D01: giá đã BAO GỒM VAT → <c>Total = tạm tính − giảm giá + phí ship</c>, KHÔNG cộng thuế.
+/// <see cref="TaxRate"/> chỉ còn là nhãn hiển thị mặc định; con số thuế có thẩm quyền được tính
+/// THEO DÒNG ở tầng ứng dụng (<c>CartVatBreakdownService</c>) vì chỉ ở đó mới join được
+/// <c>Categories.VatRate</c>/<c>VatReductionEligible</c> của từng sản phẩm.
+/// </summary>
 public class Cart : Entity<Guid>
 {
     public Guid CustomerId { get; private set; }
     public List<CartItem> Items { get; private set; } = new();
     public string? CouponCode { get; private set; }
     public decimal DiscountAmount { get; private set; }
-    // VAT chuẩn lấy từ BuildingBlocks.TaxRates (8% - VN hiện hành).
-    // TRƯỚC: hardcode 0.1m -> BUG pháp lý: mọi đơn hàng thu dư 2% VAT.
-    public decimal TaxRate { get; private set; } = TaxRates.VatStandard;
+
+    /// <summary>D01 §4 — nhãn hiển thị; không còn là nguồn thuế có thẩm quyền của dòng hàng.</summary>
+    public decimal TaxRate { get; private set; } = TaxRates.VatStatutoryStandard - TaxRates.VatReductionPoints;
+
     public decimal ShippingAmount { get; private set; }
+
+    /// <summary>
+    /// Định danh khách VÃNG LAI (cookie <c>qh_aid</c>). Giỏ của khách chưa đăng nhập sống trên
+    /// server theo khoá này, nên đổi máy/đổi tab không mất giỏ và giỏ gộp được khi khách đăng nhập.
+    /// </summary>
+    public string? AnonymousId { get; private set; }
 
     public decimal SubtotalAmount => Items.Sum(i => i.Subtotal);
     public decimal TotalAmount => Totals().Total;
 
-    /// <summary>
-    /// W0-4 / D01 — VAT ĐÃ NẰM TRONG GIÁ: đây là phần thuế TÁCH RA (để hiển thị/hoá đơn),
-    /// KHÔNG phải khoản cộng thêm vào <see cref="TotalAmount"/>.
-    /// </summary>
+    /// <summary>Phần VAT TÁCH RA khỏi <see cref="TotalAmount"/> (để hiển thị/hoá đơn), không cộng thêm.</summary>
     public decimal TaxAmount => Totals().TaxAmount;
 
     /// <summary>Giảm giá thực tế sau clamp (không vượt tạm tính).</summary>
@@ -32,14 +44,21 @@ public class Cart : Entity<Guid>
         CustomerId = customerId;
     }
 
+    /// <summary>Giỏ của khách vãng lai — chưa có tài khoản, khoá theo cookie.</summary>
+    public static Cart ForGuest(string anonymousId)
+    {
+        if (string.IsNullOrWhiteSpace(anonymousId))
+            throw new ArgumentException("anonymousId là bắt buộc cho giỏ khách vãng lai", nameof(anonymousId));
+
+        return new Cart(Guid.Empty) { AnonymousId = anonymousId.Trim() };
+    }
+
     protected Cart() { }
 
-    // Backward-compatible overload — dùng cho sản phẩm không có biến thể.
     public void AddItem(Guid productId, string productName, decimal price, int quantity)
         => AddItem(productId, productName, price, quantity, null, null, null);
 
-    // Overload có biến thể: giỏ hàng gộp theo (ProductId, VariantId).
-    // Hai biến thể khác nhau của cùng sản phẩm là 2 dòng hàng riêng.
+    /// <summary>Gộp theo (ProductId, VariantId): hai biến thể khác nhau là hai dòng riêng.</summary>
     public void AddItem(
         Guid productId,
         string productName,
@@ -53,7 +72,7 @@ public class Cart : Entity<Guid>
             throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
 
         var existingItem = Items.FirstOrDefault(i =>
-            i.ProductId == productId && i.VariantId == variantId);
+            i.ProductId == productId && i.VariantId == variantId && !i.IsGift);
 
         if (existingItem != null)
         {
@@ -65,20 +84,12 @@ public class Cart : Entity<Guid>
         }
     }
 
-    // Backward-compatible: xoá tất cả dòng hàng của productId (mọi biến thể).
-    public void RemoveItem(Guid productId)
-    {
-        Items.RemoveAll(i => i.ProductId == productId);
-    }
+    public void RemoveItem(Guid productId) => Items.RemoveAll(i => i.ProductId == productId);
 
-    // Xoá đúng 1 dòng theo (ProductId, VariantId).
     public void RemoveItem(Guid productId, Guid? variantId)
     {
         var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
-        if (item != null)
-        {
-            Items.Remove(item);
-        }
+        if (item != null) Items.Remove(item);
     }
 
     public void UpdateItemQuantity(Guid productId, int quantity)
@@ -87,27 +98,62 @@ public class Cart : Entity<Guid>
     public void UpdateItemQuantity(Guid productId, Guid? variantId, int quantity)
     {
         var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
-        if (item != null)
-        {
-            if (quantity <= 0)
-            {
-                Items.Remove(item);
-            }
-            else
-            {
-                item.UpdateQuantity(quantity);
-            }
-        }
+        if (item == null) return;
+
+        if (quantity <= 0) Items.Remove(item);
+        else item.UpdateQuantity(quantity);
     }
 
-    public void Clear()
+    public void Clear() => Items.Clear();
+
+    /// <summary>
+    /// Đồng bộ đơn giá của một dòng về giá server trước khi chốt đơn.
+    /// Gọi bởi <c>CheckoutOrchestrator</c> — giá trong giỏ không bao giờ là giá có thẩm quyền.
+    /// </summary>
+    public void UpdateItemPrice(Guid productId, Guid? variantId, decimal price)
     {
-        Items.Clear();
+        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && !i.IsGift);
+        item?.SetServerPrice(price);
     }
 
-    // [LEGACY - Phase 04] Áp mã thủ công. Ưu tiên gọi PricingEngine trong CheckoutOrchestrator.
-    // Giữ lại để tương thích endpoint /api/sales/cart/apply-coupon hiện có; sẽ gỡ khi frontend chuyển sang preview API.
-    [Obsolete("Dùng PricingEngine (Sales.Application.Pricing.IPricingEngine) — chỉ giữ vì tương thích /cart/apply-coupon.")]
+    /// <summary>
+    /// Gộp giỏ khách vãng lai vào giỏ tài khoản khi đăng nhập.
+    /// Quy tắc: cộng dồn số lượng theo (ProductId, VariantId); bỏ qua dòng quà (sẽ được
+    /// <c>PricingEngine</c> sinh lại); giá lấy theo giỏ ĐÍCH vì giá được tính lại lúc chốt đơn.
+    /// </summary>
+    public void MergeFrom(Cart source)
+    {
+        if (source == null || source.Id == Id) return;
+
+        foreach (var item in source.Items.Where(i => !i.IsGift))
+        {
+            AddItem(item.ProductId, item.ProductName, item.Price, item.Quantity,
+                item.VariantId, item.VariantName, item.VariantSku);
+        }
+
+        // Mã giảm giá của giỏ vãng lai chỉ được giữ khi giỏ đích chưa có mã.
+        if (string.IsNullOrWhiteSpace(CouponCode) && !string.IsNullOrWhiteSpace(source.CouponCode))
+        {
+            CouponCode = source.CouponCode;
+            DiscountAmount = source.DiscountAmount;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Gắn giỏ vãng lai vào tài khoản vừa đăng nhập/đăng ký.</summary>
+    public void AssignToCustomer(Guid customerId)
+    {
+        if (customerId == Guid.Empty) return;
+        CustomerId = customerId;
+        AnonymousId = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// CŨ — áp mã thủ công. Giá trị giảm được TÍNH LẠI ở server lúc chốt đơn
+    /// (<c>CheckoutOrchestrator</c>); giá trị lưu ở đây chỉ để hiển thị giỏ.
+    /// </summary>
     public void ApplyCoupon(string couponCode, decimal discountAmount)
     {
         if (discountAmount < 0)
@@ -123,8 +169,7 @@ public class Cart : Entity<Guid>
         DiscountAmount = 0;
     }
 
-    // Thêm hàng tặng (giá 0) — dùng cho khuyến mãi mua X tặng Y do PricingEngine phát hiện.
-    // Dòng gift KHÔNG gộp với dòng thường cùng ProductId+VariantId (khác flag IsGift).
+    /// <summary>Thêm hàng tặng (giá 0) do khuyến mãi mua X tặng Y. Luôn là dòng mới, không gộp.</summary>
     public void AddGiftItem(
         Guid productId,
         string productName,
@@ -137,18 +182,14 @@ public class Cart : Entity<Guid>
         if (quantity <= 0)
             throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
 
-        // Dòng gift luôn là dòng mới (không gộp) — giá = 0, đánh dấu IsGift + AppliedPromotionCode.
         var giftItem = new CartItem(productId, productName, price: 0m, quantity,
             variantId, variantName, variantSku);
         giftItem.MarkAsGift(promotionCode);
         Items.Add(giftItem);
     }
 
-    // Gỡ toàn bộ hàng tặng — gọi trước khi PricingEngine tính lại (tránh tồn đọng gift cũ).
-    public void ClearGiftItems()
-    {
-        Items.RemoveAll(i => i.IsGift);
-    }
+    /// <summary>Gỡ toàn bộ hàng tặng — gọi trước khi PricingEngine tính lại.</summary>
+    public void ClearGiftItems() => Items.RemoveAll(i => i.IsGift);
 
     public void SetShippingAmount(decimal amount)
     {
@@ -158,77 +199,19 @@ public class Cart : Entity<Guid>
     }
 
     /// <summary>
-    /// W0-4 / D01 — giá đã bao gồm VAT: Total = tạm tính − giảm giá + phí ship, KHÔNG cộng thuế.
-    /// TRƯỚC: `discounted + discounted*TaxRate + ship` → cộng thêm 8% lên giá mà storefront
-    /// đã ghi "đã bao gồm VAT". Dùng chung <see cref="DiscountAllocator"/> với Order để
-    /// giỏ hàng và đơn hàng không bao giờ ra hai con số khác nhau.
+    /// D01 — dùng chung <see cref="OrderTotalsCalculator"/> với Order để giỏ và đơn không bao giờ
+    /// ra hai con số khác nhau trên cùng dữ liệu.
     /// </summary>
-    private VatInclusiveTotals Totals() => DiscountAllocator.ComputeTotals(
-        Items.Select(i => i.Subtotal).ToList(),
+    private OrderTotals Totals() => OrderTotalsCalculator.Compute(
+        Items.Select((i, index) => new TotalsLineInput(
+            Sequence: index + 1,
+            UnitPriceIncludingVat: i.Price,
+            Quantity: i.Quantity,
+            LineDiscount: 0m,
+            VatRate: TaxRate,
+            IsGift: i.IsGift)).ToList(),
         DiscountAmount,
         ShippingAmount,
-        TaxRate);
-}
-
-public class CartItem
-{
-    public Guid ProductId { get; private set; }
-    public string ProductName { get; private set; } = string.Empty;
-    public decimal Price { get; private set; }
-    public int Quantity { get; private set; }
-    public decimal Subtotal => Price * Quantity;
-
-    // Biến thể sản phẩm — nullable để tương thích với sản phẩm không có biến thể.
-    // VariantName/VariantSku là SNAPSHOT tại thời điểm thêm giỏ,
-    // KHÔNG đổi khi admin sửa tên biến thể sau đó (ràng buộc lịch sử đơn hàng).
-    public Guid? VariantId { get; private set; }
-    public string? VariantName { get; private set; }
-    public string? VariantSku { get; private set; }
-
-    // Dòng gift do PricingEngine sinh ra (khuyến mãi mua X tặng Y).
-    // IsGift=true → giá luôn = 0, không hợp nhất với dòng thường cùng ProductId+VariantId.
-    public bool IsGift { get; private set; }
-    public string? AppliedPromotionCode { get; private set; }
-
-    // Backward-compatible constructor.
-    public CartItem(Guid productId, string productName, decimal price, int quantity)
-        : this(productId, productName, price, quantity, null, null, null)
-    {
-    }
-
-    public CartItem(
-        Guid productId,
-        string productName,
-        decimal price,
-        int quantity,
-        Guid? variantId,
-        string? variantName,
-        string? variantSku)
-    {
-        ProductId = productId;
-        ProductName = productName;
-        Price = price;
-        Quantity = quantity;
-        VariantId = variantId;
-        VariantName = variantName;
-        VariantSku = variantSku;
-        IsGift = false;
-    }
-
-    protected CartItem() { }
-
-    public void UpdateQuantity(int quantity)
-    {
-        if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than 0");
-
-        Quantity = quantity;
-    }
-
-    internal void MarkAsGift(string? promotionCode)
-    {
-        IsGift = true;
-        Price = 0m; // Dòng gift LUÔN giá 0 — bảo vệ tuyệt đối, không tin caller.
-        AppliedPromotionCode = promotionCode;
-    }
+        shippingDiscount: 0m,
+        shippingVatRate: TaxRate);
 }

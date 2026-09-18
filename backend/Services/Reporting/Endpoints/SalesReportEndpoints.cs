@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Sales.Infrastructure;
 using Sales.Domain;
 using Identity.Infrastructure;
+using BuildingBlocks.Time;
+using Reporting.Shared;
 
 namespace Reporting.Endpoints;
 
@@ -11,26 +13,25 @@ public static class SalesReportEndpoints
 {
     public static void MapSalesReportEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/sales-summary", async (SalesDbContext salesDb, string? startDate, string? endDate) =>
+        group.MapGet("/sales-summary", async (SalesDbContext salesDb, IBusinessClock clock, string? startDate, string? endDate) =>
         {
-            var today = DateTime.UtcNow.Date;
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : today.AddMonths(-12);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : today.AddDays(1);
+            var today = clock.TodayVn.ToDateTime(TimeOnly.MinValue);
+            ReportPeriod period;
+            try { period = ReportPeriod.Resolve(clock, startDate, endDate, defaultSpanMonths: 12); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            var (start, end) = (period.Start, period.End);
             var thisMonth = new DateTime(today.Year, today.Month, 1);
 
-            var ordersQuery = salesDb.Orders.Where(o => o.OrderDate >= start && o.OrderDate < end);
-
-            var totalOrders = await ordersQuery.CountAsync();
-            var totalRevenue = await ordersQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var monthRevenue = await salesDb.Orders
-                .Where(o => o.OrderDate >= thisMonth)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var todayRevenue = await salesDb.Orders
-                .Where(o => o.OrderDate >= today)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var todayOrders = await salesDb.Orders.CountAsync(o => o.OrderDate >= today);
+            // Requirement 1: cùng một RecognizedRevenue mọi nơi - khớp với dashboard-kpis,
+            // business-overview, comparison/revenue và Excel export cho cùng kỳ.
+            var totalOrders = await RevenueQueries.RecognizedInPeriod(salesDb, start, end).CountAsync();
+            var totalRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, start, end);
+            var monthRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, thisMonth, today.AddDays(1));
+            var todayRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, today, today.AddDays(1));
+            var todayOrders = await RevenueQueries.RecognizedInPeriod(salesDb, today, today.AddDays(1)).CountAsync();
 
             var rawMonthlyData = await salesDb.Orders
+                .Recognized()
                 .Where(o => o.OrderDate >= today.AddMonths(-11))
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
@@ -62,8 +63,7 @@ public static class SalesReportEndpoints
             var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-3);
             var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
-            var topProducts = await salesDb.Orders
-                .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled)
+            var topProducts = await RevenueQueries.RecognizedInPeriod(salesDb, start, end)
                 .SelectMany(o => o.Items)
                 .GroupBy(i => new { i.ProductId, i.ProductName })
                 .Select(g => new
@@ -82,7 +82,7 @@ public static class SalesReportEndpoints
         group.MapGet("/top-customers", async (SalesDbContext salesDb, IdentityDbContext identityDb, int top = 10) =>
         {
             var topCustomerIds = await salesDb.Orders
-                .Where(o => o.Status != OrderStatus.Cancelled)
+                .Recognized()
                 .GroupBy(o => o.CustomerId)
                 .Select(g => new
                 {
@@ -112,9 +112,10 @@ public static class SalesReportEndpoints
 
         group.MapGet("/business-overview", async (
             SalesDbContext salesDb, InventoryModule.Infrastructure.InventoryDbContext invDb,
-            Repair.Infrastructure.RepairDbContext repairDb, Accounting.Infrastructure.AccountingDbContext accDb) =>
+            Repair.Infrastructure.RepairDbContext repairDb, Accounting.Infrastructure.AccountingDbContext accDb,
+            IBusinessClock clock) =>
         {
-            var today = DateTime.UtcNow.Date;
+            var today = clock.TodayVn.ToDateTime(TimeOnly.MinValue);
             var thisMonth = new DateTime(today.Year, today.Month, 1);
             var lastMonth = thisMonth.AddMonths(-1);
 
@@ -122,15 +123,10 @@ public static class SalesReportEndpoints
             // concurrent operations started on the SAME context via Task.WhenAll, which
             // throws "A second operation started on this context before a previous
             // operation completed". Result sets are small; not worth IDbContextFactory.
-            // Revenue also now excludes unpaid orders, not just Cancelled ones (W2-8 owns
-            // the single shared "recognized revenue" predicate; this is a local patch only
-            // for this endpoint - see also ComparisonEndpoints.GetRevenuePeriodData).
-            var thisMonthRevenue = await salesDb.Orders
-                .Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var lastMonthRevenue = await salesDb.Orders
-                .Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
-                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            // Requirement 1: RecognizedRevenue shared helper - matches sales-summary,
+            // dashboard-kpis, comparison/revenue and Excel export for the same period.
+            var thisMonthRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, thisMonth, today.AddDays(1));
+            var lastMonthRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, lastMonth, thisMonth);
             var pendingOrders = await salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
             var inventoryValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
             var lowStockCount = await invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
@@ -140,12 +136,12 @@ public static class SalesReportEndpoints
                 .SumAsync(w => (decimal?)w.ActualCost) ?? 0;
             var totalAR = await accDb.Accounts.SumAsync(a => (decimal?)a.Balance) ?? 0;
 
-            var revenueGrowth = lastMonthRevenue > 0
-                ? Math.Round((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100, 1) : 100;
+            // Requirement 3: null + noBaseline instead of a fake "100%" when there is no prior period.
+            var revenueGrowth = GrowthCalculator.Compare(thisMonthRevenue, lastMonthRevenue);
 
             return Results.Ok(new
             {
-                Sales = new { ThisMonthRevenue = thisMonthRevenue, LastMonthRevenue = lastMonthRevenue, GrowthPercent = revenueGrowth, PendingOrders = pendingOrders },
+                Sales = new { ThisMonthRevenue = thisMonthRevenue, LastMonthRevenue = lastMonthRevenue, GrowthPercent = revenueGrowth.Percent, GrowthNoBaseline = revenueGrowth.NoBaseline, PendingOrders = pendingOrders },
                 Inventory = new { TotalValue = inventoryValue, LowStockCount = lowStockCount },
                 Repairs = new { PendingCount = pendingRepairs, ThisMonthRevenue = thisMonthRepairRevenue },
                 Accounting = new { TotalReceivables = totalAR }

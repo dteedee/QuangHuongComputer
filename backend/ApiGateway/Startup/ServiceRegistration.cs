@@ -1,3 +1,6 @@
+using ApiGateway.Seo;
+using BuildingBlocks.Time;
+using BuildingBlocks;
 using Accounting;
 using Ai;
 using Ai.Application;
@@ -45,7 +48,14 @@ public static class ServiceRegistration
         RegisterJsonAndControllers(builder);
         // Chạy sau RegisterModules để đảm bảo mọi assembly Services.* đã được load vào AppDomain
         // trước khi quét IValidator<T> (FluentValidation).
-        builder.Services.AddApplicationValidators();
+        // Platform kernel của W1-3 (IAppSettings, IDocumentNumberService, validators) + IBusinessClock.
+        // Trước đây host chỉ gọi AddApplicationValidators(), nên IAppSettings KHÔNG có trong DI:
+        // mọi endpoint minh hoạ nhận IAppSettings đều làm ASP.NET Core ném
+        // "Failure to infer one or more parameters" ngay lúc dựng bảng route (W2-9 PcBuilderSuggest
+        // đụng đúng lỗi này; Inventory và HR đã phải tự né trong DependencyInjection của module).
+        // AddPlatformKernel dùng TryAdd nên module nào đã tự đăng ký thì vẫn thắng.
+        builder.Services.AddPlatformKernel();
+        builder.Services.AddBusinessClock();
     }
 
     private static void MapOAuthEnvironmentVariables(WebApplicationBuilder builder)
@@ -91,10 +101,14 @@ public static class ServiceRegistration
         // D11: nothing registered OutputCache/ResponseCaching anywhere in the repo before this.
         // W1-6's MiddlewarePipeline.cs still needs app.UseOutputCache() and W2-17's SEO shell adds
         // the named policy that keys on path+page+filtered - both integration requests filed
-        // (see reports/integration-requests-w1.md). AddSeoShell() itself is NOT called here: it is
-        // an extension method on BuildingBlocks/Seo, which does not exist yet in this wave (W2-17,
-        // wave 2) - calling it now would not compile.
+        // (see reports/integration-requests-w1.md).
         builder.Services.AddOutputCache();
+
+        // W2-17 đã có: đăng ký SEO shell (D11). Trước đây Program.cs gọi app.MapSeoShell() nhưng
+        // AddSeoShell() không ai gọi, nên SeoShellTemplateLoader không nằm trong DI và ASP.NET Core
+        // suy tham số đó thành body -> "Body was inferred but the method does not allow inferred
+        // body parameters" ngay lúc dựng bảng route, API không khởi động được.
+        builder.Services.AddSeoShell(builder.Configuration);
 
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         // Tagged "ready": /health/ready filters on this tag and matched NOTHING before, so it always

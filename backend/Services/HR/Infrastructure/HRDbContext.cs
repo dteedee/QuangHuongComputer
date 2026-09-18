@@ -38,6 +38,10 @@ public class HRDbContext : DbContext
     public DbSet<EmployeeAsset> EmployeeAssets => Set<EmployeeAsset>();
     public DbSet<MonthlyTimesheet> MonthlyTimesheets => Set<MonthlyTimesheet>();
 
+    // ===== W2-25 / D06 — tham số pháp luật hiệu lực theo ngày + ngày nghỉ lễ =====
+    public DbSet<StatutoryParameter> StatutoryParameters => Set<StatutoryParameter>();
+    public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("hr");
@@ -63,6 +67,9 @@ public class HRDbContext : DbContext
             entity.Property(e => e.SocialInsuranceNumber).HasMaxLength(50);
             // Phase 06 fields
             entity.Property(e => e.IdCardIssuePlace).HasMaxLength(200);
+            // W2-25 / D06 §4 — cờ thuế/bảo hiểm của cá nhân.
+            entity.Property(e => e.IsTaxResident).HasDefaultValue(true);
+            entity.Property(e => e.PitMethodOverride).HasMaxLength(32);
 
             entity.HasIndex(e => e.EmployeeCode).IsUnique();
             // W1-11: email nhân sự là khoá nghiệp vụ (đăng nhập, phiếu lương, thuế TNCN) -
@@ -72,6 +79,12 @@ public class HRDbContext : DbContext
                 .HasDatabaseName("IX_Employee_Department_Status");
             entity.HasIndex(e => new { e.Status, e.HireDate });
             entity.HasIndex(e => e.StoreId).HasDatabaseName("IX_Employee_StoreId");
+            entity.Property(e => e.UserId).HasMaxLength(450); // khớp cỡ khoá chính AspNetUsers.Id
+            // W2-7 khoản 1: 1 tài khoản đăng nhập chỉ được gắn ĐÚNG 1 nhân viên — filtered vì
+            // UserId có thể NULL (nhân viên chưa cấp tài khoản).
+            entity.HasIndex(e => e.UserId).IsUnique()
+                .HasDatabaseName("IX_Employees_UserId_Unique")
+                .HasFilter("\"UserId\" IS NOT NULL");
         });
 
         // ===== Phase 06 — Dependent =====
@@ -97,6 +110,8 @@ public class HRDbContext : DbContext
             entity.HasIndex(e => e.EmployeeId).HasDatabaseName("IX_Contract_EmployeeId");
             entity.HasIndex(e => new { e.Type, e.EndDate }).HasDatabaseName("IX_Contract_Type_EndDate");
             entity.HasIndex(e => e.ContractNumber).IsUnique();
+            // W2-25 / D06 §4 — TermMonths là thuộc tính suy ra, không phải cột.
+            entity.Ignore(e => e.TermMonths);
         });
 
         // ===== Phase 06 — SalaryStructure =====
@@ -164,6 +179,8 @@ public class HRDbContext : DbContext
             entity.Property(e => e.TotalNetPay).HasPrecision(18, 2);
             entity.Property(e => e.TotalTax).HasPrecision(18, 2);
             entity.Property(e => e.TotalInsurance).HasPrecision(18, 2);
+            // W2-25 / D06 §3 — ngày trả quyết định bộ tham số THUẾ TNCN của cả kỳ.
+            entity.Property(e => e.PayDate).HasColumnType("date");
             // 1-N tới Payroll qua backing field _payrolls; PayrollRunId đã tồn tại sẵn trên
             // bảng Payrolls (không cần migration) — trước đây bị Ignore nên .Include(r => r.Payrolls)
             // luôn throw runtime (payroll calculate/approve 500 ở mọi request).
@@ -205,7 +222,43 @@ public class HRDbContext : DbContext
             entity.Property(e => e.OvertimeHoursSunday).HasPrecision(8, 2);
             entity.Property(e => e.OvertimeHoursHoliday).HasPrecision(8, 2);
             entity.Property(e => e.OvertimeHoursNight).HasPrecision(8, 2);
+            // W2-25 / D06 §4 — OT đêm tách theo loại ngày (hệ số 200/270/390%).
+            entity.Property(e => e.OvertimeHoursNightWeekday).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHoursNightRestDay).HasPrecision(8, 2);
+            entity.Property(e => e.OvertimeHoursNightHoliday).HasPrecision(8, 2);
+            entity.Property(e => e.NightShiftHours).HasPrecision(8, 2);
             entity.HasIndex(e => new { e.EmployeeId, e.Year, e.Month }).IsUnique();
+        });
+
+        // ===== W2-25 / D06 §3 — tham số pháp luật hiệu lực theo ngày =====
+        modelBuilder.Entity<StatutoryParameter>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.EffectiveFrom).HasColumnType("date");
+            entity.Property(e => e.NumberValue).HasPrecision(18, 4);
+            entity.Property(e => e.JsonValue).HasColumnType("jsonb");
+            entity.Property(e => e.Unit).HasConversion<string>().HasMaxLength(16).IsRequired();
+            entity.Property(e => e.LegalBasis).HasMaxLength(400);
+            entity.Property(e => e.SourceUrl).HasMaxLength(600);
+            entity.Property(e => e.Note).HasMaxLength(1000);
+            // Đổi luật = THÊM dòng; một mã chỉ có MỘT dòng cho mỗi mốc hiệu lực.
+            entity.HasIndex(e => new { e.Code, e.EffectiveFrom })
+                .IsUnique()
+                .HasDatabaseName("IX_StatutoryParameters_Code_EffectiveFrom");
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_StatutoryParameters_OneValue",
+                "(\"NumberValue\" IS NULL) <> (\"JsonValue\" IS NULL)"));
+        });
+
+        modelBuilder.Entity<PublicHoliday>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Date).HasColumnType("date");
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.LegalBasis).HasMaxLength(300);
+            entity.Property(e => e.Note).HasMaxLength(1000);
+            entity.HasIndex(e => e.Date).IsUnique().HasDatabaseName("IX_PublicHolidays_Date");
         });
         
         // Timesheet configuration
@@ -239,6 +292,12 @@ public class HRDbContext : DbContext
             entity.Property(e => e.GrossPay).HasPrecision(18, 2);
             entity.Property(e => e.InsurableSalary).HasPrecision(18, 2);
             entity.Property(e => e.TaxableIncome).HasPrecision(18, 2);
+
+            // W2-25 / D06 §3 — snapshot tham số để phiếu lương đã trả tái lập được.
+            entity.Property(e => e.StatutorySnapshotJson).HasColumnType("jsonb");
+            entity.Property(e => e.PayDate).HasColumnType("date");
+            entity.Property(e => e.PitMethod).HasMaxLength(32);
+            entity.Property(e => e.TaxableGrossIncome).HasPrecision(18, 2);
 
             // W1-11: một nhân viên chỉ có ĐÚNG MỘT bảng lương cho mỗi tháng.
             // Trước đây chỉ là index thường -> chạy bảng lương hai lần tạo bản ghi trùng.

@@ -1,9 +1,11 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
+using Accounting.Application.CashBook;
+using Accounting.Application.Invoicing;
 using Accounting.Infrastructure;
 using Accounting.Infrastructure.EInvoice;
-using Microsoft.Extensions.Configuration;
 using BuildingBlocks.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Accounting;
 
@@ -29,26 +31,39 @@ public static class DependencyInjection
                 options.AddInterceptors(interceptor);
         });
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        // W2-14: dịch vụ nghiệp vụ của module.
+        services.AddScoped<OrderInvoiceService>();
+        services.AddScoped<ManualInvoiceService>();
+        services.AddScoped<CreditNoteService>();
+        services.AddScoped<CashBookService>();
 
-        // E-Invoice provider: use MISA if configured, otherwise Mock
-        var einvoiceProvider = configuration["EInvoice:Provider"] ?? "Mock";
-        if (einvoiceProvider == "MISA")
-        {
-            var misaConfig = new MISAConfig
-            {
-                AppId = configuration["EInvoice:MISA:AppId"] ?? "",
-                SecretKey = configuration["EInvoice:MISA:SecretKey"] ?? "",
-                TaxCode = configuration["EInvoice:MISA:TaxCode"] ?? "",
-                Endpoint = configuration["EInvoice:MISA:Endpoint"] ?? "https://api-einvoice.misa.vn/api/v1"
-            };
-            services.AddSingleton(misaConfig);
-            services.AddHttpClient<IEInvoiceProvider, MISAEInvoiceProvider>();
-        }
+        // E-invoice (D07): adapter TRUNG LẬP, chọn theo EInvoice:Mode.
+        //   External (mặc định, cả Production) — hệ thống vẫn sinh hoá đơn nội bộ và xếp hàng
+        //     "chờ xuất HĐĐT"; kế toán xuất trên phần mềm NCC đang dùng rồi ghi nhận số/ký hiệu.
+        //   Sandbox — đánh dấu rõ là mô phỏng (tiền tố SandboxPrefix), chỉ dùng cho dev/demo.
+        // MISAEInvoiceProvider đã bị xoá: nó gọi một API hư cấu (D07 §Phản biện) và không bao giờ
+        // phát hành được hoá đơn thật. MockEInvoiceProvider được SandboxEInvoiceProvider thay thế.
+        // Tầng Application/EInvoice (hàng đợi + dịch vụ phát hành) là phần việc còn lại của W2-24.
+        var einvoiceOptions = new EInvoiceOptions();
+        configuration.GetSection("EInvoice").Bind(einvoiceOptions);
+        services.AddSingleton(einvoiceOptions);
+
+        // Chốt an toàn khởi động (Sandbox trên Production / Live chưa có adapter).
+        EInvoiceStartupGuard.Validate(einvoiceOptions, configuration);
+
+        if (einvoiceOptions.Mode == EInvoiceMode.Sandbox)
+            services.AddScoped<IEInvoiceProvider, SandboxEInvoiceProvider>();
         else
-        {
-            services.AddSingleton<IEInvoiceProvider, MockEInvoiceProvider>();
-        }
+            services.AddScoped<IEInvoiceProvider, ExternalEInvoiceProvider>();
+
+        // Tầng nghiệp vụ HĐĐT (W2-24): phát hành có kiểm tra trạng thái + hàng đợi chờ xuất.
+        services.AddScoped<Application.EInvoice.EInvoiceService>();
+        services.AddScoped<Application.EInvoice.EInvoiceQueueService>();
+
+        // Khối "người bán" in trên hoá đơn — đọc từ cấu hình, không còn là hằng số trong template.
+        var companyProfile = new CompanyProfileOptions();
+        configuration.GetSection(CompanyProfileOptions.SectionName).Bind(companyProfile);
+        services.AddSingleton(companyProfile);
 
         return services;
     }

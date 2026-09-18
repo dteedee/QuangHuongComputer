@@ -63,4 +63,24 @@ internal static class CatalogProductHelpers
         await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
         await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id) + CacheVersion);
     }
+
+    /// <summary>
+    /// Bước 5 "Rating/review count... become real": gọi sau MỌI thay đổi trạng thái duyệt của
+    /// review (approve/reject/xoá) - tính lại từ đúng tập review `IsApproved = true` hiện tại,
+    /// không cộng/trừ tăng dần (tránh lệch nếu có thao tác song song).
+    /// </summary>
+    internal static async Task RecalculateReviewStatsAsync(CatalogDbContext db, Guid productId, CancellationToken ct = default)
+    {
+        var approvedRatings = await db.ProductReviews.AsNoTracking()
+            .Where(r => r.ProductId == productId && r.IsApproved)
+            .Select(r => r.Rating)
+            .ToListAsync(ct);
+
+        var product = await db.Products.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == productId, ct);
+        if (product == null) return;
+
+        var average = approvedRatings.Count > 0 ? (float)Math.Round(approvedRatings.Average(), 2) : 0f;
+        product.UpdateReviewStats(average, approvedRatings.Count);
+        await db.SaveChangesAsync(ct);
+    }
 }

@@ -40,15 +40,9 @@ public static class DependencyInjection
         // Notification Service
         services.AddScoped<INotificationService, NotificationService>();
 
-        // AI Chat Service
+        // AI Chat Service (W2-15: calls Ai.Application.IAiService in-process now, no more
+        // "AiService" HttpClient looping back to this same host)
         services.AddScoped<IAiChatService, AiChatService>();
-
-        // HTTP Client for AI Service
-        services.AddHttpClient("AiService", client =>
-        {
-            var aiServiceUrl = configuration["Services:AiService:Url"] ?? "http://localhost:5000";
-            client.BaseAddress = new Uri(aiServiceUrl);
-        });
 
         return services;
     }

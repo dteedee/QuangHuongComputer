@@ -18,7 +18,8 @@ public interface ILeadManagementService
     /// <summary>
     /// Create a new lead
     /// </summary>
-    Task<Lead> CreateLeadAsync(CreateLeadDto dto, CancellationToken cancellationToken = default);
+    /// <summary>Returns null when no pipeline stage exists - caller must reject the request.</summary>
+    Task<Lead?> CreateLeadAsync(CreateLeadDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Update lead

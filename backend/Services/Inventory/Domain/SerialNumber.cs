@@ -15,6 +15,13 @@ public class SerialNumber : Entity<Guid>
 
     // Traceability
     public Guid? PurchaseOrderId { get; private set; }
+
+    /// <summary>
+    /// W2-5 (cho W2-12): dòng GRN đã sinh ra serial này. Nhờ nó truy được giá vốn và lô nhập của
+    /// từng máy, và phiếu trả hàng NCC biết đúng serial nào thuộc lô nào.
+    /// </summary>
+    public Guid? GoodsReceivedNoteItemId { get; set; }
+
     public Guid? OrderId { get; private set; } // Sales order that sold this unit
     public Guid? WorkOrderId { get; private set; } // Repair work order
     public string? CustomerId { get; private set; } // Customer who bought this unit

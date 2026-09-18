@@ -10,6 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks.csproj" />
     <ProjectReference Include="..\Catalog\Catalog.csproj" />
+    <!-- W2-6: /api/public/warranty/lookup-by-phone cross-verifies against the real customer
+         phone (ApplicationUser.PhoneNumber), in-process like the Catalog reference above —
+         no HTTP hop, same pattern as WarrantyPolicyResolver/OrderFulfilledConsumer. -->
+    <ProjectReference Include="..\Identity\Identity.csproj" />
   </ItemGroup>
 
   <ItemGroup>

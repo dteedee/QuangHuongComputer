@@ -50,6 +50,10 @@ public class ExpiredReservationCleanupService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+        // W2-5: nhả giữ chỗ cũng là một thay đổi tồn kho — phải đi qua sổ cái để có bút toán
+        // "Released" kèm người thực hiện (ở đây là chính job này), thay vì sửa lén ReservedQuantity.
+        var ledger = scope.ServiceProvider
+            .GetRequiredService<InventoryModule.Application.Stock.IStockLedger>();
 
         var now = DateTime.UtcNow;
 
@@ -70,15 +74,23 @@ public class ExpiredReservationCleanupService : BackgroundService
         {
             try
             {
-                // Release stock
-                var inventoryItem = await dbContext.InventoryItems
-                    .FirstOrDefaultAsync(i => i.Id == reservation.InventoryItemId, cancellationToken);
+                var location = await dbContext.InventoryItems
+                    .Where(i => i.Id == reservation.InventoryItemId)
+                    .Select(i => new InventoryModule.Application.Stock.StockLocation(
+                        i.ProductId, i.VariantId, i.WarehouseId))
+                    .FirstOrDefaultAsync(cancellationToken);
 
-                if (inventoryItem != null)
+                if (location.ProductId != Guid.Empty)
                 {
-                    inventoryItem.ReleaseReservedStock(reservation.Quantity);
+                    await ledger.ReleaseAsync(location, reservation.Quantity,
+                        new InventoryModule.Application.Stock.StockLedgerContext(
+                            "system:expired-reservation-cleanup",
+                            reservation.ReferenceId, reservation.ReferenceType,
+                            Notes: $"Giữ chỗ hết hạn lúc {reservation.ExpiresAt:o}"),
+                        cancellationToken);
+
                     _logger.LogInformation(
-                        "Released {Quantity}units of product {ProductId} from expired reservation {ReservationId}",
+                        "Released {Quantity} units of product {ProductId} from expired reservation {ReservationId}",
                         reservation.Quantity, reservation.ProductId, reservation.Id);
                 }
 

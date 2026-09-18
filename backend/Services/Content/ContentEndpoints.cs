@@ -22,14 +22,29 @@ public static class ContentEndpoints
         // ==================== PUBLIC ENDPOINTS ====================
 
         // Public Posts
-        group.MapGet("/posts", async (PostType? type, ContentDbContext db) =>
+        group.MapGet("/posts", async (PostType? type, string? tag, string? category, ContentDbContext db, HttpContext http) =>
         {
-            var query = db.Posts.Where(p => p.Status == PostStatus.Published);
-            
+            // D10: cùng scheduling predicate với detail-by-slug — 1 nguồn sự thật duy nhất.
+            var query = db.Posts.Where(Post.PublishedPredicate(DateTime.UtcNow));
+
             if (type.HasValue)
             {
                 query = query.Where(p => p.Type == type.Value);
             }
+
+            // D10: filter theo tag (scope-in) — Tags lưu List<string>, EF dịch Contains sang @> jsonb/array.
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                query = query.Where(p => p.Tags.Contains(tag));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(p => p.Category == category);
+            }
+
+            // D10: public response cache tối đa 5 phút (không job nền — TTL ngắn thay thế).
+            http.Response.Headers.CacheControl = "public, max-age=300";
 
             return await query
                 .OrderByDescending(p => p.PublishedAt)
@@ -38,7 +53,10 @@ public static class ContentEndpoints
 
         group.MapGet("/posts/{slug}", async (string slug, ContentDbContext db) =>
         {
-            var post = await db.Posts.FirstOrDefaultAsync(p => p.Slug == slug);
+            // D10: scheduling predicate dùng chung (list/detail/related/sitemap) —
+            // trước đây thiếu filter Status -> draft/scheduled post lộ qua URL trực tiếp.
+            var predicate = Post.PublishedPredicate(DateTime.UtcNow);
+            var post = await db.Posts.Where(p => p.Slug == slug).Where(predicate).FirstOrDefaultAsync();
             return post is not null ? Results.Ok(post) : Results.NotFound();
         });
 
@@ -67,7 +85,50 @@ public static class ContentEndpoints
             });
         });
 
-        // ==================== FLASH SALES PUBLIC ENDPOINTS ====================
+        // ==================== PROMOTIONS (one discount engine) ====================
+
+        // GET /api/content/promotions/active — hợp đồng cho storefront (phase-20 step 5,
+        // "làm TRƯỚC vì W2-3 phụ thuộc track này"). FlashSale giờ là Promotion.Type=FlashSale;
+        // mỗi reward mang FlashPrice/QuantityLimit/SoldCount theo từng sản phẩm.
+        // Contract ghi ở docs/api-contracts/content-promotions.md.
+        group.MapGet("/promotions/active", async (ContentDbContext db) =>
+        {
+            var now = DateTime.UtcNow;
+            var promos = await db.Promotions
+                .Include(p => p.Rewards)
+                .Where(p => p.Type == PromotionType.FlashSale
+                    && p.Status == PromotionStatus.Active
+                    && p.StartAt <= now
+                    && (p.EndAt == null || p.EndAt >= now))
+                .OrderByDescending(p => p.Priority)
+                .ToListAsync();
+
+            var result = promos.Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.EndAt,
+                Products = p.Rewards
+                    .Where(r => r.ProductId.HasValue)
+                    .Select(r => new
+                    {
+                        r.ProductId,
+                        r.VariantId,
+                        FlashPrice = r.FlashPrice,
+                        r.QuantityLimit,
+                        r.SoldCount,
+                        Remaining = r.QuantityLimit.HasValue ? r.QuantityLimit.Value - r.SoldCount : (int?)null,
+                        IsSoldOut = r.IsSoldOut(),
+                    }),
+            });
+
+            return Results.Ok(result);
+        });
+
+        // ==================== FLASH SALES PUBLIC ENDPOINTS (legacy, W2-2 giữ 1 đợt) ====================
+        // [Obsolete] bảng FlashSale — dùng /api/content/promotions/active phía trên.
+        // Giữ endpoint cũ 1 đợt (risk assessment: xoá sau khi W2-3 xác nhận migrate xong).
 
         // Get active flash sales
         group.MapGet("/flash-sales/active", async (ContentDbContext db, ICacheService cache) =>
@@ -323,17 +384,18 @@ public static class ContentEndpoints
             return page != null ? Results.Ok(page) : Results.NotFound();
         });
 
-        adminGroup.MapPost("/pages", async (CreatePageDto model, ContentDbContext db) =>
+        adminGroup.MapPost("/pages", async (CreatePageDto model, ContentDbContext db, ICacheService cache) =>
         {
             var page = new CMSPage(model.Title, model.Slug, model.Content, model.Type);
             if (model.IsPublished) page.Publish();
-            
+
             db.Pages.Add(page);
             await db.SaveChangesAsync();
+            await cache.RemoveAsync($"cache:page:{page.Slug}");
             return Results.Created($"/api/content/pages/{page.Slug}", page);
         });
 
-        adminGroup.MapPut("/pages/{id:guid}", async (Guid id, UpdatePageDto model, ContentDbContext db) =>
+        adminGroup.MapPut("/pages/{id:guid}", async (Guid id, UpdatePageDto model, ContentDbContext db, ICacheService cache) =>
         {
             var page = await db.Pages.FindAsync(id);
             if (page == null) return Results.NotFound();
@@ -343,10 +405,12 @@ public static class ContentEndpoints
             else if (!model.IsPublished && page.IsPublished) page.Unpublish();
 
             await db.SaveChangesAsync();
+            // Bug đã sửa: write trước đây không invalidate cache -> edit vô hình tới 1h.
+            await cache.RemoveAsync($"cache:page:{page.Slug}");
             return Results.Ok(page);
         });
 
-        adminGroup.MapDelete("/pages/{id:guid}", async (Guid id, ContentDbContext db, HttpContext httpContext) =>
+        adminGroup.MapDelete("/pages/{id:guid}", async (Guid id, ContentDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
             var page = await db.Pages.FindAsync(id);
             if (page == null) return Results.NotFound();
@@ -355,6 +419,7 @@ public static class ContentEndpoints
 
             db.Pages.Remove(page);
             await db.SaveChangesAsync();
+            await cache.RemoveAsync($"cache:page:{page.Slug}");
             await httpContext.LogAuditAsync("Delete", "CMSPage", id.ToString(), $"Title: {page.Title}, Slug: {page.Slug}");
             return Results.NoContent();
         });

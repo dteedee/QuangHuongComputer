@@ -37,7 +37,7 @@ public static class ExcelExportEndpoints
         group.MapGet("/export/top-products", async (SalesDbContext salesDb, int top = 50) =>
         {
             var topProducts = await salesDb.Orders
-                .Where(o => o.Status != OrderStatus.Cancelled).SelectMany(o => o.Items)
+                .Recognized().SelectMany(o => o.Items)
                 .GroupBy(i => new { i.ProductId, i.ProductName })
                 .Select(g => new { ProductName = g.Key.ProductName, TotalQuantity = g.Sum(i => i.Quantity), TotalRevenue = g.Sum(i => i.UnitPrice * i.Quantity), OrderCount = g.Select(i => i.OrderId).Distinct().Count() })
                 .OrderByDescending(x => x.TotalRevenue).Take(top).ToListAsync();
@@ -130,8 +130,8 @@ public static class ExcelExportEndpoints
             summary.Cell(1, 1).Style.Font.Bold = true; summary.Cell(1, 1).Style.Font.FontSize = 18;
             summary.Cell(2, 1).Value = $"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
 
-            var totalRevenue = await salesDb.Orders.Where(o => o.Status != OrderStatus.Cancelled).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var monthRevenue = await salesDb.Orders.Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var totalRevenue = await salesDb.Orders.Recognized().SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var monthRevenue = await salesDb.Orders.Recognized().Where(o => o.OrderDate >= thisMonth).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var totalOrders = await salesDb.Orders.CountAsync();
             var invValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
             var repairRevenue = await repairDb.WorkOrders.Where(w => w.Status == WorkOrderStatus.Completed).SumAsync(w => (decimal?)w.ActualCost) ?? 0;
@@ -147,7 +147,7 @@ public static class ExcelExportEndpoints
             summary.Range("B5:B13").Style.NumberFormat.Format = "#,##0";
             summary.Columns().AdjustToContents();
 
-            var topProducts = await salesDb.Orders.Where(o => o.Status != OrderStatus.Cancelled).SelectMany(o => o.Items)
+            var topProducts = await salesDb.Orders.Recognized().SelectMany(o => o.Items)
                 .GroupBy(i => new { i.ProductId, i.ProductName })
                 .Select(g => new { g.Key.ProductName, Qty = g.Sum(i => i.Quantity), Revenue = g.Sum(i => i.UnitPrice * i.Quantity) })
                 .OrderByDescending(x => x.Revenue).Take(20).ToListAsync();
@@ -162,7 +162,7 @@ public static class ExcelExportEndpoints
             productsSheet.Columns().AdjustToContents();
 
             var monthlyData = await salesDb.Orders
-                .Where(o => o.OrderDate >= today.AddMonths(-11) && o.Status != OrderStatus.Cancelled)
+                .Recognized().Where(o => o.OrderDate >= today.AddMonths(-11))
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month).ToListAsync();
@@ -190,7 +190,7 @@ public static class ExcelExportEndpoints
             summary.Cell(1, 1).Style.Font.Bold = true; summary.Cell(1, 1).Style.Font.FontSize = 18;
             summary.Cell(2, 1).Value = $"Kỳ báo cáo: {start:dd/MM/yyyy} - {end:dd/MM/yyyy}";
 
-            var totalRevenue = await salesDb.Orders.Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var totalRevenue = await salesDb.Orders.Recognized().Where(o => o.OrderDate >= start && o.OrderDate < end).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var totalExpenses = await accDb.Expenses.Where(e => e.Status == ExpenseStatus.Paid && e.ExpenseDate >= start && e.ExpenseDate < end).SumAsync(e => (decimal?)e.TotalAmount) ?? 0;
             var arOutstanding = await accDb.Invoices.Where(i => i.Type == InvoiceType.Receivable && i.Status != InvoiceStatus.Paid).SumAsync(i => (decimal?)i.OutstandingAmount) ?? 0;
             var apOutstanding = await accDb.Invoices.Where(i => i.Type == InvoiceType.Payable && i.Status != InvoiceStatus.Paid).SumAsync(i => (decimal?)i.OutstandingAmount) ?? 0;
@@ -206,7 +206,7 @@ public static class ExcelExportEndpoints
             summary.Range("B5:B12").Style.NumberFormat.Format = "#,##0";
             summary.Columns().AdjustToContents();
 
-            var monthlyRevenue = await salesDb.Orders.Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled)
+            var monthlyRevenue = await salesDb.Orders.Recognized().Where(o => o.OrderDate >= start && o.OrderDate < end)
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount) })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month).ToListAsync();

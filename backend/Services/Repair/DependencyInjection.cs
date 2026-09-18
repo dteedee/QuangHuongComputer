@@ -29,14 +29,11 @@ public static class DependencyInjection
                 options.AddInterceptors(interceptor);
         });
 
-        // Register services
-        services.AddHttpClient("InventoryService", client =>
-        {
-            client.BaseAddress = new Uri(configuration["Services:Inventory:Url"] ?? "http://localhost:5001");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        services.AddScoped<IInventoryService, InventoryService>();
+        // W2-13: the old dead HTTP client (pointed at localhost:5001, never reachable)
+        // is gone. Parts reserve/commit/release now call Inventory's IStockLedger
+        // in-process (Repair -> Inventory project reference); Inventory's own
+        // AddInventoryModule() registers IStockLedger and InventoryDbContext.
+        services.AddScoped<IRepairStockService, RepairStockService>();
 
         return services;
     }

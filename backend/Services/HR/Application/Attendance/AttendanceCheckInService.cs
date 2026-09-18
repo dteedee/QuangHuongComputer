@@ -1,3 +1,4 @@
+using BuildingBlocks.Time;
 using HR.Domain;
 using HR.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -28,11 +29,13 @@ public class AttendanceCheckInService
 {
     private readonly HRDbContext _db;
     private readonly AttendanceValidator _validator;
+    private readonly IBusinessClock _clock;
 
-    public AttendanceCheckInService(HRDbContext db, AttendanceValidator validator)
+    public AttendanceCheckInService(HRDbContext db, AttendanceValidator validator, IBusinessClock clock)
     {
         _db = db;
         _validator = validator;
+        _clock = clock;
     }
 
     /// <summary>Tra AttendanceRule cho store (fallback về rule toàn hệ thống nếu không có).</summary>
@@ -58,6 +61,9 @@ public class AttendanceCheckInService
         if (payload.EmployeeId == Guid.Empty)
             return new CheckInResult(false, "EmployeeId là bắt buộc.");
 
+        if (!_validator.IsMethodAllowed(payload.Method))
+            return new CheckInResult(false, $"Phương thức chấm công {payload.Method} đang bị tắt trên hệ thống này.");
+
         var rule = await GetRuleAsync(payload.StoreId, ct);
 
         // 1. Validate theo method
@@ -78,8 +84,9 @@ public class AttendanceCheckInService
         if (!validation.IsValid)
             return new CheckInResult(false, validation.Reason ?? "Chấm công bị từ chối.");
 
-        // 2. Tìm shift assignment cho hôm nay
-        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        // 2. Tìm shift assignment cho "hôm nay" theo NGÀY LÀM VIỆC VIỆT NAM, không phải UTC —
+        // gần ranh giới 00:00-07:00 VN thì UTC vẫn còn là "hôm qua".
+        var today = _clock.TodayVn;
         var shiftAssignment = await _db.ShiftAssignments
             .Where(s => s.EmployeeId == payload.EmployeeId && s.Date == today)
             .FirstOrDefaultAsync(ct);
@@ -89,23 +96,24 @@ public class AttendanceCheckInService
             shift = await _db.Shifts.FirstOrDefaultAsync(s => s.Id == shiftAssignment.ShiftId, ct);
         }
 
-        // 3. Load hoặc tạo AttendanceRecord
-        var todayDate = DateTime.UtcNow.Date;
+        // 3. Load hoặc tạo AttendanceRecord — Date là NGÀY VN (khoá duy nhất EmployeeId+Date).
+        var businessDate = today.ToDateTime(TimeOnly.MinValue);
         var record = await _db.AttendanceRecords
-            .FirstOrDefaultAsync(a => a.EmployeeId == payload.EmployeeId && a.Date == todayDate, ct);
+            .FirstOrDefaultAsync(a => a.EmployeeId == payload.EmployeeId && a.Date == businessDate, ct);
 
         if (record == null)
         {
-            record = new AttendanceRecord(payload.EmployeeId, todayDate);
+            record = new AttendanceRecord(payload.EmployeeId, businessDate);
             _db.AttendanceRecords.Add(record);
         }
 
         if (record.CheckInTime.HasValue)
             return new CheckInResult(false, "Đã check-in hôm nay rồi.");
 
-        // 4. Ghi nhận check-in
+        // 4. Ghi nhận check-in — Kind=Utc báo cho AttendanceRecord biết phải quy đổi giờ tường
+        // trước khi so với shiftStartTime (xem AttendanceRecord.ToWallClock).
         record.RecordCheckIn(
-            checkInTime: DateTime.UtcNow,
+            checkInTime: _clock.UtcNow.UtcDateTime,
             method: payload.Method,
             ipAddress: payload.IpAddress,
             latitude: payload.Latitude,
@@ -123,9 +131,9 @@ public class AttendanceCheckInService
 
     public async Task<CheckInResult> CheckOutAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var todayDate = DateTime.UtcNow.Date;
+        var businessDate = _clock.TodayVn.ToDateTime(TimeOnly.MinValue);
         var record = await _db.AttendanceRecords
-            .FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.Date == todayDate, ct);
+            .FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.Date == businessDate, ct);
         if (record == null || !record.CheckInTime.HasValue)
             return new CheckInResult(false, "Chưa check-in hôm nay.");
         if (record.CheckOutTime.HasValue)
@@ -147,7 +155,7 @@ public class AttendanceCheckInService
         }
 
         record.RecordCheckOut(
-            checkOutTime: DateTime.UtcNow,
+            checkOutTime: _clock.UtcNow.UtcDateTime,
             shiftEndTime: shiftEndTime,
             earlyLeaveToleranceMinutes: rule.EarlyLeaveToleranceMinutes,
             breakDurationMinutes: breakMin);

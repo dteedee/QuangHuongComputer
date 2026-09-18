@@ -1,3 +1,4 @@
+using Payments.Application.Providers.VnPay;
 using Microsoft.AspNetCore.Routing;
 using Payments.Webhooks;
 
@@ -25,5 +26,9 @@ public static class PaymentWebhookEndpoints
         app.MapVnPayWebhook();
         app.MapMoMoWebhook();
         app.MapSePayWebhook();
+
+        // IR #18: các route VNPay v2 (IPN + return) do W2-21 viết chưa từng có nơi gọi, nên cả hai
+        // trả 404 và tiêu chí "webhook trả 503 khi chưa cấu hình khoá" không thể kiểm chứng được.
+        app.MapVnPayGatewayRoutes();
     }
 }

@@ -58,12 +58,53 @@ public static class ContractEndpoints
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
 
+        // PUT /api/hr/contracts/{id} — sửa hợp đồng (chỉ khi chưa Active hoặc sửa các trường
+        // hồ sơ không ảnh hưởng số liệu lương đã tính — W2-7 khoản 8, FE gọi contractsApi.update).
+        group.MapPut("/{id:guid}", async (Guid id, UpdateContractDto dto, HRDbContext db) =>
+        {
+            var c = await db.EmploymentContracts.FindAsync(id);
+            if (c == null) return Results.NotFound();
+            try
+            {
+                c.UpdateTerms(dto.EndDate, dto.ContractSalary, dto.InsurableSalary, dto.DocumentUrl);
+                await db.SaveChangesAsync();
+                return Results.Ok(c);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            { return Results.BadRequest(new { error = ex.Message }); }
+        });
+
         group.MapPost("/{id:guid}/activate", async (Guid id, HRDbContext db) =>
         {
             var c = await db.EmploymentContracts.FindAsync(id);
             if (c == null) return Results.NotFound();
             try { c.Activate(); await db.SaveChangesAsync(); return Results.Ok(c); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+        });
+
+        // POST /api/hr/contracts/{id}/renew — tạo hợp đồng kế tiếp, giữ số cũ + hậu tố -R{n}.
+        // W2-7 khoản 8: FE gọi contractsApi.renew(id, {newEndDate, newSalary}).
+        group.MapPost("/{id:guid}/renew", async (Guid id, RenewContractDto dto, HRDbContext db) =>
+        {
+            var old = await db.EmploymentContracts.FindAsync(id);
+            if (old == null) return Results.NotFound();
+            try
+            {
+                var renewalCount = await db.EmploymentContracts
+                    .CountAsync(c => c.EmployeeId == old.EmployeeId && c.ContractNumber.StartsWith(old.ContractNumber + "-R"));
+                var newNumber = $"{old.ContractNumber}-R{renewalCount + 1}";
+                var newSalary = dto.NewSalary ?? old.ContractSalary;
+                var renewed = new EmploymentContract(
+                    old.EmployeeId, newNumber, old.Type,
+                    startDate: old.EndDate ?? DateTime.UtcNow, endDate: dto.NewEndDate,
+                    contractSalary: newSalary, insurableSalary: old.InsurableSalary, documentUrl: null);
+                old.MarkRenewed();
+                db.EmploymentContracts.Add(renewed);
+                await db.SaveChangesAsync();
+                return Results.Created($"/api/hr/contracts/{renewed.Id}", renewed);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            { return Results.BadRequest(new { error = ex.Message }); }
         });
 
         group.MapPost("/{id:guid}/terminate", async (Guid id, TerminateContractDto dto, HRDbContext db) =>
@@ -104,3 +145,5 @@ public record CreateContractDto(
     string? DocumentUrl);
 
 public record TerminateContractDto(string Reason, DateTime? TerminatedAt);
+public record UpdateContractDto(DateTime? EndDate, decimal ContractSalary, decimal InsurableSalary, string? DocumentUrl);
+public record RenewContractDto(DateTime NewEndDate, decimal? NewSalary);

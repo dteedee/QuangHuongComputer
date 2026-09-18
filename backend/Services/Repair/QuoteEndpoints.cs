@@ -69,6 +69,7 @@ public static class QuoteEndpoints
                     userId,
                     userName);
                 workOrder.AddActivityLog(log);
+                db.WorkOrderActivityLogs.Add(log);
 
                 await db.SaveChangesAsync();
 
@@ -172,6 +173,7 @@ public static class QuoteEndpoints
                     userName,
                     $"Quote {quote.QuoteNumber} approved by customer");
                 quote.WorkOrder.AddActivityLog(log);
+                db.WorkOrderActivityLogs.Add(log);
 
                 await db.SaveChangesAsync();
                 return Results.Ok(new
@@ -223,6 +225,7 @@ public static class QuoteEndpoints
                     userName,
                     $"Quote {quote.QuoteNumber} rejected: {dto.Reason}");
                 quote.WorkOrder.AddActivityLog(log);
+                db.WorkOrderActivityLogs.Add(log);
 
                 await db.SaveChangesAsync();
                 return Results.Ok(new
@@ -317,6 +320,7 @@ public static class QuoteEndpoints
                     userName,
                     "Quote sent to customer for approval");
                 quote.WorkOrder.AddActivityLog(log);
+                db.WorkOrderActivityLogs.Add(log);
 
                 await db.SaveChangesAsync();
 

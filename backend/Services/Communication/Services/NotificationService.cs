@@ -117,78 +117,149 @@ public class NotificationService : INotificationService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, int page = 1, int pageSize = 50)
+    // W2-15: how many role-targeted (broadcast) rows we scan before pagination/role-filtering.
+    // Bounded on purpose so a busy TargetRoles feed can't force an unbounded table scan; own
+    // (non-broadcast) notifications are never capped by this window.
+    private const int BroadcastCandidateWindow = 1000;
+
+    public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, string[] userRoles, int page = 1, int pageSize = 50)
     {
         var userGuid = Guid.TryParse(userId, out var uid) ? uid : Guid.Empty;
+        var roleSet = BuildRoleSet(userRoles);
 
-        var notifications = await _dbContext.NotificationLogs
-            .Where(n => n.UserId == userGuid || n.UserId == Guid.Empty) // User-specific or system-wide
-            .Where(n => n.Channel == "InApp")
+        var candidates = await _dbContext.NotificationLogs
+            .Where(n => n.Channel == "InApp" && (n.UserId == userGuid || n.UserId == Guid.Empty))
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(BroadcastCandidateWindow)
+            .ToListAsync();
+
+        var visible = candidates
+            .Where(n => n.UserId == userGuid || RolesIntersect(n.TargetRoles, roleSet))
             .OrderByDescending(n => n.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(n => new NotificationDto
-            {
-                Id = n.Id,
-                Type = n.Type.ToString(),
-                Title = n.Subject ?? "",
-                Message = n.Content,
-                Link = n.Link,
-                Priority = n.Priority,
-                CreatedAt = n.CreatedAt,
-                IsRead = n.IsRead,
-                ReferenceId = n.ReferenceId
-            })
-            .ToListAsync();
+            .ToList();
 
-        return notifications;
+        var visibleIds = visible.Select(n => n.Id).ToList();
+        var readIds = visibleIds.Count == 0
+            ? new HashSet<Guid>()
+            : new HashSet<Guid>(await _dbContext.NotificationReads
+                .Where(r => r.UserId == userGuid && visibleIds.Contains(r.NotificationLogId))
+                .Select(r => r.NotificationLogId)
+                .ToListAsync());
+
+        return visible.Select(n => new NotificationDto
+        {
+            Id = n.Id,
+            Type = n.Type.ToString(),
+            Title = n.Subject ?? "",
+            Message = n.Content,
+            Link = n.Link,
+            Priority = n.Priority,
+            CreatedAt = n.CreatedAt,
+            IsRead = readIds.Contains(n.Id),
+            ReferenceId = n.ReferenceId
+        }).ToList();
     }
 
-    public async Task<int> GetUnreadCountAsync(string userId)
+    public async Task<int> GetUnreadCountAsync(string userId, string[] userRoles)
     {
         var userGuid = Guid.TryParse(userId, out var uid) ? uid : Guid.Empty;
+        var roleSet = BuildRoleSet(userRoles);
 
-        var count = await _dbContext.NotificationLogs
-            .Where(n => n.UserId == userGuid || n.UserId == Guid.Empty)
-            .Where(n => n.Channel == "InApp")
-            .Where(n => !n.IsRead)
+        var candidates = await _dbContext.NotificationLogs
+            .Where(n => n.Channel == "InApp" && (n.UserId == userGuid || n.UserId == Guid.Empty))
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(BroadcastCandidateWindow)
+            .Select(n => new { n.Id, n.UserId, n.TargetRoles })
+            .ToListAsync();
+
+        var visibleIds = candidates
+            .Where(n => n.UserId == userGuid || RolesIntersect(n.TargetRoles, roleSet))
+            .Select(n => n.Id)
+            .ToList();
+
+        if (visibleIds.Count == 0) return 0;
+
+        var readCount = await _dbContext.NotificationReads
+            .Where(r => r.UserId == userGuid && visibleIds.Contains(r.NotificationLogId))
+            .Select(r => r.NotificationLogId)
+            .Distinct()
             .CountAsync();
 
-        return count;
+        return visibleIds.Count - readCount;
     }
 
-    public async Task<bool> MarkAsReadAsync(Guid notificationId, string userId)
+    public async Task<bool> MarkAsReadAsync(Guid notificationId, string userId, string[] userRoles)
     {
+        var userGuid = Guid.TryParse(userId, out var uid) ? uid : Guid.Empty;
+        var roleSet = BuildRoleSet(userRoles);
+
         var notification = await _dbContext.NotificationLogs.FindAsync(notificationId);
         if (notification == null) return false;
 
-        notification.MarkAsRead();
-        await _dbContext.SaveChangesAsync();
+        // Ownership/visibility check - a caller may only mark read what they can see.
+        var visible = notification.UserId == userGuid || RolesIntersect(notification.TargetRoles, roleSet);
+        if (!visible) return false;
 
-        // Broadcast to user's connections
+        var alreadyRead = await _dbContext.NotificationReads
+            .AnyAsync(r => r.NotificationLogId == notificationId && r.UserId == userGuid);
+        if (!alreadyRead)
+        {
+            _dbContext.NotificationReads.Add(new NotificationRead(notificationId, userGuid));
+            await _dbContext.SaveChangesAsync();
+        }
+
+        // Broadcast to this user's connections only - never affects other callers' read state.
         await _hubContext.Clients.Group($"user_{userId}").SendAsync("NotificationRead", notificationId.ToString());
 
         return true;
     }
 
-    public async Task MarkAllAsReadAsync(string userId)
+    public async Task MarkAllAsReadAsync(string userId, string[] userRoles)
     {
         var userGuid = Guid.TryParse(userId, out var uid) ? uid : Guid.Empty;
+        var roleSet = BuildRoleSet(userRoles);
 
-        var notifications = await _dbContext.NotificationLogs
-            .Where(n => n.UserId == userGuid || n.UserId == Guid.Empty)
-            .Where(n => n.Channel == "InApp")
-            .Where(n => !n.IsRead)
+        var candidates = await _dbContext.NotificationLogs
+            .Where(n => n.Channel == "InApp" && (n.UserId == userGuid || n.UserId == Guid.Empty))
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(BroadcastCandidateWindow)
+            .Select(n => new { n.Id, n.UserId, n.TargetRoles })
             .ToListAsync();
 
-        foreach (var notification in notifications)
-        {
-            notification.MarkAsRead();
-        }
+        var visibleIds = candidates
+            .Where(n => n.UserId == userGuid || RolesIntersect(n.TargetRoles, roleSet))
+            .Select(n => n.Id)
+            .ToList();
 
-        await _dbContext.SaveChangesAsync();
+        if (visibleIds.Count > 0)
+        {
+            var alreadyRead = new HashSet<Guid>(await _dbContext.NotificationReads
+                .Where(r => r.UserId == userGuid && visibleIds.Contains(r.NotificationLogId))
+                .Select(r => r.NotificationLogId)
+                .ToListAsync());
+
+            foreach (var id in visibleIds.Where(id => !alreadyRead.Contains(id)))
+            {
+                _dbContext.NotificationReads.Add(new NotificationRead(id, userGuid));
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
 
         // Broadcast to user's connections
         await _hubContext.Clients.Group($"user_{userId}").SendAsync("AllNotificationsRead");
+    }
+
+    private static HashSet<string> BuildRoleSet(string[]? userRoles) =>
+        new(userRoles ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+
+    private static bool RolesIntersect(string? targetRoles, HashSet<string> callerRoles)
+    {
+        if (string.IsNullOrWhiteSpace(targetRoles) || callerRoles.Count == 0) return false;
+        return targetRoles
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Any(callerRoles.Contains);
     }
 }

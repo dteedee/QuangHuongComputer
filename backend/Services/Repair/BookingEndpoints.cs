@@ -1,4 +1,5 @@
 using BuildingBlocks.Security;
+using BuildingBlocks.Configuration;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +21,7 @@ public static class BookingEndpoints
         var group = app.MapGroup("/api/repair").RequireAuthorization(SecurityPolicies.Authenticated);
 
         // Customer Endpoints
-        group.MapPost("/book", async ([FromBody] CreateBookingDto model, RepairDbContext db, ClaimsPrincipal user) =>
+        group.MapPost("/book", async ([FromBody] CreateBookingDto model, RepairDbContext db, IAppSettings settings, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -28,6 +29,16 @@ public static class BookingEndpoints
 
             try
             {
+                // IR#54/D08: on-site service is config-gated (Warranty.OnsiteEnabled,
+                // default OFF) and the fee is config-driven (Warranty.OnsiteFeeVnd,
+                // default 0) - both keys shared with the warranty on-site flow (D08 §3),
+                // never a hardcoded literal.
+                if (model.ServiceType == ServiceType.OnSite && !settings.GetBool("Warranty.OnsiteEnabled", false))
+                    return Results.BadRequest(new { Error = "Dịch vụ tận nơi hiện chưa được bật." });
+
+                var onSiteFee = model.ServiceType == ServiceType.OnSite
+                    ? settings.GetDecimal("Warranty.OnsiteFeeVnd", 0m)
+                    : 0m;
                 var booking = new ServiceBooking(
                     userId,
                     model.ServiceType,
@@ -38,7 +49,8 @@ public static class BookingEndpoints
                     model.AcceptedTerms,
                     model.CustomerName,
                     model.CustomerPhone,
-                    model.CustomerEmail
+                    model.CustomerEmail,
+                    onSiteFee
                 );
 
                 if (!string.IsNullOrWhiteSpace(model.SerialNumber))

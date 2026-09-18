@@ -150,6 +150,14 @@ public sealed class ProductDatasetImporter
         summary.MediaWritten += written;
         summary.SpecRowsWritten += record.Specs.Count;
 
+        // W2-1 (D10) fix: the ctor only auto-publishes when `imageUrl` is passed AT construction,
+        // but this importer always creates the product first and syncs media afterward - so every
+        // freshly-imported product was landing with PublishedAt=null (invisible to the storefront's
+        // new WherePublished() predicate) even though it has a real image. Only auto-publish brand
+        // NEW rows the first time they get an image; never touch PublishedAt on a re-run of an
+        // existing product - staff may have explicitly Unpublish()'d it since.
+        if (isNew && primaryUrl is not null && product.PublishedAt is null) product.Publish();
+
         if (!isNew)
         {
             if (Snapshot(product) != before) summary.ProductsUpdated++;

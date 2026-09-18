@@ -38,6 +38,17 @@ public class RequestForQuotation : Entity<Guid>
         Notes = notes;
     }
 
+    /// <summary>
+    /// W2-12: số chứng từ do <c>IDocumentNumberService</c> cấp (PREFIX-yyyyMM-#####). Constructor
+    /// vẫn sinh số tạm để dữ liệu cũ không vỡ; endpoint tạo chứng từ ghi đè bằng số thật.
+    /// </summary>
+    public void SetNumber(string number)
+    {
+        if (string.IsNullOrWhiteSpace(number))
+            throw new ArgumentException("Số chứng từ không được rỗng.", nameof(number));
+        Number = number;
+    }
+
     public void MarkSent()
     {
         if (Status != RfqStatus.Draft)

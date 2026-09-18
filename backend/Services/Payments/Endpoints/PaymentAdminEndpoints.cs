@@ -5,42 +5,69 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Payments.Application.Configuration;
 using Payments.Domain;
+using Payments.Endpoints.Admin;
 using Payments.Infrastructure;
 
 namespace Payments.Endpoints;
 
 /// <summary>
-/// W0-10 — endpoint quản trị thanh toán.
-/// D04 R5: KHÔNG API nào được trả secret ra ngoài — `/admin/config` giờ che giá trị của mọi
-/// bản ghi `IsSecret`. `/admin/status` là bảng "Đã cấu hình / Thiếu: ..." đọc từ
-/// <see cref="PaymentConfigGuard"/> (chỉ TÊN khoá thiếu, không bao giờ giá trị).
+/// Cửa vào của nhóm `/api/payments/admin`. File này chỉ còn phần CẤU HÌNH; danh sách giao dịch,
+/// đối soát và hoàn tiền nằm ở <see cref="Admin"/> để mỗi file dưới 200 dòng.
+///
+/// Phân quyền theo W1-1: `/admin/status` + `/admin/config` = `Payments.Configure`,
+/// `/admin/payments` = `Payments.View`, `/admin/reconciliation` = `Payments.Reconcile`,
+/// `/admin/refunds` = `Payments.Refund`. Trước W2-4 cả nhóm dùng `System.ManageConfig`, nghĩa là
+/// kế toán không xem được giao dịch còn người cấu hình hệ thống lại hoàn được tiền.
+///
+/// D04 R5: KHÔNG API nào được trả secret ra ngoài — `/admin/config` che giá trị của mọi bản ghi
+/// `IsSecret`, `/admin/status` chỉ nêu TÊN khoá còn thiếu.
 /// </summary>
 public static class PaymentAdminEndpoints
 {
     public static void MapPaymentAdminEndpoints(this RouteGroupBuilder group)
     {
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(Permissions.System.ManageConfig);
+        var adminGroup = group.MapGroup("/admin");
 
-        adminGroup.MapGet("/status", (PaymentConfigGuard guard) => Results.Ok(
+        adminGroup.MapPaymentAdminListEndpoints();
+        adminGroup.MapPaymentAdminReconcileEndpoints();
+        adminGroup.MapPaymentAdminRefundEndpoints();
+
+        // Nhóm thứ hai cùng tiền tố, chính sách riêng: cấu hình cổng KHÔNG cùng quyền với xem giao dịch.
+        var configGroup = group.MapGroup("/admin").RequireAuthorization(Permissions.Payments.Configure);
+
+        configGroup.MapGet("/status", (PaymentConfigGuard guard) => Results.Ok(
             guard.AllMethods().Select(m => new
             {
                 provider = m.Provider.ToString(),
                 code = m.Code,
                 name = m.DisplayName,
                 configured = m.Available,
+                direct = m.IsDirect,
                 missingKeys = m.MissingKeys
             })));
 
-        adminGroup.MapGet("/sepay-transactions", async (PaymentsDbContext db, CancellationToken ct) =>
+        // URL phải khai báo với hãng (SePay/VNPay) — hiện ở trang admin theo D04 R5.
+        configGroup.MapGet("/webhook-urls", (HttpContext ctx) =>
         {
-            var transactions = await db.SePayTransactions
+            var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+            return Results.Ok(new
+            {
+                sePayWebhook = $"{baseUrl}/api/payments/v2/sepay/webhook",
+                vnPayReturn = $"{baseUrl}/api/payments/v2/vnpay/callback",
+                moMoIpn = $"{baseUrl}/api/payments/v2/momo/callback"
+            });
+        });
+
+        configGroup.MapGet("/sepay-transactions", async (PaymentsDbContext db, CancellationToken ct) =>
+        {
+            var transactions = await db.SePayTransactions.AsNoTracking()
                 .OrderByDescending(t => t.TransactionDate)
                 .Take(100)
                 .ToListAsync(ct);
             return Results.Ok(transactions);
         });
 
-        adminGroup.MapGet("/sepay-stats", async (PaymentsDbContext db, CancellationToken ct) =>
+        configGroup.MapGet("/sepay-stats", async (PaymentsDbContext db, CancellationToken ct) =>
         {
             var totalRevenue = await db.SePayTransactions
                 .Where(t => t.TransferType == "in" && t.IsProcessed)
@@ -64,7 +91,7 @@ public static class PaymentAdminEndpoints
         });
 
         // Giá trị secret bị che — chỉ trả 4 ký tự cuối để đối chiếu.
-        adminGroup.MapGet("/config", async (PaymentsDbContext db, CancellationToken ct) =>
+        configGroup.MapGet("/config", async (PaymentsDbContext db, CancellationToken ct) =>
         {
             var configs = await db.PaymentConfigs.AsNoTracking().ToListAsync(ct);
             return Results.Ok(configs.Select(c => new
@@ -77,7 +104,7 @@ public static class PaymentAdminEndpoints
             }));
         });
 
-        adminGroup.MapPost("/config", async (PaymentConfigDto model, PaymentsDbContext db, CancellationToken ct) =>
+        configGroup.MapPost("/config", async (PaymentConfigDto model, PaymentsDbContext db, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(model.Key))
                 return Results.BadRequest(new { error = "KEY_REQUIRED", message = "Thiếu khoá cấu hình" });

@@ -153,16 +153,58 @@ public class Promotion : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddReward(Guid? productId, Guid? variantId, int quantity, decimal discountPercent = 100)
+    public void AddReward(
+        Guid? productId, Guid? variantId, int quantity, decimal discountPercent = 100,
+        decimal? flashPrice = null, int? quantityLimit = null)
     {
         if (quantity <= 0)
             throw new ArgumentException("Reward quantity phải > 0");
         if (discountPercent < 0 || discountPercent > 100)
             throw new ArgumentException("DiscountPercent trong khoảng 0-100");
+        if (Type == PromotionType.FlashSale && (!flashPrice.HasValue || flashPrice.Value < 0))
+            throw new ArgumentException(
+                "Promotion Type=FlashSale bắt buộc FlashPrice >= 0 cho mỗi reward", nameof(flashPrice));
 
-        _rewards.Add(new PromotionReward(Id, productId, variantId, quantity, discountPercent));
+        _rewards.Add(new PromotionReward(Id, productId, variantId, quantity, discountPercent, flashPrice, quantityLimit));
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Sửa các field không ảnh hưởng đơn hàng đã audit (thay stub no-op trước đây).
+    /// Điều kiện/rewards/discount core muốn đổi khi CurrentUsage > 0 -> chặn, tạo promotion mới.
+    /// </summary>
+    public void UpdateBasicFields(string? name, string? description, int? priority, DateTime? endAt)
+    {
+        if (name is not null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Tên khuyến mãi bắt buộc", nameof(name));
+            Name = name;
+        }
+        if (description is not null) Description = description;
+        if (priority.HasValue) Priority = priority.Value;
+        if (endAt.HasValue)
+        {
+            if (endAt.Value <= StartAt)
+                throw new ArgumentException("EndAt phải lớn hơn StartAt");
+            EndAt = endAt;
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Lưu trữ (soft) — chỉ cho phép khi chưa từng được dùng (CurrentUsage == 0).</summary>
+    public void Archive()
+    {
+        if (CurrentUsage > 0)
+            throw new InvalidOperationException(
+                $"Không thể lưu trữ promotion đã có {CurrentUsage} lượt dùng — hãy Pause() thay vì Archive().");
+        Status = PromotionStatus.Expired;
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Có thể xoá cứng an toàn không — chưa từng redeem.</summary>
+    public bool CanDelete() => CurrentUsage == 0;
 
     public void Activate()
     {
@@ -262,5 +304,7 @@ public enum PromotionDiscountType
     Fixed = 2,
     FreeShip = 3,
     BuyXGetY = 4,
-    Tiered = 5
+    Tiered = 5,
+    /// <summary>FlashSale reward: giá cố định thay giá gốc (PromotionReward.FlashPrice).</summary>
+    FixedPrice = 6
 }

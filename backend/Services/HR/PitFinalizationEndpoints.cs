@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using HR.Application.Tax;
-using HR.Infrastructure;
 
 namespace HR;
 
@@ -18,9 +17,8 @@ public static class PitFinalizationEndpoints
             .RequireModulePermissions(PermissionModules.Payroll);
 
         // GET /api/hr/tax/pit-finalization/{employeeId}?year=2026
-        group.MapGet("/{employeeId:guid}", async (Guid employeeId, int year, HRDbContext db) =>
+        group.MapGet("/{employeeId:guid}", async (Guid employeeId, int year, PitFinalizationService svc) =>
         {
-            var svc = new PitFinalizationService(db);
             try
             {
                 var result = await svc.FinalizeAsync(employeeId, year);
@@ -33,9 +31,8 @@ public static class PitFinalizationEndpoints
         });
 
         // GET /api/hr/tax/pit-finalization/summary?year=2026 — bảng tổng cho kế toán
-        group.MapGet("/summary", async (int year, HRDbContext db) =>
+        group.MapGet("/summary", async (int year, PitFinalizationService svc) =>
         {
-            var svc = new PitFinalizationService(db);
             var items = await svc.GetSummaryAsync(year);
             return Results.Ok(new
             {
@@ -51,9 +48,8 @@ public static class PitFinalizationEndpoints
         });
 
         // POST /api/hr/tax/pit-finalization/{employeeId}/export?year=2026 — mẫu 05/QTT-TNCN (giai đoạn 1: JSON)
-        group.MapPost("/{employeeId:guid}/export", async (Guid employeeId, int year, HRDbContext db) =>
+        group.MapPost("/{employeeId:guid}/export", async (Guid employeeId, int year, PitFinalizationService svc) =>
         {
-            var svc = new PitFinalizationService(db);
             try
             {
                 var r = await svc.FinalizeAsync(employeeId, year);

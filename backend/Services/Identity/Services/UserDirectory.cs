@@ -1,3 +1,4 @@
+using System.Linq;
 using BuildingBlocks.Security;
 using Identity.Infrastructure;
 using Microsoft.AspNetCore.Identity;
@@ -38,7 +39,7 @@ public interface IUserDirectory
     Task<UserProvisionResult> ProvisionCustomerAsync(string fullName, string email, string? phoneNumber, CancellationToken cancellationToken = default);
 }
 
-public sealed class UserDirectory : IUserDirectory
+public sealed class UserDirectory : IUserDirectory, BuildingBlocks.Contracts.IUserDirectory
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IdentityDbContext _db;
@@ -171,4 +172,37 @@ public sealed class UserDirectory : IUserDirectory
 
     private static UserDirectoryEntry Map(ApplicationUser u) =>
         new(u.Id, u.FullName, u.Email, u.PhoneNumber, u.IsActive);
+
+    // ---- BuildingBlocks.Contracts.IUserDirectory -------------------------------------------
+    // Đợt 1 quy định W1-3 khai báo hợp đồng dùng chung, W1-2 hiện thực nó. Thực tế W1-2 lại khai
+    // báo một interface trùng tên trong Identity.Services và chỉ đăng ký bản đó, nên CRM (và mọi
+    // module ngoài Identity) yêu cầu BuildingBlocks.Contracts.IUserDirectory đều không resolve
+    // được — API chết ngay lúc dựng service. Ở đây hiện thực tường minh hợp đồng dùng chung bằng
+    // cách uỷ quyền cho các phương thức sẵn có; hai interface trùng nhau vẫn là nợ kỹ thuật, ghi
+    // trong integration-requests-w2.md để gộp lại thành một.
+    Task<IReadOnlyList<BuildingBlocks.Contracts.UserDirectoryEntry>> BuildingBlocks.Contracts.IUserDirectory.GetByIdsAsync(
+        IReadOnlyCollection<string> userIds, CancellationToken cancellationToken)
+        => MapAsync(GetByIdsAsync(userIds, cancellationToken));
+
+    Task<IReadOnlyList<BuildingBlocks.Contracts.UserDirectoryEntry>> BuildingBlocks.Contracts.IUserDirectory.SearchCustomersAsync(
+        string query, int limit, CancellationToken cancellationToken)
+        => MapAsync(SearchCustomersAsync(query, limit, cancellationToken));
+
+    async Task<BuildingBlocks.Contracts.UserDirectoryEntry> BuildingBlocks.Contracts.IUserDirectory.ProvisionCustomerAsync(
+        string fullName, string? phoneNumber, string? email, CancellationToken cancellationToken)
+    {
+        // Hợp đồng dùng chung hứa idempotent và KHÔNG ném 409 vào mặt thu ngân: hai quầy POS cùng
+        // quẹt một số điện thoại phải ra đúng một tài khoản.
+        var result = await ProvisionCustomerAsync(fullName, email ?? string.Empty, phoneNumber, cancellationToken);
+        if (!result.Succeeded || result.User is null)
+            throw new InvalidOperationException(result.Error ?? "Không tạo được tài khoản khách hàng.");
+        return Map(result.User);
+    }
+
+    private static BuildingBlocks.Contracts.UserDirectoryEntry Map(UserDirectoryEntry e)
+        => new(e.Id, e.FullName, e.Email, e.PhoneNumber, e.IsActive);
+
+    private static async Task<IReadOnlyList<BuildingBlocks.Contracts.UserDirectoryEntry>> MapAsync(
+        Task<IReadOnlyList<UserDirectoryEntry>> source)
+        => (await source).Select(Map).ToList();
 }

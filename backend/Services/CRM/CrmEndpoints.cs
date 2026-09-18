@@ -1,3 +1,4 @@
+using BuildingBlocks.Contracts;
 using BuildingBlocks.Security;
 using CRM.Domain;
 using CRM.DTOs;
@@ -178,15 +179,22 @@ public static class CrmEndpoints
     {
         group.MapGet("/customers", async (
             CrmDbContext db,
+            IUserDirectory userDirectory,
             [AsParameters] CustomerQueryParams queryParams) =>
         {
             var query = db.CustomerAnalytics.AsNoTracking();
 
-            // Apply filters
+            // W2-8: tên/email/sđt tra qua IUserDirectory (Identity) - CRM không có bảng khách hàng
+            // riêng. Tìm theo tên/email/sđt trước (type-ahead), rồi lọc UserId theo kết quả đó;
+            // vẫn cho tìm theo UserId thô để không phá các liên kết đã lưu (email cũ, báo cáo...).
             if (!string.IsNullOrWhiteSpace(queryParams.SearchText))
             {
-                // Note: In real implementation, would join with Identity to search by name/email
-                query = query.Where(c => c.UserId.ToString().Contains(queryParams.SearchText));
+                var matches = await userDirectory.SearchCustomersAsync(queryParams.SearchText, limit: 200);
+                var matchedIds = matches.Select(m => Guid.TryParse(m.Id, out var g) ? g : (Guid?)null)
+                    .Where(g => g.HasValue).Select(g => g!.Value).ToHashSet();
+
+                var search = queryParams.SearchText;
+                query = query.Where(c => matchedIds.Contains(c.UserId) || c.UserId.ToString().Contains(search));
             }
 
             if (queryParams.LifecycleStage.HasValue)
@@ -250,6 +258,11 @@ public static class CrmEndpoints
                 .Include(a => a.Segment)
                 .ToListAsync();
 
+            // W2-8: batch lookup (một round-trip cho cả trang) qua IUserDirectory — không lặp N+1.
+            var directoryEntries = await userDirectory.GetByIdsAsync(
+                customerIds.Select(id => id.ToString()).ToList());
+            var directoryById = directoryEntries.ToDictionary(e => e.Id, e => e);
+
             var dtos = items.Select(c =>
             {
                 var segments = segmentAssignments
@@ -257,14 +270,13 @@ public static class CrmEndpoints
                     .Select(a => a.Segment.Name)
                     .ToList();
 
+                directoryById.TryGetValue(c.UserId.ToString(), out var directory);
+
                 return new CustomerAnalyticsDto(
                     c.Id,
                     c.UserId,
-                    // UserName / Email intentionally null. Populating requires a cross-module
-                    // Identity lookup (IUserQueryService abstraction). Deferred until Identity
-                    // exposes a read-model — do not couple CRM directly to IdentityDbContext.
-                    null,
-                    null,
+                    directory?.FullName,
+                    directory?.Email,
                     c.RecencyScore,
                     c.FrequencyScore,
                     c.MonetaryScore,
@@ -287,13 +299,17 @@ public static class CrmEndpoints
 
         group.MapGet("/customers/{id:guid}", async (
             Guid id,
-            CrmDbContext db) =>
+            CrmDbContext db,
+            IUserDirectory userDirectory) =>
         {
             var customer = await db.CustomerAnalytics
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (customer == null)
                 return Results.NotFound();
+
+            var directoryEntries = await userDirectory.GetByIdsAsync(new[] { customer.UserId.ToString() });
+            var directory = directoryEntries.FirstOrDefault();
 
             // Get segments
             var segments = await db.CustomerSegmentAssignments
@@ -362,12 +378,10 @@ public static class CrmEndpoints
             return Results.Ok(new CustomerDetailDto(
                 customer.Id,
                 customer.UserId,
-                // UserName / Email / Phone / Address intentionally null — see comment in
-                // /customers listing endpoint above. Requires Identity read-model abstraction.
-                null,
-                null,
-                null,
-                null,
+                directory?.FullName,
+                directory?.Email,
+                directory?.PhoneNumber,
+                null, // Address: not part of IUserDirectory (deliberately narrow - see contract doc).
                 customer.RecencyScore,
                 customer.FrequencyScore,
                 customer.MonetaryScore,
@@ -467,6 +481,19 @@ public static class CrmEndpoints
         {
             var result = await segmentationService.RemoveCustomerFromSegmentAsync(id, segmentId);
             return result ? Results.Ok() : Results.NotFound();
+        });
+
+        // W2-8 step 4: recalc theo yêu cầu (ngoài batch 02:00 UTC hằng đêm) — dùng khi cần số liệu
+        // mới ngay (vd. sau khi import đơn hàng cũ, hoặc debug một khách cụ thể).
+        group.MapPost("/analytics/recalculate", async (
+            IRfmCalculationService rfmService,
+            ISegmentationService segmentationService) =>
+        {
+            var processed = await rfmService.CalculateForAllCustomersAsync();
+            var assigned = await segmentationService.RunAutoAssignmentAsync();
+            await segmentationService.UpdateSegmentCountsAsync();
+
+            return Results.Ok(new { processed, autoAssigned = assigned });
         });
     }
 
@@ -640,6 +667,8 @@ public static class CrmEndpoints
                 return Results.BadRequest(new { error = attributesError });
 
             var lead = await service.CreateLeadAsync(dto);
+            if (lead is null)
+                return Results.UnprocessableEntity(new { error = "Chưa cấu hình giai đoạn pipeline nào cho lead." });
 
             return Results.Created($"/api/crm/leads/{lead.Id}", new LeadDto(
                 lead.Id, lead.FullName, lead.Email, lead.Phone, lead.Company, lead.JobTitle,

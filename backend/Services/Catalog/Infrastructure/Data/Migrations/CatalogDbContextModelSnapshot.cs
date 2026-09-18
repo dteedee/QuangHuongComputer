@@ -322,6 +322,13 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<int>("StockQuantity")
                         .HasColumnType("integer");
 
+                    b.Property<string>("UnitName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Chiếc");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -620,6 +627,7 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId")
+                        .IsUnique()
                         .HasDatabaseName("ix_product_medias_primary")
                         .HasFilter("\"IsPrimary\" = true");
 
@@ -728,6 +736,66 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.ToTable("ProductOptionValues", "public");
                 });
 
+            modelBuilder.Entity("Catalog.Domain.ProductPriceChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("NewCostPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("NewPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("OldCostPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("OldPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "At")
+                        .HasDatabaseName("ix_product_price_changes_product_id_at");
+
+                    b.ToTable("ProductPriceChanges", "public");
+                });
+
             modelBuilder.Entity("Catalog.Domain.ProductReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -803,6 +871,44 @@ namespace Catalog.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_ProductReviews_Rating_Range", "\"Rating\" >= 1 AND \"Rating\" <= 5");
                         });
+                });
+
+            modelBuilder.Entity("Catalog.Domain.ProductReviewHelpfulVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_product_review_helpful_votes_review_user");
+
+                    b.ToTable("ProductReviewHelpfulVotes", "public");
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductSpecificationValue", b =>
@@ -1294,6 +1400,16 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Navigation("OptionType");
                 });
 
+            modelBuilder.Entity("Catalog.Domain.ProductPriceChange", b =>
+                {
+                    b.HasOne("Catalog.Domain.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_price_changes_product_id");
+                });
+
             modelBuilder.Entity("Catalog.Domain.ProductReview", b =>
                 {
                     b.HasOne("Catalog.Domain.Product", null)
@@ -1302,6 +1418,16 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_product_reviews_product_id");
+                });
+
+            modelBuilder.Entity("Catalog.Domain.ProductReviewHelpfulVote", b =>
+                {
+                    b.HasOne("Catalog.Domain.ProductReview", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_review_helpful_votes_review_id");
                 });
 
             modelBuilder.Entity("Catalog.Domain.ProductSpecificationValue", b =>

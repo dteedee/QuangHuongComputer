@@ -171,6 +171,54 @@ public class Payroll : Entity<Guid>
         InsurableSalary = amount;
     }
 
+    /// <summary>
+    /// W2-25 / D06 §3 — chụp lại NGUYÊN bộ tham số pháp luật đã dùng để tính phiếu lương này,
+    /// cùng ngày tra (ngày 01 tháng lương cho bảo hiểm, <c>PayDate</c> cho thuế) và cách tính thuế.
+    /// Nhờ cột này, một bảng lương ĐÃ TRẢ tái lập được y hệt nhiều năm sau, kể cả khi bảng
+    /// <c>hr.StatutoryParameters</c> đã có thêm mốc hiệu lực mới.
+    /// </summary>
+    public string? StatutorySnapshotJson { get; private set; }
+
+    /// <summary>Ngày trả lương đã dùng để tra tham số thuế TNCN (sao chép từ <c>PayrollRun</c>).</summary>
+    public DateOnly? PayDate { get; private set; }
+
+    /// <summary>Cách tính thuế đã áp dụng: Progressive / Flat10 / NonResident20 (D06 §4).</summary>
+    public string? PitMethod { get; private set; }
+
+    /// <summary>
+    /// Có thoả thuận NSDLĐ-NLĐ vẫn đóng BHXH trong tháng nghỉ không hưởng lương ≥ 14 ngày làm việc
+    /// theo căn cứ đóng của tháng gần nhất (Luật BHXH 41/2024 Đ.33.5 + Đ.34.3). Mặc định false.
+    /// </summary>
+    public bool KeepSiOnUnpaidLeave { get; private set; }
+
+    /// <summary>Đặt cờ thoả thuận vẫn đóng BHXH khi nghỉ không lương ≥ 14 ngày (trước khi tính lại).</summary>
+    public void SetKeepSiOnUnpaidLeave(bool keep)
+    {
+        RequireDraftOrCalculated();
+        KeepSiOnUnpaidLeave = keep;
+    }
+
+    /// <summary>
+    /// Thu nhập CHỊU thuế của kỳ (đã loại phần OT/làm đêm và phụ cấp được miễn, TRƯỚC khi trừ bảo
+    /// hiểm và giảm trừ gia cảnh). Đây là con số mẫu 05/KK-TNCN và quyết toán năm phải cộng —
+    /// <c>GrossPay</c> gồm cả khoản miễn thuế nên không dùng được cho tờ khai.
+    /// </summary>
+    public decimal TaxableGrossIncome { get; private set; }
+
+    /// <summary>Lưu snapshot tham số + ngày trả + cách tính thuế (gọi bởi PayrollCalculationService).</summary>
+    public void SetStatutorySnapshot(
+        string snapshotJson,
+        DateOnly payDate,
+        string pitMethod,
+        decimal taxableGrossIncome)
+    {
+        RequireDraftOrCalculated();
+        StatutorySnapshotJson = snapshotJson;
+        PayDate = payDate;
+        PitMethod = pitMethod;
+        TaxableGrossIncome = Math.Round(taxableGrossIncome, 0, MidpointRounding.AwayFromZero);
+    }
+
     /// <summary>Thêm 1 line item chi tiết (dùng bởi PayrollCalculationService).</summary>
     public void AddLineItem(PayrollLineItem item)
     {

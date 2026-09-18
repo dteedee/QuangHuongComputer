@@ -30,9 +30,14 @@ public static class CatalogEndpoints
         var group = app.MapGroup("/api/catalog");
 
         group.MapCatalogProductQueryEndpoints();
+        group.MapCatalogProductSearchEndpoints();
         group.MapCatalogProductAdminEndpoints();
         group.MapCatalogCategoryEndpoints();
         group.MapCatalogBrandEndpoints();
         group.MapCatalogReviewEndpoints();
+
+        // W2-1 first commit: phân hệ con (vd W2-9's PC builder) tự đăng ký route qua
+        // ICatalogSubmodule - không cần sửa file này. No-op hôm nay (0 submodule triển khai).
+        app.MapCatalogSubmodules();
     }
 }

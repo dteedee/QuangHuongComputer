@@ -7,6 +7,7 @@ using Accounting.Infrastructure;
 using Accounting.Domain;
 using InventoryModule.Infrastructure;
 using Catalog.Infrastructure;
+using Reporting.Shared;
 
 namespace Reporting.Endpoints;
 
@@ -62,8 +63,10 @@ public static class FinancialReportEndpoints
             var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-12);
             var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
 
+            // Requirement 1: same RecognizedRevenue predicate as every other report.
             var monthlyRevenue = await salesDb.Orders
-                .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled)
+                .Recognized()
+                .Where(o => o.OrderDate >= start && o.OrderDate < end)
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month)
@@ -81,6 +84,19 @@ public static class FinancialReportEndpoints
                 .Select(g => new { g.Key.CategoryName, Total = g.Sum(e => e.TotalAmount), Count = g.Count() })
                 .OrderByDescending(x => x.Total)
                 .ToListAsync();
+
+            // D01: thuế VAT ĐẦU RA đọc từ InvoiceLine.VatAmount gộp theo VatRate - KHÔNG bao
+            // giờ tính lại từ tổng đơn hàng (không tái tạo được hoá đơn nhiều mức thuế suất).
+            // VAT ĐẦU VÀO từ Expense.VatAmount (dòng chi có kê khai thuế).
+            var vatOutByRate = await accDb.Invoices
+                .Where(i => i.Type == InvoiceType.Receivable && i.IssueDate >= start && i.IssueDate < end && i.Status != InvoiceStatus.Cancelled)
+                .SelectMany(i => i.Lines)
+                .GroupBy(l => l.VatRate)
+                .Select(g => new { VatRate = g.Key, VatAmount = g.Sum(l => l.LineTotal * l.VatRate / 100) })
+                .ToListAsync();
+            var vatInTotal = await accDb.Expenses
+                .Where(e => e.Status == ExpenseStatus.Paid && e.ExpenseDate >= start && e.ExpenseDate < end)
+                .SumAsync(e => (decimal?)e.VatAmount) ?? 0;
 
             var totalRevenue = monthlyRevenue.Sum(m => m.Revenue);
             var totalExpenses = monthlyExpenses.Sum(m => m.Expense);
@@ -100,7 +116,8 @@ public static class FinancialReportEndpoints
                     Expense = monthlyExpenses.FirstOrDefault(e => e.Year == r.Year && e.Month == r.Month)?.Expense ?? 0,
                     Profit = r.Revenue - (monthlyExpenses.FirstOrDefault(e => e.Year == r.Year && e.Month == r.Month)?.Expense ?? 0)
                 }),
-                ExpenseByCategory = expenseByCategory
+                ExpenseByCategory = expenseByCategory,
+                Vat = new { OutputByRate = vatOutByRate, InputTotal = vatInTotal, NetPayable = vatOutByRate.Sum(v => v.VatAmount) - vatInTotal }
             });
         });
 

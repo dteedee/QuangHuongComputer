@@ -378,12 +378,27 @@ namespace Repair.Migrations
                     b.Property<DateTime?>("FinishedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("HandoverAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HandoverReceivedByName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("HandoverStaffId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<decimal>("LaborCost")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentReference")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("PartsCost")
                         .HasPrecision(18, 2)

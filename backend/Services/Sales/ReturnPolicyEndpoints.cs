@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Sales.Application.Returns;
 using Sales.Domain;
 using Sales.Infrastructure;
 
@@ -67,25 +68,78 @@ public static class ReturnPolicyEndpoints
         // W1-10: khai báo AllowAnonymous tường minh; cần thêm rule vào PublicEndpointAllowList
         // (integration request W1 -> chủ file BuildingBlocks/Security/PublicEndpointAllowList.cs).
         var pub = app.MapGroup("/api/sales/return-policies");
-        pub.MapGet("/effective", async ([FromQuery] Guid? categoryId, SalesDbContext db) =>
+        // D08 — chính sách hiệu lực cho MỘT SẢN PHẨM: leo ngược cây danh mục đến gốc.
+        // `categoryId` giữ lại cho đường gọi cũ, nhưng `productId` mới là câu hỏi đúng: trang sản
+        // phẩm biết sản phẩm, không biết sản phẩm đó nằm ở tầng nào của cây danh mục.
+        pub.MapGet("/effective", async (
+            [FromQuery] Guid? productId,
+            [FromQuery] Guid? categoryId,
+            SalesDbContext db,
+            Catalog.Infrastructure.CatalogDbContext catalogDb,
+            CancellationToken ct) =>
         {
-            ReturnPolicy? policy = null;
-            if (categoryId.HasValue)
-                policy = await db.ReturnPolicies.FirstOrDefaultAsync(p => p.CategoryId == categoryId && p.IsActive);
-            policy ??= await db.ReturnPolicies.FirstOrDefaultAsync(p => p.CategoryId == null && p.IsActive);
+            EffectiveReturnPolicy? policy = null;
+            var excluded = false;
+            var warrantyMonths = 0;
+
+            if (productId.HasValue)
+            {
+                var resolution = await ReturnPolicyResolver.ResolveAsync(db, catalogDb, productId.Value, ct);
+                policy = resolution.Policy;
+                excluded = resolution.ProductExcluded;
+                warrantyMonths = resolution.WarrantyMonths;
+            }
+            else
+            {
+                var all = await ReturnPolicyResolver.AllAsync(db, ct);
+                if (categoryId.HasValue)
+                {
+                    var chain = await ReturnPolicyResolver.CategoryChainAsync(catalogDb, categoryId, ct);
+                    foreach (var id in chain)
+                    {
+                        policy = all.FirstOrDefault(p => p.CategoryId == id);
+                        if (policy != null) break;
+                    }
+                }
+                policy ??= all.FirstOrDefault(p => p.CategoryId == null);
+            }
 
             if (policy == null)
-                return Results.NotFound(new { Message = "Không có chính sách áp dụng." });
+                return Results.NotFound(new { message = "Không có chính sách áp dụng." });
 
             return Results.Ok(new
             {
                 policy.Id, policy.Name, policy.CategoryId,
                 policy.DaysForReturn, policy.DaysForExchange, policy.DaysForDefectReplace,
                 policy.RequireOriginalPackaging, policy.RequireAllAccessories,
-                policy.RestockingFeePercent, policy.Notes
+                policy.AllowOpenedBoxReturn, policy.RestockingFeePercent,
+                policy.MissingAccessoriesFeePercent, policy.DaysForStatutoryReturn,
+                isReturnExcluded = excluded,
+                warrantyMonths,
+                reasons = ReturnReasonMatrixView.Build(policy),
+            });
+        }).AllowAnonymous();
+
+        // D08 — bảng quyền trả hàng hiển thị công khai (trang "Chính sách đổi trả").
+        pub.MapGet("/public-matrix", async (SalesDbContext db, CancellationToken ct) =>
+        {
+            var all = await ReturnPolicyResolver.AllAsync(db, ct);
+            var fallback = all.FirstOrDefault(p => p.CategoryId == null);
+
+            return Results.Ok(new
+            {
+                policies = all.Select(p => new
+                {
+                    p.Id, p.Name, p.CategoryId,
+                    p.DaysForReturn, p.DaysForExchange, p.DaysForDefectReplace,
+                    p.RestockingFeePercent, p.MissingAccessoriesFeePercent,
+                    p.AllowOpenedBoxReturn, p.DaysForStatutoryReturn,
+                }).ToList(),
+                reasons = fallback == null ? null : ReturnReasonMatrixView.Build(fallback),
             });
         }).AllowAnonymous();
     }
+
 }
 
 public record CreateReturnPolicyDto(

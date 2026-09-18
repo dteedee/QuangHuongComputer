@@ -183,6 +183,12 @@ public class SegmentationService : ISegmentationService
         return totalAssigned;
     }
 
+    /// <summary>
+    /// W2-8 step 8: gán khách hàng còn khớp rule VÀ gỡ khách hàng auto-assign không còn khớp
+    /// (giữ nguyên các gán thủ công - IsAutoAssigned=false - dù họ có khớp rule hay không). Trước
+    /// đây chỉ thêm, không bao giờ gỡ: một khách rời khỏi ngưỡng RFM của "VIP" vẫn mãi mãi nằm
+    /// trong segment VIP. Toàn bộ add+remove+update-count nằm trong 1 transaction.
+    /// </summary>
     private async Task<int> ProcessAutoAssignmentForSegment(CustomerSegment segment, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(segment.RuleDefinition))
@@ -230,17 +236,24 @@ public class SegmentationService : ISegmentationService
             query = query.Where(c => c.TotalOrderCount >= rules.MinOrderCount.Value);
         }
 
-        // Get matching customers who are not already assigned
-        var existingAssignments = _crmDb.CustomerSegmentAssignments
+        var matchingIds = await query.Select(c => c.Id).ToListAsync(cancellationToken);
+        var matchingSet = matchingIds.ToHashSet();
+
+        var currentAssignments = await _crmDb.CustomerSegmentAssignments
             .Where(a => a.SegmentId == segment.Id)
-            .Select(a => a.CustomerAnalyticsId);
-
-        var customersToAssign = await query
-            .Where(c => !existingAssignments.Contains(c.Id))
-            .Select(c => c.Id)
             .ToListAsync(cancellationToken);
+        var alreadyAssignedIds = currentAssignments.Select(a => a.CustomerAnalyticsId).ToHashSet();
 
-        // Create assignments
+        var customersToAssign = matchingIds.Where(id => !alreadyAssignedIds.Contains(id)).ToList();
+
+        // Only remove AUTO-assigned members that no longer match - manual assignments
+        // (IsAutoAssigned=false) are never touched by the auto-assignment job.
+        var toRemove = currentAssignments
+            .Where(a => a.IsAutoAssigned && !matchingSet.Contains(a.CustomerAnalyticsId))
+            .ToList();
+
+        await using var transaction = await _crmDb.Database.BeginTransactionAsync(cancellationToken);
+
         foreach (var customerId in customersToAssign)
         {
             var assignment = new CustomerSegmentAssignment(
@@ -248,10 +261,23 @@ public class SegmentationService : ISegmentationService
             _crmDb.CustomerSegmentAssignments.Add(assignment);
         }
 
-        await _crmDb.SaveChangesAsync(cancellationToken);
+        if (toRemove.Count > 0)
+        {
+            _crmDb.CustomerSegmentAssignments.RemoveRange(toRemove);
+        }
 
-        // Update segment count
-        await UpdateSegmentCountAsync(segment.Id, cancellationToken);
+        var newCount = alreadyAssignedIds.Count + customersToAssign.Count - toRemove.Count;
+        segment.UpdateCustomerCount(newCount);
+
+        await _crmDb.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        if (toRemove.Count > 0)
+        {
+            _logger.LogInformation(
+                "Segment {SegmentId}: removed {Count} auto-assigned customers no longer matching the rule",
+                segment.Id, toRemove.Count);
+        }
 
         return customersToAssign.Count;
     }

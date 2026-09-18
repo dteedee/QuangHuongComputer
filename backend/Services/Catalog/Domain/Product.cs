@@ -24,6 +24,9 @@ public class Product : Entity<Guid>
     /// <summary>D08: hàng loại trừ khỏi quyền đổi trả tự nguyện (vd. hàng đặt riêng, phần mềm đã kích hoạt).</summary>
     public bool IsReturnExcluded { get; private set; }
 
+    /// <summary>D07: đơn vị tính hiển thị trên hoá đơn/dòng đơn hàng. Mặc định "Chiếc"; dịch vụ dùng "Lần".</summary>
+    public string UnitName { get; private set; } = "Chiếc";
+
     public string? StockLocations { get; private set; } // JSON string storing list of store addresses
     public Guid CategoryId { get; private set; }
     public Guid BrandId { get; private set; }
@@ -125,7 +128,8 @@ public class Product : Entity<Guid>
         string? metaDescription = null,
         string? metaKeywords = null,
         Guid? createdByUserId = null,
-        int? warrantyMonths = null)
+        int? warrantyMonths = null,
+        string? unitName = null)
     {
         // Validate nghiệp vụ: giá bán/giá vốn không được âm.
         if (price < 0)
@@ -159,8 +163,12 @@ public class Product : Entity<Guid>
         SoldCount = 0;
         AverageRating = 0;
         ReviewCount = 0;
-        PublishedAt = DateTime.UtcNow;
+        // D10: "hiện trên web" = có PublishedAt. Sản phẩm mới CHƯA có ảnh thì không tự động lên
+        // web (mới chỉ bán được ở POS/báo giá/kho) - staff gọi Publish() sau khi thêm ảnh.
+        // Có ImageUrl ngay lúc tạo (import, hoặc admin điền sẵn) thì coi như đã sẵn sàng.
+        PublishedAt = string.IsNullOrWhiteSpace(imageUrl) ? null : DateTime.UtcNow;
         LowStockThreshold = 5;
+        UnitName = string.IsNullOrWhiteSpace(unitName) ? "Chiếc" : unitName.Trim();
         CreatedByUserId = createdByUserId;
         MetaTitle = metaTitle;
         MetaDescription = metaDescription;
@@ -290,12 +298,33 @@ public class Product : Entity<Guid>
     {
         AverageRating = newRating;
     }
+
+    /// <summary>Recalc sau khi duyệt/từ chối đánh giá - MỘT lệnh ghi cả hai trường liên quan.</summary>
+    public void UpdateReviewStats(float averageRating, int reviewCount)
+    {
+        AverageRating = averageRating;
+        ReviewCount = reviewCount;
+    }
     
     public void Publish()
     {
         PublishedAt = DateTime.UtcNow;
     }
-    
+
+    /// <summary>D10: gỡ khỏi web (khác `IsActive=false` - sản phẩm vẫn bán được ở POS/kho/báo giá).</summary>
+    public void Unpublish()
+    {
+        PublishedAt = null;
+    }
+
+    /// <summary>D07: đơn vị tính - "Chiếc" mặc định, "Lần" cho dịch vụ, v.v.</summary>
+    public void SetUnitName(string unitName)
+    {
+        if (string.IsNullOrWhiteSpace(unitName))
+            throw new ArgumentException("Đơn vị tính không được rỗng", nameof(unitName));
+        UnitName = unitName.Trim();
+    }
+
     public void Discontinue()
     {
         DiscontinuedAt = DateTime.UtcNow;

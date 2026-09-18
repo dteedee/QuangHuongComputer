@@ -229,4 +229,82 @@ public class ProductTests
 
         hasFlag.Should().NotBeNull("cần API để nghiệp vụ phát hiện tình huống bán lỗ");
     }
+
+    // ------- W2-1 (D10): "lên web" = PublishedAt, tách khỏi IsActive -------
+
+    [Fact]
+    public void KhoiTao_KhongCoAnh_ChuaLenWeb()
+    {
+        var p = NewProduct();
+
+        p.PublishedAt.Should().BeNull("chưa có ảnh thì chưa nên hiện trên storefront");
+    }
+
+    [Fact]
+    public void KhoiTao_CoAnhNgay_TuDongLenWeb()
+    {
+        var p = new Product(
+            name: "Laptop có ảnh", price: 10_000_000m, costPrice: 8_000_000m,
+            description: "d", categoryId: Guid.NewGuid(), brandId: Guid.NewGuid(),
+            stockQuantity: 5, imageUrl: "/media/seed/products/x/01.webp");
+
+        p.PublishedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Publish_SauKhiGoiThi_PublishedAtCoGiaTri()
+    {
+        var p = NewProduct();
+        p.PublishedAt.Should().BeNull();
+
+        p.Publish();
+
+        p.PublishedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Unpublish_XoaPublishedAt_KhongDungIsActive()
+    {
+        var p = NewProduct();
+        p.Publish();
+        p.IsActive.Should().BeTrue();
+
+        p.Unpublish();
+
+        p.PublishedAt.Should().BeNull();
+        p.IsActive.Should().BeTrue("gỡ khỏi web khác với ngừng kinh doanh - vẫn bán được ở POS/kho");
+    }
+
+    // ------- W2-1 (D07): đơn vị tính -------
+
+    [Fact]
+    public void KhoiTao_KhongTruyenUnitName_MacDinhChiec()
+    {
+        var p = NewProduct();
+
+        p.UnitName.Should().Be("Chiếc");
+    }
+
+    [Fact]
+    public void SetUnitName_ChuoiRong_NemLoi()
+    {
+        var p = NewProduct();
+
+        var act = () => p.SetUnitName("  ");
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    // ------- W2-1: thống kê đánh giá tính lại đúng cả hai trường -------
+
+    [Fact]
+    public void UpdateReviewStats_GhiCaHaiTruong()
+    {
+        var p = NewProduct();
+
+        p.UpdateReviewStats(4.5f, 12);
+
+        p.AverageRating.Should().Be(4.5f);
+        p.ReviewCount.Should().Be(12);
+    }
 }

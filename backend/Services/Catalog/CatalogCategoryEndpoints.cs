@@ -7,6 +7,7 @@ using Catalog.Infrastructure;
 using Catalog.Domain;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Validation;
 
 namespace Catalog;
 
@@ -98,7 +99,7 @@ public static class CatalogCategoryEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.CategoriesPattern);
 
             return Results.Created($"/api/catalog/categories/{category.Id}", CatalogResponses.CategoryPayload(category, 0));
-        }).RequireAuthorization(Permissions.Catalog.Create);
+        }).RequireAuthorization(Permissions.Catalog.Create).WithValidation<CreateCategoryDto>();
 
         group.MapPut("/categories/{id:guid}", async (Guid id, UpdateCategoryDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -146,7 +147,7 @@ public static class CatalogCategoryEndpoints
 
             var count = await db.Products.CountAsync(p => p.CategoryId == id);
             return Results.Ok(new { Message = "Category updated", Category = CatalogResponses.CategoryPayload(category, count) });
-        }).RequireAuthorization(Permissions.Catalog.Edit);
+        }).RequireAuthorization(Permissions.Catalog.Edit).WithValidation<UpdateCategoryDto>();
 
         group.MapDelete("/categories/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {

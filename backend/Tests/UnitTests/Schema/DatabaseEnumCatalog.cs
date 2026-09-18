@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -25,7 +26,17 @@ public static class DatabaseEnumCatalog
     {
         var builder = new DbContextOptionsBuilder<TContext>();
         builder.UseNpgsql(UnreachableConnection);
-        var context = (TContext)Activator.CreateInstance(typeof(TContext), builder.Options)!;
+        // OptionalParamBinding là BẮT BUỘC: Activator.CreateInstance(type, args) KHÔNG tự điền
+        // tham số optional, nên khi một DbContext thêm tham số có giá trị mặc định
+        // (CatalogDbContext nhận thêm PriceChangeContext? = null) thì nó ném
+        // MissingMethodException "Constructor on type ... not found" và mọi test enum đều đỏ.
+        // Binder này khớp ctor chỉ theo các đối số được truyền và tự điền phần còn lại.
+        var context = (TContext)Activator.CreateInstance(
+            typeof(TContext),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.OptionalParamBinding,
+            binder: null,
+            args: new object?[] { builder.Options },
+            culture: null)!;
         using (context)
         {
             return context.Model;

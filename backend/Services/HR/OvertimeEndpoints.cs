@@ -43,7 +43,9 @@ public static class OvertimeEndpoints
         ).RequireAuthorization(Permissions.HR.ViewAttendance);
 
         // GET /api/hr/overtime/my — của chính nhân viên
-        group.MapGet("/my", async (ClaimsPrincipal user, HRDbContext db) =>
+        // GET /api/hr/overtime/mine — alias khớp hợp đồng FE (api/hr.ts overtimeApi.mine()) mà
+        // BE trước đây thiếu (chỉ có /my) — W2-7 khoản 8, một trong 17 route drift.
+        var myOvertimeHandler = async (ClaimsPrincipal user, HRDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -54,7 +56,9 @@ public static class OvertimeEndpoints
                 .OrderByDescending(o => o.Date)
                 .Take(50)
                 .ToListAsync());
-        });
+        };
+        group.MapGet("/my", myOvertimeHandler);
+        group.MapGet("/mine", myOvertimeHandler);
 
         group.MapPost("/{id:guid}/approve", async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
         {

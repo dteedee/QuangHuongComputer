@@ -1,4 +1,11 @@
+using BuildingBlocks.Documents;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Paging;
+using BuildingBlocks.Repository;
 using BuildingBlocks.Security;
+using BuildingBlocks.Validation;
+using InventoryModule.Application.Purchasing;
+using InventoryModule.Application.Stock;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -24,13 +31,33 @@ public static class PurchaseRequisitionEndpoints
         var group = app.MapGroup("/api/inventory/purchase-requisitions")
             .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
-        group.MapGet("", async (string? status, InventoryDbContext db) =>
+        // W2-12: phân trang chuẩn (docs/api-conventions.md §3) thay cho Take(500) không đếm tổng.
+        group.MapGet("", async (
+            [AsParameters] PagedRequest request, string? status, InventoryDbContext db, CancellationToken ct) =>
         {
-            var query = db.PurchaseRequisitions.Include(p => p.Items).AsQueryable();
+            var query = db.PurchaseRequisitions.AsQueryable();
             if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PurchaseRequisitionStatus>(status, true, out var s))
                 query = query.Where(p => p.Status == s);
-            var items = await query.OrderByDescending(p => p.CreatedAt).Take(500).ToListAsync();
-            return Results.Ok(items);
+
+            var search = request.NormalizedSearch;
+            if (search is not null) query = query.Where(p => p.Number.Contains(search));
+
+            return Results.Ok(await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Number,
+                    status = p.Status.ToString(),
+                    urgency = p.Urgency.ToString(),
+                    p.RequesterName,
+                    requestedByName = p.RequesterName,
+                    p.Reason,
+                    p.CreatedAt,
+                    itemCount = p.Items.Count,
+                    totalQuantity = p.Items.Sum(i => i.Quantity)
+                })
+                .ToPagedResultAsync(request, ct));
         });
 
         group.MapGet("{id:guid}", async (Guid id, InventoryDbContext db) =>
@@ -41,22 +68,24 @@ public static class PurchaseRequisitionEndpoints
             return pr != null ? Results.Ok(pr) : Results.NotFound();
         });
 
-        group.MapPost("", async (CreatePurchaseRequisitionDto dto, ClaimsPrincipal user, InventoryDbContext db) =>
+        group.MapPost("", async (
+            CreatePurchaseRequisitionDto dto, ClaimsPrincipal user, InventoryDbContext db,
+            InventoryDocumentNumbers numbers, CancellationToken ct) =>
         {
-            var userId = ResolveUserId(user);
-            if (userId == null) return Results.Unauthorized();
+            // Người đề nghị LUÔN từ JWT — body không được phép ký thay người khác.
+            var userId = PurchasingGuards.RequireUserId(user);
 
-            try
-            {
-                var items = dto.Items.Select(i => new PurchaseRequisitionItem(i.ProductId, i.ProductName, i.Quantity, i.Notes)).ToList();
-                var name = user.Identity?.Name ?? user.FindFirstValue(ClaimTypes.Email);
-                var pr = new PurchaseRequisition(userId.Value, name, items, dto.Urgency, dto.Reason);
-                db.PurchaseRequisitions.Add(pr);
-                await db.SaveChangesAsync();
-                return Results.Created($"/api/inventory/purchase-requisitions/{pr.Id}", pr);
-            }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        });
+            var items = dto.Items
+                .Select(i => new PurchaseRequisitionItem(i.ProductId, i.ProductName, i.Quantity, i.Notes))
+                .ToList();
+            var pr = new PurchaseRequisition(userId, PurchasingGuards.ResolveUserName(user), items, dto.Urgency, dto.Reason);
+            pr.SetNumber(await numbers.NextAsync(DocumentNumberTypes.PurchaseRequisition, ct));
+
+            db.PurchaseRequisitions.Add(pr);
+            await db.SaveChangesAsync(ct);
+            return Results.Created($"/api/inventory/purchase-requisitions/{pr.Id}",
+                new { pr.Id, pr.Number, status = pr.Status.ToString() });
+        }).WithValidation<CreatePurchaseRequisitionDto>();
 
         group.MapPost("{id:guid}/submit", async (Guid id, InventoryDbContext db) =>
         {
@@ -72,6 +101,9 @@ public static class PurchaseRequisitionEndpoints
             if (userId == null) return Results.Unauthorized();
             var pr = await db.PurchaseRequisitions.FindAsync(id);
             if (pr == null) return Results.NotFound();
+            // Chống tự duyệt: người đề nghị không được duyệt chính đề nghị của mình.
+            if (pr.RequestedBy == userId.Value)
+                throw new ForbiddenException("Người đề nghị không được tự duyệt đề nghị mua của mình.");
             try { pr.Approve(userId.Value); await db.SaveChangesAsync(); return Results.Ok(pr); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
@@ -87,23 +119,26 @@ public static class PurchaseRequisitionEndpoints
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
 
-        group.MapPost("{id:guid}/convert-to-po", async (Guid id, ConvertPrToPoDto dto, ClaimsPrincipal user, InventoryDbContext db) =>
+        group.MapPost("{id:guid}/convert-to-po", async (
+            Guid id, ConvertPrToPoDto dto, ClaimsPrincipal user, InventoryDbContext db,
+            InventoryDocumentNumbers numbers, CancellationToken ct) =>
         {
-            var userId = ResolveUserId(user);
-            if (userId == null) return Results.Unauthorized();
+            var userId = PurchasingGuards.RequireUserId(user);
+            await PurchasingGuards.EnsureSupplierUsableAsync(db, dto.SupplierId, ct: ct);
 
-            var pr = await db.PurchaseRequisitions.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
-            if (pr == null) return Results.NotFound();
+            var pr = await db.PurchaseRequisitions.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id, ct)
+                ?? throw NotFoundException.For("đề nghị mua", id);
 
             try
             {
                 var priceMap = dto.UnitPrices?.ToDictionary(p => p.ProductId, p => p.UnitPrice) ?? new();
-                var po = pr.ConvertToPO(dto.SupplierId, userId.Value, priceMap);
+                var po = pr.ConvertToPO(dto.SupplierId, userId, priceMap);
+                po.SetNumber(await numbers.NextAsync(DocumentNumberTypes.PurchaseOrder, ct));
                 db.PurchaseOrders.Add(po);
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(ct);
                 return Results.Ok(new { poId = po.Id, poNumber = po.PONumber, totalAmount = po.TotalAmount });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { throw new DomainException(ex.Message); }
         });
 
         group.MapPost("{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>

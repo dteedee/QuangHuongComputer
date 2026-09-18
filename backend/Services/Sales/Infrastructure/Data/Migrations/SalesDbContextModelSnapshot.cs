@@ -29,6 +29,10 @@ namespace Sales.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AnonymousId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("CouponCode")
                         .HasColumnType("text");
 
@@ -63,6 +67,9 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AnonymousId")
+                        .HasDatabaseName("ix_carts_anonymous_id");
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_carts_customer_id");
@@ -198,6 +205,80 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.ToTable("CustomerAddresses", "public");
                 });
 
+            modelBuilder.Entity("Sales.Domain.HeldOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CashierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CustomerPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal>("EstimatedTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResumedOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "ShiftId")
+                        .HasDatabaseName("ix_held_orders_store_shift");
+
+                    b.ToTable("HeldOrders", "public");
+                });
+
             modelBuilder.Entity("Sales.Domain.InstallmentApplication", b =>
                 {
                     b.Property<Guid>("Id")
@@ -209,6 +290,9 @@ namespace Sales.Infrastructure.Data.Migrations
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("ConsentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -222,6 +306,13 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<decimal>("DownPayment")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FinanceContractNumber")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -265,6 +356,9 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_installment_applications_expires_at");
 
                     b.HasIndex("OrderId")
                         .HasDatabaseName("ix_installment_applications_order_id");
@@ -370,6 +464,9 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<string>("ReferenceCode")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ReversalOf")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
@@ -383,6 +480,9 @@ namespace Sales.Infrastructure.Data.Migrations
 
                     b.HasIndex("OrderId")
                         .HasDatabaseName("ix_loyalty_transactions_order_id");
+
+                    b.HasIndex("ReversalOf")
+                        .HasDatabaseName("ix_loyalty_transactions_reversal_of");
 
                     b.HasIndex("Type")
                         .HasDatabaseName("ix_loyalty_transactions_type");
@@ -402,6 +502,10 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<Guid?>("AffiliateId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AnonymousId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("AppliedPromotionsJson")
                         .HasColumnType("text");
 
@@ -410,11 +514,24 @@ namespace Sales.Infrastructure.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("CancellationReason")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CashierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Web");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -502,6 +619,9 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("PaymentDueDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasColumnType("text");
@@ -515,8 +635,14 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<string>("PickupStoreName")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("QuotationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("RetryCount")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("ShippedAt")
                         .HasColumnType("timestamp with time zone");
@@ -542,11 +668,26 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<string>("ShippingProvider")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("ShippingVatAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("ShippingVatRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)")
+                        .HasDefaultValue(0m);
+
                     b.Property<Guid?>("SourceId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("StoreId")
+                        .HasColumnType("uuid");
 
                     b.Property<decimal>("SubtotalAmount")
                         .HasPrecision(18, 2)
@@ -559,6 +700,10 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<decimal>("TaxRate")
                         .HasPrecision(5, 4)
                         .HasColumnType("numeric(5,4)");
+
+                    b.Property<string>("TermsVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
@@ -575,8 +720,17 @@ namespace Sales.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AnonymousId")
+                        .HasDatabaseName("ix_orders_anonymous_id");
+
                     b.HasIndex("OrderNumber")
                         .IsUnique();
+
+                    b.HasIndex("QuotationId")
+                        .HasDatabaseName("ix_orders_quotation_id");
+
+                    b.HasIndex("ShiftId")
+                        .HasDatabaseName("ix_orders_shift_id");
 
                     b.HasIndex("TotalAmount")
                         .HasDatabaseName("ix_orders_total_amount");
@@ -596,6 +750,9 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "OrderDate")
                         .HasDatabaseName("ix_orders_status_order_date");
 
+                    b.HasIndex("StoreId", "OrderDate")
+                        .HasDatabaseName("ix_orders_store_id_order_date");
+
                     b.ToTable("Orders", "public", t =>
                         {
                             t.HasCheckConstraint("CK_Orders_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
@@ -605,6 +762,10 @@ namespace Sales.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_Orders_ShippingDiscount_NonNegative", "\"ShippingDiscount\" >= 0");
 
                             t.HasCheckConstraint("CK_Orders_ShippingFee_NonNegative", "\"ShippingFee\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_ShippingVatAmount_NonNegative", "\"ShippingVatAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_ShippingVatRate_Fraction", "\"ShippingVatRate\" >= 0 AND \"ShippingVatRate\" <= 1");
 
                             t.HasCheckConstraint("CK_Orders_SubtotalAmount_NonNegative", "\"SubtotalAmount\" >= 0");
 
@@ -663,11 +824,96 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.ToTable("OrderHistories", "public");
                 });
 
+            modelBuilder.Entity("Sales.Domain.OrderPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ChangeAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReversed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReceivedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ReversalOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TenderedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_order_payments_order_id");
+
+                    b.HasIndex("ShiftId")
+                        .HasDatabaseName("ix_order_payments_shift_id");
+
+                    b.HasIndex("Method", "Reference")
+                        .HasDatabaseName("ix_order_payments_method_reference");
+
+                    b.ToTable("OrderPayments", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_OrderPayments_Amount_Positive", "\"Amount\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Sales.Domain.ReturnPolicy", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowOpenedBoxReturn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("uuid");
@@ -687,8 +933,19 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.Property<int>("DaysForReturn")
                         .HasColumnType("integer");
 
+                    b.Property<int>("DaysForStatutoryReturn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<decimal>("MissingAccessoriesFeePercent")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -784,6 +1041,10 @@ namespace Sales.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("ReasonCode")
+                        .HasColumnType("integer")
+                        .HasColumnName("ReasonCode");
+
                     b.Property<int?>("ReceivedCondition")
                         .HasColumnType("integer");
 
@@ -878,6 +1139,225 @@ namespace Sales.Infrastructure.Data.Migrations
                     b.ToTable("WishlistItems", "public");
                 });
 
+            modelBuilder.Entity("SalesQuotation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BuyerAddress")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("BuyerBudgetUnitCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("BuyerLegalName")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("BuyerTaxCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("BuyerType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("ConvertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ConvertedOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CustomerEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CustomerPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PaymentTermDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("QuotationNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<decimal>("SubtotalAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("TaxAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("TermsText")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_sales_quotations_customer_id");
+
+                    b.HasIndex("QuotationNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sales_quotations_number");
+
+                    b.HasIndex("Status", "ValidUntil")
+                        .HasDatabaseName("ix_sales_quotations_status_valid_until");
+
+                    b.ToTable("SalesQuotations", "public");
+                });
+
+            modelBuilder.Entity("SalesQuotationLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("LineDiscount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("LineTotal")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("ProductSku")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<Guid>("QuotationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Sequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("UnitName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("VariantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("VatRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<bool>("VatReductionEligible")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("VatStatutoryRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)")
+                        .HasDefaultValue(0m);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuotationId")
+                        .HasDatabaseName("ix_sales_quotation_lines_quotation_id");
+
+                    b.ToTable("SalesQuotationLines", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_SalesQuotationLines_Quantity_Positive", "\"Quantity\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Sales.Domain.Cart", b =>
                 {
                     b.OwnsMany("Sales.Domain.CartItem", "Items", b1 =>
@@ -949,6 +1429,66 @@ namespace Sales.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Sales.Domain.Order", b =>
                 {
+                    b.OwnsOne("Sales.Domain.BuyerInvoiceInfo", "BuyerInvoice", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("BuyerAddress")
+                                .HasMaxLength(400)
+                                .HasColumnType("character varying(400)")
+                                .HasColumnName("BuyerAddress");
+
+                            b1.Property<string>("BuyerBudgetUnitCode")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("BuyerBudgetUnitCode");
+
+                            b1.Property<string>("BuyerEmail")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("BuyerEmail");
+
+                            b1.Property<string>("BuyerFullName")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("BuyerFullName");
+
+                            b1.Property<string>("BuyerLegalName")
+                                .HasMaxLength(250)
+                                .HasColumnType("character varying(250)")
+                                .HasColumnName("BuyerLegalName");
+
+                            b1.Property<string>("BuyerPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("BuyerPhone");
+
+                            b1.Property<string>("BuyerTaxCode")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("BuyerTaxCode");
+
+                            b1.Property<int>("BuyerType")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0)
+                                .HasColumnName("BuyerType");
+
+                            b1.Property<bool>("InvoiceRequested")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("InvoiceRequested");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("Orders", "public");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
                     b.OwnsMany("Sales.Domain.OrderItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
@@ -957,6 +1497,12 @@ namespace Sales.Infrastructure.Data.Migrations
                             b1.Property<Guid>("Id")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
+
+                            b1.Property<decimal>("AllocatedOrderDiscount")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasDefaultValue(0m);
 
                             b1.Property<string>("AppliedPromotionCode")
                                 .HasMaxLength(50)
@@ -973,6 +1519,12 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)");
 
+                            b1.Property<decimal>("GrossBeforeDiscount")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasDefaultValue(0m);
+
                             b1.Property<bool>("IsActive")
                                 .HasColumnType("boolean");
 
@@ -981,6 +1533,12 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasColumnType("boolean")
                                 .HasDefaultValue(false)
                                 .HasColumnName("IsGift");
+
+                            b1.Property<decimal>("LineDiscount")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasDefaultValue(0m);
 
                             b1.Property<decimal>("LineTotal")
                                 .HasPrecision(18, 2)
@@ -1002,6 +1560,15 @@ namespace Sales.Infrastructure.Data.Migrations
 
                             b1.Property<int>("Quantity")
                                 .HasColumnType("integer");
+
+                            b1.Property<int>("Sequence")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0);
+
+                            b1.Property<string>("UnitName")
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)");
 
                             b1.Property<decimal>("UnitPrice")
                                 .HasPrecision(18, 2)
@@ -1025,6 +1592,29 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasColumnType("text")
                                 .HasColumnName("VariantSku");
 
+                            b1.Property<decimal>("VatAmount")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasDefaultValue(0m);
+
+                            b1.Property<decimal>("VatRate")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(5, 4)
+                                .HasColumnType("numeric(5,4)")
+                                .HasDefaultValue(0m);
+
+                            b1.Property<bool>("VatReductionEligible")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
+
+                            b1.Property<decimal>("VatStatutoryRate")
+                                .ValueGeneratedOnAdd()
+                                .HasPrecision(5, 4)
+                                .HasColumnType("numeric(5,4)")
+                                .HasDefaultValue(0m);
+
                             b1.HasKey("OrderId", "Id");
 
                             b1.HasIndex("ProductId")
@@ -1032,18 +1622,29 @@ namespace Sales.Infrastructure.Data.Migrations
 
                             b1.ToTable("OrderItem", "public", t =>
                                 {
+                                    t.HasCheckConstraint("CK_OrderItem_AllocatedOrderDiscount_NonNegative", "\"AllocatedOrderDiscount\" >= 0");
+
                                     t.HasCheckConstraint("CK_OrderItem_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_LineDiscount_NonNegative", "\"LineDiscount\" >= 0");
 
                                     t.HasCheckConstraint("CK_OrderItem_LineTotal_NonNegative", "\"LineTotal\" >= 0");
 
                                     t.HasCheckConstraint("CK_OrderItem_Quantity_Positive", "\"Quantity\" > 0");
 
                                     t.HasCheckConstraint("CK_OrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_VatAmount_NonNegative", "\"VatAmount\" >= 0");
+
+                                    t.HasCheckConstraint("CK_OrderItem_VatRate_Fraction", "\"VatRate\" >= 0 AND \"VatRate\" <= 1");
                                 });
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
                         });
+
+                    b.Navigation("BuyerInvoice")
+                        .IsRequired();
 
                     b.Navigation("Items");
                 });
@@ -1056,6 +1657,16 @@ namespace Sales.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_order_histories_order_id");
+                });
+
+            modelBuilder.Entity("Sales.Domain.OrderPayment", b =>
+                {
+                    b.HasOne("Sales.Domain.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_payments_order_id");
                 });
 
             modelBuilder.Entity("Sales.Domain.ReturnRequest", b =>

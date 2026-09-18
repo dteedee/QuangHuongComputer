@@ -26,7 +26,21 @@ public class PayrollRun : Entity<Guid>
     public DateTime? PaidAt { get; private set; }
     public Guid? ApprovedBy { get; private set; }
     public Guid? PaidBy { get; private set; }
+    // Đặt tên khác "CreatedBy" (Entity<Guid>.CreatedBy đã tồn tại — string, tên người tạo cho
+    // audit chung, gán bởi AuditSaveChangesInterceptor) để KHÔNG che (hide) property nền tảng
+    // bằng property Guid khác kiểu cùng tên (đã có 2 lỗi CS0108 y hệt vậy trong HR — xem
+    // AttendanceRule/Shift.IsActive — không lặp lại lần thứ 3).
+    public Guid? CreatedByUserId { get; private set; }
     public string? Notes { get; private set; }
+
+    /// <summary>
+    /// W2-25 / D06 §3 — NGÀY TRẢ lương. Quyết định bộ tham số THUẾ TNCN được áp dụng
+    /// (Luật 109/2025 Đ.8.3 + NĐ 253/2026 Đ.46.3: thời điểm xác định thu nhập = thời điểm trả),
+    /// trong khi bảo hiểm / lương tối thiểu vùng / hệ số OT tra theo ngày 01 của THÁNG LƯƠNG.
+    /// Mặc định ngày 05 tháng sau, cấu hình bằng <c>PAYROLL_PAY_DAY</c>.
+    /// Nullable vì các kỳ lương tạo trước W2-25 không có giá trị này.
+    /// </summary>
+    public DateOnly? PayDate { get; private set; }
 
     // Aggregates (denormalized cho báo cáo nhanh)
     public int EmployeeCount { get; private set; }
@@ -84,10 +98,40 @@ public class PayrollRun : Entity<Guid>
         TotalInsurance = _payrolls.Sum(p => p.InsuranceDeduction);
     }
 
+    /// <summary>Ghi nhận người tạo kỳ lương — dùng để chặn tự duyệt (segregation of duties, W2-7).</summary>
+    public void SetCreatedBy(Guid userId) => CreatedByUserId ??= userId;
+
+    /// <summary>
+    /// W2-25 — đặt ngày trả lương. Chỉ đổi được khi kỳ chưa duyệt: sau Approved, bộ tham số thuế
+    /// đã chốt trong <c>Payroll.StatutorySnapshotJson</c> và đổi ngày trả sẽ làm phiếu lương
+    /// không tái lập được.
+    /// </summary>
+    public void SetPayDate(DateOnly payDate)
+    {
+        if (Status is PayrollRunStatus.Approved or PayrollRunStatus.Paid)
+            throw new InvalidOperationException($"Không đổi được ngày trả lương khi kỳ đã {Status}.");
+        if (payDate < new DateOnly(Year, Month, 1))
+            throw new ArgumentException("Ngày trả lương không thể trước ngày đầu kỳ lương.", nameof(payDate));
+        PayDate = payDate;
+    }
+
+    /// <summary>Ngày trả đã đặt, hoặc mặc định ngày <paramref name="payDay"/> của tháng kế tiếp.</summary>
+    public DateOnly ResolvePayDate(int payDay = 5)
+    {
+        if (PayDate.HasValue) return PayDate.Value;
+        var next = new DateOnly(Year, Month, 1).AddMonths(1);
+        var day = Math.Clamp(payDay, 1, DateTime.DaysInMonth(next.Year, next.Month));
+        return new DateOnly(next.Year, next.Month, day);
+    }
+
     public void Approve(Guid approvedBy)
     {
         if (Status != PayrollRunStatus.Calculated)
             throw new InvalidOperationException($"Chỉ duyệt được từ Calculated, hiện tại {Status}.");
+        // W2-7: người duyệt phải khác người tạo kỳ lương (segregation of duties). Nếu kỳ lương
+        // được tạo trước khi trường này tồn tại (CreatedByUserId = null), không chặn — dữ liệu cũ.
+        if (CreatedByUserId.HasValue && CreatedByUserId.Value == approvedBy)
+            throw new InvalidOperationException("Người duyệt phải khác người tạo kỳ lương.");
         // Approve tất cả payroll con
         foreach (var p in _payrolls)
         {

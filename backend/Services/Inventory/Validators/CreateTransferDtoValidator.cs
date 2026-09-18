@@ -1,5 +1,6 @@
 using BuildingBlocks.Validation;
 using FluentValidation;
+using InventoryModule.Endpoints;
 
 namespace InventoryModule.Validators;
 

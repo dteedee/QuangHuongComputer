@@ -38,6 +38,36 @@ public class EmploymentContract : Entity<Guid>
     public DateTime? TerminatedAt { get; private set; }
     public string? TerminationReason { get; private set; }
 
+    /// <summary>
+    /// W2-25 / D06 §4 — HỢP ĐỒNG THỬ VIỆC RIÊNG (ký riêng, không phải nội dung thử việc ghi trong
+    /// HĐLĐ theo BLLĐ Đ.24). CHỈ khi cờ này bật thì người lao động mới nằm ngoài BHXH/BHYT/BHTN bắt
+    /// buộc (NĐ 158/2025 Đ.3.5; Luật Việc làm 74/2025 Đ.31.2) và mới khấu trừ thuế 10% mỗi lần chi.
+    ///
+    /// Thử việc ghi TRONG HĐLĐ -> đóng đủ bảo hiểm; HĐLĐ ≥ 3 tháng -> tính thuế luỹ tiến.
+    /// <c>ContractType.Probation</c> một mình KHÔNG đủ để quyết định.
+    /// </summary>
+    public bool IsStandaloneProbation { get; private set; }
+
+    /// <summary>Số tháng thời hạn hợp đồng — &lt; 3 tháng thì khấu trừ 10% thay vì luỹ tiến (D06 §4).</summary>
+    public int TermMonths
+    {
+        get
+        {
+            if (Type == ContractType.Permanent || !EndDate.HasValue) return 120;
+            var months = ((EndDate.Value.Year - StartDate.Year) * 12) + EndDate.Value.Month - StartDate.Month;
+            if (EndDate.Value.Day >= StartDate.Day) months += 1;
+            return Math.Max(0, months);
+        }
+    }
+
+    /// <summary>W2-25 — đánh dấu/bỏ đánh dấu hợp đồng thử việc riêng.</summary>
+    public void SetStandaloneProbation(bool isStandalone)
+    {
+        if (isStandalone && Type != ContractType.Probation)
+            throw new ArgumentException("Chỉ hợp đồng loại Probation mới đánh dấu được là hợp đồng thử việc riêng.");
+        IsStandaloneProbation = isStandalone;
+    }
+
     public EmploymentContract(
         Guid employeeId,
         string contractNumber,
@@ -89,6 +119,25 @@ public class EmploymentContract : Entity<Guid>
         Status = ContractStatus.Terminated;
         TerminationReason = reason;
         TerminatedAt = terminatedAt;
+    }
+
+    /// <summary>Sửa các trường hồ sơ hợp đồng — W2-7 khoản 8 (PUT /api/hr/contracts/{id}).
+    /// Không cho sửa khi đã Terminated/Renewed (lịch sử bất biến).</summary>
+    public void UpdateTerms(DateTime? endDate, decimal contractSalary, decimal insurableSalary, string? documentUrl)
+    {
+        if (Status == ContractStatus.Terminated || Status == ContractStatus.Renewed)
+            throw new InvalidOperationException($"Không thể sửa HĐ ở trạng thái {Status}.");
+        if (contractSalary <= 0) throw new ArgumentException("ContractSalary phải > 0.");
+        if (insurableSalary <= 0) throw new ArgumentException("InsurableSalary phải > 0.");
+        if (Type == ContractType.Permanent && endDate.HasValue)
+            throw new ArgumentException("Hợp đồng không xác định thời hạn không có EndDate.");
+        if (endDate.HasValue && endDate.Value <= StartDate)
+            throw new ArgumentException("EndDate phải sau StartDate.");
+
+        EndDate = endDate;
+        ContractSalary = contractSalary;
+        InsurableSalary = insurableSalary;
+        DocumentUrl = documentUrl;
     }
 
     public void MarkExpired()

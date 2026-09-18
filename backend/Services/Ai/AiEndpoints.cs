@@ -17,12 +17,16 @@ public static class AiEndpoints
         {
             if (string.IsNullOrWhiteSpace(request.Message))
                 return Results.BadRequest(new { error = "Message cannot be empty" });
+            if (request.Message.Length > AiGuardrails.MaxQuestionLength)
+                return Results.BadRequest(new { error = $"Message exceeds {AiGuardrails.MaxQuestionLength} characters" });
 
             var response = await aiService.AskAsync(request.Message);
             return Results.Ok(new { response });
             // W1-10: chatbot storefront cho khách vãng lai.
             // Cần rule POST /api/ai/chat trong PublicEndpointAllowList + rate limit (IR W1, xem W0 #110).
-        }).AllowAnonymous();
+        }).AllowAnonymous()
+          // W2-15: applies IR W0 #4 - "ai" policy exists since W0 but nothing attached it yet.
+          .RequireRateLimiting("ai");
 
         // NOTE: /recommendations/* handled by RecommendationEndpoints
         // NOTE: /search handled by SemanticSearchEndpoints

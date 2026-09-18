@@ -24,7 +24,8 @@ public static class DependencyInjection
 
         services.AddHttpClient();
         services.AddScoped<IAiService, AiService>();
-        services.AddScoped<IEmbeddingService, SimpleEmbeddingService>();
+        services.AddScoped<IGeminiClient, GeminiClient>();
+        services.AddScoped<IProductRetrievalService, ProductRetrievalService>();
         services.AddScoped<RecommendationEngine>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));

@@ -54,6 +54,43 @@ public class Employee : Entity<Guid>
     public Guid? StoreId { get; private set; }              // chi nhánh trực thuộc (Phase 05)
     public int NumberOfDependents { get; private set; }      // đếm nhanh, đồng bộ với Dependent
 
+    // W2-25 / D06 §4 — ba cờ quyết định cách tính thuế TNCN và đoàn phí của từng người.
+    /// <summary>Cá nhân CƯ TRÚ (mặc định true). false -> 20% trên tổng thu nhập, không giảm trừ (Luật 109/2025 Đ.21).</summary>
+    public bool IsTaxResident { get; private set; } = true;
+
+    /// <summary>Có bản cam kết TNCN (thu nhập chưa đến mức phải nộp) -> tạm chưa khấu trừ 10% (NĐ 253/2026 Đ.50.2).</summary>
+    public bool HasPitCommitment { get; private set; }
+
+    /// <summary>Là đoàn viên công đoàn -> trừ đoàn phí 1% (mặc định false, D06 §2 đánh dấu CHƯA XÁC MINH).</summary>
+    public bool IsUnionMember { get; private set; }
+
+    /// <summary>Ghi đè cách tính thuế theo từng nhân viên: Progressive | Flat10 | NonResident20 (D06 §4).</summary>
+    public string? PitMethodOverride { get; private set; }
+
+    /// <summary>W2-25 — đặt các cờ thuế/bảo hiểm của cá nhân. null = giữ nguyên giá trị hiện tại.</summary>
+    public void SetTaxProfile(
+        bool? isTaxResident = null,
+        bool? hasPitCommitment = null,
+        bool? isUnionMember = null,
+        string? pitMethodOverride = null,
+        bool clearPitMethodOverride = false)
+    {
+        if (isTaxResident.HasValue) IsTaxResident = isTaxResident.Value;
+        if (hasPitCommitment.HasValue) HasPitCommitment = hasPitCommitment.Value;
+        if (isUnionMember.HasValue) IsUnionMember = isUnionMember.Value;
+
+        if (clearPitMethodOverride)
+        {
+            PitMethodOverride = null;
+        }
+        else if (!string.IsNullOrWhiteSpace(pitMethodOverride))
+        {
+            if (!Enum.TryParse<BuildingBlocks.TaxEngine.PitMethod>(pitMethodOverride, ignoreCase: true, out var parsed))
+                throw new ArgumentException("PitMethodOverride phải là Progressive, Flat10 hoặc NonResident20.", nameof(pitMethodOverride));
+            PitMethodOverride = parsed.ToString();
+        }
+    }
+
     // Navigation
     public ICollection<Dependent> Dependents { get; private set; } = new List<Dependent>();
     public ICollection<EmploymentContract> Contracts { get; private set; } = new List<EmploymentContract>();
@@ -261,6 +298,21 @@ public class Employee : Entity<Guid>
     }
 
     public void AssignStore(Guid? storeId) => StoreId = storeId;
+
+    /// <summary>
+    /// Gắn tài khoản đăng nhập (Identity user) — điều kiện tiên quyết cho toàn bộ self-service
+    /// (chấm công, nghỉ phép, phiếu lương "của tôi"). Uniqueness thật (1 user chỉ gắn 1 nhân viên)
+    /// được ép ở tầng ứng dụng + index lọc trên DB (W2-7 khoản 1), không ở đây vì Entity không
+    /// truy vấn được các Employee khác.
+    /// </summary>
+    public void LinkUser(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("UserId là bắt buộc.", nameof(userId));
+        UserId = userId;
+    }
+
+    public void UnlinkUser() => UserId = null;
 
     public void RefreshDependentCount(int count)
     {

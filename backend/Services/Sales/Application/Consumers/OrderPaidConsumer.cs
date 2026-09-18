@@ -19,19 +19,28 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
     private readonly ILogger<OrderPaidConsumer> _logger;
 
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly Catalog.Infrastructure.CatalogDbContext _catalogDb;
+    private readonly Sales.Application.Inventory.InventoryReservationService _reservations;
+    private readonly ILogger<Sales.Application.Orders.OrderLifecycleService> _lifecycleLogger;
 
     public OrderPaidConsumer(
         SalesDbContext dbContext,
         ContentDbContext contentDb,
         InventoryDbContext inventoryDb,
         ILogger<OrderPaidConsumer> logger,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        Catalog.Infrastructure.CatalogDbContext catalogDb,
+        Sales.Application.Inventory.InventoryReservationService reservations,
+        ILogger<Sales.Application.Orders.OrderLifecycleService> lifecycleLogger)
     {
         _dbContext = dbContext;
         _contentDb = contentDb;
         _inventoryDb = inventoryDb;
         _logger = logger;
         _publishEndpoint = publishEndpoint;
+        _catalogDb = catalogDb;
+        _reservations = reservations;
+        _lifecycleLogger = lifecycleLogger;
     }
 
     public async Task Consume(ConsumeContext<PaymentSucceededEvent> context)
@@ -72,9 +81,18 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
             return;
         }
 
-        // MarkAsPaid: đặt PaymentStatus=Paid và CHỈ nâng Status lên Paid khi đang Confirmed
-        // → không kéo lùi Fulfilled/Shipped/Delivered/Completed (SetStatus thì có).
-        order.MarkAsPaid(context.Message.PaymentId.ToString());
+        // W2-23: mọi đường "tiền đã về" đi qua ĐÚNG MỘT lối vào — RecordTenderAsync — nên sổ thu
+        // (OrderPayments) và OrderHistories luôn khớp trạng thái, và webhook gửi lại không ghi đúp.
+        var lifecycle = new Sales.Application.Orders.OrderLifecycleService(
+            _dbContext, _inventoryDb, _catalogDb, _reservations, _publishEndpoint, _lifecycleLogger);
+
+        var (_, collected, due) = await lifecycle.RecordTenderAsync(
+            order.Id,
+            Sales.Domain.PaymentTenderMethod.Transfer,
+            context.Message.Amount,
+            context.Message.PaymentId.ToString(),
+            actor: "payment-gateway",
+            ct: context.CancellationToken);
 
         // Phase 04: chỉ tăng CurrentUsage của promotion khi đã Paid — sửa nợ Phase 01.
         //    Trước đây Coupon.Apply() tăng lúc tạo Order → mã cháy oan khi thanh toán fail.
@@ -82,13 +100,8 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
         await _dbContext.SaveChangesAsync();
         await _contentDb.SaveChangesAsync();
 
-        // Trigger Invoice Creation
-        await _publishEndpoint.Publish(new InvoiceRequestedEvent(
-            order.Id,
-            order.CustomerId,
-            order.Items.Select(i => new InvoiceItemDto(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice)).ToList(),
-            order.TotalAmount
-        ));
+        // W2-23 / D07 §5 (NĐ 254/2026 Đ9.1): KHÔNG lập hoá đơn ở mốc thu tiền. Hoá đơn được neo
+        // vào mốc BÀN GIAO và do OrderInvoiceTriggerConsumer phát, theo `EInvoice:IssueTrigger`.
 
         // Fulfillment thật: gán serial InStock thật từ kho (nếu sản phẩm có theo dõi serial) và đánh dấu đã bán.
         var fulfilledItems = await AllocateFulfilledItemsAsync(order, context.CancellationToken);
@@ -96,8 +109,8 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
         await _publishEndpoint.Publish(new OrderFulfilledEvent(order.Id, order.CustomerId, fulfilledItems));
 
         _logger.LogInformation(
-            "Đơn {OrderId}: PaymentStatus=Paid (Status={Status}), đã yêu cầu hoá đơn và fulfil",
-            order.Id, order.Status);
+            "Đơn {OrderId}: đã thu {Collected}, còn thiếu {Due} (Status={Status}, PaymentStatus={PaymentStatus})",
+            order.Id, collected, due, order.Status, order.PaymentStatus);
     }
 
     /// <summary>

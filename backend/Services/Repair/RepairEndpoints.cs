@@ -1,4 +1,5 @@
 using BuildingBlocks.Security;
+using BuildingBlocks.Configuration;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -7,7 +8,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Repair.Domain;
 using Repair.Infrastructure;
+using Repair.Services;
 using Microsoft.AspNetCore.Authorization;
+using MassTransit;
+using BuildingBlocks.Messaging.IntegrationEvents;
 
 namespace Repair;
 
@@ -19,6 +23,8 @@ public static class RepairEndpoints
         app.MapBookingEndpoints();
         app.MapTechnicianEndpoints();
         app.MapQuoteEndpoints();
+        app.MapPaymentHandoverEndpoints();
+        app.MapPublicTrackingEndpoints();
 
         // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
         // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
@@ -259,19 +265,40 @@ public static class RepairEndpoints
             }
         });
 
-        adminGroup.MapPut("/work-orders/{id:guid}/complete", async (Guid id, CompleteRepairDto dto, RepairDbContext db) =>
+        // W2-13: completing a repair commits every reserved part to a real stock-out
+        // (StockMovementReason.RepairPart) BEFORE the work order flips to Completed,
+        // so a ledger failure (e.g. concurrent over-commit) blocks completion instead
+        // of leaving the work order Completed with stock still only reserved.
+        adminGroup.MapPut("/work-orders/{id:guid}/complete", async (Guid id, CompleteRepairDto dto, RepairDbContext db, IRepairStockService stock, IPublishEndpoint bus, ClaimsPrincipal user) =>
         {
-            var workOrder = await db.WorkOrders.FindAsync(id);
+            var workOrder = await db.WorkOrders.Include(w => w.Parts).FirstOrDefaultAsync(w => w.Id == id);
             if (workOrder == null)
                 return Results.NotFound(new { Error = "Work order not found" });
 
             try
             {
+                var performedBy = TechnicianAccess.GetUserName(user);
+                foreach (var part in workOrder.Parts)
+                {
+                    await stock.CommitAsync(part.InventoryItemId, part.Quantity, workOrder.Id, performedBy);
+                }
+
                 workOrder.CompleteRepair(dto.PartsCost, dto.LaborCost, dto.Notes);
                 await db.SaveChangesAsync();
-                return Results.Ok(new 
-                { 
-                    Message = "Repair completed", 
+
+                // docs/integration-events.md: RepairCompletedEvent was "contract only" -
+                // wave 2 wires the publish. BookingId falls back to the work order's own
+                // id for walk-in intake (no ServiceBooking behind it).
+                await bus.Publish(new RepairCompletedEvent(
+                    workOrder.ServiceBookingId ?? workOrder.Id,
+                    workOrder.CustomerId,
+                    workOrder.DeviceModel,
+                    workOrder.TotalCost,
+                    DateTime.UtcNow));
+
+                return Results.Ok(new
+                {
+                    Message = "Repair completed",
                     Status = workOrder.Status.ToString(),
                     TotalCost = workOrder.TotalCost
                 });
@@ -282,11 +309,23 @@ public static class RepairEndpoints
             }
         });
 
-        adminGroup.MapPut("/work-orders/{id:guid}/cancel", async (Guid id, CancelWorkOrderDto dto, RepairDbContext db) =>
+        // W2-13: cancelling releases every part still only reserved. A part on an
+        // already-Completed work order was committed (real stock-out), not reserved,
+        // so cancelling a Completed order never touches the ledger here.
+        adminGroup.MapPut("/work-orders/{id:guid}/cancel", async (Guid id, CancelWorkOrderDto dto, RepairDbContext db, IRepairStockService stock, ClaimsPrincipal user) =>
         {
-            var workOrder = await db.WorkOrders.FindAsync(id);
+            var workOrder = await db.WorkOrders.Include(w => w.Parts).FirstOrDefaultAsync(w => w.Id == id);
             if (workOrder == null)
                 return Results.NotFound(new { Error = "Work order not found" });
+
+            if (workOrder.Status != WorkOrderStatus.Completed)
+            {
+                var performedBy = TechnicianAccess.GetUserName(user);
+                foreach (var part in workOrder.Parts)
+                {
+                    await stock.ReleaseAsync(part.InventoryItemId, part.Quantity, workOrder.Id, performedBy);
+                }
+            }
 
             workOrder.Cancel(dto.Reason);
             await db.SaveChangesAsync();
@@ -333,13 +372,31 @@ public static class RepairEndpoints
             return Results.Ok(technicians);
         });
 
-        adminGroup.MapPost("/technicians", async (CreateTechnicianDto dto, RepairDbContext db) =>
+        adminGroup.MapPost("/technicians", async (CreateTechnicianDto dto, RepairDbContext db, IAppSettings settings) =>
         {
-            var technician = new Technician(dto.Name, dto.Specialty, dto.HourlyRate);
+            // D08/IR#54: falls back to the configured default labour rate (VND/hour),
+            // never a hardcoded 50.0m, when the caller does not specify one.
+            var hourlyRate = dto.HourlyRate ?? settings.GetDecimal("Repair.DefaultLaborRateVnd", 100000m);
+            var technician = new Technician(dto.Name, dto.Specialty, hourlyRate);
             db.Technicians.Add(technician);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Technician created", TechnicianId = technician.Id });
+        });
+
+        // W2-13: technician CRUD - update skills/rate/active + deactivate.
+        adminGroup.MapPut("/technicians/{id:guid}", async (Guid id, UpdateTechnicianDto dto, RepairDbContext db) =>
+        {
+            var technician = await db.Technicians.FindAsync(id);
+            if (technician == null)
+                return Results.NotFound(new { Error = "Technician not found" });
+
+            technician.UpdateProfile(dto.Name, dto.Specialty, dto.HourlyRate);
+            if (dto.IsAvailable.HasValue)
+                technician.UpdateAvailability(dto.IsAvailable.Value);
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { Message = "Technician updated" });
         });
     }
 }
@@ -350,4 +407,5 @@ public record CreateRepairDto(string DeviceModel, string SerialNumber, string Is
 public record AssignTechnicianDto(Guid TechnicianId);
 public record CompleteRepairDto(decimal PartsCost, decimal LaborCost, string? Notes);
 public record CancelWorkOrderDto(string Reason);
-public record CreateTechnicianDto(string Name, string Specialty, decimal HourlyRate = 50.0m);
+public record CreateTechnicianDto(string Name, string Specialty, decimal? HourlyRate = null);
+public record UpdateTechnicianDto(string Name, string Specialty, decimal HourlyRate, bool? IsAvailable = null);

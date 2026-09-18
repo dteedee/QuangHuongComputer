@@ -46,6 +46,10 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
+    // W2-15: DB caps ChatMessage.Text at 4000 (CommunicationDbContext.cs); validate here so the
+    // caller gets a friendly SignalR error instead of a raw DbUpdateException from SaveChangesAsync.
+    private const int MaxMessageLength = 4000;
+
     public async Task SendMessage(string conversationId, string text)
     {
         var userId = GetUserId();
@@ -56,6 +60,17 @@ public class ChatHub : Hub
         if (!Guid.TryParse(conversationId, out convId))
         {
             await Clients.Caller.SendAsync("Error", "Invalid conversation ID");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            await Clients.Caller.SendAsync("Error", "Tin nhắn không được để trống");
+            return;
+        }
+        if (text.Length > MaxMessageLength)
+        {
+            await Clients.Caller.SendAsync("Error", $"Tin nhắn vượt quá {MaxMessageLength} ký tự");
             return;
         }
 
@@ -72,6 +87,12 @@ public class ChatHub : Hub
         if (!conversation.CanBeAccessedBy(userId, userRoles))
         {
             await Clients.Caller.SendAsync("Error", "Access denied");
+            return;
+        }
+
+        if (conversation.Status == ConversationStatus.Closed)
+        {
+            await Clients.Caller.SendAsync("Error", "Hội thoại đã đóng - hãy mở lại trước khi gửi tin nhắn");
             return;
         }
 
@@ -176,10 +197,118 @@ public class ChatHub : Hub
         await Clients.Group($"conversation_{conversation.Id}").SendAsync("Notify", $"{userName} đã tham gia hỗ trợ");
     }
 
+    /// <summary>
+    /// W2-15: was a no-op stub (echoed "MessageRead" back to the caller without persisting
+    /// anything) - no read receipts existed at all. Now persists per-message read state and
+    /// broadcasts it to the whole conversation room, with the same access check every other
+    /// hub method uses.
+    /// </summary>
     public async Task MarkAsRead(string messageId)
     {
-        // Implementation for marking messages as read
-        await Clients.Caller.SendAsync("MessageRead", messageId);
+        var userId = GetUserId();
+        var userRoles = GetUserRoles();
+
+        if (!Guid.TryParse(messageId, out var msgId))
+        {
+            await Clients.Caller.SendAsync("Error", "Invalid message ID");
+            return;
+        }
+
+        var message = await _conversationRepository.GetMessageByIdAsync(msgId);
+        if (message == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Message not found");
+            return;
+        }
+
+        var conversation = await _conversationRepository.GetByIdAsync(message.ConversationId);
+        if (conversation == null || !conversation.CanBeAccessedBy(userId, userRoles))
+        {
+            await Clients.Caller.SendAsync("Error", "Access denied");
+            return;
+        }
+
+        if (!message.IsRead)
+        {
+            message.MarkAsRead();
+            await _conversationRepository.SaveChangesAsync();
+        }
+
+        await Clients.Group($"conversation_{conversation.Id}").SendAsync("MessageRead", messageId, userId);
+    }
+
+    /// <summary>W2-15: close a conversation - support staff or Admin only.</summary>
+    public async Task CloseConversation(string conversationId)
+    {
+        await ChangeConversationStatus(conversationId, close: true);
+    }
+
+    /// <summary>W2-15: reopen a closed conversation - support staff or Admin only.</summary>
+    public async Task ReopenConversation(string conversationId)
+    {
+        await ChangeConversationStatus(conversationId, close: false);
+    }
+
+    private async Task ChangeConversationStatus(string conversationId, bool close)
+    {
+        if (!IsSupportStaff())
+        {
+            await Clients.Caller.SendAsync("Error", "Access denied");
+            return;
+        }
+
+        if (!Guid.TryParse(conversationId, out var convId))
+        {
+            await Clients.Caller.SendAsync("Error", "Invalid conversation ID");
+            return;
+        }
+
+        var conversation = await _conversationRepository.GetByIdAsync(convId);
+        if (conversation == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Conversation not found");
+            return;
+        }
+
+        if (close) conversation.Close(); else conversation.Reopen();
+        await _conversationRepository.UpdateAsync(conversation);
+        await _conversationRepository.SaveChangesAsync();
+
+        var eventName = close ? "ConversationClosed" : "ConversationReopened";
+        await Clients.Group($"conversation_{convId}").SendAsync(eventName, conversationId);
+        await Clients.Group("SupportTeam").SendAsync(eventName, conversationId);
+    }
+
+    /// <summary>W2-15: transfer an assigned conversation to another staff member. Support staff
+    /// (or Admin) only - the target is trusted from the caller's own input (staff UI picks from
+    /// a staff list), same trust level as AssignConversation already has.</summary>
+    public async Task TransferConversation(string conversationId, string toUserId, string toUserName)
+    {
+        if (!IsSupportStaff())
+        {
+            await Clients.Caller.SendAsync("Error", "Access denied");
+            return;
+        }
+
+        if (!Guid.TryParse(conversationId, out var convId))
+        {
+            await Clients.Caller.SendAsync("Error", "Invalid conversation ID");
+            return;
+        }
+
+        var conversation = await _conversationRepository.GetByIdAsync(convId);
+        if (conversation == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Conversation not found");
+            return;
+        }
+
+        conversation.AssignToUser(toUserId, toUserName);
+        await _conversationRepository.UpdateAsync(conversation);
+        await _conversationRepository.SaveChangesAsync();
+
+        await Clients.Group($"conversation_{convId}").SendAsync("ConversationTransferred", conversationId, toUserName);
+        await Clients.Group("SupportTeam").SendAsync("ConversationTransferred", conversationId, toUserName);
     }
 
     public async Task UserTyping(string conversationId)

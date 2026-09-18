@@ -57,13 +57,12 @@ public class SePayService
         _config = config;
     }
 
-    public string CreatePaymentUrl(string? accountNo, string? bankCode, decimal amount, string content)
-    {
-        var acc = !string.IsNullOrWhiteSpace(accountNo) ? accountNo : _config.AccountNumber;
-        var bank = !string.IsNullOrWhiteSpace(bankCode) ? bankCode : _config.BankCode;
-        var encodedContent = System.Net.WebUtility.UrlEncode(content);
-        return $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={amount}&des={encodedContent}";
-    }
+    // W2-4: `CreatePaymentUrl` đã bị XOÁ. Nó dựng `https://qr.sepay.vn/img?acc=…&amount=…&des=…`,
+    // tức là đẩy số tài khoản, số tiền và nội dung chuyển khoản của từng khách sang máy chủ bên thứ
+    // ba mỗi lần mở màn thanh toán. Mã QR bây giờ do
+    // `Application/Providers/BankTransfer/VietQrPayloadBuilder` + `Endpoints/PaymentQrImageService`
+    // tự dựng và tự vẽ trong tiến trình. Phương thức cũ không còn người gọi nào; giữ lại chỉ là để
+    // sẵn một khẩu súng đã lên đạn cho lần sửa sau.
 
     /// <summary>
     /// W0-10 / D04 R4c — xác thực webhook SePay FAIL-CLOSED.

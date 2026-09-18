@@ -10,17 +10,26 @@ namespace Ai;
 
 public static class SemanticSearchEndpoints
 {
+    // W2-15: this is a KEYWORD search (ILIKE), not semantic - name kept for URL compatibility,
+    // documented as such in docs/api-contracts/communication-ai.md.
+    private const int MaxQueryLength = 200;
+
     public static void MapSemanticSearchEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/ai");
 
-        // POST /api/ai/search — semantic search with ILIKE fallback (pgvector future)
+        // POST /api/ai/search — keyword search with ILIKE + unaccent (pgvector future)
         group.MapPost("/search", async ([FromBody] SemanticSearchRequest request, CatalogDbContext catalogDb) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Query))
+            // W2-15: FE sends {message: query} in one call site (frontend/src/api/ai.ts:33) and
+            // {query} in another (:51) - accept both rather than 400ing on the FE's own inconsistency.
+            var queryText = request.Query ?? request.Message;
+            if (string.IsNullOrWhiteSpace(queryText))
                 return Results.BadRequest(new { error = "Query cannot be empty" });
+            if (queryText.Length > MaxQueryLength)
+                queryText = queryText[..MaxQueryLength];
 
-            var terms = request.Query.Trim().ToLower()
+            var terms = queryText.Trim().ToLower()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Distinct()
                 .Take(5)
@@ -66,11 +75,15 @@ public static class SemanticSearchEndpoints
                 .ThenByDescending(r => r.RelevanceScore)
                 .ToList();
 
-            return Results.Ok(new { results = sorted, query = request.Query, total = sorted.Count });
+            return Results.Ok(new { results = sorted, query = queryText, total = sorted.Count });
             // W1-10: tìm kiếm ngữ nghĩa trên storefront, khách chưa đăng nhập phải dùng được.
             // Cần rule POST /api/ai/search trong PublicEndpointAllowList + rate limit (IR W1, xem W0 #110).
-        }).AllowAnonymous();
+        }).AllowAnonymous()
+          // W2-15: applies IR W0 #4.
+          .RequireRateLimiting("ai");
     }
 }
 
-public record SemanticSearchRequest(string Query);
+// W2-15: Message is a FE-compat alias (frontend/src/api/ai.ts:33 sends {message}) - Query stays
+// the canonical field this contract documents.
+public record SemanticSearchRequest(string? Query, string? Message = null);

@@ -180,6 +180,7 @@ public class ContentDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.ToTable("PromotionRewards");
             entity.Property(e => e.DiscountPercent).HasPrecision(5, 2);
+            entity.Property(e => e.FlashPrice).HasPrecision(18, 2);
             entity.HasIndex(e => e.PromotionId).HasDatabaseName("IX_PromotionReward_Promotion");
         });
 

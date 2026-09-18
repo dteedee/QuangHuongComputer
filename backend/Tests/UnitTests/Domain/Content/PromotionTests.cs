@@ -216,4 +216,92 @@ public class PromotionTests
         p.Conditions.Should().HaveCount(1);
         p.Conditions.First().ValueJson.Should().Be("5000000");
     }
+
+    // ===== W2-2: FlashSale-as-Promotion contract (phase-20 step 5) =====
+
+    private static Promotion MakeFlashSale() =>
+        Promotion.Create(
+            code: null,
+            name: "Flash Sale Cuoi Tuan",
+            description: null,
+            type: PromotionType.FlashSale,
+            startAt: DateTime.UtcNow.AddMinutes(-1),
+            endAt: DateTime.UtcNow.AddHours(2),
+            discountType: PromotionDiscountType.FixedPrice,
+            discountValue: 0,
+            maxDiscountAmount: null,
+            isAutomatic: true);
+
+    [Fact]
+    public void AddReward_FlashSale_ThieuFlashPrice_NemLoi()
+    {
+        var p = MakeFlashSale();
+
+        var act = () => p.AddReward(Guid.NewGuid(), null, quantity: 1, flashPrice: null);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void AddReward_FlashSale_CoFlashPriceVaQuantityLimit_LuuDung()
+    {
+        var p = MakeFlashSale();
+
+        p.AddReward(Guid.NewGuid(), null, quantity: 1, flashPrice: 12_345_000m, quantityLimit: 10);
+
+        var reward = p.Rewards.Single();
+        reward.FlashPrice.Should().Be(12_345_000m);
+        reward.QuantityLimit.Should().Be(10);
+        reward.SoldCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void PromotionReward_IncrementSold_VuotQuantityLimit_NemLoi()
+    {
+        var p = MakeFlashSale();
+        p.AddReward(Guid.NewGuid(), null, quantity: 1, flashPrice: 1_000_000m, quantityLimit: 2);
+        var reward = p.Rewards.Single();
+
+        reward.IncrementSold(2);
+        var act = () => reward.IncrementSold(1);
+
+        act.Should().Throw<InvalidOperationException>();
+        reward.IsSoldOut().Should().BeTrue();
+    }
+
+    [Fact]
+    public void UpdateBasicFields_SuaNameVaPriority_ApDungDung()
+    {
+        var p = MakeBasicCode();
+
+        p.UpdateBasicFields(name: "Ten Moi", description: null, priority: 50, endAt: null);
+
+        p.Name.Should().Be("Ten Moi");
+        p.Priority.Should().Be(50);
+    }
+
+    [Fact]
+    public void Archive_ChuaTungDung_ThanhCong()
+    {
+        var p = MakeBasicCode();
+
+        p.Archive();
+
+        p.Status.Should().Be(PromotionStatus.Expired);
+        p.IsActive.Should().BeFalse();
+        p.CanDelete().Should().BeTrue();
+    }
+
+    [Fact]
+    public void Archive_DaTungDung_NemLoi()
+    {
+        var p = MakeBasicCode(maxDiscount: 100_000m);
+        p.Activate();
+        p.IncrementUsage();
+
+        var act = () => p.Archive();
+
+        act.Should().Throw<InvalidOperationException>();
+        p.CanDelete().Should().BeFalse();
+    }
 }

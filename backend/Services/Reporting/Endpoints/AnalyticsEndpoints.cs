@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Sales.Infrastructure;
 using Sales.Domain;
-using Catalog.Infrastructure;
 using InventoryModule.Infrastructure;
+using BuildingBlocks.Time;
+using Reporting.Shared;
 
 namespace Reporting.Endpoints;
 
@@ -12,13 +13,17 @@ public static class AnalyticsEndpoints
 {
     public static void MapAnalyticsEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/profit-margin", async (SalesDbContext salesDb, CatalogDbContext catalogDb, string? startDate, string? endDate) =>
+        group.MapGet("/profit-margin", async (SalesDbContext salesDb, InventoryDbContext invDb, IBusinessClock clock, string? startDate, string? endDate) =>
         {
-            var start = !string.IsNullOrEmpty(startDate) ? DateTime.TryParse(startDate, out var _sd) ? _sd : DateTime.UtcNow.AddMonths(-3) : DateTime.UtcNow.AddMonths(-3);
-            var end = !string.IsNullOrEmpty(endDate) ? DateTime.TryParse(endDate, out var _ed) ? _ed : DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddDays(1);
+            ReportPeriod period;
+            try { period = ReportPeriod.Resolve(clock, startDate, endDate); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            var (start, end) = (period.Start, period.End);
 
-            var orderItems = await salesDb.Orders
-                .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled)
+            // Doanh thu dùng chung RecognizedRevenue (Requirement 1); giá vốn KHÔNG có snapshot
+            // trên OrderItem nên phải ước tính từ giá vốn kho hiện tại (isEstimate: true) - xem
+            // Reporting/Shared/CogsEstimator.cs.
+            var orderItems = await RevenueQueries.RecognizedInPeriod(salesDb, start, end)
                 .SelectMany(o => o.Items)
                 .GroupBy(i => new { i.ProductId, i.ProductName })
                 .Select(g => new { g.Key.ProductId, g.Key.ProductName, Revenue = g.Sum(i => i.UnitPrice * i.Quantity), UnitsSold = g.Sum(i => i.Quantity) })
@@ -27,27 +32,27 @@ public static class AnalyticsEndpoints
                 .ToListAsync();
 
             var productIds = orderItems.Select(x => x.ProductId).ToList();
-            var products = await catalogDb.Products
-                .Where(p => productIds.Contains(p.Id))
-                .Select(p => new { p.Id, p.CostPrice })
-                .ToDictionaryAsync(p => p.Id, p => p.CostPrice);
+            // Không có snapshot giá vốn tại thời điểm bán trên OrderItem (W2-3 ngoài phạm vi sở
+            // hữu track này) -> luôn ước tính từ giá vốn kho HIỆN TẠI, đánh dấu isEstimate:true
+            // (Requirement 2). Xem integration-requests-w2.md.
+            var unitCosts = await CogsEstimator.CurrentUnitCostsAsync(invDb, productIds);
 
             var result = orderItems.Select(item =>
             {
-                var costPrice = products.GetValueOrDefault(item.ProductId, 0);
+                var costPrice = unitCosts.GetValueOrDefault(item.ProductId, 0m);
                 var totalCost = costPrice * item.UnitsSold;
                 var profit = item.Revenue - totalCost;
                 var marginPercent = item.Revenue > 0 ? Math.Round(profit / item.Revenue * 100, 1) : 0;
-                return new { item.ProductId, item.ProductName, item.Revenue, TotalCost = totalCost, Profit = profit, MarginPercent = marginPercent, item.UnitsSold };
+                return new { item.ProductId, item.ProductName, item.Revenue, TotalCost = totalCost, Profit = profit, MarginPercent = marginPercent, item.UnitsSold, IsEstimate = true };
             });
 
-            return Results.Ok(new { Period = new { Start = start, End = end }, Products = result, TotalRevenue = orderItems.Sum(x => x.Revenue) });
+            return Results.Ok(new { Period = new { Start = start, End = end }, Products = result, TotalRevenue = orderItems.Sum(x => x.Revenue), IsEstimate = true });
         });
 
-        group.MapGet("/customer-ltv", async (SalesDbContext salesDb, int top = 50) =>
+        group.MapGet("/customer-ltv", async (SalesDbContext salesDb, BuildingBlocks.Contracts.IUserDirectory userDirectory, int top = 50) =>
         {
             var customerStats = await salesDb.Orders
-                .Where(o => o.Status != OrderStatus.Cancelled)
+                .Recognized()
                 .GroupBy(o => o.CustomerId)
                 .Select(g => new
                 {
@@ -59,6 +64,11 @@ public static class AnalyticsEndpoints
                 .Take(top)
                 .ToListAsync();
 
+            // Requirement 3: tên hiển thị khách qua IUserDirectory, không trả GUID trần.
+            var custIds = customerStats.Select(c => c.CustomerId.ToString()).ToList();
+            var directory = (await userDirectory.GetByIdsAsync(custIds))
+                .ToDictionary(u => u.Id, u => u.FullName);
+
             var result = customerStats.Select(c =>
             {
                 var daysSinceFirst = (DateTime.UtcNow - c.FirstOrder).Days;
@@ -66,31 +76,35 @@ public static class AnalyticsEndpoints
                 var purchaseFrequency = daysSinceFirst > 0 ? (double)c.OrderCount / (daysSinceFirst / 365.0) : c.OrderCount;
                 var projectedClv = c.AvgOrderValue * (decimal)purchaseFrequency * 3;
                 var segment = daysSinceLast > 180 ? "Lost" : daysSinceLast > 90 ? "AtRisk" : c.TotalSpent > 50_000_000 ? "VIP" : "Regular";
-                return new { c.CustomerId, c.TotalSpent, c.OrderCount, c.AvgOrderValue, ProjectedClv = projectedClv, Segment = segment, DaysSinceLast = daysSinceLast };
+                var customerName = directory.GetValueOrDefault(c.CustomerId.ToString(), "Khách vãng lai");
+                return new { c.CustomerId, CustomerName = customerName, c.TotalSpent, c.OrderCount, c.AvgOrderValue, ProjectedClv = projectedClv, Segment = segment, DaysSinceLast = daysSinceLast };
             });
 
             return Results.Ok(result);
         });
 
-        group.MapGet("/dashboard-kpis", async (SalesDbContext salesDb, InventoryDbContext invDb) =>
+        group.MapGet("/dashboard-kpis", async (SalesDbContext salesDb, InventoryDbContext invDb, IBusinessClock clock) =>
         {
-            var today = DateTime.UtcNow.Date;
+            var today = clock.TodayVn.ToDateTime(TimeOnly.MinValue);
             var thisMonth = new DateTime(today.Year, today.Month, 1);
             var lastMonth = thisMonth.AddMonths(-1);
 
-            var todayRevenue = await salesDb.Orders.Where(o => o.OrderDate >= today).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var todayOrders = await salesDb.Orders.CountAsync(o => o.OrderDate >= today);
-            var monthRevenue = await salesDb.Orders.Where(o => o.OrderDate >= thisMonth).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var lastMonthRevenue = await salesDb.Orders.Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth).SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            // Một định nghĩa doanh thu duy nhất (Requirement 1) - trùng với sales-summary,
+            // business-overview, comparison/revenue và Excel export cho cùng kỳ.
+            var todayRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, today, today.AddDays(1));
+            var todayOrders = await RevenueQueries.RecognizedInPeriod(salesDb, today, today.AddDays(1)).CountAsync();
+            var monthRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, thisMonth, today.AddDays(1));
+            var lastMonthRevenue = await RevenueQueries.GrossRevenueAsync(salesDb, lastMonth, thisMonth);
             var pendingOrders = await salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
             var lowStockCount = await invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
 
-            var growth = lastMonthRevenue > 0 ? Math.Round((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100, 1) : 100m;
+            // Requirement 3: null + noBaseline khi chưa có kỳ trước, không suy diễn "100%".
+            var growth = GrowthCalculator.Compare(monthRevenue, lastMonthRevenue);
 
             return Results.Ok(new
             {
                 TodayRevenue = todayRevenue, TodayOrders = todayOrders,
-                MonthRevenue = monthRevenue, MonthGrowth = growth,
+                MonthRevenue = monthRevenue, MonthGrowth = growth.Percent, MonthGrowthNoBaseline = growth.NoBaseline,
                 PendingOrders = pendingOrders, LowStockAlerts = lowStockCount
             });
         });

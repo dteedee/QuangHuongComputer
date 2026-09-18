@@ -1,4 +1,5 @@
 using BuildingBlocks.Security;
+using BuildingBlocks.Time;
 using Accounting.Domain;
 using Accounting.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -47,12 +48,15 @@ public static class TaxReportingEndpoints
         });
 
         // 2. Tờ khai thuế GTGT (VAT Declaration Form 01/GTGT) — real data from DB
-        group.MapGet("/vat-declaration", async (AccountingDbContext db, string? period, string? type) =>
+        group.MapGet("/vat-declaration", async (AccountingDbContext db, IBusinessClock clock, string? period, string? type) =>
         {
             // period format: "2026-Q1" or "2026-05"
             // type: "monthly" or "quarterly"
+            // W2-25 / D06 §3: kỳ mặc định là THÁNG HIỆN TẠI THEO GIỜ VN. DateTime.UtcNow lệch 7h
+            // nên trong 7 tiếng đầu ngày 01 hằng tháng, tờ khai mặc định rơi về tháng TRƯỚC.
+            var today = clock.TodayVn;
             var (start, end) = ParsePeriod(
-                period ?? $"{DateTime.UtcNow.Year}-{DateTime.UtcNow.Month:D2}",
+                period ?? $"{today.Year}-{today.Month:D2}",
                 type ?? "monthly");
 
             // Output VAT (thuế đầu ra) - from sales invoices

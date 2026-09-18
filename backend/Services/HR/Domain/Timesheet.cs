@@ -246,9 +246,28 @@ public class MonthlyTimesheet : Entity<Guid>
 
     // Giờ OT theo loại
     public decimal OvertimeHoursWeekday { get; private set; }
+
+    /// <summary>
+    /// Giờ OT vào NGÀY NGHỈ HẰNG TUẦN (hệ số 200%). Tên cột giữ nguyên "Sunday" vì đã có dữ liệu,
+    /// nhưng ngữ nghĩa là ngày nghỉ hằng tuần THEO LỊCH CA, không mặc định Chủ nhật (D06 §4).
+    /// </summary>
     public decimal OvertimeHoursSunday { get; private set; }
     public decimal OvertimeHoursHoliday { get; private set; }
+
+    /// <summary>
+    /// Giờ OT BAN ĐÊM chưa tách loại ngày (dữ liệu cũ). Khi ba cột tách bên dưới đều bằng 0,
+    /// số giờ này được coi là OT đêm NGÀY THƯỜNG (D06 §4: "chưa tách thì coi là ngày thường").
+    /// </summary>
     public decimal OvertimeHoursNight { get; private set; }
+
+    // W2-25 / D06 §4 — OT ban đêm tách theo loại ngày, vì hệ số khác nhau:
+    // ngày thường 200% · nghỉ tuần 270% · lễ 390% (1,5/2,0/3,0 + 0,3 + 0,2 × hệ số lương của ngày).
+    public decimal OvertimeHoursNightWeekday { get; private set; }
+    public decimal OvertimeHoursNightRestDay { get; private set; }
+    public decimal OvertimeHoursNightHoliday { get; private set; }
+
+    /// <summary>Giờ LÀM ĐÊM không phải làm thêm — chỉ hưởng phụ cấp đêm 30% (BLLĐ Đ.98.2).</summary>
+    public decimal NightShiftHours { get; private set; }
 
     // Đi muộn / về sớm
     public int TotalLateMinutes { get; private set; }
@@ -310,6 +329,42 @@ public class MonthlyTimesheet : Entity<Guid>
         OvertimeHoursNight = night;
     }
 
+    /// <summary>
+    /// W2-25 / D06 §4 — tách giờ OT ban đêm theo loại ngày. "Ngày nghỉ hằng tuần" lấy theo LỊCH CA,
+    /// không mặc định Chủ nhật. Gọi sau <see cref="SetOvertimeBreakdown"/>; tổng ba số này thay thế
+    /// <see cref="OvertimeHoursNight"/> khi > 0.
+    /// </summary>
+    public void SetNightOvertimeBreakdown(decimal nightWeekday, decimal nightRestDay, decimal nightHoliday)
+    {
+        RequireDraft();
+        if (nightWeekday < 0 || nightRestDay < 0 || nightHoliday < 0)
+            throw new ArgumentException("Giờ OT đêm >= 0.");
+        OvertimeHoursNightWeekday = nightWeekday;
+        OvertimeHoursNightRestDay = nightRestDay;
+        OvertimeHoursNightHoliday = nightHoliday;
+        OvertimeHoursNight = nightWeekday + nightRestDay + nightHoliday;
+    }
+
+    /// <summary>Giờ làm đêm KHÔNG phải làm thêm (chỉ +30%).</summary>
+    public void SetNightShiftHours(decimal hours)
+    {
+        RequireDraft();
+        if (hours < 0) throw new ArgumentException("Giờ làm đêm >= 0.");
+        NightShiftHours = hours;
+    }
+
+    /// <summary>
+    /// OT đêm đã tách theo loại ngày. Bảng công cũ chỉ có tổng <see cref="OvertimeHoursNight"/>
+    /// -> quy về ngày thường (D06 §4).
+    /// </summary>
+    public (decimal Weekday, decimal RestDay, decimal Holiday) EffectiveNightOvertime()
+    {
+        var tagged = OvertimeHoursNightWeekday + OvertimeHoursNightRestDay + OvertimeHoursNightHoliday;
+        return tagged > 0m
+            ? (OvertimeHoursNightWeekday, OvertimeHoursNightRestDay, OvertimeHoursNightHoliday)
+            : (OvertimeHoursNight, 0m, 0m);
+    }
+
     public void SetLeaveDays(int paid, int unpaid)
     {
         RequireDraft();
@@ -345,7 +400,20 @@ public class MonthlyTimesheet : Entity<Guid>
             throw new InvalidOperationException("Bảng công đã chốt — không thể sửa.");
     }
 
-    /// <summary>Tổng OT hours (không nhân hệ số) — dùng cho báo cáo tổng quát.</summary>
+    /// <summary>Tổng OT hours ban ngày (không nhân hệ số) — dùng cho báo cáo tổng quát.</summary>
     public decimal TotalOvertimeHours =>
         OvertimeHoursWeekday + OvertimeHoursSunday + OvertimeHoursHoliday;
+
+    /// <summary>
+    /// Tổng giờ làm thêm THỰC TẾ kể cả ca đêm — đây mới là số so với trần 40h/tháng và 200h/năm
+    /// (BLLĐ Đ.107), cũng là số giờ được miễn thuế theo NĐ 253/2026 Đ.26.
+    /// </summary>
+    public decimal TotalOvertimeHoursWithNight
+    {
+        get
+        {
+            var (nw, nr, nh) = EffectiveNightOvertime();
+            return TotalOvertimeHours + nw + nr + nh;
+        }
+    }
 }

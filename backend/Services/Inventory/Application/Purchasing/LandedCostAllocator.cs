@@ -59,6 +59,12 @@ public class LandedCostAllocator
         var productIds = lines.Select(l => l.ProductId).Distinct().ToList();
         var productWeights = await LoadProductWeightsAsync(productIds, ct);
 
+        // Kho mặc định (D09) chỉ dùng khi phiếu nhập không nói kho nào.
+        var defaultWarehouseId = await _db.Warehouses
+            .Where(w => w.IsDefault && w.IsActive)
+            .Select(w => (Guid?)w.Id)
+            .FirstOrDefaultAsync(ct);
+
         var perLine = new Dictionary<Guid, decimal>();
         foreach (var line in lines) perLine[line.Id] = 0m;
 
@@ -92,8 +98,15 @@ public class LandedCostAllocator
                 ? line.UnitCost + (share / line.Quantity)
                 : line.UnitCost;
 
+            // W2-12: giải đúng MỘT dòng tồn theo (sản phẩm, biến thể, kho) — khoá nghiệp vụ mà
+            // IX_Inventory_Product_Variant_Warehouse_Unique bảo vệ. Bản cũ lấy
+            // FirstOrDefault(i => i.ProductId == ...) nên với sản phẩm nằm ở nhiều kho, chi phí
+            // nhập rơi vào một dòng tồn ngẫu nhiên — giá vốn của kho khác sai lặng lẽ.
+            var warehouseId = line.TargetWarehouseId ?? grn.WarehouseId ?? defaultWarehouseId;
             var invItem = await _db.InventoryItems
-                .FirstOrDefaultAsync(i => i.ProductId == line.ProductId, ct);
+                .FirstOrDefaultAsync(i => i.ProductId == line.ProductId
+                                          && i.VariantId == null
+                                          && i.WarehouseId == warehouseId, ct);
 
             if (invItem != null)
             {

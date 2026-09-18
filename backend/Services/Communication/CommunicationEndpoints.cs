@@ -71,7 +71,7 @@ public static class CommunicationEndpoints
             {
                 return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
-        });
+        }).RequireRateLimiting("contact"); // W2-15: applies IR W0 #3 (public form, unauthenticated).
 
         group.MapPost("/newsletter/unsubscribe", async ([FromBody] NewsletterUnsubscribeDto dto, Communication.Infrastructure.CommunicationDbContext db) =>
         {
@@ -89,7 +89,7 @@ public static class CommunicationEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Đã hủy đăng ký thành công" });
-        });
+        }).RequireRateLimiting("contact"); // W2-15: applies IR W0 #3.
 
         // Admin endpoints
         // W1-10: danh sách người đăng ký nhận tin là dữ liệu chiến dịch -> CRM.ManageCampaigns
@@ -235,17 +235,37 @@ public static class CommunicationEndpoints
         }).RequireAuthorization(Permissions.CRM.ViewCustomers);
 
         // AI chatbot integration
+        // W2-15: was reachable by any authenticated caller for any conversation ID (no ownership
+        // check) and had no length cap on Question.
         chatGroup.MapPost("/ai/ask", async (
             [FromBody] AiAskRequest request,
+            HttpContext context,
             Communication.Application.IAiChatService aiChatService,
             CancellationToken ct) =>
         {
+            if (string.IsNullOrWhiteSpace(request.Question))
+                return Results.BadRequest(new { error = "Question cannot be empty" });
+            if (request.Question.Length > Ai.Application.AiGuardrails.MaxQuestionLength)
+                return Results.BadRequest(new { error = $"Question exceeds {Ai.Application.AiGuardrails.MaxQuestionLength} characters" });
+
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? context.User.FindFirst("sub")?.Value ?? "";
+            var userRoles = context.User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray();
+
             try
             {
-                var response = await aiChatService.GetAiResponseAsync(request.ConversationId, request.Question, ct);
+                var response = await aiChatService.GetAiResponseAsync(request.ConversationId, request.Question, userId, userRoles, ct);
                 return Results.Ok(new { response });
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException)
+            {
+                return Results.Forbid();
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.NotFound(new { message = "Conversation not found" });
+            }
+            catch (Exception)
             {
                 return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
             }
@@ -273,7 +293,8 @@ public static class NotificationEndpointsExtensions
             int pageSize = 50) =>
         {
             var userId = GetUserId(context);
-            var notifications = await notificationService.GetUserNotificationsAsync(userId, page, pageSize);
+            var roles = GetUserRoles(context);
+            var notifications = await notificationService.GetUserNotificationsAsync(userId, roles, page, pageSize);
             return Results.Ok(notifications);
         });
 
@@ -283,18 +304,20 @@ public static class NotificationEndpointsExtensions
             INotificationService notificationService) =>
         {
             var userId = GetUserId(context);
-            var count = await notificationService.GetUnreadCountAsync(userId);
+            var roles = GetUserRoles(context);
+            var count = await notificationService.GetUnreadCountAsync(userId, roles);
             return Results.Ok(new { count });
         });
 
-        // POST /api/notifications/{id}/read - Mark notification as read
+        // POST /api/notifications/{id}/read - Mark notification as read (own/visible only)
         group.MapPost("/{id}/read", async (
             Guid id,
             HttpContext context,
             INotificationService notificationService) =>
         {
             var userId = GetUserId(context);
-            var result = await notificationService.MarkAsReadAsync(id, userId);
+            var roles = GetUserRoles(context);
+            var result = await notificationService.MarkAsReadAsync(id, userId, roles);
 
             if (!result)
             {
@@ -310,7 +333,8 @@ public static class NotificationEndpointsExtensions
             INotificationService notificationService) =>
         {
             var userId = GetUserId(context);
-            await notificationService.MarkAllAsReadAsync(userId);
+            var roles = GetUserRoles(context);
+            await notificationService.MarkAllAsReadAsync(userId, roles);
             return Results.Ok(new { message = "All notifications marked as read" });
         });
     }
@@ -320,5 +344,10 @@ public static class NotificationEndpointsExtensions
         return context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? context.User.FindFirst("sub")?.Value
             ?? "";
+    }
+
+    private static string[] GetUserRoles(HttpContext context)
+    {
+        return context.User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray();
     }
 }

@@ -19,7 +19,10 @@ public class Technician : Entity<Guid>
     /// </summary>
     public Guid? UserId { get; private set; }
 
-    public Technician(string name, string specialty, decimal hourlyRate = 50.0m)
+    /// <summary>W2-13/D08: caller resolves <paramref name="hourlyRate"/> from
+    /// <c>IAppSettings</c> (key <c>Repair.DefaultLaborRateVnd</c>) - no hardcoded
+    /// default here (IR#54 was the same bug on ServiceBooking.OnSiteFee).</summary>
+    public Technician(string name, string specialty, decimal hourlyRate)
     {
         Id = Guid.NewGuid();
         Name = name;
@@ -33,6 +36,15 @@ public class Technician : Entity<Guid>
     public void UpdateAvailability(bool isAvailable)
     {
         IsAvailable = isAvailable;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateProfile(string name, string specialty, decimal hourlyRate)
+    {
+        Name = name;
+        Specialty = specialty;
+        HourlyRate = hourlyRate;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>Links (or re-links) this technician row to an Identity user.</summary>

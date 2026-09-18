@@ -15,6 +15,11 @@ public enum WorkOrderStatus
     Completed = 10,         // Finished
     Cancelled = 11,         // Cancelled
 
+    // W2-13: payment + handover, after Completed.
+    ReadyForPickup = 12,    // Completed, waiting for customer / POS to collect payment
+    Paid = 13,              // Payment recorded (POS or in-app)
+    Delivered = 14,         // Handed over to customer/receiver - terminal state
+
     // Legacy statuses for backward compatibility
     Pending = 0             // Maps to Requested
 }

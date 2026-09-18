@@ -5,8 +5,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
 using Catalog.Domain;
+using Catalog.Application.Products;
+using Catalog.Application.PriceHistory;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Validation;
 
 namespace Catalog;
 
@@ -46,7 +49,8 @@ public static class CatalogProductAdminEndpoints
                 stockLocations: model.StockLocations,
                 imageUrl: model.ImageUrl,
                 galleryImages: model.GalleryImages,
-                warrantyMonths: model.WarrantyMonths
+                warrantyMonths: model.WarrantyMonths,
+                unitName: model.UnitName
             );
 
             // Slug đã auto-sinh trong ctor Product; ở đây chỉ bảo đảm duy nhất trong DB.
@@ -63,8 +67,10 @@ public static class CatalogProductAdminEndpoints
             await httpContext.LogAuditAsync("Create", "Product", product.Id.ToString(), $"Name: {product.Name}, Price: {product.Price}");
             await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
 
-            return Results.Created($"/api/catalog/products/{product.Id}", CatalogResponses.ProductPayload(product));
-        }).RequireAuthorization(Permissions.Catalog.Create);
+            var thumbs = await ProductDtoProjection.LoadPrimaryMediaAsync(db, new[] { product.Id });
+            return Results.Created($"/api/catalog/products/{product.Id}",
+                ProductDtoProjection.ToDto(product, thumbs.GetValueOrDefault(product.Id).Thumb));
+        }).RequireAuthorization(Permissions.Catalog.Create).WithValidation<CreateProductDto>();
 
         group.MapPut("/products/{id:guid}", async (
             Guid id,
@@ -72,11 +78,17 @@ public static class CatalogProductAdminEndpoints
             CatalogDbContext db,
             SystemConfig.Infrastructure.CustomFieldDbContext customFieldDb,
             ICacheService cache,
+            PriceChangeContext priceChangeContext,
             HttpContext httpContext) =>
         {
             var product = await CatalogProductHelpers.LoadProductAsync(db, id, includeInactive: true, tracking: true);
             if (product == null)
                 return Results.NotFound(new { Error = "Product not found" });
+
+            // D10: hook lịch sử giá trên CatalogDbContext.SaveChanges đọc context này để biết
+            // ghi ProductPriceChanges.Source là gì - sửa tay ở đây luôn là "Manual".
+            priceChangeContext.Source = "Manual";
+            priceChangeContext.ActorId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
             if (model.Attributes is not null)
             {
@@ -128,6 +140,9 @@ public static class CatalogProductAdminEndpoints
             else if (model.WarrantyMonths.HasValue || model.IsReturnExcluded.HasValue)
                 product.UpdateWarrantyPolicy(model.WarrantyMonths, model.IsReturnExcluded);
 
+            // D07
+            if (!string.IsNullOrWhiteSpace(model.UnitName)) product.SetUnitName(model.UnitName);
+
             // SEO PARTIAL: không gửi = giữ nguyên. Trước đây lưu sản phẩm từ một tab admin khác
             // (tab không gửi SEO) là xoá sạch MetaTitle/MetaDescription/MetaKeywords.
             product.UpdateSeo(model.MetaTitle, model.MetaDescription, model.MetaKeywords, model.CanonicalUrl);
@@ -138,12 +153,13 @@ public static class CatalogProductAdminEndpoints
             await httpContext.LogAuditAsync("Update", "Product", id.ToString(), $"Name: {product.Name}, Price: {product.Price}");
             await CatalogProductHelpers.InvalidateProductCachesAsync(cache, id);
 
+            var thumbs = await ProductDtoProjection.LoadPrimaryMediaAsync(db, new[] { product.Id });
             return Results.Ok(new
             {
                 Message = "Product updated",
-                Product = CatalogResponses.ProductPayload(product)
+                Product = ProductDtoProjection.ToDto(product, thumbs.GetValueOrDefault(product.Id).Thumb)
             });
-        }).RequireAuthorization(Permissions.Catalog.Edit);
+        }).RequireAuthorization(Permissions.Catalog.Edit).WithValidation<UpdateProductDto>();
 
         group.MapDelete("/products/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
             await CatalogProductHelpers.SetProductActiveAsync(id, db, cache, httpContext, active: false))
@@ -156,6 +172,9 @@ public static class CatalogProductAdminEndpoints
         group.MapPost("/products/{id:guid}/toggle-status", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
             await CatalogProductHelpers.SetProductActiveAsync(id, db, cache, httpContext, active: null))
             .RequireAuthorization(Permissions.Catalog.Edit);
+
+        // D10: publish/unpublish - CatalogProductPublishEndpoints.cs (giữ file này dưới 200 dòng).
+        group.MapCatalogProductPublishEndpoints();
     }
 
     /// <summary>Đổi slug sản phẩm có kiểm tra trùng (Slug là unique có filter ở DB).</summary>

@@ -9,11 +9,27 @@
 # cert to request); a real domain here (docker-compose.prod.yml) switches Caddy to automatic
 # HTTPS + HTTP->HTTPS redirect + HSTS with zero other changes.
 #
-# In wave 2, W2-17 (D11) takes ownership of this file and replaces the final `handle` (SPA
-# fallthrough) with the SEO-shell rule (`/_shell{uri}` + static index.html fallback so a restart
-# never blanks the page for 30s — see the api_and_hubs `lb_try_duration` note below).
+# W2-17 (D11): the final `handle` (SPA fallthrough) is now the SEO-shell rule
+# (`rewrite * /_shell{uri}` -> api:8080, real 200/301/404 per URL) with a static-`index.html`
+# fallback for BOTH failure modes Caddy distinguishes: the api container answering with a
+# server error (`handle_response` on the reverse_proxy) and Caddy being unable to reach it at all
+# (`handle_errors` at the site level). Neither path uses `lb_try_duration` (D05 mục 12) — a shell
+# request must fail FAST to the static fallback, never hang for 30s like /api/* and /hubs/* do.
+#
+# NOT verified against a real `caddy validate` / running container on this machine (no local
+# `caddy` binary, docker compose is off-limits per D12 §8 — same gap the plan already flags:
+# "Caddy's handle_response/handle_errors behave differently in practice — unverified on this
+# machine; W1-14 validates the file inside the caddy image and W2-G runs it for real once").
 {
 	email {$ACME_EMAIL:admin@example.com}
+}
+
+# Internal listener the SEO shell fetches `index.html` from (`Seo:ShellTemplateUrl` in prod =
+# `http://web:8081/index.html` — this IS the `web` container, D11 §"Architecture"). Not exposed
+# to the internet; only reachable from other containers on the compose network.
+:8081 {
+	root * /srv
+	file_server
 }
 
 {$SITE_URL:http://localhost:8080} {
@@ -53,15 +69,40 @@
 		reverse_proxy api:8080
 	}
 
-	# Everything else: the built SPA. W1's rule is a plain fallthrough — W2-17 (D11) replaces
-	# this block with the SEO-shell rule; it must keep excluding the paths above (D02 §Tác động
-	# lên plan #13: the shell rule's exclude list is currently missing /media, /sitemap.xml,
-	# /robots.txt — flagged for W2-17 in the integration request).
-	handle {
+	# Built asset files (hashed names -> safe to cache forever) still go straight to disk, never
+	# through the shell — a JS/CSS/image request rewritten to `/_shell/assets/...` would 404.
+	@assets path *.js *.css *.svg *.woff2 *.png *.jpg *.webp *.ico
+	handle @assets {
 		root * /srv
-		@assets path *.js *.css *.svg *.woff2 *.png *.jpg *.webp *.ico
-		header @assets Cache-Control "public, max-age=31536000, immutable"
-		try_files {path} /index.html
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# A direct hit on `/_shell*` from OUTSIDE must 404 — otherwise the rewrite below would stack
+	# into `/_shell/_shell/...` on a request that already carries the prefix (D11 §"Architecture").
+	handle /_shell* {
+		respond 404
+	}
+
+	# Everything else -> the SEO shell (W2-17 / D11): real title/meta/JSON-LD/status per URL for
+	# every request, not just bots. `handle_response` covers the api CONTAINER being up but
+	# answering 502/503/504 (e.g. mid-deploy); `handle_errors` below covers Caddy not being able
+	# to reach it at all.
+	handle {
+		rewrite * /_shell{uri}
+		reverse_proxy api:8080 {
+			@shellUpstreamError status 502 503 504
+			handle_response @shellUpstreamError {
+				root * /srv
+				rewrite * /index.html
+				file_server
+			}
+		}
+	}
+
+	handle_errors {
+		root * /srv
+		rewrite * /index.html
 		file_server
 	}
 

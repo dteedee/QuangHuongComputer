@@ -306,6 +306,9 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<Guid>("InventoryItemId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -330,9 +333,18 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("VariantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("WarehouseId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CountSessionId");
+
+                    b.HasIndex("InventoryItemId")
+                        .HasDatabaseName("IX_CountItem_InventoryItem");
 
                     b.ToTable("InventoryCountItems");
                 });
@@ -1135,6 +1147,9 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<Guid?>("GoodsReceivedNoteItemId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1199,6 +1214,9 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GoodsReceivedNoteItemId")
+                        .HasDatabaseName("IX_Serial_GRNItem");
+
                     b.HasIndex("OrderId")
                         .HasDatabaseName("IX_Serial_Order");
 
@@ -1228,17 +1246,20 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("AdjustedBy")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("AdjustmentNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ApprovedBy")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -1252,8 +1273,20 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsPosted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PostedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Reason")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -1303,10 +1336,12 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("ProductName")
-                        .HasColumnType("text");
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<string>("ProductSku")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("QuantityAdjusted")
                         .HasColumnType("integer");
@@ -1328,9 +1363,15 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InventoryItemId")
+                        .HasDatabaseName("IX_StockAdjustmentItem_InventoryItem");
+
                     b.HasIndex("StockAdjustmentId");
 
-                    b.ToTable("StockAdjustmentItem");
+                    b.ToTable("StockAdjustmentItem", t =>
+                        {
+                            t.HasCheckConstraint("CK_StockAdjustmentItems_QuantityAfter_NonNegative", "\"QuantityAfter\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockMovement", b =>
@@ -1338,6 +1379,9 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("BalanceAfter")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -1377,6 +1421,9 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int>("ReasonCode")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ReferenceId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -1388,16 +1435,29 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("VariantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("WarehouseId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("InventoryItemId")
                         .HasDatabaseName("IX_StockMovement_InventoryItemId");
+
+                    b.HasIndex("ReasonCode")
+                        .HasDatabaseName("IX_StockMovement_ReasonCode");
 
                     b.HasIndex("ReferenceId")
                         .HasDatabaseName("IX_StockMovement_Reference");
@@ -1408,7 +1468,13 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.HasIndex("ProductId", "MovementDate")
                         .HasDatabaseName("IX_StockMovement_Product_Date");
 
-                    b.ToTable("StockMovements");
+                    b.HasIndex("WarehouseId", "MovementDate")
+                        .HasDatabaseName("IX_StockMovement_Warehouse_Date");
+
+                    b.ToTable("StockMovements", t =>
+                        {
+                            t.HasCheckConstraint("CK_StockMovements_UnitCost_NonNegative", "\"UnitCost\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("InventoryModule.Domain.StockReservation", b =>
@@ -2025,6 +2091,14 @@ namespace Inventory.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("InventoryModule.Domain.GoodsReceivedNote", b =>
+                {
+                    b.HasOne("InventoryModule.Domain.PurchaseOrder", null)
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("InventoryModule.Domain.InventoryCountItem", b =>
                 {
                     b.HasOne("InventoryModule.Domain.InventoryCountSession", null)
@@ -2058,6 +2132,11 @@ namespace Inventory.Infrastructure.Data.Migrations
                             b1.Property<int>("Quantity")
                                 .HasColumnType("integer");
 
+                            b1.Property<int>("ReceivedQuantity")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0);
+
                             b1.Property<decimal>("UnitPrice")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)");
@@ -2067,6 +2146,8 @@ namespace Inventory.Infrastructure.Data.Migrations
                             b1.ToTable("PurchaseOrderItem", t =>
                                 {
                                     t.HasCheckConstraint("CK_PurchaseOrderItem_Quantity_Positive", "\"Quantity\" > 0");
+
+                                    t.HasCheckConstraint("CK_PurchaseOrderItem_ReceivedQuantity_NonNegative", "\"ReceivedQuantity\" >= 0");
 
                                     t.HasCheckConstraint("CK_PurchaseOrderItem_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
                                 });

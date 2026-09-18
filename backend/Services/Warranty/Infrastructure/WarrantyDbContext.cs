@@ -28,6 +28,11 @@ public class WarrantyDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Provider).HasConversion<int>();
             entity.Property(e => e.Exclusions).HasColumnType("text"); // JSON array as text
+            // D08 §2/§4: 1 policy active / (CategoryId, Provider) — CategoryId NULL = DEFAULT toàn hệ thống.
+            entity.HasIndex(e => new { e.CategoryId, e.Provider })
+                .IsUnique()
+                .HasFilter("\"IsActive\" = true")
+                .HasDatabaseName("IX_Policies_CategoryId_Provider_Active");
         });
 
         modelBuilder.Entity<WarrantyClaim>(entity =>

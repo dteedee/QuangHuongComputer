@@ -117,6 +117,15 @@ public static class StoreEndpoints
                 foreach (var eid in dto.EmployeeIds.Distinct())
                     store.AssignEmployee(eid);
 
+            // D09: IsPrimary luôn = false vì MarkPrimary() không được gọi ở đâu ngoài unit test.
+            // Gán kho chính trong cùng transaction tạo store.
+            if (dto.PrimaryWarehouseId.HasValue)
+            {
+                if (dto.WarehouseIds is null || !dto.WarehouseIds.Contains(dto.PrimaryWarehouseId.Value))
+                    return Results.BadRequest(new { error = "PrimaryWarehouseId phải nằm trong WarehouseIds" });
+                store.MarkPrimaryWarehouse(dto.PrimaryWarehouseId.Value);
+            }
+
             db.Stores.Add(store);
             await db.SaveChangesAsync();
             return Results.Created($"/api/admin/stores/{store.Id}", ToAdminDto(store));
@@ -156,6 +165,14 @@ public static class StoreEndpoints
                     store.UnassignEmployee(eid);
                 foreach (var eid in dto.EmployeeIds.Except(current))
                     store.AssignEmployee(eid);
+            }
+
+            if (dto.PrimaryWarehouseId.HasValue)
+            {
+                var assigned = store.Warehouses.Select(w => w.WarehouseId).ToList();
+                if (!assigned.Contains(dto.PrimaryWarehouseId.Value))
+                    return Results.BadRequest(new { error = "PrimaryWarehouseId phải nằm trong danh sách kho đã gán" });
+                store.MarkPrimaryWarehouse(dto.PrimaryWarehouseId.Value);
             }
 
             await db.SaveChangesAsync();
@@ -230,7 +247,8 @@ public static class StoreEndpoints
         s.Phone, s.Email, s.OpeningHoursJson, s.Latitude, s.Longitude,
         s.IsActive, s.IsPickupPoint, s.SortOrder,
         s.Warehouses.Select(w => w.WarehouseId).ToList(),
-        s.Employees.Select(e => e.EmployeeId).ToList());
+        s.Employees.Select(e => e.EmployeeId).ToList(),
+        s.Warehouses.FirstOrDefault(w => w.IsPrimary)?.WarehouseId);
 }
 
 public record StorePublicDto(
@@ -245,7 +263,8 @@ public record StoreAdminDto(
     string Phone, string? Email, string OpeningHoursJson,
     decimal? Latitude, decimal? Longitude,
     bool IsActive, bool IsPickupPoint, int SortOrder,
-    List<Guid> WarehouseIds, List<Guid> EmployeeIds);
+    List<Guid> WarehouseIds, List<Guid> EmployeeIds,
+    Guid? PrimaryWarehouseId);
 
 public record CreateStoreDto(
     string Code, string Name, string Address, string Phone,
@@ -254,7 +273,8 @@ public record CreateStoreDto(
     bool IsPickupPoint = true, int SortOrder = 0,
     string? OpeningHoursJson = null,
     List<Guid>? WarehouseIds = null,
-    List<Guid>? EmployeeIds = null);
+    List<Guid>? EmployeeIds = null,
+    Guid? PrimaryWarehouseId = null);
 
 public record UpdateStoreDto(
     string Name, string Address, string Phone,
@@ -263,4 +283,5 @@ public record UpdateStoreDto(
     bool IsPickupPoint = true, int SortOrder = 0,
     string? OpeningHoursJson = null,
     List<Guid>? WarehouseIds = null,
-    List<Guid>? EmployeeIds = null);
+    List<Guid>? EmployeeIds = null,
+    Guid? PrimaryWarehouseId = null);

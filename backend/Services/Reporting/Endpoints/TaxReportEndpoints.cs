@@ -6,8 +6,8 @@ using Accounting.Domain;
 using Sales.Infrastructure;
 using Sales.Domain;
 using InventoryModule.Infrastructure;
-using HR.Infrastructure;
-using HR.Domain;
+using HR.Application.Tax;
+using BuildingBlocks.TaxEngine;
 
 namespace Reporting.Endpoints;
 
@@ -270,71 +270,67 @@ public static class TaxReportEndpoints
         });
 
         // Mẫu 05/KK-TNCN: PIT Settlement
+        //
+        // W2-25 / D06 §4 — TỜ KHAI PHÁP LÝ, nên KHÔNG còn một dòng số thuế nào ở file này.
+        // Trước đây endpoint tự giữ `const personalDeduction = 11_000_000m`, một biểu 7 bậc riêng
+        // và BỎ HẲN giảm trừ người phụ thuộc -> quyết toán 2026 ra số sai trên tờ khai gửi cơ quan
+        // thuế. Giờ gọi thẳng PitFinalizationService của HR, tức cùng IStatutoryParameterProvider
+        // và cùng PitCalculator với phiếu lương hằng tháng: hai con số không thể lệch nhau nữa.
+        // Tham số resolve tại 31/12 của năm quyết toán.
         group.MapGet("/pit-settlement", async (
-            HRDbContext hrDb,
+            PitFinalizationService pitService,
             int year) =>
         {
-            var payrolls = await hrDb.Payrolls
-                .Include(p => p.Employee)
-                .Where(p => p.Year == year)
-                .ToListAsync();
+            var items = await pitService.GetSummaryAsync(year);
+            var parameters = await pitService.GetYearParametersAsync(year);
 
-            const decimal personalDeduction = 11_000_000m; // per month
-            const decimal yearlyPersonalDeduction = personalDeduction * 12;
-
-            var employeeSummaries = payrolls
-                .GroupBy(p => p.EmployeeId)
-                .Select(g =>
+            var employees = items
+                .OrderBy(e => e.EmployeeName)
+                .Select(e => new
                 {
-                    var emp = g.First().Employee;
-                    var totalGross = g.Sum(p => p.BaseSalary + p.Bonuses + p.OvertimePay);
-                    var totalInsurance = g.Sum(p => p.InsuranceDeduction);
-                    var preTaxIncome = totalGross - totalInsurance;
-                    var taxableIncome = Math.Max(0, preTaxIncome - yearlyPersonalDeduction);
-                    var pitTax = CalculatePit(taxableIncome);
-
-                    return new
-                    {
-                        EmployeeId = g.Key,
-                        FullName = emp?.FullName ?? "N/A",
-                        TaxCode = emp?.TaxCode ?? "N/A",
-                        Department = emp?.Department ?? "N/A",
-                        MonthsWorked = g.Count(),
-                        TotalGrossIncome = totalGross,
-                        InsuranceDeduction = totalInsurance,
-                        PersonalDeduction = yearlyPersonalDeduction,
-                        TaxableIncome = taxableIncome,
-                        PitTax = pitTax
-                    };
+                    e.EmployeeId,
+                    FullName = e.EmployeeName,
+                    TaxCode = e.TaxCode ?? "N/A",
+                    MonthsWorked = e.MonthsCounted,
+                    TotalTaxableIncome = e.AnnualGrossIncome,
+                    InsuranceDeduction = e.AnnualInsurance,
+                    PersonalDeduction = e.AnnualPersonalDeduction,
+                    DependentDeduction = e.AnnualDependentDeduction,
+                    e.DependentMonthCount,
+                    AssessableIncome = e.AnnualTaxableIncome,
+                    PitTax = e.RecalculatedAnnualPit,
+                    PitWithheld = e.MonthlyPitWithheldTotal,
+                    e.PitOverpayment,
+                    e.PitShortfall
                 })
-                .OrderBy(e => e.FullName)
                 .ToList();
-
-            var totalGrossAll = employeeSummaries.Sum(e => e.TotalGrossIncome);
-            var totalTaxAll = employeeSummaries.Sum(e => e.PitTax);
 
             return Results.Ok(new
             {
                 ReportType = "05/KK-TNCN",
                 Year = year,
+                ParametersAsOf = parameters.AsOf,
                 Summary = new
                 {
-                    TotalEmployees = employeeSummaries.Count,
-                    TotalGrossIncome = totalGrossAll,
-                    TotalPitTax = totalTaxAll,
-                    PersonalDeductionPerYear = yearlyPersonalDeduction
+                    TotalEmployees = employees.Count,
+                    TotalTaxableIncome = employees.Sum(e => e.TotalTaxableIncome),
+                    TotalInsurance = employees.Sum(e => e.InsuranceDeduction),
+                    TotalPitTax = employees.Sum(e => e.PitTax),
+                    TotalPitWithheld = employees.Sum(e => e.PitWithheld),
+                    PersonalDeductionPerMonth = parameters.PitPersonalDeduction,
+                    PersonalDeductionPerYear = parameters.PitPersonalDeduction * 12m,
+                    DependentDeductionPerMonth = parameters.PitDependentDeduction
                 },
-                Employees = employeeSummaries,
-                PitBrackets = new[]
+                Employees = employees,
+                // Biểu thuế lấy từ chính bộ tham số đã dùng, mốc THÁNG × 12 = mốc NĂM.
+                PitBrackets = parameters.PitBrackets.Select(b => new
                 {
-                    new { Range = "Đến 60 triệu/năm", Rate = "5%" },
-                    new { Range = "60 - 120 triệu/năm", Rate = "10%" },
-                    new { Range = "120 - 216 triệu/năm", Rate = "15%" },
-                    new { Range = "216 - 384 triệu/năm", Rate = "20%" },
-                    new { Range = "384 - 624 triệu/năm", Rate = "25%" },
-                    new { Range = "624 - 960 triệu/năm", Rate = "30%" },
-                    new { Range = "Trên 960 triệu/năm", Rate = "35%" }
-                }
+                    UpToMonthly = b.UpTo,
+                    UpToAnnual = b.UpTo * 12m,
+                    Rate = b.Rate,
+                    RateLabel = $"{b.Rate:P0}"
+                }),
+                LegalBasis = parameters.LegalBasisOf(StatutoryParameterCodes.PitBrackets)
             });
         });
     }
@@ -356,32 +352,4 @@ public static class TaxReportEndpoints
         return (yearStart, yearStart.AddYears(1));
     }
 
-    /// <summary>
-    /// Progressive PIT calculation (annual income, VND)
-    /// Brackets per Luật thuế TNCN: 5M→5%, 5M→10%, 8M→15%, 14M→20%, 20M→25%, 28M→30%, rest→35%
-    /// </summary>
-    private static decimal CalculatePit(decimal taxableIncome)
-    {
-        if (taxableIncome <= 0) return 0;
-
-        // Monthly bracket limits → annual = monthly * 12
-        decimal[] limits = { 60_000_000, 60_000_000, 96_000_000, 168_000_000, 240_000_000, 336_000_000 };
-        decimal[] rates = { 0.05m, 0.10m, 0.15m, 0.20m, 0.25m, 0.30m, 0.35m };
-
-        decimal tax = 0;
-        decimal remaining = taxableIncome;
-
-        for (int i = 0; i < limits.Length; i++)
-        {
-            if (remaining <= 0) break;
-            var bracket = Math.Min(remaining, limits[i]);
-            tax += bracket * rates[i];
-            remaining -= bracket;
-        }
-
-        if (remaining > 0)
-            tax += remaining * rates[6];
-
-        return Math.Round(tax, 0);
-    }
 }

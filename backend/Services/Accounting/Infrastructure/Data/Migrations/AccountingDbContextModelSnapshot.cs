@@ -22,6 +22,231 @@ namespace Accounting.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Accounting.Domain.CashVoucher", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CounterpartyName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("ExpenseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FundCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ShiftSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("VoucherDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShiftSessionId")
+                        .HasDatabaseName("IX_CashVouchers_ShiftSessionId");
+
+                    b.HasIndex("SourceKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CashVouchers_SourceKey_Unique")
+                        .HasFilter("\"SourceKey\" IS NOT NULL");
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CashVouchers_Number_Unique");
+
+                    b.HasIndex("FundCode", "VoucherDate")
+                        .HasDatabaseName("IX_CashVouchers_Fund_Date");
+
+                    b.ToTable("CashVouchers", t =>
+                        {
+                            t.HasCheckConstraint("CK_CashVouchers_Amount_Positive", "\"Amount\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.Domain.CreditNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateOnly?>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CreditNoteNumber")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EInvoiceId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OriginalInvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginalInvoiceNumber")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ReasonCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreditNoteNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CreditNotes_Number_Unique");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_CreditNotes_OrderId");
+
+                    b.HasIndex("OriginalInvoiceId")
+                        .HasDatabaseName("IX_CreditNotes_OriginalInvoiceId");
+
+                    b.HasIndex("SourceKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CreditNotes_SourceKey_Unique");
+
+                    b.ToTable("CreditNotes", t =>
+                        {
+                            t.HasCheckConstraint("CK_CreditNotes_Amount_Positive", "\"Amount\" > 0");
+
+                            t.HasCheckConstraint("CK_CreditNotes_VatAmount_NonNegative", "\"VatAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_CreditNotes_VatRate_Percent", "\"VatRate\" >= 0 AND \"VatRate\" <= 100");
+                        });
+                });
+
             modelBuilder.Entity("Accounting.Domain.Expense", b =>
                 {
                     b.Property<Guid>("Id")
@@ -192,6 +417,41 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.Property<int>("AgingBucket")
                         .HasColumnType("integer");
 
+                    b.Property<DateOnly?>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("BuyerAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("BuyerBudgetUnitCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("BuyerEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BuyerFullName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BuyerLegalName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BuyerPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("BuyerTaxCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("BuyerType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -237,6 +497,13 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OrderNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid?>("OrganizationAccountId")
                         .HasColumnType("uuid");
@@ -297,11 +564,21 @@ namespace Accounting.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Invoices_InvoiceNumber_Unique");
 
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoices_OrderId_Unique")
+                        .HasFilter("\"OrderId\" IS NOT NULL");
+
                     b.HasIndex("OrganizationAccountId")
                         .HasDatabaseName("IX_Invoices_OrganizationAccountId");
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("IX_Invoices_PurchaseOrderId");
+
+                    b.HasIndex("PurchaseOrderId", "GoodsReceiptId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Invoices_PO_GRN_Unique")
+                        .HasFilter("\"PurchaseOrderId\" IS NOT NULL AND \"GoodsReceiptId\" IS NOT NULL");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("IX_Invoices_SupplierId");
@@ -366,7 +643,6 @@ namespace Accounting.Infrastructure.Data.Migrations
             modelBuilder.Entity("Accounting.Domain.PaymentApplication", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
@@ -440,6 +716,10 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.Property<DateTime>("OpenedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<decimal?>("ExpectedCash")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<decimal>("OpeningBalance")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -453,6 +733,20 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("Variance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("VarianceApprovedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("VarianceApprovedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VarianceReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
@@ -460,6 +754,11 @@ namespace Accounting.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CashierId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ShiftSessions_Cashier_Open_Unique")
+                        .HasFilter("\"Status\" = 0");
 
                     b.HasIndex("CashierId", "WarehouseId", "OpenedAt", "Status")
                         .HasDatabaseName("IX_ShiftSession_UniqueOpenShift");
@@ -488,21 +787,55 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.OwnsMany("Accounting.Domain.InvoiceLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("Description")
                                 .IsRequired()
                                 .HasColumnType("text");
 
+                            b1.Property<decimal>("GrossAmount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<decimal>("GrossBeforeDiscount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
                             b1.Property<Guid>("InvoiceId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<bool>("IsPromotion")
+                                .HasColumnType("boolean");
+
+                            b1.Property<decimal>("LineDiscount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<decimal>("NetAmount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("Note")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
                                 .HasColumnType("numeric(18,4)");
 
+                            b1.Property<string>("Sku")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("UnitName")
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)");
+
                             b1.Property<decimal>("UnitPrice")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<decimal>("VatAmount")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)");
 
@@ -530,7 +863,6 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.OwnsMany("Accounting.Domain.Payment", "Payments", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
@@ -573,7 +905,6 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.OwnsMany("Accounting.Domain.LedgerEntry", "Entries", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
@@ -627,7 +958,6 @@ namespace Accounting.Infrastructure.Data.Migrations
                     b.OwnsMany("Accounting.Domain.ShiftTransaction", "Transactions", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
@@ -643,6 +973,9 @@ namespace Accounting.Infrastructure.Data.Migrations
 
                             b1.Property<Guid>("ShiftSessionId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<int>("Source")
+                                .HasColumnType("integer");
 
                             b1.Property<DateTime>("Timestamp")
                                 .HasColumnType("timestamp without time zone");

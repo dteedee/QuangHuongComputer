@@ -47,6 +47,14 @@ public class WarrantyClaim : Entity<Guid>
     public Guid? RmaId { get; private set; }             // Gửi hãng → WarrantyRma
     public Guid? LoanerDeviceId { get; private set; }    // Máy cho mượn
 
+    // D08 §4: actor tracking + "hai lớp thời gian".
+    public Guid? ApprovedBy { get; private set; }
+    public Guid? ResolvedBy { get; private set; }
+    public DateTime? DeviceReceivedAt { get; private set; }
+    public DateTime? DeviceReturnedAt { get; private set; }
+    /// <summary>Số ngày xử lý CÔNG BỐ trên biên nhận (mốc pháp lý Đ30.2.đ) — KHÔNG phải SLA nội bộ.</summary>
+    public int? CommittedTurnaroundDays { get; private set; }
+
     public WarrantyClaim(
         Guid customerId,
         string serialNumber,
@@ -68,7 +76,11 @@ public class WarrantyClaim : Entity<Guid>
 
     protected WarrantyClaim() { }
 
-    public void Approve() { Status = ClaimStatus.Approved; }
+    public void Approve(Guid? approvedBy = null)
+    {
+        Status = ClaimStatus.Approved;
+        ApprovedBy = approvedBy;
+    }
 
     public void Reject(string reason)
     {
@@ -78,11 +90,39 @@ public class WarrantyClaim : Entity<Guid>
         ResolvedDate = DateTime.UtcNow;
     }
 
-    public void Resolve(string notes)
+    public void Resolve(string notes, Guid? resolvedBy = null)
     {
         Status = ClaimStatus.Resolved;
         ResolutionNotes = notes;
         ResolvedDate = DateTime.UtcNow;
+        ResolvedBy = resolvedBy;
+    }
+
+    /// <summary>D08 §4: mốc nhận máy — dùng cộng bù (thời gian xử lý không tính vào hạn BH).</summary>
+    public void ReceiveDevice(DateTime? receivedAt = null)
+    {
+        DeviceReceivedAt = receivedAt ?? DateTime.UtcNow;
+    }
+
+    /// <summary>D08 §4: mốc trả máy — số ngày giữa hai mốc này cộng bù vào ProductWarranty.</summary>
+    public void ReturnDevice(DateTime? returnedAt = null)
+    {
+        DeviceReturnedAt = returnedAt ?? DateTime.UtcNow;
+    }
+
+    /// <summary>D08 §4: số ngày xử lý IN TRÊN BIÊN NHẬN — mốc pháp lý Đ30.2.đ, không phải SLA nội bộ.</summary>
+    public void SetCommittedTurnaround(int days)
+    {
+        if (days < 0) throw new ArgumentOutOfRangeException(nameof(days));
+        CommittedTurnaroundDays = days;
+    }
+
+    /// <summary>Số ngày máy đã ở shop/hãng để xử lý claim này (cộng bù hạn BH). Null nếu chưa đủ 2 mốc.</summary>
+    public int? ServiceDurationDays()
+    {
+        if (DeviceReceivedAt is null || DeviceReturnedAt is null) return null;
+        var days = (DeviceReturnedAt.Value - DeviceReceivedAt.Value).Days;
+        return days > 0 ? days : 0;
     }
 
     /// <summary>Phase 07: chỉ định cách xử lý + SLA deadline.</summary>

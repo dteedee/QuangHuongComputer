@@ -1,6 +1,8 @@
 using Accounting.Domain;
 using Accounting.Infrastructure;
+using BuildingBlocks.Documents;
 using BuildingBlocks.Messaging.IntegrationEvents;
+using BuildingBlocks.Time;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,11 +20,19 @@ namespace Accounting.Application.Consumers;
 public class POReceivedConsumer : IConsumer<POReceivedEvent>
 {
     private readonly AccountingDbContext _dbContext;
+    private readonly IDocumentNumberService _documentNumbers;
+    private readonly IBusinessClock _clock;
     private readonly ILogger<POReceivedConsumer> _logger;
 
-    public POReceivedConsumer(AccountingDbContext dbContext, ILogger<POReceivedConsumer> logger)
+    public POReceivedConsumer(
+        AccountingDbContext dbContext,
+        IDocumentNumberService documentNumbers,
+        IBusinessClock clock,
+        ILogger<POReceivedConsumer> logger)
     {
         _dbContext = dbContext;
+        _documentNumbers = documentNumbers;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -52,32 +62,61 @@ public class POReceivedConsumer : IConsumer<POReceivedEvent>
         // Tính hạn thanh toán theo Supplier.PaymentTerms (đọc trực tiếp bảng suppliers qua raw SQL
         // — không import Inventory module, chỉ dùng Guid supplierId).
         var (dueDays, termLabel) = await ResolvePaymentTermsAsync(msg.SupplierId, context.CancellationToken);
-        var dueDate = DateTime.UtcNow.AddDays(dueDays);
+        var nowUtc = _clock.UtcNow.UtcDateTime;
+        var dueDate = nowUtc.AddDays(dueDays);
+        var number = await _documentNumbers.NextAsync(DocumentNumberTypes.Invoice, context.CancellationToken);
 
         var invoice = Invoice.CreatePayable(
             msg.SupplierId,
+            number,
+            nowUtc,
             dueDate,
-            10, // 10% VAT mặc định
-            Currency.VND,
-            $"PO: {msg.PONumber} — Payment term: {termLabel}",
+            $"PO: {msg.PONumber} — điều khoản thanh toán: {termLabel}",
             msg.POId,
             msg.GoodsReceiptId
         );
 
         foreach (var item in msg.Items)
         {
-            invoice.AddLine(
-                item.ProductName,
-                item.Quantity,
-                item.UnitPrice,
-                item.VatRate
-            );
+            // Giá mua từ nhà cung cấp là giá CHƯA thuế: thuế được CỘNG THÊM
+            // (ngược với giá bán lẻ trong nước, vốn đã gồm thuế và phải TÁCH ra — xem
+            // OrderInvoiceLineBuilder). Đây là lý do hai đường dựng dòng không dùng chung công thức.
+            var vatRatePercent = item.VatRate > 1m ? item.VatRate : item.VatRate * 100m;
+            var net = Math.Round(item.UnitPrice * item.Quantity, 0, MidpointRounding.AwayFromZero);
+            var vat = Math.Round(net * vatRatePercent / 100m, 0, MidpointRounding.AwayFromZero);
+
+            invoice.AddLine(InvoiceLine.FromExtracted(
+                description: item.ProductName,
+                quantity: item.Quantity,
+                vatRatePercent: vatRatePercent,
+                grossBeforeDiscount: net + vat,
+                lineDiscount: 0m,
+                grossAmount: net + vat,
+                netAmount: net,
+                vatAmount: vat,
+                unitName: "Cái"));
         }
 
-        invoice.Issue();
+        invoice.Issue(nowUtc);
 
         _dbContext.Invoices.Add(invoice);
-        await _dbContext.SaveChangesAsync();
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(context.CancellationToken);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException?.Message.Contains("IX_Invoices_PO_GRN_Unique", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            // W2-14 verify (lần 3): hai lần giao cùng một POReceivedEvent chạy song song đều qua
+            // được bước kiểm tra ở trên. Unique index là lớp chặn thật; ở đây nuốt để message
+            // không quay vòng error queue — hoá đơn mua vào đã do consumer kia lập.
+            _dbContext.ChangeTracker.Clear();
+            _logger.LogInformation(
+                "Một consumer khác vừa lập hoá đơn mua vào cho PO {PONumber} / GRN {GRNId} — bỏ qua.",
+                msg.PONumber, msg.GoodsReceiptId);
+            return;
+        }
 
         _logger.LogInformation(
             "AP Invoice {InvoiceNumber} created for PO {PONumber}, Total: {Total}, Due: {Due} ({Term})",

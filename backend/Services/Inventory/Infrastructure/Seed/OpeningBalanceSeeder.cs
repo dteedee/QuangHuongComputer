@@ -41,7 +41,12 @@ public static class OpeningBalanceSeeder
                 if (row.QuantityOnHand == quantity && row.AverageCost == unitCost) continue;
 
                 // InventoryItem has no absolute setter, so the opening balance is reached with a delta.
-                if (row.QuantityOnHand != quantity) row.AdjustStock(quantity - row.QuantityOnHand, "opening balance (db seed)");
+                var delta = quantity - row.QuantityOnHand;
+                if (delta != 0)
+                {
+                    row.AdjustStock(delta, "opening balance (db seed)");
+                    db.StockMovements.Add(Movement(row, delta, unitCost));
+                }
                 if (row.AverageCost != unitCost) row.UpdateAverageCost(unitCost);
                 if (summary is not null) summary.InventoryItemsUpdated++;
                 changes++;
@@ -56,6 +61,7 @@ public static class OpeningBalanceSeeder
                 averageCost: unitCost);
             db.InventoryItems.Add(item);
             db.Entry(item).Property("Id").CurrentValue = id;
+            if (quantity != 0) db.StockMovements.Add(Movement(item, quantity, unitCost));
             if (summary is not null) summary.InventoryItemsCreated++;
             changes++;
         }
@@ -63,4 +69,15 @@ public static class OpeningBalanceSeeder
         if (changes > 0) await db.SaveChangesAsync(ct);
         return changes;
     }
+
+    /// <summary>
+    /// W2-5: kể cả đường nạp tồn đầu kỳ ngoại tuyến cũng phải để lại bút toán — bất biến "mọi thay
+    /// đổi số lượng đều có một dòng StockMovements" không có ngoại lệ, nếu không thì sổ kho và tồn
+    /// thực lệch nhau ngay từ ngày đầu. Seeder chạy ngoài HTTP nên không đi qua IStockLedger
+    /// (không có ClaimsPrincipal, không có bus); người thực hiện ghi rõ là tiến trình seed.
+    /// </summary>
+    private static StockMovement Movement(InventoryItem item, int delta, decimal unitCost) =>
+        StockMovement.Post(
+            item, MovementType.In, delta, StockMovementReason.OpeningBalance, unitCost,
+            performedBy: "system:db-seed", referenceType: "OpeningBalance");
 }

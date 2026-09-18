@@ -105,6 +105,38 @@ public class AttendanceRule : Entity<Guid>
         OvertimeHolidayRate = overtimeHolidayRate;
     }
 
+    /// <summary>Update đầy đủ — dùng cho PUT /api/hr/attendance-rules/{id} (W2-7 khoản 8).</summary>
+    public void Update(
+        string name,
+        int lateToleranceMinutes,
+        decimal lateFineMoneyPerMinute,
+        int halfDayThresholdMinutes,
+        int earlyLeaveToleranceMinutes,
+        decimal overtimeWeekdayRate,
+        decimal overtimeSundayRate,
+        decimal overtimeHolidayRate,
+        decimal overtimeNightBonus,
+        int gpsRadiusMeters,
+        decimal standardWorkHoursPerDay)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Tên quy tắc là bắt buộc.", nameof(name));
+        if (halfDayThresholdMinutes <= lateToleranceMinutes)
+            throw new ArgumentException("Ngưỡng nửa ngày phải > dung sai đi muộn.");
+        if (overtimeSundayRate < overtimeWeekdayRate) throw new ArgumentException("Sunday rate >= Weekday rate.");
+        if (overtimeHolidayRate < overtimeSundayRate) throw new ArgumentException("Holiday rate >= Sunday rate.");
+        if (gpsRadiusMeters <= 0 || gpsRadiusMeters > 10_000)
+            throw new ArgumentException("GpsRadiusMeters trong khoảng 1..10000.");
+
+        Name = name;
+        Update(lateToleranceMinutes, lateFineMoneyPerMinute, halfDayThresholdMinutes,
+            overtimeWeekdayRate, overtimeSundayRate, overtimeHolidayRate);
+        EarlyLeaveToleranceMinutes = earlyLeaveToleranceMinutes;
+        OvertimeNightBonus = overtimeNightBonus;
+        GpsRadiusMeters = gpsRadiusMeters;
+        StandardWorkHoursPerDay = standardWorkHoursPerDay;
+    }
+
     public void Activate() => IsActive = true;
     public void Deactivate() => IsActive = false;
 

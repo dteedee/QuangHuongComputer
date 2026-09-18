@@ -6,6 +6,7 @@ using Sales.Domain;
 using Accounting.Infrastructure;
 using Accounting.Domain;
 using InventoryModule.Infrastructure;
+using Reporting.Shared;
 
 namespace Reporting.Endpoints;
 
@@ -27,12 +28,7 @@ public static class ComparisonEndpoints
             {
                 Period1 = new { Label = $"{p1s:dd/MM} - {p1e:dd/MM}", p1.Revenue, p1.OrderCount, p1.AvgOrderValue },
                 Period2 = new { Label = $"{p2s:dd/MM} - {p2e:dd/MM}", p2.Revenue, p2.OrderCount, p2.AvgOrderValue },
-                Change = new
-                {
-                    RevenuePercent = CalcChangePercent(p1.Revenue, p2.Revenue),
-                    OrderPercent = CalcChangePercent(p1.OrderCount, p2.OrderCount),
-                    AovPercent = CalcChangePercent(p1.AvgOrderValue, p2.AvgOrderValue)
-                }
+                Change = BuildComparisonChange(p1, p2)
             });
         });
 
@@ -48,12 +44,7 @@ public static class ComparisonEndpoints
             return Results.Ok(new
             {
                 Period1 = p1, Period2 = p2,
-                Change = new
-                {
-                    TotalPercent = CalcChangePercent(p1.Total, p2.Total),
-                    CompletedPercent = CalcChangePercent(p1.Completed, p2.Completed),
-                    CancelRateChange = Math.Round(p2.CancelRate - p1.CancelRate, 1)
-                }
+                Change = BuildOrderChange(p1, p2)
             });
         });
 
@@ -70,7 +61,7 @@ public static class ComparisonEndpoints
             {
                 Period1 = new { p1.Total, p1.ByCategory },
                 Period2 = new { p2.Total, p2.ByCategory },
-                Change = new { TotalPercent = CalcChangePercent(p1.Total, p2.Total) }
+                Change = BuildDecimalChange(p1.Total, p2.Total)
             });
         });
 
@@ -82,10 +73,8 @@ public static class ComparisonEndpoints
 
             var avgInventory = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 1;
 
-            var p1Cogs = await salesDb.Orders.Where(o => o.OrderDate >= p1s && o.OrderDate < p1e && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.SubtotalAmount) ?? 0;
-            var p2Cogs = await salesDb.Orders.Where(o => o.OrderDate >= p2s && o.OrderDate < p2e && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.SubtotalAmount) ?? 0;
+            var p1Cogs = await RevenueQueries.RecognizedInPeriod(salesDb, p1s, p1e).SumAsync(o => (decimal?)o.SubtotalAmount) ?? 0;
+            var p2Cogs = await RevenueQueries.RecognizedInPeriod(salesDb, p2s, p2e).SumAsync(o => (decimal?)o.SubtotalAmount) ?? 0;
 
             var p1Turnover = avgInventory > 0 ? p1Cogs / avgInventory : 0;
             var p2Turnover = avgInventory > 0 ? p2Cogs / avgInventory : 0;
@@ -96,18 +85,16 @@ public static class ComparisonEndpoints
             {
                 Period1 = new { TurnoverRatio = Math.Round(p1Turnover, 2), AvgDaysToSell = p1Days, Cogs = p1Cogs, AvgInventory = avgInventory },
                 Period2 = new { TurnoverRatio = Math.Round(p2Turnover, 2), AvgDaysToSell = p2Days, Cogs = p2Cogs, AvgInventory = avgInventory },
-                Change = new { TurnoverChangePercent = CalcChangePercent(p1Turnover, p2Turnover), DaysChange = Math.Round(p2Days - p1Days, 1) }
+                Change = BuildTurnoverChange(p1Turnover, p2Turnover, p2Days - p1Days)
             });
         });
     }
 
     private static async Task<(decimal Revenue, int OrderCount, decimal AvgOrderValue)> GetRevenuePeriodData(SalesDbContext db, DateTime start, DateTime end)
     {
-        // Exclude cancelled and unpaid orders from revenue (quick correctness pass; W2-8
-        // owns the single shared recognized-revenue predicate across all reports).
-        var orders = await db.Orders
-            .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
-            .ToListAsync();
+        // Requirement 1: shared RecognizedRevenue predicate - same figure as sales-summary,
+        // dashboard-kpis, business-overview and the Excel export for the same period.
+        var orders = await RevenueQueries.RecognizedInPeriod(db, start, end).ToListAsync();
         var revenue = orders.Sum(o => o.TotalAmount);
         var count = orders.Count;
         var aov = count > 0 ? revenue / count : 0;
@@ -136,9 +123,44 @@ public static class ComparisonEndpoints
         return (total, byCategory);
     }
 
-    private static decimal CalcChangePercent(decimal oldVal, decimal newVal) =>
-        oldVal != 0 ? Math.Round((newVal - oldVal) / Math.Abs(oldVal) * 100, 1) : (newVal > 0 ? 100 : 0);
+    // Requirement 3 / Success Criteria: "a first-ever period shows chưa có dữ liệu so sánh, not
+    // 100%". The old CalcChangePercent here returned a hardcoded 100 when the prior period was 0
+    // (exactly the bug phase-54 calls out) - now routed through the shared GrowthCalculator so
+    // comparison/* matches dashboard-kpis and business-overview: null + NoBaseline=true.
+    private static object BuildComparisonChange((decimal Revenue, int OrderCount, decimal AvgOrderValue) p1, (decimal Revenue, int OrderCount, decimal AvgOrderValue) p2)
+    {
+        var revenue = GrowthCalculator.Compare(p1.Revenue, p2.Revenue);
+        var orders = GrowthCalculator.Compare(p1.OrderCount, p2.OrderCount);
+        var aov = GrowthCalculator.Compare(p1.AvgOrderValue, p2.AvgOrderValue);
+        return new
+        {
+            RevenuePercent = revenue.Percent, RevenueNoBaseline = revenue.NoBaseline,
+            OrderPercent = orders.Percent, OrderNoBaseline = orders.NoBaseline,
+            AovPercent = aov.Percent, AovNoBaseline = aov.NoBaseline
+        };
+    }
 
-    private static double CalcChangePercent(int oldVal, int newVal) =>
-        oldVal != 0 ? Math.Round((double)(newVal - oldVal) / Math.Abs(oldVal) * 100, 1) : (newVal > 0 ? 100 : 0);
+    private static object BuildOrderChange(dynamic p1, dynamic p2)
+    {
+        var total = GrowthCalculator.Compare((int)p1.Total, (int)p2.Total);
+        var completed = GrowthCalculator.Compare((int)p1.Completed, (int)p2.Completed);
+        return new
+        {
+            TotalPercent = total.Percent, TotalNoBaseline = total.NoBaseline,
+            CompletedPercent = completed.Percent, CompletedNoBaseline = completed.NoBaseline,
+            CancelRateChange = Math.Round((double)p2.CancelRate - (double)p1.CancelRate, 1)
+        };
+    }
+
+    private static object BuildDecimalChange(decimal oldVal, decimal newVal)
+    {
+        var growth = GrowthCalculator.Compare(oldVal, newVal);
+        return new { TotalPercent = growth.Percent, TotalNoBaseline = growth.NoBaseline };
+    }
+
+    private static object BuildTurnoverChange(decimal oldTurnover, decimal newTurnover, decimal daysChange)
+    {
+        var growth = GrowthCalculator.Compare(oldTurnover, newTurnover);
+        return new { TurnoverChangePercent = growth.Percent, TurnoverChangeNoBaseline = growth.NoBaseline, DaysChange = Math.Round(daysChange, 1) };
+    }
 }

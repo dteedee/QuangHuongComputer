@@ -26,6 +26,7 @@ public static class ReportingEndpoints
         Group(app, Permissions.Reporting.ViewSales).MapComparisonEndpoints();
         Group(app, Permissions.Reporting.ExportReports).MapReportCustomizationEndpoints();
         Group(app, Permissions.Reporting.ViewHR).MapHRReportEndpoints();
+        Group(app, Permissions.Reporting.ViewSales).MapPromotionEffectivenessEndpoints(); // D10
     }
 
     /// <summary>

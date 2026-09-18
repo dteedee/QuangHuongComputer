@@ -100,10 +100,14 @@
 | `AssignmentStatus` | 0 = Scheduled, 1 = CheckedIn, 2 = CheckedOut, 3 = Missed, 4 = Late, 5 = Cancelled |
 | `AttendanceStatus` | 0 = Present, 1 = Late, 2 = Absent, 3 = HalfDay, 4 = Holiday, 5 = OnLeave |
 | `BannerPosition` | 0 = HomepageHero, 1 = HomepageSidebar, 2 = CategoryTop, 3 = ProductDetail, 4 = Checkout, 5 = Footer, 6 = Header |
+| `BuyerType` | 0 = Individual, 1 = Organization, 2 = BudgetUnit |
+| `CashVoucherKind` | 0 = Receipt, 1 = Payment |
+| `CashVoucherSource` | 0 = Manual, 1 = ShiftClose, 2 = Expense, 3 = SupplierPayment, 4 = CustomerDeposit, 5 = InvoiceSettlement |
 | `CheckInMethod` | 0 = Web, 1 = QR, 2 = GPS, 3 = WiFi, 4 = Manual |
 | `CheckoutSessionStatus` | 0 = Active, 1 = Completed, 2 = Cancelled, 3 = Expired |
 | `ClaimStatus` | 0 = Pending, 1 = Approved, 2 = Rejected, 3 = Resolved, 4 = InProgress |
 | `ClaimType` | 1 = RepairAtShop, 2 = SendToManufacturer, 3 = ExchangeNew, 4 = Rejected |
+| `CodSettlementStatus` | 0 = NotApplicable, 1 = AwaitingRemittance, 2 = Remitted |
 | `ConditionOperator` | 1 = Eq, 2 = Gte, 3 = Lte, 4 = In, 5 = Between |
 | `ConditionType` | 1 = MinOrderValue, 2 = Category, 3 = Brand, 4 = Product, 5 = CustomerGroup, 6 = TimeOfDay, 7 = DayOfWeek, 8 = FirstOrder, 9 = Quantity |
 | `ConfigValueType` | 0 = String, 1 = Number, 2 = Boolean, 3 = Json, 4 = Secret, 5 = Url, 6 = Email, 7 = Percentage, 8 = Color |
@@ -112,6 +116,9 @@
 | `ContractType` | 1 = Probation, 2 = FixedTerm1Year, 3 = FixedTerm3Year, 4 = Permanent, 5 = Seasonal |
 | `CountScope` | 0 = Full, 1 = ByCategory |
 | `CountSessionStatus` | 0 = Open, 1 = InProgress, 2 = PendingApproval, 3 = Approved, 4 = Cancelled |
+| `CreditNoteReason` | 0 = OrderCancelled, 1 = Refund, 2 = Return, 3 = PriceAdjustment, 4 = Other |
+| `CreditNoteStatus` | 0 = Draft, 1 = Issued, 2 = Cancelled |
+| `CreditNoteType` | 0 = Credit, 1 = Debit |
 | `Currency` | 0 = USD, 1 = VND |
 | `DNReason` | 0 = Sale, 1 = Transfer, 2 = WarrantyReplace, 3 = Defect, 4 = Other |
 | `DNStatus` | 0 = Draft, 1 = Confirmed, 2 = Cancelled |
@@ -123,7 +130,7 @@
 | `FulfillmentStatus` | 0 = Pending, 1 = PartiallyFulfilled, 2 = Fulfilled, 3 = Returned |
 | `GRNSource` | 1 = Purchase, 2 = CustomerReturn, 3 = Transfer, 4 = Adjustment |
 | `GRNStatus` | 0 = Draft, 1 = Confirmed, 2 = Cancelled |
-| `InstallmentStatus` | 0 = PendingApproval, 1 = Approved, 2 = Rejected, 3 = Active, 4 = Completed |
+| `InstallmentStatus` | 0 = PendingApproval, 1 = Approved, 2 = Rejected, 3 = Active, 4 = Completed, 5 = Expired |
 | `InvoiceStatus` | 0 = Draft, 1 = Issued, 2 = PartiallyPaid, 3 = Paid, 4 = Overdue, 5 = Cancelled |
 | `InvoiceType` | 0 = Receivable, 1 = Payable |
 | `JobStatus` | 0 = Draft, 1 = Active, 2 = Closed, 3 = Archived |
@@ -145,9 +152,10 @@
 | `POStatus` | 0 = Draft, 1 = Sent, 2 = PartialReceived, 3 = Received, 4 = Cancelled, 5 = PendingApproval, 6 = Approved, 7 = Rejected |
 | `PageType` | 0 = Custom, 1 = About, 2 = Contact, 3 = FAQ, 4 = Terms, 5 = Privacy, 6 = Shipping, 7 = Returns, 8 = Warranty |
 | `PaymentMethod` | 0 = Cash, 1 = BankTransfer, 2 = CreditCard, 3 = Momo, 4 = ZaloPay, 5 = VnPay |
-| `PaymentProvider` | 0 = Stripe, 1 = VnPay, 2 = Momo, 3 = COD, 4 = SePay, 5 = ZaloPay |
-| `PaymentStatus` | 0 = Pending, 1 = Succeeded, 2 = Failed, 3 = Cancelled, 4 = Refunded |
+| `PaymentProvider` | 0 = Stripe, 1 = VnPay, 2 = Momo, 3 = COD, 4 = SePay, 5 = ZaloPay, 6 = Installment |
+| `PaymentStatus` | 0 = Pending, 1 = Succeeded, 2 = Failed, 3 = Cancelled, 4 = Refunded, 5 = PartiallyRefunded |
 | `PaymentStatus` | 0 = Pending, 1 = PartiallyPaid, 2 = Paid, 3 = Refunded, 4 = Failed |
+| `PaymentTenderMethod` | 0 = Cash, 1 = Card, 2 = Transfer, 3 = SePay, 4 = VNPay, 5 = MoMo, 6 = ZaloPay, 7 = Credit, 8 = Installment, 9 = LoyaltyPoints |
 | `PaymentTermType` | 0 = COD, 1 = NET7, 2 = NET15, 3 = NET30, 4 = NET45, 5 = NET60, 6 = Prepaid, 7 = Custom |
 | `PayrollLineType` | 1 = BaseSalary, 2 = Allowance, 3 = Overtime, 4 = Bonus, 5 = InsuranceEmployee, 6 = PersonalDeduction, 7 = DependentDeduction, 8 = Pit, 9 = LateFine, 10 = Advance, 11 = OtherDeduction |
 | `PayrollRunStatus` | 0 = Draft, 1 = Calculated, 2 = Approved, 3 = Paid, 4 = Cancelled |
@@ -155,12 +163,14 @@
 | `PostStatus` | 0 = Draft, 1 = Published |
 | `PostType` | 0 = News, 1 = Article, 2 = Promotion |
 | `ProductStatus` | 0 = InStock, 1 = LowStock, 2 = OutOfStock, 3 = PreOrder |
-| `PromotionDiscountType` | 1 = Percent, 2 = Fixed, 3 = FreeShip, 4 = BuyXGetY, 5 = Tiered |
+| `PromotionDiscountType` | 1 = Percent, 2 = Fixed, 3 = FreeShip, 4 = BuyXGetY, 5 = Tiered, 6 = FixedPrice |
 | `PromotionStatus` | 1 = Draft, 2 = Active, 3 = Paused, 4 = Expired |
 | `PromotionType` | 1 = Code, 2 = Automatic, 3 = FlashSale |
 | `PurchaseRequisitionStatus` | 0 = Draft, 1 = Submitted, 2 = Approved, 3 = Rejected, 4 = ConvertedToPO, 5 = Cancelled |
 | `PurchaseReturnStatus` | 0 = Draft, 1 = Sent, 2 = Accepted, 3 = Refunded, 4 = Cancelled |
 | `ReceivedCondition` | 1 = Intact, 2 = UsedGood, 3 = DefectiveTechnical, 4 = UserDamage, 5 = MissingAccessories |
+| `RefundChannel` | 0 = Gateway, 1 = ManualTransfer, 2 = Cash |
+| `RefundStatus` | 0 = Requested, 1 = Approved, 2 = Completed, 3 = Rejected, 4 = Failed |
 | `RequestStatus` | 0 = Pending, 1 = Approved, 2 = Rejected, 3 = Cancelled |
 | `ReservationStatus` | 0 = Active, 1 = Fulfilled, 2 = Released, 3 = Expired |
 | `ResolutionPreference` | 0 = Repair, 1 = Replace, 2 = Refund |
@@ -170,7 +180,10 @@
 | `RmaStatus` | 1 = Draft, 2 = Sent, 3 = Received, 4 = Closed |
 | `SerialStatus` | 0 = InStock, 1 = Reserved, 2 = Sold, 3 = Returned, 4 = Defective, 5 = InRepair, 6 = Scrapped |
 | `ShiftStatus` | 0 = Open, 1 = Closed |
+| `ShiftTransactionSource` | 0 = Manual, 1 = PosSale, 2 = PosRefund, 3 = Deposit, 4 = CashDrop, 5 = ExpensePayout |
 | `SpecDataType` | 1 = Text, 2 = Number, 3 = Boolean, 4 = Enum |
+| `StatutoryParameterUnit` | 0 = Vnd, 1 = Rate, 2 = Hours, 3 = Days, 4 = Count, 5 = Json, 6 = Text, 7 = Bool |
+| `StockMovementReason` | 0 = GoodsReceipt, 1 = OpeningBalance, 2 = CustomerReturn, 3 = TransferIn, 4 = TransferOut, 5 = Sale, 6 = DeliveryNote, 7 = RepairPart, 8 = CountAdjustment, 9 = ManualAdjustment, 10 = Damage, 11 = Loss, 12 = Found, 13 = Expiry, 14 = Reservation, 15 = ReservationRelease, 16 = ReservationCommit, 17 = PurchaseReturn |
 | `SupplierQuotationStatus` | 0 = Received, 1 = Awarded, 2 = Rejected, 3 = Expired |
 | `SupplierType` | 0 = Manufacturer, 1 = Distributor, 2 = Wholesaler, 3 = Agent, 4 = Retailer, 5 = Importer |
 | `TargetDevice` | 0 = All, 1 = Desktop, 2 = Mobile |
@@ -183,10 +196,15 @@
 | `WarrantyProvider` | 1 = Manufacturer, 2 = Store |
 | `WarrantyStatus` | 0 = Active, 1 = Expired, 2 = Voided |
 
-## Cột nào lưu enum nào (101 cột)
+## Cột nào lưu enum nào (114 cột)
 
 | Module | Bảng | Cột | Enum | Kiểu cột |
 |---|---|---|---|---|
+| Accounting | `public.CashVouchers` | `Kind` | `CashVoucherKind` | integer |
+| Accounting | `public.CashVouchers` | `Source` | `CashVoucherSource` | integer |
+| Accounting | `public.CreditNotes` | `ReasonCode` | `CreditNoteReason` | integer |
+| Accounting | `public.CreditNotes` | `Status` | `CreditNoteStatus` | integer |
+| Accounting | `public.CreditNotes` | `Type` | `CreditNoteType` | integer |
 | Accounting | `public.Expenses` | `Currency` | `Currency` | integer |
 | Accounting | `public.Expenses` | `PaymentMethod` | `PaymentMethod` | integer |
 | Accounting | `public.Expenses` | `Status` | `ExpenseStatus` | integer |
@@ -198,6 +216,7 @@
 | Accounting | `public.LedgerEntry` | `Type` | `TransactionType` | integer |
 | Accounting | `public.Payment` | `Method` | `PaymentMethod` | integer |
 | Accounting | `public.ShiftSessions` | `Status` | `ShiftStatus` | integer |
+| Accounting | `public.ShiftTransaction` | `Source` | `ShiftTransactionSource` | integer |
 | Accounting | `public.ShiftTransaction` | `Type` | `TransactionType` | integer |
 | Catalog | `public.ProductMedias` | `Type` | `MediaType` | integer |
 | Catalog | `public.ProductOptionTypes` | `InputType` | `OptionInputType` | integer |
@@ -239,6 +258,7 @@
 | HR | `hr.PayrollRuns` | `Status` | `PayrollRunStatus` | integer |
 | HR | `hr.Payrolls` | `Status` | `PayrollStatus` | integer |
 | HR | `hr.ShiftAssignments` | `Status` | `AssignmentStatus` | integer |
+| HR | `hr.StatutoryParameters` | `Unit` | `StatutoryParameterUnit` | character varying(16) |
 | HR | `hr.Timesheets` | `Status` | `TimesheetStatus` | integer |
 | Inventory | `public.DeliveryNotes` | `Reason` | `DNReason` | integer |
 | Inventory | `public.DeliveryNotes` | `Status` | `DNStatus` | integer |
@@ -256,6 +276,7 @@
 | Inventory | `public.RequestForQuotations` | `Status` | `RfqStatus` | integer |
 | Inventory | `public.SerialNumbers` | `Status` | `SerialStatus` | integer |
 | Inventory | `public.StockAdjustments` | `Type` | `AdjustmentType` | integer |
+| Inventory | `public.StockMovements` | `ReasonCode` | `StockMovementReason` | integer |
 | Inventory | `public.StockMovements` | `Type` | `MovementType` | integer |
 | Inventory | `public.StockReservations` | `Status` | `ReservationStatus` | integer |
 | Inventory | `public.StockTransfers` | `Status` | `TransferStatus` | integer |
@@ -265,13 +286,18 @@
 | Inventory | `public.Suppliers` | `SupplierType` | `SupplierType` | integer |
 | Inventory | `public.Warehouses` | `Type` | `WarehouseType` | integer |
 | Payments | `payments.PaymentIntents` | `Provider` | `PaymentProvider` | integer |
+| Payments | `payments.PaymentIntents` | `Settlement` | `CodSettlementStatus` | integer |
 | Payments | `payments.PaymentIntents` | `Status` | `PaymentStatus` | integer |
+| Payments | `payments.PaymentRefunds` | `Channel` | `RefundChannel` | integer |
+| Payments | `payments.PaymentRefunds` | `Status` | `RefundStatus` | integer |
 | Sales | `public.CheckoutSessions` | `Status` | `CheckoutSessionStatus` | integer |
 | Sales | `public.InstallmentApplications` | `Status` | `InstallmentStatus` | integer |
 | Sales | `public.LoyaltyAccounts` | `Tier` | `LoyaltyTier` | integer |
 | Sales | `public.LoyaltyTransactions` | `Type` | `LoyaltyTransactionType` | integer |
 | Sales | `public.OrderHistories` | `FromStatus` | `OrderStatus` | integer |
 | Sales | `public.OrderHistories` | `ToStatus` | `OrderStatus` | integer |
+| Sales | `public.OrderPayments` | `Method` | `PaymentTenderMethod` | integer |
+| Sales | `public.Orders` | `BuyerType` | `BuyerType` | integer |
 | Sales | `public.Orders` | `FulfillmentStatus` | `FulfillmentStatus` | integer |
 | Sales | `public.Orders` | `PaymentStatus` | `PaymentStatus` | integer |
 | Sales | `public.Orders` | `Status` | `OrderStatus` | integer |

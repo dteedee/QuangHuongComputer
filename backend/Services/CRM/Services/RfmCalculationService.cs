@@ -63,28 +63,46 @@ public class RfmCalculationService : IRfmCalculationService
 
     public async Task<int> CalculateForAllCustomersAsync(CancellationToken cancellationToken = default)
     {
+        // W2-8 step 4: trước đây gọi CalculateForCustomerAsync() trong vòng lặp — N truy vấn SQL
+        // sang Orders + N SaveChanges cho N khách hàng. Giờ gộp thành MỘT truy vấn GROUP BY lấy
+        // toàn bộ thống kê đơn hàng, rồi cập nhật entity theo lô và SaveChanges một lần.
+        var statsByUser = await GetOrderStatsForAllUsersAsync(cancellationToken);
+
+        if (statsByUser.Count == 0)
+        {
+            _logger.LogInformation("RFM calculation: no users with orders found.");
+            return 0;
+        }
+
+        var userIds = statsByUser.Keys.ToList();
+        var existing = await _crmDb.CustomerAnalytics
+            .Where(c => userIds.Contains(c.UserId))
+            .ToDictionaryAsync(c => c.UserId, cancellationToken);
+
         int processedCount = 0;
-
-        // Get all user IDs that have orders
-        var userIds = await GetUsersWithOrdersAsync(cancellationToken);
-
-        foreach (var userId in userIds)
+        foreach (var (userId, stats) in statsByUser)
         {
             if (cancellationToken.IsCancellationRequested)
                 break;
 
-            try
+            if (!existing.TryGetValue(userId, out var analytics))
             {
-                await CalculateForCustomerAsync(userId, cancellationToken);
-                processedCount++;
+                analytics = new CustomerAnalytics(userId);
+                _crmDb.CustomerAnalytics.Add(analytics);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to calculate RFM for user {UserId}", userId);
-            }
+
+            analytics.UpdateOrderStats(stats.OrderCount, stats.TotalSpent, stats.FirstPurchaseDate, stats.LastPurchaseDate);
+            analytics.UpdateRfmScores(
+                GetRecencyScore(stats.DaysSinceLastPurchase),
+                GetFrequencyScore(stats.OrderCount),
+                GetMonetaryScore(stats.TotalSpent));
+
+            processedCount++;
         }
 
-        _logger.LogInformation("RFM calculation completed. Processed {Count} customers.", processedCount);
+        await _crmDb.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("RFM calculation completed. Processed {Count} customers (set-based).", processedCount);
 
         return processedCount;
     }
@@ -173,10 +191,11 @@ public class RfmCalculationService : IRfmCalculationService
         }
     }
 
-    // Get all users that have orders
-    private async Task<List<Guid>> GetUsersWithOrdersAsync(CancellationToken cancellationToken)
+    // W2-8 step 4: một truy vấn GROUP BY cho TOÀN BỘ khách hàng có đơn hàng, thay vì N truy vấn
+    // (một cho danh sách UserId + N cho từng thống kê) như bản cũ.
+    private async Task<Dictionary<Guid, OrderStatsDto>> GetOrderStatsForAllUsersAsync(CancellationToken cancellationToken)
     {
-        var userIds = new List<Guid>();
+        var result = new Dictionary<Guid, OrderStatsDto>();
         var connection = _crmDb.Database.GetDbConnection();
         bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
 
@@ -185,27 +204,44 @@ public class RfmCalculationService : IRfmCalculationService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT DISTINCT ""CustomerId"" FROM public.""Orders"" WHERE ""IsActive"" = true";
+            command.CommandText = @"
+                SELECT
+                    ""CustomerId"",
+                    COUNT(""Id"") as OrderCount,
+                    COALESCE(SUM(""TotalAmount""), 0) as TotalSpent,
+                    MIN(""OrderDate"") as FirstPurchaseDate,
+                    MAX(""OrderDate"") as LastPurchaseDate
+                FROM public.""Orders""
+                WHERE ""IsActive"" = true AND ""Status"" NOT IN (0, 7, 99)
+                GROUP BY ""CustomerId""";
 
             using var reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
             {
-                if (!reader.IsDBNull(0))
-                {
-                    userIds.Add(reader.GetGuid(0));
-                }
+                if (reader.IsDBNull(0)) continue;
+
+                var userId = reader.GetGuid(0);
+                int orderCount = reader.GetInt32(1);
+                decimal totalSpent = reader.GetDecimal(2);
+                DateTime? firstPurchaseDate = reader.IsDBNull(3) ? null : reader.GetDateTime(3);
+                DateTime? lastPurchaseDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4);
+                int daysSinceLastPurchase = lastPurchaseDate.HasValue
+                    ? (int)(DateTime.UtcNow - lastPurchaseDate.Value).TotalDays
+                    : int.MaxValue;
+
+                result[userId] = new OrderStatsDto(orderCount, totalSpent, firstPurchaseDate, lastPurchaseDate, daysSinceLastPurchase);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get users with orders");
+            _logger.LogError(ex, "Failed to get order stats for all users");
         }
         finally
         {
             if (wasClosed) await connection.CloseAsync();
         }
 
-        return userIds;
+        return result;
     }
 
     private record OrderStatsDto(

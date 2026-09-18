@@ -1,4 +1,11 @@
+using BuildingBlocks.Documents;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Paging;
+using BuildingBlocks.Repository;
 using BuildingBlocks.Security;
+using BuildingBlocks.Validation;
+using InventoryModule.Application.Purchasing;
+using InventoryModule.Application.Stock;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -22,13 +29,37 @@ public static class PurchaseReturnEndpoints
         var group = app.MapGroup("/api/inventory/purchase-returns")
             .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
-        group.MapGet("", async (string? status, InventoryDbContext db) =>
+        group.MapGet("", async (
+            [AsParameters] PagedRequest request, string? status, Guid? supplierId,
+            InventoryDbContext db, CancellationToken ct) =>
         {
-            var query = db.PurchaseReturns.Include(p => p.Items).AsQueryable();
+            var query = db.PurchaseReturns.AsQueryable();
             if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PurchaseReturnStatus>(status, true, out var s))
                 query = query.Where(p => p.Status == s);
-            var items = await query.OrderByDescending(p => p.CreatedAt).Take(500).ToListAsync();
-            return Results.Ok(items);
+            if (supplierId.HasValue) query = query.Where(p => p.SupplierId == supplierId.Value);
+
+            var search = request.NormalizedSearch;
+            if (search is not null) query = query.Where(p => p.Number.Contains(search));
+
+            return Results.Ok(await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Number,
+                    p.GRNId,
+                    grnNumber = db.GoodsReceivedNotes.Where(g => g.Id == p.GRNId).Select(g => g.DocumentNumber).FirstOrDefault(),
+                    p.PurchaseOrderId,
+                    p.SupplierId,
+                    supplierName = db.Suppliers.Where(x => x.Id == p.SupplierId).Select(x => x.Name).FirstOrDefault(),
+                    status = p.Status.ToString(),
+                    total = p.TotalValue,
+                    p.RefundAmount,
+                    p.ReturnDate,
+                    p.CreatedAt,
+                    itemCount = p.Items.Count
+                })
+                .ToPagedResultAsync(request, ct));
         });
 
         group.MapGet("{id:guid}", async (Guid id, InventoryDbContext db) =>
@@ -37,19 +68,24 @@ public static class PurchaseReturnEndpoints
             return pr != null ? Results.Ok(pr) : Results.NotFound();
         });
 
-        group.MapPost("", async (CreatePurchaseReturnDto dto, InventoryDbContext db) =>
+        group.MapPost("", async (
+            CreatePurchaseReturnDto dto, InventoryDbContext db,
+            InventoryDocumentNumbers numbers, CancellationToken ct) =>
         {
-            try
-            {
-                var items = dto.Items.Select(i => new PurchaseReturnItem(
-                    i.ProductId, i.ProductName, i.Quantity, i.UnitCost, i.Reason, i.SerialNumbers)).ToList();
-                var ret = new PurchaseReturn(dto.SupplierId, items, dto.GRNId, dto.PurchaseOrderId, dto.Notes);
-                db.PurchaseReturns.Add(ret);
-                await db.SaveChangesAsync();
-                return Results.Created($"/api/inventory/purchase-returns/{ret.Id}", ret);
-            }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        });
+            await PurchasingGuards.EnsureSupplierUsableAsync(db, dto.SupplierId, ct: ct);
+            if (dto.GRNId.HasValue && !await db.GoodsReceivedNotes.AnyAsync(g => g.Id == dto.GRNId.Value, ct))
+                throw new RequestValidationException("grnId", "Phiếu nhập không tồn tại.");
+
+            var items = dto.Items.Select(i => new PurchaseReturnItem(
+                i.ProductId, i.ProductName, i.Quantity, i.UnitCost, i.Reason, i.SerialNumbers)).ToList();
+            var ret = new PurchaseReturn(dto.SupplierId, items, dto.GRNId, dto.PurchaseOrderId, dto.Notes);
+            ret.SetNumber(await numbers.NextAsync(DocumentNumberTypes.ReturnRequest, ct));
+
+            db.PurchaseReturns.Add(ret);
+            await db.SaveChangesAsync(ct);
+            return Results.Created($"/api/inventory/purchase-returns/{ret.Id}",
+                new { ret.Id, ret.Number, status = ret.Status.ToString(), total = ret.TotalValue });
+        }).WithValidation<CreatePurchaseReturnDto>();
 
         group.MapPost("{id:guid}/confirm", async (Guid id, InventoryDbContext db) =>
         {
@@ -71,7 +107,11 @@ public static class PurchaseReturnEndpoints
         {
             var ret = await db.PurchaseReturns.FindAsync(id);
             if (ret == null) return Results.NotFound();
-            try { ret.MarkRefunded(dto.RefundAmount); await db.SaveChangesAsync(); return Results.Ok(ret); }
+            // FE (api/inventory.ts purchaseReturnApi.acceptRefund) gửi {amount}; giữ cả hai tên để
+            // không im lặng hoàn 0đ khi client cũ gọi.
+            var refund = dto.RefundAmount ?? dto.Amount
+                ?? throw new RequestValidationException("refundAmount", "Phải nhập số tiền hoàn.");
+            try { ret.MarkRefunded(refund); await db.SaveChangesAsync(); return Results.Ok(ret); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
@@ -101,4 +141,4 @@ public record CreatePurchaseReturnItemDto(
     string? Reason,
     string? SerialNumbers);
 
-public record AcceptRefundDto(decimal RefundAmount);
+public record AcceptRefundDto(decimal? RefundAmount, decimal? Amount);

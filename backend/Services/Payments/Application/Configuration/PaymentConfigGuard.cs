@@ -75,6 +75,31 @@ public sealed class PaymentConfigGuard
     public string GetValueOrEmpty(string key) => TryGetValue(key, out var v) ? v : string.Empty;
 
     /// <summary>
+    /// Như <see cref="TryGetValue"/> nhưng chấp nhận bí danh cũ của khoá
+    /// (<see cref="PaymentMethodSpec.RequiredKeyAliases"/>) — cấu hình đang chạy không gãy khi
+    /// W2-4 đổi `Payment:SePay:*` sang `Payment:BankTransfer:*`.
+    /// </summary>
+    public bool TryResolveValue(string key, out string value)
+    {
+        if (TryGetValue(key, out value)) return true;
+        if (PaymentMethodSpec.RequiredKeyAliases.TryGetValue(key, out var alias))
+            return TryGetValue(alias, out value);
+        value = string.Empty;
+        return false;
+    }
+
+    public string ResolveValueOrEmpty(string key) => TryResolveValue(key, out var v) ? v : string.Empty;
+
+    /// <summary>
+    /// Khoá dạng DANH SÁCH (ví dụ danh sách đối tác trả góp của D10): "đã cấu hình" nghĩa là
+    /// section có ít nhất một phần tử con mang giá trị thật.
+    /// </summary>
+    public bool HasListValues(string key)
+        => _config.GetSection(key).GetChildren()
+            .Any(child => child.GetChildren().Any(g => WebhookSignature.IsConfiguredSecret(g.Value))
+                          || WebhookSignature.IsConfiguredSecret(child.Value));
+
+    /// <summary>
     /// Secret dùng để verify webhook của provider, theo thứ tự ưu tiên trong spec.
     /// Rỗng ⇒ route webhook PHẢI trả 503 (không bao giờ "bỏ qua kiểm tra").
     /// </summary>
@@ -106,14 +131,25 @@ public sealed class PaymentConfigGuard
         var missing = new List<string>();
 
         var enabledKey = $"Payment:{spec.ConfigSection}:Enabled";
-        var enabledRaw = _config[enabledKey];
-        var enabled = string.IsNullOrWhiteSpace(enabledRaw) || enabledRaw.Contains("${", StringComparison.Ordinal)
-            ? spec.EnabledByDefault
-            : bool.TryParse(enabledRaw.Trim(), out var parsed) && parsed;
-        if (!enabled) missing.Add(enabledKey);
+        if (!ReadEnabledFlag(enabledKey, spec)) missing.Add(enabledKey);
 
         foreach (var key in spec.RequiredKeys)
-            if (!TryGetValue(key, out _)) missing.Add(key);
+        {
+            if (PaymentMethodSpec.ListValuedKeys.Contains(key))
+            {
+                if (!HasListValues(key)) missing.Add(key);
+                continue;
+            }
+
+            var present = TryResolveValue(key, out var resolved);
+            if (present && IsWellFormedValue(key, resolved)) continue;
+
+            // Có giá trị nhưng SAI dạng thì nói rõ sai ở đâu, đừng báo "thiếu" một khoá đã đặt.
+            missing.Add(present ? $"{key} (phải là BIN 6 chữ số)" : key);
+            // Khoá còn thiếu mà có bí danh cũ: liệt kê CẢ HAI tên để người cấu hình biết
+            // đặt khoá nào cũng được (và để trang admin không nói dối "chỉ thiếu khoá mới").
+            if (PaymentMethodSpec.RequiredKeyAliases.TryGetValue(key, out var alias)) missing.Add(alias);
+        }
 
         // R3 — sandbox trên Production = thanh toán giả.
         if (spec.EndpointKey is not null && IsProductionSandboxViolation(spec.EndpointKey))
@@ -124,7 +160,31 @@ public sealed class PaymentConfigGuard
             Available: missing.Count == 0,
             MissingKeys: missing,
             RequiresRedirect: spec.RequiresRedirect,
-            SortOrder: spec.SortOrder);
+            SortOrder: spec.SortOrder,
+            IsDirect: spec.IsDirect);
+    }
+
+    /// <summary>
+    /// Một khoá có thể "đã đặt" mà giá trị vẫn vô dụng. BIN ngân hàng là ca sống: bí danh cũ
+    /// <c>Payment:SePay:BankCode</c> mang "MB" — đủ để coi là đã cấu hình, nhưng
+    /// <see cref="Providers.BankTransfer.VietQrPayloadBuilder"/> từ chối nó, nên phương thức sẽ
+    /// hiện trong `/methods` rồi `/initiate` trả 503 PAYMENT_PROVIDER_MISCONFIGURED cho mọi khách.
+    /// Kiểm dạng NGAY Ở ĐÂY để cổng chưa cấu hình ĐÚNG thì đơn giản là không tồn tại (D04 R2).
+    /// </summary>
+    private static bool IsWellFormedValue(string key, string value)
+        => key != PaymentConfigKeys.BankBin
+           || Providers.BankTransfer.VietQrPayloadBuilder.IsValidBankBin(value);
+
+    /// <summary>`Payment:&lt;Section&gt;:Enabled`, chấp nhận cả tên khoá cũ của cùng phương thức.</summary>
+    private bool ReadEnabledFlag(string enabledKey, PaymentMethodSpec spec)
+    {
+        foreach (var key in new[] { enabledKey }.Concat(spec.EnabledKeyAliases ?? Array.Empty<string>()))
+        {
+            var raw = _config[key];
+            if (string.IsNullOrWhiteSpace(raw) || raw.Contains("${", StringComparison.Ordinal)) continue;
+            return bool.TryParse(raw.Trim(), out var parsed) && parsed;
+        }
+        return spec.EnabledByDefault;
     }
 
     private bool IsProductionSandboxViolation(string endpointKey)

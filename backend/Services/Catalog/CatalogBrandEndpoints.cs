@@ -7,6 +7,7 @@ using Catalog.Infrastructure;
 using Catalog.Domain;
 using BuildingBlocks.Caching;
 using BuildingBlocks.Endpoints;
+using BuildingBlocks.Validation;
 
 namespace Catalog;
 
@@ -89,7 +90,7 @@ public static class CatalogBrandEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.BrandsPattern);
 
             return Results.Created($"/api/catalog/brands/{brand.Id}", CatalogResponses.BrandPayload(brand, 0));
-        }).RequireAuthorization(Permissions.Catalog.Create);
+        }).RequireAuthorization(Permissions.Catalog.Create).WithValidation<CreateBrandDto>();
 
         group.MapPut("/brands/{id:guid}", async (Guid id, UpdateBrandDto model, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {
@@ -123,7 +124,7 @@ public static class CatalogBrandEndpoints
 
             var count = await db.Products.CountAsync(p => p.BrandId == id);
             return Results.Ok(new { Message = "Brand updated", Brand = CatalogResponses.BrandPayload(brand, count) });
-        }).RequireAuthorization(Permissions.Catalog.Edit);
+        }).RequireAuthorization(Permissions.Catalog.Edit).WithValidation<UpdateBrandDto>();
 
         group.MapDelete("/brands/{id:guid}", async (Guid id, CatalogDbContext db, ICacheService cache, HttpContext httpContext) =>
         {

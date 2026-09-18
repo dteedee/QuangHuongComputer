@@ -1,10 +1,12 @@
 using BuildingBlocks.Messaging.IntegrationEvents;
+using BuildingBlocks.Time;
 using Catalog.Infrastructure;
-using InventoryModule.Domain;
+using Content.Infrastructure;
 using InventoryModule.Infrastructure;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sales.Application.Inventory;
 using Sales.Application.Pricing;
 using Sales.Domain;
 using Sales.Infrastructure;
@@ -13,323 +15,254 @@ using System.Text.Json;
 namespace Sales.Application.Checkout;
 
 /// <summary>
-/// Phase 04 — Hợp nhất 2 đường checkout (SalesEndpoints:/checkout + SalesEndpointsFastCheckout).
-/// - Dùng InventoryItem.ReserveStock/ConfirmReservedStock qua domain method (bỏ ExecuteSqlAsync UPDATE thô).
-/// - Giữ tối ưu tốc độ: AsNoTracking cho Catalog, truy vấn gộp.
-/// - Nếu có CheckoutSessionId → tồn đã giữ trước; nếu không → tạo reservation tại chỗ.
-/// - COD → OrderStatus=Pending; Online → OrderStatus=Pending + PaymentStatus=Pending (chờ webhook).
+/// ĐƯỜNG CHỐT ĐƠN DUY NHẤT — web, khách vãng lai, POS và chuyển báo giá đều đi qua đây.
+///
+/// Trước W2-3 tồn tại HAI đường song song (`SalesEndpoints./checkout` inline và orchestrator này),
+/// và đường mà frontend thật sự gọi lại là đường inline — nó bỏ qua <c>PricingEngine</c>, tự tính
+/// tiền, và không giữ chỗ tồn kho. Hai đường ⇒ hai kết quả tiền khác nhau trên cùng giỏ hàng.
+///
+/// Bảo đảm của đường này:
+///  · Giá LUÔN từ <see cref="IOrderPriceSource"/> (CSDL), không bao giờ từ client.
+///  · Khuyến mãi + coupon được TÍNH LẠI tại thời điểm chốt đơn, không đọc lại snapshot của giỏ.
+///  · Thuế tách THEO DÒNG theo thuế suất của danh mục tại ngày VN (D01).
+///  · Giữ chỗ tồn kho đúng MỘT điểm (<see cref="InventoryReservationService"/>).
+///  · Sales + Inventory + Content nằm trong MỘT giao dịch; hỏng ở đâu cũng không trừ nhầm tồn.
+///  · Sự kiện chỉ phát SAU khi commit (chưa có outbox — xem docs/integration-events.md).
 /// </summary>
 public class CheckoutOrchestrator
 {
     private readonly SalesDbContext _salesDb;
     private readonly InventoryDbContext _inventoryDb;
     private readonly CatalogDbContext _catalogDb;
+    private readonly ContentDbContext _contentDb;
     private readonly IPricingEngine _pricingEngine;
+    private readonly LineVatProfileResolver _vatResolver;
+    private readonly InventoryReservationService _reservations;
+    private readonly IOrderPriceSource _priceSource;
+    private readonly IBusinessClock _clock;
     private readonly IPublishEndpoint _bus;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
     private readonly ILogger<CheckoutOrchestrator> _logger;
 
     public CheckoutOrchestrator(
         SalesDbContext salesDb,
         InventoryDbContext inventoryDb,
         CatalogDbContext catalogDb,
+        ContentDbContext contentDb,
         IPricingEngine pricingEngine,
+        LineVatProfileResolver vatResolver,
+        InventoryReservationService reservations,
+        IOrderPriceSource priceSource,
+        IBusinessClock clock,
         IPublishEndpoint bus,
+        Microsoft.Extensions.Configuration.IConfiguration config,
         ILogger<CheckoutOrchestrator> logger)
     {
         _salesDb = salesDb;
         _inventoryDb = inventoryDb;
         _catalogDb = catalogDb;
+        _contentDb = contentDb;
         _pricingEngine = pricingEngine;
+        _vatResolver = vatResolver;
+        _reservations = reservations;
+        _priceSource = priceSource;
+        _clock = clock;
         _bus = bus;
+        _config = config;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Chốt đơn dưới EXECUTION STRATEGY của EF.
+    ///
+    /// Bắt buộc phải bọc như thế này: <c>AddSalesModule</c> bật <c>EnableRetryOnFailure</c>, và
+    /// <c>NpgsqlRetryingExecutionStrategy</c> TỪ CHỐI giao dịch do người dùng tự mở
+    /// ("does not support user-initiated transactions"). Không bọc thì mọi lần chốt đơn trả 400.
+    ///
+    /// Mỗi lần thử lại phải bắt đầu từ trạng thái sạch: <c>ChangeTracker.Clear()</c> ở đầu mỗi lượt.
+    /// Nếu không, lượt hai sẽ thấy các entity đã bị lượt một sửa trong bộ nhớ (giỏ đã <c>Clear()</c>,
+    /// tồn kho đã trừ) dù giao dịch đã rollback ở CSDL — và sinh ra một đơn sai.
+    /// </summary>
     public async Task<CheckoutResult> ExecuteAsync(CheckoutRequest req, CancellationToken ct)
     {
-        // 1. Load cart
-        var cart = await _salesDb.Carts
-            .Include(c => c.Items)
+        var strategy = _salesDb.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            _salesDb.ChangeTracker.Clear();
+            _inventoryDb.ChangeTracker.Clear();
+            _contentDb.ChangeTracker.Clear();
+            return await ExecuteCoreAsync(req, ct);
+        });
+    }
+
+    private async Task<CheckoutResult> ExecuteCoreAsync(CheckoutRequest req, CancellationToken ct)
+    {
+        var guard = CheckoutRequestGuard.Validate(req);
+        if (guard != null) return CheckoutResult.Failure(guard);
+
+        // Giao dịch phải mở TRƯỚC mọi truy vấn trên Inventory/Content để gộp được kết nối.
+        await using var scope = await CheckoutTransactionScope.BeginAsync(
+            _salesDb, new DbContext[] { _inventoryDb, _contentDb }, _logger, ct);
+        if (!scope.IsAtomic) return CheckoutResult.Failure(scope.FailureReason!);
+
+        var cart = await _salesDb.Carts.Include(c => c.Items)
             .FirstOrDefaultAsync(c => c.Id == req.CartId, ct);
-        if (cart == null)
-            return CheckoutResult.Failure("Giỏ hàng không tồn tại");
-        if (cart.Items.Count == 0)
-            return CheckoutResult.Failure("Giỏ hàng trống");
+        if (cart == null) return CheckoutResult.Failure("Giỏ hàng không tồn tại");
 
-        // 2. Load session (nếu có) — validate chưa hết hạn.
-        CheckoutSession? session = null;
-        if (req.CheckoutSessionId.HasValue)
+        // IDOR: giỏ của người khác không bao giờ được chốt thành đơn của mình.
+        var ownership = CheckoutRequestGuard.CheckCartOwnership(req, cart);
+        if (ownership != null) return CheckoutResult.Failure(ownership);
+
+        var payable = cart.Items.Where(i => !i.IsGift).ToList();
+        if (payable.Count == 0) return CheckoutResult.Failure("Giỏ hàng trống");
+
+        var session = await LoadSessionAsync(req, ct);
+        if (session.Error != null) return CheckoutResult.Failure(session.Error);
+
+        // 1. GIÁ — luôn từ nguồn giá của kênh, không bao giờ từ client.
+        var priceQuery = new OrderPriceQuery(
+            payable.Select(i => (i.ProductId, i.VariantId)).ToList(), req.QuotationId);
+        var prices = await _priceSource.GetUnitPricesAsync(priceQuery, ct);
+
+        var missingPrice = payable.FirstOrDefault(i => !prices.ContainsKey((i.ProductId, i.VariantId)));
+        if (missingPrice != null)
+            return CheckoutResult.Failure($"Không xác định được giá bán: {missingPrice.ProductName}");
+
+        // Ghi giá server về giỏ trước khi tính khuyến mãi — nếu không, PricingEngine sẽ tính
+        // mức giảm dựa trên giá client gửi lúc thêm vào giỏ (có thể đã cũ hoặc đã bị sửa).
+        foreach (var item in payable)
         {
-            session = await _salesDb.CheckoutSessions
-                .FirstOrDefaultAsync(s => s.Id == req.CheckoutSessionId.Value, ct);
-            if (session == null)
-                return CheckoutResult.Failure("Phiên checkout không tồn tại");
-            if (session.IsExpired())
-                return CheckoutResult.Failure("Phiên checkout đã hết hạn, vui lòng tạo phiên mới");
-            if (session.Status != CheckoutSessionStatus.Active)
-                return CheckoutResult.Failure($"Phiên checkout ở trạng thái {session.Status}, không thể tiếp tục");
+            var serverPrice = prices[(item.ProductId, item.VariantId)];
+            if (item.Price != serverPrice)
+            {
+                cart.UpdateItemPrice(item.ProductId, item.VariantId, serverPrice);
+            }
         }
 
-        // 3. Fetch products + inventory + variant snapshots (parallel, AsNoTracking cho read-only Catalog).
-        var productIds = cart.Items.Select(i => i.ProductId).Distinct().ToList();
-        var variantIds = cart.Items.Where(i => i.VariantId.HasValue)
-            .Select(i => i.VariantId!.Value).Distinct().ToList();
+        // 2. GIỮ CHỖ TỒN KHO — đúng một điểm, khoá theo phiên checkout hoặc theo giỏ.
+        var reservationRef = (session.Session?.Id ?? cart.Id).ToString();
+        var reserve = await _reservations.ReserveAsync(
+            reservationRef,
+            session.Session != null
+                ? InventoryReservationService.CheckoutSessionReference
+                : InventoryReservationService.OrderReference,
+            payable.Select(i => new ReservationLine(i.ProductId, i.VariantId, i.Quantity, i.ProductName)).ToList(),
+            expirationHours: 1,
+            ct);
+        if (!reserve.Success) return CheckoutResult.Failure(reserve.ErrorMessage!);
 
-        var productsTask = _catalogDb.Products.AsNoTracking()
-            .Where(p => productIds.Contains(p.Id))
-            .Select(p => new { p.Id, p.Name, p.Price, p.Sku })
-            .ToListAsync(ct);
-        var inventoryTask = _inventoryDb.InventoryItems
-            .Where(i => productIds.Contains(i.ProductId))
-            .ToListAsync(ct);
-        var variantTask = variantIds.Any()
-            ? _catalogDb.ProductVariants.AsNoTracking()
-                .Where(v => variantIds.Contains(v.Id))
-                .Select(v => new { v.Id, v.Name, v.Sku })
-                .ToListAsync(ct)
-            : Task.FromResult(new List<dynamic>().Select(x => new { Id = Guid.Empty, Name = "", Sku = "" }).ToList());
+        // 3. KHUYẾN MÃI + COUPON — tính lại từ đầu tại thời điểm chốt đơn.
+        var pricing = await CheckoutPricingStep.ApplyAsync(
+            _pricingEngine, _contentDb, cart, req, ct);
+        if (pricing.Error != null) return CheckoutResult.Failure(pricing.Error);
 
-        await Task.WhenAll(productsTask, inventoryTask, variantTask);
-        var products = await productsTask;
-        var inventoryItems = await inventoryTask;
-        var variantSnapshots = (await variantTask).ToDictionary(v => v.Id, v => (v.Name, v.Sku));
-
-        // 4. Kiểm tra stock — nếu KHÔNG có session, phải reserve tại chỗ.
-        //    Nếu có session, reservation đã tạo lúc CreateSession → chỉ verify Confirm được.
-        foreach (var cartItem in cart.Items.Where(i => !i.IsGift))
+        // 3b. PHÍ SHIP — trên kênh khách, SERVER quyết định (W0-4 `ShippingFeePolicy` là nguồn duy nhất).
+        //
+        // Vá sau kiểm chứng đối kháng: `/api/sales/checkout` và `/public/guest-checkout` truyền
+        // cứng 0đ (mọi đơn web thành miễn phí ship, trong khi `/cart/shipping-fee` vẫn báo khách
+        // 30.000đ), còn `/checkout/orchestrate` + `/fast-checkout` lấy thẳng `shipping.shippingFee`
+        // của client — đo được trên :5050: gửi 999.999 thì đơn lưu đúng 999.999. Đó chính là lỗ
+        // W0-4 đã bịt ("khách tự set phí ship") mở lại. POS/Báo giá vẫn giữ phí do nhân viên nhập.
+        if (req.Channel is CheckoutChannel.Web or CheckoutChannel.Guest)
         {
-            var invItem = inventoryItems.FirstOrDefault(i =>
-                i.ProductId == cartItem.ProductId && i.VariantId == cartItem.VariantId);
-            if (invItem == null)
-                return CheckoutResult.Failure($"Sản phẩm không có trong kho: {cartItem.ProductName}");
-
-            if (session == null)
+            var netSubtotal = payable.Sum(i => i.Subtotal) - pricing.OrderDiscount;
+            req = req with
             {
-                // Chưa reserve — reserve luôn.
-                if (invItem.AvailableQuantity < cartItem.Quantity)
-                    return CheckoutResult.Failure($"Không đủ hàng: {cartItem.ProductName} (còn {invItem.AvailableQuantity})");
-                try
+                Shipping = req.Shipping with
                 {
-                    invItem.ReserveStock(cartItem.Quantity);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return CheckoutResult.Failure(ex.Message);
-                }
-            }
-            else
-            {
-                // Đã reserve — cần đủ ReservedQuantity.
-                if (invItem.ReservedQuantity < cartItem.Quantity)
-                    return CheckoutResult.Failure($"Reservation không đủ cho {cartItem.ProductName}");
-            }
+                    ShippingFee = ShippingFeePolicy.Calculate(
+                        netSubtotal, req.Shipping.IsPickup, _config),
+                },
+            };
         }
 
-        // 5. Gọi PricingEngine — snapshot promotions đã áp.
-        var customerContext = req.CustomerId.HasValue
-            ? new CustomerContext(req.CustomerId.Value, CustomerGroup: null,
-                PreviousOrderCount: 0, IsFirstOrder: false)
-            : null;
-        var pricing = await _pricingEngine.CalculateAsync(cart, customerContext, req.PromotionCodes, ct);
+        // 4. THUẾ theo dòng (D01) + dựng đơn.
+        var vatProfiles = await _vatResolver.ResolveAsync(
+            cart.Items.Select(i => i.ProductId).Distinct().ToList(), _clock.TodayVn, ct);
 
-        // 6. Build OrderItems (bao gồm gift items từ pricing.FreeGifts).
-        var orderItems = new List<OrderItem>();
-        foreach (var cartItem in cart.Items.Where(i => !i.IsGift))
-        {
-            var product = products.First(p => p.Id == cartItem.ProductId);
-            string? vName = null, vSku = null;
-            if (cartItem.VariantId.HasValue && variantSnapshots.TryGetValue(cartItem.VariantId.Value, out var vs))
-            {
-                vName = vs.Name; vSku = vs.Sku;
-            }
-            orderItems.Add(new OrderItem(
-                product.Id, product.Name, product.Price, cartItem.Quantity,
-                productSku: product.Sku, originalPrice: null,
-                variantId: cartItem.VariantId, variantName: vName, variantSku: vSku));
-        }
-        // Thêm hàng tặng từ PricingResult.
-        foreach (var gift in pricing.FreeGifts)
-        {
-            var giftProduct = products.FirstOrDefault(p => p.Id == gift.ProductId);
-            if (giftProduct == null) continue; // Bỏ qua nếu sản phẩm gift không có trong Catalog (an toàn).
-            string? gvName = null, gvSku = null;
-            if (gift.VariantId.HasValue && variantSnapshots.TryGetValue(gift.VariantId.Value, out var gvs))
-            {
-                gvName = gvs.Name; gvSku = gvs.Sku;
-            }
-            orderItems.Add(new OrderItem(
-                giftProduct.Id, giftProduct.Name, 0m, gift.Quantity,
-                productSku: giftProduct.Sku, originalPrice: null,
-                variantId: gift.VariantId, variantName: gvName, variantSku: gvSku,
-                isGift: true, appliedPromotionCode: gift.PromotionCode));
-        }
-
-        // 7. Tạo Order (snapshot toàn bộ).
-        var order = new Order(
-            customerId: req.CustomerId ?? Guid.NewGuid(), // Guest → sinh mới
-            shippingAddress: req.Shipping.FormatFull(),
-            items: orderItems,
-            taxRate: cart.TaxRate,
-            notes: req.Shipping.Notes,
-            customerIp: null,
-            customerUserAgent: null,
-            sourceId: null,
-            paymentMethod: req.PaymentMethod.ToString(),
-            isPickup: req.Shipping.IsPickup,
-            pickupStoreId: req.Shipping.PickupStoreId,
-            pickupStoreName: req.Shipping.PickupStoreName,
-            customerName: req.Shipping.RecipientName,
-            customerEmail: req.GuestEmail,
-            customerPhone: req.Shipping.Phone);
-
-        order.SetShippingAmount(req.Shipping.ShippingFee);
-        var appliedPromoJson = JsonSerializer.Serialize(pricing.AppliedPromotions);
-        order.ApplyPricingResult(
-            discountAmount: pricing.TotalDiscount,
-            shippingDiscount: pricing.ShippingDiscount,
-            appliedPromotionsJson: appliedPromoJson,
-            couponCode: req.PromotionCodes?.FirstOrDefault());
-
+        var order = await CheckoutOrderFactory.BuildAsync(
+            _catalogDb, cart, req, pricing, vatProfiles, _clock, ct);
         _salesDb.Orders.Add(order);
+        _salesDb.OrderHistories.Add(new OrderHistory(
+            order.Id, OrderStatus.Draft, order.Status,
+            changedBy: req.ApprovedBy ?? req.CustomerId?.ToString() ?? "guest",
+            notes: $"Tạo đơn qua kênh {req.Channel}"));
 
-        // 8. Confirm reservation → trừ tồn thật (qua domain method, KHÔNG SQL UPDATE thô).
-        foreach (var item in orderItems.Where(i => !i.IsGift))
-        {
-            var invItem = inventoryItems.First(i =>
-                i.ProductId == item.ProductId && i.VariantId == item.VariantId);
-            try
-            {
-                invItem.ConfirmReservedStock(item.Quantity);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogError(ex, "ConfirmReservedStock thất bại cho product {ProductId}", item.ProductId);
-                return CheckoutResult.Failure($"Không thể xác nhận tồn: {item.ProductName}");
-            }
-        }
+        // 5. CHỐT giữ chỗ thành xuất kho thật.
+        var commit = await _reservations.CommitAsync(reservationRef, ct);
+        if (!commit.Success) return CheckoutResult.Failure(commit.ErrorMessage!);
 
-        // 9. Fulfill reservations liên kết Session/Cart.
-        if (session != null)
-        {
-            session.Complete();
-            var reservationIds = session.ReservationIds.ToList();
-            if (reservationIds.Any())
-            {
-                var reservations = await _inventoryDb.StockReservations
-                    .Where(r => reservationIds.Contains(r.Id) && r.Status == ReservationStatus.Active)
-                    .ToListAsync(ct);
-                foreach (var r in reservations) r.Fulfill();
-            }
-        }
-        else
-        {
-            // Fulfill reservation cấp Cart (nếu Cart đã tạo trước đó qua /cart/items).
-            var cartReservations = await _inventoryDb.StockReservations
-                .Where(r => r.ReferenceId == cart.Id.ToString()
-                            && r.Status == ReservationStatus.Active)
-                .ToListAsync(ct);
-            foreach (var r in cartReservations) r.Fulfill();
-        }
-
-        // 10. Clear cart.
+        session.Session?.Complete();
         cart.Clear();
         cart.RemoveCoupon();
 
-        // 11. Set OrderStatus theo phương thức thanh toán.
-        //     COD → Pending (chờ shop xác nhận), Online → Pending + đợi webhook đổi PaymentStatus.
-        //     KHÔNG SetStatus Confirmed ở đây — để flow xác nhận qua admin/hoặc payment.
-        // (Order khởi tạo Status=Pending mặc định)
-
-        // 12. Save changes tuần tự (tránh race giữa 3 DbContext).
         try
         {
-            await _inventoryDb.SaveChangesAsync(ct);
-            await _salesDb.SaveChangesAsync(ct);
+            await scope.SaveAndCommitAsync(ct);
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex, "Save changes thất bại cho cart {CartId}", cart.Id);
+            _logger.LogError(ex, "Chốt đơn thất bại cho giỏ {CartId}", cart.Id);
             return CheckoutResult.Failure("Không thể lưu đơn hàng. Vui lòng thử lại.");
         }
 
-        // 13. Publish integration event (non-blocking) — email/notification consumer sẽ xử lý.
-        var customerEmail = req.GuestEmail ?? "customer@api.com";
-        _ = _bus.Publish(new OrderCreatedIntegrationEvent(
-            order.Id, order.CustomerId, customerEmail,
-            order.TotalAmount, order.OrderNumber), ct);
+        // 6. Sự kiện — CHỈ sau khi commit. Chưa có outbox nên đây là "at most once":
+        //    giao dịch bị rollback sẽ không phát sự kiện ma, nhưng tiến trình chết ngay sau
+        //    commit thì sự kiện mất. Ghi nhận ở docs/integration-events.md.
+        await PublishOrderCreatedAsync(order, ct);
 
         return CheckoutResult.SuccessResult(
-            orderId: order.Id,
-            orderNumber: order.OrderNumber,
-            totalAmount: order.TotalAmount,
-            orderStatus: order.Status.ToString(),
-            requiresPaymentGateway: req.PaymentMethod != PaymentMethodChoice.COD);
+            order.Id, order.OrderNumber, order.TotalAmount, order.TaxAmount,
+            order.Status.ToString(),
+            requiresPaymentGateway: req.PaymentMethod is not (PaymentMethodChoice.COD
+                or PaymentMethodChoice.Cash or PaymentMethodChoice.Credit));
     }
-}
 
-// ===== Request/Result DTOs (nằm chung file — <200 dòng, cùng nghiệp vụ Checkout) =====
-
-public record CheckoutRequest(
-    Guid CartId,
-    Guid? CustomerId,
-    string? GuestPhone,
-    string? GuestEmail,
-    ShippingInfo Shipping,
-    PaymentMethodChoice PaymentMethod,
-    string[]? PromotionCodes,
-    Guid? CheckoutSessionId);
-
-public record ShippingInfo(
-    string RecipientName,
-    string Phone,
-    string? StreetAddress,
-    string? Ward,
-    string? District,
-    string? Province,
-    decimal ShippingFee,
-    bool IsPickup = false,
-    string? PickupStoreId = null,
-    string? PickupStoreName = null,
-    string? Notes = null)
-{
-    public string FormatFull()
+    private async Task<(CheckoutSession? Session, string? Error)> LoadSessionAsync(
+        CheckoutRequest req, CancellationToken ct)
     {
-        if (IsPickup) return PickupStoreName ?? "Nhận tại cửa hàng";
-        return string.Join(", ", new[] { StreetAddress, Ward, District, Province }
-            .Where(x => !string.IsNullOrWhiteSpace(x)));
+        if (!req.CheckoutSessionId.HasValue)
+        {
+            // Không truyền mã phiên — đây là đường `/api/sales/checkout` mà frontend đang dùng.
+            // Nếu giỏ này ĐANG có một phiên còn hiệu lực thì phải dùng LẠI nó: nếu không,
+            // orchestrator giữ chỗ lần thứ hai dưới khoá `Order/{cartId}` và bỏ mồ côi phần giữ
+            // chỗ của phiên. Đo được trên :5050 trước khi vá: tồn 88→86 (đúng) nhưng
+            // ReservedQuantity vẫn 2 và StockReservations của phiên vẫn Active — tức là một đơn
+            // 2 cái khoá 4 cái. phase-21 §Risk Assessment: đúng MỘT điểm giữ chỗ.
+            var active = await _salesDb.CheckoutSessions
+                .Where(s => s.CartId == req.CartId && s.Status == CheckoutSessionStatus.Active)
+                .OrderByDescending(s => s.ExpiresAt)
+                .FirstOrDefaultAsync(ct);
+
+            return active != null && !active.IsExpired() ? (active, null) : (null, null);
+        }
+
+        var session = await _salesDb.CheckoutSessions
+            .FirstOrDefaultAsync(s => s.Id == req.CheckoutSessionId.Value, ct);
+
+        if (session == null) return (null, "Phiên checkout không tồn tại");
+        // IDOR: phiên phải thuộc đúng giỏ đang chốt.
+        if (session.CartId != req.CartId) return (null, "Phiên checkout không thuộc giỏ hàng này");
+        if (session.IsExpired()) return (null, "Phiên checkout đã hết hạn, vui lòng tạo phiên mới");
+        if (session.Status != CheckoutSessionStatus.Active)
+            return (null, $"Phiên checkout ở trạng thái {session.Status}, không thể tiếp tục");
+
+        return (session, null);
     }
-}
 
-public enum PaymentMethodChoice
-{
-    COD = 0,
-    VNPay = 1,
-    MoMo = 2,
-    ZaloPay = 3,
-    SePay = 4,
-    Installment = 5
-}
-
-public class CheckoutResult
-{
-    public bool Success { get; init; }
-    public string? ErrorMessage { get; init; }
-    public Guid? OrderId { get; init; }
-    public string? OrderNumber { get; init; }
-    public decimal? TotalAmount { get; init; }
-    public string? OrderStatus { get; init; }
-    public bool RequiresPaymentGateway { get; init; }
-
-    public static CheckoutResult Failure(string reason) => new() { Success = false, ErrorMessage = reason };
-
-    public static CheckoutResult SuccessResult(
-        Guid orderId, string orderNumber, decimal totalAmount,
-        string orderStatus, bool requiresPaymentGateway) => new()
+    private async Task PublishOrderCreatedAsync(Order order, CancellationToken ct)
     {
-        Success = true,
-        OrderId = orderId,
-        OrderNumber = orderNumber,
-        TotalAmount = totalAmount,
-        OrderStatus = orderStatus,
-        RequiresPaymentGateway = requiresPaymentGateway
-    };
+        try
+        {
+            await _bus.Publish(new OrderCreatedIntegrationEvent(
+                order.Id, order.CustomerId,
+                order.CustomerEmail ?? string.Empty,
+                order.TotalAmount, order.OrderNumber), ct);
+        }
+        catch (Exception ex)
+        {
+            // Đơn ĐÃ commit — không được ném lỗi về cho khách chỉ vì broker bận.
+            _logger.LogError(ex, "Không phát được OrderCreated cho đơn {OrderNumber}", order.OrderNumber);
+        }
+    }
 }

@@ -53,6 +53,20 @@ public static class SalaryStructureEndpoints
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
 
+        // PUT /api/hr/employees/{eid}/salary-structures/{id} — W2-7 khoản 8, FE salaryStructureApi.update.
+        group.MapPut("/{id:guid}", async (Guid eid, Guid id, CreateSalaryStructureDto dto, HRDbContext db) =>
+        {
+            var s = await db.SalaryStructures.FindAsync(id);
+            if (s == null || s.EmployeeId != eid) return Results.NotFound();
+            try
+            {
+                s.Update(dto.BaseSalary, dto.InsurableSalary, dto.Coefficient, dto.EndDate, dto.Note);
+                await db.SaveChangesAsync();
+                return Results.Ok(s);
+            }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+        });
+
         group.MapDelete("/{id:guid}", async (Guid eid, Guid id, HRDbContext db) =>
         {
             var s = await db.SalaryStructures.FindAsync(id);

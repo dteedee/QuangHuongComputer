@@ -25,8 +25,21 @@ public class RfmCalculationBackgroundService : BackgroundService
     {
         _logger.LogInformation("RFM Calculation Background Service started");
 
-        // Wait a bit before first run to let the application start up
-        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        // W2-8 step 4: chạy một lần ngay khi khởi động thay vì chỉ đợi 02:00 UTC — nếu không,
+        // Customer 360 trống (điểm RFM mặc định 1/1/1, không tên) cho tới tận lần chạy đêm đầu
+        // tiên sau khi deploy/migrate dữ liệu.
+        try
+        {
+            await RunCalculationsAsync(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Startup RFM calculation failed; will retry on the nightly schedule");
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {

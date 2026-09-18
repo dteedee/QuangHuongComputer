@@ -1,3 +1,4 @@
+using BuildingBlocks.Contracts;
 using CRM.Domain;
 using CRM.DTOs;
 using CRM.Infrastructure;
@@ -9,13 +10,16 @@ namespace CRM.Services;
 public class LeadManagementService : ILeadManagementService
 {
     private readonly CrmDbContext _crmDb;
+    private readonly IUserDirectory _userDirectory;
     private readonly ILogger<LeadManagementService> _logger;
 
     public LeadManagementService(
         CrmDbContext crmDb,
+        IUserDirectory userDirectory,
         ILogger<LeadManagementService> logger)
     {
         _crmDb = crmDb;
+        _userDirectory = userDirectory;
         _logger = logger;
     }
 
@@ -95,8 +99,24 @@ public class LeadManagementService : ILeadManagementService
             .FirstOrDefaultAsync(l => l.Id == leadId, cancellationToken);
     }
 
-    public async Task<Lead> CreateLeadAsync(CreateLeadDto dto, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// W2-8 step 12: từ chối tạo lead nếu chưa có pipeline stage nào (trước đây tạo được lead
+    /// không thuộc giai đoạn nào - "mồ côi", không hiện trên bất kỳ cột Kanban nào và không tính
+    /// vào thống kê pipeline). Trả về null khi không có stage; endpoint trả 422.
+    /// </summary>
+    public async Task<Lead?> CreateLeadAsync(CreateLeadDto dto, CancellationToken cancellationToken = default)
     {
+        // Assign to first pipeline stage - required, not optional.
+        var firstStage = await _crmDb.LeadPipelineStages
+            .OrderBy(s => s.SortOrder)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (firstStage == null)
+        {
+            _logger.LogWarning("Cannot create lead {LeadName}: no pipeline stage configured", dto.FullName);
+            return null;
+        }
+
         var lead = new Lead(dto.FullName, dto.Email, dto.Source);
         lead.Update(dto.FullName, dto.Phone, dto.Company, dto.JobTitle,
             dto.Address, dto.City, dto.District, dto.Notes);
@@ -111,15 +131,7 @@ public class LeadManagementService : ILeadManagementService
             lead.SetAttributes(dto.Attributes);
         }
 
-        // Assign to first pipeline stage if available
-        var firstStage = await _crmDb.LeadPipelineStages
-            .OrderBy(s => s.SortOrder)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (firstStage != null)
-        {
-            lead.SetPipelineStage(firstStage.Id);
-        }
+        lead.SetPipelineStage(firstStage.Id);
 
         _crmDb.Leads.Add(lead);
         await _crmDb.SaveChangesAsync(cancellationToken);
@@ -240,6 +252,17 @@ public class LeadManagementService : ILeadManagementService
         return lead;
     }
 
+    /// <summary>
+    /// W2-8 step 5: chuyển lead thành khách hàng qua <see cref="IUserDirectory.ProvisionCustomerAsync"/>
+    /// (do Identity sở hữu — UserManager, hash mật khẩu null hợp lệ, role Customer, mail đặt mật khẩu).
+    ///
+    /// Trước đây: raw SQL INSERT thẳng vào AspNetUsers, bỏ qua toàn bộ Identity (không SecurityStamp
+    /// hợp lệ theo UserManager, không role Customer, không normalize theo cấu hình Identity) VÀ vẫn
+    /// gọi lead.Convert() ngay cả khi câu INSERT lỗi (catch nuốt exception, customerId là Guid.NewGuid()
+    /// ngẫu nhiên không tồn tại trong AspNetUsers) — lead bị đánh dấu "đã chuyển đổi" trỏ tới một
+    /// UserId ma. Giờ: abort (không lưu gì) nếu provisioning thất bại; toàn bộ thao tác trong 1
+    /// transaction DB của CRM (CustomerAnalytics + lead.Convert + interaction cùng commit/rollback).
+    /// </summary>
     public async Task<Guid?> ConvertLeadAsync(Guid leadId, string? notes, CancellationToken cancellationToken = default)
     {
         var lead = await _crmDb.Leads.FirstOrDefaultAsync(l => l.Id == leadId, cancellationToken);
@@ -247,95 +270,61 @@ public class LeadManagementService : ILeadManagementService
         if (lead == null || lead.IsConverted)
             return null;
 
-        var customerId = Guid.NewGuid();
-        
-        if (!string.IsNullOrEmpty(lead.Email))
+        if (string.IsNullOrWhiteSpace(lead.Email) && string.IsNullOrWhiteSpace(lead.Phone))
         {
-            var connection = _crmDb.Database.GetDbConnection();
-            bool wasClosed = connection.State == System.Data.ConnectionState.Closed;
-            
-            if (wasClosed) await connection.OpenAsync(cancellationToken);
-            
-            try
-            {
-                using var command = connection.CreateCommand();
-                
-                // Check if user with email already exists
-                command.CommandText = "SELECT \"Id\" FROM public.\"AspNetUsers\" WHERE \"NormalizedEmail\" = @NormalizedEmail";
-                var paramEmail = command.CreateParameter();
-                paramEmail.ParameterName = "@NormalizedEmail";
-                paramEmail.Value = lead.Email.ToUpperInvariant();
-                command.Parameters.Add(paramEmail);
-                
-                var existingId = await command.ExecuteScalarAsync(cancellationToken);
-                if (existingId != null && existingId != DBNull.Value)
-                {
-                    if (Guid.TryParse(existingId.ToString(), out var parsedId))
-                    {
-                        customerId = parsedId;
-                    }
-                }
-                else
-                {
-                    command.CommandText = @"
-                        INSERT INTO public.""AspNetUsers"" 
-                        (""Id"", ""UserName"", ""NormalizedUserName"", ""Email"", ""NormalizedEmail"", ""EmailConfirmed"", ""PasswordHash"", ""SecurityStamp"", ""ConcurrencyStamp"", ""PhoneNumber"", ""PhoneNumberConfirmed"", ""TwoFactorEnabled"", ""LockoutEnabled"", ""AccessFailedCount"", ""FullName"", ""IsActive"")
-                        VALUES 
-                        (@Id, @UserName, @NormalizedEmail, @Email, @NormalizedEmail, true, @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumber, false, false, true, 0, @FullName, true)
-                    ";
-                    
-                    command.Parameters.Clear();
-                    
-                    var paramId = command.CreateParameter(); paramId.ParameterName = "@Id"; paramId.Value = customerId.ToString(); command.Parameters.Add(paramId);
-                    var paramUn = command.CreateParameter(); paramUn.ParameterName = "@UserName"; paramUn.Value = lead.Email; command.Parameters.Add(paramUn);
-                    var paramNe = command.CreateParameter(); paramNe.ParameterName = "@NormalizedEmail"; paramNe.Value = lead.Email.ToUpperInvariant(); command.Parameters.Add(paramNe);
-                    var paramE = command.CreateParameter(); paramE.ParameterName = "@Email"; paramE.Value = lead.Email; command.Parameters.Add(paramE);
-                    
-                    // PasswordHash NULL = tài khoản chưa đặt mật khẩu (chuẩn ASP.NET Identity cho
-                    // external/auto-created user) — không thể đăng nhập bằng password cho tới khi
-                    // khách dùng luồng quên-mật-khẩu/đặt mật khẩu. Tuyệt đối không seed hash giả.
-                    var paramPh = command.CreateParameter(); paramPh.ParameterName = "@PasswordHash"; paramPh.Value = DBNull.Value; command.Parameters.Add(paramPh);
-                    var paramSs = command.CreateParameter(); paramSs.ParameterName = "@SecurityStamp"; paramSs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramSs);
-                    var paramCs = command.CreateParameter(); paramCs.ParameterName = "@ConcurrencyStamp"; paramCs.Value = Guid.NewGuid().ToString(); command.Parameters.Add(paramCs);
-                    var paramPn = command.CreateParameter(); paramPn.ParameterName = "@PhoneNumber"; paramPn.Value = lead.Phone ?? (object)DBNull.Value; command.Parameters.Add(paramPn);
-                    var paramFn = command.CreateParameter(); paramFn.ParameterName = "@FullName"; paramFn.Value = lead.FullName; command.Parameters.Add(paramFn);
-                    
-                    await command.ExecuteNonQueryAsync(cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create user in Identity db for lead {LeadId}", leadId);
-            }
-            finally
-            {
-                if (wasClosed) await connection.CloseAsync();
-            }
+            _logger.LogWarning("Cannot convert lead {LeadId}: no email or phone to provision a customer account", leadId);
+            return null;
         }
 
-        var customerAnalytics = await _crmDb.CustomerAnalytics.FirstOrDefaultAsync(c => c.UserId == customerId, cancellationToken);
-        if (customerAnalytics == null)
+        BuildingBlocks.Contracts.UserDirectoryEntry provisioned;
+        try
         {
-            customerAnalytics = new CustomerAnalytics(customerId);
-            _crmDb.CustomerAnalytics.Add(customerAnalytics);
+            provisioned = await _userDirectory.ProvisionCustomerAsync(
+                lead.FullName, lead.Phone, lead.Email, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Abort: KHÔNG lead.Convert(), KHÔNG lưu gì — trước đây lỗi ở bước này vẫn bị nuốt và
+            // lead vẫn bị đánh dấu converted với một UserId không tồn tại.
+            _logger.LogError(ex, "Failed to provision customer account for lead {LeadId}; conversion aborted", leadId);
+            return null;
         }
 
-        lead.Convert(customerId);
+        var customerId = Guid.Parse(provisioned.Id);
 
-        // Add conversion note
-        if (!string.IsNullOrWhiteSpace(notes))
+        await using var transaction = await _crmDb.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            var interaction = new CustomerInteraction(
-                InteractionType.Note,
-                "Lead converted to customer",
-                lead.AssignedToUserId ?? Guid.Empty,
-                lead.AssignedToUserName ?? "System",
-                leadId: leadId);
-            interaction.SetContent(notes);
-            _crmDb.CustomerInteractions.Add(interaction);
-        }
+            var customerAnalytics = await _crmDb.CustomerAnalytics.FirstOrDefaultAsync(c => c.UserId == customerId, cancellationToken);
+            if (customerAnalytics == null)
+            {
+                customerAnalytics = new CustomerAnalytics(customerId);
+                _crmDb.CustomerAnalytics.Add(customerAnalytics);
+            }
 
-        await _crmDb.SaveChangesAsync(cancellationToken);
+            lead.Convert(customerId);
+
+            if (!string.IsNullOrWhiteSpace(notes))
+            {
+                var interaction = new CustomerInteraction(
+                    InteractionType.Note,
+                    "Lead converted to customer",
+                    lead.AssignedToUserId ?? Guid.Empty,
+                    lead.AssignedToUserName ?? "System",
+                    leadId: leadId);
+                interaction.SetContent(notes);
+                _crmDb.CustomerInteractions.Add(interaction);
+            }
+
+            await _crmDb.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(ex, "Failed to persist conversion for lead {LeadId} after provisioning customer {CustomerId}; rolled back (Identity account still exists - idempotent retry will reuse it)", leadId, customerId);
+            return null;
+        }
 
         _logger.LogInformation("Converted lead {LeadId} to customer {CustomerId}", leadId, customerId);
 

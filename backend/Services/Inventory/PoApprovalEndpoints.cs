@@ -88,6 +88,8 @@ public static class PoApprovalEndpoints
                                      poId = po.Id,
                                      poNumber = po.PONumber,
                                      supplierId = po.SupplierId,
+                                     supplierName = db.Suppliers.Where(x => x.Id == po.SupplierId)
+                                         .Select(x => x.Name).FirstOrDefault(),
                                      totalAmount = po.TotalAmount,
                                      requiredRole = req.RequiredRole,
                                      submittedBy = req.RequestedBy,
@@ -95,7 +97,28 @@ public static class PoApprovalEndpoints
                                      isUrgent = po.IsUrgent
                                  })
                                  .ToListAsync();
-            return Results.Ok(pending);
+
+            // IR đợt 0 #50: danh sách chỉ trả GUID người gửi nên cột "người gửi" luôn trống.
+            // Identity nằm trong CÙNG CSDL nhưng ở DbContext khác và Inventory không tham chiếu
+            // module đó — đọc tên qua một truy vấn thô theo đúng cách LandedCostAllocator đọc
+            // Catalog.Products.
+            var names = await SubmitterNamesAsync(db, pending.Select(p => p.submittedBy).Distinct().ToList());
+
+            return Results.Ok(pending.Select(p => new
+            {
+                p.approvalRequestId,
+                p.poId,
+                p.poNumber,
+                p.supplierId,
+                p.supplierName,
+                p.totalAmount,
+                p.requiredRole,
+                p.submittedBy,
+                submittedByName = names.TryGetValue(p.submittedBy, out var name) ? name : null,
+                createdByName = names.TryGetValue(p.submittedBy, out var alias) ? alias : null,
+                p.submittedAt,
+                p.isUrgent
+            }));
         });
 
         // === CRUD POApprovalRule (chỉ Admin) ===
@@ -143,6 +166,50 @@ public static class PoApprovalEndpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
+    }
+
+
+    /// <summary>
+    /// Tên hiển thị của người gửi duyệt (IR đợt 0 #50). Dùng ADO trực tiếp trên connection của
+    /// DbContext: bảng <c>AspNetUsers</c> thuộc module Identity, Inventory không tham chiếu tới nó.
+    /// </summary>
+    private static async Task<Dictionary<Guid, string>> SubmitterNamesAsync(
+        InventoryDbContext db, List<Guid> userIds)
+    {
+        var result = new Dictionary<Guid, string>();
+        if (userIds.Count == 0) return result;
+
+        var connection = db.Database.GetDbConnection();
+        var opened = connection.State != System.Data.ConnectionState.Open;
+        if (opened) await connection.OpenAsync();
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT \"Id\", COALESCE(NULLIF(\"FullName\", ''), \"Email\", \"UserName\") " +
+                "FROM \"AspNetUsers\" WHERE \"Id\" = ANY(@ids)";
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "ids";
+            parameter.Value = userIds.ToArray();
+            command.Parameters.Add(parameter);
+
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                if (!reader.IsDBNull(1)) result[reader.GetGuid(0)] = reader.GetString(1);
+            }
+        }
+        catch (Exception)
+        {
+            // Tên hiển thị là thông tin phụ: thiếu nó thì danh sách duyệt vẫn phải chạy.
+            return result;
+        }
+        finally
+        {
+            if (opened) await connection.CloseAsync();
+        }
+
+        return result;
     }
 
     private static Guid? ResolveUserId(ClaimsPrincipal user)

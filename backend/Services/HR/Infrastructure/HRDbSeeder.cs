@@ -7,6 +7,16 @@ public static class HRDbSeeder
 {
     public static async Task SeedAsync(HRDbContext context)
     {
+        // W2-7 khoản 1: 0 Employee dù đã có 8 tài khoản staff (Employee.UserId chỉ tồn tại từ
+        // track này nên W1-4 không seed được — ghi rõ trong phase-25). Không seed được thì mọi
+        // luồng HR (self-service, chấm công, lương) đều vô dụng vì không nhân viên nào đăng
+        // nhập được vào chính hồ sơ của mình.
+        await SeedStaffEmployeesAsync(context);
+
+        // W2-25 / D06: tham số lương-thuế-bảo hiểm theo mốc hiệu lực, ngày nghỉ lễ, loại phụ cấp.
+        // Chỉ INSERT dòng còn thiếu — không bao giờ ghi đè dòng kế toán đã sửa.
+        await HR.Application.Statutory.StatutorySeeder.SeedAsync(context);
+
         if (!await context.JobListings.AnyAsync())
         {
             var jobs = new List<JobListing>
@@ -92,6 +102,95 @@ public static class HRDbSeeder
             };
 
             context.JobListings.AddRange(jobs);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>Demo profile cho từng tài khoản staff sẵn có, seed theo Email trong AspNetUsers
+    /// (ổn định, không phải id sinh ngẫu nhiên).</summary>
+    private static readonly (string Email, string Department, string Position, decimal BaseSalary)[] StaffProfiles =
+    {
+        ("admin@quanghuong.com", "Ban Giám đốc", "Quản trị hệ thống", 25_000_000m),
+        ("hr@quanghuong.com", "Nhân sự", "Chuyên viên Nhân sự", 12_000_000m),
+        ("accountant@quanghuong.com", "Kế toán", "Kế toán viên", 13_000_000m),
+        ("kho@quanghuong.com", "Kho", "Nhân viên Kho", 9_000_000m),
+        ("manager@quanghuong.com", "Quản lý", "Quản lý Cửa hàng", 18_000_000m),
+        ("marketing@quanghuong.com", "Marketing", "Chuyên viên Marketing", 11_000_000m),
+        ("sale@quanghuong.com", "Kinh doanh", "Nhân viên Bán hàng", 8_500_000m),
+        ("technician@quanghuong.com", "Kỹ thuật", "Kỹ thuật viên", 10_000_000m),
+    };
+
+    /// <summary>
+    /// W2-7 khoản 1: gắn Employee cho 8 tài khoản staff seed sẵn (Identity). Đọc AspNetUsers qua
+    /// SQL thô (READ-ONLY) thay vì <c>IUserDirectory</c> vì hợp đồng đúng đắn
+    /// (<c>BuildingBlocks.Contracts.IUserDirectory</c>) CHƯA từng được đăng ký vào DI ở bất kỳ
+    /// host nào (xem integration-requests-w2.md) — HR cũng không được phép reference assembly
+    /// Identity để gọi <c>Identity.Services.IUserDirectory</c> (vi phạm biên module). Idempotent:
+    /// chỉ INSERT nhân viên còn thiếu theo Email, không ghi đè nhân viên đã có (kể cả admin đã
+    /// sửa tay), không tự ý LinkUser lại nếu Employee đã tồn tại nhưng UserId khác (giữ nguyên,
+    /// tránh cướp liên kết admin đã thay đổi thủ công).
+    /// </summary>
+    private static async Task SeedStaffEmployeesAsync(HRDbContext context)
+    {
+        var conn = context.Database.GetDbConnection();
+        var wasClosed = conn.State != System.Data.ConnectionState.Open;
+        if (wasClosed) await conn.OpenAsync();
+        List<(string Id, string Email, string FullName)> users;
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT \"Id\", \"Email\", \"FullName\" FROM \"AspNetUsers\" WHERE \"Email\" = ANY(@emails)";
+            var p = cmd.CreateParameter();
+            p.ParameterName = "@emails";
+            p.Value = StaffProfiles.Select(s => s.Email).ToArray();
+            // Npgsql suy ra text[] từ string[] khi gán trực tiếp; không cần NpgsqlDbType ở đây vì
+            // HRDbContext không tham chiếu gói Npgsql trực tiếp (chỉ qua EFCore.Npgsql).
+            cmd.Parameters.Add(p);
+            using var reader = await cmd.ExecuteReaderAsync();
+            users = new List<(string, string, string)>();
+            while (await reader.ReadAsync())
+                users.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+        }
+        finally
+        {
+            if (wasClosed) await conn.CloseAsync();
+        }
+
+        if (users.Count == 0) return; // Chưa có seed Identity (DB trống) — bỏ qua, chạy lại sau khi Identity seed xong.
+
+        var existingEmails = await context.Employees.Select(e => e.Email).ToListAsync();
+        var nextCodeNum = 1 + (await context.Employees
+            .Where(e => e.EmployeeCode != null && e.EmployeeCode.StartsWith("NV"))
+            .Select(e => e.EmployeeCode)
+            .ToListAsync())
+            .Select(c => int.TryParse(c!.AsSpan(2), out var n) ? n : 0)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var toAdd = new List<Employee>();
+        foreach (var (email, department, position, baseSalary) in StaffProfiles)
+        {
+            if (existingEmails.Contains(email)) continue;
+            var identityUser = users.FirstOrDefault(u => u.Email == email);
+            if (identityUser.Id == null) continue; // Tài khoản này chưa tồn tại trong Identity ở lần seed này.
+
+            var employee = new Employee(
+                fullName: identityUser.FullName,
+                email: email,
+                phone: "0900000000", // placeholder demo — HR cập nhật số thật qua PUT /employees/{id}
+                department: department,
+                position: position,
+                hireDate: new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                baseSalary: baseSalary,
+                employeeCode: $"NV{nextCodeNum:D4}",
+                userId: identityUser.Id);
+            nextCodeNum++;
+            toAdd.Add(employee);
+        }
+
+        if (toAdd.Count > 0)
+        {
+            context.Employees.AddRange(toAdd);
             await context.SaveChangesAsync();
         }
     }

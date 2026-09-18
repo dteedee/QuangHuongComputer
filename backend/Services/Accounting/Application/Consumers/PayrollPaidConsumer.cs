@@ -30,6 +30,16 @@ public class PayrollPaidConsumer : IConsumer<PayrollPaidIntegrationEvent>
             "Recording salary expense for Payroll {PayrollId}, Employee: {EmployeeName}, Amount: {Amount}",
             msg.PayrollId, msg.EmployeeName, msg.NetPay);
 
+        // Chống trùng: HR phát lại sự kiện (hoặc MassTransit redeliver) không được đẻ ra
+        // hai khoản chi lương cho cùng một bảng lương.
+        var payrollTag = $"PayrollId: {msg.PayrollId}";
+        if (await _dbContext.Expenses.AsNoTracking()
+                .AnyAsync(e => e.Notes != null && e.Notes.Contains(payrollTag), context.CancellationToken))
+        {
+            _logger.LogInformation("Đã ghi chi phí lương cho bảng lương {PayrollId} — bỏ qua.", msg.PayrollId);
+            return;
+        }
+
         // Find or create salary expense category
         var category = await _dbContext.ExpenseCategories
             .FirstOrDefaultAsync(c => c.Code == SALARY_CATEGORY_CODE);

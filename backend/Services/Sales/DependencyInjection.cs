@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sales.Infrastructure;
 using Sales.Application.Checkout;
+using Sales.Application.Inventory;
 using Sales.Application.Pricing;
 using BuildingBlocks.Database;
+using BuildingBlocks.Time;
 
 namespace Sales;
 
@@ -25,16 +27,28 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
             });
 
-            // Add audit interceptor
             var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
             if (interceptor != null)
                 options.AddInterceptors(interceptor);
         });
 
-        // Phase 04: Checkout orchestrator + real PricingEngine (luồng A đã nộp).
-        // Stub đã bị gỡ; đăng ký DI cho pricing bộ 9 rule + engine ở ApiGateway.ServiceRegistration.
+        // D01 — đồng hồ nghiệp vụ giờ VN. TryAdd nên gọi nhiều lần vô hại; đăng ký ở đây để Sales
+        // không phụ thuộc vào việc module khác có được nạp trước hay không.
+        services.AddBusinessClock();
+
+        // ===== Luồng chốt đơn (W2-3) =====
         services.AddScoped<CheckoutOrchestrator>();
+        services.AddScoped<InventoryReservationService>();
+        services.AddScoped<LineVatProfileResolver>();
+
+        // Nguồn giá mặc định: giá niêm yết trong Catalog. W2-19 đăng ký thêm nguồn giá báo giá.
+        services.AddScoped<IOrderPriceSource, CatalogOrderPriceSource>();
+
         services.TryAddScopedIfMissing<IPricingEngine, PricingEngine>();
+
+        // Nhả tồn kho của phiên checkout hết hạn (15 phút) — nếu thiếu, tồn khả dụng tụt dần
+        // mỗi lần khách bỏ ngang và website báo hết hàng cho hàng còn trên kệ.
+        services.AddHostedService<CheckoutSessionExpiryJob>();
 
         // Phase 07: Return workflow (3 luồng + nhập lại kho).
         services.AddScoped<Sales.Application.Returns.RestockService>();

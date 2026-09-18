@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
 using Catalog.Application.Media;
+using Catalog.Application.PriceHistory;
 using Microsoft.Extensions.Configuration;
 using BuildingBlocks.Database;
 using BuildingBlocks.Storage;
@@ -37,6 +38,13 @@ public static class DependencyInjection
         services.AddFileStorage(configuration);
         services.AddScoped<MediaUploadService>();
         services.AddSingleton<MediaValidator>();
+
+        // D10: hook lịch sử giá trên CatalogDbContext đọc context này (xem PriceChangeContext.cs).
+        services.AddScoped<PriceChangeContext>();
+
+        // W2-1 first commit: cho phép W2-9 (PC builder) và các phân hệ sau này tự đăng ký DI mà
+        // không phải sửa file này - xem ICatalogSubmodule.cs.
+        services.AddCatalogSubmodules();
 
         return services;
     }

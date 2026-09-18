@@ -9,7 +9,9 @@ using Xunit;
 namespace UnitTests.Domain.HR;
 
 /// <summary>
-/// Quyết toán TNCN năm — 3 kịch bản: đóng thừa / vừa / thiếu.
+/// Quyết toán TNCN năm — 3 kịch bản: đóng thừa / vừa / thiếu. Kỳ 2025 (luật CŨ: giảm trừ 11tr/4,4tr,
+/// biểu 7 bậc) — W2-25 đưa các vector này về đúng kỳ của chúng vì từ kỳ 2026 giảm trừ là 15,5tr/6,2tr
+/// và biểu 5 bậc (D06 §2); W4-1 sẽ bổ sung vector kỳ 2026.
 /// Dùng EF InMemory.
 /// </summary>
 public class PitFinalizationServiceTests
@@ -53,11 +55,11 @@ public class PitFinalizationServiceTests
         // BH: 2.1tr/tháng × 12 = 25.2tr
         // Khấu trừ thuế cao mỗi tháng 800k × 12 = 9.6tr (giả định > số đúng)
         for (int m = 1; m <= 12; m++)
-            SeedPayroll(db, e.Id, 2026, m, 20_000_000m, tax: 800_000m, insurance: 2_100_000m);
+            SeedPayroll(db, e.Id, 2025, m, 20_000_000m, tax: 800_000m, insurance: 2_100_000m);
         await db.SaveChangesAsync();
 
         var svc = new PitFinalizationService(db);
-        var r = await svc.FinalizeAsync(e.Id, 2026);
+        var r = await svc.FinalizeAsync(e.Id, 2025);
 
         r.AnnualGrossIncome.Should().Be(240_000_000m);
         r.AnnualInsurance.Should().Be(25_200_000m);
@@ -82,11 +84,11 @@ public class PitFinalizationServiceTests
 
         // Khấu trừ ít mỗi tháng để đảm bảo Shortfall > 0
         for (int m = 1; m <= 12; m++)
-            SeedPayroll(db, e.Id, 2026, m, 40_000_000m, tax: 100_000m, insurance: 3_500_000m);
+            SeedPayroll(db, e.Id, 2025, m, 40_000_000m, tax: 100_000m, insurance: 3_500_000m);
         await db.SaveChangesAsync();
 
         var svc = new PitFinalizationService(db);
-        var r = await svc.FinalizeAsync(e.Id, 2026);
+        var r = await svc.FinalizeAsync(e.Id, 2025);
 
         r.MonthlyPitWithheldTotal.Should().Be(1_200_000m);
         // Với thu nhập 40tr/tháng, PIT thực tế chắc chắn > 1.2tr/năm
@@ -107,11 +109,11 @@ public class PitFinalizationServiceTests
         db.Dependents.Add(d1);
 
         for (int m = 1; m <= 12; m++)
-            SeedPayroll(db, e.Id, 2026, m, 25_000_000m, tax: 400_000m, insurance: 2_625_000m);
+            SeedPayroll(db, e.Id, 2025, m, 25_000_000m, tax: 400_000m, insurance: 2_625_000m);
         await db.SaveChangesAsync();
 
         var svc = new PitFinalizationService(db);
-        var r = await svc.FinalizeAsync(e.Id, 2026);
+        var r = await svc.FinalizeAsync(e.Id, 2025);
 
         r.DependentMonthCount.Should().Be(12);
         r.AnnualDependentDeduction.Should().Be(VietnameseTaxEngine.DependentDeduction * 12m);
@@ -123,7 +125,7 @@ public class PitFinalizationServiceTests
         using var db = NewDb();
         var svc = new PitFinalizationService(db);
 
-        var act = async () => await svc.FinalizeAsync(Guid.NewGuid(), 2026);
+        var act = async () => await svc.FinalizeAsync(Guid.NewGuid(), 2025);
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
@@ -136,12 +138,12 @@ public class PitFinalizationServiceTests
             "KTV", new DateTime(2024, 1, 1), 30_000_000m);
         db.Employees.Add(e2);
 
-        SeedPayroll(db, e1.Id, 2026, 1, 20_000_000m, 200_000m, 2_100_000m);
-        SeedPayroll(db, e2.Id, 2026, 1, 30_000_000m, 500_000m, 3_150_000m);
+        SeedPayroll(db, e1.Id, 2025, 1, 20_000_000m, 200_000m, 2_100_000m);
+        SeedPayroll(db, e2.Id, 2025, 1, 30_000_000m, 500_000m, 3_150_000m);
         await db.SaveChangesAsync();
 
         var svc = new PitFinalizationService(db);
-        var items = await svc.GetSummaryAsync(2026);
+        var items = await svc.GetSummaryAsync(2025);
 
         items.Should().HaveCount(2);
     }

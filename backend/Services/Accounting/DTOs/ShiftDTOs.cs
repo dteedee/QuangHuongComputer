@@ -15,7 +15,13 @@ public record ShiftSessionDto(
     decimal OpeningBalance,
     decimal? ClosingBalance,
     ShiftStatus Status,
-    decimal? CashVariance,
+    decimal CashIn,
+    decimal CashOut,
+    decimal ExpectedCash,
+    decimal? Variance,
+    string? VarianceReason,
+    Guid? VarianceApprovedBy,
+    DateTime? VarianceApprovedAt,
     TimeSpan? Duration,
     List<ShiftTransactionDto> Transactions);
 
@@ -27,17 +33,25 @@ public record ShiftSessionListDto(
     DateTime? ClosedAt,
     decimal OpeningBalance,
     decimal? ClosingBalance,
-    ShiftStatus Status,
-    decimal? CashVariance,
-    TimeSpan? Duration);
+    decimal? ExpectedCash,
+    decimal? Variance,
+    ShiftStatus Status);
 
+/// <summary>
+/// Mở ca. KHÔNG có <c>CashierId</c>: thu ngân luôn là người đang đăng nhập (lấy từ JWT).
+/// Nhận id thu ngân từ body nghĩa là ai cũng mở được ca đứng tên người khác.
+/// </summary>
 public record OpenShiftRequest(
-    Guid CashierId,
     Guid WarehouseId,
     decimal OpeningBalance);
 
+/// <param name="ActualCash">Tiền mặt đếm được trong két.</param>
+/// <param name="VarianceReason">Bắt buộc khi có chênh lệch so với số lẽ ra phải có.</param>
 public record CloseShiftRequest(
-    decimal ActualCash);
+    decimal ActualCash,
+    string? VarianceReason = null);
+
+public record ApproveShiftVarianceRequest(string? Note = null);
 
 public record RecordShiftTransactionRequest(
     string Description,
@@ -50,6 +64,7 @@ public record ShiftTransactionDto(
     string Description,
     decimal Amount,
     TransactionType Type,
+    ShiftTransactionSource Source,
     DateTime Timestamp,
     string? Reference);
 

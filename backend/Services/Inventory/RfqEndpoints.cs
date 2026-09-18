@@ -1,4 +1,11 @@
 using BuildingBlocks.Security;
+using BuildingBlocks.Documents;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Paging;
+using BuildingBlocks.Repository;
+using BuildingBlocks.Validation;
+using InventoryModule.Application.Purchasing;
+using InventoryModule.Application.Stock;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -24,13 +31,29 @@ public static class RfqEndpoints
         var group = app.MapGroup("/api/inventory/rfq")
             .RequireModulePermissions(PermissionModules.PurchaseOrders);
 
-        group.MapGet("", async (string? status, InventoryDbContext db) =>
+        group.MapGet("", async (
+            [AsParameters] PagedRequest request, string? status, InventoryDbContext db, CancellationToken ct) =>
         {
             var query = db.RequestForQuotations.AsQueryable();
             if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<RfqStatus>(status, true, out var s))
                 query = query.Where(r => r.Status == s);
-            var rfqs = await query.OrderByDescending(r => r.CreatedAt).Take(500).ToListAsync();
-            return Results.Ok(rfqs);
+
+            var search = request.NormalizedSearch;
+            if (search is not null) query = query.Where(r => r.Number.Contains(search));
+
+            return Results.Ok(await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Number,
+                    status = r.Status.ToString(),
+                    r.DueDate,
+                    r.CreatedAt,
+                    r.RequisitionId,
+                    quotationCount = db.SupplierQuotations.Count(q => q.RfqId == r.Id)
+                })
+                .ToPagedResultAsync(request, ct));
         });
 
         group.MapGet("{id:guid}", async (Guid id, InventoryDbContext db) =>
@@ -44,20 +67,20 @@ public static class RfqEndpoints
             return Results.Ok(new { rfq, quotations });
         });
 
-        group.MapPost("", async (CreateRfqDto dto, ClaimsPrincipal user, InventoryDbContext db) =>
+        group.MapPost("", async (
+            CreateRfqDto dto, ClaimsPrincipal user, InventoryDbContext db,
+            InventoryDocumentNumbers numbers, CancellationToken ct) =>
         {
-            var userId = ResolveUserId(user);
-            if (userId == null) return Results.Unauthorized();
-            try
-            {
-                var itemsJson = JsonSerializer.Serialize(dto.Items);
-                var rfq = new RequestForQuotation(userId.Value, itemsJson, dto.DueDate, dto.RequisitionId, dto.Notes);
-                db.RequestForQuotations.Add(rfq);
-                await db.SaveChangesAsync();
-                return Results.Created($"/api/inventory/rfq/{rfq.Id}", rfq);
-            }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        });
+            var userId = PurchasingGuards.RequireUserId(user);
+            var itemsJson = JsonSerializer.Serialize(dto.Items);
+            var rfq = new RequestForQuotation(userId, itemsJson, dto.DueDate, dto.RequisitionId, dto.Notes);
+            rfq.SetNumber(await numbers.NextAsync(DocumentNumberTypes.RequestForQuotation, ct));
+
+            db.RequestForQuotations.Add(rfq);
+            await db.SaveChangesAsync(ct);
+            return Results.Created($"/api/inventory/rfq/{rfq.Id}",
+                new { rfq.Id, rfq.Number, status = rfq.Status.ToString() });
+        }).WithValidation<CreateRfqDto>();
 
         // Gửi RFQ cho danh sách NCC — chỉ publish sự kiện, Communication service lo email.
         group.MapPost("{id:guid}/send-to-suppliers", async (Guid id, SendRfqDto dto, InventoryDbContext db, IPublishEndpoint bus) =>
@@ -140,10 +163,11 @@ public static class RfqEndpoints
         });
 
         // Chọn NCC thắng → sinh PO tự động từ báo giá.
-        group.MapPost("{id:guid}/award/{quotationId:guid}", async (Guid id, Guid quotationId, ClaimsPrincipal user, InventoryDbContext db) =>
+        group.MapPost("{id:guid}/award/{quotationId:guid}", async (
+            Guid id, Guid quotationId, ClaimsPrincipal user, InventoryDbContext db,
+            InventoryDocumentNumbers numbers, CancellationToken ct) =>
         {
-            var userId = ResolveUserId(user);
-            if (userId == null) return Results.Unauthorized();
+            var userId = (Guid?)PurchasingGuards.RequireUserId(user);
 
             var rfq = await db.RequestForQuotations.FindAsync(id);
             if (rfq == null) return Results.NotFound(new { error = "RFQ không tồn tại." });
@@ -157,7 +181,8 @@ public static class RfqEndpoints
                 // Snapshot giá từ báo giá → PO
                 var poItems = quot.Items.Select(i =>
                     new PurchaseOrderItem(i.ProductId, Math.Max(i.MinQuantity, 1), i.UnitPrice)).ToList();
-                var po = new PurchaseOrder(quot.SupplierId, poItems, userId.Value);
+                var po = new PurchaseOrder(quot.SupplierId, poItems, userId!.Value);
+                po.SetNumber(await numbers.NextAsync(DocumentNumberTypes.PurchaseOrder, ct));
                 po.LinkToQuotation(quotationId);
 
                 rfq.Award(quotationId, po.Id);

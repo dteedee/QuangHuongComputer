@@ -279,6 +279,48 @@ namespace Communication.Infrastructure.Data.Migrations
                     b.ToTable("NotificationLogs", "communication");
                 });
 
+            modelBuilder.Entity("Communication.Domain.NotificationRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("NotificationLogId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotificationLogId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_NotificationRead_Notification_User_Unique");
+
+                    b.HasIndex("UserId", "NotificationLogId")
+                        .HasDatabaseName("IX_NotificationRead_User_Notification");
+
+                    b.ToTable("NotificationReads", "communication");
+                });
+
             modelBuilder.Entity("Communication.Domain.NotificationTemplate", b =>
                 {
                     b.Property<Guid>("Id")

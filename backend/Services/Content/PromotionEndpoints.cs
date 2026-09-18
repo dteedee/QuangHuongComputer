@@ -156,13 +156,16 @@ public static class PromotionEndpoints
 
             if (dto.Rewards is not null)
                 foreach (var r in dto.Rewards)
-                    promo.AddReward(r.ProductId, r.VariantId, r.Quantity, r.DiscountPercent);
+                    promo.AddReward(r.ProductId, r.VariantId, r.Quantity, r.DiscountPercent, r.FlashPrice, r.QuantityLimit);
 
             db.Promotions.Add(promo);
             await db.SaveChangesAsync();
             return Results.Created($"/api/promotions/{promo.Id}", ToDto(promo));
         });
 
+        // Sửa lỗi: trước đây PUT là no-op stub (nhận dto nhưng không apply gì) — giờ update
+        // thật các field an toàn (Name/Description/Priority/EndAt). Điều kiện/rewards/discount
+        // core muốn đổi khi đã có lượt dùng -> tạo promotion mới (bảo vệ audit đơn cũ).
         adminGroup.MapPut("/{id:guid}", async (Guid id, UpdatePromotionDto dto, ContentDbContext db) =>
         {
             var promo = await db.Promotions
@@ -171,9 +174,40 @@ public static class PromotionEndpoints
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (promo is null) return Results.NotFound();
 
-            // MVP: chỉ cho phép sửa các field không ảnh hưởng thanh toán đã diễn ra.
-            // Điều kiện/rewards muốn đổi → tạo promotion mới; đây bảo vệ audit đơn cũ.
+            try
+            {
+                promo.UpdateBasicFields(dto.Name, dto.Description, dto.Priority, dto.EndAt);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+
+            await db.SaveChangesAsync();
             return Results.Ok(ToDto(promo));
+        });
+
+        // Archive (soft) — chỉ khi chưa từng redeem; đã dùng thì Pause() thay vì archive.
+        adminGroup.MapPost("/{id:guid}/archive", async (Guid id, ContentDbContext db) =>
+        {
+            var promo = await db.Promotions.FindAsync(id);
+            if (promo is null) return Results.NotFound();
+            try { promo.Archive(); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { message = ex.Message }); }
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Đã lưu trữ", status = promo.Status.ToString() });
+        });
+
+        // Xoá cứng — chỉ khi CurrentUsage == 0 (chưa từng redeem lần nào).
+        adminGroup.MapDelete("/{id:guid}", async (Guid id, ContentDbContext db) =>
+        {
+            var promo = await db.Promotions.FindAsync(id);
+            if (promo is null) return Results.NotFound();
+            if (!promo.CanDelete())
+                return Results.BadRequest(new { message = $"Không thể xoá promotion đã dùng {promo.CurrentUsage} lần — dùng Archive." });
+            db.Promotions.Remove(promo);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
         });
 
         adminGroup.MapPost("/{id:guid}/activate", async (Guid id, ContentDbContext db) =>
@@ -238,7 +272,11 @@ public static class PromotionEndpoints
         p.MaxTotalUsage, p.MaxUsagePerCustomer, p.CurrentUsage,
         p.StoreId, p.AudienceTag,
         Conditions = p.Conditions.Select(c => new { c.Id, c.Type, c.Operator, c.ValueJson }),
-        Rewards = p.Rewards.Select(r => new { r.Id, r.ProductId, r.VariantId, r.Quantity, r.DiscountPercent }),
+        Rewards = p.Rewards.Select(r => new
+        {
+            r.Id, r.ProductId, r.VariantId, r.Quantity, r.DiscountPercent,
+            r.FlashPrice, r.QuantityLimit, r.SoldCount,
+        }),
     };
 }
 
@@ -264,7 +302,9 @@ public record CreatePromotionDto(
 
 public record CreatePromotionConditionDto(ConditionType Type, ConditionOperator Operator, string ValueJson);
 
-public record CreatePromotionRewardDto(Guid? ProductId, Guid? VariantId, int Quantity, decimal DiscountPercent = 100);
+public record CreatePromotionRewardDto(
+    Guid? ProductId, Guid? VariantId, int Quantity, decimal DiscountPercent = 100,
+    decimal? FlashPrice = null, int? QuantityLimit = null);
 
 public record UpdatePromotionDto(
     string? Name = null,

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Catalog.Domain;
 using Catalog.Application.Search;
+using Catalog.Application.PriceHistory;
 using Catalog.Infrastructure.Data.Configurations;
 using BuildingBlocks.Database;
 
@@ -8,14 +9,20 @@ namespace Catalog.Infrastructure;
 
 public class CatalogDbContext : DbContext
 {
-    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options)
+    private readonly PriceChangeContext? _priceChangeContext;
+
+    public CatalogDbContext(DbContextOptions<CatalogDbContext> options, PriceChangeContext? priceChangeContext = null)
+        : base(options)
     {
+        _priceChangeContext = priceChangeContext;
     }
 
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Brand> Brands { get; set; }
     public DbSet<ProductReview> ProductReviews { get; set; }
+    public DbSet<ProductReviewHelpfulVote> ProductReviewHelpfulVotes { get; set; } = default!;
+    public DbSet<ProductPriceChange> ProductPriceChanges { get; set; } = default!;
     public DbSet<ProductAttribute> ProductAttributes { get; set; }
     public DbSet<SavedPcBuild> SavedPcBuilds { get; set; }
     public DbSet<SavedPcBuildItem> SavedPcBuildItems { get; set; }
@@ -31,6 +38,43 @@ public class CatalogDbContext : DbContext
     public DbSet<SpecificationGroup> SpecificationGroups { get; set; } = default!;
     public DbSet<SpecificationAttribute> SpecificationAttributes { get; set; } = default!;
     public DbSet<ProductSpecificationValue> ProductSpecificationValues { get; set; } = default!;
+
+    /// <summary>
+    /// D10: MỘT VÀ CHỈ MỘT nơi ghi `ProductPriceChanges` - so sánh giá trị gốc/hiện tại của mọi
+    /// `Product` đang `Modified` trước khi SaveChanges thật sự chạy. Endpoint chỉ đặt
+    /// `PriceChangeContext.Source`; không endpoint nào tự `Add` vào bảng này.
+    /// </summary>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        CapturePriceChanges();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        CapturePriceChanges();
+        return base.SaveChanges();
+    }
+
+    private void CapturePriceChanges()
+    {
+        var source = _priceChangeContext?.Source ?? "Manual";
+        var actorId = _priceChangeContext?.ActorId;
+
+        foreach (var entry in ChangeTracker.Entries<Product>())
+        {
+            if (entry.State != EntityState.Modified) continue;
+
+            var oldPrice = entry.OriginalValues.GetValue<decimal>(nameof(Product.Price));
+            var newPrice = entry.CurrentValues.GetValue<decimal>(nameof(Product.Price));
+            var oldCost = entry.OriginalValues.GetValue<decimal>(nameof(Product.CostPrice));
+            var newCost = entry.CurrentValues.GetValue<decimal>(nameof(Product.CostPrice));
+
+            if (oldPrice == newPrice && oldCost == newCost) continue;
+
+            ProductPriceChanges.Add(new ProductPriceChange(entry.Entity.Id, oldPrice, newPrice, oldCost, newCost, source, actorId));
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,7 +128,10 @@ public class CatalogDbContext : DbContext
             // + cờ loại trừ khỏi quyền đổi trả tự nguyện.
             entity.Property(p => p.WarrantyMonths);
             entity.Property(p => p.IsReturnExcluded).HasDefaultValue(false);
-            
+
+            // D07: đơn vị tính - "Chiếc" mặc định, cần cho dòng hoá đơn (Accounting đọc qua sự kiện).
+            entity.Property(p => p.UnitName).HasMaxLength(30).HasDefaultValue("Chiếc").IsRequired();
+
             // Foreign Keys with Navigation Properties
             entity.HasOne(p => p.Category)
                 .WithMany()
@@ -279,6 +326,46 @@ public class CatalogDbContext : DbContext
                 "\"Rating\" >= 1 AND \"Rating\" <= 5"));
         });
 
+        // W2-1 (Todo "hide unapproved reviews" + "require auth + one vote per user"): 1 vote / user / review.
+        modelBuilder.Entity<ProductReviewHelpfulVote>(entity =>
+        {
+            entity.ToTable("ProductReviewHelpfulVotes");
+            entity.HasKey(v => v.Id);
+            entity.Property(v => v.UserId).IsRequired().HasMaxLength(450); // khớp ASP.NET Identity key length
+
+            entity.HasOne<ProductReview>()
+                .WithMany()
+                .HasForeignKey(v => v.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_product_review_helpful_votes_review_id");
+
+            entity.HasIndex(v => new { v.ReviewId, v.UserId })
+                .IsUnique()
+                .HasDatabaseName("uq_product_review_helpful_votes_review_user");
+        });
+
+        // D10: lịch sử giá - MỘT nơi ghi (SaveChanges hook trên chính DbContext này, xem trên).
+        modelBuilder.Entity<ProductPriceChange>(entity =>
+        {
+            entity.ToTable("ProductPriceChanges");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.OldPrice).HasPrecision(18, 2);
+            entity.Property(c => c.NewPrice).HasPrecision(18, 2);
+            entity.Property(c => c.OldCostPrice).HasPrecision(18, 2);
+            entity.Property(c => c.NewCostPrice).HasPrecision(18, 2);
+            entity.Property(c => c.Source).IsRequired().HasMaxLength(30);
+            entity.Property(c => c.ActorId).HasMaxLength(450);
+
+            entity.HasOne<Product>()
+                .WithMany()
+                .HasForeignKey(c => c.ProductId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_product_price_changes_product_id");
+
+            entity.HasIndex(c => new { c.ProductId, c.At })
+                .HasDatabaseName("ix_product_price_changes_product_id_at");
+        });
+
         // ProductAttribute configurations
         modelBuilder.Entity<ProductAttribute>(entity =>
         {
@@ -425,8 +512,10 @@ public class CatalogDbContext : DbContext
             entity.HasIndex(m => new { m.ProductId, m.SortOrder })
                 .HasDatabaseName("ix_product_medias_product_id_sort");
 
-            // Partial index: chỉ 1 primary per product (đảm bảo ở tầng ứng dụng, đây là index tăng tốc query "ảnh chính")
+            // W2-1: filtered UNIQUE - CSDL tự chặn 2 ảnh chính/sản phẩm (trước đây chỉ index
+            // thường, "đảm bảo ở tầng ứng dụng" - tầng ứng dụng có thể có race/bug, CSDL thì không).
             entity.HasIndex(m => m.ProductId)
+                .IsUnique()
                 .HasFilter("\"IsPrimary\" = true")
                 .HasDatabaseName("ix_product_medias_primary");
 

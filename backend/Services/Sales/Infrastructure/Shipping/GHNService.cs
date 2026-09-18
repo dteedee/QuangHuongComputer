@@ -77,7 +77,16 @@ public class GHNCreateOrderRequest
     public int to_district_id { get; set; }
     public int weight { get; set; } = 500;
     public int service_type_id { get; set; } = 2;
+
+    /// <summary>1 = shop trả phí ship, 2 = người nhận trả phí ship (KHÔNG liên quan COD).</summary>
     public int payment_type_id { get; set; } = 2;
+
+    /// <summary>Số tiền GHN phải THU HỘ khi giao — 0 với đơn đã thanh toán online (W2-11).</summary>
+    public int cod_amount { get; set; }
+
+    /// <summary>Giá trị hàng hoá để GHN tính bảo hiểm khi mất/hỏng (W2-11).</summary>
+    public int insurance_value { get; set; }
+
     public string required_note { get; set; } = "KHONGCHOXEMHANG";
     public List<GHNItem> items { get; set; } = new();
 }

@@ -484,6 +484,9 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("text");
 
+                    b.Property<bool>("HasPitCommitment")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("HireDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -505,6 +508,14 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsTaxResident")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsUnionMember")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("NumberOfDependents")
                         .HasColumnType("integer");
 
@@ -512,6 +523,10 @@ namespace HR.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PitMethodOverride")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("Position")
                         .IsRequired()
@@ -553,7 +568,8 @@ namespace HR.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("text");
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
 
                     b.Property<string>("WorkLocation")
                         .HasColumnType("text");
@@ -569,6 +585,11 @@ namespace HR.Infrastructure.Data.Migrations
 
                     b.HasIndex("StoreId")
                         .HasDatabaseName("IX_Employee_StoreId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Employees_UserId_Unique")
+                        .HasFilter("\"UserId\" IS NOT NULL");
 
                     b.HasIndex("Department", "Status")
                         .HasDatabaseName("IX_Employee_Department_Status");
@@ -698,6 +719,9 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsStandaloneProbation")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
@@ -802,10 +826,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
                             Benefits = "- Lương cứng + phụ cấp tay nghề.\n- Được đào tạo chuyên sâu về phần cứng đời mới nhất.\n- Môi trường làm việc năng động, tiếp xúc với linh kiện cao cấp.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Kỹ thuật",
                             Description = "Chúng tôi đang tìm kiếm kỹ thuật viên có kinh nghiệm trong việc lắp ráp máy tính chơi game, máy bộ văn phòng và cài đặt phần mềm. Công việc bao gồm tư vấn cấu hình cho khách hàng, lắp ráp hoàn thiện máy tính và cài đặt hệ điều hành.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Có kiến thức về phần cứng máy tính (CPU, GPU, Mainboard, RAM...).\n- Biết lắp ráp máy tính thẩm mỹ (đi dây gọn gàng).\n- Biết cài đặt Windows, Driver và các phần mềm cơ bản.\n- Cẩn thận, tỉ mỉ trong công việc.",
@@ -818,10 +842,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000002"),
                             Benefits = "- Lương cứng + Hoa hồng doanh số cao.\n- Thưởng lễ, tết và tháng lương 13.\n- Chế độ bảo hiểm đầy đủ theo quy định của nhà nước.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Kinh doanh",
                             Description = "Tư vấn khách hàng về các sản phẩm laptop, linh kiện máy tính và thiết bị ngoại vi tại showroom của Quang Hưởng Computer.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Giao tiếp tốt, ngoại hình ưa nhìn.\n- Am hiểu về các dòng laptop và linh kiện máy tính là một lợi thế lớn.\n- Có khả năng thuyết phục khách hàng và làm việc theo nhóm.",
@@ -834,10 +858,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000003"),
                             Benefits = "- Lương cao theo tay nghề.\n- Phụ cấp ăn trưa tại công ty.\n- Nghỉ chủ nhật và các ngày lễ theo quy định.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Kỹ thuật",
                             Description = "Sửa chữa phần cứng laptop, thay thế linh kiện, xử lý các lỗi mainboard cho khách hàng.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Có kinh nghiệm sửa chữa phần cứng laptop ít nhất 1 năm.\n- Biết sử dụng máy khò, máy hàn, đồng hồ đo và đọc sơ đồ mạch mainboard.\n- Trung thực, trách nhiệm với công việc.",
@@ -850,10 +874,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000004"),
                             Benefits = "- Môi trường làm việc sáng tạo, không gò bó.\n- Được trải nghiệm sớm các sản phẩm công nghệ mới nhất.\n- Lương thưởng xứng đáng theo năng suất.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Marketing",
                             Description = "Lên kế hoạch nội dung cho Fanpage, Website và các kênh mạng xã hội. Viết bài review sản phẩm công nghệ.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Sử dụng tốt các công cụ thiết kế cơ bản (Photoshop, Canva).\n- Có kỹ năng viết lách, sáng tạo nội dung thu hút.\n- Yêu thích và am hiểu về đồ công nghệ, gaming gear.",
@@ -866,10 +890,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000005"),
                             Benefits = "- Phụ cấp xăng xe và điện thoại hàng tháng.\n- Thưởng theo sản lượng đơn hàng giao thành công.\n- Chế độ bảo hiểm tai nạn đầy đủ.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Logistics",
                             Description = "Giao hàng từ showroom đến địa chỉ khách hàng trong khu vực nội thành. Hỗ trợ khách hàng kiểm tra sản phẩm khi giao.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Có xe máy riêng và thông thuộc đường phố Hồ Chí Minh.\n- Sức khỏe tốt, tính tình thật thà.\n- Có điện thoại smartphone để liên lạc và sử dụng app giao hàng.",
@@ -882,10 +906,10 @@ namespace HR.Infrastructure.Data.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000006"),
                             Benefits = "- Môi trường làm việc văn phòng máy lạnh mát mẻ.\n- Chế độ thâm niên, tăng lương hàng năm.\n- Được đào tạo về các nghiệp vụ kế toán chuyên sâu của ngành bán lẻ công nghệ.",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "Kế toán",
                             Description = "Quản lý hóa đơn, chứng từ bán hàng. Theo dõi kho hàng và đối soát công nợ khách hàng, nhà cung cấp.",
-                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpiryDate = new DateTime(2027, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             JobType = "Full-time",
                             Location = "Hồ Chí Minh",
                             Requirements = "- Tốt nghiệp chuyên ngành Kế toán.\n- Thành thạo Excel và các phần mềm kế toán thông dụng.\n- Cẩn thận, trung thực, có trí nhớ tốt.",
@@ -1025,6 +1049,10 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<int>("Month")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("NightShiftHours")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
@@ -1033,6 +1061,18 @@ namespace HR.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(8,2)");
 
                     b.Property<decimal>("OvertimeHoursNight")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
+                    b.Property<decimal>("OvertimeHoursNightHoliday")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
+                    b.Property<decimal>("OvertimeHoursNightRestDay")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
+
+                    b.Property<decimal>("OvertimeHoursNightWeekday")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
 
@@ -1195,6 +1235,9 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("KeepSiOnUnpaidLeave")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("Month")
                         .HasColumnType("integer");
 
@@ -1223,12 +1266,19 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateOnly?>("PayDate")
+                        .HasColumnType("date");
+
                     b.Property<Guid?>("PayrollRunId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("PerformanceBonus")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("PitMethod")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("timestamp without time zone");
@@ -1243,7 +1293,14 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StatutorySnapshotJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<decimal>("TaxDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("TaxableGrossIncome")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -1363,6 +1420,9 @@ namespace HR.Infrastructure.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("EmployeeCount")
                         .HasColumnType("integer");
 
@@ -1385,6 +1445,9 @@ namespace HR.Infrastructure.Data.Migrations
 
                     b.Property<Guid?>("PaidBy")
                         .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("PayDate")
+                        .HasColumnType("date");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1420,6 +1483,58 @@ namespace HR.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("PayrollRuns", "hr");
+                });
+
+            modelBuilder.Entity("HR.Domain.PublicHoliday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LegalBasis")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PublicHolidays_Date");
+
+                    b.ToTable("PublicHolidays", "hr");
                 });
 
             modelBuilder.Entity("HR.Domain.SalaryStructure", b =>
@@ -1599,6 +1714,79 @@ namespace HR.Infrastructure.Data.Migrations
                     b.HasIndex("ShiftId", "Date");
 
                     b.ToTable("ShiftAssignments", "hr");
+                });
+
+            modelBuilder.Entity("HR.Domain.StatutoryParameter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSeed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JsonValue")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("LegalBasis")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<decimal?>("NumberValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("SourceUrl")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code", "EffectiveFrom")
+                        .IsUnique()
+                        .HasDatabaseName("IX_StatutoryParameters_Code_EffectiveFrom");
+
+                    b.ToTable("StatutoryParameters", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_StatutoryParameters_OneValue", "(\"NumberValue\" IS NULL) <> (\"JsonValue\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("HR.Domain.Timesheet", b =>

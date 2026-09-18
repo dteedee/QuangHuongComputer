@@ -7,9 +7,9 @@ using Payments.Endpoints;
 namespace Payments;
 
 /// <summary>
-/// W0-10 (D04 R4/R4b) — điểm vào của module Payments.
+/// Điểm vào của module Payments.
 ///
-/// Bộ webhook/callback **v1** đã bị XOÁ khỏi file này:
+/// Bộ webhook/callback **v1** đã bị XOÁ (W0-10, D04 R4/R4b):
 ///   GET  /api/payments/vnpay/callback
 ///   POST /api/payments/sepay/webhook
 ///   POST /api/payments/momo/callback
@@ -17,8 +17,9 @@ namespace Payments;
 /// Tất cả đều gọi verifier fail-open. Bộ duy nhất còn lại là `/api/payments/v2/*`
 /// (xem <see cref="PaymentWebhookEndpoints"/>), fail-closed.
 ///
-/// Nhánh `else` của `/initiate` — đường "thành công giả" thật sự, gán `EXT-&lt;guid&gt;` +
-/// `paymentUrl=/payment/mock/{id}` cho MỌI provider không có nhánh riêng — cũng đã bị xoá.
+/// Nhánh `else` của `/initiate` — đường "thành công giả" gán `paymentUrl=/payment/mock/{id}` cho MỌI
+/// provider không có nhánh riêng — cũng đã bị xoá. W2-4 gỡ nốt `PaymentUrlBuilder` (cái `switch`
+/// cuối cùng theo provider) và thay bằng chiến lược <see cref="Application.Providers.IPaymentProvider"/>.
 /// </summary>
 public static class PaymentsEndpoints
 {
@@ -26,6 +27,9 @@ public static class PaymentsEndpoints
     {
         // Nguồn sự thật DUY NHẤT cho checkout/footer/PDP/POS — public (D04 R1).
         app.MapPaymentMethodsEndpoint();
+
+        // Khách vãng lai: token ký cho ĐÚNG một đơn, fail-closed khi chưa cấu hình secret.
+        app.MapPaymentGuestEndpoints();
 
         // W1-10: nhánh /api/payments là "thanh toán đơn của tôi" — initiate và GET /{id}
         // đều tự kiểm tra quyền sở hữu đơn trong handler, nên chỉ cần đăng nhập.

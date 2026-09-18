@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Repair.Domain;
 using Repair.Infrastructure;
+using Repair.Services;
 
 namespace Repair;
 
@@ -18,8 +19,12 @@ public static class TechnicianWorkOrderPartsEndpoints
 {
     public static void MapTechnicianWorkOrderPartsEndpoints(this RouteGroupBuilder group)
     {
-        // Add parts - technician (own work order) or Manager/Admin.
-        group.MapPost("/work-orders/{id:guid}/parts", async (Guid id, [FromBody] AddPartsDto dto, RepairDbContext db, ClaimsPrincipal user) =>
+        // Add parts - technician (own work order) or Manager/Admin. W2-13: reserves
+        // real stock via IStockLedger BEFORE the part is persisted - a reservation
+        // failure (item missing / insufficient available quantity) must leave the
+        // work order untouched, so the ledger call runs first and any exception
+        // aborts before AddPart/SaveChanges.
+        group.MapPost("/work-orders/{id:guid}/parts", async (Guid id, [FromBody] AddPartsDto dto, RepairDbContext db, IRepairStockService stock, ClaimsPrincipal user) =>
         {
             if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
@@ -37,6 +42,9 @@ public static class TechnicianWorkOrderPartsEndpoints
 
             try
             {
+                var performedBy = TechnicianAccess.GetUserName(user);
+                await stock.ReserveAsync(dto.InventoryItemId, dto.Quantity, workOrder.Id, performedBy);
+
                 var part = new WorkOrderPart(
                     workOrder.Id,
                     dto.InventoryItemId,
@@ -48,7 +56,7 @@ public static class TechnicianWorkOrderPartsEndpoints
                 workOrder.AddPart(part);
 
                 var log = WorkOrderActivityLog.CreatePartAdded(
-                    workOrder.Id, dto.PartName, dto.Quantity, userId, TechnicianAccess.GetUserName(user));
+                    workOrder.Id, dto.PartName, dto.Quantity, userId, performedBy);
                 workOrder.AddActivityLog(log);
                 db.WorkOrderActivityLogs.Add(log);
 
@@ -60,14 +68,22 @@ public static class TechnicianWorkOrderPartsEndpoints
                     TotalPartsCost = workOrder.PartsCost
                 });
             }
+            catch (InvalidOperationException)
+            {
+                // Not enough available stock, or the item does not exist - nothing
+                // was reserved (IStockLedger only mutates on success), nothing to roll back.
+                return Results.BadRequest(new { error = "Không đủ hàng tồn kho cho linh kiện này." });
+            }
             catch (Exception)
             {
                 return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
         });
 
-        // Remove part - technician (own work order) or Manager/Admin.
-        group.MapDelete("/work-orders/{id:guid}/parts/{partId:guid}", async (Guid id, Guid partId, RepairDbContext db, ClaimsPrincipal user) =>
+        // Remove part - technician (own work order) or Manager/Admin. W2-13: releases
+        // the matching reservation before the row disappears, so a removed part
+        // never leaves stock reserved forever.
+        group.MapDelete("/work-orders/{id:guid}/parts/{partId:guid}", async (Guid id, Guid partId, RepairDbContext db, IRepairStockService stock, ClaimsPrincipal user) =>
         {
             if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
@@ -81,6 +97,17 @@ public static class TechnicianWorkOrderPartsEndpoints
                 var technician = await TechnicianAccess.ResolveTechnicianAsync(db, userId);
                 if (technician == null || workOrder.TechnicianId != technician.Id)
                     return Results.Forbid();
+            }
+
+            var removedPart = workOrder.Parts.FirstOrDefault(p => p.Id == partId);
+            if (removedPart == null)
+                return Results.NotFound(new { Error = "Part not found" });
+
+            // Only reserved (not yet committed at Completed) - a part on a Completed
+            // work order is already a real stock-out and must not be released here.
+            if (workOrder.Status != WorkOrderStatus.Completed)
+            {
+                await stock.ReleaseAsync(removedPart.InventoryItemId, removedPart.Quantity, workOrder.Id, TechnicianAccess.GetUserName(user));
             }
 
             workOrder.RemovePart(partId);

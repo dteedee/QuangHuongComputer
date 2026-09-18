@@ -14,6 +14,7 @@ public class PaymentsDbContext : DbContext
     public DbSet<SePayTransaction> SePayTransactions { get; set; }
     public DbSet<PaymentConfig> PaymentConfigs { get; set; }
     public DbSet<ProcessedWebhook> ProcessedWebhooks { get; set; }
+    public DbSet<PaymentRefund> PaymentRefunds { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,8 +36,48 @@ public class PaymentsDbContext : DbContext
             entity.HasIndex(e => e.ExternalId);
             entity.HasIndex(e => new { e.Status, e.CreatedAt })
                 .HasDatabaseName("IX_PaymentIntents_Status_CreatedAt");
+
+            // W2-4: mã thanh toán (nội dung chuyển khoản) là khoá đối soát — phải duy nhất và
+            // tra được trong một index, vì mỗi webhook SePay đều tra theo nó.
+            entity.Property(e => e.PaymentCode).HasMaxLength(20);
+            entity.HasIndex(e => e.PaymentCode)
+                .IsUnique()
+                .HasDatabaseName("IX_PaymentIntents_PaymentCode")
+                .HasFilter("\"PaymentCode\" IS NOT NULL");
+            entity.Property(e => e.AmountRefunded).HasPrecision(18, 2);
+            entity.Property(e => e.ReconciliationReference).HasMaxLength(100);
+
             entity.ToTable(t =>
-                t.HasCheckConstraint("CK_PaymentIntents_Amount_NonNegative", "\"Amount\" >= 0"));
+            {
+                t.HasCheckConstraint("CK_PaymentIntents_Amount_NonNegative", "\"Amount\" >= 0");
+                // Không bao giờ hoàn quá số đã thu: chặn ở CSDL, không chỉ ở code.
+                t.HasCheckConstraint(
+                    "CK_PaymentIntents_Refund_NotOverAmount",
+                    "\"AmountRefunded\" >= 0 AND \"AmountRefunded\" <= \"Amount\"");
+            });
+        });
+
+        // W2-4 (D04 mục 4) — phiếu hoàn tiền.
+        modelBuilder.Entity<PaymentRefund>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.UseXminAsConcurrencyToken();
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Reference).HasMaxLength(100);
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.IdempotencyKey).IsRequired().HasMaxLength(100);
+
+            entity.HasIndex(e => e.IdempotencyKey)
+                .IsUnique()
+                .HasDatabaseName("IX_PaymentRefunds_IdempotencyKey");
+            entity.HasIndex(e => e.PaymentIntentId).HasDatabaseName("IX_PaymentRefunds_PaymentIntentId");
+            entity.HasIndex(e => e.OrderId).HasDatabaseName("IX_PaymentRefunds_OrderId");
+            entity.HasIndex(e => new { e.Status, e.RequestedAt })
+                .HasDatabaseName("IX_PaymentRefunds_Status_RequestedAt");
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_PaymentRefunds_Amount_Positive", "\"Amount\" > 0"));
         });
 
         // W1-11 / audit db-schema-migrations-23: TransferAmount + Accumulated còn thả nổi kiểu,

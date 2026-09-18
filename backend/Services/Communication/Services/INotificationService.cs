@@ -58,22 +58,25 @@ public interface INotificationService
     Task SendToRolesAsync(string[] roles, CreateNotificationDto notification);
 
     /// <summary>
-    /// Get all notifications for a user
+    /// Get notifications visible to a user: their own + role-targeted rows whose TargetRoles
+    /// intersect <paramref name="userRoles"/>. Read state is per-caller (W2-15).
     /// </summary>
-    Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, int page = 1, int pageSize = 50);
+    Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, string[] userRoles, int page = 1, int pageSize = 50);
 
     /// <summary>
-    /// Get unread notification count for a user
+    /// Get unread notification count for a user, scoped the same way as GetUserNotificationsAsync.
     /// </summary>
-    Task<int> GetUnreadCountAsync(string userId);
+    Task<int> GetUnreadCountAsync(string userId, string[] userRoles);
 
     /// <summary>
-    /// Mark a notification as read
+    /// Mark a notification as read for this caller only. Returns false if the notification does
+    /// not exist or is not visible to this caller (ownership/role check) - never mutates other
+    /// callers' read state.
     /// </summary>
-    Task<bool> MarkAsReadAsync(Guid notificationId, string userId);
+    Task<bool> MarkAsReadAsync(Guid notificationId, string userId, string[] userRoles);
 
     /// <summary>
-    /// Mark all notifications as read for a user
+    /// Mark all notifications visible to this caller as read, for this caller only.
     /// </summary>
-    Task MarkAllAsReadAsync(string userId);
+    Task MarkAllAsReadAsync(string userId, string[] userRoles);
 }

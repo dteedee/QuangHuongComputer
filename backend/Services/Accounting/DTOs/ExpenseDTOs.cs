@@ -64,12 +64,12 @@ public record ExpenseDetailDto(
     string? ReceiptUrl,
     DateTime CreatedAt);
 
+/// <summary>Không còn trường <c>Currency</c>: mọi khoản chi đều bằng VND (D01).</summary>
 public record CreateExpenseRequest(
     Guid CategoryId,
     string Description,
     decimal Amount,
     decimal VatRate,
-    string Currency,
     DateTime ExpenseDate,
     Guid? SupplierId,
     Guid? EmployeeId,
@@ -93,8 +93,10 @@ public record ApproveExpenseRequest(
 public record RejectExpenseRequest(
     string Reason);
 
+/// <param name="FundCode">Quỹ tiền mặt ghi phiếu chi. Bỏ trống = quỹ chính.</param>
 public record PayExpenseRequest(
-    string PaymentMethod);
+    string PaymentMethod,
+    string? FundCode = null);
 
 public record ExpenseSummaryDto(
     decimal TotalExpenses,

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
 
@@ -5,6 +6,14 @@ namespace Content.Domain;
 
 public class Post : Entity<Guid>
 {
+    /// <summary>
+    /// D10 (binding): MỘT predicate lịch xuất bản duy nhất, dùng chung bởi list public,
+    /// detail-by-slug, related posts và sitemap provider (W2-17). Lọc riêng ở list mà
+    /// quên detail vẫn lộ bài viết đã lên lịch qua URL trực tiếp — đây là lỗi đã xảy ra.
+    /// Admin nhập giờ local Asia/Ho_Chi_Minh, lưu UTC; so sánh ở đây luôn bằng UTC.
+    /// </summary>
+    public static Expression<Func<Post, bool>> PublishedPredicate(DateTime utcNow) =>
+        p => p.Status == PostStatus.Published && p.PublishedAt != null && p.PublishedAt <= utcNow;
     public string Title { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public string Content { get; private set; } = string.Empty;

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
+using Catalog.Domain;
+using Catalog.Application.Products;
 using Catalog.Application.Search;
 using BuildingBlocks.Database;
 using BuildingBlocks.Caching;
@@ -10,7 +12,8 @@ using BuildingBlocks.Caching;
 namespace Catalog;
 
 /// <summary>
-/// Đường ĐỌC của sản phẩm: danh sách, chi tiết, theo slug, tìm kiếm nâng cao, sản phẩm liên quan.
+/// Đường ĐỌC "đơn giản" của sản phẩm: danh sách, chi tiết theo id, theo slug.
+/// Tìm kiếm nâng cao + facet + liên quan -> `CatalogProductSearchEndpoints.cs` (giữ file dưới 200 dòng).
 /// Đường GHI (admin) ở `CatalogProductAdminEndpoints.cs`.
 /// </summary>
 public static class CatalogProductQueryEndpoints
@@ -31,38 +34,30 @@ public static class CatalogProductQueryEndpoints
             bool? includeInactive = null) =>
         {
             var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
-
-            // Support both 'search' and 'q' parameters (q is an alias for search)
             var searchTerm = search ?? q;
-
-            // BẢO MẬT: `includeInactive` để lộ hàng chưa xuất bản -> chỉ nhân viên mới dùng được.
             var showInactive = http.WantsInactive(includeInactive);
 
             var cacheKey = CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, searchTerm)
                            + CatalogProductHelpers.CacheVersion;
             if (!showInactive)
             {
-                var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
+                var cachedResponse = await cache.GetAsync<object>(cacheKey);
                 if (cachedResponse is not null) return Results.Ok(cachedResponse);
             }
 
-            // IgnoreQueryFilters là BẮT BUỘC: bộ lọc toàn cục `p.IsActive` vẫn chạy dù endpoint
-            // có gọi `Where(p => p.IsActive)` hay không, nên trước đây `includeInactive` là no-op
-            // (26 hàng trả về trên tổng số 28 trong DB).
-            var baseQuery = showInactive ? db.Products.IgnoreQueryFilters() : db.Products;
+            // D10: nhân viên xem TẤT CẢ (kể cả chưa đăng web); khách chỉ thấy hàng đã publish.
+            // IgnoreQueryFilters BẮT BUỘC: filter toàn cục IsActive vẫn chạy dù có Where hay không.
+            var baseQuery = showInactive
+                ? db.Products.IgnoreQueryFilters()
+                : db.Products.WherePublished();
 
             var query = baseQuery.AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .AsQueryable();
 
-            if (categoryId.HasValue)
-                query = query.Where(p => p.CategoryId == categoryId.Value);
-
-            if (brandId.HasValue)
-                query = query.Where(p => p.BrandId == brandId.Value);
-
-            // Vị từ tìm kiếm DÙNG CHUNG với /products/search (ILIKE + unaccent).
+            if (categoryId.HasValue) query = query.Where(p => p.CategoryId == categoryId.Value);
+            if (brandId.HasValue) query = query.Where(p => p.BrandId == brandId.Value);
             query = query.ApplySearch(searchTerm);
 
             var total = await query.CountAsync();
@@ -72,9 +67,10 @@ public static class CatalogProductQueryEndpoints
                 .Take(validPageSize)
                 .ToListAsync();
 
+            var thumbs = await ProductDtoProjection.LoadPrimaryMediaAsync(db, products.Select(p => p.Id).ToList());
             var result = CatalogResponses.Paged(
                 total, validPage, validPageSize,
-                products.Select(CatalogResponses.ProductPayload));
+                products.Select(p => ProductDtoProjection.ToDto(p, thumbs.GetValueOrDefault(p.Id).Thumb ?? thumbs.GetValueOrDefault(p.Id).Url)));
 
             if (!showInactive)
                 await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(10));
@@ -82,145 +78,74 @@ public static class CatalogProductQueryEndpoints
             return Results.Ok(result);
         });
 
-        // ------------------------------------------------------------ detail
+        // ------------------------------------------------------------ detail (by id)
         group.MapGet("/products/{id:guid}", async (
             Guid id,
+            string? include,
             CatalogDbContext db,
             ICacheService cache,
             HttpContext http,
-            bool? includeInactive = null) =>
+            bool? includeInactive = null,
+            CancellationToken ct = default) =>
         {
             var showInactive = http.WantsInactive(includeInactive);
-            var cacheKey = CacheKeys.ProductKey(id) + CatalogProductHelpers.CacheVersion;
+            var includes = ProductDtoProjection.ParseInclude(include);
 
-            // Nhân viên xem hàng đã gỡ bán thì không đụng tới cache công khai.
-            if (!showInactive)
+            // Bước 5: view count tăng ở MỌI lượt xem chi tiết (kể cả cache hit) - 1 ExecuteUpdate,
+            // không Redis counter (YAGNI ở lưu lượng này).
+            await db.Products.IgnoreQueryFilters().Where(p => p.Id == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.ViewCount, p => p.ViewCount + 1), ct);
+
+            // Adversarial-verify fix: the old key embedded the raw `include` string
+            // (`ProductKey(id) + $":{include}" + CacheVersion`), so EVERY write path that calls
+            // `CatalogProductHelpers.InvalidateProductCachesAsync` (media, publish/unpublish,
+            // review approve/reject, admin update...) removed a DIFFERENT key than this endpoint
+            // reads/writes and never actually cleared it - confirmed live: publish/unpublish/review
+            // stats kept serving a stale `ProductDto` for the full 30-min TTL. `RemoveByPatternAsync`
+            // is a documented no-op in `BuildingBlocks/Caching/CacheService.cs` (IR filed, out of
+            // this track's ownership), so per-`include`-value keys can never be reliably invalidated
+            // from here. Only cache the bare (no `include=`) shape, under the exact key
+            // `InvalidateProductCachesAsync` already clears; `include=`-bearing requests (richer PDP
+            // reads) are always computed fresh - correctness over a cache hit for the rarer call.
+            var canCache = !showInactive && string.IsNullOrEmpty(include);
+            var cacheKey = CacheKeys.ProductKey(id) + CatalogProductHelpers.CacheVersion;
+            if (canCache)
             {
-                var cachedProduct = await cache.GetAsync<dynamic>(cacheKey);
+                var cachedProduct = await cache.GetAsync<ProductDto>(cacheKey);
                 if (cachedProduct is not null) return Results.Ok(cachedProduct);
             }
 
             var product = await CatalogProductHelpers.LoadProductAsync(db, id, showInactive, tracking: false);
-            if (product == null)
-                return Results.NotFound(new { Error = "Product not found" });
+            if (product == null) return Results.NotFound(new { Error = "Product not found" });
+            // D10: khách vãng lai không được xem hàng chưa đăng web qua đường /{id} công khai.
+            if (!showInactive && product.PublishedAt is null) return Results.NotFound(new { Error = "Product not found" });
 
-            var result = CatalogResponses.ProductPayload(product);
+            var dto = await ProductDtoProjection.BuildDetailAsync(db, product, includes, ct);
 
-            if (!showInactive)
-                await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(30));
+            if (canCache)
+                await cache.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(30));
 
-            return Results.Ok(result);
+            return Results.Ok(dto);
         });
 
         // ------------------------------------------------------------ by slug
-        group.MapGet("/products/by-slug/{slug}", async (string slug, CatalogDbContext db) =>
+        group.MapGet("/products/by-slug/{slug}", async (
+            string slug, string? include, CatalogDbContext db, HttpContext http, bool? includeInactive = null, CancellationToken ct = default) =>
         {
-            var product = await db.Products
-                .AsNoTracking()
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
-                .FirstOrDefaultAsync(p => p.Slug == slug);
+            var showInactive = http.WantsInactive(includeInactive);
+            var source = showInactive ? db.Products.IgnoreQueryFilters() : db.Products.WherePublished();
 
-            return product is null ? Results.NotFound() : Results.Ok(CatalogResponses.ProductPayload(product));
-        });
+            var product = await source.AsNoTracking()
+                .Include(p => p.Category).Include(p => p.Brand)
+                .FirstOrDefaultAsync(p => p.Slug == slug, ct);
+            if (product is null) return Results.NotFound();
 
-        // ------------------------------------------------------------ advanced search
-        group.MapGet("/products/search", async (
-            string? query,
-            Guid? categoryId,
-            Guid? brandId,
-            decimal? minPrice,
-            decimal? maxPrice,
-            bool? inStock,
-            string? sortBy,
-            CatalogDbContext db,
-            ICacheService cache,
-            int page = 1,
-            int pageSize = 20) =>
-        {
-            var (validPage, validPageSize) = QueryOptimizationExtensions.ValidatePaginationParams(page, pageSize);
+            await db.Products.IgnoreQueryFilters().Where(p => p.Id == product.Id)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.ViewCount, p => p.ViewCount + 1), ct);
 
-            var cacheKey = $"{CacheKeys.ProductsListKey(validPage, validPageSize, categoryId, brandId, query)}" +
-                           $":{minPrice}:{maxPrice}:{inStock}:{sortBy}{CatalogProductHelpers.CacheVersion}";
-            var cachedResponse = await cache.GetAsync<dynamic>(cacheKey);
-            if (cachedResponse is not null) return Results.Ok(cachedResponse);
-
-            var productsQuery = db.Products
-                .AsNoTracking()
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
-                .AsQueryable();
-
-            // Cùng MỘT vị từ với /products - không còn hai bản LIKE lệch nhau.
-            productsQuery = productsQuery.ApplySearch(query);
-
-            if (categoryId.HasValue)
-                productsQuery = productsQuery.Where(p => p.CategoryId == categoryId.Value);
-
-            if (brandId.HasValue)
-                productsQuery = productsQuery.Where(p => p.BrandId == brandId.Value);
-
-            if (minPrice.HasValue)
-                productsQuery = productsQuery.Where(p => p.Price >= minPrice.Value);
-
-            if (maxPrice.HasValue)
-                productsQuery = productsQuery.Where(p => p.Price <= maxPrice.Value);
-
-            if (inStock == true)
-                productsQuery = productsQuery.Where(p => p.StockQuantity > 0);
-
-            productsQuery = sortBy switch
-            {
-                "price_asc" => productsQuery.OrderBy(p => p.Price),
-                "price_desc" => productsQuery.OrderByDescending(p => p.Price),
-                "newest" => productsQuery.OrderByDescending(p => p.CreatedAt),
-                "popular" => productsQuery.OrderByDescending(p => p.ViewCount),
-                "name" => productsQuery.OrderBy(p => p.Name),
-                _ => productsQuery.OrderByDescending(p => p.CreatedAt) // Default: newest first
-            };
-
-            var total = await productsQuery.CountAsync();
-            var products = await productsQuery
-                .Skip((validPage - 1) * validPageSize)
-                .Take(validPageSize)
-                .ToListAsync();
-
-            var result = CatalogResponses.Paged(
-                total, validPage, validPageSize,
-                products.Select(CatalogResponses.ProductPayload));
-
-            await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
-
-            return Results.Ok(result);
-        });
-
-        // ------------------------------------------------------------ related
-        group.MapGet("/products/{productId:guid}/related", async (
-            Guid productId, CatalogDbContext db, ICacheService cache, int limit = 8) =>
-        {
-            var cacheKey = CacheKeys.RelatedProductsKey(productId) + CatalogProductHelpers.CacheVersion;
-            var cachedRelated = await cache.GetAsync<List<dynamic>>(cacheKey);
-            if (cachedRelated != null) return Results.Ok(cachedRelated);
-
-            var product = await db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId);
-            if (product == null) return Results.NotFound();
-
-            var relatedProducts = await db.Products
-                .AsNoTracking()
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
-                .Where(p => p.Id != productId)
-                .Where(p => p.CategoryId == product.CategoryId || p.BrandId == product.BrandId)
-                .OrderByDescending(p => p.CategoryId == product.CategoryId) // Prioritize same category
-                .ThenByDescending(p => p.CreatedAt)
-                .Take(limit <= 0 ? 8 : Math.Min(limit, 50))
-                .ToListAsync();
-
-            // Flat shape — khớp Product DTO chuẩn để frontend dùng chung một kiểu.
-            var payload = relatedProducts.Select(CatalogResponses.ProductPayload).ToList();
-            await cache.SetAsync(cacheKey, payload, TimeSpan.FromMinutes(30));
-
-            return Results.Ok(payload);
+            var includes = ProductDtoProjection.ParseInclude(include);
+            var dto = await ProductDtoProjection.BuildDetailAsync(db, product, includes, ct);
+            return Results.Ok(dto);
         });
     }
 }

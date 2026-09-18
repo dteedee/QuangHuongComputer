@@ -1,5 +1,9 @@
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Messaging.IntegrationEvents;
 using Catalog.Infrastructure;
 using InventoryModule.Infrastructure;
+using MassTransit;
+using Sales.Application.Loyalty;
 using Microsoft.EntityFrameworkCore;
 using Sales.Domain;
 using Sales.Infrastructure;
@@ -12,20 +16,23 @@ namespace Sales.Application.Returns;
 ///     kiểm chính sách hạn theo Category, tạo ReturnRequest.
 ///  2. ProcessAfterInspectionAsync — sau kiểm hàng: gọi RestockService, xử lý tiền/đơn mới, Complete.
 /// </summary>
-public class ReturnOrchestrator
+public partial class ReturnOrchestrator
 {
     private readonly SalesDbContext _salesDb;
     private readonly CatalogDbContext _catalogDb;
     private readonly RestockService _restockService;
+    private readonly IPublishEndpoint _bus;
 
     public ReturnOrchestrator(
         SalesDbContext salesDb,
         CatalogDbContext catalogDb,
-        RestockService restockService)
+        RestockService restockService,
+        IPublishEndpoint bus)
     {
         _salesDb = salesDb;
         _catalogDb = catalogDb;
         _restockService = restockService;
+        _bus = bus;
     }
 
     public async Task<ReturnRequest> RequestAsync(
@@ -33,35 +40,43 @@ public class ReturnOrchestrator
         Guid customerId,
         CancellationToken ct = default)
     {
-        // 1. Verify Order thuộc customer.
+        // 1. Đơn phải thuộc khách đang yêu cầu (IDOR).
         var order = await _salesDb.Orders
             .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == input.OrderId && o.CustomerId == customerId, ct)
-            ?? throw new InvalidOperationException("Đơn hàng không tồn tại hoặc không thuộc khách hàng.");
+            ?? throw new NotFoundException("Đơn hàng không tồn tại hoặc không thuộc khách hàng.");
 
         var orderItem = order.Items.FirstOrDefault(i => i.Id == input.OrderItemId)
-            ?? throw new InvalidOperationException("Sản phẩm trong đơn không tồn tại.");
+            ?? throw new NotFoundException("Sản phẩm trong đơn không tồn tại.");
 
-        // 2. Kiểm tra policy — tra theo CategoryId của product; fallback policy mặc định (CategoryId == null).
-        var product = await _catalogDb.Products
-            .AsNoTracking()
-            .Where(p => p.Id == orderItem.ProductId)
-            .Select(p => new { p.CategoryId })
-            .FirstOrDefaultAsync(ct);
+        // 2. MỘT dòng đơn chỉ được có MỘT yêu cầu đang mở, và không bao giờ hoàn tiền hai lần.
+        //    Trước đây không có kiểm tra nào: gửi cùng một yêu cầu ba lần thì hoàn tiền ba lần.
+        var existing = await _salesDb.ReturnRequests
+            .Where(r => r.OrderItemId == input.OrderItemId)
+            .Select(r => new { r.Id, r.Status })
+            .ToListAsync(ct);
 
-        var categoryId = product?.CategoryId;
-        var policy = await GetEffectivePolicyAsync(categoryId, ct);
-        if (policy == null || !policy.IsActive)
-            throw new InvalidOperationException("Không có chính sách đổi trả áp dụng cho sản phẩm này.");
+        if (existing.Any(r => r.Status is ReturnStatus.Completed or ReturnStatus.Refunded))
+            throw new ConflictException("Sản phẩm này đã được hoàn tiền/đổi trả xong — không yêu cầu lại được.");
+        if (existing.Any(r => r.Status is ReturnStatus.Pending or ReturnStatus.Approved))
+            throw new ConflictException("Sản phẩm này đang có một yêu cầu đổi trả chưa xử lý xong.");
 
-        if (!policy.IsWithinPeriod(input.Type, order.OrderDate))
-            throw new InvalidOperationException(
-                $"Sản phẩm đã ngoài hạn {input.Type} ({policy.AllowedDaysFor(input.Type)} ngày).");
+        // 3. D08 — chính sách hiệu lực leo ngược cây danh mục + ma trận lý do.
+        var resolution = await ReturnPolicyResolver.ResolveAsync(
+            _salesDb, _catalogDb, orderItem.ProductId, ct);
 
-        // 3. Tính amount gốc của line item.
-        var originalAmount = orderItem.UnitPrice * orderItem.Quantity;
+        var assessment = ReturnReasonRules.Assess(
+            input.ReasonCode, input.Type, resolution.Policy,
+            resolution.ProductExcluded, resolution.WarrantyMonths,
+            // D08: mốc tính hạn là NGÀY GIAO, không phải ngày đặt.
+            order.DeliveredAt ?? order.CompletedAt,
+            DateTime.UtcNow);
 
-        // 4. Tạo ReturnRequest theo Type.
+        if (!assessment.Allowed) throw new ConflictException(assessment.Reason!);
+
+        // 4. Tiền hoàn lấy từ snapshot đã đóng băng trên dòng đơn (D01), không từ client.
+        var originalAmount = orderItem.LineTotal;
+
         ReturnRequest rr = input.Type switch
         {
             ReturnType.Refund => ReturnRequest.RequestRefund(
@@ -69,140 +84,85 @@ public class ReturnOrchestrator
                 input.Description, input.AttachmentUrls, input.CustomerNotes),
             ReturnType.Exchange => ReturnRequest.RequestExchange(
                 input.OrderId, input.OrderItemId,
-                input.ExchangeProductId ?? throw new InvalidOperationException("Exchange cần ExchangeProductId."),
+                input.ExchangeProductId ?? throw new RequestValidationException(
+                    "exchangeProductId", "Đổi sang sản phẩm khác thì phải chọn sản phẩm thay thế."),
                 input.ExchangeVariantId,
                 input.Reason, originalAmount,
                 input.Description, input.AttachmentUrls, input.CustomerNotes),
             ReturnType.Replace => ReturnRequest.RequestReplace(
                 input.OrderId, input.OrderItemId, input.Reason, originalAmount,
                 input.Description, input.AttachmentUrls, input.CustomerNotes),
-            _ => throw new ArgumentOutOfRangeException(nameof(input.Type))
+            _ => throw new RequestValidationException("type", "Loại yêu cầu đổi trả không hợp lệ."),
         };
 
         _salesDb.ReturnRequests.Add(rr);
+        _salesDb.Entry(rr).Property("ReasonCode").CurrentValue = (int)input.ReasonCode;
         await _salesDb.SaveChangesAsync(ct);
+
+        // Mở việc hoàn tiền cho Payments (W2-4) ngay khi khách gửi yêu cầu hoàn tiền.
+        if (input.Type == ReturnType.Refund)
+        {
+            await _bus.Publish(new RefundRequestedEvent(
+                rr.Id, order.Id, order.CustomerId, originalAmount,
+                $"{input.ReasonCode}: {input.Reason}", DateTime.UtcNow), ct);
+        }
+
         return rr;
     }
 
-    /// <summary>
-    /// Sau khi kiểm hàng: nhập kho + xử lý tiền/đơn mới, Complete.
-    /// Refund : hoàn tiền qua phương thức gốc → RefundAmount có thể trừ restocking fee.
-    /// Exchange: tạo Order mới cho SP thay thế (giá hiện tại) → tính PriceDifference.
-    /// Replace : xuất máy cùng SKU (chưa implement DeliveryNote real — trả metadata).
-    /// </summary>
-    public async Task<ProcessResult> ProcessAfterInspectionAsync(
-        Guid returnRequestId,
-        string processedBy,
-        CancellationToken ct = default)
+    /// <summary>Lý do trả hàng đã lưu của một yêu cầu (đọc từ cột shadow <c>ReasonCode</c>).</summary>
+    public async Task<ReturnReasonCode> ReasonCodeOfAsync(Guid returnRequestId, CancellationToken ct = default)
     {
-        var rr = await _salesDb.ReturnRequests
-            .FirstOrDefaultAsync(r => r.Id == returnRequestId, ct)
-            ?? throw new InvalidOperationException("Không tìm thấy ReturnRequest.");
+        var raw = await _salesDb.ReturnRequests
+            .Where(r => r.Id == returnRequestId)
+            .Select(r => EF.Property<int?>(r, "ReasonCode"))
+            .FirstOrDefaultAsync(ct);
 
-        if (rr.InspectedAt == null)
-            throw new InvalidOperationException("Chưa kiểm hàng (chống gian lận): gọi RecordInspection trước.");
-
-        // 1. Nhập lại kho (mọi luồng đều nhập lại hàng khách trả về).
-        var restock = await _restockService.RestockAsync(rr.Id, ct);
-
-        decimal finalRefund = 0m;
-        Guid? exchangeOrderId = null;
-        decimal priceDifference = 0m;
-
-        // 2. Xử lý theo luồng.
-        switch (rr.Type)
-        {
-            case ReturnType.Refund:
-                finalRefund = ComputeRefundAmount(rr);
-                rr.Complete(processedBy, finalRefund);
-                break;
-
-            case ReturnType.Exchange:
-                (exchangeOrderId, priceDifference) = await CreateExchangeOrderAsync(rr, ct);
-                rr.AttachExchangeOrder(exchangeOrderId.Value, priceDifference);
-                rr.Complete(processedBy);
-                break;
-
-            case ReturnType.Replace:
-                // Cùng SKU, không phát sinh tiền. DeliveryNote sinh ở tầng endpoint hoặc phase sau.
-                rr.Complete(processedBy);
-                break;
-        }
-
-        await _salesDb.SaveChangesAsync(ct);
-
-        return new ProcessResult(
-            ReturnRequestId: rr.Id,
-            Type: rr.Type,
-            RefundAmount: rr.Type == ReturnType.Refund ? finalRefund : 0m,
-            ExchangeOrderId: exchangeOrderId,
-            PriceDifference: priceDifference,
-            GoodsReceivedNoteId: restock.GoodsReceivedNoteId);
+        return raw.HasValue && Enum.IsDefined(typeof(ReturnReasonCode), raw.Value)
+            ? (ReturnReasonCode)raw.Value
+            : ReturnReasonCode.ChangeOfMind;
     }
 
     /// <summary>
-    /// Chọn policy hiệu lực: khớp CategoryId trước, fallback policy mặc định (CategoryId == null).
+    /// D08 — chính sách hiệu lực cho một SẢN PHẨM (leo ngược cây danh mục đến gốc, 10 tầng).
+    /// Thay hoàn toàn bản cũ chỉ khớp đúng danh mục lá.
     /// </summary>
-    public async Task<ReturnPolicy?> GetEffectivePolicyAsync(Guid? categoryId, CancellationToken ct = default)
+    public Task<ReturnPolicyResolver.Resolution> GetEffectivePolicyAsync(
+        Guid productId, CancellationToken ct = default)
+        => ReturnPolicyResolver.ResolveAsync(_salesDb, _catalogDb, productId, ct);
+
+    /// <summary>
+    /// D08 + D01 — tiền hoàn = payable của dòng đơn gốc trừ phí khấu trừ.
+    /// Phí CHỈ tồn tại với lý do "đổi ý"; mọi lý do thuộc nghĩa vụ người bán khấu trừ 0%.
+    /// (Bản cũ trừ cứng 20% cho mọi ca thiếu phụ kiện — <c>baseAmount * 0.8m</c> — kể cả khi hàng
+    /// giao sai; đó là trừ tiền khách trái D08.)
+    /// </summary>
+    private async Task<decimal> ComputeRefundAmountAsync(ReturnRequest rr, CancellationToken ct)
     {
-        if (categoryId.HasValue)
-        {
-            var byCategory = await _salesDb.ReturnPolicies
-                .FirstOrDefaultAsync(p => p.CategoryId == categoryId && p.IsActive, ct);
-            if (byCategory != null) return byCategory;
-        }
-        return await _salesDb.ReturnPolicies
-            .FirstOrDefaultAsync(p => p.CategoryId == null && p.IsActive, ct);
+        // AsNoTracking là BẮT BUỘC, không phải tối ưu: OrderItem là owned entity của Order, và
+        // EF Core từ chối theo dõi một owned entity bị chiếu ra ngoài owner của nó
+        // ("A tracking query is attempting to project an owned entity without a corresponding
+        // owner"). Thiếu dòng này thì MỌI lần tính tiền hoàn đều ném exception lúc chạy.
+        // Ở đây chỉ đọc để tính số tiền nên không cần tracking.
+        var orderItem = await _salesDb.Orders
+            .AsNoTracking()
+            .Where(o => o.Id == rr.OrderId)
+            .SelectMany(o => o.Items)
+            .FirstOrDefaultAsync(i => i.Id == rr.OrderItemId, ct);
+
+        if (orderItem == null) return 0m;
+
+        var reasonCode = await ReasonCodeOfAsync(rr.Id, ct);
+        var resolution = await ReturnPolicyResolver.ResolveAsync(
+            _salesDb, _catalogDb, orderItem.ProductId, ct);
+
+        var feePercent = resolution.Policy == null
+            ? 0m
+            : ReturnReasonRules.FeePercent(reasonCode, rr.ReceivedCondition, resolution.Policy);
+
+        return RefundCalculator.ForWholeLine(orderItem, feePercent).Amount;
     }
 
-    // Tính tiền hoàn: tính lại từ Order gốc trên server (không tin client).
-    // Trừ restocking fee theo policy nếu điều kiện không nguyên vẹn.
-    private decimal ComputeRefundAmount(ReturnRequest rr)
-    {
-        var baseAmount = rr.RefundAmount;
-        if (rr.ReceivedCondition == ReceivedCondition.UserDamage)
-            return 0m; // Từ chối hoàn — nhân viên có thể override qua manual approve
-        if (rr.ReceivedCondition == ReceivedCondition.MissingAccessories)
-            return baseAmount * 0.8m; // Trừ 20% mặc định (nên đọc từ policy phụ kiện phase sau)
-        return baseAmount;
-    }
-
-    private async Task<(Guid orderId, decimal priceDifference)> CreateExchangeOrderAsync(
-        ReturnRequest rr, CancellationToken ct)
-    {
-        if (!rr.ExchangeProductId.HasValue)
-            throw new InvalidOperationException("Exchange thiếu ExchangeProductId.");
-
-        // Fetch SP thay thế (giá hiện tại).
-        var newProduct = await _catalogDb.Products.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == rr.ExchangeProductId.Value, ct)
-            ?? throw new InvalidOperationException("Sản phẩm đổi không tồn tại.");
-
-        var originalOrder = await _salesDb.Orders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == rr.OrderId, ct)
-            ?? throw new InvalidOperationException("Order gốc không tồn tại.");
-
-        var newItem = new OrderItem(
-            productId: newProduct.Id,
-            productName: newProduct.Name,
-            unitPrice: newProduct.Price,
-            quantity: 1,
-            productSku: newProduct.Sku,
-            originalPrice: newProduct.OldPrice ?? newProduct.Price,
-            variantId: rr.ExchangeVariantId);
-
-        var exchangeOrder = new Order(
-            customerId: originalOrder.CustomerId,
-            shippingAddress: originalOrder.ShippingAddress ?? "",
-            items: new List<OrderItem> { newItem },
-            taxRate: 0.1m,
-            notes: $"Đơn đổi từ ReturnRequest {rr.Id}");
-        _salesDb.Orders.Add(exchangeOrder);
-
-        var priceDifference = exchangeOrder.TotalAmount - rr.RefundAmount;
-        return (exchangeOrder.Id, priceDifference);
-    }
 }
 
 public record CreateReturnRequestInput(
@@ -210,6 +170,7 @@ public record CreateReturnRequestInput(
     Guid OrderItemId,
     ReturnType Type,
     string Reason,
+    ReturnReasonCode ReasonCode = ReturnReasonCode.ChangeOfMind,
     string? Description = null,
     string? CustomerNotes = null,
     string? AttachmentUrls = null,

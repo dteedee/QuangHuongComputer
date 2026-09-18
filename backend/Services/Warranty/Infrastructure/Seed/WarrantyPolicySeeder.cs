@@ -11,9 +11,9 @@ namespace Warranty.Infrastructure.Seed;
 ///   * the PUBLISHED policy (this <c>WarrantyPolicy</c> row) is what the customer is promised;
 ///   * the SLA rows are internal operational targets that only ever raise an admin warning.
 ///
-/// DEFAULT = 12 months, Manufacturer provider, matching the DEFAULT line of D08's matrix. Per-leaf
-/// category policies need <c>Policies.CategoryId</c>, which the current schema does not have
-/// (W1-11 adds it); the wave-2 warranty owner seeds the matrix once it exists.
+/// DEFAULT = 12 months, Manufacturer provider, matching the DEFAULT line of D08's matrix.
+/// Per-leaf category policies (<see cref="CategoryMatrix"/>) use <c>Policies.CategoryId</c>,
+/// added by the W2-6 migration <c>20260918145859_W26WarrantyD08Fields</c>.
 /// </summary>
 public static class WarrantyPolicySeeder
 {
@@ -42,6 +42,32 @@ public static class WarrantyPolicySeeder
         (ClaimType.ExchangeNew,         48, "SLA nội bộ: đổi máy mới trong 48 giờ. Không in cho khách."),
     };
 
+    /// <summary>
+    /// D08 §"Ma trận seed" (slug lá theo W0-6 taxonomy; leo lá -> cha -> DEFAULT). Catalog in this
+    /// deployment is 10 flat leaf categories (no ParentId populated - confirmed by SELECT, 2026-09-18),
+    /// so several matrix rows (CPU/Mainboard/RAM/PSU/VGA/SSD, Case/Tản nhiệt, Phần mềm/key) have no
+    /// matching category and are intentionally left out here — <c>Product.WarrantyMonths</c> (higher
+    /// priority than category policy in <see cref="WarrantyPolicyResolver"/>) is the real source for
+    /// those per the phase Overview ("dataset already carries warrantyMonths - W0-6 imported it").
+    /// `linh-kien-may-tinh` (the catch-all "Linh Kiện Máy Tính" leaf) gets 24 months as a conservative
+    /// fallback for that mixed bucket (CPU/Mainboard/RAM/PSU want 36, VGA/SSD want 24 - 24 never
+    /// UNDER-promises against the legal floor while not over-promising the 36-month rows either;
+    /// products in that bucket should carry their own WarrantyMonths to get the precise number).
+    /// </summary>
+    private static readonly (string Slug, int Months, WarrantyProvider Provider, string Notes)[] CategoryMatrix =
+    {
+        ("laptop", 12, WarrantyProvider.Manufacturer, "Laptop: pin/sạc theo hãng; điểm chết theo hãng, shop nhận đổi khi >= 5 điểm trong 15 ngày."),
+        ("pc-gaming", 24, WarrantyProvider.Store, "PC Gaming lắp sẵn (Store): 1 đổi 1 15 ngày - đổi linh kiện lỗi, không đổi nguyên bộ; không BH phần mềm/dữ liệu."),
+        ("pc-do-hoa", 24, WarrantyProvider.Store, "PC Đồ họa lắp sẵn (Store): 1 đổi 1 15 ngày - đổi linh kiện lỗi, không đổi nguyên bộ; không BH phần mềm/dữ liệu."),
+        ("linh-kien-may-tinh", 24, WarrantyProvider.Manufacturer, "Linh kiện (CPU/Mainboard/RAM/PSU/VGA/SSD gộp chung do catalog chưa có danh mục con) - mức bảo thủ; ưu tiên Product.WarrantyMonths khi có."),
+        ("man-hinh-may-tinh", 24, WarrantyProvider.Manufacturer, "Màn hình: >= 5 điểm chết/sáng (chuẩn GearVN cho hàng mới); áp dụng chính sách hãng nếu tốt hơn."),
+        ("thiet-bi-mang", 24, WarrantyProvider.Manufacturer, "Thiết bị mạng."),
+        ("camera", 24, WarrantyProvider.Manufacturer, "Camera."),
+        ("gaming-gear", 12, WarrantyProvider.Manufacturer, "Phím/Chuột Gaming Gear: hao mòn tự nhiên (switch, feet) không BH; SP < 1 triệu: BH bằng đổi tương đương."),
+        ("loa-mic-webcam-stream", 12, WarrantyProvider.Manufacturer, "Loa/Mic/Webcam/Stream."),
+        ("phu-kien-may-tinh-laptop", 6, WarrantyProvider.Manufacturer, "Phụ kiện: cáp, túi, lót chuột, pin = tiêu hao."),
+    };
+
     public static async Task<int> SeedAsync(WarrantyDbContext db, CancellationToken ct = default)
     {
         var changes = 0;
@@ -60,6 +86,46 @@ public static class WarrantyPolicySeeder
             db.Policies.Add(policy);
             db.Entry(policy).Property("Id").CurrentValue =
                 DeterministicGuid.Create(DeterministicGuid.UrlNamespace, "warranty-policy:" + PolicyName);
+            changes++;
+        }
+
+        // D08 category matrix. Same physical Postgres DB as Catalog (modular monolith) - a raw scalar
+        // SELECT avoids taking a CatalogDbContext dependency into this seeder (its registration in
+        // DatabaseMigrationRunner.cs, which this track does not own, only resolves WarrantyDbContext).
+        foreach (var (slug, months, provider, notes) in CategoryMatrix)
+        {
+            Guid? categoryId;
+            try
+            {
+                categoryId = await db.Database
+                    .SqlQueryRaw<Guid>("SELECT \"Id\" FROM \"Categories\" WHERE \"Slug\" = {0} LIMIT 1", slug)
+                    .SingleOrDefaultAsync(ct);
+                if (categoryId == Guid.Empty) categoryId = null;
+            }
+            catch (Exception)
+            {
+                // Categories table missing/renamed in some environment - degrade to "skip this row"
+                // rather than fail the whole seed pass (DEFAULT + SLA rows above must still land).
+                categoryId = null;
+            }
+            if (categoryId is null) continue;
+
+            var exists = await db.Policies.AnyAsync(
+                p => p.CategoryId == categoryId && p.Provider == provider && p.IsActive, ct);
+            if (exists) continue;
+
+            var catPolicy = new WarrantyPolicy(
+                name: $"D08-{slug}-{provider}",
+                description: $"Chính sách bảo hành theo danh mục '{slug}' (D08 ma trận seed).",
+                durationMonths: months,
+                coverageTerms: CoverageTerms,
+                scope: notes,
+                exclusions: Exclusions,
+                provider: provider,
+                categoryId: categoryId);
+            db.Policies.Add(catPolicy);
+            db.Entry(catPolicy).Property("Id").CurrentValue =
+                DeterministicGuid.Create(DeterministicGuid.UrlNamespace, $"warranty-policy:{slug}:{provider}");
             changes++;
         }
 

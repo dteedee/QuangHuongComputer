@@ -18,5 +18,10 @@ public interface IConversationRepository
     /// and issues an UPDATE for a row that does not exist yet (DbUpdateConcurrencyException).
     /// </summary>
     Task AddMessageAsync(Conversation conversation, ChatMessage message, CancellationToken ct = default);
+
+    /// <summary>W2-15: looks up a single message (for read-receipt marking) without loading the
+    /// whole conversation's message list.</summary>
+    Task<ChatMessage?> GetMessageByIdAsync(Guid messageId, CancellationToken ct = default);
+
     Task SaveChangesAsync(CancellationToken ct = default);
 }

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
+using HR.Application.Leave;
+using HR.Endpoints;
 using System.Security.Claims;
 
 namespace HR;
@@ -17,6 +19,12 @@ public static class HRLeaveEndpoints
 {
     public static void MapHRLeaveEndpoints(this IEndpointRouteBuilder app)
     {
+        // W2-7 khoản 6: Shifts + ShiftAssignments tách sang Endpoints/ShiftEndpoints.cs (file này
+        // đã 480 dòng). Gọi từ đây, không đổi Program.cs (frozen).
+        app.MapShiftEndpoints();
+        // W2-7 khoản 7/8: route self-service "/hr/leave" (số ít) khớp hợp đồng FE — xem cuối file.
+        app.MapLeaveSelfServiceEndpoints();
+
         var group = app.MapGroup("/api/hr").RequireModulePermissions(PermissionModules.HR);
 
         // ============================
@@ -26,10 +34,12 @@ public static class HRLeaveEndpoints
         var leaveGroup = group.MapGroup("/leaves").RequireModulePermissions(PermissionModules.HR);
 
         // GET /api/hr/leaves
+        // W2-7: page/pageSize không có default -> ASP.NET Core minimal API coi là bắt buộc,
+        // gọi "/leaves" (không kèm ?page=&pageSize=) trả 400 thay vì trang đầu mặc định. Bug
+        // giống hệt phát hiện được ở EmployeeEndpoints/AttendanceEndpoints khi chạy probe thật.
         leaveGroup.MapGet("", async (
             Guid? employeeId, string? status, string? type,
-            int page, int pageSize,
-            HRDbContext db) =>
+            HRDbContext db, int page = 0, int pageSize = 0) =>
         {
             page = page <= 0 ? 1 : page;
             pageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 100);
@@ -105,94 +115,45 @@ public static class HRLeaveEndpoints
             });
         });
 
-        // POST /api/hr/leaves
-        leaveGroup.MapPost("", async (CreateLeaveRequestDto dto, HRDbContext db) =>
+        // POST /api/hr/leaves — W2-7 khoản 6: đi qua LeaveApprovalService (MỘT đường nộp/duyệt
+        // duy nhất) để hạn mức phép được kiểm tra thật, thay vì tạo LeaveRequest trực tiếp không
+        // kiểm tra gì (dto.Days trước đây do client tự khai, không xác minh với số ngày công thật).
+        leaveGroup.MapPost("", async (CreateLeaveRequestDto dto, HRDbContext db, LeaveApprovalService svc) =>
         {
             var employee = await db.Employees.FindAsync(dto.EmployeeId);
             if (employee == null) return Results.NotFound(new { error = "Nhân viên không tồn tại" });
 
-            // Check for overlapping leave
-            var overlap = await db.LeaveRequests.AnyAsync(l =>
-                l.EmployeeId == dto.EmployeeId &&
-                l.Status != RequestStatus.Cancelled &&
-                l.Status != RequestStatus.Rejected &&
-                l.StartDate <= dto.EndDate &&
-                l.EndDate >= dto.StartDate);
+            var (leave, error) = await svc.SubmitAsync(
+                employee, Enum.Parse<LeaveType>(dto.Type), dto.StartDate, dto.EndDate, dto.Reason,
+                dto.IsPaidLeave, dto.HandoverTo, dto.HandoverNotes, dto.ContactDuringLeave);
+            if (error != null) return Results.BadRequest(new { error });
 
-            if (overlap) return Results.BadRequest(new { error = "Nhân viên đã có đơn nghỉ phép trùng ngày" });
-
-            var leave = new LeaveRequest(
-                dto.EmployeeId,
-                Enum.Parse<LeaveType>(dto.Type),
-                dto.StartDate,
-                dto.EndDate,
-                dto.Days,
-                dto.Reason,
-                dto.IsPaidLeave,
-                dto.HandoverNotes,
-                dto.HandoverTo,
-                dto.ContactDuringLeave
-            );
-
-            db.LeaveRequests.Add(leave);
-
-            // Auto-create approval request
-            if (Guid.TryParse(dto.EmployeeId.ToString(), out _))
-            {
-                var approval = new ApprovalRequest
-                {
-                    Id = Guid.NewGuid(),
-                    Type = ApprovalType.LeaveRequest,
-                    ReferenceId = leave.Id,
-                    RequesterId = dto.EmployeeId,
-                    RequesterName = employee.FullName,
-                    SubmittedAt = DateTime.UtcNow,
-                    Status = ApprovalStatus.Pending
-                };
-                db.ApprovalRequests.Add(approval);
-            }
-
-            await db.SaveChangesAsync();
-
-            return Results.Created($"/api/hr/leaves/{leave.Id}", new { leave.Id, Status = leave.Status.ToString() });
+            return Results.Created($"/api/hr/leaves/{leave!.Id}", new { leave.Id, leave.Days, Status = leave.Status.ToString() });
         });
 
-        // PUT /api/hr/leaves/{id}/approve
-        leaveGroup.MapPut("{id:guid}/approve", async (Guid id, ClaimsPrincipal user, HRDbContext db) =>
+        // PUT /api/hr/leaves/{id}/approve — cùng đường duyệt với POST /api/hr/leave/{id}/approve
+        // và POST /api/hr/approvals/{id}/approve (LeaveApprovalService.ApproveAsync).
+        leaveGroup.MapPut("{id:guid}/approve", async (Guid id, ClaimsPrincipal user, LeaveApprovalService svc) =>
         {
-            var leave = await db.LeaveRequests.FindAsync(id);
-            if (leave == null) return Results.NotFound();
-
-            try
-            {
-                var approvedBy = user.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-                leave.Approve(approvedBy);
-                await db.SaveChangesAsync();
-                return Results.Ok(new { message = "Đã duyệt đơn nghỉ phép", status = leave.Status.ToString() });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
+            var approvedBy = user.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var approverIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(approverIdStr, out var approverId);
+            var error = await svc.ApproveAsync(id, approvedBy, approverId == Guid.Empty ? null : approverId);
+            if (error != null)
+                return error.StartsWith("Không tìm thấy") ? Results.NotFound(new { error }) : Results.BadRequest(new { error });
+            return Results.Ok(new { message = "Đã duyệt đơn nghỉ phép" });
         });
 
         // PUT /api/hr/leaves/{id}/reject
-        leaveGroup.MapPut("{id:guid}/reject", async (Guid id, RejectLeaveDto dto, ClaimsPrincipal user, HRDbContext db) =>
+        leaveGroup.MapPut("{id:guid}/reject", async (Guid id, RejectLeaveDto dto, ClaimsPrincipal user, LeaveApprovalService svc) =>
         {
-            var leave = await db.LeaveRequests.FindAsync(id);
-            if (leave == null) return Results.NotFound();
-
-            try
-            {
-                var rejectedBy = user.FindFirst(ClaimTypes.Name)?.Value ?? "System";
-                leave.Reject(dto.Reason, rejectedBy);
-                await db.SaveChangesAsync();
-                return Results.Ok(new { message = "Đã từ chối đơn nghỉ phép", status = leave.Status.ToString() });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
+            var rejectedBy = user.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+            var approverIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid.TryParse(approverIdStr, out var approverId);
+            var error = await svc.RejectAsync(id, dto.Reason, rejectedBy, approverId == Guid.Empty ? null : approverId);
+            if (error != null)
+                return error.StartsWith("Không tìm thấy") ? Results.NotFound(new { error }) : Results.BadRequest(new { error });
+            return Results.Ok(new { message = "Đã từ chối đơn nghỉ phép" });
         });
 
         // PUT /api/hr/leaves/{id}/cancel
@@ -241,196 +202,7 @@ public static class HRLeaveEndpoints
             return Results.Ok(summary);
         });
 
-        // ============================
-        // SHIFTS
-        // ============================
-        // W1-10: ca làm việc -> GET HR.ViewAttendance, ghi HR.ManageAttendance.
-        var shiftGroup = group.MapGroup("/shifts").RequireModulePermissions(PermissionModules.Attendance);
-
-        // GET /api/hr/shifts
-        shiftGroup.MapGet("", async (HRDbContext db) =>
-        {
-            var shifts = await db.Shifts
-                .OrderBy(s => s.DisplayOrder)
-                .ThenBy(s => s.StartTime)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.Name,
-                    s.StartTime,
-                    s.EndTime,
-                    s.BreakDurationMinutes,
-                    s.Description,
-                    s.ColorCode,
-                    s.DisplayOrder,
-                    s.IsActive,
-                    Hours = s.CalculateHours()
-                })
-                .ToListAsync();
-            return Results.Ok(shifts);
-        });
-
-        // POST /api/hr/shifts
-        shiftGroup.MapPost("", async (CreateShiftDto dto, HRDbContext db) =>
-        {
-            var shift = new Shift(dto.Name, dto.StartTime, dto.EndTime,
-                dto.BreakDurationMinutes, dto.Description, dto.ColorCode, dto.DisplayOrder);
-            db.Shifts.Add(shift);
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/hr/shifts/{shift.Id}", new { shift.Id, shift.Name });
-        });
-
-        // PUT /api/hr/shifts/{id}
-        shiftGroup.MapPut("{id:guid}", async (Guid id, UpdateShiftDto dto, HRDbContext db) =>
-        {
-            var shift = await db.Shifts.FindAsync(id);
-            if (shift == null) return Results.NotFound();
-            shift.Update(dto.Name, dto.StartTime, dto.EndTime, dto.BreakDurationMinutes);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { message = "Cập nhật ca thành công" });
-        });
-
-        // PUT /api/hr/shifts/{id}/toggle
-        shiftGroup.MapPut("{id:guid}/toggle", async (Guid id, HRDbContext db) =>
-        {
-            var shift = await db.Shifts.FindAsync(id);
-            if (shift == null) return Results.NotFound();
-            shift.SetActive(!shift.IsActive);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { message = "Đã cập nhật trạng thái", isActive = shift.IsActive });
-        });
-
-        // ============================
-        // SHIFT ASSIGNMENTS
-        // ============================
-        // W1-10: phân ca + check-in/out -> quyền chấm công.
-        var assignmentGroup = group.MapGroup("/shift-assignments").RequireModulePermissions(PermissionModules.Attendance);
-
-        // GET /api/hr/shift-assignments
-        assignmentGroup.MapGet("", async (
-            Guid? employeeId, Guid? shiftId, string? status,
-            DateOnly? fromDate, DateOnly? toDate,
-            HRDbContext db) =>
-        {
-            var query = db.ShiftAssignments.AsQueryable();
-            if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
-            if (shiftId.HasValue) query = query.Where(a => a.ShiftId == shiftId.Value);
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<AssignmentStatus>(status, out var st))
-                query = query.Where(a => a.Status == st);
-            if (fromDate.HasValue) query = query.Where(a => a.Date >= fromDate.Value);
-            if (toDate.HasValue) query = query.Where(a => a.Date <= toDate.Value);
-
-            var items = await query
-                .OrderByDescending(a => a.Date)
-                .ThenBy(a => a.EmployeeId)
-                .Take(200)
-                .Select(a => new
-                {
-                    a.Id,
-                    a.EmployeeId,
-                    EmployeeName = db.Employees.Where(e => e.Id == a.EmployeeId).Select(e => e.FullName).FirstOrDefault(),
-                    a.ShiftId,
-                    ShiftName = db.Shifts.Where(s => s.Id == a.ShiftId).Select(s => s.Name).FirstOrDefault(),
-                    a.Date,
-                    Status = a.Status.ToString(),
-                    a.ActualStartTime,
-                    a.ActualEndTime,
-                    a.ActualHoursWorked,
-                    a.CheckInAt,
-                    a.CheckOutAt,
-                    a.Notes
-                })
-                .ToListAsync();
-
-            return Results.Ok(items);
-        });
-
-        // POST /api/hr/shift-assignments
-        assignmentGroup.MapPost("", async (CreateShiftAssignmentDto dto, HRDbContext db) =>
-        {
-            // Check for existing assignment on same date
-            var exists = await db.ShiftAssignments.AnyAsync(a =>
-                a.EmployeeId == dto.EmployeeId && a.Date == dto.Date && a.Status != AssignmentStatus.Cancelled);
-            if (exists) return Results.BadRequest(new { error = "Nhân viên đã có ca làm việc vào ngày này" });
-
-            var assignment = new ShiftAssignment(dto.EmployeeId, dto.ShiftId, dto.Date);
-            db.ShiftAssignments.Add(assignment);
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/hr/shift-assignments/{assignment.Id}", new { assignment.Id });
-        });
-
-        // POST /api/hr/shift-assignments/batch — Assign shifts to multiple employees
-        assignmentGroup.MapPost("batch", async (BatchAssignmentDto dto, HRDbContext db) =>
-        {
-            var created = 0;
-            foreach (var empId in dto.EmployeeIds)
-            {
-                foreach (var date in dto.Dates)
-                {
-                    var exists = await db.ShiftAssignments.AnyAsync(a =>
-                        a.EmployeeId == empId && a.Date == date && a.Status != AssignmentStatus.Cancelled);
-                    if (exists) continue;
-
-                    db.ShiftAssignments.Add(new ShiftAssignment(empId, dto.ShiftId, date));
-                    created++;
-                }
-            }
-            await db.SaveChangesAsync();
-            return Results.Ok(new { message = $"Đã phân {created} ca làm việc", created });
-        });
-
-        // PUT /api/hr/shift-assignments/{id}/check-in
-        assignmentGroup.MapPut("{id:guid}/check-in", async (Guid id, HttpContext httpContext, HRDbContext db) =>
-        {
-            var assignment = await db.ShiftAssignments.FindAsync(id);
-            if (assignment == null) return Results.NotFound();
-            try
-            {
-                var ip = httpContext.Connection.RemoteIpAddress?.ToString();
-                assignment.CheckIn(TimeSpan.FromTicks(DateTime.UtcNow.TimeOfDay.Ticks), ip);
-                await db.SaveChangesAsync();
-                return Results.Ok(new { message = "Check-in thành công", checkInAt = assignment.CheckInAt });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // PUT /api/hr/shift-assignments/{id}/check-out
-        assignmentGroup.MapPut("{id:guid}/check-out", async (Guid id, HttpContext httpContext, HRDbContext db) =>
-        {
-            var assignment = await db.ShiftAssignments.FindAsync(id);
-            if (assignment == null) return Results.NotFound();
-            try
-            {
-                var ip = httpContext.Connection.RemoteIpAddress?.ToString();
-                assignment.CheckOut(TimeSpan.FromTicks(DateTime.UtcNow.TimeOfDay.Ticks), ip);
-                await db.SaveChangesAsync();
-                return Results.Ok(new { message = "Check-out thành công", hoursWorked = assignment.ActualHoursWorked });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // PUT /api/hr/shift-assignments/{id}/cancel
-        assignmentGroup.MapPut("{id:guid}/cancel", async (Guid id, HRDbContext db) =>
-        {
-            var assignment = await db.ShiftAssignments.FindAsync(id);
-            if (assignment == null) return Results.NotFound();
-            try
-            {
-                assignment.Cancel();
-                await db.SaveChangesAsync();
-                return Results.Ok(new { message = "Đã hủy ca" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
+        // Shifts + ShiftAssignments: xem Endpoints/ShiftEndpoints.cs (gọi ở đầu MapHRLeaveEndpoints).
     }
 }
 
@@ -449,32 +221,3 @@ public record CreateLeaveRequestDto(
 );
 
 public record RejectLeaveDto(string Reason);
-
-public record CreateShiftDto(
-    string Name,
-    TimeSpan StartTime,
-    TimeSpan EndTime,
-    decimal? BreakDurationMinutes = null,
-    string? Description = null,
-    string? ColorCode = null,
-    int DisplayOrder = 0
-);
-
-public record UpdateShiftDto(
-    string Name,
-    TimeSpan StartTime,
-    TimeSpan EndTime,
-    decimal? BreakDurationMinutes = null
-);
-
-public record CreateShiftAssignmentDto(
-    Guid EmployeeId,
-    Guid ShiftId,
-    DateOnly Date
-);
-
-public record BatchAssignmentDto(
-    List<Guid> EmployeeIds,
-    Guid ShiftId,
-    List<DateOnly> Dates
-);

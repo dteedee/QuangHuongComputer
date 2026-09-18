@@ -3,56 +3,86 @@ using Sales.Application.Pricing;
 
 namespace Sales.Domain;
 
-public class Order : Entity<Guid>
+/// <summary>
+/// Đơn hàng — gốc tổng hợp (aggregate root). File này giữ ĐỊNH DANH + TIỀN.
+/// Chuyển trạng thái nằm ở <c>OrderTransitions.cs</c> (partial), sở hữu bởi W2-23.
+///
+/// D01: giá bán ĐÃ GỒM VAT. <c>Total = Σ thành tiền dòng − giảm giá + phí ship ròng</c>; thuế được
+/// TÁCH RA theo từng dòng, không bao giờ cộng thêm. <see cref="TaxRate"/> chỉ còn là NHÃN hiển thị
+/// (thuế suất nhóm chuẩn tại ngày đặt) và là fallback cho dòng chưa có hồ sơ thuế riêng.
+/// </summary>
+public partial class Order : Entity<Guid>
 {
     public string OrderNumber { get; private set; } = string.Empty;
     public Guid CustomerId { get; private set; }
     public OrderStatus Status { get; private set; }
     public PaymentStatus PaymentStatus { get; private set; }
     public FulfillmentStatus FulfillmentStatus { get; private set; }
-    
+
     public List<OrderItem> Items { get; private set; } = new();
-    
-    // Price Snapshot (BUSINESS REQUIREMENT: Frozen at order time)
+
+    // ===== Snapshot tiền — đóng băng tại thời điểm chốt đơn =====
     public decimal SubtotalAmount { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal TaxAmount { get; private set; }
     public decimal ShippingAmount { get; private set; }
     public decimal TotalAmount { get; private set; }
-    public decimal TaxRate { get; private set; } // Snapshot of tax rate at order time
-    
-    // Coupon Snapshot (BUSINESS REQUIREMENT: Audit trail)
-    public string? CouponCode { get; private set; }
-    public string? CouponSnapshot { get; private set; } // JSON snapshot of coupon details
 
-    // Phase 04: Snapshot toàn bộ khuyến mãi đã áp lúc chốt đơn (đối chiếu tranh chấp).
-    // Format JSON array: [{code, name, discountType, discountAmount, appliesTo}, ...]
+    /// <summary>D01 §4 — chỉ là nhãn hiển thị; KHÔNG còn là nguồn tính thuế của dòng hàng.</summary>
+    public decimal TaxRate { get; private set; }
+
+    /// <summary>D01 §3.3 — thuế suất hiệu lực của phí vận chuyển (dòng thuế riêng).</summary>
+    public decimal ShippingVatRate { get; private set; }
+
+    /// <summary>D01 §3.3 — tiền thuế tách ra từ phí vận chuyển.</summary>
+    public decimal ShippingVatAmount { get; private set; }
+
+    /// <summary>D01 §2 — ngày giao dịch theo giờ VN; hoá đơn resolve lại thuế suất theo ngày lập.</summary>
+    public DateOnly BusinessDate { get; private set; }
+
+    // ===== Khuyến mãi =====
+    public string? CouponCode { get; private set; }
+    public string? CouponSnapshot { get; private set; }
     public string? AppliedPromotionsJson { get; private set; }
-    // Số tiền giảm phí ship (do FreeShip promotion). Không cộng vào DiscountAmount tránh
-    // nhầm gốc VAT — VAT tính trên (subtotal - discount hàng), ship giảm tính riêng.
     public decimal ShippingDiscount { get; private set; }
-    
+
+    // ===== Giao hàng / liên hệ =====
     public string ShippingAddress { get; private set; } = string.Empty;
     public string? Notes { get; private set; }
-    public string PaymentMethod { get; private set; } = "COD"; // Default to COD
-
-    // Snapshot thông tin khách hàng tại thời điểm đặt hàng — admin order list/detail cần hiển thị TÊN,
-    // không phải chỉ CustomerId (Guid). Guest checkout: lấy từ form. Authenticated: lấy từ claims JWT.
+    public string PaymentMethod { get; private set; } = "COD";
     public string? CustomerName { get; private set; }
     public string? CustomerEmail { get; private set; }
     public string? CustomerPhone { get; private set; }
-    
-    // Pickup fields
     public bool IsPickup { get; private set; }
     public string? PickupStoreId { get; private set; }
     public string? PickupStoreName { get; private set; }
-    
-    // Phase 1: Enhanced fields
+
+    // ===== D07: khối người mua cho hoá đơn điện tử (owned, cùng bảng Orders) =====
+    public BuyerInvoiceInfo BuyerInvoice { get; private set; } = new();
+
+    // ===== Kênh bán (W2-10 POS đọc/ghi) =====
+    /// <summary>Web | Guest | Pos | Quotation — kênh tạo đơn, quyết định luồng hậu kiểm.</summary>
+    public string Channel { get; private set; } = OrderChannels.Web;
+    public Guid? StoreId { get; private set; }
+    public Guid? ShiftId { get; private set; }
+    public Guid? CashierId { get; private set; }
+
+    /// <summary>Định danh khách vãng lai (cookie) — dùng để gộp đơn khách vãng lai vào tài khoản khi đăng ký.</summary>
+    public string? AnonymousId { get; private set; }
+
+    // ===== D10: báo giá + công nợ =====
+    public Guid? QuotationId { get; private set; }
+    public DateTime? PaymentDueDate { get; private set; }
+
+    /// <summary>D08 — phiên bản điều khoản bán hàng khách đã chấp nhận khi đặt.</summary>
+    public string? TermsVersion { get; private set; }
+
+    // ===== Thông tin kỹ thuật / vận hành =====
     public string? CustomerIp { get; private set; }
     public string? CustomerUserAgent { get; private set; }
-    public string? InternalNotes { get; private set; } // Ghi chú nội bộ
-    public Guid? SourceId { get; private set; } // Website, POS, Mobile
-    public Guid? AffiliateId { get; private set; } // Nếu có affiliate
+    public string? InternalNotes { get; private set; }
+    public Guid? SourceId { get; private set; }
+    public Guid? AffiliateId { get; private set; }
     public string? DiscountReason { get; private set; }
     public string? DeliveryTrackingNumber { get; private set; }
     public string? DeliveryCarrier { get; private set; }
@@ -61,8 +91,8 @@ public class Order : Entity<Guid>
     public string? ShippingProvider { get; private set; }
     public int RetryCount { get; private set; }
     public string? FailureReason { get; private set; }
-    
-    // Timestamps
+
+    // ===== Mốc thời gian =====
     public DateTime OrderDate { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
     public DateTime? ShippedAt { get; private set; }
@@ -73,15 +103,12 @@ public class Order : Entity<Guid>
     public DateTime? CancelledAt { get; private set; }
     public string? CancellationReason { get; private set; }
 
-    /// <summary>
-    /// JSON extensibility: freeform key/value attributes (jsonb). Declared keys validated against
-    /// CustomFieldDefinition (EntityType="Order") at the endpoint layer; unknown keys always allowed.
-    /// </summary>
+    /// <summary>Thuộc tính mở rộng tự do (jsonb); khoá đã khai báo được validate ở tầng endpoint.</summary>
     public string? Attributes { get; private set; }
 
     public Order(
-        Guid customerId, 
-        string shippingAddress, 
+        Guid customerId,
+        string shippingAddress,
         List<OrderItem> items,
         decimal taxRate = 0.1m,
         string? notes = null,
@@ -94,7 +121,9 @@ public class Order : Entity<Guid>
         string? pickupStoreName = null,
         string? customerName = null,
         string? customerEmail = null,
-        string? customerPhone = null)
+        string? customerPhone = null,
+        DateOnly? businessDate = null,
+        string channel = OrderChannels.Web)
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Order must have at least one item");
@@ -119,82 +148,18 @@ public class Order : Entity<Guid>
         CustomerEmail = customerEmail;
         CustomerPhone = customerPhone;
         OrderDate = DateTime.UtcNow;
-        TaxRate = taxRate; // Snapshot tax rate
+        TaxRate = taxRate;
+        ShippingVatRate = taxRate;
+        Channel = string.IsNullOrWhiteSpace(channel) ? OrderChannels.Web : channel;
+        // Mặc định = ngày VN của thời điểm đặt. Caller có IBusinessClock nên truyền TodayVn vào.
+        BusinessDate = businessDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+        BuyerInvoice = BuyerInvoiceInfo.None(customerName, customerEmail, customerPhone);
         RetryCount = 0;
-        
+
         CalculateAmounts();
     }
 
     protected Order() { }
-
-    /// <summary>
-    /// W0-4 / D01 — GIÁ ĐÃ BAO GỒM VAT. Thuế được TÁCH RA, không cộng thêm.
-    ///   Total = Σ(UnitPrice×Qty) − Discount + ShippingNet     (KHÔNG có "+ Tax")
-    ///   Tax   = Σ ExtractVat(gross_i − alloc_i) + ExtractVat(ShippingNet)   — tách THEO DÒNG
-    /// TRƯỚC: Total = net + net×TaxRate + ship → thu dư 8% trên giá mà storefront ghi
-    /// "đã bao gồm VAT". TaxAmount vẫn được ghi để xuất hoá đơn.
-    /// Giảm giá được phân bổ theo dòng (largest remainder) và ghi vào OrderItem.DiscountAmount
-    /// để hoá đơn hiển thị giảm trừ từng dòng.
-    /// KHÔNG backfill đơn cũ — chỉ đơn tạo mới đi qua đây.
-    /// </summary>
-    private void CalculateAmounts()
-    {
-        var grossPerLine = Items.Select(i => i.UnitPrice * i.Quantity).ToList();
-        var shippingNet = ShippingAmount - ShippingDiscount;
-        if (shippingNet < 0) shippingNet = 0;
-
-        var totals = DiscountAllocator.ComputeTotals(grossPerLine, DiscountAmount, shippingNet, TaxRate);
-
-        SubtotalAmount = totals.Subtotal;
-        // Clamp ngược về entity: giảm giá không bao giờ vượt tiền hàng (bảo toàn chốt chặn cũ).
-        DiscountAmount = totals.EffectiveDiscount;
-        TaxAmount = totals.TaxAmount;
-        TotalAmount = totals.Total;
-
-        for (var i = 0; i < Items.Count && i < totals.Allocations.Length; i++)
-        {
-            Items[i].ApplyDiscount(totals.Allocations[i]);
-        }
-
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void ApplyCoupon(string couponCode, decimal discountAmount, string couponSnapshot, string? discountReason = null)
-    {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Cannot apply coupon to non-draft and non-pending order");
-
-        CouponCode = couponCode;
-        DiscountAmount = discountAmount;
-        CouponSnapshot = couponSnapshot; // Store coupon details for audit
-        DiscountReason = discountReason;
-        CalculateAmounts();
-    }
-
-    // Phase 04: Áp kết quả từ PricingEngine (không dùng chung với ApplyCoupon để tránh double-count).
-    // - discountAmount: tổng giảm hàng (line discount + order discount).
-    // - shippingDiscount: giảm phí ship (freeship promotion).
-    // - appliedPromotionsJson: snapshot JSON các promotion đã áp (audit).
-    public void ApplyPricingResult(
-        decimal discountAmount,
-        decimal shippingDiscount,
-        string appliedPromotionsJson,
-        string? couponCode = null)
-    {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Cannot apply pricing to non-draft and non-pending order");
-        if (discountAmount < 0) throw new ArgumentException("discountAmount không được âm", nameof(discountAmount));
-        if (shippingDiscount < 0) throw new ArgumentException("shippingDiscount không được âm", nameof(shippingDiscount));
-
-        DiscountAmount = discountAmount;
-        ShippingDiscount = shippingDiscount;
-        AppliedPromotionsJson = appliedPromotionsJson;
-        if (!string.IsNullOrEmpty(couponCode))
-        {
-            CouponCode = couponCode;
-        }
-        CalculateAmounts();
-    }
 
     public void SetCustomerInfo(string? name, string? email, string? phone)
     {
@@ -204,13 +169,51 @@ public class Order : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SetShippingAmount(decimal amount)
+    /// <summary>D07 — gắn khối người mua đã validate cho hoá đơn điện tử.</summary>
+    public void SetBuyerInvoiceInfo(BuyerInvoiceInfo buyer)
     {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Cannot change shipping on non-draft and non-pending order");
+        BuyerInvoice = buyer ?? BuyerInvoiceInfo.None(CustomerName, CustomerEmail, CustomerPhone);
+        UpdatedAt = DateTime.UtcNow;
+    }
 
-        ShippingAmount = amount;
-        CalculateAmounts();
+    /// <summary>Gắn ngữ cảnh quầy/ca cho đơn POS (W2-10).</summary>
+    public void SetPosContext(Guid storeId, Guid? shiftId, Guid? cashierId)
+    {
+        Channel = OrderChannels.Pos;
+        StoreId = storeId;
+        ShiftId = shiftId;
+        CashierId = cashierId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>D10 — liên kết đơn với báo giá đã chuyển đổi và hạn thanh toán công nợ.</summary>
+    public void SetQuotationLink(Guid quotationId, DateTime? paymentDueDate)
+    {
+        QuotationId = quotationId;
+        PaymentDueDate = paymentDueDate;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Định danh khách vãng lai để gộp đơn vào tài khoản sau khi đăng ký.</summary>
+    public void SetGuestIdentity(string? anonymousId)
+    {
+        AnonymousId = string.IsNullOrWhiteSpace(anonymousId) ? null : anonymousId.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Gắn đơn khách vãng lai vào một tài khoản thật (đăng ký sau khi mua).</summary>
+    public void LinkToAccount(Guid customerId)
+    {
+        if (customerId == Guid.Empty) return;
+        CustomerId = customerId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>D08 — phiên bản điều khoản bán hàng khách đã chấp nhận.</summary>
+    public void SetTermsVersion(string? version)
+    {
+        TermsVersion = string.IsNullOrWhiteSpace(version) ? null : version.Trim();
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void AddItem(Guid productId, string productName, decimal unitPrice, int quantity)
@@ -225,21 +228,16 @@ public class Order : Entity<Guid>
         string? variantName,
         string? variantSku)
     {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Cannot add items to non-draft and non-pending order");
-
-        var item = new OrderItem(productId, productName, unitPrice, quantity,
+        RequireMutable("thêm dòng hàng");
+        Items.Add(new OrderItem(productId, productName, unitPrice, quantity,
             productSku: null, originalPrice: null,
-            variantId: variantId, variantName: variantName, variantSku: variantSku);
-        Items.Add(item);
+            variantId: variantId, variantName: variantName, variantSku: variantSku));
         CalculateAmounts();
     }
 
     public void RemoveItem(Guid itemId)
     {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException("Cannot remove items from non-draft and non-pending order");
-
+        RequireMutable("bỏ dòng hàng");
         var item = Items.FirstOrDefault(i => i.Id == itemId);
         if (item != null)
         {
@@ -248,214 +246,25 @@ public class Order : Entity<Guid>
         }
     }
 
-    // BUSINESS REQUIREMENT: Proper state transitions
-    public void Confirm()
-    {
-        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
-            throw new InvalidOperationException($"Cannot confirm order in status {Status}");
-
-        Status = OrderStatus.Confirmed;
-        ConfirmedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-        
-        // Raise domain event for stock reservation
-        RaiseDomainEvent(new OrderConfirmedDomainEvent(Id, Items.Select(i => new OrderItemDto(i.ProductId, i.Quantity)).ToList()));
-    }
-
-    public void MarkAsPaid(string paymentReference)
-    {
-        if (Status == OrderStatus.Cancelled)
-            throw new InvalidOperationException("Cannot mark cancelled order as paid");
-
-        PaymentStatus = PaymentStatus.Paid;
-        
-        // If confirmed, move to Paid status
-        if (Status == OrderStatus.Confirmed)
-        {
-            Status = OrderStatus.Paid;
-            PaidAt = DateTime.UtcNow;
-        }
-        
-        UpdatedAt = DateTime.UtcNow;
-        
-        // Check if we can complete the order
-        TryComplete();
-    }
-
-    public void MarkAsFulfilled()
-    {
-        if (Status == OrderStatus.Cancelled)
-            throw new InvalidOperationException("Cannot fulfill cancelled order");
-
-        FulfillmentStatus = FulfillmentStatus.Fulfilled;
-        
-        if (Status == OrderStatus.Paid)
-        {
-            Status = OrderStatus.Fulfilled;
-            FulfilledAt = DateTime.UtcNow;
-        }
-        
-        UpdatedAt = DateTime.UtcNow;
-        
-        // Check if we can complete the order
-        TryComplete();
-    }
-    
-    public void SetShippingTracking(decimal shippingFee, string trackingNumber, string shippingProvider)
-    {
-        ShippingFee = shippingFee;
-        TrackingNumber = trackingNumber;
-        ShippingProvider = shippingProvider;
-        DeliveryTrackingNumber = trackingNumber;
-        DeliveryCarrier = shippingProvider;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void MarkAsShipped(string trackingNumber, string carrier)
-    {
-        if (Status == OrderStatus.Cancelled)
-            throw new InvalidOperationException("Cannot ship cancelled order");
-
-        Status = OrderStatus.Shipped;
-        ShippedAt = DateTime.UtcNow;
-        DeliveryTrackingNumber = trackingNumber;
-        DeliveryCarrier = carrier;
-        UpdatedAt = DateTime.UtcNow;
-    }
-    
-    public void MarkAsDelivered()
-    {
-        if (Status != OrderStatus.Shipped)
-            throw new InvalidOperationException("Can only mark shipped orders as delivered");
-
-        Status = OrderStatus.Delivered;
-        DeliveredAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-        
-        TryComplete();
-    }
-
-    // BUSINESS REQUIREMENT: Order only Completed when Paid + Fulfilled
-    private void TryComplete()
-    {
-        if (PaymentStatus == PaymentStatus.Paid && FulfillmentStatus == FulfillmentStatus.Fulfilled)
-        {
-            Status = OrderStatus.Completed;
-            CompletedAt = DateTime.UtcNow;
-            UpdatedAt = DateTime.UtcNow;
-            
-            RaiseDomainEvent(new OrderCompletedDomainEvent(Id));
-        }
-    }
-
-    public void Cancel(string reason)
-    {
-        if (Status == OrderStatus.Completed)
-            throw new InvalidOperationException("Cannot cancel completed order");
-
-        Status = OrderStatus.Cancelled;
-        CancelledAt = DateTime.UtcNow;
-        CancellationReason = reason;
-        UpdatedAt = DateTime.UtcNow;
-        
-        // Raise domain event to release stock reservation
-        RaiseDomainEvent(new OrderCancelledDomainEvent(Id, reason));
-    }
-    
-    /// <summary>Set/replace the JSON extensibility attributes blob. Caller is responsible for validation.</summary>
+    /// <summary>Đặt/thay khối thuộc tính mở rộng JSON. Caller chịu trách nhiệm validate.</summary>
     public void SetAttributes(string? attributesJson)
     {
         Attributes = attributesJson;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddInternalNote(string note)
+    private void RequireMutable(string action)
     {
-        InternalNotes = string.IsNullOrWhiteSpace(InternalNotes) 
-            ? note 
-            : $"{InternalNotes}\n{DateTime.UtcNow:yyyy-MM-dd HH:mm}: {note}";
-        UpdatedAt = DateTime.UtcNow;
-    }
-    
-    public void IncrementRetryCount(string? failureReason = null)
-    {
-        RetryCount++;
-        FailureReason = failureReason;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    // Legacy method for backward compatibility
-    public void SetStatus(OrderStatus status)
-    {
-        Status = status;
-        if (status == OrderStatus.Confirmed) ConfirmedAt = DateTime.UtcNow;
-        if (status == OrderStatus.Paid) PaidAt = DateTime.UtcNow;
-        if (status == OrderStatus.Fulfilled) FulfilledAt = DateTime.UtcNow;
-        if (status == OrderStatus.Shipped) ShippedAt = DateTime.UtcNow;
-        if (status == OrderStatus.Delivered) DeliveredAt = DateTime.UtcNow;
-        if (status == OrderStatus.Completed) CompletedAt = DateTime.UtcNow;
-        if (status == OrderStatus.Cancelled) CancelledAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        if (Status != OrderStatus.Draft && Status != OrderStatus.Pending)
+            throw new InvalidOperationException($"Không thể {action} khi đơn ở trạng thái {Status}");
     }
 }
 
-public class OrderItem : Entity<Guid>
+/// <summary>Kênh tạo đơn — giá trị lưu vào <c>Orders.Channel</c>.</summary>
+public static class OrderChannels
 {
-    public Guid OrderId { get; private set; }
-    public Guid ProductId { get; private set; }
-    public string ProductName { get; private set; } = string.Empty;
-    public string? ProductSku { get; private set; }
-    public decimal UnitPrice { get; private set; }
-    public decimal? OriginalPrice { get; private set; }
-    public int Quantity { get; private set; }
-    public decimal DiscountAmount { get; private set; }
-    public decimal LineTotal { get; private set; }
-
-    // Biến thể sản phẩm — SNAPSHOT tại thời điểm đặt hàng.
-    // Không đổi khi admin sửa tên biến thể sau đó (ràng buộc kế toán/lịch sử đơn hàng).
-    public Guid? VariantId { get; private set; }
-    public string? VariantName { get; private set; }
-    public string? VariantSku { get; private set; }
-
-    // Phase 04: đánh dấu hàng tặng (mua X tặng Y). Giá luôn = 0.
-    public bool IsGift { get; private set; }
-    public string? AppliedPromotionCode { get; private set; }
-
-    public OrderItem(
-        Guid productId,
-        string productName,
-        decimal unitPrice,
-        int quantity,
-        string? productSku = null,
-        decimal? originalPrice = null,
-        Guid? variantId = null,
-        string? variantName = null,
-        string? variantSku = null,
-        bool isGift = false,
-        string? appliedPromotionCode = null)
-    {
-        Id = Guid.NewGuid();
-        ProductId = productId;
-        ProductName = productName;
-        ProductSku = productSku;
-        // Gift LUÔN giá 0 — không tin caller.
-        UnitPrice = isGift ? 0m : unitPrice;
-        OriginalPrice = originalPrice;
-        Quantity = quantity;
-        DiscountAmount = 0;
-        LineTotal = UnitPrice * quantity;
-        VariantId = variantId;
-        VariantName = variantName;
-        VariantSku = variantSku;
-        IsGift = isGift;
-        AppliedPromotionCode = appliedPromotionCode;
-    }
-
-    protected OrderItem() { }
-
-    public void ApplyDiscount(decimal discountAmount)
-    {
-        DiscountAmount = discountAmount;
-        LineTotal = (UnitPrice * Quantity) - discountAmount;
-    }
+    public const string Web = "Web";
+    public const string Guest = "Guest";
+    public const string Pos = "Pos";
+    public const string Quotation = "Quotation";
 }

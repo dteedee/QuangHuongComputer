@@ -198,29 +198,3 @@ public class ReturnRequest : Entity<Guid>
         ProcessedBy = processedBy;
     }
 }
-
-public enum ReturnType
-{
-    Refund = 1,
-    Exchange = 2,
-    Replace = 3
-}
-
-public enum ReceivedCondition
-{
-    Intact = 1,              // Nguyên vẹn, còn seal → kho chính
-    UsedGood = 2,            // Đã mở, còn tốt → kho Returns
-    DefectiveTechnical = 3,  // Lỗi kỹ thuật → kho Defective (gửi hãng)
-    UserDamage = 4,          // Hỏng do người dùng → kho Defective, từ chối/trừ tiền
-    MissingAccessories = 5   // Thiếu phụ kiện → kho Returns, trừ tiền
-}
-
-public enum ReturnStatus
-{
-    Pending,
-    Approved,
-    Rejected,
-    Refunded,
-    Completed,
-    Cancelled
-}

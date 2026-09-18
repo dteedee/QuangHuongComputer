@@ -12,7 +12,9 @@ public static class RecommendationEndpoints
 {
     public static void MapRecommendationEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/ai/recommendations");
+        // W2-15: applies IR W0 #4 ("Services/Ai/*Endpoints.cs: chat, recommendations, semantic
+        // search" -> RequireRateLimiting("ai")).
+        var group = app.MapGroup("/api/ai/recommendations").RequireRateLimiting("ai");
 
         // Hybrid: collaborative + content-based
         group.MapGet("/{productId:guid}", async (Guid productId, RecommendationEngine engine) =>

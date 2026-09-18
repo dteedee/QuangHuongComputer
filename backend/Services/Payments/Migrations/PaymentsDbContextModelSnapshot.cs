@@ -69,8 +69,15 @@ namespace Payments.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<decimal>("AmountRefunded")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("ClientSecret")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -82,6 +89,9 @@ namespace Payments.Migrations
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ExternalId")
                         .HasColumnType("text");
@@ -100,7 +110,18 @@ namespace Payments.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("PaymentCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReconciliationReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Settlement")
                         .HasColumnType("integer");
 
                     b.Property<int>("Status")
@@ -130,12 +151,116 @@ namespace Payments.Migrations
 
                     b.HasIndex("OrderId");
 
+                    b.HasIndex("PaymentCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentIntents_PaymentCode")
+                        .HasFilter("\"PaymentCode\" IS NOT NULL");
+
                     b.HasIndex("Status", "CreatedAt")
                         .HasDatabaseName("IX_PaymentIntents_Status_CreatedAt");
 
                     b.ToTable("PaymentIntents", "payments", t =>
                         {
                             t.HasCheckConstraint("CK_PaymentIntents_Amount_NonNegative", "\"Amount\" >= 0");
+
+                            t.HasCheckConstraint("CK_PaymentIntents_Refund_NotOverAmount", "\"AmountRefunded\" >= 0 AND \"AmountRefunded\" <= \"Amount\"");
+                        });
+                });
+
+            modelBuilder.Entity("Payments.Domain.PaymentRefund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaymentIntentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("RequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentRefunds_IdempotencyKey");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("IX_PaymentRefunds_OrderId");
+
+                    b.HasIndex("PaymentIntentId")
+                        .HasDatabaseName("IX_PaymentRefunds_PaymentIntentId");
+
+                    b.HasIndex("Status", "RequestedAt")
+                        .HasDatabaseName("IX_PaymentRefunds_Status_RequestedAt");
+
+                    b.ToTable("PaymentRefunds", "payments", t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentRefunds_Amount_Positive", "\"Amount\" > 0");
                         });
                 });
 

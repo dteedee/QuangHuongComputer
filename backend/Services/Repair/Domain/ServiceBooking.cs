@@ -50,6 +50,12 @@ public class ServiceBooking : Entity<Guid>
 
     protected ServiceBooking() { }
 
+    /// <summary>
+    /// W2-13/D08: <paramref name="onSiteFee"/> comes from the caller (resolved from
+    /// <c>IAppSettings</c> key <c>Repair.OnSiteFeeVnd</c> - see BookingEndpoints), never
+    /// hardcoded here. IR#54: this constructor used to default OnSite bookings to a
+    /// hardcoded 50.0m regardless of what the admin configured.
+    /// </summary>
     public ServiceBooking(
         Guid customerId,
         ServiceType serviceType,
@@ -60,7 +66,8 @@ public class ServiceBooking : Entity<Guid>
         bool acceptedTerms,
         string customerName,
         string customerPhone,
-        string customerEmail)
+        string customerEmail,
+        decimal onSiteFee = 0m)
     {
         Id = Guid.NewGuid();
         CustomerId = customerId;
@@ -72,7 +79,7 @@ public class ServiceBooking : Entity<Guid>
         AcceptedTerms = acceptedTerms;
         TermsAcceptedAt = acceptedTerms ? DateTime.UtcNow : null;
         Status = BookingStatus.Pending;
-        OnSiteFee = serviceType == ServiceType.OnSite ? 50.0m : 0m; // Default fee
+        OnSiteFee = serviceType == ServiceType.OnSite ? onSiteFee : 0m;
         CustomerName = customerName;
         CustomerPhone = customerPhone;
         CustomerEmail = customerEmail;

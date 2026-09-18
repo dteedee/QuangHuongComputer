@@ -22,6 +22,8 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
     <PackageReference Include="MediatR" Version="12.2.0" />
+    <!-- D04 mục 2 tầng 0b: vẽ mã VietQR trong backend thay vì nhúng ảnh từ qr.sepay.vn. -->
+    <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
 
 </Project>

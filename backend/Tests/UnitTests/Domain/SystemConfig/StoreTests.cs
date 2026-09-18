@@ -1,3 +1,4 @@
+using System.Linq;
 using FluentAssertions;
 using SystemConfig.Domain;
 using Xunit;
@@ -126,5 +127,49 @@ public class StoreTests
         sw.IsPrimary.Should().BeTrue();
         sw.UnmarkPrimary();
         sw.IsPrimary.Should().BeFalse();
+    }
+
+    // ===== D09: MarkPrimaryWarehouse gọi được, trước đây không gọi ở đâu ngoài unit test =====
+
+    [Fact]
+    public void MarkPrimaryWarehouse_KhoDaGan_DatThanhChinh()
+    {
+        var s = new Store("HN-CG", "Cầu Giấy", "1 Trần Duy Hưng", "090");
+        var w1 = Guid.NewGuid();
+        var w2 = Guid.NewGuid();
+        s.AssignWarehouse(w1);
+        s.AssignWarehouse(w2);
+
+        s.MarkPrimaryWarehouse(w2);
+
+        s.Warehouses.Single(w => w.WarehouseId == w2).IsPrimary.Should().BeTrue();
+        s.Warehouses.Single(w => w.WarehouseId == w1).IsPrimary.Should().BeFalse();
+    }
+
+    [Fact]
+    public void MarkPrimaryWarehouse_DoiKhoChinh_ClearCoCu()
+    {
+        var s = new Store("HN-CG", "Cầu Giấy", "1 Trần Duy Hưng", "090");
+        var w1 = Guid.NewGuid();
+        var w2 = Guid.NewGuid();
+        s.AssignWarehouse(w1);
+        s.AssignWarehouse(w2);
+        s.MarkPrimaryWarehouse(w1);
+
+        s.MarkPrimaryWarehouse(w2);
+
+        s.Warehouses.Single(w => w.WarehouseId == w1).IsPrimary.Should().BeFalse();
+        s.Warehouses.Single(w => w.WarehouseId == w2).IsPrimary.Should().BeTrue();
+        s.Warehouses.Count(w => w.IsPrimary).Should().Be(1);
+    }
+
+    [Fact]
+    public void MarkPrimaryWarehouse_KhoChuaGan_NemLoi()
+    {
+        var s = new Store("HN-CG", "Cầu Giấy", "1 Trần Duy Hưng", "090");
+
+        var act = () => s.MarkPrimaryWarehouse(Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>();
     }
 }

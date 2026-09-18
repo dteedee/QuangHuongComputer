@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using BuildingBlocks.Security;
+using BuildingBlocks.Caching;
+using BuildingBlocks.Validation;
 using Catalog.Application.Media;
 using Catalog.Domain;
 using Catalog.Infrastructure;
@@ -15,6 +17,14 @@ namespace Catalog;
 /// Endpoint quản lý media (ảnh/video/nhúng YouTube) của sản phẩm.
 /// Upload đi qua MediaValidator (magic bytes) + MediaUploadService (đĩa local qua IFileStorage,
 /// W1-6 / D02 — MinIO đã gỡ hoàn toàn). Request/response record types: <c>CatalogMediaEndpointRequests.cs</c> (giữ file dưới 200 dòng).
+///
+/// W2-1: các handler dưới đây KHÔNG BAO GIỜ chạm `Product._medias` (navigation qua backing
+/// field). W1-6 phát hiện + để lại nguyên trạng một lỗi thật: gọi `product.AddMedia(media)` khi
+/// `_medias` chưa được nạp thì `SaveChangesAsync` ghi 0 dòng (im lặng); nạp bằng
+/// `db.Entry(product).Collection("_medias").LoadAsync()` thì ném `InvalidOperationException` lúc
+/// chạy (tên navigation không khớp cấu hình EF). Sửa triệt để: ghi thẳng vào `DbSet&lt;ProductMedia&gt;`
+/// (giống các endpoint biến thể/thông số vốn đã làm đúng kiểu này) và đặt/gỡ cờ "chính" bằng
+/// `ExecuteUpdateAsync` trên chính bảng đó - không đi qua bất kỳ navigation nào của `Product`.
 /// </summary>
 public static partial class CatalogMediaEndpoints
 {
@@ -92,20 +102,11 @@ public static partial class CatalogMediaEndpoints
 
         // ---- Thêm media (record) vào sản phẩm ----
         group.MapPost("/products/{id:guid}/media", async (
-            Guid id, AddMediaRequest req, CatalogDbContext db, CancellationToken ct) =>
+            Guid id, AddMediaRequest req, CatalogDbContext db, ICacheService cache, CancellationToken ct) =>
         {
-            var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
-            if (product == null) return Results.NotFound();
+            var productExists = await db.Products.AnyAsync(p => p.Id == id, ct);
+            if (!productExists) return Results.NotFound();
 
-            // W1-6 found a pre-existing defect here while verifying this track (reproduced on TEST
-            // 2026-09-18, see reports/integration-requests-w1.md and w1-6-report.md "Unresolved"):
-            // product.AddMedia(media) below never persists (SaveChangesAsync silently writes 0 rows)
-            // because `_medias` (PropertyAccessMode.Field) is never loaded here. The obvious fix —
-            // `db.Entry(product).Collection("_medias").LoadAsync(ct)`, the exact pattern the PUT
-            // handler below already uses — throws InvalidOperationException at runtime ("The
-            // property 'Product._medias' could not be found"), so the real fix is deeper than this
-            // file (Catalog/Infrastructure/CatalogDbContext.cs + Domain/Product.cs, W2-1 ownership,
-            // not W1-6's). Left AS-IS (not W1-6's regression to introduce) — flagged, not patched.
             ProductMedia media;
             if (req.Type == MediaType.YoutubeEmbed)
             {
@@ -127,66 +128,60 @@ public static partial class CatalogMediaEndpoints
                     req.SortOrder, req.IsPrimary, req.FileSize, req.VariantId);
             }
 
-            product.AddMedia(media);
+            // Chỉ 1 primary/product (filtered UNIQUE index chặn ở CSDL nếu đây bị bỏ sót do race):
+            // unset cái đang có TRƯỚC KHI thêm dòng mới, thẳng trên bảng - không qua navigation.
+            if (media.IsPrimary)
+                await db.ProductMedias.Where(m => m.ProductId == id && m.IsPrimary)
+                    .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsPrimary, false), ct);
+
+            db.ProductMedias.Add(media);
             await db.SaveChangesAsync(ct);
-            return Results.Ok(new { id = media.Id });
-        }).RequirePermission(Permissions.Content.ManageMedia);
+
+            // D02: `Product.ImageUrl` là ảnh chính khử-chuẩn-hoá (denormalized) - đồng bộ khi đổi primary.
+            if (media.IsPrimary && media.Type == MediaType.Image)
+                await db.Products.Where(p => p.Id == id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.ImageUrl, media.Url), ct);
+
+            await CatalogProductHelpers.InvalidateProductCachesAsync(cache, id);
+            return Results.Ok(new { id = media.Id, url = media.Url, thumbnailUrl = media.ThumbnailUrl });
+        }).RequirePermission(Permissions.Content.ManageMedia).WithValidation<AddMediaRequest>();
 
         // ---- Sửa alt / sortOrder / isPrimary ----
         group.MapPut("/products/{id:guid}/media/{mid:guid}", async (
-            Guid id, Guid mid, UpdateMediaRequest req, CatalogDbContext db, CancellationToken ct) =>
+            Guid id, Guid mid, UpdateMediaRequest req, CatalogDbContext db, ICacheService cache, CancellationToken ct) =>
         {
-            var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
-            if (product == null) return Results.NotFound();
             var media = await db.ProductMedias.FirstOrDefaultAsync(m => m.Id == mid && m.ProductId == id, ct);
             if (media == null) return Results.NotFound();
 
             if (req.AltText != null) media.UpdateAltText(req.AltText);
             if (req.SortOrder.HasValue) media.UpdateSortOrder(req.SortOrder.Value);
-            if (req.IsPrimary.HasValue && req.IsPrimary.Value)
+
+            string? newPrimaryUrl = null;
+            if (req.IsPrimary == true)
             {
-                // Load các media của product để tương tác helper SetPrimaryMedia
-                await db.Entry(product).Collection("_medias").LoadAsync(ct);
-                product.SetPrimaryMedia(mid);
+                if (media.Type != MediaType.Image)
+                    return Results.BadRequest(new { error = "Chỉ ảnh mới được đặt làm ảnh chính" });
+                await db.ProductMedias.Where(m => m.ProductId == id && m.IsPrimary && m.Id != mid)
+                    .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsPrimary, false), ct);
+                media.SetPrimary(true);
+                newPrimaryUrl = media.Url;
             }
+            else if (req.IsPrimary == false)
+            {
+                media.SetPrimary(false);
+            }
+
             await db.SaveChangesAsync(ct);
+
+            if (newPrimaryUrl != null)
+                await db.Products.Where(p => p.Id == id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.ImageUrl, newPrimaryUrl), ct);
+
+            await CatalogProductHelpers.InvalidateProductCachesAsync(cache, id);
             return Results.NoContent();
         }).RequirePermission(Permissions.Content.ManageMedia);
 
-        // ---- Xoá media ----
-        group.MapDelete("/products/{id:guid}/media/{mid:guid}", async (
-            Guid id, Guid mid, CatalogDbContext db, MediaUploadService uploader, CancellationToken ct) =>
-        {
-            var media = await db.ProductMedias.FirstOrDefaultAsync(m => m.Id == mid && m.ProductId == id, ct);
-            if (media == null) return Results.NotFound();
-            db.ProductMedias.Remove(media);
-            await db.SaveChangesAsync(ct);
-            // Best-effort xoá file vật lý — DeleteAsync tự no-op an toàn nếu URL không phải của
-            // storage runtime (ảnh seed /media/seed/**, legacy /uploads/**, nhúng YouTube).
-            try
-            {
-                if (media.Type != MediaType.YoutubeEmbed)
-                {
-                    if (!string.IsNullOrEmpty(media.Url)) await uploader.DeleteAsync(media.Url, ct);
-                    if (!string.IsNullOrEmpty(media.ThumbnailUrl) && media.ThumbnailUrl != media.Url)
-                        await uploader.DeleteAsync(media.ThumbnailUrl, ct);
-                }
-            }
-            catch { /* ignore — record đã xoá khỏi DB, xoá file chỉ là dọn dẹp best-effort */ }
-            return Results.NoContent();
-        }).RequirePermission(Permissions.Content.ManageMedia);
-
-        // ---- Sắp xếp lại: body { ids: [uuid, uuid, ...] } — vị trí = index ----
-        group.MapPost("/products/{id:guid}/media/reorder", async (
-            Guid id, ReorderRequest req, CatalogDbContext db, CancellationToken ct) =>
-        {
-            if (req.Ids == null || req.Ids.Count == 0) return Results.BadRequest();
-            var medias = await db.ProductMedias.Where(m => m.ProductId == id).ToListAsync(ct);
-            var order = req.Ids.Select((mid, idx) => new { mid, idx }).ToDictionary(x => x.mid, x => x.idx);
-            foreach (var m in medias)
-                if (order.TryGetValue(m.Id, out var pos)) m.UpdateSortOrder(pos);
-            await db.SaveChangesAsync(ct);
-            return Results.NoContent();
-        }).RequirePermission(Permissions.Content.ManageMedia);
+        // ---- Xoá / sắp xếp lại: CatalogMediaAdminEndpoints.cs (giữ file này dưới 200 dòng) ----
+        group.MapCatalogMediaAdminEndpoints();
     }
 }

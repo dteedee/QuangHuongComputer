@@ -1,3 +1,4 @@
+using BuildingBlocks.Configuration;
 using HR.Domain;
 using HR.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -7,16 +8,29 @@ namespace HR.Application.Payroll;
 /// <summary>Điều phối chạy kỳ lương hàng loạt cho tất cả nhân viên active.</summary>
 public class PayrollRunService
 {
+    private const string PayDaySettingKey = "PAYROLL_PAY_DAY";
+
     private readonly HRDbContext _db;
     private readonly PayrollCalculationService _calculator;
+    private readonly IAppSettings? _settings;
 
-    public PayrollRunService(HRDbContext db, PayrollCalculationService calculator)
+    public PayrollRunService(HRDbContext db, PayrollCalculationService calculator, IAppSettings? settings = null)
     {
         _db = db;
         _calculator = calculator;
+        _settings = settings;
     }
 
-    public async Task<PayrollRun> CreateRunAsync(int year, int month, CancellationToken ct = default)
+    /// <summary>
+    /// Tạo kỳ lương. W2-25/D06 §3: kỳ lương LUÔN có <c>PayDate</c> — thuế TNCN tra tham số theo
+    /// NGÀY TRẢ, nên bỏ trống ngày này là bỏ trống một đầu vào pháp lý. Mặc định ngày
+    /// <c>PAYROLL_PAY_DAY</c> (05) của tháng kế tiếp.
+    /// </summary>
+    public async Task<PayrollRun> CreateRunAsync(
+        int year,
+        int month,
+        DateOnly? payDate = null,
+        CancellationToken ct = default)
     {
         var existing = await _db.PayrollRuns
             .FirstOrDefaultAsync(r => r.Year == year && r.Month == month, ct);
@@ -24,7 +38,21 @@ public class PayrollRunService
             throw new InvalidOperationException($"Kỳ lương {month}/{year} đã tồn tại (Id={existing.Id}).");
 
         var run = new PayrollRun(year, month);
+        var payDay = _settings?.GetInt(PayDaySettingKey, 5) ?? 5;
+        run.SetPayDate(payDate ?? PayrollCalculationService.DefaultPayDate(year, month, payDay));
+
         _db.PayrollRuns.Add(run);
+        await _db.SaveChangesAsync(ct);
+        return run;
+    }
+
+    /// <summary>Đổi ngày trả của một kỳ lương chưa duyệt (thay đổi bộ tham số thuế được áp dụng).</summary>
+    public async Task<PayrollRun> SetPayDateAsync(Guid runId, DateOnly payDate, CancellationToken ct = default)
+    {
+        var run = await _db.PayrollRuns.FirstOrDefaultAsync(r => r.Id == runId, ct)
+            ?? throw new InvalidOperationException($"Không tìm thấy kỳ lương {runId}.");
+
+        run.SetPayDate(payDate);
         await _db.SaveChangesAsync(ct);
         return run;
     }

@@ -108,6 +108,9 @@ namespace Warranty.Infrastructure.Migrations
                     b.Property<DateTime>("ExpirationDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("ExtendedDays")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -128,6 +131,9 @@ namespace Warranty.Infrastructure.Migrations
 
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("ReplacedByWarrantyId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
@@ -171,11 +177,17 @@ namespace Warranty.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<List<string>>("AttachmentUrls")
                         .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<int?>("ClaimType")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CommittedTurnaroundDays")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
@@ -186,6 +198,12 @@ namespace Warranty.Infrastructure.Migrations
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeviceReceivedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeviceReturnedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("FiledDate")
                         .HasColumnType("timestamp without time zone");
@@ -208,6 +226,9 @@ namespace Warranty.Infrastructure.Migrations
 
                     b.Property<string>("ResolutionNotes")
                         .HasColumnType("text");
+
+                    b.Property<Guid?>("ResolvedBy")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("ResolvedDate")
                         .HasColumnType("timestamp without time zone");
@@ -257,6 +278,9 @@ namespace Warranty.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("CoverageTerms")
                         .IsRequired()
                         .HasColumnType("text");
@@ -297,6 +321,11 @@ namespace Warranty.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId", "Provider")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Policies_CategoryId_Provider_Active")
+                        .HasFilter("\"IsActive\" = true");
 
                     b.ToTable("Policies");
                 });

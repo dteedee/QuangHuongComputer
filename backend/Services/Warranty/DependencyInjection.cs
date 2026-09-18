@@ -31,6 +31,8 @@ public static class DependencyInjection
         // Phase 07: receipt generator + SLA background monitor.
         services.AddScoped<Warranty.Application.WarrantyReceiptGenerator>();
         services.AddHostedService<Warranty.Application.WarrantySlaMonitor>();
+        // W2-6 / D08: resolve số tháng BH theo Product -> danh mục lá -> cha -> DEFAULT.
+        services.AddScoped<Warranty.Application.WarrantyPolicyResolver>();
 
         return services;
     }

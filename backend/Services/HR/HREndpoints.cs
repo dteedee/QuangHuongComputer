@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
+using HR.Endpoints;
+using HR.Endpoints.Statutory;
 using System.Security.Claims;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
@@ -16,6 +18,17 @@ public static class HREndpoints
 {
     public static void MapHREndpoints(this IEndpointRouteBuilder app)
     {
+        // W2-7: Employee CRUD + link-user + terminate tách ra Endpoints/EmployeeEndpoints.cs
+        // (file này đã 657 dòng, vượt giới hạn 200 dòng). Gọi từ đây thay vì thêm dòng vào
+        // Program.cs — Program.cs frozen (BE/ApiGateway/** đóng băng cả wave 2).
+        app.MapEmployeeEndpoints();
+
+        // W2-25 / D06: tham số lương-thuế-bảo hiểm hiệu lực theo ngày, ngày nghỉ lễ, bảng kê OT.
+        // Gọi từ đây vì Program.cs (BE/ApiGateway/**) đóng băng cả wave 2.
+        app.MapStatutoryParameterEndpoints();
+        app.MapPublicHolidayEndpoints();
+        app.MapOvertimeScheduleEndpoints();
+
         var group = app.MapGroup("/api/hr").RequireModulePermissions(PermissionModules.HR);
 
         // ==================== PUBLIC RECRUITMENT ====================
@@ -36,470 +49,45 @@ public static class HREndpoints
         }).AllowAnonymous();
 
         // ==================== EMPLOYEE MANAGEMENT ====================
+        // Moved to Endpoints/EmployeeEndpoints.cs (mapped above) — kept file under 200 LOC.
 
-        group.MapGet("/employees", async (HRDbContext db) =>
+        // ==================== LEGACY TIMESHEET (DEMOLISHED — W2-7 khoản 5) ====================
+        // Timesheet (CRUD tự do, không so giờ VN) là 1 trong 3 mô hình chấm công trùng lặp mà
+        // spec yêu cầu gộp về AttendanceRecord + MonthlyTimesheet. Giữ route trả 410 thay vì im
+        // lặng biến mất (Risk Assessment: "keep the old route returning 410 with a clear
+        // message, not a 500") — FE cũ gọi vào đây sẽ thấy lỗi rõ ràng thay vì 500.
+        var timesheetGone = Results.Json(new
         {
-            return await db.Employees.ToListAsync();
-        });
+            error = "Đã gỡ bỏ chấm công kiểu Timesheet tự do. Dùng /api/hr/attendance/check-in|check-out " +
+                     "và /api/hr/timesheet cho bảng công theo tháng."
+        }, statusCode: StatusCodes.Status410Gone);
+        group.MapPost("/timesheets", () => timesheetGone);
+        group.MapGet("/timesheets", () => timesheetGone);
+        group.MapGet("/timesheets/{id:guid}", (Guid id) => timesheetGone);
+        group.MapPut("/timesheets/{id:guid}", (Guid id) => timesheetGone);
+        group.MapPost("/timesheets/{id:guid}/approve", (Guid id) => timesheetGone);
+        group.MapPost("/timesheets/{id:guid}/reject", (Guid id) => timesheetGone);
+        group.MapGet("/employees/{id:guid}/timesheets", (Guid id) => timesheetGone);
 
-        group.MapGet("/employees/{id:guid}", async (Guid id, HRDbContext db) =>
+        // ==================== LEGACY PAYROLL (DEMOLISHED — W2-7 khoản 3) ====================
+        // Đường lương cũ gọi thẳng Payroll.Calculate()/Approve()/Process() KHÔNG qua
+        // PayrollCalculationService => bỏ qua toàn bộ VietnameseTaxEngine (không PIT, không BH,
+        // Bonuses/Deductions phải set tay). Đường DUY NHẤT bây giờ là PayrollRun qua
+        // /api/hr/payroll/runs/* (PayrollEndpoints.cs) — Draft → Calculated → Approved → Paid.
+        var payrollGone = Results.Json(new
         {
-            var employee = await db.Employees.FindAsync(id);
-            return employee != null ? Results.Ok(employee) : Results.NotFound();
-        });
-
-        group.MapPost("/employees", async (CreateEmployeeDto dto, HRDbContext db) =>
-        {
-            // W0-8: was positional — dto.IdCardNumber landed in the 8th ctor param
-            // (employeeCode) and dto.Address in the 9th (idCardNumber), writing both
-            // values into the wrong columns. Named args pin them to the right ones.
-            var employee = new Employee(
-                dto.FullName,
-                dto.Email,
-                dto.Phone,
-                dto.Department,
-                dto.Position,
-                dto.HireDate ?? DateTime.UtcNow,
-                dto.BaseSalary,
-                idCardNumber: dto.IdCardNumber,
-                address: dto.Address
-            );
-
-            db.Employees.Add(employee);
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/hr/employees/{employee.Id}", employee);
-        });
-
-        group.MapPut("/employees/{id:guid}", async (Guid id, UpdateEmployeeDto dto, HRDbContext db) =>
-        {
-            var employee = await db.Employees.FindAsync(id);
-            if (employee == null) return Results.NotFound();
-
-            employee.UpdateDetails(
-                dto.FullName,
-                dto.Email,
-                dto.Phone,
-                dto.Department,
-                dto.Position,
-                dto.IdCardNumber,
-                dto.Address
-            );
-
-            if (dto.BaseSalary.HasValue)
-            {
-                employee.UpdateSalary(dto.BaseSalary.Value);
-            }
-
-            if (dto.IsActive.HasValue)
-            {
-                if (dto.IsActive.Value) employee.Activate();
-                else employee.Deactivate();
-            }
-
-            await db.SaveChangesAsync();
-            return Results.Ok(employee);
-        });
-
-        group.MapDelete("/employees/{id:guid}", async (Guid id, HRDbContext db) =>
-        {
-            var employee = await db.Employees.FindAsync(id);
-            if (employee == null) return Results.NotFound();
-
-            employee.Deactivate();
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Message = "Employee deactivated" });
-        });
-
-        // ==================== TIMESHEET MANAGEMENT ====================
-
-        // Create Timesheet
-        group.MapPost("/timesheets", async (CreateTimesheetDto dto, HRDbContext db) =>
-        {
-            var ts = new Timesheet(
-                dto.EmployeeId,
-                dto.Date,
-                dto.CheckIn,
-                dto.CheckOut,
-                dto.Notes
-            );
-
-            db.Timesheets.Add(ts);
-            await db.SaveChangesAsync();
-            return Results.Ok(ts);
-        });
-
-        // Get All Timesheets (with pagination and filters)
-        group.MapGet("/timesheets", async (HRDbContext db, int page = 1, int pageSize = 20, Guid? employeeId = null, int? month = null, int? year = null, string? status = null) =>
-        {
-            var query = db.Timesheets.AsQueryable();
-
-            if (employeeId.HasValue)
-                query = query.Where(t => t.EmployeeId == employeeId.Value);
-
-            if (month.HasValue && year.HasValue)
-                query = query.Where(t => t.Date.Month == month.Value && t.Date.Year == year.Value);
-            else if (year.HasValue)
-                query = query.Where(t => t.Date.Year == year.Value);
-
-            var total = await query.CountAsync();
-            var timesheets = await query
-                .OrderByDescending(t => t.Date)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.EmployeeId,
-                    t.Date,
-                    t.CheckIn,
-                    t.CheckOut,
-                    t.TotalHours,
-                    t.Status,
-                    t.Notes,
-                    t.ApprovedBy,
-                    t.ApprovedAt,
-                    t.CreatedAt
-                })
-                .ToListAsync();
-
-            return Results.Ok(new
-            {
-                total = total,
-                page = page,
-                pageSize = pageSize,
-                timesheets = timesheets
-            });
-        });
-
-        // Get Timesheet by ID
-        group.MapGet("/timesheets/{id:guid}", async (Guid id, HRDbContext db) =>
-        {
-            var timesheet = await db.Timesheets.FindAsync(id);
-            if (timesheet == null)
-                return Results.NotFound(new { Error = "Timesheet not found" });
-
-            return Results.Ok(new
-            {
-                timesheet.Id,
-                timesheet.EmployeeId,
-                timesheet.Date,
-                timesheet.CheckIn,
-                timesheet.CheckOut,
-                timesheet.TotalHours,
-                timesheet.Status,
-                timesheet.Notes,
-                timesheet.ApprovedBy,
-                timesheet.ApprovedAt,
-                timesheet.RejectionReason,
-                timesheet.CreatedAt,
-                timesheet.UpdatedAt
-            });
-        });
-
-        // Update Timesheet
-        group.MapPut("/timesheets/{id:guid}", async (Guid id, UpdateTimesheetDto dto, HRDbContext db) =>
-        {
-            var timesheet = await db.Timesheets.FindAsync(id);
-            if (timesheet == null)
-                return Results.NotFound(new { Error = "Timesheet not found" });
-
-            if (dto.CheckIn.HasValue)
-                timesheet.UpdateCheckIn(dto.CheckIn.Value);
-
-            if (dto.CheckOut.HasValue)
-                timesheet.UpdateCheckOut(dto.CheckOut.Value);
-
-            if (dto.Notes != null)
-                timesheet.UpdateNotes(dto.Notes);
-
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new
-            {
-                message = "Timesheet updated",
-                timesheet = new
-                {
-                    timesheet.Id,
-                    timesheet.Date,
-                    timesheet.CheckIn,
-                    timesheet.CheckOut,
-                    timesheet.TotalHours,
-                    timesheet.Status,
-                    timesheet.Notes
-                }
-            });
-        });
-
-        // Approve Timesheet
-        group.MapPost("/timesheets/{id:guid}/approve", async (Guid id, ApproveTimesheetDto dto, HRDbContext db, ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var timesheet = await db.Timesheets.FindAsync(id);
-            if (timesheet == null)
-                return Results.NotFound(new { Error = "Timesheet not found" });
-
-            if (timesheet.Status != TimesheetStatus.Pending)
-                return Results.BadRequest(new { Error = "Only pending timesheets can be approved" });
-
-            timesheet.Approve(userId);
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new
-            {
-                message = "Timesheet approved",
-                status = timesheet.Status.ToString(),
-                approvedAt = timesheet.ApprovedAt
-            });
-        });
-
-        // Reject Timesheet
-        group.MapPost("/timesheets/{id:guid}/reject", async (Guid id, RejectTimesheetDto dto, HRDbContext db, ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var timesheet = await db.Timesheets.FindAsync(id);
-            if (timesheet == null)
-                return Results.NotFound(new { Error = "Timesheet not found" });
-
-            if (timesheet.Status != TimesheetStatus.Pending)
-                return Results.BadRequest(new { Error = "Only pending timesheets can be rejected" });
-
-            timesheet.Reject(userId, dto.Reason);
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new
-            {
-                message = "Timesheet rejected",
-                status = timesheet.Status.ToString(),
-                rejectionReason = timesheet.RejectionReason
-            });
-        });
-
-        // Get Employee's Timesheets
-        group.MapGet("/employees/{id:guid}/timesheets", async (Guid id, int month, int year, HRDbContext db) =>
-        {
-            return await db.Timesheets
-                .Where(t => t.EmployeeId == id && t.Date.Month == month && t.Date.Year == year)
-                .OrderByDescending(t => t.Date)
-                .ToListAsync();
-        });
-
-        // ==================== PAYROLL MANAGEMENT ====================
-
-        group.MapGet("/payroll", async (int month, int year, HRDbContext db) =>
-        {
-            return await db.Payrolls.Where(p => p.Month == month && p.Year == year).ToListAsync();
-        });
-
-        group.MapPost("/payroll/generate", async (GeneratePayrollDto dto, HRDbContext db) =>
-        {
-            var employees = await db.Employees.Where(e => e.Status == EmployeeStatus.Active).ToListAsync();
-            var existingPayrolls = await db.Payrolls.Where(p => p.Month == dto.Month && p.Year == dto.Year).ToListAsync();
-
-            int count = 0;
-            foreach (var emp in employees)
-            {
-                if (existingPayrolls.Any(p => p.EmployeeId == emp.Id)) continue;
-
-                var payroll = new Payroll(
-                    emp.Id,
-                    dto.Month,
-                    dto.Year,
-                    emp.BaseSalary
-                );
-
-                db.Payrolls.Add(payroll);
-                count++;
-            }
-
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Message = $"Payroll for {dto.Month}/{dto.Year} generated for {count} employees" });
-        });
-        group.MapPut("/payroll/{id:guid}/pay", async (Guid id, HRDbContext db, IPublishEndpoint publishEndpoint) =>
-        {
-            var payroll = await db.Payrolls.Include(p => p.Employee).FirstOrDefaultAsync(p => p.Id == id);
-            if (payroll == null) return Results.NotFound();
-
-            // Typically process then mark as paid
-            // Assuming simplified flow or already processed
-            if (payroll.Status == PayrollStatus.Draft)
-            {
-                payroll.Calculate();
-                payroll.Approve(Guid.NewGuid());
-                payroll.Process(Guid.NewGuid());
-            }
-
-            payroll.MarkAsPaid();
-            await db.SaveChangesAsync();
-
-            // Publish event to Accounting module to record salary expense
-            var employeeName = payroll.Employee?.FullName ?? "Unknown";
-            await publishEndpoint.Publish(new PayrollPaidIntegrationEvent(
-                payroll.Id,
-                payroll.EmployeeId,
-                employeeName,
-                payroll.Month,
-                payroll.Year,
-                payroll.BaseSalary + payroll.Bonuses,
-                payroll.NetPay,
-                DateTime.UtcNow
-            ));
-
-            return Results.Ok(new { Message = "Payroll marked as paid", PayrollId = payroll.Id });
-        });
-
-        // Get Payroll by ID — moved to PayrollEndpoints.cs (GET /api/hr/payroll/{payrollId})
-        // which returns the same route + LineItems. Having both registered threw
-        // AmbiguousMatchException on every request (W0-8).
-
-        // Calculate Payroll
-        group.MapPost("/payroll/{id:guid}/calculate", async (Guid id, HRDbContext db) =>
-        {
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            try
-            {
-                payroll.Calculate();
-                await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    message = "Payroll calculated",
-                    payrollId = payroll.Id,
-                    baseSalary = payroll.BaseSalary,
-                    bonuses = payroll.Bonuses,
-                    deductions = payroll.Deductions,
-                    netPay = payroll.NetPay,
-                    status = payroll.Status.ToString()
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // Approve Payroll
-        group.MapPost("/payroll/{id:guid}/approve", async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            try
-            {
-                payroll.Approve(userId);
-                await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    message = "Payroll approved",
-                    payrollId = payroll.Id,
-                    status = payroll.Status.ToString(),
-                    approvedAt = payroll.ApprovedAt
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // Process Payroll
-        group.MapPost("/payroll/{id:guid}/process", async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            try
-            {
-                payroll.Process(userId);
-                await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    message = "Payroll processed",
-                    payrollId = payroll.Id,
-                    status = payroll.Status.ToString(),
-                    processedAt = payroll.ProcessedAt
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // Add Bonus to Payroll
-        group.MapPost("/payroll/{id:guid}/bonus", async (Guid id, AddPayrollBonusDto dto, HRDbContext db) =>
-        {
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            try
-            {
-                payroll.AddBonus(dto.Amount, dto.Type ?? "Performance");
-                await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    Message = $"Bonus of {dto.Amount:N0} added",
-                    payroll.Bonuses,
-                    payroll.PerformanceBonus,
-                    payroll.AttendanceBonus
-                });
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // Add Deduction to Payroll
-        group.MapPost("/payroll/{id:guid}/deduction", async (Guid id, AddPayrollDeductionDto dto, HRDbContext db) =>
-        {
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            try
-            {
-                payroll.AddDeduction(dto.Amount, dto.Type ?? "Other");
-                await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    Message = $"Deduction of {dto.Amount:N0} added",
-                    payroll.Deductions,
-                    payroll.TaxDeduction,
-                    payroll.InsuranceDeduction,
-                    payroll.OtherDeductions
-                });
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        // Update Payroll Notes
-        group.MapPut("/payroll/{id:guid}/notes", async (Guid id, UpdatePayrollNotesDto dto, HRDbContext db) =>
-        {
-            var payroll = await db.Payrolls.FindAsync(id);
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            payroll.UpdateNotes(dto.Notes);
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new { Message = "Notes updated" });
-        });
+            error = "Đường tính lương cũ đã gỡ bỏ. Dùng POST /api/hr/payroll/runs để tạo kỳ lương, " +
+                     "rồi /runs/{id}/calculate → /approve → /mark-paid."
+        }, statusCode: StatusCodes.Status410Gone);
+        group.MapGet("/payroll", () => payrollGone);
+        group.MapPost("/payroll/generate", () => payrollGone);
+        group.MapPut("/payroll/{id:guid}/pay", (Guid id) => payrollGone);
+        group.MapPost("/payroll/{id:guid}/calculate", (Guid id) => payrollGone);
+        group.MapPost("/payroll/{id:guid}/approve", (Guid id) => payrollGone);
+        group.MapPost("/payroll/{id:guid}/process", (Guid id) => payrollGone);
+        group.MapPost("/payroll/{id:guid}/bonus", (Guid id) => payrollGone);
+        group.MapPost("/payroll/{id:guid}/deduction", (Guid id) => payrollGone);
+        group.MapPut("/payroll/{id:guid}/notes", (Guid id) => payrollGone);
 
         // ==================== RECRUITMENT MANAGEMENT (ADMIN) ====================
         group.MapGet("/recruitment", async (HRDbContext db) =>
@@ -563,57 +151,8 @@ public static class HREndpoints
 }
 
 // ==================== DTOs ====================
-
-public record CreateEmployeeDto(
-    string FullName,
-    string Email,
-    string Phone,
-    string Department,
-    string Position,
-    decimal BaseSalary,
-    DateTime? HireDate,
-    string? IdCardNumber,
-    string? Address
-);
-
-public record UpdateEmployeeDto(
-    string FullName,
-    string Email,
-    string Phone,
-    string Department,
-    string Position,
-    decimal? BaseSalary,
-    string? IdCardNumber,
-    string? Address,
-    bool? IsActive
-);
-
-public record CreateTimesheetDto(
-    Guid EmployeeId,
-    DateTime Date,
-    TimeSpan CheckIn,
-    TimeSpan? CheckOut,
-    string? Notes
-);
-
-public record UpdateTimesheetDto(
-    TimeSpan? CheckIn,
-    TimeSpan? CheckOut,
-    string? Notes
-);
-
-public record ApproveTimesheetDto(
-    string? Notes
-);
-
-public record RejectTimesheetDto(
-    string Reason
-);
-
-public record GeneratePayrollDto(
-    int Month,
-    int Year
-);
+// W2-7: DTO của Employee/Timesheet/Payroll cũ đã xoá cùng các route dùng chúng (xem 410 stubs
+// ở trên) — Employee DTOs nay ở Endpoints/EmployeeEndpoints.cs.
 
 public record CreateJobListingDto(
     string Title,
@@ -640,18 +179,4 @@ public record UpdateJobListingDto(
     decimal? SalaryRangeMin,
     decimal? SalaryRangeMax,
     JobStatus Status
-);
-
-public record AddPayrollBonusDto(
-    decimal Amount,
-    string? Type
-);
-
-public record AddPayrollDeductionDto(
-    decimal Amount,
-    string? Type
-);
-
-public record UpdatePayrollNotesDto(
-    string? Notes
 );

@@ -115,6 +115,8 @@ public static class DependencyInjection
         services.AddScoped<Identity.Services.ITokenIssuer, Identity.Services.TokenIssuer>();
         services.AddScoped<Identity.Services.ITwoFactorChallengeService, Identity.Services.TwoFactorChallengeService>();
         services.AddScoped<Identity.Services.IUserDirectory, Identity.Services.UserDirectory>();
+        // Hợp đồng dùng chung cho các module ngoài Identity (CRM, Sales/POS, Reporting).
+        services.AddScoped<BuildingBlocks.Contracts.IUserDirectory>(sp => (Identity.Services.UserDirectory)sp.GetRequiredService<Identity.Services.IUserDirectory>());
 
         // Background Services
         services.AddHostedService<Identity.Services.RefreshTokenCleanupService>();

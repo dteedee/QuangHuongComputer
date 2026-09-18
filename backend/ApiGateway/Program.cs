@@ -1,3 +1,4 @@
+using ApiGateway.Seo;
 using BuildingBlocks.Security;
 using Accounting;
 using ApiGateway;
@@ -83,8 +84,12 @@ app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthC
     Predicate = _ => false
 });
 
+// -- SEO shell (D11) -----------------------------------------------------------
+// Thay cho MapSitemapEndpoints() cũ (W2-17 đã xoá): server render thẻ head + JSON-LD,
+// trả đúng mã trạng thái 404/301, và sinh sitemap.xml/robots.txt từ cùng nguồn provider.
+app.MapSeoShell();
+
 // -- Module endpoints ----------------------------------------------------------
-app.MapSitemapEndpoints();
 app.MapCatalogEndpoints();
 app.MapAiEndpoints();
 app.MapRecommendationEndpoints();

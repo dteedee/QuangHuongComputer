@@ -1,4 +1,5 @@
 using BuildingBlocks.Security;
+using BuildingBlocks.Time;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -68,11 +69,42 @@ public static class AttendanceEndpoints
         });
 
         // GET /api/hr/attendance/qr-code?storeId= — sinh mã TOTP 30s
-        group.MapGet("/qr-code", (Guid storeId) =>
+        group.MapGet("/qr-code", (Guid storeId, AttendanceValidator validator) =>
         {
-            var code = AttendanceValidator.GenerateQr(storeId);
+            var code = validator.GenerateCode(storeId);
             var expiresIn = 30 - (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 30);
             return Results.Ok(new { storeId, code, expiresInSeconds = expiresIn });
+        }).RequireAuthorization(Permissions.HR.ViewAttendance);
+
+        // GET /api/hr/attendance?employeeId=&year=&month=&storeId=&page=&pageSize= — danh sách phân trang
+        // (W2-7 khoản 8: FE api/hr.ts gọi route này nhưng BE trước đây chỉ có /report, /today, /my-report.)
+        group.MapGet("", async (
+            HRDbContext db, Guid? employeeId, int? year, int? month, Guid? storeId,
+            int page = 0, int pageSize = 0) =>
+        {
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
+            var query = db.AttendanceRecords.AsQueryable();
+            if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
+            if (storeId.HasValue) query = query.Where(a => a.StoreId == storeId.Value);
+            if (year.HasValue && month.HasValue)
+            {
+                var from = new DateTime(year.Value, month.Value, 1);
+                query = query.Where(a => a.Date >= from && a.Date < from.AddMonths(1));
+            }
+            else if (year.HasValue)
+            {
+                query = query.Where(a => a.Date.Year == year.Value);
+            }
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(a => a.Date).ThenBy(a => a.EmployeeId)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToListAsync();
+
+            return Results.Ok(new { items, total, page, pageSize });
         }).RequireAuthorization(Permissions.HR.ViewAttendance);
 
         // POST /api/hr/attendance/manual — quản lý chấm hộ
@@ -99,7 +131,7 @@ public static class AttendanceEndpoints
         }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         // GET /api/hr/attendance/today
-        group.MapGet("/today", async (ClaimsPrincipal user, HRDbContext db) =>
+        group.MapGet("/today", async (ClaimsPrincipal user, HRDbContext db, IBusinessClock clock) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -107,7 +139,7 @@ public static class AttendanceEndpoints
             var employee = await db.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
             if (employee == null) return Results.NotFound(new { error = "Không tìm thấy nhân viên." });
 
-            var today = DateTime.UtcNow.Date;
+            var today = clock.TodayVn.ToDateTime(TimeOnly.MinValue);
             var record = await db.AttendanceRecords
                 .FirstOrDefaultAsync(a => a.EmployeeId == employee.Id && a.Date == today);
 
@@ -115,9 +147,9 @@ public static class AttendanceEndpoints
         });
 
         // GET /api/hr/attendance/report?month=2026-05
-        group.MapGet("/report", async (string? month, HRDbContext db) =>
+        group.MapGet("/report", async (string? month, HRDbContext db, IBusinessClock clock) =>
         {
-            var (from, to) = ParseMonthRange(month);
+            var (from, to) = ParseMonthRange(month, clock);
             var records = await db.AttendanceRecords
                 .Where(a => a.Date >= from && a.Date < to)
                 .OrderBy(a => a.EmployeeId).ThenBy(a => a.Date)
@@ -126,7 +158,7 @@ public static class AttendanceEndpoints
         }).RequireAuthorization(Permissions.HR.ViewAttendance);
 
         // GET /api/hr/attendance/my-report?month=2026-05
-        group.MapGet("/my-report", async (string? month, ClaimsPrincipal user, HRDbContext db) =>
+        group.MapGet("/my-report", async (string? month, ClaimsPrincipal user, HRDbContext db, IBusinessClock clock) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -134,7 +166,7 @@ public static class AttendanceEndpoints
             var employee = await db.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
             if (employee == null) return Results.NotFound(new { error = "Không tìm thấy nhân viên." });
 
-            var (from, to) = ParseMonthRange(month);
+            var (from, to) = ParseMonthRange(month, clock);
             var records = await db.AttendanceRecords
                 .Where(a => a.EmployeeId == employee.Id && a.Date >= from && a.Date < to)
                 .OrderBy(a => a.Date)
@@ -143,11 +175,17 @@ public static class AttendanceEndpoints
         });
 
         // ==================== ATTENDANCE RULES ====================
-        group.MapGet("/rules", async (HRDbContext db) =>
+        // W2-7 khoản 8: FE api/hr.ts gọi '/hr/attendance-rules' (route riêng, không lồng trong
+        // /attendance) — nhóm cũ '/api/hr/attendance/rules' không khớp nên trang cấu hình quy tắc
+        // chấm công của FE luôn 404. Đổi sang nhóm top-level đúng hợp đồng, thêm PUT update
+        // (trước đây chỉ có Create, không Update/Delete — FE gọi PUT /hr/attendance-rules/{id}).
+        var rulesGroup = app.MapGroup("/api/hr/attendance-rules").RequireAuthorization(SecurityPolicies.Staff);
+
+        rulesGroup.MapGet("", async (HRDbContext db) =>
             Results.Ok(await db.AttendanceRules.OrderBy(r => r.StoreId).ToListAsync())
         ).RequireAuthorization(Permissions.HR.ViewAttendance);
 
-        group.MapPost("/rules", async (CreateAttendanceRuleDto dto, HRDbContext db) =>
+        rulesGroup.MapPost("", async (CreateAttendanceRuleDto dto, HRDbContext db) =>
         {
             var rule = new AttendanceRule(
                 dto.Name,
@@ -164,12 +202,37 @@ public static class AttendanceEndpoints
                 dto.StandardWorkHoursPerDay);
             db.AttendanceRules.Add(rule);
             await db.SaveChangesAsync();
-            return Results.Created($"/api/hr/attendance/rules/{rule.Id}", rule);
+            return Results.Created($"/api/hr/attendance-rules/{rule.Id}", rule);
+        }).RequireAuthorization(Permissions.HR.ManageAttendance);
+
+        rulesGroup.MapPut("/{id:guid}", async (Guid id, CreateAttendanceRuleDto dto, HRDbContext db) =>
+        {
+            var rule = await db.AttendanceRules.FindAsync(id);
+            if (rule == null) return Results.NotFound();
+            rule.Update(
+                dto.Name, dto.LateToleranceMinutes, dto.LateFineMoneyPerMinute,
+                dto.HalfDayThresholdMinutes, dto.EarlyLeaveToleranceMinutes,
+                dto.OvertimeWeekdayRate, dto.OvertimeSundayRate, dto.OvertimeHolidayRate,
+                dto.OvertimeNightBonus, dto.GpsRadiusMeters, dto.StandardWorkHoursPerDay);
+            await db.SaveChangesAsync();
+            return Results.Ok(rule);
+        }).RequireAuthorization(Permissions.HR.ManageAttendance);
+
+        rulesGroup.MapDelete("/{id:guid}", async (Guid id, HRDbContext db) =>
+        {
+            var rule = await db.AttendanceRules.FindAsync(id);
+            if (rule == null) return Results.NotFound();
+            db.AttendanceRules.Remove(rule);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Đã xoá quy tắc chấm công." });
         }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         // ==================== MONTHLY TIMESHEET ====================
         // W1-10: bảng công tháng của chính mình -> Staff (endpoint tổng hợp bên dưới có quyền riêng).
-        var timesheetGroup = app.MapGroup("/api/hr/timesheet-monthly").RequireAuthorization(SecurityPolicies.Staff);
+        // W2-7 khoản 8: đổi "/timesheet-monthly" -> "/timesheet" khớp hợp đồng FE (api/hr.ts
+        // timesheetApi.get/aggregate gọi "/hr/timesheet/{employeeId}") — route cũ không khớp gì
+        // nên trang bảng công tháng của FE luôn 404.
+        var timesheetGroup = app.MapGroup("/api/hr/timesheet").RequireAuthorization(SecurityPolicies.Staff);
 
         // IDOR guard: any authenticated user could read ANY employee's monthly timesheet by
         // guessing the GUID — scope to staff roles or the timesheet's own employee.
@@ -220,7 +283,7 @@ public static class AttendanceEndpoints
             }).RequireAuthorization(Permissions.HR.ManageAttendance);
     }
 
-    private static (DateTime From, DateTime To) ParseMonthRange(string? month)
+    private static (DateTime From, DateTime To) ParseMonthRange(string? month, IBusinessClock clock)
     {
         if (!string.IsNullOrEmpty(month) && DateTime.TryParseExact(month, "yyyy-MM",
             System.Globalization.CultureInfo.InvariantCulture,
@@ -228,8 +291,10 @@ public static class AttendanceEndpoints
         {
             return (parsed, parsed.AddMonths(1));
         }
-        var now = DateTime.UtcNow;
-        return (new DateTime(now.Year, now.Month, 1), new DateTime(now.Year, now.Month, 1).AddMonths(1));
+        // "Tháng này" theo ngày làm việc VN, không phải ngày UTC (lệch gần ranh giới tháng).
+        var now = clock.TodayVn;
+        var start = new DateTime(now.Year, now.Month, 1);
+        return (start, start.AddMonths(1));
     }
 }
 

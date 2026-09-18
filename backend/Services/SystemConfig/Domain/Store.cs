@@ -117,6 +117,23 @@ public class Store : Entity<Guid>
         _warehouses.RemoveAll(w => w.WarehouseId == warehouseId);
     }
 
+    /// <summary>
+    /// D09: đặt kho chính của chi nhánh — clear cờ IsPrimary trên các kho khác trước khi set.
+    /// Yêu cầu warehouse đã được gán (AssignWarehouse) trong cùng transaction.
+    /// </summary>
+    public void MarkPrimaryWarehouse(Guid warehouseId)
+    {
+        var target = _warehouses.FirstOrDefault(w => w.WarehouseId == warehouseId);
+        if (target is null)
+            throw new ArgumentException("Kho chính phải nằm trong danh sách kho đã gán cho chi nhánh", nameof(warehouseId));
+
+        foreach (var w in _warehouses)
+        {
+            if (w.WarehouseId == warehouseId) w.MarkPrimary();
+            else w.UnmarkPrimary();
+        }
+    }
+
     public void AssignEmployee(Guid employeeId, string? role = null)
     {
         if (_employees.Any(e => e.EmployeeId == employeeId)) return;

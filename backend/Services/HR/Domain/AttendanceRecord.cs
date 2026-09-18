@@ -59,9 +59,32 @@ public class AttendanceRecord : Entity<Guid>
         CheckInMethod = CheckInMethod.Web;
     }
 
+    /// <summary>Việt Nam không có giờ mùa hè kể từ 1975 — lệch cố định UTC+7
+    /// (khớp <c>BuildingBlocks.Time.SystemBusinessClock.VietnamOffset</c>, không tham chiếu trực
+    /// tiếp để domain entity không phụ thuộc DI/IBusinessClock).</summary>
+    private static readonly TimeSpan VietnamOffset = TimeSpan.FromHours(7);
+
+    /// <summary>
+    /// Chỉ quy đổi khi input thật sự là một thời điểm UTC (<see cref="DateTimeKind.Utc"/>) — giá
+    /// trị <see cref="DateTimeKind.Unspecified"/>/<see cref="DateTimeKind.Local"/> được coi là ĐÃ
+    /// là giờ tường (test cũ + <see cref="AdjustManually"/> truyền thẳng giờ tường, không qua UTC).
+    /// Đây là cách sửa "so UTC với giờ ca VN" (W2-7 khoản 5, early-leave/late sai ~7h mỗi ngày) mà
+    /// KHÔNG đổi chữ ký <see cref="RecordCheckIn"/>/<see cref="RecordCheckOut"/> — đổi chữ ký sẽ vỡ
+    /// <c>backend/Tests/UnitTests/Domain/HR/AttendanceRecordTests.cs</c>, đóng băng ở wave 2 (không
+    /// sửa được cùng track này).
+    /// </summary>
+    private static DateTime ToWallClock(DateTime instant) =>
+        instant.Kind == DateTimeKind.Utc ? instant.Add(VietnamOffset) : instant;
+
     /// <summary>
     /// Ghi nhận check-in. Nếu có shift, tính LateMinutes so với giờ ca chuẩn.
     /// </summary>
+    /// <param name="checkInTime">
+    /// Thời điểm check-in — lưu nguyên vào DB (cột timestamptz). Khi <see cref="DateTime.Kind"/>
+    /// là Utc (đường sản xuất thật, từ <c>IBusinessClock.UtcNow</c>), so đi muộn được quy đổi sang
+    /// giờ tường VN trước khi so <paramref name="shiftStartTime"/>. Trước W2-7, hàm này so thẳng
+    /// UTC với giờ ca (giờ tường) → "08:05 giờ VN" bị coi là sớm ~7h thay vì Late.
+    /// </param>
     public void RecordCheckIn(
         DateTime checkInTime,
         CheckInMethod method,
@@ -86,11 +109,12 @@ public class AttendanceRecord : Entity<Guid>
         StoreId = storeId;
         ShiftAssignmentId = shiftAssignmentId;
 
-        // Tính đi muộn
+        // Tính đi muộn — SO SÁNH TRÊN GIỜ TƯỜNG (Date cũng phải là ngày công VN, xem
+        // AttendanceCheckInService — nơi gọi hàm này với businessDate = IBusinessClock.TodayVn).
         if (shiftStartTime.HasValue)
         {
             var expectedStart = Date.Date.Add(shiftStartTime.Value);
-            var lateBy = (int)(checkInTime - expectedStart).TotalMinutes;
+            var lateBy = (int)(ToWallClock(checkInTime) - expectedStart).TotalMinutes;
             LateMinutes = lateBy > lateToleranceMinutes ? lateBy : 0;
         }
 
@@ -111,15 +135,15 @@ public class AttendanceRecord : Entity<Guid>
 
         CheckOutTime = checkOutTime;
 
-        // Về sớm
+        // Về sớm — so sánh trên giờ tường.
         if (shiftEndTime.HasValue)
         {
             var expectedEnd = Date.Date.Add(shiftEndTime.Value);
-            var earlyBy = (int)(expectedEnd - checkOutTime).TotalMinutes;
+            var earlyBy = (int)(expectedEnd - ToWallClock(checkOutTime)).TotalMinutes;
             EarlyLeaveMinutes = earlyBy > earlyLeaveToleranceMinutes ? earlyBy : 0;
         }
 
-        // Tổng giờ = (out - in) - break
+        // Tổng giờ = (out - in) - break — hiệu số hai thời điểm CÙNG Kind, múi giờ không ảnh hưởng.
         var totalMin = (checkOutTime - CheckInTime.Value).TotalMinutes;
         if (breakDurationMinutes.HasValue) totalMin -= (double)breakDurationMinutes.Value;
         WorkHours = Math.Round((decimal)Math.Max(0, totalMin / 60), 2);
