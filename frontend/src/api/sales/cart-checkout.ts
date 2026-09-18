@@ -1,64 +1,23 @@
 /**
- * Sales — storefront CART + CHECKOUT surface (cart CRUD, stock-hold checkout
- * session, place order, guest checkout, shipping fee estimate). Split out of
- * the old flat `api/sales.ts` (W1-9, step 7c). Functions moved verbatim;
- * `api/sales.ts` re-exports them.
+ * Sales — storefront CART + CHECKOUT surface.
+ *
+ * Hợp đồng nguồn: `docs/api-contracts/sales-checkout-orders.md` (W2-3) và
+ * `docs/api-contracts/shipping.md` (W2-11). Hai luật xuyên suốt:
+ *   1. Giá đã BAO GỒM VAT (D01) — FE KHÔNG tự tính thuế, đọc `vatBreakdown`.
+ *   2. Client KHÔNG quyết định tiền — không gửi price/discount/shippingFee/customerId.
  */
 import client from '../client';
 
-export interface CheckoutDto {
-    items: {
-        productId: string;
-        productName: string;
-        unitPrice: number;
-        quantity: number;
-    }[];
-    shippingAddress?: string;
-    notes?: string;
-    couponCode?: string;
-    sourceId?: string;
-    customerIp?: string;
-    customerUserAgent?: string;
-    paymentMethod?: string;
-    isPickup?: boolean;
-    pickupStoreId?: string;
-    pickupStoreName?: string;
-    customerId?: string;
-    manualDiscount?: number;
-    /** Phí vận chuyển. Backend: CheckoutDto.ShippingFee (decimal, mặc định 0). */
-    shippingFee?: number;
-    /** ID phiên giữ chỗ (giữ tồn 15 phút). Nếu có, backend đối chiếu và không giữ lại. */
-    checkoutSessionId?: string;
-}
+/** Cookie giỏ vãng lai `qh_aid` là HttpOnly ⇒ request phải đi kèm credentials. */
+const guestCfg = { withCredentials: true } as const;
 
-export interface GuestCheckoutDto {
-    customerName: string;
-    customerEmail: string;
-    customerPhone: string;
-    shippingAddress: string;
-    items: {
-        productId: string;
-        productName: string;
-        price: number;
-        quantity: number;
-    }[];
-    couponCode?: string;
-    notes?: string;
-    paymentMethod?: string;
-}
-
-// Cart Types
-export interface CartDto {
-    id: string;
-    customerId: string;
-    subtotalAmount: number;
-    discountAmount: number;
-    taxAmount: number;
-    shippingAmount: number;
-    totalAmount: number;
-    taxRate: number;
-    couponCode?: string;
-    items: CartItemDto[];
+// ============================================
+// Cart
+// ============================================
+export interface VatBucketDto {
+    rate: number;
+    net: number;
+    vat: number;
 }
 
 export interface CartItemDto {
@@ -69,149 +28,183 @@ export interface CartItemDto {
     subtotal: number;
     imageUrl?: string;
     stockQuantity?: number;
-    /** Tên biến thể (VD "16GB / 512GB / Đen"). Chỉ có khi sản phẩm có biến thể. */
     variantId?: string;
     variantName?: string;
+    variantSku?: string;
 }
 
-// ============================================
-// Checkout Session (giữ chỗ tồn kho 15 phút)
-// Backend endpoints (Phase 04-B): POST /sales/checkout/session, POST /sales/checkout/session/{id}/extend
-// ============================================
-export interface CheckoutSession {
+export interface CartDto {
     id: string;
-    cartId?: string;
-    status: 'Active' | 'Expired' | 'Completed' | 'Cancelled';
-    createdAt: string;
-    expiresAt: string;
-    reservationIds: string[];
+    customerId: string;
+    subtotalAmount: number;
+    discountAmount: number;
+    /** VAT đã TÁCH RA — đã nằm trong totalAmount, không bao giờ cộng thêm (D01). */
+    taxAmount: number;
+    shippingAmount: number;
+    totalAmount: number;
+    /** Chỉ là NHÃN; nhiều thuế suất trong giỏ ⇒ đọc `vatBreakdown` thay vì hiển thị % này. */
+    taxRate: number;
+    couponCode?: string;
+    items: CartItemDto[];
+    vatBreakdown?: VatBucketDto[];
 }
 
-export interface CreateCheckoutSessionDto {
-    items: {
-        productId: string;
-        quantity: number;
-        variantId?: string;
-    }[];
-    /** Mặc định 15 phút. Nếu backend cấu hình khác, cứ để trống. */
-    holdMinutes?: number;
+export interface GuestCartLineDto {
+    productId: string;
+    variantId?: string;
+    productName: string;
+    price: number;
+    quantity: number;
+    isGift: boolean;
 }
+
+export interface GuestCartDto {
+    cartId: string | null;
+    items: GuestCartLineDto[];
+    subtotalAmount: number;
+}
+
+// ============================================
+// Checkout session (nơi DUY NHẤT giữ tồn kho — 15 phút, gia hạn 1 lần)
+// ============================================
+export interface CheckoutSessionDto {
+    sessionId: string;
+    expiresAt: string;
+    holdMinutes: number;
+}
+
+// ============================================
+// Chốt đơn
+// ============================================
+export interface CheckoutShippingInfo {
+    recipientName: string;
+    phone: string;
+    streetAddress?: string;
+    ward?: string;
+    district?: string;
+    province?: string;
+    /** Server tính lại cho kênh Web/Guest; gửi 0 và đọc lại từ response. */
+    shippingFee: number;
+    isPickup?: boolean;
+    pickupStoreId?: string;
+    pickupStoreName?: string;
+    notes?: string;
+}
+
+export interface OrchestrateCheckoutDto {
+    cartId: string;
+    shipping: CheckoutShippingInfo;
+    paymentMethod?: string;
+    promotionCodes?: string[];
+    /** Khoá chống đặt trùng: phiên giữ chỗ đã tạo ở bước 3. */
+    checkoutSessionId?: string;
+    guestEmail?: string;
+    guestPhone?: string;
+}
+
+export interface GuestCheckoutDto {
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    shippingAddress: string;
+    items: { productId: string; productName: string; price: number; quantity: number }[];
+    couponCode?: string;
+    notes?: string;
+    paymentMethod?: string;
+}
+
+export interface CheckoutResultDto {
+    orderId: string;
+    orderNumber: string;
+    totalAmount: number;
+    taxAmount?: number;
+    orderStatus?: string;
+    requiresPaymentGateway?: boolean;
+}
+
+// ============================================
+// Shipping (W2-11)
+// ============================================
+export interface ShippingQuoteDto {
+    fee: number;
+    isFreeShipping: boolean;
+    source: 'pickup' | 'free_threshold' | 'flat' | 'ghn_live';
+    estimatedDeliveryDays: string | null;
+}
+
+export interface ProvinceDto { code: string; name: string }
+export interface WardDto { code: string; name: string; provinceCode: string }
 
 export const salesCartCheckoutApi = {
     cart: {
-        get: async () => {
-            const response = await client.get<CartDto>('/sales/cart');
-            return response.data;
-        },
+        get: async () => (await client.get<CartDto>('/sales/cart')).data,
 
-        addItem: async (item: {
-            productId: string;
-            productName: string;
-            price: number;
-            quantity: number;
-        }) => {
-            const response = await client.post<{ message: string }>('/sales/cart/items', item);
-            return response.data;
-        },
+        /** KHÔNG gửi price/productName — server đọc giá thật từ CSDL (W0-4). */
+        addItem: async (item: { productId: string; variantId?: string; quantity: number }) =>
+            (await client.post<{ message: string }>('/sales/cart/items', item)).data,
 
-        updateQuantity: async (productId: string, quantity: number) => {
-            const response = await client.put<{ message: string }>(`/sales/cart/items/${productId}`, { quantity });
-            return response.data;
-        },
+        updateQuantity: async (productId: string, quantity: number) =>
+            (await client.put<{ message: string }>(`/sales/cart/items/${productId}`, { quantity })).data,
 
-        removeItem: async (productId: string) => {
-            const response = await client.delete<{ message: string }>(`/sales/cart/items/${productId}`);
-            return response.data;
-        },
+        removeItem: async (productId: string) =>
+            (await client.delete<{ message: string }>(`/sales/cart/items/${productId}`)).data,
 
-        clear: async () => {
-            const response = await client.delete<{ message: string }>('/sales/cart/clear');
-            return response.data;
-        },
+        clear: async () => (await client.delete<{ message: string }>('/sales/cart/clear')).data,
 
-        applyCoupon: async (couponCode: string) => {
-            // Backend trả về { message, discountAmount, totalAmount } (SalesEndpoints.cs /cart/apply-coupon).
-            const response = await client.post<{ message: string; discountAmount: number; totalAmount: number }>('/sales/cart/apply-coupon', { couponCode });
-            return response.data;
-        },
+        applyCoupon: async (couponCode: string) =>
+            (await client.post<{ message: string; discountAmount: number; totalAmount: number }>(
+                '/sales/cart/apply-coupon', { couponCode })).data,
 
-        removeCoupon: async () => {
-            const response = await client.delete<{ message: string }>('/sales/cart/remove-coupon');
-            return response.data;
-        },
+        removeCoupon: async () => (await client.delete<{ message: string }>('/sales/cart/remove-coupon')).data,
 
-        setShipping: async (amount: number) => {
-            const response = await client.post<{ message: string; totalAmount: number }>('/sales/cart/set-shipping', { shippingAmount: amount });
-            return response.data;
-        },
+        /** Gộp giỏ vãng lai (cookie `qh_aid`) vào tài khoản + gắn đơn đã đặt lúc còn vãng lai. */
+        merge: async () =>
+            (await client.post<{ merged: boolean; cartId?: string; linkedOrders?: number; reason?: string }>(
+                '/sales/cart/merge', {}, guestCfg)).data,
+    },
+
+    publicCart: {
+        get: async () => (await client.get<GuestCartDto>('/sales/public/cart', guestCfg)).data,
+        addItem: async (item: { productId: string; productName: string; variantId?: string; quantity: number }) =>
+            (await client.post<{ id: string; itemCount: number }>('/sales/public/cart/items', item, guestCfg)).data,
     },
 
     checkoutSession: {
-        create: async (data: CreateCheckoutSessionDto): Promise<CheckoutSession> => {
-            const response = await client.post<CheckoutSession>('/sales/checkout/session', data);
-            return response.data;
-        },
-        extend: async (sessionId: string): Promise<CheckoutSession> => {
-            const response = await client.post<CheckoutSession>(`/sales/checkout/session/${sessionId}/extend`);
-            return response.data;
-        },
-        cancel: async (sessionId: string): Promise<{ message: string }> => {
-            const response = await client.delete<{ message: string }>(`/sales/checkout/session/${sessionId}`);
-            return response.data;
-        },
+        create: async (cartId: string) =>
+            (await client.post<CheckoutSessionDto>('/sales/checkout/session', { cartId })).data,
+        get: async (sessionId: string) =>
+            (await client.get<CheckoutSessionDto>(`/sales/checkout/session/${sessionId}`)).data,
+        extend: async (sessionId: string) =>
+            (await client.post<CheckoutSessionDto>(`/sales/checkout/session/${sessionId}/extend`)).data,
+        cancel: async (sessionId: string) =>
+            (await client.post<{ message: string }>(`/sales/checkout/session/${sessionId}/cancel`)).data,
     },
 
     orders: {
-        create: async (data: CheckoutDto) => {
-            // Luồng hợp nhất: gọi thẳng /sales/checkout (backend Phase 04-B đã gom fast-checkout vào đây).
-            try {
-                const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string }>('/sales/checkout', {
-                    items: data.items,
-                    shippingAddress: data.shippingAddress,
-                    notes: data.notes,
-                    sourceId: data.sourceId,
-                    paymentMethod: data.paymentMethod,
-                    couponCode: data.couponCode,
-                    isPickup: data.isPickup,
-                    pickupStoreId: data.pickupStoreId,
-                    pickupStoreName: data.pickupStoreName,
-                    customerId: data.customerId,
-                    manualDiscount: data.manualDiscount,
-                    shippingFee: data.shippingFee,
-                    checkoutSessionId: data.checkoutSessionId,
-                });
-                return response.data;
-            } catch (checkoutError: any) {
-                const errorData = checkoutError.response?.data;
-                const finalError = errorData?.error || errorData?.Error || errorData?.message || 'Không thể đặt hàng';
-                throw new Error(finalError);
-            }
-        },
+        /**
+         * Kênh Web. Dùng `/checkout/orchestrate` chứ KHÔNG phải `/checkout`: chỉ đường này
+         * nhận `checkoutSessionId` (giữ chỗ tồn kho + chống đặt trùng) và lấy dòng hàng từ
+         * giỏ trên server thay vì từ body của client.
+         */
+        create: async (data: OrchestrateCheckoutDto) =>
+            (await client.post<CheckoutResultDto>('/sales/checkout/orchestrate', data)).data,
 
-        guestCheckout: async (data: GuestCheckoutDto) => {
-            const response = await client.post<{ orderId: string; orderNumber: string; totalAmount: number; status: string; message: string }>('/sales/public/guest-checkout', {
-                customerName: data.customerName,
-                customerEmail: data.customerEmail,
-                customerPhone: data.customerPhone,
-                shippingAddress: data.shippingAddress,
-                items: data.items,
-                couponCode: data.couponCode,
-                notes: data.notes,
-                paymentMethod: data.paymentMethod,
-            });
-            return response.data;
-        },
+        guestCheckout: async (data: GuestCheckoutDto) =>
+            (await client.post<CheckoutResultDto>('/sales/public/guest-checkout', data, guestCfg)).data,
+    },
+
+    shipping: {
+        /** Phí ship do SERVER tính từ tạm tính sau giảm giá. Client không bao giờ gửi phí. */
+        quote: async (req: {
+            netSubtotal: number; isPickup?: boolean;
+            provinceCode?: string; wardCode?: string; weightGrams?: number;
+        }) => (await client.post<ShippingQuoteDto>('/sales/shipping/quote', req)).data,
+
+        provinces: async () =>
+            (await client.get<{ version: string; provinces: ProvinceDto[] }>('/sales/shipping/provinces')).data,
+
+        wards: async (provinceCode: string) =>
+            (await client.get<{ version: string; provinceCode: string; wards: WardDto[] }>(
+                `/sales/shipping/provinces/${provinceCode}/wards`)).data,
     },
 };
-
-// ============================================
-// Shipping Fee API
-// ============================================
-export async function calculateShippingFee(
-    toDistrictId: number,
-    toWardCode: string,
-    weight: number = 500
-): Promise<{ fee: number; expectedDeliveryDays: string }> {
-    const response = await client.post('/shipping/calculate-fee', { toDistrictId, toWardCode, weight });
-    return response.data;
-}

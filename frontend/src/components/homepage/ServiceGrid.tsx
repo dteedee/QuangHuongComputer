@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Award, Truck, Wrench } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 interface ServiceGridProps {

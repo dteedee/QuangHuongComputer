@@ -10,8 +10,11 @@ import { ROUTES } from './route-paths';
 const RepairPage = lazy(() => import('../pages/RepairPage').then((m) => ({ default: m.RepairPage })));
 const RepairDetailPage = lazy(() => import('../pages/RepairDetailPage').then((m) => ({ default: m.RepairDetailPage })));
 const BookingPage = lazy(() => import('../pages/repair/BookingPage').then((m) => ({ default: m.BookingPage })));
+const RepairTrackingPage = lazy(() => import('../pages/services/repair-tracking-page').then((m) => ({ default: m.RepairTrackingPage })));
 const WarrantyPage = lazy(() => import('../pages/WarrantyPage').then((m) => ({ default: m.WarrantyPage })));
-const ChatSupport = lazy(() => import('../components/ChatSupport').then((m) => ({ default: m.ChatSupport })));
+const MyWarrantiesPage = lazy(() => import('../pages/services/my-warranties-page').then((m) => ({ default: m.MyWarrantiesPage })));
+const WarrantyClaimPage = lazy(() => import('../pages/services/warranty-claim-page').then((m) => ({ default: m.WarrantyClaimPage })));
+const HelpCenterPage = lazy(() => import('../pages/services/help-center-page').then((m) => ({ default: m.HelpCenterPage })));
 const RecruitmentPage = lazy(() => import('../pages/RecruitmentPage').then((m) => ({ default: m.RecruitmentPage })));
 const JobDetailPage = lazy(() => import('../pages/JobDetailPage').then((m) => ({ default: m.JobDetailPage })));
 const PolicyPage = lazy(() => import('../pages/PolicyPage').then((m) => ({ default: m.PolicyPage })));
@@ -26,8 +29,16 @@ export const storefrontServiceRoutes: RouteDef[] = [
   { path: 'sua-chua', element: RepairPage, layout: 'storefront', seo: 'index', name: 'repair' },
   { path: 'sua-chua/:id', element: RepairDetailPage, layout: 'storefront', seo: 'index', hidden: true, name: 'repairDetail' },
   { path: 'booking', element: BookingPage, layout: 'storefront', seo: 'noindex', hidden: true, name: 'booking' },
+  { path: 'tra-cuu-sua-chua', element: RepairTrackingPage, layout: 'storefront', seo: 'index', hidden: true, name: 'repairTracking' },
   { path: 'bao-hanh', element: WarrantyPage, layout: 'storefront', seo: 'index', name: 'warranty' },
-  { path: 'support', element: ChatSupport, layout: 'storefront', seo: 'noindex', hidden: true },
+  // W3-3/D08: khu vực bảo hành của khách đã đăng nhập, sống dưới `pages/services/**` — sidebar
+  // tài khoản (W3-8, không thuộc track này) chỉ cần link tới 2 path này.
+  { path: 'tai-khoan/bao-hanh', element: MyWarrantiesPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'myWarranties' },
+  { path: 'tai-khoan/bao-hanh/yeu-cau-moi', element: WarrantyClaimPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'warrantyClaimNew' },
+  // Trước là `ChatSupport` mount trực tiếp -> thân trang trống với khách chưa đăng nhập (spec:
+  // "`/support` renders an empty body"). Nay là help centre thật; chat người thật (ChatSupport)
+  // được nhúng trong đó cho khách đã đăng nhập.
+  { path: 'ho-tro', element: HelpCenterPage, layout: 'storefront', seo: 'index', name: 'support' },
   { path: 'tuyen-dung', element: RecruitmentPage, layout: 'storefront', seo: 'index', name: 'recruitment' },
   { path: 'tuyen-dung/:id', element: JobDetailPage, layout: 'storefront', seo: 'index', hidden: true, name: 'recruitmentDetail' },
   { path: 'chinh-sach/:type', element: PolicyPage, layout: 'storefront', seo: 'index', hidden: true, name: 'policy' },
@@ -44,6 +55,7 @@ export const storefrontServiceRedirects: RedirectDef[] = [
   { from: 'repair', to: ROUTES.REPAIR, layout: 'storefront' },
   { from: 'repair/:id', to: '/sua-chua/:id', layout: 'storefront' },
   { from: 'warranty', to: ROUTES.WARRANTY, layout: 'storefront' },
+  { from: 'support', to: '/ho-tro', layout: 'storefront' },
   { from: 'recruitment', to: ROUTES.RECRUITMENT, layout: 'storefront' },
   { from: 'recruitment/:id', to: '/tuyen-dung/:id', layout: 'storefront' },
   { from: 'policy/:type', to: '/chinh-sach/:type', layout: 'storefront' },

@@ -57,6 +57,64 @@ export interface Product {
 
     /** JSON extensibility: freeform key/value attributes (JSON string, validated against CustomFieldDefinition) */
     attributes?: string;
+
+    // ---- Fields the ONE `ProductDto` projection really returns (docs/api-contracts/catalog.md §1).
+    // Added by W3-4 after probing GET /api/catalog/products against :5050 — they were already on
+    // the wire, the TS type just did not declare them.
+    categoryName?: string | null;
+    categorySlug?: string | null;
+    brandName?: string | null;
+    brandSlug?: string | null;
+    /** D02 — relative path derived from the primary media row. */
+    thumbnailUrl?: string | null;
+    /** D08 — product-level warranty override, in months. `null` = fall back to category policy. */
+    warrantyMonths?: number | null;
+    /** D08 — excluded from 1-for-1 exchange / buy-back ONLY, never from warranty. */
+    isReturnExcluded?: boolean;
+    /** D07 — "Chiếc" by default, "Lần" for services. */
+    unitName?: string | null;
+    /** Present only when the detail call used `?include=media`. */
+    medias?: ProductMedia[] | null;
+    /** Present only when the detail call used `?include=variants`. */
+    variants?: ProductVariant[] | null;
+}
+
+/**
+ * Detail shape the ADMIN editor asks for (`?include=media,specs,variants`).
+ * Kept separate from `ProductDetailBundle` (storefront, W3-7) because that one
+ * declares `specGroups` as the *schema* type `SpecificationGroup[]`, while the
+ * projection actually returns group+value pairs — see catalog.md §1.
+ */
+export interface AdminProductDetail extends Product {
+    specGroups?: ProductSpecGroup[] | null;
+}
+
+/** `specGroups[i]` of the detail projection — see catalog.md §1. */
+export interface ProductSpecGroup {
+    groupId: string;
+    groupName: string;
+    sortOrder: number;
+    values: Array<{
+        attributeId: string;
+        key: string;
+        name: string;
+        unit?: string | null;
+        dataType: SpecDataType;
+        value: string;
+    }>;
+}
+
+/** One row of `ProductPriceChanges` (D10). Written by the CatalogDbContext SaveChanges hook. */
+export interface ProductPriceChange {
+    id: string;
+    productId: string;
+    oldPrice?: number | null;
+    newPrice?: number | null;
+    oldCostPrice?: number | null;
+    newCostPrice?: number | null;
+    source?: string | null;
+    actorId?: string | null;
+    at: string;
 }
 
 // ============ Phase 03: Media / Variants / Specifications ============
@@ -69,7 +127,7 @@ export interface ProductMedia {
     variantId?: string;
     type: MediaType;
     url: string;
-    thumbnailUrl?: string;
+    thumbnailUrl?: string | null;
     altText?: string;
     sortOrder: number;
     isPrimary: boolean;
@@ -216,9 +274,22 @@ export interface ProductAttribute {
 
 export interface Category {
     id: string;
-    slug?: string;
+    slug?: string | null;
     name: string;
     description: string;
+    /** Tree edge — `GET /categories` returns a FLAT list, the FE builds the tree. */
+    parentId?: string | null;
+    imageUrl?: string | null;
+    icon?: string | null;
+    displayOrder?: number;
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    /** D01 — statutory VAT fraction (0 / 0.05 / 0.1), NOT a percentage. */
+    vatRate?: number | null;
+    /** D01 — eligible for the Nghị quyết VAT reduction. */
+    vatReductionEligible?: boolean;
+    /** D08 — every SKU in this category is tracked by serial number. */
+    isSerialTracked?: boolean;
     isActive: boolean;
     createdAt: string;
     updatedAt?: string;
@@ -229,8 +300,12 @@ export interface Category {
 
 export interface Brand {
     id: string;
+    slug?: string | null;
     name: string;
     description: string;
+    logoUrl?: string | null;
+    website?: string | null;
+    displayOrder?: number;
     isActive: boolean;
     createdAt: string;
     updatedAt?: string;
@@ -244,6 +319,11 @@ export interface ProductsResponse {
     page: number;
     pageSize: number;
     products: Product[];
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+    rangeFrom?: number;
+    rangeTo?: number;
 }
 
 export interface CreateProductDto {
@@ -265,6 +345,9 @@ export interface CreateProductDto {
     metaDescription?: string;
     metaKeywords?: string;
     attributes?: string;
+    warrantyMonths?: number;
+    isReturnExcluded?: boolean;
+    unitName?: string | null;
 }
 
 export interface UpdateProductDto {
@@ -288,7 +371,85 @@ export interface UpdateProductDto {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string;
+    canonicalUrl?: string;
     attributes?: string;
+    slug?: string;
+    warrantyMonths?: number;
+    isReturnExcluded?: boolean;
+    unitName?: string | null;
+    /** JSON cannot tell "absent" from "null" on a nullable — these erase explicitly. */
+    clearOldPrice?: boolean;
+    clearWarrantyMonths?: boolean;
+}
+
+/** `CreateCategoryDto` / `UpdateCategoryDto` (backend `CatalogDtos.cs:62-90`). */
+export interface CategoryWriteDto {
+    name: string;
+    description: string;
+    parentId?: string | null;
+    clearParent?: boolean;
+    imageUrl?: string | null;
+    icon?: string | null;
+    displayOrder?: number;
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    vatRate?: number | null;
+    vatReductionEligible?: boolean;
+    isSerialTracked?: boolean;
+    isActive?: boolean;
+    slug?: string;
+}
+
+/** `CreateBrandDto` / `UpdateBrandDto` (backend `CatalogDtos.cs:92-106`). */
+export interface BrandWriteDto {
+    name: string;
+    description: string;
+    logoUrl?: string | null;
+    website?: string | null;
+    displayOrder?: number;
+    isActive?: boolean;
+    slug?: string;
+}
+
+/** Body of the specification-group CRUD routes (catalog.md §8). */
+export interface SpecGroupWriteDto {
+    name: string;
+    categoryId?: string | null;
+    sortOrder: number;
+}
+
+/** Body of the specification-attribute CRUD routes (catalog.md §8). `key` is immutable on update. */
+export interface SpecAttributeWriteDto {
+    key?: string;
+    name: string;
+    dataType: SpecDataType;
+    unit?: string | null;
+    enumValuesJson?: string | null;
+    isFilterable: boolean;
+    isComparable: boolean;
+    sortOrder: number;
+}
+
+/** Row shape of `GET /catalog/reviews/admin/pending` (catalog.md §9). */
+export interface PendingReview {
+    id: string;
+    productId: string;
+    productName: string;
+    customerId: string;
+    rating: number;
+    title?: string | null;
+    comment: string;
+    isVerifiedPurchase: boolean;
+    createdAt: string;
+}
+
+/** Row shape of `GET /catalog/reviews/admin/sentiment-analysis`. */
+export interface ReviewSentiment {
+    positivePercent: number;
+    neutralPercent: number;
+    negativePercent: number;
+    totalReviews: number;
+    topKeywords: string[];
 }
 
 export interface UpdateBundleRequest {

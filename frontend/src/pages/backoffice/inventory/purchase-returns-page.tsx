@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { PackageX, RefreshCw, Plus, Eye, Send, CheckCircle, X, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AnimatedSection } from '../../../components/motion/animated-section';
-import { useConfirm } from '../../../context/ConfirmContext';
+import { useConfirm, usePrompt } from '../../../context/ConfirmContext';
 import { purchaseReturnApi, formatCurrency } from '../../../api/inventory';
 import type {
     PurchaseReturn,
@@ -38,6 +38,7 @@ export default function PurchaseReturnsPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [detail, setDetail] = useState<PurchaseReturn | null>(null);
     const confirm = useConfirm();
+    const { promptAmount } = usePrompt();
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -67,10 +68,28 @@ export default function PurchaseReturnsPage() {
         }
     };
 
+    const handleAccept = async (r: PurchaseReturn) => {
+        const ok = await confirm({ message: `Xác nhận NCC đã nhận hàng trả cho phiếu ${r.number}?`, variant: 'info' });
+        if (!ok) return;
+        try {
+            await purchaseReturnApi.accept(r.id);
+            toast.success('Đã ghi nhận NCC nhận hàng');
+            void load();
+        } catch (err) {
+            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+            toast.error(msg || 'Lỗi ghi nhận');
+        }
+    };
+
     const handleRefund = async (r: PurchaseReturn) => {
-        const amountStr = window.prompt(`Số tiền đã hoàn (VND) cho phiếu ${r.number}:`, String(r.total));
-        if (amountStr == null) return;
-        const amount = parseFloat(amountStr);
+        const amount = await promptAmount({
+            title: 'Ghi nhận hoàn tiền',
+            message: `Số tiền NCC đã hoàn cho phiếu ${r.number}:`,
+            defaultValue: r.total,
+            min: 1,
+            suffix: 'đ',
+        });
+        if (amount == null) return;
         if (!isFinite(amount) || amount <= 0) { toast.error('Số tiền không hợp lệ'); return; }
         try {
             await purchaseReturnApi.acceptRefund(r.id, amount);
@@ -185,8 +204,16 @@ export default function PurchaseReturnsPage() {
                                                     <Send size={13} /> Xác nhận gửi
                                                 </button>
                                             )}
-                                            {/* BE: MarkRefunded() chỉ chạy từ Accepted (PurchaseReturn.cs:59).
-                                                Bước Sent → Accepted chưa có UI, xem integration-requests-w0.md. */}
+                                            {/* BE: Accept() chỉ chạy từ Sent (PurchaseReturn.cs:52), wave-0 IR #59. */}
+                                            {r.status === 'Sent' && (
+                                                <button
+                                                    onClick={() => void handleAccept(r)}
+                                                    className="inline-flex items-center gap-1 px-2 py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg text-xs font-semibold"
+                                                >
+                                                    <CheckCircle size={13} /> NCC đã nhận
+                                                </button>
+                                            )}
+                                            {/* BE: MarkRefunded() chỉ chạy từ Accepted (PurchaseReturn.cs:59). */}
                                             {(r.status as string) === 'Accepted' && (
                                                 <button
                                                     onClick={() => void handleRefund(r)}

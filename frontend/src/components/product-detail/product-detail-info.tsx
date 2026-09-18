@@ -1,9 +1,27 @@
+/**
+ * The buy box (right column of the PDP).
+ *
+ * Decisions that shape it:
+ * - D01: every price is VAT-inclusive; the block says so once, here.
+ * - D08: warranty / 1-đổi-1 / đổi-trả come from `ProductPolicyBlock`, which
+ *        reads the two public effective-policy endpoints. No hardcoded months.
+ * - D09: stock is qualitative only — "Còn hàng" / "Sắp hết hàng" / "Hết hàng".
+ *        The exact quantity is never printed (it used to say "Chỉ còn 3 sản
+ *        phẩm" and "{n} sản phẩm có sẵn").
+ * - D04: the instalment line lives in `ProductPolicyBlock` and only appears
+ *        when a partner is really configured.
+ */
 import { useMemo } from 'react';
-import { Minus, Plus, ShoppingCart, ShoppingBag, Check, Star, Truck, Shield, Headphones, BadgeCheck } from 'lucide-react';
-import type { Product, ProductVariant, StockByBranch } from '../../api/catalog';
+import { Check, Headphones, Minus, Plus, ShoppingBag, ShoppingCart, Star, Truck } from 'lucide-react';
+
+import type { Product, ProductVariant } from '../../api/catalog';
+import { usePublicConfig } from '../../lib/use-public-config';
 import { formatNumber } from '../../utils/format';
-import ProductVariantSelector from './product-variant-selector';
+import { Badge, Button, IconButton } from '../ui';
+import ProductFlashCountdown from './product-flash-countdown';
+import ProductPolicyBlock from './product-policy-block';
 import ProductStockByBranch from './product-stock-by-branch';
+import ProductVariantSelector from './product-variant-selector';
 
 interface ProductDetailInfoProps {
     product: Product;
@@ -17,25 +35,44 @@ interface ProductDetailInfoProps {
     addingToCart: boolean;
     averageRating: number;
     reviewCount: number;
-    stockByBranch?: StockByBranch[];
+    /** Flash-sale price in force right now, when the promotion carries one. */
+    flashPrice?: number | null;
+    /** ISO end of that flash-sale window, for the countdown. */
+    flashEndAt?: string | null;
 }
 
-/** Cột phải trang chi tiết: giá, biến thể, tồn, nút mua. */
+/** D09 — three qualitative states, never a number. */
+function stockState(available: number, lowStockThreshold?: number | null) {
+    if (available <= 0) return { label: 'Hết hàng', cls: 'bg-danger-subtle text-danger border-danger/20' };
+    if (available <= (lowStockThreshold ?? 5)) {
+        return { label: 'Sắp hết hàng', cls: 'bg-warning-subtle text-warning border-warning/20' };
+    }
+    return { label: 'Còn hàng', cls: 'bg-success-subtle text-success border-success/20' };
+}
+
 export default function ProductDetailInfo({
     product, variants, selectedVariant, onVariantChange,
     quantity, onQuantityChange, onAddToCart, onBuyNow, addingToCart,
-    averageRating, reviewCount, stockByBranch,
+    averageRating, reviewCount, flashPrice, flashEndAt,
 }: ProductDetailInfoProps) {
+    const { data: config } = usePublicConfig();
     const hasVariants = variants.length > 0;
-    const displayPrice = selectedVariant?.price ?? product.price;
-    const displayOldPrice = selectedVariant?.oldPrice ?? product.oldPrice;
+    const catalogPrice = selectedVariant?.price ?? product.price;
+    const displayPrice = flashPrice && flashPrice > 0 ? flashPrice : catalogPrice;
+    const displayOldPrice = flashPrice && flashPrice > 0
+        ? catalogPrice
+        : selectedVariant?.oldPrice ?? product.oldPrice;
     const availableStock = selectedVariant?.stockQuantity ?? product.stockQuantity;
+    const stock = stockState(availableStock, product.lowStockThreshold);
+    const outOfStock = availableStock <= 0;
 
-    // Giá "từ X" khi có biến thể và giá thấp nhất < giá hiện tại
+    // "Từ X" khi có biến thể rẻ hơn biến thể đang chọn.
     const showPriceFrom = useMemo(() => {
         if (!hasVariants) return null;
         if (product.priceFrom != null && product.priceFrom < displayPrice) return product.priceFrom;
-        const min = Math.min(...variants.filter((v) => v.status === 'Active').map((v) => v.price));
+        const active = variants.filter((v) => v.status === 'Active').map((v) => v.price);
+        if (active.length === 0) return null;
+        const min = Math.min(...active);
         return Number.isFinite(min) && min < displayPrice ? min : null;
     }, [hasVariants, product.priceFrom, displayPrice, variants]);
 
@@ -43,50 +80,55 @@ export default function ProductDetailInfo({
         ? Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100)
         : null;
 
+    const freeshipThreshold = Number(
+        config?.find((c) => c.key === 'FREESHIP_THRESHOLD')?.value ?? NaN
+    );
+    const hotline = config?.find((c) => c.key === 'COMPANY_HOTLINE')?.value
+        ?? config?.find((c) => c.key === 'COMPANY_PHONE')?.value;
+
     return (
         <div className="space-y-5">
             {/* Tên + SKU + rating */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">{product.name}</h1>
+                <h1 className="mb-2 text-2xl font-bold leading-tight tracking-tight text-fg">{product.name}</h1>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-medium">
-                        SKU: {selectedVariant?.sku || product.sku}
-                    </span>
-                    {averageRating > 0 && (
-                        <span className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 py-0.5 rounded text-xs">
-                            <Star className="w-3.5 h-3.5 fill-current" />
-                            <span className="font-bold text-gray-700">{averageRating.toFixed(1)}</span>
-                            <span className="text-gray-500">({reviewCount})</span>
+                    <Badge variant="neutral">SKU: {selectedVariant?.sku || product.sku}</Badge>
+                    {reviewCount > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-sm bg-sunken px-1.5 py-0.5 text-xs">
+                            <Star className="h-3.5 w-3.5 fill-current text-rating" aria-hidden="true" />
+                            <span className="num font-bold text-fg">{averageRating.toFixed(1)}</span>
+                            <span className="num text-fg-subtle">({reviewCount} đánh giá)</span>
                         </span>
                     )}
                 </div>
             </div>
 
-            {/* Giá — pattern hacom: giá cũ gạch + tiết kiệm % → giá bán đỏ bold, ₫ superscript */}
-            <div className="bg-red-50/40 rounded-lg p-4 border border-gray-200">
-                <div className="min-h-[18px] flex items-center gap-2 text-[13px] mb-1">
+            {/* Giá — D01: mọi giá đã bao gồm VAT */}
+            <div className="rounded-xl border border-brand-line bg-brand-subtle/50 p-4">
+                <div className="mb-1 flex min-h-[18px] items-center gap-2 text-[13px]">
                     {displayOldPrice && displayOldPrice > displayPrice && (
                         <>
-                            <span className="text-gray-400 line-through">{formatNumber(displayOldPrice)}₫</span>
+                            <span className="num text-fg-subtle line-through">{formatNumber(displayOldPrice)}₫</span>
                             {discount != null && (
-                                <span className="text-accent font-semibold">(Tiết kiệm {discount}%)</span>
+                                <span className="num font-semibold text-savings">(Tiết kiệm {discount}%)</span>
                             )}
                         </>
                     )}
                 </div>
-                <div className="flex items-baseline gap-2 flex-wrap">
+                <div className="flex flex-wrap items-baseline gap-2">
                     {showPriceFrom != null && !selectedVariant && (
-                        <span className="text-sm text-gray-500">Từ</span>
+                        <span className="text-sm text-fg-subtle">Từ</span>
                     )}
-                    <span className="text-[28px] font-bold text-accent leading-none">
+                    <span className="num price text-[28px] font-bold leading-none text-brand-text">
                         {formatNumber(showPriceFrom != null && !selectedVariant ? showPriceFrom : displayPrice)}
-                        <sup className="text-sm font-bold ml-0.5">₫</sup>
+                        <sup className="ml-0.5 text-sm font-bold">₫</sup>
                     </span>
+                    {flashPrice && flashPrice > 0 && <Badge variant="discount">Giá Flash Sale</Badge>}
                 </div>
-                <p className="text-xs text-gray-500 mt-1.5">Giá đã bao gồm VAT</p>
+                <p className="mt-1.5 text-xs text-fg-subtle">Giá đã bao gồm VAT</p>
+                {flashPrice && flashPrice > 0 && <ProductFlashCountdown endAt={flashEndAt} />}
             </div>
 
-            {/* Chọn biến thể */}
             {hasVariants && (
                 <ProductVariantSelector
                     variants={variants}
@@ -95,106 +137,95 @@ export default function ProductDetailInfo({
                 />
             )}
 
-            {/* Trạng thái tồn — "✓ Sẵn hàng" xanh theo pattern hacom */}
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold border ${
-                availableStock > 10
-                    ? 'bg-emerald-50 text-stock border-emerald-100'
-                    : availableStock > 0
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-red-50 text-red-600 border-red-100'
-            }`}>
-                {availableStock > 10 && <Check className="w-4 h-4" />}
-                <span>
-                    {availableStock > 10
-                        ? '✓ Sẵn hàng'
-                        : availableStock > 0
-                            ? `Chỉ còn ${availableStock} sản phẩm`
-                            : 'Hết hàng'}
-                </span>
+            {/* D09: trạng thái tồn định tính, không lộ số lượng */}
+            <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold ${stock.cls}`}>
+                {!outOfStock && <Check className="h-4 w-4" aria-hidden="true" />}
+                <span>{stock.label}</span>
             </div>
 
             {/* Số lượng */}
             <div className="flex items-center gap-4">
-                <div className="flex items-center rounded-xl border border-gray-200 bg-white">
-                    <button
+                <div className="flex items-center rounded-lg border border-control-line bg-surface">
+                    <IconButton
+                        aria-label="Giảm số lượng"
+                        variant="ghost"
                         onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-                        disabled={quantity <= 1}
-                        className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-40 cursor-pointer rounded-l-xl"
+                        disabled={quantity <= 1 || outOfStock}
                     >
-                        <Minus className="w-4 h-4" />
-                    </button>
+                        <Minus />
+                    </IconButton>
                     <input
                         type="number"
+                        aria-label="Số lượng"
                         value={quantity}
-                        onChange={(e) => onQuantityChange(Math.max(1, Math.min(availableStock, Number(e.target.value))))}
-                        className="w-14 h-10 text-center border-x border-gray-200 focus:outline-none font-bold text-gray-900 text-sm"
+                        onChange={(e) => onQuantityChange(
+                            Math.max(1, Math.min(Math.max(availableStock, 1), Number(e.target.value) || 1))
+                        )}
+                        className="num h-10 w-14 border-x border-line bg-surface text-center text-sm font-bold text-fg focus:outline-none"
                         min={1}
-                        max={availableStock}
+                        max={Math.max(availableStock, 1)}
+                        disabled={outOfStock}
                     />
-                    <button
+                    <IconButton
+                        aria-label="Tăng số lượng"
+                        variant="ghost"
                         onClick={() => onQuantityChange(Math.min(availableStock, quantity + 1))}
-                        disabled={quantity >= availableStock}
-                        className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-40 cursor-pointer rounded-r-xl"
+                        disabled={quantity >= availableStock || outOfStock}
                     >
-                        <Plus className="w-4 h-4" />
-                    </button>
+                        <Plus />
+                    </IconButton>
                 </div>
-                <span className="text-gray-500 text-xs">{availableStock} sản phẩm có sẵn</span>
             </div>
 
-            {/* Nút hành động — CTA đỏ theo pattern hacom, compact ~44-48px */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <button
+            {/* CTA */}
+            <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                    className="flex-[3]"
                     onClick={onBuyNow}
-                    disabled={availableStock === 0}
-                    className="flex-[3] bg-accent hover:bg-accent-hover text-white px-5 py-3 rounded-lg text-sm font-semibold whitespace-nowrap transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
+                    disabled={outOfStock}
+                    loading={addingToCart}
                 >
-                    <ShoppingBag className="w-[18px] h-[18px]" /> MUA NGAY
-                </button>
-                <button
+                    <ShoppingBag className="h-[18px] w-[18px]" aria-hidden="true" /> MUA NGAY
+                </Button>
+                <Button
+                    className="flex-[2]"
+                    variant="secondary"
                     onClick={onAddToCart}
-                    disabled={availableStock === 0 || addingToCart}
-                    className="flex-[2] border-2 border-accent text-accent px-4 py-3 rounded-lg text-sm font-semibold whitespace-nowrap hover:bg-red-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 flex items-center justify-center gap-1.5 cursor-pointer"
+                    disabled={outOfStock}
+                    loading={addingToCart}
                 >
-                    <ShoppingCart className="w-[18px] h-[18px]" />
-                    {addingToCart ? 'ĐANG THÊM...' : 'THÊM VÀO GIỎ'}
-                </button>
+                    <ShoppingCart className="h-[18px] w-[18px]" aria-hidden="true" />
+                    THÊM VÀO GIỎ
+                </Button>
             </div>
 
-            {/* Tồn theo chi nhánh — nay dùng storeApi (Phase 05) thay cho catalog stock-by-branch */}
-            <ProductStockByBranch
-                productId={product.id}
-                variantId={selectedVariant?.id}
-            />
+            {/* D09: một cửa hàng ⇒ một dòng "Có sẵn tại" */}
+            <ProductStockByBranch productId={product.id} inStock={!outOfStock} />
 
-            {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
-                {[
-                    { icon: Truck, title: 'Miễn phí vận chuyển', sub: 'Đơn hàng > 5tr' },
-                    { icon: Shield, title: 'Bảo hành chính hãng', sub: product.warrantyInfo || '12 tháng' },
-                    { icon: Headphones, title: 'Hỗ trợ 24/7', sub: '0904.235.090' },
-                ].map(({ icon: Icon, title, sub }) => (
-                    <div key={title} className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <Icon className="w-5 h-5 text-gray-400 mb-1.5" />
-                        <span className="text-xs font-semibold text-gray-900 leading-tight">{title}</span>
-                        <span className="text-[11px] text-gray-500 mt-0.5">{sub}</span>
+            {/* Trust badges — số liệu lấy từ cấu hình, không viết cứng */}
+            <div className="grid grid-cols-2 gap-3 border-t border-line pt-4">
+                {Number.isFinite(freeshipThreshold) && freeshipThreshold > 0 && (
+                    <div className="flex flex-col items-center rounded-xl border border-line bg-sunken p-3 text-center">
+                        <Truck className="mb-1.5 h-5 w-5 text-fg-subtle" aria-hidden="true" />
+                        <span className="text-xs font-semibold leading-tight text-fg">Miễn phí vận chuyển</span>
+                        <span className="num mt-0.5 text-[11px] text-fg-subtle">
+                            Đơn từ {formatNumber(freeshipThreshold)}₫
+                        </span>
                     </div>
-                ))}
+                )}
+                {hotline && (
+                    <div className="flex flex-col items-center rounded-xl border border-line bg-sunken p-3 text-center">
+                        <Headphones className="mb-1.5 h-5 w-5 text-fg-subtle" aria-hidden="true" />
+                        <span className="text-xs font-semibold leading-tight text-fg">Tư vấn kỹ thuật</span>
+                        <a href={`tel:${hotline}`} className="num mt-0.5 text-[11px] text-brand-text hover:underline">
+                            {hotline}
+                        </a>
+                    </div>
+                )}
             </div>
 
-            {/* Cam kết / chính sách */}
-            <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
-                {[
-                    'Sản phẩm chính hãng 100%, đầy đủ giấy tờ',
-                    'Đổi trả trong 7 ngày nếu lỗi do nhà sản xuất',
-                    'Hỗ trợ trả góp 0% qua thẻ tín dụng',
-                ].map((text) => (
-                    <div key={text} className="flex items-start gap-2 px-4 py-2.5 text-sm text-gray-700">
-                        <BadgeCheck className="w-4 h-4 text-stock flex-shrink-0 mt-0.5" />
-                        <span>{text}</span>
-                    </div>
-                ))}
-            </div>
+            {/* D08 — bảo hành / đổi trả / trả góp, mọi con số từ API chính sách */}
+            <ProductPolicyBlock productId={product.id} isReturnExcluded={product.isReturnExcluded} />
         </div>
     );
 }

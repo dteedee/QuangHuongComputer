@@ -212,6 +212,18 @@ const _deleteEmployee = async (id: string): Promise<{ message: string }> => {
     return response.data;
 };
 
+// Employee <-> Identity account linking — docs/api-contracts/hr.md §1/§9.
+// Unblocks self-service, check-in, OT and leave for that user.
+const _linkEmployeeUser = async (id: string, userId: string): Promise<{ message: string; id: string; userId: string }> => {
+    const response = await client.post(`/hr/employees/${id}/link-user`, { userId });
+    return response.data;
+};
+
+const _unlinkEmployeeUser = async (id: string): Promise<{ message: string }> => {
+    const response = await client.post(`/hr/employees/${id}/unlink-user`);
+    return response.data;
+};
+
 // --- Timesheet APIs ---
 const _getTimesheets = async (params: TimesheetQueryParams = {}): Promise<TimesheetsResponse> => {
     const queryParams: Record<string, any> = {};
@@ -514,6 +526,8 @@ export const hrApi = {
         create: _createEmployee,
         update: _updateEmployee,
         delete: _deleteEmployee,
+        linkUser: _linkEmployeeUser,
+        unlinkUser: _unlinkEmployeeUser,
     },
     timesheets: {
         getList: _getTimesheets,
@@ -574,6 +588,8 @@ export const hrApi = {
     createEmployee: _createEmployee,
     updateEmployee: _updateEmployee,
     deleteEmployee: _deleteEmployee,
+    linkEmployeeUser: _linkEmployeeUser,
+    unlinkEmployeeUser: _unlinkEmployeeUser,
     getTimesheets: _getTimesheets,
     getTimesheet: _getTimesheet,
     createTimesheet: _createTimesheet,
@@ -1685,9 +1701,79 @@ const _payrollGetById = async (payrollId: string): Promise<Payroll> => {
     return response.data;
 };
 
+// Backend (PayslipGenerator.GenerateAsync) trả DTO PHẲNG với incomes/deductions/taxCalculation
+// tách riêng và field "description"/"isTaxable" — KHÔNG khớp shape PayslipDetail/PayslipLineItem
+// (lineItems/label/category/taxable) khai báo ở trên mà payslip-view.tsx tiêu thụ. Không có lớp
+// chuyển đổi này, `data.lineItems` luôn là undefined và `.filter(...)` ném lỗi ngay khi render
+// phiếu lương thật (đã xác minh live trên :5050, kỳ 08/2026). Chuyển đổi tại nguồn để UI không
+// cần biết chi tiết backend.
+interface RawPayslipLine {
+    type: string;
+    description: string;
+    amount: number;
+    isTaxable: boolean;
+}
+interface RawPayslipResponse {
+    payrollId: string;
+    employeeName?: string;
+    employeeCode?: string;
+    department?: string;
+    position?: string;
+    month: number;
+    year: number;
+    insurableSalary: number;
+    grossPay: number;
+    totalIncomeLines: number;
+    totalDeductions: number;
+    netPay: number;
+    incomes: RawPayslipLine[];
+    deductions: RawPayslipLine[];
+    calculatedAt?: string;
+    approvedAt?: string;
+}
+
+const INCOME_LINE_CATEGORY: Record<string, PayslipLineItem['category']> = {
+    BaseSalary: 'Income',
+    Overtime: 'Income',
+    Bonus: 'Bonus',
+    Allowance: 'Allowance',
+};
+const DEDUCTION_LINE_CATEGORY: Record<string, PayslipLineItem['category']> = {
+    InsuranceEmployee: 'Insurance',
+    Pit: 'Tax',
+    OtherDeduction: 'Deduction',
+};
+
 const _payslipGet = async (payrollId: string): Promise<PayslipDetail> => {
-    const response = await client.get<PayslipDetail>(`/hr/payroll/${payrollId}/payslip`);
-    return response.data;
+    const response = await client.get<RawPayslipResponse>(`/hr/payroll/${payrollId}/payslip`);
+    const raw = response.data;
+    const toLine = (l: RawPayslipLine, catMap: Record<string, PayslipLineItem['category']>): PayslipLineItem => ({
+        label: l.description,
+        category: catMap[l.type] ?? 'Other',
+        amount: l.amount,
+        taxable: l.isTaxable,
+    });
+    return {
+        payrollId: raw.payrollId,
+        // Backend không trả employeeId/baseSalary/status trong DTO phiếu lương (không cần cho
+        // hiển thị — payslip-view.tsx không đọc 3 field này); điền giá trị an toàn để khớp type.
+        employeeId: '',
+        employeeName: raw.employeeName,
+        employeeCode: raw.employeeCode,
+        department: raw.department,
+        position: raw.position,
+        period: { month: raw.month, year: raw.year },
+        baseSalary: raw.insurableSalary,
+        grossPay: raw.grossPay,
+        netPay: raw.netPay,
+        totalIncome: raw.totalIncomeLines,
+        totalDeductions: raw.totalDeductions,
+        lineItems: [
+            ...(raw.incomes ?? []).map((l) => toLine(l, INCOME_LINE_CATEGORY)),
+            ...(raw.deductions ?? []).map((l) => toLine(l, DEDUCTION_LINE_CATEGORY)),
+        ],
+        status: raw.approvedAt ? 'Approved' : raw.calculatedAt ? 'Calculated' : 'Draft',
+    };
 };
 
 // Named exports

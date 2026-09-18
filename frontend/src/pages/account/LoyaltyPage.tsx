@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { LoyaltyCard, LoyaltyHistory, RedeemPointsModal } from '../../components/loyalty';
 import { salesApi } from '../../api/sales';
 import type { LoyaltyAccount } from '../../api/sales';
-import { ArrowLeft, Coins, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Coins, Info } from 'lucide-react';
+import { AccountLayout } from '../../layouts/account-layout';
 
 const tierLevels = [
   { name: 'Bronze',   color: 'text-amber-700',  range: '0 - 4,999 điểm' },
@@ -30,8 +30,12 @@ export function LoyaltyPage() {
   }, []);
 
   const loadAccount = async () => {
+    // Was `setLoading(false)` here too (before the request even started) — the loading state
+    // never actually covered the fetch. Left as `setLoading(true)`; `LoyaltyCard`/`LoyaltyHistory`
+    // render their own skeletons independently of this page's `account` (used only by the redeem
+    // modal), so `loading` isn't wired into this page's JSX — tracked as unresolved below.
+    setLoading(true);
     try {
-      setLoading(false);
       const data = await salesApi.loyalty.getAccount();
       setAccount(data);
     } catch {
@@ -46,17 +50,7 @@ export function LoyaltyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <Link
-          to="/profile"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-accent transition-colors mb-4 text-sm cursor-pointer"
-        >
-          <ArrowLeft size={16} />
-          Quay lại tài khoản
-        </Link>
-
+    <AccountLayout breadcrumb={[{ label: 'Điểm tích lũy' }]}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2.5 bg-yellow-50 rounded-xl text-yellow-500">
             <Coins size={22} />
@@ -120,8 +114,7 @@ export function LoyaltyPage() {
             onSuccess={handleRedeemSuccess}
           />
         )}
-      </div>
-    </div>
+    </AccountLayout>
   );
 }
 

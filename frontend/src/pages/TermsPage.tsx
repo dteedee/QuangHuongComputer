@@ -110,7 +110,7 @@ export const TermsPage = () => {
                         <p className="text-sm text-gray-700">
                             <strong>Thông tin liên hệ:</strong> Nếu bạn có bất kỳ thắc mắc nào về điều khoản sử dụng,
                             vui lòng{' '}
-                            <Link to="/contact" className="text-accent font-semibold hover:underline cursor-pointer">liên hệ với chúng tôi</Link>.
+                            <Link to="/lien-he" className="text-accent font-semibold hover:underline cursor-pointer">liên hệ với chúng tôi</Link>.
                         </p>
                     </div>
                 </div>

@@ -58,6 +58,8 @@ interface FormState {
     sortOrder: number;
     hours: Record<string, DayHours>;
     warehouseIds: string[];
+    /** D09 — kho chính, phải nằm trong warehouseIds. */
+    primaryWarehouseId: string | null;
     employeeIds: string[];
 }
 
@@ -77,6 +79,7 @@ const EMPTY_STATE: FormState = {
     sortOrder: 0,
     hours: DEFAULT_HOURS,
     warehouseIds: [],
+    primaryWarehouseId: null,
     employeeIds: [],
 };
 
@@ -186,6 +189,7 @@ export default function StoreForm({ editingId, onClose, onSaved }: StoreFormProp
             isPickupPoint: state.isPickupPoint,
             sortOrder: state.sortOrder,
             warehouseIds: state.warehouseIds,
+            primaryWarehouseId: state.primaryWarehouseId,
             employeeIds: state.employeeIds,
         };
     };
@@ -413,20 +417,44 @@ export default function StoreForm({ editingId, onClose, onSaved }: StoreFormProp
                                 <p className="text-sm italic text-gray-500">Chưa có kho nào để gán</p>
                             ) : (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1">
-                                    {warehouses.filter(w => w.isActive).map(w => (
-                                        <label key={w.id} className="flex items-start gap-2 p-2 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
-                                            <input
-                                                type="checkbox"
-                                                checked={state.warehouseIds.includes(w.id)}
-                                                onChange={() => patch('warehouseIds', toggleId(state.warehouseIds, w.id))}
-                                            />
-                                            <span className="flex-1 min-w-0">
-                                                <span className="block font-medium text-gray-800 truncate">{w.name}</span>
-                                                <span className="block text-xs text-gray-500">{w.code} · {w.type}</span>
-                                            </span>
-                                        </label>
-                                    ))}
+                                    {warehouses.filter(w => w.isActive).map(w => {
+                                        const checked = state.warehouseIds.includes(w.id);
+                                        return (
+                                            <label key={w.id} className="flex items-start gap-2 p-2 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => {
+                                                        const nextIds = toggleId(state.warehouseIds, w.id);
+                                                        patch('warehouseIds', nextIds);
+                                                        // Bỏ chọn kho chính nếu kho đó bị bỏ khỏi danh sách gán.
+                                                        if (!nextIds.includes(w.id) && state.primaryWarehouseId === w.id) {
+                                                            patch('primaryWarehouseId', null);
+                                                        }
+                                                    }}
+                                                />
+                                                <span className="flex-1 min-w-0">
+                                                    <span className="block font-medium text-gray-800 truncate">{w.name}</span>
+                                                    <span className="block text-xs text-gray-500">{w.code} · {w.type}</span>
+                                                    {checked && (
+                                                        <label className="mt-1 flex items-center gap-1 text-xs text-accent cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="primaryWarehouse"
+                                                                checked={state.primaryWarehouseId === w.id}
+                                                                onChange={() => patch('primaryWarehouseId', w.id)}
+                                                            />
+                                                            Kho chính
+                                                        </label>
+                                                    )}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
                                 </div>
+                            )}
+                            {state.warehouseIds.length > 0 && !state.primaryWarehouseId && (
+                                <p className="mt-2 text-xs text-amber-600">Chưa chọn kho chính — xuất hàng ưu tiên sẽ không có kho mặc định.</p>
                             )}
                         </Section>
 
@@ -558,6 +586,9 @@ function mapDetailToState(detail: StoreDetail): FormState {
         sortOrder: detail.sortOrder,
         hours,
         warehouseIds: detail.warehouses.map(w => w.warehouseId),
+        primaryWarehouseId: detail.primaryWarehouseId
+            ?? detail.warehouses.find(w => w.isPrimary)?.warehouseId
+            ?? null,
         employeeIds: detail.employees.map(e => e.employeeId),
     };
 }

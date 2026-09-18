@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast';
 import { warrantyApi, WarrantyProvider } from '../../../api/warranty';
 import type { WarrantyPolicy, CreateWarrantyPolicyRequest, WarrantyProvider as WarrantyProviderT } from '../../../api/warranty';
 import { useConfirm } from '../../../context/ConfirmContext';
+import { WarrantyPolicyInheritancePanel } from './warranty-policy-inheritance-panel';
+import { WarrantySlaPoliciesSection } from './warranty-sla-policies-section';
 
 interface FormState {
     id?: string;
@@ -211,6 +213,15 @@ export default function WarrantyPoliciesPage() {
                     </table>
                 )}
             </div>
+
+            <WarrantyPolicyInheritancePanel policies={items} />
+
+            <WarrantySlaPoliciesSection />
+
+            <p className="text-xs text-gray-400">
+                Chính sách đổi trả (loại thứ 2 theo D08) nằm ở Bán hàng → Chính sách đổi trả
+                (<code>frontend/src/pages/backoffice/sale/return-policies-page.tsx</code>, ngoài phạm vi sở hữu file của track này).
+            </p>
 
             {editing && (
                 <PolicyModal

@@ -17,21 +17,30 @@ interface Review {
 
 interface ReviewItemProps {
   review: Review;
-  onMarkHelpful?: (reviewId: string) => void;
+  /** May reject (401 chưa đăng nhập, 409 đã bình chọn) — the count then rolls back. */
+  onMarkHelpful?: (reviewId: string) => Promise<void> | void;
 }
 
 export default function ReviewItem({ review, onMarkHelpful }: ReviewItemProps) {
   const [helpfulClicked, setHelpfulClicked] = useState(false);
+  const [voting, setVoting] = useState(false);
   const [localHelpfulCount, setLocalHelpfulCount] = useState(review.helpfulCount);
 
-  const handleHelpfulClick = () => {
-    if (helpfulClicked) return;
-
+  // Optimistic, but reversible: the vote endpoint now requires authentication and
+  // answers 409 on a second vote, so a failure has to take the +1 back instead of
+  // leaving the customer looking at a count the server never recorded.
+  const handleHelpfulClick = async () => {
+    if (helpfulClicked || voting || !onMarkHelpful) return;
+    setVoting(true);
     setHelpfulClicked(true);
     setLocalHelpfulCount((prev) => prev + 1);
-
-    if (onMarkHelpful) {
-      onMarkHelpful(review.id);
+    try {
+      await onMarkHelpful(review.id);
+    } catch {
+      setHelpfulClicked(false);
+      setLocalHelpfulCount((prev) => Math.max(0, prev - 1));
+    } finally {
+      setVoting(false);
     }
   };
 
@@ -132,8 +141,9 @@ export default function ReviewItem({ review, onMarkHelpful }: ReviewItemProps) {
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
         {/* Helpful Button */}
         <button
-          onClick={handleHelpfulClick}
-          disabled={helpfulClicked}
+          type="button"
+          onClick={() => { void handleHelpfulClick(); }}
+          disabled={helpfulClicked || voting}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
             helpfulClicked
               ? 'bg-blue-50 text-blue-600 cursor-default'

@@ -7,13 +7,64 @@ import client from '../client';
 import type {
     Brand,
     Category,
+    MediaType,
     Product,
     ProductAttribute,
     ProductDetailBundle,
+    ProductMedia,
     ProductReview,
+    ProductSpecGroup,
+    ProductVariant,
     SpecificationGroup,
     StockByBranch,
 } from './types';
+
+/** `include=` segments the PDP endpoint understands (docs/api-contracts/catalog.md §2). */
+export type ProductDetailInclude = 'media' | 'specs' | 'variants';
+
+/**
+ * `medias[i]` as the DETAIL projection really returns it: the field is `alt`
+ * (not `altText`) and `productId` is not echoed back. Measured against
+ * `GET /api/catalog/products/by-slug/{slug}?include=media` on 2026-09-18.
+ */
+export interface ProductMediaView extends Omit<ProductMedia, 'productId'> {
+    alt?: string | null;
+    productId?: string;
+}
+
+/** What `GET /products/by-slug/{slug}?include=media,specs,variants` returns. */
+export interface PublicProductDetail extends Omit<Product, 'medias'> {
+    medias?: ProductMediaView[] | null;
+    specGroups?: ProductSpecGroup[] | null;
+    variants?: ProductVariant[] | null;
+}
+
+/** `GET /api/warranty/policies/effective?productId=` (anonymous, D08). */
+export interface EffectiveWarrantyPolicy {
+    productId: string;
+    manufacturer?: { months: number; policyId: string | null; source: string } | null;
+    store?: { months: number; policyId: string | null; source: string } | null;
+}
+
+/** `GET /api/sales/return-policies/effective?productId=` (public, D08). */
+export interface EffectiveReturnPolicy {
+    daysForReturn: number;
+    daysForExchange: number;
+    daysForDefectReplace: number;
+    daysForStatutoryReturn: number;
+    isReturnExcluded: boolean;
+    warrantyMonths?: number | null;
+    allowOpenedBoxReturn?: boolean;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** `/san-pham/:slug` and the legacy `/product/:id` both land on the PDP. */
+export const isProductGuid = (value: string) => UUID_RE.test(value);
+
+export const MEDIA_TYPES: Record<MediaType, MediaType> = {
+    Image: 'Image', Video: 'Video', YoutubeEmbed: 'YoutubeEmbed',
+};
 
 export const catalogPublicProductApi = {
     getProduct: async (id: string) => {
@@ -88,9 +139,58 @@ export const catalogPublicProductApi = {
         return response.data;
     },
 
-    /** Lấy sản phẩm kèm media/variants/specs/stockByBranch (endpoint mở rộng). */
+    /**
+     * THE PDP read. One call, by slug or by GUID, with the `include=` segments
+     * the contract documents (`media,specs,variants` — there is no `reviews`
+     * or `stock` include; those are separate endpoints).
+     */
+    getProductDetail: async (
+        slugOrId: string,
+        includes: ProductDetailInclude[] = ['media', 'specs', 'variants'],
+    ): Promise<PublicProductDetail> => {
+        const path = isProductGuid(slugOrId)
+            ? `/catalog/products/${slugOrId}`
+            : `/catalog/products/by-slug/${encodeURIComponent(slugOrId)}`;
+        const response = await client.get<PublicProductDetail>(path, {
+            params: includes.length ? { include: includes.join(',') } : undefined,
+        });
+        return response.data;
+    },
+
+    /** `GET /products/{id}/related?limit=` — same category first, then same brand. */
+    getRelatedProducts: async (productId: string, limit = 8): Promise<Product[]> => {
+        const response = await client.get<Product[]>(`/catalog/products/${productId}/related`, {
+            params: { limit },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+    },
+
+    /** D08 — warranty months actually in force for this product. Never hardcode. */
+    getEffectiveWarrantyPolicy: async (productId: string): Promise<EffectiveWarrantyPolicy> => {
+        const response = await client.get<EffectiveWarrantyPolicy>('/warranty/policies/effective', {
+            params: { productId },
+        });
+        return response.data;
+    },
+
+    /**
+     * @deprecated Legacy bundle read kept for the wave-0 call sites that still
+     * use it (`guest-cart-storage`, `specification-editor`, `NewReturnRequestPage`,
+     * `ComparePage`). The `include` list was `medias,variants,specs,stock`, none
+     * of which the endpoint understands — the documented values are
+     * `media`, `specs`, `variants` (catalog.md §2), so every array came back
+     * null. Fixed here; new code calls `getProductDetail`.
+     */
     getProductWithDetails: async (id: string): Promise<ProductDetailBundle> => {
-        const response = await client.get<ProductDetailBundle>(`/catalog/products/${id}?include=medias,variants,specs,stock`);
+        const response = await client.get<ProductDetailBundle>(`/catalog/products/${id}?include=media,specs,variants`);
+        return response.data;
+    },
+
+    /** D08 — return/exchange windows actually in force for this product. */
+    getEffectiveReturnPolicy: async (productId: string): Promise<EffectiveReturnPolicy> => {
+        const response = await client.get<EffectiveReturnPolicy>('/sales/return-policies/effective', {
+            params: { productId },
+        });
         return response.data;
     },
 

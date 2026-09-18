@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Category } from '../../api/catalog';
+import { buildPath, ROUTES } from '../../routes/route-paths';
 
 interface HeaderMobileMenuProps {
     isOpen: boolean;
@@ -27,7 +28,7 @@ export const HeaderMobileMenu = ({
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
+            navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(searchQuery)}`);
             setSearchQuery('');
             onClose();
         }
@@ -51,7 +52,7 @@ export const HeaderMobileMenu = ({
                 {/* Drawer header */}
                 <div className="bg-accent p-4 flex items-center justify-between">
                     <Link
-                        to="/"
+                        to={ROUTES.HOME}
                         className="flex items-center gap-2.5"
                         onClick={onClose}
                         aria-label={`${companyBrand1} ${companyBrand2}`}
@@ -94,16 +95,16 @@ export const HeaderMobileMenu = ({
                 {/* Navigation */}
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-2 space-y-0.5">
-                        <Link to="/" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                        <Link to={ROUTES.HOME} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
                             <Home size={18} /> Trang chủ
                         </Link>
-                        <Link to="/products" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                        <Link to={ROUTES.PRODUCTS} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
                             <MenuIcon size={18} /> Danh mục sản phẩm
                         </Link>
-                        <Link to="/repairs" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                        <Link to={ROUTES.REPAIR} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
                             <Wrench size={18} /> Dịch vụ sửa chữa
                         </Link>
-                        <Link to="/warranty" onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                        <Link to={ROUTES.WARRANTY} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
                             <Monitor size={18} /> Bảo hành
                         </Link>
                     </div>
@@ -115,7 +116,7 @@ export const HeaderMobileMenu = ({
                             {categories.slice(0, 8).map((cat) => (
                                 <Link
                                     key={cat.id}
-                                    to={`/products?categoryId=${cat.id}`}
+                                    to={buildPath(ROUTES.CATEGORY, cat.slug ?? '')}
                                     onClick={onClose}
                                     className="flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer"
                                 >
@@ -130,13 +131,13 @@ export const HeaderMobileMenu = ({
                     <div className="mt-3 pt-3 border-t border-gray-100">
                         <h4 className="px-5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Hỗ trợ</h4>
                         <div className="px-2 space-y-0.5">
-                            <Link to="/contact" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
+                            <Link to={ROUTES.CONTACT} onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
                                 <Phone size={15} /> Liên hệ
                             </Link>
-                            <Link to="/recruitment" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
+                            <Link to={ROUTES.RECRUITMENT} onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
                                 <Briefcase size={15} /> Tuyển dụng
                             </Link>
-                            <Link to="/about" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
+                            <Link to={ROUTES.ABOUT} onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-accent rounded-lg transition-colors cursor-pointer">
                                 <FileText size={15} /> Giới thiệu
                             </Link>
                         </div>
@@ -147,7 +148,7 @@ export const HeaderMobileMenu = ({
                 <div className="p-3 border-t border-gray-100 bg-gray-50">
                     {isAuthenticated ? (
                         <div className="flex items-center justify-between">
-                            <Link to="/account" onClick={onClose} className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
+                            <Link to={ROUTES.ACCOUNT} onClick={onClose} className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
                                 <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs">
                                     {user?.fullName.charAt(0)}
                                 </div>
@@ -159,10 +160,10 @@ export const HeaderMobileMenu = ({
                         </div>
                     ) : (
                         <div className="flex gap-2">
-                            <Link to="/login" onClick={onClose} className="flex-1 text-center py-2 bg-accent text-white font-bold rounded-lg text-sm hover:bg-accent-hover transition-colors cursor-pointer">
+                            <Link to={ROUTES.LOGIN} onClick={onClose} className="flex-1 text-center py-2 bg-accent text-white font-bold rounded-lg text-sm hover:bg-accent-hover transition-colors cursor-pointer">
                                 Đăng nhập
                             </Link>
-                            <Link to="/register" onClick={onClose} className="flex-1 text-center py-2 bg-gray-200 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-300 transition-colors cursor-pointer">
+                            <Link to={ROUTES.REGISTER} onClick={onClose} className="flex-1 text-center py-2 bg-gray-200 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-300 transition-colors cursor-pointer">
                                 Đăng ký
                             </Link>
                         </div>

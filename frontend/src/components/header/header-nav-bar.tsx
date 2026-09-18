@@ -5,6 +5,7 @@ import {
     Briefcase, MessageCircle, User, Package, FileText
 } from 'lucide-react';
 import type { Menu } from '../../api/content';
+import { buildPath, ROUTES } from '../../routes/route-paths';
 
 const IconComponents: Record<string, React.ElementType> = {
     'Search': Search, 'ShoppingCart': ShoppingCart, 'Menu': MenuIcon,
@@ -61,13 +62,13 @@ export const HeaderNavBar = ({ headerMenu, isScrolled }: HeaderNavBarProps) => {
                         ))
                     ) : (
                         <>
-                            <Link to="/products" className={getLinkClass('/products')}>
+                            <Link to={ROUTES.PRODUCTS} className={getLinkClass(ROUTES.PRODUCTS)}>
                                 <MenuIcon size={15} /> Danh mục sản phẩm
                             </Link>
-                            <Link to="/repairs" className={getLinkClass('/repairs')}>
+                            <Link to={ROUTES.REPAIR} className={getLinkClass(ROUTES.REPAIR)}>
                                 <Wrench size={15} /> Dịch vụ sửa chữa
                             </Link>
-                            <Link to="/warranty" className={getLinkClass('/warranty')}>
+                            <Link to={ROUTES.WARRANTY} className={getLinkClass(ROUTES.WARRANTY)}>
                                 <Monitor size={15} /> Bảo hành
                             </Link>
                         </>
@@ -75,7 +76,7 @@ export const HeaderNavBar = ({ headerMenu, isScrolled }: HeaderNavBarProps) => {
                 </nav>
 
                 <Link
-                    to="/policy/promotions"
+                    to={buildPath(ROUTES.POLICY, 'promotions')}
                     className="flex items-center gap-1 text-xs font-bold text-accent bg-red-50 px-3 py-1.5 rounded-md border border-red-100 hover:bg-red-100 transition-colors cursor-pointer whitespace-nowrap"
                 >
                     <Zap size={13} className="fill-accent" />

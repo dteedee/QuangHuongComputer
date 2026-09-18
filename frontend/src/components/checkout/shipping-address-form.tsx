@@ -1,157 +1,81 @@
-import { useEffect, useState } from 'react';
-import { SearchableSelect } from '../ui/SearchableSelect';
+import type { Control, UseFormSetValue } from 'react-hook-form';
+import { TextField } from '../form';
 import AddressBookSelector from '../address-book-selector';
+import AddressRegionFields from './address-region-fields';
 import ShippingFeeCalculator from '../shipping-fee-calculator';
-import type { ShippingFormState } from './checkout-types';
-
-interface ProvinceApi {
-    name: string; code: number;
-    districts: { name: string; code: number; wards: { name: string; code: number }[] }[];
-}
+import type { ShippingSchemaValues } from './checkout-schemas';
+import type { ShippingQuoteDto } from '../../api/sales/cart-checkout';
 
 interface ShippingAddressFormProps {
     isAuthenticated: boolean;
-    value: ShippingFormState;
-    errors: Partial<Record<keyof ShippingFormState, string>>;
-    onChange: (patch: Partial<ShippingFormState>) => void;
-    onShippingFee: (fee: number) => void;
-    ghnDistrictId: number;
-    ghnWardCode: string;
-    onGhnChange: (districtId: number, wardCode: string) => void;
+    control: Control<ShippingSchemaValues>;
+    setValue: UseFormSetValue<ShippingSchemaValues>;
+    provinceCode: string;
+    wardCode: string;
+    /** Tạm tính sau giảm giá — server cần đúng con số này để báo phí ship. */
+    netSubtotal: number;
+    onQuote: (quote: ShippingQuoteDto) => void;
 }
 
-const input = (err?: string) =>
-    `w-full px-4 py-3 border ${err ? 'border-red-400 bg-red-50' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-red-100 focus:border-[var(--accent-primary,#dc2626)] outline-none text-gray-900 font-medium transition-all`;
-const label = 'block text-sm font-semibold text-gray-600 mb-1';
-
-/**
- * Form địa chỉ giao hàng — chỉ dùng khi deliveryMethod = "delivery".
- * Tách khỏi ShippingStep để giữ file cha < 200 dòng.
- */
+/** Form địa chỉ giao hàng — chỉ dùng khi deliveryMethod = "delivery". */
 export function ShippingAddressForm({
-    isAuthenticated, value, errors, onChange, onShippingFee,
-    ghnDistrictId, ghnWardCode, onGhnChange,
+    isAuthenticated, control, setValue, provinceCode, wardCode, netSubtotal, onQuote,
 }: ShippingAddressFormProps) {
-    const [provinces, setProvinces] = useState<ProvinceApi[]>([]);
-    const [districts, setDistricts] = useState<ProvinceApi['districts']>([]);
-    const [wards, setWards] = useState<{ name: string; code: number }[]>([]);
-
-    useEffect(() => {
-        // API công khai bên thứ ba (khác origin với backend QH) — không đi qua client axios
-        // dùng chung vì baseURL của client trỏ vào API của chúng ta, không phải domain này.
-        // eslint-disable-next-line no-restricted-syntax
-        fetch('https://provinces.open-api.vn/api/?depth=3')
-            .then(r => r.json())
-            .then((data: ProvinceApi[]) => setProvinces(data))
-            .catch(() => setProvinces([]));
-    }, []);
-
-    useEffect(() => {
-        if (!value.province || provinces.length === 0) return;
-        const p = provinces.find(x => x.name === value.province);
-        setDistricts(p?.districts ?? []);
-        if (value.district) {
-            const d = p?.districts.find(x => x.name === value.district);
-            setWards(d?.wards ?? []);
-        }
-    }, [value.province, value.district, provinces]);
-
-    const handleProvince = (name: string) => {
-        onChange({ province: name, district: '', ward: '' });
-        const p = provinces.find(x => x.name === name);
-        setDistricts(p?.districts ?? []); setWards([]);
-        onGhnChange(0, '');
-    };
-    const handleDistrict = (name: string) => {
-        onChange({ district: name, ward: '' });
-        const d = districts.find(x => x.name === name);
-        setWards(d?.wards ?? []);
-        onGhnChange(d?.code ? Number(d.code) : 0, '');
-    };
-    const handleWard = (name: string) => {
-        onChange({ ward: name });
-        const w = wards.find(x => x.name === name);
-        onGhnChange(ghnDistrictId, w?.code ? String(w.code) : '');
-    };
-
     return (
         <div className="space-y-5">
             {isAuthenticated && (
                 <AddressBookSelector
-                    onSelect={a => onChange({
-                        fullName: a.fullName ?? value.fullName,
-                        phone: a.phone ?? value.phone,
-                        address: a.streetAddress ?? value.address,
-                        ward: a.ward ?? value.ward,
-                        district: a.district ?? value.district,
-                        province: a.province ?? value.province,
-                        addressId: a.id,
-                    })}
+                    onSelect={a => {
+                        const set = (k: keyof ShippingSchemaValues, v: string) =>
+                            setValue(k, v, { shouldValidate: true, shouldDirty: true });
+                        if (a.fullName) set('fullName', a.fullName);
+                        if (a.phone) set('phone', a.phone);
+                        if (a.streetAddress) set('address', a.streetAddress);
+                        if (a.ward) set('ward', a.ward);
+                        if (a.province) set('province', a.province);
+                        if (a.id) setValue('addressId', a.id);
+                    }}
                 />
             )}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className={label}>Họ và tên *</label>
-                    <input value={value.fullName} onChange={e => onChange({ fullName: e.target.value })}
-                        placeholder="Nguyễn Văn A" className={input(errors.fullName)} />
-                    {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
-                </div>
-                <div>
-                    <label className={label}>SĐT *</label>
-                    <input type="tel" value={value.phone} onChange={e => onChange({ phone: e.target.value })}
-                        placeholder="09xx xxx xxx" className={input(errors.phone)} />
-                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                </div>
-                <div className="col-span-2">
-                    <label className={label}>Email *</label>
-                    <input type="email" value={value.email} onChange={e => onChange({ email: e.target.value })}
-                        placeholder="email@example.com" className={input(errors.email)} />
-                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <TextField name="fullName" control={control} label="Họ và tên người nhận" required
+                    placeholder="Nguyễn Văn A" autoComplete="name" />
+                <TextField name="phone" control={control} label="Số điện thoại" required
+                    placeholder="0912345678" inputMode="tel" autoComplete="tel" />
+                <div className="sm:col-span-2">
+                    <TextField name="email" control={control} label="Email" required
+                        placeholder="email@example.com" type="email" autoComplete="email"
+                        hint="Chúng tôi gửi xác nhận đơn hàng và hóa đơn điện tử tới email này." />
                 </div>
             </div>
-            <div className="border-t border-gray-100 pt-5 space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                    <div>
-                        <label className={label}>Tỉnh/TP *</label>
-                        <SearchableSelect value={value.province} onChange={handleProvince}
-                            options={provinces.map(p => ({ value: p.name, label: p.name }))}
-                            placeholder="Chọn tỉnh" error={!!errors.province} searchPlaceholder="Tìm tỉnh..." />
-                    </div>
-                    <div>
-                        <label className={label}>Quận/Huyện *</label>
-                        <SearchableSelect value={value.district} onChange={handleDistrict} disabled={!value.province}
-                            options={districts.map(d => ({ value: d.name, label: d.name }))}
-                            placeholder="Chọn quận" error={!!errors.district} searchPlaceholder="Tìm quận..." />
-                    </div>
-                    <div>
-                        <label className={label}>Phường/Xã *</label>
-                        <SearchableSelect value={value.ward} onChange={handleWard} disabled={!value.district}
-                            options={wards.map(w => ({ value: w.name, label: w.name }))}
-                            placeholder="Chọn phường" error={!!errors.ward} searchPlaceholder="Tìm phường..." />
-                    </div>
-                </div>
-                <div>
-                    <label className={label}>Địa chỉ chi tiết *</label>
-                    <textarea value={value.address} onChange={e => onChange({ address: e.target.value })} rows={2}
-                        placeholder="Số nhà, tên đường..."
-                        className={`w-full px-4 py-3 border ${errors.address ? 'border-red-400 bg-red-50' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-red-100 focus:border-[var(--accent-primary,#dc2626)] outline-none resize-none text-gray-900 font-medium`} />
-                    {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-                </div>
-                {ghnDistrictId > 0 && ghnWardCode && (
-                    <ShippingFeeCalculator districtId={ghnDistrictId} wardCode={ghnWardCode} onFeeCalculated={onShippingFee} />
+
+            <div className="border-t border-line pt-5 space-y-4">
+                <AddressRegionFields control={control} setValue={setValue}
+                    provinceCode={provinceCode} wardCode={wardCode} />
+
+                <TextField name="address" control={control} label="Địa chỉ chi tiết" required
+                    placeholder="Số nhà, tên đường, thôn/xóm…" autoComplete="street-address" />
+
+                {provinceCode && wardCode && (
+                    <ShippingFeeCalculator
+                        netSubtotal={netSubtotal}
+                        provinceCode={provinceCode}
+                        wardCode={wardCode}
+                        onQuote={onQuote}
+                    />
                 )}
             </div>
-            {!isAuthenticated && (
-                <label className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer">
-                    <input type="checkbox" checked={value.createAccount}
-                        onChange={e => onChange({ createAccount: e.target.checked })}
-                        className="mt-1 accent-[var(--accent-primary,#dc2626)]" />
-                    <span className="text-sm text-gray-700">
-                        Tạo tài khoản sau khi đặt hàng để theo dõi đơn dễ hơn
-                        (link đặt mật khẩu sẽ gửi qua email).
-                    </span>
-                </label>
-            )}
+
+            {/*
+              * Đã GỠ hai công tắc "Lưu địa chỉ này vào sổ địa chỉ" và "Tạo tài khoản sau khi đặt
+              * hàng": cả hai chỉ ghi vào state rồi bị bỏ đi — không có lời gọi API nào đọc chúng,
+              * nên khách bật lên và không có gì xảy ra (lời hứa giả). Bật lại ngay khi backend
+              * sẵn sàng, xem `reports/integration-requests-w3.md`:
+              *   - `POST /api/sales/addresses` vẫn BẮT BUỘC `District` (dữ liệu 3 cấp đã bãi bỏ
+              *     01/07/2025) nên không thể lưu địa chỉ 2 cấp mà không bịa quận/huyện;
+              *   - chưa có endpoint tạo tài khoản từ đơn của khách vãng lai.
+              */}
         </div>
     );
 }

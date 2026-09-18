@@ -183,6 +183,22 @@ export const repairAdminApi = {
             return response.data;
         },
 
+        // Payment + handover (W2-13 new, contract `docs/api-contracts/repair.md`).
+        readyForPickup: async (id: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/ready-for-pickup`);
+            return response.data;
+        },
+
+        pay: async (id: string, paymentReference?: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/pay`, { paymentReference });
+            return response.data;
+        },
+
+        handover: async (id: string, receivedByName: string): Promise<{ message: string; status: WorkOrderStatus }> => {
+            const response = await client.put(`/repair/admin/work-orders/${id}/handover`, { receivedByName });
+            return response.data;
+        },
+
         getStats: async (): Promise<{
             totalWorkOrders: number;
             todayWorkOrders: number;
@@ -213,6 +229,19 @@ export const repairAdminApi = {
             technicianId: string;
         }> => {
             const response = await client.post('/repair/admin/technicians', data);
+            return response.data;
+        },
+
+        // W2-13 new: PUT technician (name/specialty/hourlyRate/isAvailable). No dedicated
+        // deactivate endpoint exists yet — `isAvailable:false` is the closest equivalent
+        // (contract "Known gaps"; filed as IR for a real soft-delete action).
+        updateTechnician: async (id: string, data: {
+            name: string;
+            specialty: string;
+            hourlyRate: number;
+            isAvailable?: boolean;
+        }): Promise<{ message: string }> => {
+            const response = await client.put(`/repair/admin/technicians/${id}`, data);
             return response.data;
         },
     },

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, FileText, Wrench, GraduationCap, Package } from 'lucide-react';
 import { AnimatedSection } from '../motion/animated-section';
+import { ROUTES } from '../../routes/route-paths';
 
 // ---------------------------------------------------------------------------
 // Section top theo audience — nội dung hardcode ở phase này.
@@ -32,7 +33,7 @@ export const StudentTopSection = () => (
                 nhãn "combo" không có thật). */}
             <div className="flex flex-wrap gap-3">
                 <Link
-                    to="/products?maxPrice=15000000"
+                    to={`${ROUTES.PRODUCTS}?gia-den=15000000`}
                     className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-white border text-sm font-medium hover:brightness-95"
                     style={{ borderColor: 'var(--accent-primary, #D22B2B)', color: 'var(--accent-primary, #D22B2B)' }}
                 >
@@ -40,7 +41,7 @@ export const StudentTopSection = () => (
                     Giá dưới 15 triệu
                 </Link>
                 <Link
-                    to="/products"
+                    to={ROUTES.PRODUCTS}
                     className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-white border text-sm font-medium hover:brightness-95"
                     style={{ borderColor: 'var(--accent-primary, #D22B2B)', color: 'var(--accent-primary, #D22B2B)' }}
                 >
@@ -92,7 +93,7 @@ export const BusinessTopSection = () => (
             </ul>
 
             <Link
-                to="/contact?type=quote"
+                to={`${ROUTES.CONTACT}?type=quote`}
                 className="inline-flex items-center gap-2 min-h-[44px] px-5 py-3 rounded-full text-white text-sm font-semibold hover:brightness-95"
                 style={{ backgroundColor: 'var(--accent-primary, #D22B2B)' }}
             >

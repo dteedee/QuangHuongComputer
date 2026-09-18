@@ -153,7 +153,7 @@ export const AboutPage = () => {
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
                     <p className="text-sm text-gray-700">
                         <strong>Liên hệ với chúng tôi:</strong> Vui lòng{' '}
-                        <Link to="/contact" className="text-accent font-bold hover:underline cursor-pointer">liên hệ tại đây</Link> hoặc
+                        <Link to="/lien-he" className="text-accent font-bold hover:underline cursor-pointer">liên hệ tại đây</Link> hoặc
                         gọi hotline <a href={`tel:${company.phone2.replace(/\D/g, '')}`} className="text-accent font-bold cursor-pointer">{company.phone2}</a>
                     </p>
                 </div>

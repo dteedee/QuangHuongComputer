@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
@@ -8,7 +8,10 @@ import {
     Wifi, Wrench, Zap, Laptop, Gift, Star, Speaker,
     Camera, Headset, MousePointer2
 } from 'lucide-react';
-import { catalogApi, type Category } from '../../api/catalog';
+import { useQuery } from '@tanstack/react-query';
+import { catalogPublicListingApi } from '../../api/catalog/public-listing';
+import { queryKeys } from '../../lib/query-keys';
+import { buildPath, ROUTES } from '../../routes/route-paths';
 import { resolveMediaUrl } from '../../lib/media-url';
 
 // Import Swiper styles
@@ -45,7 +48,15 @@ const getCategoryIcon = (name: string) => {
 };
 
 export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
-    const [categories, setCategories] = useState<Category[]>([]);
+    /* Shared cache entry with the header/mega menu — one request per session,
+     * and the sidebar links now use the real category SLUG (they pointed at
+     * `/products?category=<guid>`, a param no page ever read). */
+    const categoriesQuery = useQuery({
+        queryKey: queryKeys.catalog.list({ resource: 'categories' }),
+        queryFn: catalogPublicListingApi.getCategories,
+        staleTime: 5 * 60 * 1000,
+    });
+    const categories = (categoriesQuery.data ?? []).filter((c) => c.isActive && (c.productCount ?? 0) > 0);
     const { slides = [], showSidebar = true } = config;
 
     // W0 gate: mũi điều hướng mặc định của Swiper nằm giữa hai cạnh nên ở 390px nó đè lên
@@ -57,17 +68,6 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
         'w-10 h-10 rounded-full bg-black/45 hover:bg-black/70 text-white flex items-center justify-center '
         + 'backdrop-blur-sm transition-colors ring-1 ring-white/25';
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await catalogApi.getCategories();
-                setCategories(data.filter(c => c.isActive));
-            } catch (err) {
-                console.error('Failed to fetch categories', err);
-            }
-        };
-        fetchCategories();
-    }, []);
 
     return (
         <div className="max-w-[1400px] mx-auto px-4 pt-6">
@@ -89,7 +89,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                             {categories.map((cat) => (
                                 <Link
                                     key={cat.id}
-                                    to={`/products?category=${cat.id}`}
+                                    to={buildPath(ROUTES.CATEGORY, cat.slug ?? '')}
                                     className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-accent transition-all group border-l-4 border-transparent hover:border-accent"
                                 >
                                     <span className="text-gray-400 group-hover:text-accent transition-colors">

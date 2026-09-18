@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Search, RefreshCw, Play, Pause, BarChart3, Ticket, X, Filter } from 'lucide-react';
+import { Plus, Search, RefreshCw, Play, Pause, BarChart3, Ticket, X, Filter, Archive, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   promotionsApi,
@@ -14,6 +14,7 @@ import {
 } from '../../api/promotions';
 import { PromotionWizard } from '../../components/admin/promotion-wizard';
 import { PromotionEffectivenessReport } from '../../components/admin/promotion-effectiveness-report';
+import { ConfirmDialog } from '../../components/ui';
 
 type Tab = 'list' | 'report';
 
@@ -37,6 +38,8 @@ export default function PromotionsPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<Promotion | null>(null);
   const [selectedReport, setSelectedReport] = useState<Promotion | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{ promotion: Promotion; action: 'archive' | 'delete' } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const filter: PromotionListFilter = useMemo(() => ({
     type: filterType,
@@ -86,6 +89,30 @@ export default function PromotionsPage() {
   const doPause = async (p: Promotion) => {
     try { await promotionsApi.pause(p.id); toast.success('Đã tạm dừng'); void load(); }
     catch { toast.error('Không tạm dừng được'); }
+  };
+
+  const confirmArchiveOrDelete = async () => {
+    if (!confirmTarget) return;
+    setConfirmLoading(true);
+    try {
+      if (confirmTarget.action === 'archive') {
+        await promotionsApi.archive(confirmTarget.promotion.id);
+        toast.success('Đã lưu trữ promotion');
+      } else {
+        await promotionsApi.remove(confirmTarget.promotion.id);
+        toast.success('Đã xoá promotion');
+      }
+      setConfirmTarget(null);
+      void load();
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? (confirmTarget.action === 'archive'
+          ? 'Không lưu trữ được — promotion đã có lượt dùng, hãy Tạm dừng thay thế.'
+          : 'Không xoá được — promotion đã có lượt dùng, hãy Lưu trữ thay thế.');
+      toast.error(msg);
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const changeType = (t: PromotionType | '') => {
@@ -213,6 +240,12 @@ export default function PromotionsPage() {
                             <IconBtn onClick={() => { setSelectedReport(p); setTab('report'); }} title="Báo cáo">
                               <BarChart3 className="w-4 h-4" />
                             </IconBtn>
+                            <IconBtn onClick={() => setConfirmTarget({ promotion: p, action: 'archive' })} title="Lưu trữ">
+                              <Archive className="w-4 h-4" />
+                            </IconBtn>
+                            <IconBtn onClick={() => setConfirmTarget({ promotion: p, action: 'delete' })} title="Xoá">
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </IconBtn>
                           </div>
                         </td>
                       </tr>
@@ -243,6 +276,21 @@ export default function PromotionsPage() {
           onSaved={() => closeWizard(true)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmTarget}
+        onOpenChange={(open) => { if (!open) setConfirmTarget(null); }}
+        title={confirmTarget?.action === 'archive' ? 'Lưu trữ promotion?' : 'Xoá promotion?'}
+        description={
+          confirmTarget?.action === 'archive'
+            ? `"${confirmTarget?.promotion.name}" sẽ chuyển sang Hết hạn và không thể kích hoạt lại. Nếu đã có lượt dùng, dùng Tạm dừng thay thế.`
+            : `Xoá vĩnh viễn "${confirmTarget?.promotion.name}". Không thể hoàn tác. Nếu đã có lượt dùng, hệ thống sẽ báo lỗi — dùng Lưu trữ thay thế.`
+        }
+        confirmLabel={confirmTarget?.action === 'archive' ? 'Lưu trữ' : 'Xoá'}
+        tone="danger"
+        loading={confirmLoading}
+        onConfirm={() => void confirmArchiveOrDelete()}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@
  * `warrantyAdminApi` by `admin.ts`.
  */
 import client from '../client';
-import type { LoanerStatus, RmaResult, RmaStatus } from './types';
+import type { LoanerStatus, RmaResult, RmaStatus, WarrantyProvider } from './types';
 
 // RMA
 export interface RmaItem {
@@ -116,13 +116,19 @@ export const warrantyAdminLoanerApi = {
         const response = await client.get<LoanerDevice[]>(`/warranty/loaner-devices?${params.toString()}`);
         return response.data;
     },
-    getEligibleSerials: async () => {
+    // W3-15 fix (IR#61.3, w0): real path is `/warranty/admin/claims/eligible-serials`
+    // (contract `docs/api-contracts/warranty.md`) — `/warranty/loaner-devices/eligible-serials`
+    // 404s, so the loaner-assignment serial picker was always empty.
+    // Real shape confirmed against :5050, 2026-09-18 (no `id`/`productName` —
+    // this endpoint predates the loaner feature and was built for a serial
+    // lookup, not a picker; `serialNumber` is the only stable key here).
+    getEligibleSerials: async (q?: string) => {
         const response = await client.get<Array<{
-            id: string;
             serialNumber: string;
             productId: string;
-            productName: string;
-        }>>('/warranty/loaner-devices/eligible-serials');
+            expirationDate: string;
+            provider: WarrantyProvider;
+        }>>('/warranty/admin/claims/eligible-serials', { params: q ? { q } : undefined });
         return response.data;
     },
     create: async (data: CreateLoanerRequest) => {

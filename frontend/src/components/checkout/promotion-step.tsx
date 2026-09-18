@@ -1,48 +1,60 @@
 import { motion } from 'framer-motion';
-import { Tag, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Tag } from 'lucide-react';
+import { Button, Card, CardBody } from '../ui';
 import PromotionInput from './promotion-input';
 import type { AppliedPromotion } from '../../api/promotion';
+import { fadeUp } from '../../design-system/motion';
 
 interface PromotionStepProps {
     appliedCode: string | null;
     onCodeChange: (code: string | null) => void;
     applied: AppliedPromotion[];
     loading: boolean;
+    /** Lý do server từ chối mã. Còn lỗi thì KHÔNG cho đi tiếp. */
+    error: string | null;
     onNext: () => void;
     onBack: () => void;
 }
 
-export function PromotionStep({ appliedCode, onCodeChange, applied, loading, onNext, onBack }: PromotionStepProps) {
+export function PromotionStep({
+    appliedCode, onCodeChange, applied, loading, error, onNext, onBack,
+}: PromotionStepProps) {
+    // Mã sai chặn "Tiếp tục"; không có mã nào thì vẫn đi tiếp bình thường.
+    const blocked = Boolean(appliedCode && error);
+
     return (
-        <motion.div key="promo" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-                    <Tag className="w-5 h-5" />
-                </div>
-                <div>
-                    <h2 className="text-lg font-bold text-gray-900">Khuyến mãi</h2>
-                    <p className="text-gray-500 text-xs">Áp mã & xem ưu đãi tự động cho đơn của bạn</p>
-                </div>
-            </div>
+        <motion.div variants={fadeUp} initial="hidden" animate="show" exit="hidden">
+            <Card>
+                <CardBody className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning-subtle text-warning">
+                            <Tag className="h-5 w-5" aria-hidden />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-semibold text-fg">Khuyến mãi</h2>
+                            <p className="text-13 text-fg-muted">Áp mã giảm giá và xem ưu đãi tự động cho đơn của bạn</p>
+                        </div>
+                    </div>
 
-            <PromotionInput
-                appliedCode={appliedCode}
-                onCodeChange={onCodeChange}
-                applied={applied}
-                loading={loading}
-            />
+                    <PromotionInput appliedCode={appliedCode} onCodeChange={onCodeChange}
+                        applied={applied} loading={loading} />
 
-            <div className="flex gap-3 mt-6">
-                <button type="button" onClick={onBack}
-                    className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold whitespace-nowrap hover:bg-gray-50 inline-flex items-center justify-center gap-1.5">
-                    <ArrowLeft className="w-[18px] h-[18px]" /> Quay lại
-                </button>
-                <button type="button" onClick={onNext}
-                    className="flex-[2] py-3 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center gap-1.5">
-                    Tiếp tục — thanh toán <ArrowRight className="w-[18px] h-[18px]" />
-                </button>
-            </div>
+                    {error && (
+                        <p role="alert" className="rounded-lg bg-danger-subtle px-3 py-2 text-13 text-danger">
+                            {error}
+                        </p>
+                    )}
+
+                    <div className="flex gap-3">
+                        <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+                            <ArrowLeft className="h-[18px] w-[18px]" /> Quay lại
+                        </Button>
+                        <Button type="button" onClick={onNext} className="flex-[2]" disabled={blocked || loading}>
+                            Tiếp tục — thanh toán <ArrowRight className="h-[18px] w-[18px]" />
+                        </Button>
+                    </div>
+                </CardBody>
+            </Card>
         </motion.div>
     );
 }

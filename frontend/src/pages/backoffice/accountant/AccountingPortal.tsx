@@ -1,300 +1,153 @@
-import { Link, useLocation } from 'react-router-dom';
-import { DollarSign, FileText, TrendingUp, Clock, Eye, Calendar, Filter, ArrowRight, CreditCard, Receipt, BarChart3, Wallet } from 'lucide-react';
-import { motion } from 'framer-motion';
+/**
+ * Cổng kế toán (W3-13).
+ *
+ * Lỗi cũ bị bịt ở đây: các ô KPI đọc `res.data` rồi `?? 0`, nên khi
+ * `GET /accounting/stats` trả 500 thì màn hình vẫn hiện "0 ₫" — không phân biệt
+ * được "không nợ" với "không đọc được". Mọi ô bây giờ đi qua `StatCard` với
+ * `value={null}` khi query lỗi (hiện "—") kèm một dòng lỗi có nút thử lại,
+ * đúng luật §4 của `docs/ui-kit-components.md`.
+ */
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import client from '../../../api/client';
-import { formatCurrency } from '../../../utils/format';
+import {
+    Banknote, BarChart3, CreditCard, Clock, FileText, Receipt, ReceiptText, TrendingUp, Wallet,
+} from 'lucide-react';
+import {
+    Button, Card, CardBody, CardHeader, CardTitle, Money, PageHeader, QueryBoundary,
+    StatCard, StatusBadge, Skeleton,
+} from '../../../components/ui';
+import { Can } from '../../../components/Can';
+import { PERMISSIONS } from '../../../constants/permissions';
+import {
+    einvoiceApi, formatCurrency, formatVnDate, invoiceStatusLabel, invoicesApi, statsApi,
+} from '../../../api/accounting';
 
-interface TabItem {
-    label: string;
-    path: string;
-    icon: React.ReactNode;
-    description: string;
-}
+/** KPI tiles take a preformatted string for money so the ₫ is never dropped. */
+const money = (v: number | undefined, failed: boolean) => (failed || v === undefined ? null : formatCurrency(v));
 
-interface Invoice {
-    id: string;
-    invoiceNumber: string;
-    type: number;
-    status: number;
-    customerId?: string;
-    supplierId?: string;
-    issueDate: string;
-    dueDate: string;
-    subTotal: number;
-    vatAmount: number;
-    totalAmount: number;
-    paidAmount: number;
-}
-
-interface AccountingStats {
-    totalReceivables: number;
-    revenueToday: number;
-    totalInvoices: number;
-    activeAccounts: number;
-}
-
-const tabs: TabItem[] = [
-    { label: 'Tổng quan', path: '/backoffice/accounting', icon: <BarChart3 size={18} />, description: 'Bảng điều khiển' },
-    { label: 'Công nợ thu', path: '/backoffice/accounting/ar', icon: <TrendingUp size={18} />, description: 'Phải thu khách hàng' },
-    { label: 'Công nợ trả', path: '/backoffice/accounting/ap', icon: <CreditCard size={18} />, description: 'Phải trả nhà cung cấp' },
-    { label: 'Quản lý ca', path: '/backoffice/accounting/shifts', icon: <Clock size={18} />, description: 'Quản lý ca làm việc' },
-    { label: 'Chi phí', path: '/backoffice/accounting/expenses', icon: <Wallet size={18} />, description: 'Theo dõi chi phí' },
-    { label: 'Báo cáo', path: '/backoffice/accounting/reports', icon: <Receipt size={18} />, description: 'Báo cáo tài chính' },
-    { label: 'Báo cáo thuế', path: '/backoffice/accounting/tax-reports', icon: <FileText size={18} />, description: 'Kê khai thuế VAT, CIT' },
+const QUICK_LINKS = [
+    { to: '/backoffice/accounting/invoices', label: 'Hoá đơn', description: 'Lập, phát hành và in hoá đơn', icon: FileText, permission: PERMISSIONS.ACCOUNTING_VIEW_INVOICES },
+    { to: '/backoffice/accounting/ar', label: 'Công nợ phải thu', description: 'Tuổi nợ và ghi nhận thu tiền', icon: TrendingUp, permission: PERMISSIONS.ACCOUNTING_MANAGE_DEBT },
+    { to: '/backoffice/accounting/ap', label: 'Công nợ phải trả', description: 'Hoá đơn nhà cung cấp', icon: CreditCard, permission: PERMISSIONS.ACCOUNTING_VIEW_INVOICES },
+    { to: '/backoffice/accounting/cash-book', label: 'Sổ quỹ tiền mặt', description: 'Phiếu thu, phiếu chi, số dư', icon: Wallet, permission: PERMISSIONS.ACCOUNTING_VIEW_INVOICES },
+    { to: '/backoffice/accounting/shifts', label: 'Ca thu ngân', description: 'Đối soát quỹ từng ca', icon: Clock, permission: PERMISSIONS.ACCOUNTING_VIEW_INVOICES },
+    { to: '/backoffice/accounting/expenses', label: 'Chi phí', description: 'Duyệt và chi trả khoản chi', icon: Receipt, permission: PERMISSIONS.ACCOUNTING_MANAGE_EXPENSE },
+    { to: '/backoffice/accounting/reconciliation', label: 'Đối soát thu tiền', description: 'Tiền về, COD và hoàn tiền', icon: Banknote, permission: PERMISSIONS.PAYMENTS_RECONCILE },
+    { to: '/backoffice/accounting/einvoice', label: 'Hoá đơn điện tử', description: 'Hàng đợi chờ xuất HĐĐT', icon: ReceiptText, permission: PERMISSIONS.ACCOUNTING_VIEW_INVOICES },
+    { to: '/backoffice/accounting/reports', label: 'Báo cáo tài chính', description: 'Dòng tiền, doanh thu - chi phí', icon: BarChart3, permission: PERMISSIONS.ACCOUNTING_VIEW_REPORTS },
+    { to: '/backoffice/accounting/tax-reports', label: 'Báo cáo thuế', description: '8 biểu mẫu theo TT133', icon: FileText, permission: PERMISSIONS.ACCOUNTING_VIEW_REPORTS },
 ];
 
 export const AccountingPortal = () => {
-    const location = useLocation();
-
-    // Use react-query for caching and better performance
-    const { data: invoicesData, isLoading: loadingInvoices } = useQuery({
-        queryKey: ['accounting-invoices'],
-        queryFn: async () => {
-            const res = await client.get('/accounting/invoices?page=1&pageSize=20');
-            return res.data;
-        },
-        staleTime: 30000, // Cache for 30 seconds
+    const statsQuery = useQuery({ queryKey: ['accounting', 'stats'], queryFn: statsApi.get });
+    const recentQuery = useQuery({
+        queryKey: ['accounting', 'invoices', 'recent'],
+        queryFn: () => invoicesApi.list({ page: 1, pageSize: 8, sortBy: 'issueDate', sortDir: 'desc' }),
+    });
+    const queueQuery = useQuery({
+        queryKey: ['accounting', 'einvoice', 'queue', 'portal'],
+        queryFn: () => einvoiceApi.queue({ page: 1, pageSize: 1, onlyLate: true }),
     });
 
-    const { data: stats, isLoading: loadingStats } = useQuery({
-        queryKey: ['accounting-stats'],
-        queryFn: async () => {
-            const res = await client.get('/accounting/stats');
-            return res.data as AccountingStats;
-        },
-        staleTime: 30000, // Cache for 30 seconds
-    });
-
-    const invoices = invoicesData?.invoices || [];
-    const loading = loadingInvoices || loadingStats;
-
-    const getStatusBadge = (status: number) => {
-        switch (status) {
-            case 0: return <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold">Bản nháp</span>;
-            case 1: return <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold">Đã xuất</span>;
-            case 2: return <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg text-xs font-semibold">Trả một phần</span>;
-            case 3: return <span className="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-semibold">Đã thanh toán</span>;
-            case 4: return <span className="px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-semibold">Quá hạn</span>;
-            case 5: return <span className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-xs font-semibold">Đã hủy</span>;
-            default: return null;
-        }
-    };
-
-    const viewInvoiceHTML = (invoiceId: string) => {
-        window.open(`${client.defaults.baseURL}/accounting/invoices/${invoiceId}/html`, '_blank');
-    };
+    const s = statsQuery.data;
+    const failed = statsQuery.isError;
 
     return (
-        <div className="space-y-10 pb-20">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
-                        Kế toán & <span className="text-accent">Tài chính</span>
-                    </h1>
-                    <p className="text-gray-500 font-medium text-xs">
-                        Quản lý hóa đơn, công nợ và báo cáo tài chính
-                    </p>
-                </div>
+        <div className="space-y-5">
+            <PageHeader
+                title="Tài chính - Kế toán"
+                description="Công nợ, quỹ tiền mặt, chi phí, hoá đơn và báo cáo thuế."
+            />
+
+            {failed && (
+                <Card>
+                    <CardBody className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-danger">
+                            Không đọc được số liệu tổng quan. Các ô bên dưới hiện dấu "—" thay vì 0 để tránh hiểu nhầm.
+                        </p>
+                        <Button variant="outline" size="sm" onClick={() => statsQuery.refetch()}>Thử lại</Button>
+                    </CardBody>
+                </Card>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard label="Doanh thu hôm nay" value={money(s?.revenueToday, failed)} icon={TrendingUp} />
+                <StatCard label="Tổng phải thu" value={money(s?.totalReceivables, failed)} icon={FileText}
+                    hint={failed ? undefined : <>Quá hạn: <Money value={s?.overdueReceivables ?? null} /></>} />
+                <StatCard label="Tổng phải trả" value={money(s?.totalPayables, failed)} icon={CreditCard}
+                    hint={failed ? undefined : <>Quá hạn: <Money value={s?.overduePayables ?? null} /></>} />
+                <StatCard label="Hoá đơn bán ra" value={failed ? null : s?.totalReceivableInvoices ?? null} icon={Receipt}
+                    hint={failed ? undefined : `${s?.totalPayableInvoices ?? 0} hoá đơn mua vào`} />
             </div>
 
-            {/* Tab Navigation */}
-            <div className="premium-card p-2 border-2 bg-white/80 backdrop-blur-sm">
-                <div className="flex flex-wrap gap-2">
-                    {tabs.map((tab) => {
-                        const isActive = location.pathname === tab.path;
-                        return (
-                            <Link
-                                key={tab.path}
-                                to={tab.path}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all group ${
-                                    isActive
-                                        ? 'bg-gray-950 text-white shadow-sm shadow-gray-950/20'
-                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950'
-                                }`}
-                            >
-                                <span className={`${isActive ? 'text-accent' : 'text-gray-400 group-hover:text-accent'} transition-colors`}>
-                                    {tab.icon}
-                                </span>
-                                <div>
-                                    <span className="text-sm font-medium">{tab.label}</span>
-                                    {isActive && (
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase">{tab.description}</p>
-                                    )}
-                                </div>
-                                {isActive && <ArrowRight size={14} className="text-accent ml-2" />}
-                            </Link>
-                        );
-                    })}
-                </div>
-            </div>
+            {queueQuery.data && queueQuery.data.total > 0 && (
+                <Card>
+                    <CardBody className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-fg">
+                            <StatusBadge tone="warning">Chờ xuất HĐĐT</StatusBadge>{' '}
+                            <span className="num">{queueQuery.data.total}</span> hoá đơn đã quá hạn xuất hoá đơn điện tử.
+                        </p>
+                        <Link to="/backoffice/accounting/einvoice"><Button size="sm" variant="outline">Xem hàng đợi</Button></Link>
+                    </CardBody>
+                </Card>
+            )}
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-red-50 text-accent rounded-xl">
-                            <DollarSign size={24} />
-                        </div>
-                        <span className="text-sm font-medium text-slate-400">Công nợ</span>
-                    </div>
-                    <h3 className="text-3xl font-semibold text-gray-900">
-                        {formatCurrency(stats?.totalReceivables || 0)}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Phải thu khách hàng</p>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
-                            <TrendingUp size={24} />
-                        </div>
-                        <span className="text-sm font-medium text-slate-400">Doanh thu</span>
-                    </div>
-                    <h3 className="text-3xl font-semibold text-gray-900">
-                        {formatCurrency(stats?.revenueToday || 0)}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Hôm nay</p>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                            <FileText size={24} />
-                        </div>
-                        <span className="text-sm font-medium text-slate-400">Hóa đơn</span>
-                    </div>
-                    <h3 className="text-3xl font-semibold text-gray-900">{stats?.totalInvoices || 0}</h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Tổng số hóa đơn</p>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                            <Clock size={24} />
-                        </div>
-                        <span className="text-sm font-medium text-slate-400">Tài khoản</span>
-                    </div>
-                    <h3 className="text-3xl font-semibold text-gray-900">{stats?.activeAccounts || 0}</h3>
-                    <p className="text-xs text-gray-400 font-bold mt-2">Đang hoạt động</p>
-                </motion.div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="premium-card p-8 border-2">
-                <h3 className="text-xs text-slate-400 mb-6">Thao tác nhanh</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[
-                        { to: '/backoffice/accounting/ar', icon: <TrendingUp size={20} />, label: 'Thu nợ khách', color: 'text-green-600 bg-green-50' },
-                        { to: '/backoffice/accounting/ap', icon: <CreditCard size={20} />, label: 'Trả nợ NCC', color: 'text-blue-600 bg-blue-50' },
-                        { to: '/backoffice/accounting/expenses', icon: <Wallet size={20} />, label: 'Ghi chi phí', color: 'text-amber-600 bg-amber-50' },
-                        { to: '/backoffice/accounting/reports', icon: <Receipt size={20} />, label: 'Xem báo cáo', color: 'text-purple-600 bg-purple-50' },
-                    ].map((action) => (
-                        <Link
-                            key={action.to}
-                            to={action.to}
-                            className="flex items-center gap-4 p-5 rounded-xl border-2 border-gray-50 hover:border-gray-200 hover:shadow-lg transition-all group active:scale-[0.98]"
-                        >
-                            <div className={`p-3 rounded-xl ${action.color}`}>
-                                {action.icon}
-                            </div>
-                            <div className="flex-1">
-                                <span className="text-sm font-medium text-slate-800">{action.label}</span>
-                            </div>
-                            <ArrowRight size={16} className="text-gray-300 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {QUICK_LINKS.map((link) => (
+                    <Can key={link.to} permission={link.permission}>
+                        <Link to={link.to} className="block focus-visible:outline-none">
+                            <Card interactive className="h-full p-4">
+                                <link.icon size={20} className="mb-2 text-fg-subtle" aria-hidden />
+                                <p className="font-medium text-fg">{link.label}</p>
+                                <p className="mt-0.5 text-sm text-fg-muted">{link.description}</p>
+                            </Card>
                         </Link>
-                    ))}
-                </div>
+                    </Can>
+                ))}
             </div>
-            {/* Invoices Table */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="premium-card overflow-hidden"
-            >
-                <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-sm flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-gray-900 ">Danh sách hóa đơn</h3>
-                    <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-gray-50 text-gray-400 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all">
-                            <Filter size={14} className="inline mr-2" />
-                            Lọc
-                        </button>
-                    </div>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 text-gray-400 text-xs uppercase font-semibold">
-                            <tr>
-                                <th className="px-8 py-5">Số hóa đơn</th>
-                                <th className="px-8 py-5">Ngày phát hành</th>
-                                <th className="px-8 py-5">Hạn thanh toán</th>
-                                <th className="px-8 py-5">Tổng tiền</th>
-                                <th className="px-8 py-5">Đã thanh toán</th>
-                                <th className="px-8 py-5">Trạng thái</th>
-                                <th className="px-8 py-5 text-right">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-8 py-20 text-center text-gray-300">
-                                        Đang tải...
-                                    </td>
-                                </tr>
-                            ) : invoices.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="px-8 py-20 text-center">
-                                        <FileText className="mx-auto text-gray-100 mb-4" size={60} />
-                                        <p className="text-xs text-gray-300 font-semibold">
-                                            Chưa có hóa đơn nào.
-                                        </p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                invoices.map((invoice: Invoice) => (
-                                    <tr key={invoice.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <span className="font-semibold text-accent font-mono">
-                                                {invoice.invoiceNumber}
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Hoá đơn gần đây</CardTitle>
+                    <Link to="/backoffice/accounting/invoices" className="text-sm text-brand-text">Xem tất cả</Link>
+                </CardHeader>
+                <CardBody>
+                    <QueryBoundary
+                        query={recentQuery}
+                        inline
+                        errorTitle="Không tải được hoá đơn gần đây"
+                        skeleton={<div className="space-y-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>}
+                        isEmpty={(d) => d.items.length === 0}
+                        empty={{ icon: FileText, title: 'Chưa có hoá đơn nào', description: 'Hoá đơn sinh tự động khi đơn hàng được giao hoặc thanh toán.' }}
+                    >
+                        {(data) => (
+                            <ul className="divide-y divide-line">
+                                {data.items.map((inv) => (
+                                    <li key={inv.id}>
+                                        <Link
+                                            to={`/backoffice/accounting/invoices/${inv.id}`}
+                                            className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm hover:bg-sunken"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <span className="num font-medium text-fg">{inv.invoiceNumber}</span>
+                                                <StatusBadge tone={invoiceStatusLabel[inv.status]?.tone ?? 'neutral'}>
+                                                    {invoiceStatusLabel[inv.status]?.label ?? inv.status}
+                                                </StatusBadge>
                                             </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-2 text-gray-600 text-xs font-bold">
-                                                <Calendar size={14} />
-                                                {new Date(invoice.issueDate).toLocaleDateString('vi-VN')}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="text-xs text-gray-600 font-bold">
-                                                {new Date(invoice.dueDate).toLocaleDateString('vi-VN')}
+                                            <span className="flex items-center gap-4">
+                                                <span className="num text-fg-subtle">{formatVnDate(inv.issueDate)}</span>
+                                                <Money value={inv.totalAmount} />
                                             </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-semibold text-gray-900 text-base">
-                                                {formatCurrency(invoice.totalAmount)}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="text-xs text-gray-600 font-bold">
-                                                {formatCurrency(invoice.paidAmount)}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6">{getStatusBadge(invoice.status)}</td>
-                                        <td className="px-8 py-6 text-right">
-                                            <button
-                                                onClick={() => viewInvoiceHTML(invoice.id)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </motion.div>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
         </div>
     );
 };
+
+export default AccountingPortal;

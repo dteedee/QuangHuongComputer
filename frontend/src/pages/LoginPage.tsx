@@ -13,9 +13,14 @@ import { useRecaptcha } from '../hooks/useRecaptcha';
 import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 import confetti from 'canvas-confetti';
 import { STAFF_ROLES } from '../constants/staff-roles';
+import { authApi, isTwoFactorChallenge } from '../api/auth';
+import { browserStorage } from '../lib/browser-storage';
+import TwoFactorPrompt from '../components/two-factor-prompt';
+
+const RATE_LIMIT_MESSAGE = 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau ít phút.';
 
 export const LoginPage = () => {
-    const { login, loginWithGoogle } = useAuth();
+    const { loginWithGoogle } = useAuth();
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -24,6 +29,10 @@ export const LoginPage = () => {
     const [loginSuccess, setLoginSuccess] = useState(false);
     const [loginError, setLoginError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    // Step 2 (2FA) state. `challengeToken` non-null means the password step already succeeded
+    // and we're waiting on a TOTP/backup code — docs/api-contracts/identity.md §1.
+    const [challengeToken, setChallengeToken] = useState<string | null>(null);
+    const [twoFaError, setTwoFaError] = useState('');
     const { executeRecaptcha } = useRecaptcha(RECAPTCHA_SITE_KEY);
 
     const triggerConfetti = () => {
@@ -37,20 +46,64 @@ export const LoginPage = () => {
         return roles.some(role => (STAFF_ROLES as readonly string[]).includes(role)) ? '/backoffice' : '/';
     };
 
+    /**
+     * Persists a completed session and does a FULL reload rather than `navigate()`. `AuthContext`
+     * (owned by W1-8, out of this track's globs) only reads `token`/`refreshToken`/`user` from
+     * storage once, on mount — it has no public "adopt this already-issued session" method, and
+     * this track cannot add one to a file it doesn't own. A reload re-mounts `AuthProvider`, which
+     * picks the session up from storage exactly like a page refresh after a normal login would.
+     * Filed as an integration request (AuthContext needs a `completeLogin(data)` method) so the
+     * next track through that file can remove this workaround.
+     */
+    const persistSessionAndGo = (data: { token: string; refreshToken: string; user: { roles: string[] } }) => {
+        browserStorage.setItem('token', data.token);
+        browserStorage.setItem('refreshToken', data.refreshToken);
+        browserStorage.setJSON('user', data.user);
+        setLoginSuccess(true);
+        triggerConfetti();
+        setTimeout(() => {
+            window.location.href = getRedirectPath(data.user.roles || []);
+        }, 1200);
+    };
+
     const onSubmit = async (data: LoginFormData) => {
         setIsLoading(true);
         setLoginError('');
         try {
             const recaptchaToken = await executeRecaptcha(RECAPTCHA_ACTIONS.LOGIN);
-            await login(data.email, data.password, recaptchaToken);
-            const savedUser = localStorage.getItem('user');
-            const userObj = savedUser ? JSON.parse(savedUser) : null;
-            const roles = userObj?.roles || [];
-            setLoginSuccess(true);
-            triggerConfetti();
-            setTimeout(() => navigate(getRedirectPath(roles)), 1500);
+            const result = await authApi.loginRaw({ email: data.email, password: data.password, recaptchaToken });
+            if (isTwoFactorChallenge(result)) {
+                setChallengeToken(result.challengeToken);
+                return;
+            }
+            persistSessionAndGo(result);
         } catch (error: any) {
-            setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Tài khoản hoặc mật khẩu không chính xác');
+            if (error?.response?.status === 429) {
+                setLoginError(RATE_LIMIT_MESSAGE);
+            } else {
+                // Backend deliberately answers the same generic message for "no such account" and
+                // "wrong password" (identity.md §"Deliberately shallow") — surfaced verbatim, never
+                // overridden with something more specific, so the UI doesn't reintroduce enumeration.
+                setLoginError(error.response?.data?.Error || error.response?.data?.error || 'Tài khoản hoặc mật khẩu không chính xác');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const onVerifyTwoFactor = async (payload: { code?: string; backupCode?: string }) => {
+        if (!challengeToken) return;
+        setIsLoading(true);
+        setTwoFaError('');
+        try {
+            const result = await authApi.loginTwoFactor({ challengeToken, ...payload });
+            persistSessionAndGo(result);
+        } catch (error: any) {
+            if (error?.response?.status === 429) {
+                setTwoFaError(RATE_LIMIT_MESSAGE);
+            } else {
+                setTwoFaError(error.response?.data?.Error || error.response?.data?.error || 'Mã xác thực không đúng hoặc đã hết hạn.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -94,6 +147,14 @@ export const LoginPage = () => {
                                 <h2 className="text-xl font-bold text-gray-900 mb-1">Đăng nhập thành công!</h2>
                                 <p className="text-sm text-gray-500">Đang chuyển hướng...</p>
                             </motion.div>
+                        ) : challengeToken ? (
+                            <TwoFactorPrompt
+                                key="2fa"
+                                loading={isLoading}
+                                error={twoFaError}
+                                onVerify={onVerifyTwoFactor}
+                                onCancel={() => { setChallengeToken(null); setTwoFaError(''); }}
+                            />
                         ) : (
                             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Đăng nhập tài khoản</h1>

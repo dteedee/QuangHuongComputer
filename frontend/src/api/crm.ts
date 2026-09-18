@@ -449,6 +449,12 @@ export const crmApi = {
     removeFromSegment: async (customerId: string, segmentId: string): Promise<void> => {
       await client.delete(`/crm/customers/${customerId}/segments/${segmentId}`);
     },
+
+    /** `POST /crm/customers/analytics/recalculate` — `ManageCustomers`. No body. */
+    recalculateAnalytics: async (): Promise<{ processed: number; autoAssigned: number }> => {
+      const response = await client.post<{ processed: number; autoAssigned: number }>('/crm/customers/analytics/recalculate');
+      return response.data;
+    },
   },
 
   // ============ Segments ============
@@ -642,6 +648,16 @@ export const crmApi = {
     preview: async (id: string, customerAnalyticsId?: string): Promise<string> => {
       const response = await client.get<string>(`/crm/campaigns/${id}/preview${customerAnalyticsId ? `?customerAnalyticsId=${customerAnalyticsId}` : ''}`);
       return response.data;
+    },
+
+    /**
+     * "Gửi thử" — NOT in the current backend contract (crm.md §6: campaigns are unchanged stubs;
+     * grepped `CrmEndpoints.cs` 2026-09-19, no `/send-test` route exists). Calling this 404s until
+     * W2-8/CRM adds it — filed as an integration request. Kept here (not faked) so the FE action
+     * is wired to a real client call whose failure the UI reports honestly.
+     */
+    sendTest: async (id: string, testEmail: string): Promise<void> => {
+      await client.post(`/crm/campaigns/${id}/send-test`, { testEmail });
     },
   },
 

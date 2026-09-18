@@ -13,6 +13,9 @@ export interface AssignClaimRequest {
     claimType: ClaimType;
     technicianId?: string;
     workOrderId?: string;
+    /** D08: RMA gửi hãng / máy mượn — contract body `{ClaimType, WorkOrderId?, RmaId?, LoanerDeviceId?}`. */
+    rmaId?: string;
+    loanerDeviceId?: string;
     notes?: string;
 }
 
@@ -106,9 +109,15 @@ export const warrantyAdminClaimsApi = {
         return response.data;
     },
 
-    // Legacy alias — vẫn giữ cho compat
+    // Legacy alias — vẫn giữ cho compat. D08: response carries the "3 lần"
+    // query result (`resolvedClaimCountForSerial` + `eligibleForReplaceOrRefund`)
+    // — never a stored flag, always recomputed by the backend.
     resolveClaim: async (id: string, notes: string) => {
-        const response = await client.post<{ message: string; id: string; status: string }>(`/warranty/admin/claims/${id}/resolve`, { notes });
+        const response = await client.post<{
+            message: string; id: string; status: string;
+            resolvedClaimCountForSerial?: number;
+            eligibleForReplaceOrRefund?: boolean;
+        }>(`/warranty/admin/claims/${id}/resolve`, { notes });
         return response.data;
     },
 

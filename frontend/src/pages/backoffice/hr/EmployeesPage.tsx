@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
-import { UserPlus, Mail, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff, FileText } from 'lucide-react';
+import { UserPlus, Mail, Search, Edit2, Loader2, Check, Users2, Briefcase, Calendar, Power, PowerOff, FileText, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hrApi, contractsApi, contractTypeLabels, contractStatusLabels, type Employee } from '../../../api/hr';
@@ -13,10 +13,11 @@ import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
 import { DependentsEditor } from '../../../components/hr/dependents-editor';
 import { SalaryStructureHistory } from '../../../components/hr/salary-structure-history';
+import { EmployeeAccountLinkPanel } from '../../../components/hr/employee-account-link-panel';
 import { z } from 'zod';
 import { validationMessages as msg } from '../../../lib/validation/messages';
 
-type EditTab = 'info' | 'dependents' | 'contracts' | 'salary';
+type EditTab = 'info' | 'account' | 'dependents' | 'contracts' | 'salary';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -337,7 +338,14 @@ export const EmployeesPage = () => {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        {getStatusBadge(employee.status)}
+                                        <div className="flex flex-col gap-1.5">
+                                            {getStatusBadge(employee.status)}
+                                            {!employee.userId && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-lg text-[8px] font-semibold w-fit" title="Chưa liên kết tài khoản đăng nhập — không thể tự phục vụ">
+                                                    <ShieldAlert size={10} /> Chưa liên kết
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -399,19 +407,25 @@ export const EmployeesPage = () => {
             >
                 {editingEmployee && (
                     <div className="flex gap-1 mb-6 border-b border-gray-100">
-                        {(['info', 'dependents', 'contracts', 'salary'] as EditTab[]).map(t => (
+                        {(['info', 'account', 'dependents', 'contracts', 'salary'] as EditTab[]).map(t => (
                             <button
                                 key={t}
                                 type="button"
                                 onClick={() => setEditTab(t)}
-                                className={`px-4 py-2 text-xs font-semibold transition-colors ${editTab === t ? 'border-b-2 border-accent text-accent' : 'text-gray-500 hover:text-gray-700'}`}
+                                className={`px-4 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5 ${editTab === t ? 'border-b-2 border-accent text-accent' : 'text-gray-500 hover:text-gray-700'}`}
                             >
                                 {tabLabel(t)}
+                                {t === 'account' && !editingEmployee.userId && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Chưa liên kết tài khoản" />
+                                )}
                             </button>
                         ))}
                     </div>
                 )}
 
+                {editingEmployee && editTab === 'account' && (
+                    <EmployeeAccountLinkPanel employee={editingEmployee} />
+                )}
                 {editingEmployee && editTab === 'dependents' && (
                     <DependentsEditor employeeId={editingEmployee.id} />
                 )}
@@ -564,6 +578,7 @@ export const EmployeesPage = () => {
 function tabLabel(t: EditTab): string {
     switch (t) {
         case 'info': return 'Thông tin';
+        case 'account': return 'Tài khoản đăng nhập';
         case 'dependents': return 'Người phụ thuộc';
         case 'contracts': return 'Hợp đồng';
         case 'salary': return 'Cơ cấu lương';

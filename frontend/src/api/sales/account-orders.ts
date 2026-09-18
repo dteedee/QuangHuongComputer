@@ -50,7 +50,50 @@ export interface LoyaltyTransaction {
 
 export type LoyaltyTransactionType = 'Earn' | 'Redeem' | 'Expired' | 'Adjustment' | 'Refund' | 'Bonus' | 'Referral';
 
+/**
+ * `GET /api/sales/public/orders/track` response (docs/api-contracts/sales-checkout-orders.md
+ * "Tra cứu đơn của khách vãng lai"). Anonymous — no email, no internal notes, no promo code.
+ * Lives here (not a separate file) because this track has no other owned `api/` home for a
+ * guest-facing sales call; kept clearly separate from the authenticated `getMyOrders`/`getMyOrder`.
+ */
+export interface GuestOrderTrackingResult {
+    orderNumber: string;
+    status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
+    orderDate: string;
+    confirmedAt?: string;
+    shippedAt?: string;
+    deliveredAt?: string;
+    cancelledAt?: string;
+    subtotalAmount: number;
+    discountAmount: number;
+    shippingAmount: number;
+    taxAmount: number;
+    totalAmount: number;
+    shippingAddress?: string;
+    customerName?: string;
+    deliveryTrackingNumber?: string;
+    deliveryCarrier?: string;
+    items: Array<{
+        productName: string;
+        variantName?: string;
+        quantity: number;
+        unitPrice: number;
+        lineTotal: number;
+        isGift: boolean;
+    }>;
+}
+
 export const salesAccountOrdersApi = {
+    /** Guest order lookup — `pages/account/GuestOrderLookupPage.tsx` (Todo #6). Both params required. */
+    trackGuestOrder: async (orderNumber: string, phone: string): Promise<GuestOrderTrackingResult> => {
+        const response = await client.get<GuestOrderTrackingResult>('/sales/public/orders/track', {
+            params: { orderNumber, phone },
+        });
+        return response.data;
+    },
+
     getMyOrders: async () => {
         const response = await client.get<Order[]>(`/sales/orders?t=${Date.now()}`);
         return response.data;

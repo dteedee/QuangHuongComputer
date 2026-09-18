@@ -36,8 +36,12 @@ export const ForgotPasswordPage = () => {
             await client.post('/auth/forgot-password', { email });
             setIsSubmitted(true);
             toast.success('Nếu email tồn tại, chúng tôi đã gửi link đặt lại mật khẩu!');
-        } catch (error) {
-            toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+        } catch (error: any) {
+            if (error?.response?.status === 429) {
+                toast.error('Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau ít phút.');
+            } else {
+                toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +113,10 @@ export const ForgotPasswordPage = () => {
                             <div>
                                 <p className="font-semibold mb-1">Email đã được gửi!</p>
                                 <p className="text-sm">
-                                    Vui lòng kiểm tra hộp thư của bạn và làm theo hướng dẫn để đặt lại mật khẩu.
+                                    Vui lòng kiểm tra hộp thư và lấy mã xác nhận 6 số, sau đó{' '}
+                                    <Link to={`/reset-password?email=${encodeURIComponent(email)}`} className="font-semibold underline cursor-pointer">
+                                        nhập mã tại đây
+                                    </Link>.
                                 </p>
                             </div>
                         </div>

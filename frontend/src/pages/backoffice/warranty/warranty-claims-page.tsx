@@ -16,10 +16,8 @@ const STATUS_LABELS: Record<ClaimStatusT, { label: string; cls: string; icon: Re
     Pending: { label: 'Chờ duyệt', cls: 'bg-amber-100 text-amber-700', icon: Clock },
     Approved: { label: 'Đã duyệt', cls: 'bg-blue-100 text-blue-700', icon: CheckCircle },
     Rejected: { label: 'Từ chối', cls: 'bg-red-100 text-red-700', icon: XCircle },
-    Assigned: { label: 'Đã phân', cls: 'bg-indigo-100 text-indigo-700', icon: Wrench },
-    Processing: { label: 'Đang xử lý', cls: 'bg-purple-100 text-purple-700', icon: RefreshCw },
+    InProgress: { label: 'Đang xử lý', cls: 'bg-purple-100 text-purple-700', icon: RefreshCw },
     Resolved: { label: 'Đã giải quyết', cls: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
-    Completed: { label: 'Hoàn tất', cls: 'bg-green-100 text-green-700', icon: CheckCircle },
 };
 
 const CLAIM_TYPE_LABELS: Record<ClaimTypeT, string> = {
@@ -305,14 +303,21 @@ function ClaimDrawer({ claim, onClose, onChanged, onPrint }: {
         }
     };
 
+    // W3-15 fix (IR#61.2, w0): `completeClaim` POSTs `/warranty/claims/{id}/complete`,
+    // a route that does not exist on the backend (404-by-construction) — no claim
+    // could ever reach Resolved from this UI. The real endpoint is `/resolve`.
     const handleComplete = async () => {
         setSubmitting(true);
         try {
-            await warrantyApi.admin.completeClaim(claim.id, { result: 'Success', notes });
+            const res = await warrantyApi.admin.resolveClaim(claim.id, notes || 'Đã xử lý xong');
             toast.success('Đã hoàn tất claim');
+            if (res.eligibleForReplaceOrRefund) {
+                toast('Serial này đủ điều kiện đổi máy mới / thu hồi hoàn tiền (D08 "3 lần")', { icon: '⚠️', duration: 6000 });
+            }
             onChanged();
-        } catch {
-            toast.error('Không hoàn tất được');
+        } catch (err) {
+            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+            toast.error(msg || 'Không hoàn tất được');
         } finally {
             setSubmitting(false);
         }
@@ -364,11 +369,42 @@ function ClaimDrawer({ claim, onClose, onChanged, onPrint }: {
                         <div className="whitespace-pre-wrap">{claim.issueDescription}</div>
                     </div>
 
-                    {/* SLA */}
+                    {/* D08 §4: hai lớp thời gian — KHÔNG trộn lẫn */}
+                    {claim.committedTurnaroundDays != null && claim.deviceReceivedAt && (() => {
+                        const deadline = new Date(claim.deviceReceivedAt);
+                        deadline.setDate(deadline.getDate() + claim.committedTurnaroundDays!);
+                        const daysLeft = Math.ceil((deadline.getTime() - Date.now()) / 86400000);
+                        const overdue = daysLeft < 0;
+                        const nearing = daysLeft >= 0 && daysLeft <= 2;
+                        return (
+                            <div className={`rounded-xl p-3 text-sm border ${overdue ? 'bg-red-50 border-red-300 text-red-700' : nearing ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                                <div className="font-bold flex items-center gap-2">
+                                    <Clock size={14} />
+                                    Hạn công bố trên biên nhận: {claim.committedTurnaroundDays} ngày
+                                </div>
+                                <div className="mt-1">
+                                    Nhận máy {new Date(claim.deviceReceivedAt).toLocaleDateString('vi-VN')} → hạn {deadline.toLocaleDateString('vi-VN')}
+                                    {overdue ? ' — ĐÃ QUÁ HẠN (Đ30.2.đ: khách có quyền đòi đổi mới/hoàn tiền)' : nearing ? ` — còn ${daysLeft} ngày` : ''}
+                                </div>
+                                <div className="text-xs opacity-70 mt-1">Đây là mốc pháp lý in cho khách, khác với SLA nội bộ dưới đây.</div>
+                            </div>
+                        );
+                    })()}
+
+                    {(claim.eligibleForReplaceOrRefund || (claim.resolvedClaimCountForSerial ?? 0) >= 3) && (
+                        <div className="bg-purple-50 border border-purple-300 rounded-xl p-3 text-sm text-purple-800 flex items-center gap-2">
+                            <AlertTriangle size={16} />
+                            <span className="font-semibold">
+                                Serial đã sửa {claim.resolvedClaimCountForSerial ?? '≥3'} lần — đủ điều kiện đổi máy mới/thu hồi hoàn tiền (D08, quy tắc "3 lần")
+                            </span>
+                        </div>
+                    )}
+
+                    {/* SLA nội bộ — mục tiêu vận hành, KHÔNG in cho khách */}
                     {claim.slaWarning && (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 flex items-center gap-2">
                             <AlertTriangle size={16} />
-                            <span className="font-semibold">Cảnh báo SLA — đã vượt 80% thời hạn</span>
+                            <span className="font-semibold">Cảnh báo SLA nội bộ — đã vượt 80% thời hạn (mục tiêu vận hành, không in cho khách)</span>
                         </div>
                     )}
 
@@ -430,7 +466,7 @@ function ClaimDrawer({ claim, onClose, onChanged, onPrint }: {
                     )}
 
                     {/* Hoàn tất */}
-                    {(claim.status === ClaimStatus.Assigned || claim.status === ClaimStatus.Processing) && (
+                    {(claim.status === ClaimStatus.Approved || claim.status === ClaimStatus.InProgress) && (
                         <button
                             onClick={handleComplete}
                             disabled={submitting}

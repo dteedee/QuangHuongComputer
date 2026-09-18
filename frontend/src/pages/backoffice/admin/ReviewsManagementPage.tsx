@@ -1,330 +1,251 @@
-import { useState } from 'react';
-import { SearchableSelect } from '../../../components/ui/SearchableSelect';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, MessageSquare, Star, X } from 'lucide-react';
 import {
-  Star, Check, X, Search, RefreshCw, Filter, ChevronLeft, ChevronRight,
-  MessageSquare, Eye, AlertTriangle
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useConfirm } from '@context/ConfirmContext';
-import client from '@api/client';
+  Badge, Button, Card, CardBody, Combobox, PageHeader, QueryBoundary, Select, SkeletonText,
+  StatCard, StatusBadge, Tab, TabList, TabPanel, Tabs, notify,
+} from '../../../components/ui';
+import { Can } from '../../../components/Can';
+import { usePrompt } from '../../../context/ConfirmContext';
+import { PERMISSIONS } from '../../../constants/permissions';
+import { catalogAdminApi } from '../../../api/catalog/admin';
+import { queryKeys } from '../../../lib/query-keys';
+import { formatDateTime } from '../../admin/products/admin-formatting';
 
-interface PendingReview {
-  id: string;
-  productId: string;
-  productName: string;
-  customerId: string;
-  rating: number;
-  title?: string;
-  comment: string;
-  isVerifiedPurchase: boolean;
-  createdAt: string;
-}
+const RATINGS = [
+  { value: '', label: 'Mọi số sao' },
+  ...[5, 4, 3, 2, 1].map((n) => ({ value: String(n), label: `${n} sao` })),
+];
 
-interface ApprovedReview extends PendingReview {
-  isApproved: boolean;
-  approvedAt?: string;
-  approvedBy?: string;
-}
+const Stars = ({ rating }: { rating: number }) => (
+  <span className="inline-flex items-center gap-0.5" aria-label={`${rating} trên 5 sao`}>
+    {Array.from({ length: 5 }).map((_, i) => (
+      <Star key={i} size={13} className={i < rating ? 'fill-warning text-warning' : 'text-fg-subtle'} aria-hidden />
+    ))}
+  </span>
+);
 
-// API functions
-const reviewsApi = {
-  getPending: async (): Promise<PendingReview[]> => {
-    const response = await client.get('/catalog/reviews/admin/pending');
-    return response.data;
-  },
-  approve: async (reviewId: string): Promise<{ message: string }> => {
-    const response = await client.post(`/catalog/reviews/admin/${reviewId}/approve`);
-    return response.data;
-  },
-  reject: async (reviewId: string): Promise<{ message: string }> => {
-    const response = await client.delete(`/catalog/reviews/admin/${reviewId}`);
-    return response.data;
-  },
-  getAll: async (params: { page?: number; status?: string; productId?: string }): Promise<{
-    reviews: ApprovedReview[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }> => {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.status) queryParams.append('status', params.status);
-    if (params.productId) queryParams.append('productId', params.productId);
-    const response = await client.get(`/catalog/reviews/admin?${queryParams.toString()}`);
-    return response.data;
-  }
-};
-
+/**
+ * Kiểm duyệt đánh giá sản phẩm.
+ *
+ * Backend chỉ có 3 mặt (catalog.md §9): hàng chờ duyệt (toàn hệ thống), duyệt,
+ * và từ chối = XOÁ HẲN. Không có trạng thái "đã từ chối" để liệt kê lại, cũng
+ * chưa có endpoint liệt kê đánh giá đã duyệt theo toàn hệ thống — nên tab
+ * "Đã duyệt" làm việc theo TỪNG sản phẩm qua
+ * `GET /products/{id}/reviews?approvedOnly=false` (chỉ nhân viên được bỏ lọc).
+ * Hai khoảng hở này đã ghi vào `integration-requests-w3.md`, không bịa UI thay thế.
+ */
 export function ReviewsManagementPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'all'>('pending');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const confirm = useConfirm();
+  const { promptText } = usePrompt();
+  const [tab, setTab] = useState('pending');
+  const [productFilter, setProductFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('');
+  const [approvedProductId, setApprovedProductId] = useState('');
 
-  // Fetch pending reviews
-  const { data: pendingReviews, isLoading, refetch } = useQuery({
-    queryKey: ['admin', 'reviews', 'pending'],
-    queryFn: reviewsApi.getPending,
-    enabled: statusFilter === 'pending',
+  const pendingQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'reviews-pending' }),
+    queryFn: catalogAdminApi.reviews.listPending,
+  });
+  const sentimentQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'reviews-sentiment' }),
+    queryFn: catalogAdminApi.reviews.sentiment,
+  });
+  const productsQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'products-for-reviews' }),
+    queryFn: () => catalogAdminApi.listProducts({ pageSize: 100 }),
+  });
+  const approvedQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'reviews-of-product', id: approvedProductId }),
+    queryFn: () => catalogAdminApi.reviews.listForProduct(approvedProductId),
+    enabled: tab === 'approved' && Boolean(approvedProductId),
   });
 
-  // Approve mutation
-  const approveMutation = useMutation({
-    mutationFn: reviewsApi.approve,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] });
-      toast.success('Đã duyệt đánh giá thành công!');
-    },
-    onError: () => {
-      toast.error('Không thể duyệt đánh giá!');
-    }
-  });
+  const productOptions = useMemo(
+    () => (productsQuery.data?.products ?? []).map((p) => ({ value: p.id, label: p.name })),
+    [productsQuery.data],
+  );
 
-  // Reject mutation
-  const rejectMutation = useMutation({
-    mutationFn: reviewsApi.reject,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] });
-      toast.success('Đã từ chối đánh giá!');
-    },
-    onError: () => {
-      toast.error('Không thể từ chối đánh giá!');
-    }
-  });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
 
-  const handleApprove = (reviewId: string) => {
-    approveMutation.mutate(reviewId);
+  const run = async (label: string, work: () => Promise<unknown>) => {
+    try { await work(); refresh(); notify.success(label); }
+    catch (error) { notify.error('Thao tác thất bại', { description: (error as Error).message }); }
   };
 
-  const handleReject = async (reviewId: string) => {
-    const ok = await confirm({ message: 'Bạn có chắc muốn từ chối đánh giá này?', variant: 'danger' });
-    if (ok) {
-      rejectMutation.mutate(reviewId);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+  const reject = async (id: string, what: string) => {
+    const reason = await promptText({
+      title: 'Từ chối đánh giá',
+      message: `Nhập lý do từ chối "${what}" để xác nhận. Máy chủ CHƯA lưu được lý do (không có trạng thái "đã từ chối"), nên đánh giá sẽ bị xoá hẳn và điểm trung bình được tính lại.`,
+      required: true,
     });
+    if (reason === null) return;
+    await run('Đã từ chối đánh giá', () => catalogAdminApi.reviews.reject(id));
   };
 
-  // Filter reviews by search term
-  const filteredReviews = pendingReviews?.filter(review =>
-    review.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const pending = useMemo(() => {
+    const rows = pendingQuery.data ?? [];
+    return rows.filter(
+      (r) => (!productFilter || r.productId === productFilter) && (!ratingFilter || r.rating === Number(ratingFilter)),
+    );
+  }, [pendingQuery.data, productFilter, ratingFilter]);
+
+  const sentiment = sentimentQuery.data;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quản lý đánh giá</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Duyệt và quản lý đánh giá sản phẩm từ khách hàng
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Làm mới
-          </button>
-        </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Đánh giá sản phẩm"
+        description="Duyệt đánh giá của khách trước khi hiển thị trên cửa hàng."
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Chờ duyệt" value={pendingQuery.data?.length ?? null} />
+        <StatCard label="Tổng đánh giá" value={sentiment?.totalReviews ?? null} />
+        <StatCard label="Tích cực" value={sentiment ? `${sentiment.positivePercent}%` : null} />
+        <StatCard label="Tiêu cực" value={sentiment ? `${sentiment.negativePercent}%` : null} />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-100 rounded-xl">
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Chờ duyệt</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {pendingReviews?.length || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <Check className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Đã duyệt hôm nay</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <MessageSquare className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Tổng đánh giá</p>
-              <p className="text-2xl font-bold text-gray-900">-</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Card padded>
+        <CardBody className="space-y-4">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabList aria-label="Trạng thái đánh giá">
+              <Tab value="pending" count={pendingQuery.data?.length}>Chờ duyệt</Tab>
+              <Tab value="approved">Đã duyệt</Tab>
+            </TabList>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo sản phẩm, nội dung..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <SearchableSelect
-                value={statusFilter}
-                onChange={null}
-                options={[
-                    { value: 'pending', label: 'Chờ duyệt' },
-                    { value: 'approved', label: 'Đã duyệt' },
-                    { value: 'all', label: 'Tất cả' },
-                ]}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Reviews List */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-accent border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-gray-500 mt-3">Đang tải...</p>
-          </div>
-        ) : filteredReviews.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Không có đánh giá nào chờ duyệt</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {filteredReviews.map((review) => (
-              <div key={review.id} className="p-5 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    {/* Product Info */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-gray-900 truncate">
-                        {review.productName}
-                      </span>
-                      {review.isVerifiedPurchase && (
-                        <span className="flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          <Check className="w-3 h-3" />
-                          Đã mua hàng
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${
-                            star <= review.rating
-                              ? 'text-amber-400 fill-amber-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                      <span className="text-sm text-gray-500 ml-2">
-                        {formatDate(review.createdAt)}
-                      </span>
-                    </div>
-
-                    {/* Title & Comment */}
-                    {review.title && (
-                      <h4 className="font-medium text-gray-800 mb-1">{review.title}</h4>
-                    )}
-                    <p className="text-gray-600 text-sm line-clamp-3">{review.comment}</p>
-
-                    {/* Customer ID */}
-                    <p className="text-xs text-gray-400 mt-2">
-                      Khách hàng: {review.customerId.substring(0, 8)}...
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleApprove(review.id)}
-                      disabled={approveMutation.isPending}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      <Check className="w-4 h-4" />
-                      Duyệt
-                    </button>
-                    <button
-                      onClick={() => handleReject(review.id)}
-                      disabled={rejectMutation.isPending}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      <X className="w-4 h-4" />
-                      Từ chối
-                    </button>
-                  </div>
+            <TabPanel value="pending">
+              <div className="mb-4 grid max-w-2xl gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="block text-13 font-medium text-fg" htmlFor="review-product-filter">
+                    Sản phẩm
+                  </label>
+                  <Combobox
+                    id="review-product-filter"
+                    options={[{ value: '', label: 'Mọi sản phẩm' }, ...productOptions]}
+                    value={productFilter}
+                    onChange={setProductFilter}
+                    placeholder="Lọc theo sản phẩm"
+                  />
                 </div>
+                <Select
+                  label="Số sao"
+                  options={RATINGS}
+                  value={ratingFilter}
+                  onChange={(e) => setRatingFilter(e.target.value)}
+                />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <QueryBoundary
+                query={pendingQuery}
+                skeleton={<SkeletonText lines={6} />}
+                isEmpty={() => pending.length === 0}
+                errorTitle="Không tải được hàng chờ duyệt"
+                empty={{
+                  icon: MessageSquare,
+                  title: productFilter || ratingFilter ? 'Không có đánh giá nào khớp bộ lọc' : 'Không còn đánh giá nào chờ duyệt',
+                  description: 'Đánh giá mới của khách sẽ xuất hiện ở đây.',
+                  secondaryAction: { label: 'Xoá bộ lọc', onClick: () => { setProductFilter(''); setRatingFilter(''); } },
+                }}
+              >
+                {() => (
+                  <ul className="space-y-3">
+                    {pending.map((r) => (
+                      <li key={r.id} className="rounded-xl border border-line p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-13 font-semibold text-fg">{r.productName}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <Stars rating={r.rating} />
+                              {r.isVerifiedPurchase && <Badge variant="success">Đã mua hàng</Badge>}
+                              <span className="num text-xs text-fg-subtle">{formatDateTime(r.createdAt)}</span>
+                            </div>
+                          </div>
+                          <Can permission={PERMISSIONS.CATALOG_MANAGE}>
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" variant="primary" onClick={() => void run('Đã duyệt đánh giá', () => catalogAdminApi.reviews.approve(r.id))}>
+                                <Check size={15} /> Duyệt
+                              </Button>
+                              <Button size="sm" variant="danger" onClick={() => void reject(r.id, r.title || r.comment.slice(0, 40))}>
+                                <X size={15} /> Từ chối
+                              </Button>
+                            </div>
+                          </Can>
+                        </div>
+                        {r.title && <p className="mt-2 text-13 font-medium text-fg">{r.title}</p>}
+                        <p className="mt-1 whitespace-pre-line text-13 text-fg-muted">{r.comment}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </QueryBoundary>
+            </TabPanel>
 
-      {/* Pagination */}
-      {filteredReviews.length > 0 && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">
-            Hiển thị {filteredReviews.length} đánh giá
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="px-4 py-2 bg-gray-100 rounded-lg font-medium">
-              {page}
-            </span>
-            <button
-              onClick={() => setPage(p => p + 1)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
+            <TabPanel value="approved">
+              <div className="mb-4">
+                <label className="mb-1.5 block text-13 font-medium text-fg" htmlFor="approved-product">
+                  Sản phẩm
+                </label>
+                <Combobox
+                  id="approved-product"
+                  options={productOptions}
+                  value={approvedProductId}
+                  onChange={setApprovedProductId}
+                  placeholder="Chọn sản phẩm để xem đánh giá"
+                  className="max-w-md"
+                />
+                <p className="mt-1.5 text-xs text-fg-subtle">
+                  Máy chủ chỉ liệt kê đánh giá theo từng sản phẩm — hãy chọn một sản phẩm.
+                </p>
+              </div>
+              {!approvedProductId ? (
+                <p className="rounded-xl border border-dashed border-line-strong px-4 py-10 text-center text-13 text-fg-muted">
+                  Chọn một sản phẩm ở trên để xem toàn bộ đánh giá của sản phẩm đó.
+                </p>
+              ) : (
+                <QueryBoundary
+                  query={approvedQuery}
+                  skeleton={<SkeletonText lines={5} />}
+                  isEmpty={(rows) => rows.length === 0}
+                  errorTitle="Không tải được đánh giá của sản phẩm"
+                  empty={{ icon: MessageSquare, title: 'Sản phẩm này chưa có đánh giá nào' }}
+                >
+                  {(rows) => (
+                    <ul className="space-y-3">
+                      {rows.map((r) => (
+                        <li key={r.id} className="rounded-xl border border-line p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Stars rating={r.rating} />
+                              <StatusBadge tone={r.isApproved ? 'success' : 'warning'}>
+                                {r.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
+                              </StatusBadge>
+                              <span className="num text-xs text-fg-subtle">{formatDateTime(r.createdAt)}</span>
+                            </div>
+                            <Can permission={PERMISSIONS.CATALOG_MANAGE}>
+                              <div className="flex items-center gap-2">
+                                {!r.isApproved && (
+                                  <Button size="sm" variant="primary" onClick={() => void run('Đã duyệt đánh giá', () => catalogAdminApi.reviews.approve(r.id))}>
+                                    <Check size={15} /> Duyệt
+                                  </Button>
+                                )}
+                                <Button size="sm" variant="outline" onClick={() => void reject(r.id, r.title || r.comment.slice(0, 40))}>
+                                  <X size={15} /> Gỡ đánh giá
+                                </Button>
+                              </div>
+                            </Can>
+                          </div>
+                          {r.title && <p className="mt-2 text-13 font-medium text-fg">{r.title}</p>}
+                          <p className="mt-1 whitespace-pre-line text-13 text-fg-muted">{r.comment}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </QueryBoundary>
+              )}
+            </TabPanel>
+          </Tabs>
+        </CardBody>
+      </Card>
     </div>
   );
 }

@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Clock, ShoppingCart, ChevronLeft, ChevronRight, X } from 'lucide-react';
+/**
+ * "Đã xem gần đây" strip. Renders W3-1's `ProductCard` from the snapshots the
+ * `useRecentlyViewed` hook keeps in localStorage — no network call, so opening
+ * a PDP no longer inflates the `viewCount` of every remembered product.
+ */
+import { Clock } from 'lucide-react';
+
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
-import { useCart } from '../context/CartContext';
-import { useConfirm } from '../context/ConfirmContext';
-import { catalogApi, type Product } from '../api/catalog';
-import toast from 'react-hot-toast';
+import type { Product } from '../api/catalog';
+import { ProductCard } from './ProductCard';
+import { Button } from './ui';
 
 interface RecentlyViewedProductsProps {
   currentProductId?: string;
@@ -20,211 +23,44 @@ export function RecentlyViewedProducts({
   maxItems = 8,
   showClearButton = false,
 }: RecentlyViewedProductsProps) {
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const confirm = useConfirm();
-  const { recentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const { recentlyViewedProducts, clearRecentlyViewed } = useRecentlyViewed();
 
-  // Filter out current product and limit items
-  const productIds = recentlyViewed
-    .filter(id => id !== currentProductId)
+  const products = recentlyViewedProducts
+    .filter((p) => p.id !== currentProductId)
     .slice(0, maxItems);
 
-  // Fetch product details
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (productIds.length === 0) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const fetchedProducts = await Promise.all(
-          productIds.map(async (id) => {
-            try {
-              return await catalogApi.getProduct(id);
-            } catch {
-              return null;
-            }
-          })
-        );
-
-        // Filter out null results and maintain order
-        const validProducts = fetchedProducts.filter((p): p is Product => p !== null);
-        setProducts(validProducts);
-      } catch (error) {
-        console.error('Failed to fetch recently viewed products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [productIds.join(',')]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
-
-  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation();
-    if (product.stockQuantity > 0) {
-      addToCart(product, 1);
-      toast.success('Đã thêm vào giỏ hàng!');
-    }
-  };
-
-  const handleClear = async () => {
-    const ok = await confirm({ message: 'Xóa tất cả sản phẩm đã xem?', variant: 'warning' });
-    if (ok) {
-      clearRecentlyViewed();
-      setProducts([]);
-    }
-  };
-
-  const scrollLeft = () => {
-    const container = document.getElementById('recently-viewed-container');
-    if (container) {
-      container.scrollBy({ left: -280, behavior: 'smooth' });
-      setScrollPosition(container.scrollLeft - 280);
-    }
-  };
-
-  const scrollRight = () => {
-    const container = document.getElementById('recently-viewed-container');
-    if (container) {
-      container.scrollBy({ left: 280, behavior: 'smooth' });
-      setScrollPosition(container.scrollLeft + 280);
-    }
-  };
-
-  // Don't render if no products
-  if (!loading && products.length === 0) {
-    return null;
-  }
+  if (products.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-accent" />
-          <h2 className="text-lg font-bold text-gray-900 uppercase">{title}</h2>
-          <span className="text-sm text-gray-400">({products.length})</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {showClearButton && products.length > 0 && (
-            <button
-              onClick={handleClear}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-              Xóa
-            </button>
-          )}
-          {products.length > 4 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={scrollLeft}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </button>
-              <button
-                onClick={scrollRight}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          )}
-        </div>
+    <section aria-labelledby="recently-viewed-heading">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h2
+          id="recently-viewed-heading"
+          className="flex items-center gap-2 text-2xl font-bold tracking-tight text-fg"
+        >
+          <Clock className="h-5 w-5 text-fg-subtle" aria-hidden="true" />
+          {title}
+        </h2>
+        {showClearButton && (
+          <Button variant="ghost" size="sm" onClick={clearRecentlyViewed}>
+            Xoá lịch sử
+          </Button>
+        )}
       </div>
 
-      {/* Loading State */}
-      {loading ? (
-        <div className="flex gap-4 overflow-hidden">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-[200px] flex-shrink-0">
-              <div className="aspect-square bg-gray-100 rounded-xl animate-pulse mb-3" />
-              <div className="h-4 bg-gray-100 rounded animate-pulse mb-2" />
-              <div className="h-5 bg-gray-100 rounded animate-pulse w-2/3" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* Products Grid */
-        <div
-          id="recently-viewed-container"
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {products.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => navigate(`/products/${product.id}`)}
-              className="w-[200px] flex-shrink-0 bg-white rounded-xl border border-gray-100 hover:border-accent/30 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
-            >
-              {/* Image */}
-              <div className="aspect-square bg-gray-50 p-3 relative overflow-hidden">
-                {product.imageUrl ? (
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300 font-black text-4xl uppercase">
-                    {product?.name?.charAt(0) || '?'}
-                  </div>
-                )}
-                {product.oldPrice && product.oldPrice > product.price && (
-                  <div className="absolute top-2 left-2 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
-                  </div>
-                )}
-                {/* Quick Add Button */}
-                <button
-                  onClick={(e) => handleAddToCart(e, product)}
-                  disabled={product.stockQuantity === 0}
-                  className="absolute bottom-2 right-2 p-2 bg-white shadow-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Info */}
-              <div className="p-3">
-                <h3 className="text-xs font-bold text-gray-900 line-clamp-2 h-8 group-hover:text-accent transition-colors uppercase leading-tight">
-                  {product.name}
-                </h3>
-                <div className="mt-2">
-                  <span className="text-sm font-black text-accent">
-                    {formatPrice(product.price)}
-                  </span>
-                  {product.oldPrice && product.oldPrice > product.price && (
-                    <span className="text-[10px] text-gray-400 line-through ml-2">
-                      {formatPrice(product.oldPrice)}
-                    </span>
-                  )}
-                </div>
-                {product.stockQuantity === 0 && (
-                  <span className="text-[10px] text-red-500 font-medium">Hết hàng</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
+        {products.map((p) => (
+          <ProductCard
+            key={p.id}
+            product={{
+              ...p,
+              averageRating: p.averageRating ?? 0,
+              reviewCount: p.reviewCount ?? 0,
+            } as unknown as Product}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

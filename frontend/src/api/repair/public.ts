@@ -85,6 +85,30 @@ export const repairPublicApi = {
         },
     },
 
+    /**
+     * Tra cứu tình trạng sửa chữa CÔNG KHAI bằng mã ticket + SĐT — không cần đăng nhập.
+     * Backend (`docs/api-contracts/repair.md` "Public ticket tracking"): rate-limited (policy
+     * `contact`), 404 (đồng dạng) nếu ticket không tồn tại HOẶC SĐT không khớp — không lộ PII.
+     * Gap đã biết: chỉ theo dõi được `WorkOrder` có `TicketNumber` (walk-in / "Gửi yêu cầu
+     * nhanh"), KHÔNG theo dõi được `ServiceBooking` (đặt lịch qua `/booking`) vì booking chưa có
+     * TicketNumber — xem integration-requests-w3.md.
+     */
+    track: async (ticketNumber: string, phone: string): Promise<{
+        ticketNumber: string;
+        deviceModel: string;
+        status: WorkOrderStatus;
+        createdAt: string;
+        startedAt?: string;
+        finishedAt?: string;
+        quote?: { status: QuoteStatus; totalAmount?: number } | null;
+        timeline?: { status: string; timestamp: string; note?: string }[];
+    }> => {
+        const response = await client.get(`/repair/track/${encodeURIComponent(ticketNumber)}`, {
+            params: { phone },
+        });
+        return response.data;
+    },
+
     quotes: {
         get: async (id: string): Promise<RepairQuote> => {
             const response = await client.get(`/repair/quotes/${id}`);

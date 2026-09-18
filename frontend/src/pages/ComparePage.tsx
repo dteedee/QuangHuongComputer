@@ -1,36 +1,33 @@
+/**
+ * Product comparison.
+ *
+ * Rows come from the SAME grouped spec payload the PDP renders
+ * (`?include=specs` → `specGroups[i].values[]`, keyed by the attribute `key`),
+ * not from the category schema + a separate value list — that pairing only
+ * worked when `ProductSpecificationValues` had rows, which it does not, so the
+ * table was empty for every real product.
+ *
+ * An empty comparison now shows an empty state instead of silently redirecting.
+ */
 import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Check, Minus, Plus, Scale, ShoppingCart, Star, X } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useComparison } from '../context/ComparisonContext';
+
 import { catalogApi } from '../api/catalog';
-import type {
-    Product,
-    ProductDetailBundle,
-    SpecificationAttribute,
-    SpecificationGroup,
-    ProductSpecificationValue,
-} from '../api/catalog';
-import { formatCurrency } from '../utils/format';
-import { ArrowLeft, Scale, X, ShoppingCart, Star, Check, Minus, Plus } from 'lucide-react';
+import type { Product } from '../api/catalog';
+import { catalogPublicProductApi, type PublicProductDetail } from '../api/catalog/public-product';
 import { useCart } from '../context/CartContext';
+import { useComparison } from '../context/ComparisonContext';
+import { buildPath, ROUTES } from '../routes/route-paths';
+import { formatCurrency } from '../utils/format';
+import { Button, Dialog, EmptyState, Img, Skeleton } from '../components/ui';
 
-interface ProductWithSpecs extends Product {
-    specGroups?: SpecificationGroup[];
-    specs?: ProductSpecificationValue[];
-}
-
-/** Định dạng giá trị spec theo dataType. */
-function formatSpecValue(attr: SpecificationAttribute, value?: ProductSpecificationValue): string | null {
-    if (!value) return null;
-    switch (attr.dataType) {
-        case 'Number':
-            if (value.valueNumber == null) return null;
-            return `${value.valueNumber}${attr.unit ? ` ${attr.unit}` : ''}`;
-        case 'Boolean':
-            if (value.valueBool == null) return null;
-            return value.valueBool ? 'Có' : 'Không';
-        default:
-            return value.valueText ?? null;
-    }
+/** One comparable row: an attribute key, its label, and the value per product. */
+interface SpecRow {
+    key: string;
+    name: string;
+    unit?: string | null;
+    group: string;
 }
 
 export function ComparePage() {
@@ -38,21 +35,21 @@ export function ComparePage() {
     const { addToCart } = useCart();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [products, setProducts] = useState<ProductWithSpecs[]>([]);
+    const [products, setProducts] = useState<PublicProductDetail[]>([]);
     const [loading, setLoading] = useState(true);
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerCandidates, setPickerCandidates] = useState<Product[]>([]);
     const [pickerLoading, setPickerLoading] = useState(false);
 
-    // Nếu URL có ?add=<productId>, tự động thêm vào so sánh 1 lần
+    // `/compare?add=<productId>` — the PDP's "so sánh" button.
     useEffect(() => {
         const addId = searchParams.get('add');
         if (!addId) return;
-        (async () => {
+        void (async () => {
             try {
                 const p = await catalogApi.getProduct(addId);
                 addToComparison(p);
-            } catch { /* silent */ }
+            } catch { /* a bad id must not break the page */ }
             const next = new URLSearchParams(searchParams);
             next.delete('add');
             setSearchParams(next, { replace: true });
@@ -61,69 +58,67 @@ export function ComparePage() {
     }, []);
 
     useEffect(() => {
-        if (items.length === 0) {
-            navigate('/products');
-            return;
-        }
-        loadProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [items.length]);
-
-    const loadProducts = async () => {
-        try {
-            setLoading(true);
-            const loaded = await Promise.all(
-                items.map(async (item) => {
-                    try {
-                        const bundle = await catalogApi.getProductWithDetails(item.id) as ProductDetailBundle;
-                        return { ...bundle, specGroups: bundle.specGroups, specs: bundle.specs } as ProductWithSpecs;
-                    } catch {
-                        const base = await catalogApi.getProduct(item.id);
-                        return { ...base } as ProductWithSpecs;
-                    }
-                })
-            );
-            setProducts(loaded);
-        } finally {
+        let cancelled = false;
+        if (items.length === 0) { setProducts([]); setLoading(false); return; }
+        setLoading(true);
+        void Promise.all(
+            items.map((item) =>
+                catalogPublicProductApi
+                    .getProductDetail(item.id, ['media', 'specs'])
+                    .catch(() => null)
+            )
+        ).then((loaded) => {
+            if (cancelled) return;
+            setProducts(loaded.filter((p): p is PublicProductDetail => p !== null));
             setLoading(false);
-        }
-    };
-
-    const handleAddToCart = (product: Product) => addToCart(product, 1);
-
-    // ============ Comparable attributes (unique across all products) ============
-    const comparableGroups = useMemo(() => {
-        const groupMap = new Map<string, { group: SpecificationGroup; attrs: SpecificationAttribute[] }>();
-        const seenAttrIds = new Set<string>();
-
-        products.forEach((p) => {
-            (p.specGroups || []).forEach((g) => {
-                const filtered = g.attributes.filter((a) => a.isComparable);
-                if (filtered.length === 0) return;
-                let entry = groupMap.get(g.id);
-                if (!entry) {
-                    entry = { group: g, attrs: [] };
-                    groupMap.set(g.id, entry);
-                }
-                filtered.forEach((a) => {
-                    if (!seenAttrIds.has(a.id)) {
-                        entry!.attrs.push(a);
-                        seenAttrIds.add(a.id);
-                    }
-                });
-            });
         });
-        return Array.from(groupMap.values());
+        return () => { cancelled = true; };
+    }, [items]);
+
+    /** Union of every attribute key across the compared products, in group order. */
+    const specRows = useMemo<SpecRow[]>(() => {
+        const rows = new Map<string, SpecRow>();
+        products.forEach((p) => {
+            (p.specGroups ?? [])
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .forEach((g) => {
+                    (g.values ?? []).forEach((v) => {
+                        if (!v.value || !String(v.value).trim()) return;
+                        const id = `${g.groupName}::${v.key}`;
+                        if (!rows.has(id)) {
+                            rows.set(id, { key: v.key, name: v.name, unit: v.unit, group: g.groupName });
+                        }
+                    });
+                });
+        });
+        return Array.from(rows.values());
     }, [products]);
 
-    // Xác định ô "khác biệt" theo hàng (mọi giá trị không đồng nhất)
-    const isRowDiverse = (attr: SpecificationAttribute): boolean => {
-        const vals = products.map((p) => {
-            const v = (p.specs || []).find((x) => x.attributeId === attr.id);
-            return formatSpecValue(attr, v) ?? '';
+    const groupedRows = useMemo(() => {
+        const byGroup = new Map<string, SpecRow[]>();
+        specRows.forEach((r) => {
+            const list = byGroup.get(r.group) ?? [];
+            list.push(r);
+            byGroup.set(r.group, list);
         });
-        return new Set(vals).size > 1;
+        return Array.from(byGroup.entries());
+    }, [specRows]);
+
+    const valueOf = (product: PublicProductDetail, row: SpecRow): string | null => {
+        for (const g of product.specGroups ?? []) {
+            if (g.groupName !== row.group) continue;
+            const hit = (g.values ?? []).find((v) => v.key === row.key);
+            if (hit && String(hit.value).trim()) {
+                return `${hit.value}${hit.unit ? ` ${hit.unit}` : ''}`;
+            }
+        }
+        return null;
     };
+
+    /** Highlight a row when the products genuinely differ on it. */
+    const isRowDiverse = (row: SpecRow) =>
+        new Set(products.map((p) => valueOf(p, row) ?? '')).size > 1;
 
     const openPicker = async () => {
         if (products.length === 0) return;
@@ -143,86 +138,94 @@ export function ComparePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="animate-pulse">
-                        <div className="h-8 bg-gray-200 rounded-xl w-1/4 mb-8" />
-                        <div className="grid grid-cols-4 gap-4">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="h-96 bg-gray-200 rounded-xl" />
-                            ))}
-                        </div>
+            <div className="min-h-screen bg-bg py-8">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6">
+                    <Skeleton className="h-8 w-1/4" />
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-96 w-full rounded-xl" />)}
                     </div>
                 </div>
             </div>
         );
     }
 
+    if (products.length === 0) {
+        return (
+            <div className="mx-auto max-w-2xl px-4 py-20">
+                <EmptyState
+                    icon={Scale}
+                    title="Chưa có sản phẩm nào để so sánh"
+                    description="Bấm “So sánh” trên một sản phẩm bất kỳ, rồi quay lại đây để xem bảng thông số cạnh nhau."
+                    action={{ label: 'Xem danh sách sản phẩm', onClick: () => navigate(ROUTES.PRODUCTS) }}
+                />
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
+        <div className="min-h-screen bg-bg py-8">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <Link
-                            to="/products"
-                            className="inline-flex items-center gap-2 text-gray-500 hover:text-accent transition-colors mb-2 text-sm cursor-pointer"
+                            to={ROUTES.PRODUCTS}
+                            className="mb-2 inline-flex items-center gap-2 text-sm text-fg-muted hover:text-brand-text"
                         >
-                            <ArrowLeft size={16} />
+                            <ArrowLeft size={16} aria-hidden="true" />
                             Tiếp tục mua sắm
                         </Link>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                            <Scale className="text-accent" size={24} />
-                            So sánh sản phẩm ({products.length})
+                        <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-fg">
+                            <Scale className="text-brand" size={24} aria-hidden="true" />
+                            So sánh sản phẩm <span className="num">({products.length})</span>
                         </h1>
                     </div>
                     <div className="flex gap-2">
                         {products.length < 4 && (
-                            <button
-                                type="button"
-                                onClick={openPicker}
-                                className="inline-flex items-center gap-2 border border-accent text-accent px-4 py-2 rounded-xl hover:bg-red-50 transition-all text-sm font-semibold cursor-pointer"
-                            >
-                                <Plus size={16} /> Thêm sản phẩm
-                            </button>
+                            <Button variant="outline" size="sm" onClick={() => void openPicker()}>
+                                <Plus size={16} aria-hidden="true" /> Thêm sản phẩm
+                            </Button>
                         )}
-                        <button
-                            onClick={() => { clearComparison(); navigate('/products'); }}
-                            className="border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all text-sm font-semibold cursor-pointer"
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { clearComparison(); navigate(ROUTES.PRODUCTS); }}
                         >
-                            Xóa tất cả
-                        </button>
+                            Xoá tất cả
+                        </Button>
                     </div>
                 </div>
 
-                {/* Comparison Table */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-line bg-surface">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-gray-100">
-                                    <th className="w-48 p-4 text-left text-sm font-semibold text-gray-500 bg-gray-50">Sản phẩm</th>
+                                <tr className="border-b border-line">
+                                    <th className="w-44 bg-sunken p-4 text-left text-sm font-semibold text-fg-muted">
+                                        Sản phẩm
+                                    </th>
                                     {products.map((product) => (
-                                        <th key={product.id} className="p-4 text-center min-w-[220px]">
+                                        <th key={product.id} className="min-w-[220px] p-4 text-center">
                                             <div className="relative">
                                                 <button
+                                                    type="button"
                                                     onClick={() => removeFromComparison(product.id)}
-                                                    className="absolute -top-2 -right-2 p-1.5 bg-gray-100 text-gray-500 rounded-full hover:bg-red-100 hover:text-accent transition-all cursor-pointer"
-                                                    title="Xóa khỏi so sánh"
+                                                    className="absolute -right-2 -top-2 rounded-full bg-sunken p-1.5 text-fg-subtle transition-colors hover:bg-brand-subtle hover:text-brand-text"
+                                                    aria-label={`Bỏ ${product.name} khỏi so sánh`}
                                                 >
-                                                    <X className="w-3 h-3" />
+                                                    <X className="h-3 w-3" aria-hidden="true" />
                                                 </button>
-                                                <Link to={`/san-pham/${product.slug || product.id}`}>
-                                                    <div className="w-32 h-32 mx-auto mb-3 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden">
-                                                        {product.imageUrl ? (
-                                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
-                                                        ) : (
-                                                            <span className="text-gray-300 text-sm">Không có ảnh</span>
-                                                        )}
-                                                    </div>
-                                                    <h3 className="font-semibold text-gray-800 hover:text-accent transition-colors line-clamp-2 text-sm">
+                                                <Link to={buildPath(ROUTES.PRODUCT_DETAIL, product.slug || product.id)}>
+                                                    <Img
+                                                        src={product.medias?.[0]?.thumbnailUrl ?? product.medias?.[0]?.url ?? product.thumbnailUrl ?? product.imageUrl}
+                                                        alt={product.name}
+                                                        ratio="1/1"
+                                                        fit="contain"
+                                                        blend
+                                                        wrapperClassName="mx-auto mb-3 w-32 overflow-hidden rounded-xl"
+                                                    />
+                                                    <h2 className="line-clamp-2 text-sm font-semibold text-fg hover:text-brand-text">
                                                         {product.name}
-                                                    </h3>
+                                                    </h2>
                                                 </Link>
                                             </div>
                                         </th>
@@ -231,80 +234,96 @@ export function ComparePage() {
                             </thead>
 
                             <tbody>
-                                {/* Price row */}
-                                <tr className="border-b border-gray-100 bg-red-50/40">
-                                    <td className="p-4 text-sm font-semibold text-gray-700 bg-gray-50">Giá</td>
+                                <tr className="border-b border-line bg-brand-subtle/40">
+                                    <td className="bg-sunken p-4 text-sm font-semibold text-fg-muted">Giá</td>
                                     {products.map((product) => (
                                         <td key={product.id} className="p-4 text-center">
-                                            <div className="text-xl font-bold text-accent">
+                                            <div className="num price text-xl font-bold text-brand-text">
                                                 {formatCurrency(product.priceFrom ?? product.price)}
                                             </div>
                                             {product.oldPrice && product.oldPrice > product.price && (
-                                                <div className="text-sm text-gray-400 line-through">{formatCurrency(product.oldPrice)}</div>
+                                                <div className="num text-sm text-fg-subtle line-through">
+                                                    {formatCurrency(product.oldPrice)}
+                                                </div>
                                             )}
                                         </td>
                                     ))}
                                 </tr>
 
-                                {/* Rating */}
-                                <tr className="border-b border-gray-100">
-                                    <td className="p-4 text-sm font-semibold text-gray-700 bg-gray-50">Đánh giá</td>
+                                <tr className="border-b border-line">
+                                    <td className="bg-sunken p-4 text-sm font-semibold text-fg-muted">Đánh giá</td>
                                     {products.map((product) => (
                                         <td key={product.id} className="p-4 text-center">
-                                            <div className="flex items-center justify-center gap-0.5">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star key={i} className={`w-4 h-4 ${i < Math.round(product.averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200 fill-gray-200'}`} />
-                                                ))}
-                                                <span className="ml-2 text-xs text-gray-500">({product.reviewCount})</span>
-                                            </div>
+                                            {product.reviewCount > 0 ? (
+                                                <span className="inline-flex items-center gap-1 text-sm text-fg">
+                                                    <Star className="h-4 w-4 fill-current text-rating" aria-hidden="true" />
+                                                    <span className="num font-semibold">
+                                                        {product.averageRating.toFixed(1)}
+                                                    </span>
+                                                    <span className="num text-fg-subtle">({product.reviewCount})</span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm text-fg-subtle">Chưa có đánh giá</span>
+                                            )}
                                         </td>
                                     ))}
                                 </tr>
 
-                                {/* Stock */}
-                                <tr className="border-b border-gray-100">
-                                    <td className="p-4 text-sm font-semibold text-gray-700 bg-gray-50">Tình trạng</td>
+                                <tr className="border-b border-line">
+                                    <td className="bg-sunken p-4 text-sm font-semibold text-fg-muted">Tình trạng</td>
                                     {products.map((product) => (
                                         <td key={product.id} className="p-4 text-center">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${product.stockQuantity > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                            <span className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${
+                                                product.stockQuantity > 0
+                                                    ? 'bg-success-subtle text-success'
+                                                    : 'bg-danger-subtle text-danger'
+                                            }`}>
                                                 {product.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'}
                                             </span>
                                         </td>
                                     ))}
                                 </tr>
 
-                                {/* SKU */}
-                                <tr className="border-b border-gray-100">
-                                    <td className="p-4 text-sm font-semibold text-gray-700 bg-gray-50">SKU</td>
+                                <tr className="border-b border-line">
+                                    <td className="bg-sunken p-4 text-sm font-semibold text-fg-muted">Bảo hành</td>
                                     {products.map((product) => (
-                                        <td key={product.id} className="p-4 text-center text-sm text-gray-600">{product.sku || '-'}</td>
+                                        <td key={product.id} className="p-4 text-center text-sm text-fg-muted">
+                                            {product.warrantyMonths
+                                                ? `${product.warrantyMonths} tháng`
+                                                : product.warrantyInfo || '—'}
+                                        </td>
                                     ))}
                                 </tr>
 
-                                {/* Structured spec groups */}
-                                {comparableGroups.length > 0 && comparableGroups.map(({ group, attrs }) => (
-                                    <React.Fragment key={group.id}>
-                                        <tr className="border-b border-gray-100 bg-gray-50">
-                                            <td colSpan={products.length + 1} className="px-4 py-3 text-xs font-bold text-gray-600 uppercase tracking-wide">
-                                                {group.name}
+                                {groupedRows.map(([groupName, rows]) => (
+                                    <React.Fragment key={groupName}>
+                                        <tr className="border-b border-line bg-sunken">
+                                            <td
+                                                colSpan={products.length + 1}
+                                                className="px-4 py-3 text-xs font-bold uppercase tracking-wide text-fg-muted"
+                                            >
+                                                {groupName}
                                             </td>
                                         </tr>
-                                        {attrs.map((attr) => {
-                                            const diverse = isRowDiverse(attr);
+                                        {rows.map((row) => {
+                                            const diverse = isRowDiverse(row);
                                             return (
-                                                <tr key={attr.id} className="border-b border-gray-100">
-                                                    <td className="p-4 text-sm font-medium text-gray-700 bg-gray-50">
-                                                        {attr.name}{attr.unit ? ` (${attr.unit})` : ''}
+                                                <tr key={`${groupName}-${row.key}`} className="border-b border-line">
+                                                    <td className="bg-sunken p-4 text-sm font-medium text-fg-muted">
+                                                        {row.name}
                                                     </td>
                                                     {products.map((product) => {
-                                                        const v = (product.specs || []).find((x) => x.attributeId === attr.id);
-                                                        const display = formatSpecValue(attr, v);
+                                                        const display = valueOf(product, row);
                                                         return (
                                                             <td
                                                                 key={product.id}
-                                                                className={`p-4 text-center text-sm text-gray-700 ${diverse ? 'bg-yellow-50' : ''}`}
+                                                                className={`p-4 text-center text-sm text-fg ${
+                                                                    diverse ? 'bg-warning-subtle' : ''
+                                                                }`}
                                                             >
-                                                                {display || <Minus className="w-3 h-3 mx-auto text-gray-300" />}
+                                                                {display || (
+                                                                    <Minus className="mx-auto h-3 w-3 text-fg-subtle" aria-hidden="true" />
+                                                                )}
                                                             </td>
                                                         );
                                                     })}
@@ -314,27 +333,19 @@ export function ComparePage() {
                                     </React.Fragment>
                                 ))}
 
-                                {/* Warranty */}
-                                <tr className="border-b border-gray-100">
-                                    <td className="p-4 text-sm font-semibold text-gray-700 bg-gray-50">Bảo hành</td>
-                                    {products.map((product) => (
-                                        <td key={product.id} className="p-4 text-center text-sm text-gray-600">{product.warrantyInfo || '-'}</td>
-                                    ))}
-                                </tr>
-
-                                {/* Add to cart */}
-                                <tr className="bg-gray-50">
-                                    <td className="p-4 bg-gray-50" />
+                                <tr className="bg-sunken">
+                                    <td className="bg-sunken p-4" />
                                     {products.map((product) => (
                                         <td key={product.id} className="p-4 text-center">
-                                            <button
-                                                onClick={() => handleAddToCart(product)}
+                                            <Button
+                                                block
+                                                size="sm"
                                                 disabled={product.stockQuantity === 0}
-                                                className="w-full py-2.5 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer text-sm px-3"
+                                                onClick={() => void addToCart(product, 1)}
                                             >
-                                                <ShoppingCart size={16} />
+                                                <ShoppingCart size={16} aria-hidden="true" />
                                                 Thêm vào giỏ
-                                            </button>
+                                            </Button>
                                         </td>
                                     ))}
                                 </tr>
@@ -343,104 +354,95 @@ export function ComparePage() {
                     </div>
                 </div>
 
-                {/* Summary */}
+                {specRows.length === 0 && (
+                    <p className="mt-4 rounded-xl border border-dashed border-line bg-surface p-6 text-center text-sm text-fg-muted">
+                        Các sản phẩm này chưa có thông số kỹ thuật có cấu trúc để đối chiếu.
+                    </p>
+                )}
+
                 {products.length >= 2 && (
-                    <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Tóm tắt so sánh</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                                <p className="text-xs font-semibold text-emerald-700 uppercase mb-2">Giá tốt nhất</p>
+                    <div className="mt-6 rounded-xl border border-line bg-surface p-6">
+                        <h2 className="mb-4 text-lg font-bold text-fg">Tóm tắt so sánh</h2>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="rounded-xl border border-success/20 bg-success-subtle p-4">
+                                <p className="mb-2 text-xs font-semibold uppercase text-success">Giá tốt nhất</p>
                                 {(() => {
-                                    const cheapest = products.reduce((min, p) => p.price < min.price ? p : min);
+                                    const cheapest = products.reduce((min, p) => (p.price < min.price ? p : min));
                                     return (
                                         <div className="flex items-center gap-2">
-                                            <Check className="text-emerald-600 flex-shrink-0" size={16} />
-                                            <span className="font-medium text-gray-800 text-sm truncate">{cheapest.name}</span>
-                                            <span className="ml-auto text-emerald-700 font-bold text-sm whitespace-nowrap">{formatCurrency(cheapest.price)}</span>
+                                            <Check className="flex-shrink-0 text-success" size={16} aria-hidden="true" />
+                                            <span className="truncate text-sm font-medium text-fg">{cheapest.name}</span>
+                                            <span className="num ml-auto whitespace-nowrap text-sm font-bold text-success">
+                                                {formatCurrency(cheapest.price)}
+                                            </span>
                                         </div>
                                     );
                                 })()}
                             </div>
-                            <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                                <p className="text-xs font-semibold text-yellow-700 uppercase mb-2">Đánh giá cao nhất</p>
-                                {(() => {
-                                    const bestRated = products.reduce((max, p) => p.averageRating > max.averageRating ? p : max);
-                                    return (
-                                        <div className="flex items-center gap-2">
-                                            <Star className="text-yellow-500 flex-shrink-0 fill-yellow-500" size={16} />
-                                            <span className="font-medium text-gray-800 text-sm truncate">{bestRated.name}</span>
-                                            <span className="ml-auto text-yellow-700 font-bold text-sm">{bestRated.averageRating.toFixed(1)}</span>
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                <p className="text-xs font-semibold text-blue-700 uppercase mb-2">Bán chạy nhất</p>
-                                {(() => {
-                                    const mostPopular = products.reduce((max, p) => p.soldCount > max.soldCount ? p : max);
-                                    return (
-                                        <div className="flex items-center gap-2">
-                                            <ShoppingCart className="text-blue-600 flex-shrink-0" size={16} />
-                                            <span className="font-medium text-gray-800 text-sm truncate">{mostPopular.name}</span>
-                                            <span className="ml-auto text-blue-700 font-bold text-sm whitespace-nowrap">{mostPopular.soldCount} đã bán</span>
-                                        </div>
-                                    );
-                                })()}
-                            </div>
+                            {products.some((p) => p.reviewCount > 0) && (
+                                <div className="rounded-xl border border-warning/20 bg-warning-subtle p-4">
+                                    <p className="mb-2 text-xs font-semibold uppercase text-warning">Đánh giá cao nhất</p>
+                                    {(() => {
+                                        const best = products.reduce((max, p) =>
+                                            (p.averageRating > max.averageRating ? p : max));
+                                        return (
+                                            <div className="flex items-center gap-2">
+                                                <Star className="flex-shrink-0 fill-current text-rating" size={16} aria-hidden="true" />
+                                                <span className="truncate text-sm font-medium text-fg">{best.name}</span>
+                                                <span className="num ml-auto text-sm font-bold text-warning">
+                                                    {best.averageRating.toFixed(1)}
+                                                </span>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
 
-                {/* Product picker modal */}
-                {pickerOpen && (
-                    <div
-                        className="fixed inset-0 z-[150] bg-black/50 flex items-center justify-center p-4"
-                        onClick={() => setPickerOpen(false)}
-                    >
-                        <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
-                        >
-                            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                                <h3 className="font-bold text-gray-900">Chọn sản phẩm để so sánh</h3>
-                                <button onClick={() => setPickerOpen(false)} className="p-1 text-gray-400 hover:text-gray-700">
-                                    <X className="w-5 h-5" />
+                <Dialog
+                    open={pickerOpen}
+                    onOpenChange={setPickerOpen}
+                    title="Chọn sản phẩm để so sánh"
+                    size="lg"
+                >
+                    <div className="space-y-2">
+                        {pickerLoading ? (
+                            <div className="space-y-2">
+                                {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+                            </div>
+                        ) : pickerCandidates.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-fg-muted">
+                                Không còn sản phẩm nào khác trong danh mục này.
+                            </p>
+                        ) : (
+                            pickerCandidates.map((p) => (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => { addToComparison(p); setPickerOpen(false); }}
+                                    className="flex w-full items-center gap-3 rounded-lg border border-line p-2 text-left transition-colors hover:border-brand hover:bg-brand-subtle/40"
+                                >
+                                    <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                                        <Img
+                                            src={p.thumbnailUrl ?? p.imageUrl}
+                                            alt={p.name}
+                                            ratio="1/1"
+                                            fit="contain"
+                                            blend
+                                            wrapperClassName="h-full w-full"
+                                        />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-semibold text-fg">{p.name}</p>
+                                        <p className="num text-xs font-bold text-brand-text">{formatCurrency(p.price)}</p>
+                                    </div>
                                 </button>
-                            </div>
-                            <div className="p-4 overflow-y-auto space-y-2">
-                                {pickerLoading ? (
-                                    <p className="text-center text-sm text-gray-500 py-6">Đang tải...</p>
-                                ) : pickerCandidates.length === 0 ? (
-                                    <p className="text-center text-sm text-gray-500 py-6">Không có sản phẩm cùng danh mục.</p>
-                                ) : (
-                                    pickerCandidates.map((p) => (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            onClick={() => {
-                                                addToComparison(p);
-                                                setPickerOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-3 p-2 rounded-lg border border-gray-100 hover:border-accent hover:bg-red-50/40 transition-colors text-left cursor-pointer"
-                                        >
-                                            <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {p.imageUrl ? (
-                                                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
-                                                ) : (
-                                                    <span className="text-gray-300 text-xs font-bold">{p.name?.charAt(0) || '?'}</span>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-semibold text-gray-900 truncate">{p.name}</p>
-                                                <p className="text-xs text-accent font-bold">{formatCurrency(p.price)}</p>
-                                            </div>
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-                        </div>
+                            ))
+                        )}
                     </div>
-                )}
+                </Dialog>
             </div>
         </div>
     );

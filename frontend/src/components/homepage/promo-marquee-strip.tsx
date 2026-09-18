@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
+import { useCompanyInfo } from '../../hooks/use-company-info';
 
 /**
  * Dải khuyến mãi trên cùng trang chủ.
@@ -22,9 +23,13 @@ const PROMO_ITEMS = [
     'Hỗ trợ 24/7',
 ];
 
-const HOTLINE = '0904.235.090';
+/* D09: the hotline is config-driven (`useCompanyInfo`), never a literal — the
+ * hardcoded value here disagreed with the Footer and the contact page. */
+export const PromoMarqueeStrip = () => {
+    const { companyInfo } = useCompanyInfo();
+    const HOTLINE = companyInfo.hotline;
 
-export const PromoMarqueeStrip = () => (
+    return (
     <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -56,6 +61,7 @@ export const PromoMarqueeStrip = () => (
             <Zap className="text-yellow-300 flex-shrink-0" size={16} aria-hidden="true" />
         </div>
     </motion.div>
-);
+    );
+};
 
 export default PromoMarqueeStrip;

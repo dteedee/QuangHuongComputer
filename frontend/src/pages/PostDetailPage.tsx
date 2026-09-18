@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
 import { Loader2, ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
 import SEO from '../components/SEO';
+import { ROUTES, buildPath } from '../routes/route-paths';
+import { SafeHtml } from '../components/ui/safe-html';
 
 export const PostDetailPage = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -32,7 +34,7 @@ export const PostDetailPage = () => {
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy bài viết</h1>
                 <p className="text-gray-500 mb-6">Bài viết bạn tìm kiếm không tồn tại hoặc đã bị xóa.</p>
                 <Link
-                    to="/"
+                    to={ROUTES.HOME}
                     className="px-6 py-2.5 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
                 >
                     Về trang chủ
@@ -54,9 +56,9 @@ export const PostDetailPage = () => {
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link to="/" className="hover:text-accent transition-colors">Trang chủ</Link>
+                        <Link to={ROUTES.HOME} className="hover:text-accent transition-colors">Trang chủ</Link>
                         <span>/</span>
-                        <Link to="/policy/news" className="hover:text-accent transition-colors">Tin tức & Blog</Link>
+                        <Link to={buildPath(ROUTES.POLICY, 'tin-tuc')} className="hover:text-accent transition-colors">Tin tức & Blog</Link>
                         <span>/</span>
                         <span className="text-gray-900 font-medium truncate max-w-[200px] md:max-w-md">{post.title}</span>
                     </div>
@@ -104,10 +106,10 @@ export const PostDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* Body */}
-                        <div
+                        {/* Body — sanitized via SafeHtml (DOMPurify); never bare dangerouslySetInnerHTML (stored-XSS finding). */}
+                        <SafeHtml
+                            html={post.content}
                             className="prose prose-lg prose-red max-w-none text-gray-700 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: post.content }}
                         />
 
                         {/* Tags */}
@@ -132,7 +134,7 @@ export const PostDetailPage = () => {
                 {/* Back button */}
                 <div className="mt-6">
                     <Link
-                        to={post.type === 'Promotion' ? '/policy/promotions' : '/policy/news'}
+                        to={post.type === 'Promotion' ? buildPath(ROUTES.POLICY, 'khuyen-mai') : buildPath(ROUTES.POLICY, 'tin-tuc')}
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-medium text-sm transition-colors cursor-pointer group"
                     >
                         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />

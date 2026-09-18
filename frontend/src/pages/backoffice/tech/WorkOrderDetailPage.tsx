@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { repairApi, type WorkOrderStatus, getStatusColor } from '../../../api/repair';
+import { repairApi, type WorkOrderStatus, getStatusColor, getWorkOrderStatusLabel } from '../../../api/repair';
 import { inventoryApi } from '../../../api/inventory';
 import { formatCurrency } from '../../../utils/format';
 import toast from 'react-hot-toast';
@@ -10,24 +10,11 @@ import {
     CheckCircle, Play, Pause, MessageSquare, Clock, AlertCircle,
     DollarSign, User, Smartphone, Calendar
 } from 'lucide-react';
+import { WorkOrderPaymentHandoverPanel } from './work-order-payment-handover-panel';
 
-const translateStatus = (status: WorkOrderStatus): string => {
-    const map: Record<WorkOrderStatus, string> = {
-        'Requested': 'Chờ tiếp nhận',
-        'Assigned': 'Đã phân công',
-        'Declined': 'Đã từ chối',
-        'Diagnosed': 'Đã chẩn đoán',
-        'Quoted': 'Đã báo giá',
-        'AwaitingApproval': 'Chờ duyệt',
-        'Approved': 'Đã duyệt',
-        'Rejected': 'Bị từ chối',
-        'InProgress': 'Đang sửa',
-        'OnHold': 'Tạm dừng',
-        'Completed': 'Hoàn thành',
-        'Cancelled': 'Đã hủy'
-    };
-    return map[status] || status;
-};
+// Single source of Vietnamese labels lives in `api/repair/types.ts` now
+// (was a second, slightly different copy here — DRY per dev rules).
+const translateStatus = getWorkOrderStatusLabel;
 
 export const WorkOrderDetailPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -56,7 +43,13 @@ export const WorkOrderDetailPage = () => {
 
     // Note form
     const [noteContent, setNoteContent] = useState('');
-    const [diagnosisNotes, setDiagnosisNotes] = useState('');
+
+    // Status-change note modal — replaces native `prompt()` (D12: freezes the
+    // automation channel; standing rule: no native dialogs).
+    const [statusPrompt, setStatusPrompt] = useState<{
+        status: WorkOrderStatus; title: string; label: string; required: boolean;
+    } | null>(null);
+    const [statusPromptValue, setStatusPromptValue] = useState('');
 
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['tech-work-order', id],
@@ -214,10 +207,7 @@ export const WorkOrderDetailPage = () => {
                 <div className="flex gap-3">
                     {canDiagnose && (
                         <button
-                            onClick={() => {
-                                const notes = prompt('Nhập kết quả chẩn đoán:');
-                                if (notes) updateStatusMutation.mutate({ status: 'Diagnosed', notes });
-                            }}
+                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'Diagnosed', title: 'Hoàn tất chẩn đoán', label: 'Kết quả chẩn đoán', required: true }); }}
                             className="flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold hover:bg-cyan-700 transition"
                         >
                             <Wrench size={18} />
@@ -235,10 +225,7 @@ export const WorkOrderDetailPage = () => {
                     )}
                     {canPause && (
                         <button
-                            onClick={() => {
-                                const reason = prompt('Lý do tạm dừng:');
-                                if (reason) updateStatusMutation.mutate({ status: 'OnHold', notes: reason });
-                            }}
+                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'OnHold', title: 'Tạm dừng sửa chữa', label: 'Lý do tạm dừng', required: true }); }}
                             className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition"
                         >
                             <Pause size={18} />
@@ -256,10 +243,7 @@ export const WorkOrderDetailPage = () => {
                     )}
                     {canComplete && (
                         <button
-                            onClick={() => {
-                                const notes = prompt('Ghi chú hoàn thành:');
-                                updateStatusMutation.mutate({ status: 'Completed', notes: notes || undefined });
-                            }}
+                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'Completed', title: 'Hoàn thành sửa chữa', label: 'Ghi chú hoàn thành (tuỳ chọn)', required: false }); }}
                             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition"
                         >
                             <CheckCircle size={18} />
@@ -442,6 +426,9 @@ export const WorkOrderDetailPage = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Payment + handover (W2-13/W3-15) */}
+                    <WorkOrderPaymentHandoverPanel workOrder={workOrder} workOrderId={id!} refetch={refetch} />
 
                     {/* Timeline */}
                     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
@@ -726,6 +713,41 @@ export const WorkOrderDetailPage = () => {
                                 className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
                             >
                                 {addNoteMutation.isPending ? 'Đang thêm...' : 'Thêm ghi chú'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Status-change note modal (Diagnosed/OnHold/Completed) — no native prompt() */}
+            {statusPrompt && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">{statusPrompt.title}</h3>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">{statusPrompt.label}</label>
+                        <textarea
+                            value={statusPromptValue}
+                            onChange={(e) => setStatusPromptValue(e.target.value)}
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[100px]"
+                            placeholder="Nhập nội dung..."
+                        />
+                        <div className="flex gap-4 mt-6">
+                            <button
+                                onClick={() => setStatusPrompt(null)}
+                                className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (statusPrompt.required && !statusPromptValue.trim()) return;
+                                    updateStatusMutation.mutate({ status: statusPrompt.status, notes: statusPromptValue.trim() || undefined });
+                                    setStatusPrompt(null);
+                                }}
+                                disabled={statusPrompt.required && !statusPromptValue.trim()}
+                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
+                            >
+                                Xác nhận
                             </button>
                         </div>
                     </div>

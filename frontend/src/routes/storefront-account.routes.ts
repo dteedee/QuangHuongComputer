@@ -15,6 +15,7 @@ const ReturnRequestDetailPage = lazy(() => import('../pages/account/return-reque
 const LoyaltyPage = lazy(() => import('../pages/account/LoyaltyPage').then((m) => ({ default: m.LoyaltyPage })));
 const AddressBookPage = lazy(() => import('../pages/account/address-book-page'));
 const WishlistPage = lazy(() => import('../pages/account/WishlistPage').then((m) => ({ default: m.WishlistPage })));
+const GuestOrderLookupPage = lazy(() => import('../pages/account/GuestOrderLookupPage'));
 
 // All require login only (no specific permission) — wrapped in `<RequireAuth>` at render time
 // (routes/index.ts), matching the old "bắt buộc đăng nhập (mọi role)" behaviour exactly.
@@ -29,6 +30,8 @@ export const storefrontAccountRoutes: RouteDef[] = [
   // New: WishlistPage existed (main.tsx/W1-13 already mounts WishlistProvider) but had no route —
   // an unreachable page (Requirements: "wishlist works").
   { path: 'tai-khoan/wishlist', element: WishlistPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountWishlist' },
+  // Guest lookup — anonymous, no `requiresAuth` (phase-56 Step 8).
+  { path: 'tra-cuu-don-hang', element: GuestOrderLookupPage, layout: 'storefront', seo: 'index', hidden: true, name: 'guestOrderLookup' },
 ];
 
 export const storefrontAccountRedirects: RedirectDef[] = [

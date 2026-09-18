@@ -1,90 +1,112 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Category tiles on the homepage, from the real category list.
+ *
+ * Fixed here (W3-1): tiles linked to `/products?category=<guid>` — a param no
+ * page has ever read — so every tile showed the full catalogue. They now link
+ * to `/danh-muc/<slug>` through `ROUTES`. The column count came from a
+ * `md:grid-cols-${columns}` template string, which Tailwind purges (the class
+ * never existed in the build), so the grid silently fell back to one column.
+ */
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-    Laptop, Gamepad, Server, Monitor, Cpu, 
-    MousePointer2, Wifi, Camera, Speaker, Headset, 
-    Wrench, LayoutGrid, ChevronRight 
+import {
+    Camera, ChevronRight, Cpu, Gamepad, Headset, Laptop, LayoutGrid,
+    Monitor, MousePointer2, Server, Speaker, Wifi, Wrench,
 } from 'lucide-react';
-import { catalogApi, type Category } from '../../api/catalog';
+import { Skeleton } from '../ui';
+import { Reveal } from '../motion';
+import { catalogPublicListingApi } from '../../api/catalog/public-listing';
+import { queryKeys } from '../../lib/query-keys';
+import { buildPath, ROUTES } from '../../routes/route-paths';
 
 interface CategoryGridSectionProps {
-    title: string;
-    config: {
-        limit?: number;
-        columns?: number;
-    };
+    title?: string;
+    config?: { limit?: number; columns?: number };
 }
 
-const getCategoryIcon = (name: string) => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('laptop')) return <Laptop size={40} />;
-    if (lowerName.includes('game') || lowerName.includes('gaming')) return <Gamepad size={40} />;
-    if (lowerName.includes('workstation') || lowerName.includes('đồ họa')) return <Server size={40} />;
-    if (lowerName.includes('màn') || lowerName.includes('monitor')) return <Monitor size={40} />;
-    if (lowerName.includes('linh kiện') || lowerName.includes('cpu') || lowerName.includes('ram')) return <Cpu size={40} />;
-    if (lowerName.includes('phím') || lowerName.includes('chuột') || lowerName.includes('gear')) return <MousePointer2 size={40} />;
-    if (lowerName.includes('mạng') || lowerName.includes('wifi')) return <Wifi size={40} />;
-    if (lowerName.includes('camera') || lowerName.includes('cam')) return <Camera size={40} />;
-    if (lowerName.includes('loa') || lowerName.includes('âm thanh') || lowerName.includes('mic')) return <Speaker size={40} />;
-    if (lowerName.includes('phụ kiện') || lowerName.includes('tai nghe')) return <Headset size={40} />;
-    return <Wrench size={40} />;
+const ICONS: Array<[RegExp, typeof Laptop]> = [
+    [/laptop/, Laptop],
+    [/game|gaming/, Gamepad],
+    [/workstation|đồ họa/, Server],
+    [/màn|monitor/, Monitor],
+    [/linh kiện|cpu|ram/, Cpu],
+    [/phím|chuột|gear/, MousePointer2],
+    [/mạng|wifi/, Wifi],
+    [/camera/, Camera],
+    [/loa|âm thanh|mic/, Speaker],
+    [/phụ kiện|tai nghe/, Headset],
+];
+
+const iconFor = (name: string) => {
+    const lower = name.toLowerCase();
+    return ICONS.find(([re]) => re.test(lower))?.[1] ?? Wrench;
 };
 
-export const CategoryGridSection: React.FC<CategoryGridSectionProps> = ({ title, config }) => {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const { limit = 8, columns = 4 } = config;
+/* Static class strings — Tailwind must see them literally to emit them. */
+const COLUMN_CLASS: Record<number, string> = {
+    3: 'sm:grid-cols-3',
+    4: 'sm:grid-cols-3 lg:grid-cols-4',
+    5: 'sm:grid-cols-3 lg:grid-cols-5',
+    6: 'sm:grid-cols-3 lg:grid-cols-6',
+};
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await catalogApi.getCategories();
-                setCategories(data.filter(c => c.isActive).slice(0, limit));
-            } catch (err) {
-                console.error('Failed to fetch categories', err);
-            }
-        };
-        fetchCategories();
-    }, []);
+export const CategoryGridSection = ({ title, config }: CategoryGridSectionProps) => {
+    const { limit = 10, columns = 5 } = config ?? {};
+    const query = useQuery({
+        queryKey: queryKeys.catalog.list({ resource: 'categories' }),
+        queryFn: catalogPublicListingApi.getCategories,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Only active categories that have products — the catalogue still holds
+    // empty `w02-probe-*` rows left by a wave-2 API probe.
+    const categories = (query.data ?? [])
+        .filter((c) => c.isActive && (c.productCount ?? 0) > 0)
+        .slice(0, limit);
+
+    if (!query.isPending && categories.length === 0) return null;
+
+    const gridClass = `grid grid-cols-2 gap-3 sm:gap-4 ${COLUMN_CLASS[columns] ?? COLUMN_CLASS[5]}`;
 
     return (
-        <div className="max-w-[1400px] mx-auto px-4 mt-16">
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
-                    <span className="text-accent"><LayoutGrid size={28} /></span>
-                    {title || 'DANH MỤC SẢN PHẨM'}
+        <section className="mx-auto mt-10 w-full max-w-shell px-4">
+            <div className="mb-3 flex items-end justify-between gap-3">
+                <h2 className="flex items-center gap-2 text-lg font-bold uppercase tracking-tight text-fg sm:text-xl">
+                    <LayoutGrid size={20} className="text-brand" aria-hidden />
+                    {title || 'Danh mục sản phẩm'}
                 </h2>
-                <Link
-                    to="/products"
-                    className="text-sm font-bold text-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
-                >
-                    Tất cả danh mục <ChevronRight size={16} />
+                <Link to={ROUTES.PRODUCTS} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-text hover:underline">
+                    Tất cả <ChevronRight size={15} aria-hidden />
                 </Link>
             </div>
-            <div className={`grid grid-cols-2 md:grid-cols-${columns} gap-6`}>
-                {categories.map((cat, i) => (
-                    <motion.div
-                        key={cat.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ y: -8 }}
-                    >
-                        <Link
-                            to={`/products?category=${cat.id}`}
-                            className="block bg-white rounded-3xl p-8 text-center border-4 border-gray-50 hover:border-red-100 shadow-lg hover:shadow-2xl transition-all"
-                        >
-                            <div className="text-accent flex justify-center mb-6 transform group-hover:scale-110 transition-transform">
-                                {getCategoryIcon(cat.name)}
-                            </div>
-                            <h4 className="font-black text-gray-800 text-sm uppercase leading-tight h-10 flex items-center justify-center">
-                                {cat.name}
-                            </h4>
-                        </Link>
-                    </motion.div>
-                ))}
-            </div>
-        </div>
+
+            {query.isPending ? (
+                <div className={gridClass} aria-hidden>
+                    {Array.from({ length: Math.min(limit, columns * 2) }).map((_, i) => (
+                        <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+                    ))}
+                </div>
+            ) : (
+                <div className={gridClass}>
+                    {categories.map((cat, i) => {
+                        const Icon = iconFor(cat.name);
+                        return (
+                            <Reveal key={cat.id} index={i} cap={6} className="h-full">
+                                <Link
+                                    to={buildPath(ROUTES.CATEGORY, cat.slug ?? '')}
+                                    className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-4 text-center transition duration-220 ease-out hover:-translate-y-0.5 hover:border-brand-line hover:shadow-md motion-reduce:transform-none"
+                                >
+                                    <Icon size={28} className="text-brand" aria-hidden />
+                                    <span className="line-clamp-2 text-sm font-semibold text-fg">{cat.name}</span>
+                                    <span className="text-2xs text-fg-subtle">{cat.productCount} sản phẩm</span>
+                                </Link>
+                            </Reveal>
+                        );
+                    })}
+                </div>
+            )}
+        </section>
     );
 };
+
+export default CategoryGridSection;

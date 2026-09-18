@@ -37,6 +37,8 @@ export interface Store {
 export interface StoreWarehouseLink {
     warehouseId: string;
     warehouseName: string;
+    /** D09 — true cho đúng 1 kho trong danh sách (kho chính, dùng để xuất hàng ưu tiên). */
+    isPrimary?: boolean;
 }
 
 export interface StoreEmployeeLink {
@@ -48,6 +50,8 @@ export interface StoreEmployeeLink {
 export interface StoreDetail extends Store {
     warehouses: StoreWarehouseLink[];
     employees: StoreEmployeeLink[];
+    /** D09 — kho chính (Guid), null nếu chưa chọn. `StoreAdminDto.primaryWarehouseId`. */
+    primaryWarehouseId?: string | null;
 }
 
 export interface StockByStore {
@@ -73,6 +77,8 @@ export interface CreateStoreDto {
     sortOrder?: number;
     warehouseIds?: string[];
     employeeIds?: string[];
+    /** D09 — phải là một trong `warehouseIds`, else BE trả 400. */
+    primaryWarehouseId?: string | null;
 }
 
 export type UpdateStoreDto = CreateStoreDto;

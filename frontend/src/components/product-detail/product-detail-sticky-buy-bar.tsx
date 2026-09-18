@@ -1,13 +1,22 @@
+/**
+ * Mobile sticky buy bar — the thumb-zone copy of the CTA, shown once the real
+ * buy box has scrolled away. Motion comes from the design-system presets, not
+ * from inline `initial={{…}}` objects (design-direction §"không tự chế chuyển
+ * động"). D09: it shows a state, never a quantity.
+ */
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingCart } from 'lucide-react';
+
+import type { Product } from '../../api/catalog';
+import type { ProductMediaView } from '../../api/catalog/public-product';
+import { dur, ease } from '../../design-system/motion';
 import { formatNumber } from '../../utils/format';
-import { resolveMediaUrl } from '../../lib/media-url';
-import type { Product, ProductMedia } from '../../api/catalog';
+import { Button, Img } from '../ui';
 
 interface ProductDetailStickyBuyBarProps {
   show: boolean;
   product: Product;
-  displayMedia?: ProductMedia;
+  displayMedia?: ProductMediaView;
   displayPrice: number;
   stockQuantity: number;
   addingToCart: boolean;
@@ -15,52 +24,54 @@ interface ProductDetailStickyBuyBarProps {
   onAddToCart: () => void;
 }
 
-/** Mobile sticky "buy now / add to cart" bar shown when scrolled past the fold. */
 export default function ProductDetailStickyBuyBar({
-  show,
-  product,
-  displayMedia,
-  displayPrice,
-  stockQuantity,
-  addingToCart,
-  onBuyNow,
-  onAddToCart,
+  show, product, displayMedia, displayPrice, stockQuantity, addingToCart, onBuyNow, onAddToCart,
 }: ProductDetailStickyBuyBarProps) {
+  const outOfStock = stockQuantity <= 0;
+
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: 96, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          exit={{ y: 96, opacity: 0 }}
+          transition={{ duration: dur.move, ease: ease.expo }}
+          className="fixed bottom-0 left-0 right-0 z-[100] border-t border-line bg-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgb(0_0_0/.08)]"
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="hidden md:flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 bg-gray-50 rounded-lg p-0.5 flex-shrink-0">
-                {displayMedia && <img src={resolveMediaUrl(displayMedia.url)} alt="" className="w-full h-full object-contain" />}
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
+              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg">
+                <Img
+                  src={displayMedia?.url ?? product.imageUrl}
+                  alt=""
+                  ratio="1/1"
+                  fit="contain"
+                  blend
+                  wrapperClassName="h-full w-full"
+                />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h3>
-                <span className="text-accent font-bold text-sm">{formatNumber(displayPrice)}<sup className="text-[10px] font-bold ml-0.5">₫</sup></span>
+                <h2 className="truncate text-sm font-semibold text-fg">{product.name}</h2>
+                <span className="num price text-sm font-bold text-brand-text">
+                  {formatNumber(displayPrice)}<sup className="ml-0.5 text-[10px] font-bold">₫</sup>
+                </span>
               </div>
             </div>
-            <div className="flex gap-3 w-full md:w-auto">
-              <button
-                onClick={onBuyNow}
-                disabled={stockQuantity === 0}
-                className="flex-1 md:flex-none bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
-              >
+            <div className="flex w-full gap-3 md:w-auto">
+              <Button className="flex-1 md:flex-none" onClick={onBuyNow} disabled={outOfStock} loading={addingToCart}>
                 MUA NGAY
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex-1 md:flex-none"
+                variant="secondary"
                 onClick={onAddToCart}
-                disabled={stockQuantity === 0 || addingToCart}
-                className="flex-1 md:flex-none border-2 border-accent text-accent px-6 py-3 rounded-lg hover:bg-red-50 font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                disabled={outOfStock}
+                loading={addingToCart}
               >
-                <ShoppingCart className="w-[18px] h-[18px]" />
-                <span className="hidden sm:inline">{addingToCart ? 'Đang thêm...' : 'Thêm vào giỏ'}</span>
-              </button>
+                <ShoppingCart className="h-[18px] w-[18px]" aria-hidden="true" />
+                THÊM VÀO GIỎ
+              </Button>
             </div>
           </div>
         </motion.div>

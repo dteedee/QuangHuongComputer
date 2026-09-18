@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wrench, ChevronRight } from 'lucide-react';
+import { ROUTES } from '../../routes/route-paths';
 
 /**
  * Promo banner for the fallback layout: repair service, matching hacom.vn's
@@ -13,7 +14,7 @@ export const DualServiceBanner = () => (
     <div className="max-w-[1400px] mx-auto px-4 mt-10">
         <motion.div whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300 }} className="max-w-xl mx-auto">
             <Link
-                to="/repair"
+                to={ROUTES.REPAIR}
                 className="relative flex items-center gap-5 bg-gradient-to-br from-slate-800 to-slate-950 rounded-2xl p-7 overflow-hidden shadow-lg hover:shadow-2xl transition-all group"
             >
                 <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-opacity">

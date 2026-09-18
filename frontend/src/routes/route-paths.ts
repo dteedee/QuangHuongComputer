@@ -28,6 +28,11 @@ export const ROUTES = {
   WARRANTY: '/bao-hanh',
   REPAIR: '/sua-chua',
   REPAIR_DETAIL: '/sua-chua/:id',
+  REPAIR_TRACKING: '/tra-cuu-sua-chua',
+  MY_WARRANTIES: '/tai-khoan/bao-hanh',
+  WARRANTY_CLAIM_NEW: '/tai-khoan/bao-hanh/yeu-cau-moi',
+  SUPPORT: '/ho-tro',
+  BACKOFFICE: '/backoffice',
   RECRUITMENT: '/tuyen-dung',
   RECRUITMENT_DETAIL: '/tuyen-dung/:id',
   STORES: '/he-thong-cua-hang',
@@ -37,6 +42,7 @@ export const ROUTES = {
   CART: '/gio-hang',
   CHECKOUT: '/thanh-toan',
   ACCOUNT: '/tai-khoan',
+  GUEST_ORDER_LOOKUP: '/tra-cuu-don-hang',
   // Unchanged on purpose (D11 §2): no SEO value, 20+ call sites, backend emails
   // link to `{Frontend:Url}/reset-password` literally.
   LOGIN: '/login',

@@ -83,3 +83,39 @@ export const promotionApi = {
         return response.data;
     },
 };
+
+/* ------------------------------------------------------------------------ */
+/* Storefront flash sales (W3-1)                                             */
+/* ------------------------------------------------------------------------ */
+
+/** One product's terms inside an active flash sale (content-promotions contract §1). */
+export interface ActiveFlashSaleProduct {
+    productId: string;
+    variantId: string | null;
+    flashPrice: number;
+    quantityLimit: number | null;
+    soldCount: number;
+    remaining: number | null;
+    isSoldOut: boolean;
+}
+
+/** `GET /api/content/promotions/active` — public, anonymous, FlashSale only. */
+export interface ActiveFlashSale {
+    id: string;
+    name: string;
+    description: string | null;
+    /** ISO-8601 end of the sale window; drives the countdown. */
+    endAt: string | null;
+    products: ActiveFlashSaleProduct[];
+}
+
+export const flashSalePublicApi = {
+    /**
+     * The storefront flash-sale feed. Returns `[]` when nothing is running —
+     * the homepage section then renders nothing at all (no fabricated deals).
+     */
+    getActive: async (): Promise<ActiveFlashSale[]> => {
+        const response = await client.get<ActiveFlashSale[]>('/content/promotions/active');
+        return Array.isArray(response.data) ? response.data : [];
+    },
+};

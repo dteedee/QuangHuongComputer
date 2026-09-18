@@ -2,29 +2,19 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { repairApi, type WorkOrder, type WorkOrderStatus, getStatusColor } from '../api/repair';
+import { repairApi, type WorkOrder, type WorkOrderStatus, getStatusColor, getWorkOrderStatusLabel } from '../api/repair';
 import { formatCurrency } from '../utils/format';
 import { Clock, CheckCircle, XCircle, Play, AlertCircle, FileText, Wrench, ChevronRight, LogIn } from 'lucide-react';
 import { z } from 'zod';
 import { validationMessages as msg } from '../lib/validation/messages';
 
-const translateStatus = (status: WorkOrderStatus): string => {
-    const map: Record<WorkOrderStatus, string> = {
-        'Requested': 'Chờ tiếp nhận',
-        'Assigned': 'Đã phân công',
-        'Declined': 'Từ chối',
-        'Diagnosed': 'Đã chẩn đoán',
-        'Quoted': 'Đã báo giá',
-        'AwaitingApproval': 'Chờ duyệt báo giá',
-        'Approved': 'Đã duyệt',
-        'Rejected': 'Từ chối báo giá',
-        'InProgress': 'Đang sửa chữa',
-        'OnHold': 'Tạm dừng',
-        'Completed': 'Hoàn thành',
-        'Cancelled': 'Đã hủy'
-    };
-    return map[status] || status;
-};
+// W3-15: `WorkOrderStatus` gained ReadyForPickup/Paid/Delivered (contract
+// `docs/api-contracts/repair.md`, W2-13) — this file's own copy of the label
+// map went out of sync with the type and failed `tsc`. Delegates to the one
+// source of truth in `api/repair/types.ts` instead of a second local map
+// (outside this track's file ownership; minimal mechanical fix to keep the
+// build green — see `integration-requests-w3.md`).
+const translateStatus = getWorkOrderStatusLabel;
 
 const getStatusIcon = (status: WorkOrderStatus) => {
     switch (status) {

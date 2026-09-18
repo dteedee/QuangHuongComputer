@@ -1,9 +1,19 @@
 import { client } from './client';
 
 /**
- * Vietnamese Tax Engine API
- * Frontend module for tax calculations (PIT, VAT, Insurance, CIT, Payroll)
- * Phase 2.5
+ * Máy tính thuế Việt Nam — `POST /api/accounting/tax/*` (contract §9).
+ * CALCULATION ONLY: this module reads and writes nothing.
+ *
+ * W3-13 removed from here (they belonged to other owners and three of them
+ * called routes that no longer exist):
+ *  · `issueEInvoice` / `getEInvoiceStatus` / `cancelEInvoice` → `api/accounting`
+ *    (`einvoiceApi`); `cancel` was deleted by W2-24 with the fake MISA adapter.
+ *  · `getVatLedger` / `getVatDeclaration` / `getCitReport` / `exportTaxReport`
+ *    → `api/tax-reports.ts`, the single tax-report client. `exportTaxReport`
+ *    called `/accounting/tax-reports/export/vat`, which does not exist.
+ *  · the hardcoded `TAX_CONSTANTS` table — deductions and brackets are
+ *    statutory and change by decree; read `taxApi.getRates()` instead, which
+ *    returns the rates in force today plus their legal basis.
  */
 
 // ============================================
@@ -87,14 +97,6 @@ export interface TaxRates {
     cit: { standardRate: number };
 }
 
-export interface IssueEInvoiceRequest {
-    provider: string;
-    taxCode: string;
-    buyerName: string;
-    buyerAddress: string;
-    buyerEmail: string;
-}
-
 // ============================================
 // API
 // ============================================
@@ -158,90 +160,18 @@ export const taxApi = {
         return response.data;
     },
 
-    // ============================================
-    // E-INVOICE (Hóa đơn điện tử)
-    // ============================================
-    issueEInvoice: async (orderId: string, data: IssueEInvoiceRequest): Promise<any> => {
-        const response = await client.post(`/accounting/einvoice/issue/${orderId}`, data);
-        return response.data;
-    },
-    getEInvoiceStatus: async (invoiceId: string): Promise<any> => {
-        const response = await client.get(`/accounting/einvoice/status/${invoiceId}`);
-        return response.data;
-    },
-    cancelEInvoice: async (invoiceId: string, reason: string): Promise<any> => {
-        const response = await client.post(`/accounting/einvoice/cancel/${invoiceId}`, { reason });
-        return response.data;
-    },
-
-    // ============================================
-    // TAX REPORTING (Báo cáo thuế)
-    // ============================================
-    getVatLedger: async (month: number, year: number, type: 'in' | 'out'): Promise<any> => {
-        const response = await client.get('/accounting/tax-reports/vat-ledger', { params: { month, year, type } });
-        return response.data;
-    },
-    getVatDeclaration: async (quarter: number, year: number): Promise<any> => {
-        const response = await client.get('/accounting/tax-reports/vat-declaration', { params: { quarter, year } });
-        return response.data;
-    },
-    getCitReport: async (year: number): Promise<any> => {
-        const response = await client.get('/accounting/tax-reports/cit-report', { params: { year } });
-        return response.data;
-    }
 };
-
-// ============================================
-// STANDALONE TAX REPORT FUNCTIONS
-// ============================================
-
-/** Get VAT declaration by period string (e.g. "2025-01") and type (monthly/quarterly) */
-export async function getVatDeclaration(period: string, type: string = 'monthly') {
-    const { data } = await client.get('/accounting/tax-reports/vat-declaration', {
-        params: { period, type }
-    });
-    return data;
-}
-
-/** Export VAT report as blob (Excel) */
-export async function exportTaxReport(period: string, type: string = 'monthly') {
-    const response = await client.get('/accounting/tax-reports/export/vat', {
-        params: { period, type },
-        responseType: 'blob'
-    });
-    return response.data;
-}
 
 // ============================================
 // LABELS & CONSTANTS
 // ============================================
 
-export const TAX_CONSTANTS = {
-    PERSONAL_DEDUCTION: 11_000_000,   // VND/month
-    DEPENDENT_DEDUCTION: 4_400_000,   // VND/dependent/month
-    VAT_STANDARD: 0.08,              // 8%
-    VAT_TELECOM: 0.10,               // 10%
-    CIT_RATE: 0.20,                  // 20%
-    BASE_SALARY_2025: 2_340_000,     // Mức lương cơ sở 2025
-    MAX_INSURABLE: 46_800_000,       // 20x base salary
-    REGIONAL_MIN_SALARY: {
-        I: 4_960_000,    // Vùng I
-        II: 4_410_000,   // Vùng II
-        III: 3_860_000,  // Vùng III
-        IV: 3_450_000,   // Vùng IV
-    }
-};
-
-export const PIT_BRACKET_LABELS = [
-    { range: 'Đến 5 triệu', rate: '5%' },
-    { range: '5 - 10 triệu', rate: '10%' },
-    { range: '10 - 18 triệu', rate: '15%' },
-    { range: '18 - 32 triệu', rate: '20%' },
-    { range: '32 - 52 triệu', rate: '25%' },
-    { range: '52 - 80 triệu', rate: '30%' },
-    { range: 'Trên 80 triệu', rate: '35%' },
-];
-
+/**
+ * Bracket labels are NOT hardcoded any more: `taxApi.getRates()` returns the
+ * brackets in force today (`pit.brackets`) together with their legal basis.
+ * The old constant said "Đến 5 triệu / 11.000.000đ giảm trừ", which the
+ * statutory parameters of 2026 have already superseded.
+ */
 export const INSURANCE_LABELS = {
     bhxh: 'Bảo hiểm xã hội (BHXH)',
     bhyt: 'Bảo hiểm y tế (BHYT)',

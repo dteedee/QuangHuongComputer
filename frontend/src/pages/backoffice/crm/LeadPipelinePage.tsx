@@ -4,6 +4,7 @@ import { Target, Plus, DollarSign, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { crmApi, type PipelineView, type Lead, formatCurrency } from '../../../api/crm';
 import { useConfirm } from '../../../context/ConfirmContext';
+import { notify } from '../../../components/ui/toast';
 import { LeadCard } from '../../../components/crm';
 import {
   DndContext,
@@ -159,8 +160,9 @@ export default function LeadPipelinePage() {
       await crmApi.leads.moveStage(leadId, newStageId);
       // Re-fetch to guarantee sync with server
       loadPipeline();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to move lead:', error);
+      notify.error(error?.response?.data?.error || 'Không thể chuyển stage, đã hoàn tác');
       loadPipeline(); // Rollback on failure
     }
   };

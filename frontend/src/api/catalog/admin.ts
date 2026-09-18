@@ -4,20 +4,90 @@
  * 7c). Functions moved verbatim; `api/catalog.ts` re-exports them.
  */
 import client from '../client';
+import { catalogSpecSchemaApi, catalogReviewAdminApi, uploadTaxonomyImage } from './admin-spec-reviews';
 import type {
+    AdminProductDetail,
     Brand,
+    BrandWriteDto,
     Category,
+    CategoryWriteDto,
     CreateProductDto,
     Product,
     ProductMedia,
     ProductOptionType,
+    ProductPriceChange,
     ProductSpecificationValue,
     ProductVariant,
     UpdateBundleRequest,
     UpdateProductDto,
 } from './types';
 
+/** Admin list read — `includeInactive=true` is honoured for staff only (catalog.md §0.1). */
+export interface AdminProductQuery {
+    page?: number;
+    pageSize?: number;
+    categoryId?: string;
+    brandId?: string;
+    search?: string;
+}
+
 export const catalogAdminApi = {
+    /**
+     * Staff product list. `includeInactive=true` bypasses BOTH the global
+     * `IsActive` filter and the publish filter, so the backoffice sees
+     * "ngừng kinh doanh" and "chưa đăng web" rows the storefront cannot.
+     */
+    listProducts: async (params: AdminProductQuery) => {
+        const response = await client.get<import('./types').ProductsResponse>('/catalog/products', {
+            params: { ...params, includeInactive: true },
+        });
+        return response.data;
+    },
+
+    /**
+     * One product with every tab's data in a single round trip.
+     * NOTE the `include` values are `media,specs,variants` — the contract's exact
+     * spelling (catalog.md §2); `medias` is silently ignored by the backend.
+     */
+    getProductForEdit: async (id: string) => {
+        const response = await client.get<AdminProductDetail>(`/catalog/products/${id}`, {
+            params: { include: 'media,specs,variants', includeInactive: true },
+        });
+        return response.data;
+    },
+
+    /** D10 — publish to the storefront. 400 when the product has no image. */
+    publishProduct: async (id: string) => {
+        const response = await client.post<{ message?: string }>(`/catalog/products/${id}/publish`);
+        return response.data;
+    },
+
+    /** D10 — hide from the storefront only; the product still sells at POS. */
+    unpublishProduct: async (id: string) => {
+        const response = await client.post<{ message?: string }>(`/catalog/products/${id}/unpublish`);
+        return response.data;
+    },
+
+    /**
+     * D10 price history. The table + its SaveChanges hook exist and are populated,
+     * but no read endpoint is deployed yet (probed 404 on :5050, 2026-09-18) —
+     * integration request filed in `integration-requests-w3.md`. The screen shows
+     * a real error state until it lands; nothing here is faked.
+     */
+    getPriceHistory: async (id: string) => {
+        const response = await client.get<ProductPriceChange[]>(`/catalog/products/${id}/price-changes`);
+        return response.data;
+    },
+
+    /** W2-22 bulk export (catalog-bulk.md §4) — returns the .xlsx blob. */
+    exportProducts: async (params: { categoryId?: string; brandId?: string; ids?: string }) => {
+        const response = await client.get<Blob>('/catalog/bulk/products/export', {
+            params,
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
     createProduct: async (data: CreateProductDto) => {
         const response = await client.post<Product>(
             '/catalog/products',
@@ -51,7 +121,7 @@ export const catalogAdminApi = {
     },
 
     // Categories
-    createCategory: async (data: { name: string; description: string }) => {
+    createCategory: async (data: CategoryWriteDto) => {
         const response = await client.post<Category>(
             '/catalog/categories',
             data
@@ -59,7 +129,7 @@ export const catalogAdminApi = {
         return response.data;
     },
 
-    updateCategory: async (id: string, data: { name: string; description: string; isActive?: boolean }) => {
+    updateCategory: async (id: string, data: CategoryWriteDto) => {
         const response = await client.put<{ message: string; category: Category }>(
             `/catalog/categories/${id}`,
             data
@@ -82,7 +152,7 @@ export const catalogAdminApi = {
     },
 
     // Brands
-    createBrand: async (data: { name: string; description: string }) => {
+    createBrand: async (data: BrandWriteDto) => {
         const response = await client.post<Brand>(
             '/catalog/brands',
             data
@@ -90,7 +160,7 @@ export const catalogAdminApi = {
         return response.data;
     },
 
-    updateBrand: async (id: string, data: { name: string; description: string; isActive?: boolean }) => {
+    updateBrand: async (id: string, data: BrandWriteDto) => {
         const response = await client.put<{ message: string; brand: Brand }>(
             `/catalog/brands/${id}`,
             data
@@ -122,13 +192,27 @@ export const catalogAdminApi = {
         return response.data;
     },
 
-    uploadMedia: async (file: File): Promise<{ url: string; thumbnailUrl?: string }> => {
+    /**
+     * `POST /catalog/media/upload` — `productId` và `kind` là THAM SỐ QUERY bắt
+     * buộc (`CatalogMediaEndpoints.cs:41-60`: thiếu `productId` thì route trả 400
+     * "Sản phẩm không tồn tại"). Bản cũ không gửi cả hai nên mọi lần tải ảnh đều
+     * hỏng — sửa ở đây, đúng file sở hữu của W3-4.
+     *
+     * `productId` để optional CHỈ vì `components/return/return-attachment-upload.tsx`
+     * (thuộc W3-8) vẫn gọi 1 tham số; gọi thiếu nó vẫn sẽ bị máy chủ từ chối 400.
+     * Đã gửi yêu cầu tích hợp cho chủ sở hữu file đó.
+     */
+    uploadMedia: async (
+        file: File,
+        productId?: string,
+        kind: 'image' | 'video' = 'image',
+    ): Promise<{ url: string; thumbnailUrl?: string }> => {
         const formData = new FormData();
         formData.append('file', file);
         const response = await client.post<{ url: string; thumbnailUrl?: string }>(
             '/catalog/media/upload',
             formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } }
+            { params: { productId, kind }, headers: { 'Content-Type': 'multipart/form-data' } }
         );
         return response.data;
     },
@@ -188,6 +272,11 @@ export const catalogAdminApi = {
         const response = await client.post<{ message: string }>(`/catalog/products/${productId}/specifications`, { values });
         return response.data;
     },
+
+    /** See `admin-spec-reviews.ts` — kept out of this file to stay near the 200-line rule. */
+    uploadTaxonomyImage,
+    specSchema: catalogSpecSchemaApi,
+    reviews: catalogReviewAdminApi,
 
     // Bundles — CatalogBundleEndpoints.cs (chưa nối UI, dùng khi có màn quản lý combo)
     bundles: {

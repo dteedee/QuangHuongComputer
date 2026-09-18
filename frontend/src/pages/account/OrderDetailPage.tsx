@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { salesApi, type Order } from '../../api/sales';
-import { ArrowLeft, Package, MapPin, CreditCard, FileText, Clock, CheckCircle, Truck, Ban, XCircle, RotateCcw, Wrench } from 'lucide-react';
+import { Package, MapPin, CreditCard, FileText, Clock, CheckCircle, Truck, Ban, XCircle, RotateCcw, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '../../utils/format';
 import { useConfirm } from '../../context/ConfirmContext';
 import client from '../../api/client';
 import { motion } from 'framer-motion';
+import { AccountLayout } from '../../layouts/account-layout';
 
 export const OrderDetailPage = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -26,7 +27,6 @@ export const OrderDetailPage = () => {
             setOrder(data);
         } catch {
             toast.error('Không thể tải thông tin đơn hàng');
-            navigate('/account/orders');
         } finally {
             setIsLoading(false);
         }
@@ -34,13 +34,24 @@ export const OrderDetailPage = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
-            </div>
+            <AccountLayout breadcrumb={[{ label: 'Đơn hàng', to: '/tai-khoan/orders' }]}>
+                <div className="flex items-center justify-center min-h-[40vh]">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+                </div>
+            </AccountLayout>
         );
     }
 
-    if (!order) return null;
+    if (!order) {
+        return (
+            <AccountLayout breadcrumb={[{ label: 'Đơn hàng', to: '/tai-khoan/orders' }]}>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-14 text-center">
+                    <p className="text-sm text-red-600 mb-3">Không tìm thấy đơn hàng, hoặc bạn không có quyền xem đơn này.</p>
+                    <Link to="/tai-khoan/orders" className="text-accent text-sm font-semibold hover:underline cursor-pointer">Về danh sách đơn hàng</Link>
+                </div>
+            </AccountLayout>
+        );
+    }
 
     const timelineSteps = [
         { status: 'Pending',   label: 'Đặt hàng',   icon: <Clock className="w-5 h-5" />,        date: order.orderDate,    completed: true },
@@ -67,21 +78,11 @@ export const OrderDetailPage = () => {
     };
 
     const handleReturnRequest = () => {
-        navigate(`/account/returns/new?orderId=${order.id}`);
+        navigate(`/tai-khoan/returns/new?orderId=${order.id}`);
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                {/* Back link */}
-                <Link
-                    to="/account/orders"
-                    className="inline-flex items-center gap-2 text-gray-500 hover:text-accent text-sm font-medium mb-5 transition-colors cursor-pointer"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Quay lại danh sách đơn hàng
-                </Link>
-
+        <AccountLayout breadcrumb={[{ label: 'Đơn hàng', to: '/tai-khoan/orders' }, { label: `#${order.orderNumber}` }]}>
                 {/* Page header */}
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2.5 bg-red-50 rounded-xl text-accent">
@@ -253,7 +254,7 @@ export const OrderDetailPage = () => {
                                             Yêu cầu đổi trả
                                         </button>
                                         <Link
-                                            to={`/account/warranty/new?orderId=${order.id}`}
+                                            to="/bao-hanh"
                                             className="w-full border border-blue-200 text-blue-700 px-6 py-3 rounded-xl hover:bg-blue-50 font-semibold transition-all text-sm flex items-center justify-center gap-2"
                                         >
                                             <Wrench className="w-4 h-4" />
@@ -265,7 +266,6 @@ export const OrderDetailPage = () => {
                         )}
                     </div>
                 </div>
-            </div>
-        </div>
+        </AccountLayout>
     );
 };

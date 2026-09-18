@@ -1,423 +1,179 @@
-import { useState, useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { DollarSign, Clock, AlertCircle, X } from 'lucide-react';
-import { accountingApi, type ARInvoice, type InvoiceStatus, type AgingBucket } from '../../../api/accounting';
-import { DataTable, type Column } from '../../../components/crud/DataTable';
-import { useCrudList, type QueryParams } from '../../../hooks/useCrudList';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { formatCurrency } from '../../../utils/format';
+/**
+ * Công nợ phải thu (W3-13) — contract §2. Rebuilt on the kit; the aging strip
+ * now reads `GET /ar/aging-summary` inside a QueryBoundary instead of summing
+ * the current page client-side (which silently reported 0 when the call failed).
+ */
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { HandCoins, Search, TrendingUp } from 'lucide-react';
+import {
+    Button, Card, DataTable, IconButton, Input, Money, PageHeader, Pagination, RowActions,
+    Select, StatCard, StatusBadge, notify, type DataTableColumn, type SortState,
+} from '../../../components/ui';
+import { CrudFormDialog, MoneyField, TextField } from '../../../components/form';
+import { Can } from '../../../components/Can';
+import { PERMISSIONS } from '../../../constants/permissions';
+import {
+    agingBucketLabel, arApi, formatCurrency, formatVnDate, invoiceStatusLabel,
+    type AgingBucket, type InvoiceListItem, type InvoiceStatus,
+} from '../../../api/accounting';
+import { applyPaymentSchema, type ApplyPaymentFormData } from './accounting-schemas';
 
-const paymentSchema = z.object({
-  amount: z.number().positive('Số tiền phải lớn hơn 0'),
-  notes: z.string().optional(),
-});
-
-type PaymentFormData = z.infer<typeof paymentSchema>;
-
-type AgingFilter = 'all' | AgingBucket;
-
-interface PaymentModalProps {
-  invoice: ARInvoice | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: { amount: number; notes?: string }) => Promise<void>;
-  isSubmitting: boolean;
-}
-
-function PaymentModal({ invoice, isOpen, onClose, onSubmit, isSubmitting }: PaymentModalProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-  } = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: { amount: 0, notes: '' },
-  });
-
-  const amount = watch('amount');
-  const isOverLimit = invoice ? amount > invoice.outstandingAmount : false;
-
-  const handleFormSubmit = async (data: PaymentFormData) => {
-    if (isOverLimit) return;
-    await onSubmit(data);
-    reset();
-  };
-
-  const handleClose = () => {
-    reset();
-    onClose();
-  };
-
-  if (!isOpen || !invoice) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-          onClick={handleClose}
-        ></div>
-
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h3 className="text-lg font-bold text-gray-900 ">Ghi nhận thanh toán</h3>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-500 transition-colors"
-              disabled={isSubmitting}
-            >
-              <X size={24} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit(handleFormSubmit)}>
-            <div className="px-6 py-4 space-y-4">
-              <div className="bg-gray-50 p-6 rounded-xl space-y-3 border-2 border-gray-100">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-medium text-xs">Mã hóa đơn</span>
-                  <span className="font-semibold text-gray-950 font-mono">{invoice.invoiceNumber}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-medium text-xs">Khách hàng</span>
-                  <span className="font-semibold text-gray-950 text-right">{invoice.customerId}</span>
-                </div>
-                <div className="flex justify-between text-sm border-t-2 border-dashed border-gray-200 pt-3">
-                  <span className="text-gray-500 font-medium text-xs">Dư nợ hiện tại</span>
-                  <span className="font-semibold text-accent text-xl">
-                    {formatCurrency(invoice.outstandingAmount)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    Số tiền thanh toán
-                  </label>
-                  <input
-                    type="number"
-                    {...register('amount', { valueAsNumber: true })}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-2xl italic text-accent placeholder-gray-400 text-gray-900 transition-all"
-                    placeholder="0"
-                    disabled={isSubmitting}
-                  />
-                  {errors.amount && (
-                    <p className="mt-2 text-xs font-bold text-red-600 uppercase">{errors.amount.message}</p>
-                  )}
-                  {isOverLimit && (
-                    <div className="mt-3 flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs text-slate-500 border border-red-100">
-                      <AlertCircle size={14} />
-                      <span>Không thể thanh toán vượt quá số tiền nợ</span>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    Ghi chú
-                  </label>
-                  <textarea
-                    {...register('notes')}
-                    className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm placeholder-gray-400 text-gray-900 transition-all min-h-[100px]"
-                    placeholder="Nhập ghi chú thanh toán..."
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 py-6 bg-gray-50 border-t flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-400 text-xs text-slate-500 rounded-xl hover:bg-gray-100 transition-all active:scale-95"
-                disabled={isSubmitting}
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50 disabled:scale-100"
-                disabled={isSubmitting || isOverLimit}
-              >
-                {isSubmitting ? 'Đang xử lý...' : 'Xác nhận thu nợ'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-}
+const PAGE_SIZE = 20;
 
 export const ARPage = () => {
-  const queryClient = useQueryClient();
-  const [selectedAgingBucket, setSelectedAgingBucket] = useState<AgingFilter>('all');
-  const [selectedInvoice, setSelectedInvoice] = useState<ARInvoice | null>(null);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [page, setPage] = useState(1);
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('');
+    const [aging, setAging] = useState('');
+    const [sort, setSort] = useState<SortState | null>({ id: 'dueDate', dir: 'asc' });
+    const [payTarget, setPayTarget] = useState<InvoiceListItem | null>(null);
 
-  const {
-    data,
-    total,
-    page,
-    pageSize,
-    isLoading,
-    handlePageChange,
-    handleSearch,
-    search,
-  } = useCrudList<ARInvoice>({
-    queryKey: ['ar-invoices', selectedAgingBucket],
-    fetchFn: async (params: QueryParams) => {
-      const result = await accountingApi.ar.getList(params.page, params.pageSize, selectedAgingBucket === 'all' ? undefined : selectedAgingBucket);
-      return {
-        ...result,
-        totalPages: Math.ceil(result.total / result.pageSize),
-        hasPreviousPage: result.page > 1,
-        hasNextPage: result.page < Math.ceil(result.total / result.pageSize),
-      };
-    },
-    initialPageSize: 20,
-  });
-
-  const { data: agingSummary } = useQuery({
-    queryKey: ['ar-aging-summary'],
-    queryFn: () => accountingApi.ar.getAgingSummary(),
-  });
-
-  const applyPaymentMutation = useMutation({
-    mutationFn: ({ invoiceId, amount, notes }: { invoiceId: string; amount: number; notes?: string }) =>
-      accountingApi.ar.applyPayment(invoiceId, { amount, notes, paymentIntentId: 'manual' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ar-invoices'] });
-      setIsPaymentModalOpen(false);
-      setSelectedInvoice(null);
-    },
-  });
-
-  const handleApplyPayment = async (data: { amount: number; notes?: string }) => {
-    if (!selectedInvoice) return;
-    await applyPaymentMutation.mutateAsync({
-      invoiceId: selectedInvoice.id,
-      amount: data.amount,
-      notes: data.notes,
-    });
-  };
-
-  const openPaymentModal = (invoice: ARInvoice) => {
-    setSelectedInvoice(invoice);
-    setIsPaymentModalOpen(true);
-  };
-
-  const getStatusBadge = (status: InvoiceStatus) => {
-    const configs: Record<InvoiceStatus, { label: string; bg: string; text: string }> = {
-      Draft: { label: 'Bản nháp', bg: 'bg-gray-50', text: 'text-gray-400' },
-      Issued: { label: 'Chờ thu', bg: 'bg-amber-50', text: 'text-amber-600' },
-      Paid: { label: 'Đã thu', bg: 'bg-green-50', text: 'text-green-600' },
-      Overdue: { label: 'Quá hạn', bg: 'bg-red-50', text: 'text-red-600' },
-      Cancelled: { label: 'Đã hủy', bg: 'bg-gray-100', text: 'text-gray-400' },
+    const params = {
+        page, pageSize: PAGE_SIZE,
+        search: search || undefined,
+        status: (status || undefined) as InvoiceStatus | undefined,
+        aging: (aging || undefined) as AgingBucket | undefined,
+        sortBy: sort?.id, sortDir: sort?.dir,
     };
-    const config = configs[status] || configs.Draft;
+
+    const query = useQuery({ queryKey: ['accounting', 'ar', params], queryFn: () => arApi.list(params) });
+    const agingQuery = useQuery({ queryKey: ['accounting', 'ar', 'aging'], queryFn: arApi.agingSummary });
+    const a = agingQuery.data;
+    const failed = agingQuery.isError;
+
+    const columns = useMemo<DataTableColumn<InvoiceListItem>[]>(() => [
+        { id: 'invoiceNumber', header: 'Số hoá đơn', sortable: true, locked: true, cell: (r) => <span className="num font-medium text-fg">{r.invoiceNumber}</span> },
+        { id: 'issueDate', header: 'Ngày lập', sortable: true, cell: (r) => <span className="num">{formatVnDate(r.issueDate)}</span> },
+        { id: 'dueDate', header: 'Hạn thu', sortable: true, cell: (r) => <span className="num">{formatVnDate(r.dueDate)}</span> },
+        { id: 'totalAmount', header: 'Giá trị', align: 'right', sortable: true, cell: (r) => <Money value={r.totalAmount} /> },
+        { id: 'paidAmount', header: 'Đã thu', align: 'right', cell: (r) => <Money value={r.paidAmount} /> },
+        { id: 'outstandingAmount', header: 'Còn phải thu', align: 'right', cell: (r) => <Money value={r.outstandingAmount} /> },
+        {
+            id: 'agingBucket', header: 'Tuổi nợ',
+            cell: (r) => <StatusBadge tone={agingBucketLabel[r.agingBucket]?.tone ?? 'neutral'}>
+                {agingBucketLabel[r.agingBucket]?.label ?? '—'}
+            </StatusBadge>,
+        },
+        {
+            id: 'status', header: 'Trạng thái', locked: true,
+            cell: (r) => <StatusBadge tone={invoiceStatusLabel[r.status]?.tone ?? 'neutral'}>
+                {invoiceStatusLabel[r.status]?.label ?? r.status}
+            </StatusBadge>,
+        },
+        {
+            id: 'actions', header: '', locked: true, width: '1%',
+            cell: (r) => (
+                <RowActions>
+                    <Can permission={PERMISSIONS.ACCOUNTING_CREATE_INVOICE}>
+                        {r.outstandingAmount > 0 && r.status !== 'Cancelled' && (
+                            <IconButton
+                                aria-label={`Ghi nhận thu tiền cho ${r.invoiceNumber}`} variant="ghost"
+                                onClick={(e) => { e.stopPropagation(); setPayTarget(r); }}
+                            >
+                                <HandCoins size={16} aria-hidden />
+                            </IconButton>
+                        )}
+                    </Can>
+                </RowActions>
+            ),
+        },
+    ], []);
+
     return (
-      <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-medium border border-current opacity-70`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const columns: Column<ARInvoice>[] = [
-    {
-      key: 'invoiceNumber',
-      label: 'Mã hóa đơn',
-      sortable: true,
-      render: (item) => (
-        <span className="font-semibold text-accent font-mono">{item.invoiceNumber}</span>
-      ),
-    },
-    {
-      key: 'customerId',
-      label: 'Khách hàng',
-      sortable: true,
-      render: (item) => <span className="font-semibold text-gray-900  text-xs">{item.customerId}</span>,
-    },
-    {
-      key: 'totalAmount',
-      label: 'Tổng tiền',
-      sortable: true,
-      render: (item) => (
-        <span className="font-semibold text-gray-900">{formatCurrency(item.totalAmount)}</span>
-      ),
-    },
-    {
-      key: 'outstandingAmount',
-      label: 'Còn nợ',
-      sortable: true,
-      render: (item) => (
-        <span className="font-semibold text-accent">{formatCurrency(item.outstandingAmount)}</span>
-      ),
-    },
-    {
-      key: 'dueDate',
-      label: 'Hạn thanh toán',
-      sortable: true,
-      render: (item) => (
-        <span className="text-xs font-bold text-gray-500 uppercase">
-          {new Date(item.dueDate).toLocaleDateString('vi-VN')}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Trạng thái',
-      sortable: true,
-      render: (item) => getStatusBadge(item.status),
-    },
-  ];
-
-  const agingBuckets: { key: AgingFilter; label: string }[] = [
-    { key: 'all', label: 'Tất cả' },
-    { key: 'Current', label: 'Trong hạn' },
-    { key: 'Days1To30', label: '1-30 ngày' },
-    { key: 'Days31To60', label: '31-60 ngày' },
-    { key: 'Days61To90', label: '61-90 ngày' },
-    { key: 'Over90Days', label: '90+ ngày' },
-  ];
-
-  return (
-    <div className="space-y-10 pb-20">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
-            Quản lý <span className="text-accent">Công nợ phải thu</span>
-          </h1>
-          <p className="text-gray-500 font-medium text-xs">
-            Theo dõi khoản thu từ khách hàng đại lý (AR)
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Card */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group border-2 border-red-50">
-          <div className="absolute top-0 right-0 p-8 text-red-500/5 group-hover:scale-125 transition-transform duration-700">
-            <DollarSign size={120} />
-          </div>
-          <p className="text-gray-400 text-xs text-slate-500 mb-3">Tổng nợ chưa thu</p>
-          <h3 className="text-4xl font-semibold text-accent">
-            {formatCurrency(agingSummary?.totalOutstanding ?? 0)}
-          </h3>
-          <div className="mt-8 pt-6 border-t-2 border-gray-50 flex items-center gap-3">
-            <span className="text-xs font-semibold text-gray-900 uppercase">Toàn bộ dư nợ AR</span>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group border-2 border-amber-50">
-          <div className="absolute top-0 right-0 p-8 text-amber-500/5 group-hover:scale-125 transition-transform duration-700">
-            <Clock size={120} />
-          </div>
-          <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ quá hạn</p>
-          <h3 className="text-4xl font-semibold text-amber-600">
-            {formatCurrency((agingSummary?.days1To30 ?? 0) + (agingSummary?.days31To60 ?? 0) + (agingSummary?.days61To90 ?? 0) + (agingSummary?.over90Days ?? 0))}
-          </h3>
-          <div className="mt-8 pt-6 border-t-2 border-gray-50">
-            <span className="text-xs font-semibold text-amber-600  animate-pulse">Cần ưu tiên thu nợ</span>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ y: -5 }} className="premium-card p-10 group border-2 border-blue-50">
-          <div className="absolute top-0 right-0 p-8 text-blue-500/5 group-hover:scale-125 transition-transform duration-700">
-            <AlertCircle size={120} />
-          </div>
-          <p className="text-gray-400 text-xs text-slate-500 mb-3">Dư nợ trong hạn</p>
-          <h3 className="text-4xl font-semibold text-blue-600">
-            {formatCurrency(agingSummary?.current ?? 0)}
-          </h3>
-          <div className="mt-8 pt-6 border-t-2 border-gray-50">
-            <span className="text-xs text-slate-500">Dòng tiền ổn định</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Aging Filters */}
-      <div className="premium-card p-8 border-2 bg-white">
-        <h3 className="text-xs text-slate-400 mb-6">Phân tích tuổi nợ</h3>
-        <div className="flex flex-wrap gap-3">
-          {agingBuckets.map((bucket) => (
-            <button
-              key={bucket.key}
-              onClick={() => setSelectedAgingBucket(bucket.key)}
-              className={`px-6 py-3 rounded-xl text-xs text-slate-500 transition-all border-2 ${selectedAgingBucket === bucket.key
-                  ? 'bg-gray-950 text-white border-gray-950 shadow-sm'
-                  : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
-                }`}
-            >
-              {bucket.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Search & Table */}
-      <div className="premium-card p-4 border-2 shadow-md shadow-gray-200/50">
-        <div className="p-6 border-b border-gray-50 flex items-center gap-4">
-          <div className="flex-1 relative">
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo mã hóa đơn, khách hàng..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-accent rounded-xl text-sm font-semibolder italic placeholder-gray-400 text-gray-900 transition-all"
+        <div className="space-y-5">
+            <PageHeader
+                title="Công nợ phải thu"
+                description="Hoá đơn bán ra chưa thu đủ tiền, phân nhóm theo tuổi nợ."
+                breadcrumbs={[{ label: 'Tài chính', to: '/backoffice/accounting' }, { label: 'Công nợ phải thu' }]}
             />
-          </div>
-        </div>
 
-        <div className="p-4">
-          <DataTable
-            columns={columns}
-            data={data}
-            total={total}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={handlePageChange}
-            isLoading={isLoading}
-            actions={(item) => (
-              <button
-                onClick={() => openPaymentModal(item)}
-                disabled={item.outstandingAmount <= 0}
-                className="px-6 py-2.5 bg-gray-950 text-white text-[9px] font-medium rounded-xl hover:bg-accent transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-gray-200"
-              >
-                Ghi nhận thu nợ
-              </button>
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <StatCard label="Trong hạn" value={failed || !a ? null : formatCurrency(a.current)} />
+                <StatCard label="1–30 ngày" value={failed || !a ? null : formatCurrency(a.days1To30)} />
+                <StatCard label="31–60 ngày" value={failed || !a ? null : formatCurrency(a.days31To60)} />
+                <StatCard label="61–90 ngày" value={failed || !a ? null : formatCurrency(a.days61To90)} />
+                <StatCard label="Trên 90 ngày" value={failed || !a ? null : formatCurrency(a.over90Days)} />
+                <StatCard label="Tổng phải thu" value={failed || !a ? null : formatCurrency(a.totalOutstanding)} icon={TrendingUp} />
+            </div>
+            {failed && (
+                <p className="text-sm text-danger">
+                    Không tải được bảng tuổi nợ ({String((agingQuery.error as Error)?.message ?? 'lỗi không xác định')}).
+                    <Button variant="ghost" size="sm" onClick={() => agingQuery.refetch()}>Thử lại</Button>
+                </p>
             )}
-          />
-        </div>
-      </div>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        invoice={selectedInvoice}
-        isOpen={isPaymentModalOpen}
-        onClose={() => {
-          setIsPaymentModalOpen(false);
-          setSelectedInvoice(null);
-        }}
-        onSubmit={handleApplyPayment}
-        isSubmitting={applyPaymentMutation.isPending}
-      />
-    </div>
-  );
+            <Card className="p-4">
+                <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); setSearch(searchInput.trim()); setPage(1); }}>
+                    <Input label="Tìm kiếm" placeholder="Số hoá đơn hoặc khách hàng" icon={Search}
+                        value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="sm:flex-1" />
+                    <Select
+                        label="Tuổi nợ" className="sm:w-48" value={aging}
+                        onChange={(e) => { setAging(e.target.value); setPage(1); }}
+                        options={[
+                            { value: '', label: 'Tất cả' },
+                            ...(Object.keys(agingBucketLabel) as AgingBucket[]).map((b) => ({ value: b, label: agingBucketLabel[b].label })),
+                        ]}
+                    />
+                    <Select
+                        label="Trạng thái" className="sm:w-48" value={status}
+                        onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                        options={[
+                            { value: '', label: 'Tất cả' },
+                            ...(Object.keys(invoiceStatusLabel) as InvoiceStatus[]).map((s) => ({ value: s, label: invoiceStatusLabel[s].label })),
+                        ]}
+                    />
+                    <Button type="submit" variant="outline">Lọc</Button>
+                </form>
+            </Card>
+
+            <DataTable
+                caption="Danh sách công nợ phải thu"
+                columns={columns}
+                rows={query.data?.items}
+                rowKey={(r) => r.id}
+                loading={query.isPending}
+                error={query.error}
+                onRetry={query.refetch}
+                sort={sort}
+                onSortChange={setSort}
+                enableColumnVisibility
+                skeletonRows={8}
+                onRowClick={(r) => navigate(`/backoffice/accounting/invoices/${r.id}`)}
+                empty={{ icon: TrendingUp, title: 'Không có công nợ phải thu', description: 'Mọi hoá đơn bán ra trong bộ lọc này đã được thu đủ.' }}
+                pagination={<Pagination page={page} pageSize={PAGE_SIZE} total={query.data?.total ?? 0} onPageChange={setPage} />}
+            />
+
+            <CrudFormDialog<ApplyPaymentFormData>
+                open={payTarget !== null}
+                onOpenChange={(o) => { if (!o) setPayTarget(null); }}
+                title={`Ghi nhận thu tiền ${payTarget?.invoiceNumber ?? ''}`}
+                description={payTarget ? `Còn phải thu ${new Intl.NumberFormat('vi-VN').format(payTarget.outstandingAmount)} ₫` : undefined}
+                schema={applyPaymentSchema}
+                defaultValues={{ amount: payTarget?.outstandingAmount ?? 0, notes: '' }}
+                submitLabel="Ghi nhận"
+                knownFields={['amount', 'notes']}
+                onSubmit={async (data) => {
+                    if (!payTarget) return;
+                    const res = await arApi.applyPayment(payTarget.id, { amount: data.amount, notes: data.notes || undefined });
+                    notify.success('Đã ghi nhận thu tiền', { description: res.message });
+                    setPayTarget(null);
+                    queryClient.invalidateQueries({ queryKey: ['accounting', 'ar'] });
+                }}
+            >
+                {(form) => (
+                    <>
+                        <MoneyField name="amount" control={form.control} label="Số tiền thu" max={payTarget?.outstandingAmount} />
+                        <TextField name="notes" control={form.control} label="Ghi chú" />
+                    </>
+                )}
+            </CrudFormDialog>
+        </div>
+    );
 };
 
-const Search = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"></circle>
-    <path d="m21 21-4.3-4.3"></path>
-  </svg>
-);
+export default ARPage;

@@ -1,567 +1,223 @@
-import { useState } from 'react';
-import { SearchableSelect } from '../../../components/ui/SearchableSelect';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Wallet, Clock, CheckCircle, CreditCard, Plus, X, Filter } from 'lucide-react';
-import { expenseApi, type Expense, type ExpenseCategory, type ExpenseStatus, type CreateExpenseRequest } from '../../../api/accounting';
-import { DataTable, type Column } from '../../../components/crud/DataTable';
-import { formatCurrency } from '../../../utils/format';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import toast from 'react-hot-toast';
-import { useConfirm } from '../../../context/ConfirmContext';
+/**
+ * Chi phí (W3-13) — contract §7. Rebuilt on the UI kit + form kit.
+ *
+ * What changed: the wave-0 page could only create and approve; there was no way
+ * to correct a wrong amount. `PUT /expenses/{id}` exists, so editing is wired
+ * here and offered while the row is still Draft/Pending (an approved or paid
+ * expense is an accounting document, not a draft). There is NO delete endpoint
+ * on the server — the page does not pretend otherwise (integration request #3).
+ */
+import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, Pencil, Plus, Receipt, Search, Wallet, X } from 'lucide-react';
+import {
+    Button, Card, DataTable, IconButton, Input, Money, PageHeader, Pagination, RowActions,
+    Select, StatCard, StatusBadge, notify, type DataTableColumn, type SortState,
+} from '../../../components/ui';
+import { Can } from '../../../components/Can';
+import { PERMISSIONS } from '../../../constants/permissions';
+import { usePrompt } from '../../../context/ConfirmContext';
+import {
+    expenseCategoriesApi, expenseStatusLabel, expensesApi, formatCurrency, formatVnDate,
+    type Expense, type ExpenseStatus,
+} from '../../../api/accounting';
+import { ExpenseFormDialog } from './expense-form-dialog';
 
-const expenseSchema = z.object({
-    categoryId: z.string().min(1, 'Vui lòng chọn danh mục'),
-    description: z.string().min(3, 'Mô tả phải có ít nhất 3 ký tự'),
-    amount: z.number().positive('Số tiền phải lớn hơn 0'),
-    vatRate: z.number().min(0).max(100),
-    currency: z.string().default('VND'),
-    expenseDate: z.string(),
-    supplierId: z.string().optional(),
-    employeeId: z.string().optional(),
-    notes: z.string().optional(),
-});
-
-// `currency` có `.default('VND')` nên input (trước parse) khác output (sau parse):
-// input coi currency là optional, output đảm bảo luôn có. useForm phải khai báo cả hai,
-// nếu không zodResolver và kiểu form sẽ lệch nhau.
-type ExpenseFormInput = z.input<typeof expenseSchema>;
-type ExpenseFormData = z.output<typeof expenseSchema>;
-
-interface CreateExpenseModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    categories: ExpenseCategory[];
-    onSubmit: (data: CreateExpenseRequest) => Promise<void>;
-    isSubmitting: boolean;
-}
-
-function CreateExpenseModal({ isOpen, onClose, categories, onSubmit, isSubmitting }: CreateExpenseModalProps) {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-        watch,
-        setValue,
-    } = useForm<ExpenseFormInput, unknown, ExpenseFormData>({
-        resolver: zodResolver(expenseSchema),
-        defaultValues: {
-            categoryId: '',
-            description: '',
-            amount: 0,
-            vatRate: 10,
-            currency: 'VND',
-            expenseDate: new Date().toISOString().split('T')[0],
-            notes: '',
-        },
-    });
-
-    const amount = watch('amount');
-    const vatRate = watch('vatRate');
-    // SearchableSelect là controlled component: phải truyền cả value, nếu không
-    // ô chọn luôn hiện placeholder dù người dùng đã chọn.
-    const categoryId = watch('categoryId');
-    const currency = watch('currency');
-    const vatAmount = amount * vatRate / 100;
-    const totalAmount = amount + vatAmount;
-
-    const handleFormSubmit = async (data: ExpenseFormData) => {
-        await onSubmit({
-            ...data,
-            supplierId: data.supplierId || undefined,
-            employeeId: data.employeeId || undefined,
-        });
-        reset();
-    };
-
-    const handleClose = () => {
-        reset();
-        onClose();
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 transition-opacity bg-gray-950/50 backdrop-blur-sm" onClick={handleClose}></div>
-
-                <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-md transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
-                    <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="text-xl font-semibold text-gray-950 ">Tạo chi phí mới</h3>
-                        <button onClick={handleClose} className="text-gray-400 hover:text-gray-950 transition-colors" disabled={isSubmitting}>
-                            <X size={24} />
-                        </button>
-                    </div>
-
-                    <form onSubmit={handleSubmit(handleFormSubmit)}>
-                        <div className="px-8 py-6 space-y-5 max-h-[60vh] overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="text-xs text-slate-400 mb-2 block">Danh mục *</label>
-                                    <SearchableSelect
-                                        disabled={isSubmitting}
-                                        placeholder="Chọn danh mục"
-                                        value={categoryId}
-                                        onChange={(val: string) => setValue('categoryId', val, { shouldValidate: true, shouldDirty: true })}
-                                        options={categories.filter(c => c.isActive).map((cat) => ({ value: cat.id, label: `${cat.name} (${cat.code})` }))}
-                                    />
-                                    {errors.categoryId && <p className="mt-1 text-xs text-red-500">{errors.categoryId.message}</p>}
-                                </div>
-
-                                <div className="col-span-2">
-                                    <label className="text-xs text-slate-400 mb-2 block">Mô tả *</label>
-                                    <input
-                                        type="text"
-                                        {...register('description')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
-                                        placeholder="Nhập mô tả chi phí..."
-                                        disabled={isSubmitting}
-                                    />
-                                    {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-2 block">Số tiền *</label>
-                                    <input
-                                        type="number"
-                                        {...register('amount', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-semibold text-lg text-accent"
-                                        placeholder="0"
-                                        disabled={isSubmitting}
-                                    />
-                                    {errors.amount && <p className="mt-1 text-xs text-red-500">{errors.amount.message}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-2 block">VAT (%)</label>
-                                    <input
-                                        type="number"
-                                        {...register('vatRate', { valueAsNumber: true })}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-bold text-sm"
-                                        placeholder="10"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-2 block">Ngày chi</label>
-                                    <input
-                                        type="date"
-                                        {...register('expenseDate')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-2 block">Tiền tệ</label>
-                                    <SearchableSelect
-                                        disabled={isSubmitting}
-                                        value={currency}
-                                        onChange={(val: string) => setValue('currency', val, { shouldDirty: true })}
-                                        options={[
-                                            { value: 'VND', label: 'VND' },
-                                            { value: 'USD', label: 'USD' },
-                                        ]}
-                                    />
-                                </div>
-
-                                <div className="col-span-2">
-                                    <label className="text-xs text-slate-400 mb-2 block">Ghi chú</label>
-                                    <textarea
-                                        {...register('notes')}
-                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-accent font-medium text-sm min-h-[80px]"
-                                        placeholder="Ghi chú thêm..."
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Summary */}
-                            <div className="bg-gray-950 text-white p-6 rounded-xl space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400 uppercase text-xs font-semibold">Số tiền</span>
-                                    <span className="font-semibold">{formatCurrency(amount || 0)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400 uppercase text-xs font-semibold">VAT ({vatRate}%)</span>
-                                    <span className="font-semibold">{formatCurrency(vatAmount || 0)}</span>
-                                </div>
-                                <div className="flex justify-between text-lg pt-3 border-t border-white/10">
-                                    <span className="text-gray-400 uppercase text-xs font-semibold">Tổng cộng</span>
-                                    <span className="font-semibold text-accent text-2xl">{formatCurrency(totalAmount || 0)}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="px-8 py-6 bg-gray-50 border-t flex justify-end gap-4">
-                            <button
-                                type="button"
-                                onClick={handleClose}
-                                className="px-6 py-3 text-gray-500 text-xs text-slate-500 hover:text-gray-950 transition-all"
-                                disabled={isSubmitting}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-8 py-3 bg-accent text-white text-xs text-slate-500 rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all active:scale-95 disabled:opacity-50"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Đang tạo...' : 'Tạo chi phí'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-}
+const PAGE_SIZE = 20;
+const EDITABLE: ExpenseStatus[] = ['Draft', 'Pending'];
 
 export const ExpensesPage = () => {
     const queryClient = useQueryClient();
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [statusFilter, setStatusFilter] = useState<ExpenseStatus | 'all'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
     const [page, setPage] = useState(1);
-    const pageSize = 20;
-    const confirm = useConfirm();
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
+    const [status, setStatus] = useState('');
+    const [sort, setSort] = useState<SortState | null>({ id: 'expenseDate', dir: 'desc' });
+    const [formOpen, setFormOpen] = useState(false);
+    const [editing, setEditing] = useState<Expense | null>(null);
+    const { promptText, promptSelect } = usePrompt();
 
-    // Queries with caching for better performance
-    const { data: categoriesData } = useQuery({
-        queryKey: ['expense-categories'],
-        queryFn: () => expenseApi.categories.getAll(),
-        staleTime: 300000, // Cache categories for 5 minutes (rarely change)
-    });
-
-    const { data: expensesData, isLoading } = useQuery({
-        queryKey: ['expenses', page, statusFilter, categoryFilter],
-        queryFn: () => expenseApi.getList({
-            page,
-            pageSize,
-            status: statusFilter === 'all' ? undefined : statusFilter,
-            categoryId: categoryFilter === 'all' ? undefined : categoryFilter,
-        }),
-        staleTime: 15000, // Cache for 15 seconds
-    });
-
-    const { data: summary } = useQuery({
-        queryKey: ['expenses-summary'],
-        queryFn: () => expenseApi.getSummary(),
-        staleTime: 30000, // Cache for 30 seconds
-    });
-
-    // Mutations
-    const createMutation = useMutation({
-        mutationFn: (data: CreateExpenseRequest) => expenseApi.create(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            queryClient.invalidateQueries({ queryKey: ['expenses-summary'] });
-            setIsCreateModalOpen(false);
-            toast.success('Tạo chi phí thành công');
-        },
-        onError: () => {
-            toast.error('Có lỗi xảy ra');
-        },
-    });
-
-    const approveMutation = useMutation({
-        mutationFn: (id: string) => expenseApi.approve(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            queryClient.invalidateQueries({ queryKey: ['expenses-summary'] });
-            toast.success('Duyệt chi phí thành công');
-        },
-    });
-
-    const rejectMutation = useMutation({
-        mutationFn: ({ id, reason }: { id: string; reason: string }) => expenseApi.reject(id, reason),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            queryClient.invalidateQueries({ queryKey: ['expenses-summary'] });
-            toast.success('Từ chối chi phí');
-        },
-    });
-
-    const payMutation = useMutation({
-        mutationFn: ({ id, method }: { id: string; method: string }) => expenseApi.pay(id, method),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            queryClient.invalidateQueries({ queryKey: ['expenses-summary'] });
-            toast.success('Ghi nhận thanh toán');
-        },
-    });
-
-    const handleApprove = async (id: string) => {
-        const ok = await confirm({ message: 'Xác nhận duyệt chi phí này?', variant: 'info' });
-        if (ok) {
-            approveMutation.mutate(id);
-        }
+    const params = {
+        page, pageSize: PAGE_SIZE,
+        search: search || undefined,
+        status: (status || undefined) as ExpenseStatus | undefined,
+        sortBy: sort?.id as 'expenseNumber' | 'expenseDate' | 'totalAmount' | undefined,
+        sortDir: sort?.dir,
     };
 
-    const handleReject = (id: string) => {
-        const reason = prompt('Lý do từ chối:');
-        if (reason) {
-            rejectMutation.mutate({ id, reason });
-        }
+    const query = useQuery({ queryKey: ['accounting', 'expenses', params], queryFn: () => expensesApi.list(params) });
+    const summaryQuery = useQuery({ queryKey: ['accounting', 'expenses', 'summary'], queryFn: () => expensesApi.summary() });
+    const categoriesQuery = useQuery({ queryKey: ['accounting', 'expense-categories'], queryFn: () => expenseCategoriesApi.list() });
+
+    const categoryOptions = (categoriesQuery.data ?? []).map((c) => ({ value: c.id, label: `${c.code} — ${c.name}` }));
+    const refresh = () => queryClient.invalidateQueries({ queryKey: ['accounting', 'expenses'] });
+
+    const approve = async (row: Expense) => {
+        try {
+            await expensesApi.approve(row.id);
+            notify.success('Đã duyệt khoản chi', { description: row.expenseNumber });
+            refresh();
+        } catch { notify.error('Không duyệt được khoản chi'); }
     };
 
-    const handlePay = (id: string) => {
-        const method = prompt('Phương thức thanh toán (Cash, BankTransfer, Card):') || 'Cash';
-        payMutation.mutate({ id, method });
+    const reject = async (row: Expense) => {
+        const reason = await promptText({ title: 'Từ chối khoản chi', message: 'Nhập lý do từ chối', required: true });
+        if (reason === null) return;
+        try {
+            await expensesApi.reject(row.id, reason);
+            notify.success('Đã từ chối khoản chi');
+            refresh();
+        } catch { notify.error('Không từ chối được khoản chi'); }
     };
 
-    const getStatusBadge = (status: ExpenseStatus) => {
-        const configs: Record<ExpenseStatus, { label: string; bg: string; text: string }> = {
-            Pending: { label: 'Chờ duyệt', bg: 'bg-amber-50', text: 'text-amber-600' },
-            Approved: { label: 'Đã duyệt', bg: 'bg-blue-50', text: 'text-blue-600' },
-            Rejected: { label: 'Từ chối', bg: 'bg-red-50', text: 'text-red-600' },
-            Paid: { label: 'Đã thanh toán', bg: 'bg-green-50', text: 'text-green-600' },
-        };
-        const config = configs[status];
-        return (
-            <span className={`px-3 py-1 ${config.bg} ${config.text} rounded-lg text-[9px] font-medium border border-current opacity-80`}>
-                {config.label}
-            </span>
-        );
+    const pay = async (row: Expense) => {
+        const method = await promptSelect({
+            title: 'Chi trả khoản chi',
+            message: 'Chọn hình thức chi. Chi bằng tiền mặt sẽ tự sinh phiếu chi vào sổ quỹ.',
+            options: [
+                { value: 'Cash', label: 'Tiền mặt' },
+                { value: 'BankTransfer', label: 'Chuyển khoản' },
+                { value: 'Card', label: 'Thẻ' },
+            ],
+        });
+        if (method === null) return;
+        try {
+            await expensesApi.pay(row.id, { paymentMethod: method });
+            notify.success('Đã ghi nhận chi trả');
+            refresh();
+            queryClient.invalidateQueries({ queryKey: ['accounting', 'cash-book'] });
+        } catch { notify.error('Không ghi nhận được chi trả'); }
     };
 
-    const columns: Column<Expense>[] = [
+    const columns = useMemo<DataTableColumn<Expense>[]>(() => [
+        { id: 'expenseNumber', header: 'Số chứng từ', sortable: true, locked: true, cell: (r) => <span className="num font-medium text-fg">{r.expenseNumber}</span> },
+        { id: 'expenseDate', header: 'Ngày chi', sortable: true, cell: (r) => <span className="num">{formatVnDate(r.expenseDate)}</span> },
+        { id: 'categoryName', header: 'Nhóm', cell: (r) => r.categoryName ?? '—' },
+        { id: 'description', header: 'Diễn giải', nowrap: false, cell: (r) => <span className="text-fg-muted">{r.description}</span> },
+        { id: 'amount', header: 'Chưa thuế', align: 'right', defaultHidden: true, cell: (r) => <Money value={r.amount} /> },
+        { id: 'vatAmount', header: 'Thuế GTGT', align: 'right', defaultHidden: true, cell: (r) => <Money value={r.vatAmount} /> },
+        { id: 'totalAmount', header: 'Tổng tiền', align: 'right', sortable: true, cell: (r) => <Money value={r.totalAmount} /> },
         {
-            key: 'expenseNumber',
-            label: 'Mã chi phí',
-            sortable: true,
-            render: (item) => <span className="font-semibold text-accent font-mono text-xs">{item.expenseNumber}</span>,
+            id: 'status', header: 'Trạng thái', locked: true,
+            cell: (r) => <StatusBadge tone={expenseStatusLabel[r.status]?.tone ?? 'neutral'}>
+                {expenseStatusLabel[r.status]?.label ?? r.status}
+            </StatusBadge>,
         },
         {
-            key: 'categoryName',
-            label: 'Danh mục',
-            sortable: true,
-            render: (item) => <span className="font-bold text-gray-700 text-xs uppercase">{item.categoryName}</span>,
-        },
-        {
-            key: 'description',
-            label: 'Mô tả',
-            render: (item) => <span className="text-sm text-gray-600 line-clamp-1">{item.description}</span>,
-        },
-        {
-            key: 'totalAmount',
-            label: 'Tổng tiền',
-            sortable: true,
-            render: (item) => <span className="font-semibold text-gray-950">{formatCurrency(item.totalAmount)}</span>,
-        },
-        {
-            key: 'expenseDate',
-            label: 'Ngày chi',
-            sortable: true,
-            render: (item) => (
-                <span className="text-xs font-bold text-gray-500 uppercase">
-                    {new Date(item.expenseDate).toLocaleDateString('vi-VN')}
-                </span>
+            id: 'actions', header: '', locked: true, width: '1%',
+            cell: (r) => (
+                <RowActions>
+                    {EDITABLE.includes(r.status) && (
+                        <IconButton
+                            aria-label={`Sửa khoản chi ${r.expenseNumber}`} variant="ghost"
+                            onClick={() => { setEditing(r); setFormOpen(true); }}
+                        >
+                            <Pencil size={16} aria-hidden />
+                        </IconButton>
+                    )}
+                    <Can permission={PERMISSIONS.ACCOUNTING_MANAGE_EXPENSE}>
+                        {(r.status === 'Draft' || r.status === 'Pending') && (
+                            <>
+                                <IconButton aria-label={`Duyệt ${r.expenseNumber}`} variant="ghost" onClick={() => approve(r)}>
+                                    <Check size={16} aria-hidden />
+                                </IconButton>
+                                <IconButton aria-label={`Từ chối ${r.expenseNumber}`} variant="ghost" onClick={() => reject(r)}>
+                                    <X size={16} aria-hidden />
+                                </IconButton>
+                            </>
+                        )}
+                        {r.status === 'Approved' && (
+                            <IconButton aria-label={`Chi trả ${r.expenseNumber}`} variant="ghost" onClick={() => pay(r)}>
+                                <Wallet size={16} aria-hidden />
+                            </IconButton>
+                        )}
+                    </Can>
+                </RowActions>
             ),
         },
-        {
-            key: 'status',
-            label: 'Trạng thái',
-            sortable: true,
-            render: (item) => getStatusBadge(item.status),
-        },
-    ];
-
-    const categories = categoriesData || [];
-    const expenses = expensesData?.expenses || [];
-    const total = expensesData?.total || 0;
-
-    const statusFilters: { key: ExpenseStatus | 'all'; label: string }[] = [
-        { key: 'all', label: 'Tất cả' },
-        { key: 'Pending', label: 'Chờ duyệt' },
-        { key: 'Approved', label: 'Đã duyệt' },
-        { key: 'Paid', label: 'Đã thanh toán' },
-        { key: 'Rejected', label: 'Từ chối' },
-    ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], []);
 
     return (
-        <div className="space-y-10 pb-20">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 leading-none mb-2">
-                        Quản lý <span className="text-accent">Chi phí</span>
-                    </h1>
-                    <p className="text-gray-500 font-medium text-xs">
-                        Theo dõi và phê duyệt các khoản chi phí
-                    </p>
-                </div>
-                <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="px-8 py-4 bg-gray-950 text-white rounded-xl text-xs text-slate-500 hover:bg-accent transition-all shadow-sm flex items-center gap-3"
-                >
-                    <Plus size={16} />
-                    Tạo chi phí
-                </button>
+        <div className="space-y-5">
+            <PageHeader
+                title="Chi phí"
+                description="Ghi nhận, duyệt và chi trả các khoản chi của cửa hàng."
+                breadcrumbs={[{ label: 'Tài chính', to: '/backoffice/accounting' }, { label: 'Chi phí' }]}
+                actions={
+                    <Button onClick={() => { setEditing(null); setFormOpen(true); }}>
+                        <Plus size={16} aria-hidden /> Thêm khoản chi
+                    </Button>
+                }
+            />
+
+            <div className="grid gap-3 sm:grid-cols-3">
+                <StatCard label="Tổng chi (toàn kỳ)" value={summaryQuery.isError || summaryQuery.data === undefined ? null : formatCurrency(summaryQuery.data.totalAmount)} />
+                <StatCard label="Số chứng từ" value={summaryQuery.isError ? null : summaryQuery.data?.totalCount ?? null} />
+                <StatCard label="Nhóm chi phí" value={categoriesQuery.isError ? null : categoriesQuery.data?.length ?? null} />
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-gray-50">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-gray-50 text-gray-600 rounded-xl">
-                            <Wallet size={24} />
-                        </div>
-                        <span className="text-xs text-slate-400">Tổng chi</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-slate-900">{formatCurrency(summary?.totalExpenses || 0)}</h3>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-amber-50">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-                            <Clock size={24} />
-                        </div>
-                        <span className="text-xs font-semibold text-amber-500 uppercase">Chờ duyệt</span>
-                    </div>
-                    <h3 className="text-2xl font-semibold text-amber-600">{summary?.pendingCount || 0}</h3>
-                    <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.pendingAmount || 0)}</p>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-blue-50">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                            <CheckCircle size={24} />
-                        </div>
-                        <span className="text-xs font-semibold text-blue-500 uppercase">Đã duyệt</span>
-                    </div>
-                    <h3 className="text-2xl font-semibold text-blue-600">{summary?.approvedCount || 0}</h3>
-                    <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.approvedAmount || 0)}</p>
-                </motion.div>
-
-                <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-green-50">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
-                            <CreditCard size={24} />
-                        </div>
-                        <span className="text-xs font-semibold text-green-500 uppercase">Đã chi</span>
-                    </div>
-                    <h3 className="text-2xl font-semibold text-green-600">{summary?.paidCount || 0}</h3>
-                    <p className="text-xs text-gray-400 mt-1">{formatCurrency(summary?.paidAmount || 0)}</p>
-                </motion.div>
-            </div>
-
-            {/* Filters */}
-            <div className="premium-card p-6 border-2 bg-white">
-                <div className="flex flex-wrap gap-4 items-center">
-                    <div className="flex items-center gap-2">
-                        <Filter size={16} className="text-gray-400" />
-                        <span className="text-xs text-slate-400">Lọc:</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {statusFilters.map((filter) => (
-                            <button
-                                key={filter.key}
-                                onClick={() => setStatusFilter(filter.key)}
-                                className={`px-4 py-2 rounded-xl text-xs text-slate-500 transition-all border-2 ${
-                                    statusFilter === filter.key
-                                        ? 'bg-gray-950 text-white border-gray-950'
-                                        : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
-                                }`}
-                            >
-                                {filter.label}
-                            </button>
-                        ))}
-                    </div>
-                    <SearchableSelect
-                        value={categoryFilter}
-                        onChange={(val: string) => setCategoryFilter(val)}
-                        options={[
-                            { value: 'all', label: 'Tất cả danh mục' },
-                            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
-                        ]}
-                    />
-                </div>
-            </div>
-
-            {/* Data Table */}
-            <div className="premium-card p-4 border-2 shadow-md shadow-gray-200/50">
-                <div className="p-4">
-                    <DataTable
-                        columns={columns}
-                        data={expenses}
-                        total={total}
-                        page={page}
-                        pageSize={pageSize}
-                        onPageChange={setPage}
-                        isLoading={isLoading}
-                        actions={(item) => (
-                            <div className="flex gap-2 justify-end">
-                                {item.status === 'Pending' && (
-                                    <>
-                                        <button
-                                            onClick={() => handleApprove(item.id)}
-                                            className="px-4 py-2 bg-blue-600 text-white text-[9px] font-medium rounded-lg hover:bg-blue-700 transition-all"
-                                        >
-                                            Duyệt
-                                        </button>
-                                        <button
-                                            onClick={() => handleReject(item.id)}
-                                            className="px-4 py-2 bg-red-50 text-red-600 text-[9px] font-medium rounded-lg hover:bg-red-100 transition-all"
-                                        >
-                                            Từ chối
-                                        </button>
-                                    </>
-                                )}
-                                {item.status === 'Approved' && (
-                                    <button
-                                        onClick={() => handlePay(item.id)}
-                                        className="px-4 py-2 bg-green-600 text-white text-[9px] font-medium rounded-lg hover:bg-green-700 transition-all"
-                                    >
-                                        Thanh toán
-                                    </button>
-                                )}
-                                {item.status === 'Paid' && (
-                                    <span className="px-4 py-2 bg-gray-100 text-gray-400 text-[9px] font-medium rounded-lg">
-                                        Hoàn tất
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    />
-                </div>
-            </div>
-
-            {/* Category Breakdown */}
-            {summary?.byCategory && summary.byCategory.length > 0 && (
-                <div className="premium-card p-8 border-2">
-                    <h3 className="text-lg font-semibold text-gray-900  mb-6">Chi phí theo danh mục</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {summary.byCategory.map((cat) => (
-                            <div key={cat.categoryId} className="p-6 bg-gray-50 rounded-xl border border-gray-100">
-                                <div className="flex justify-between items-start mb-3">
-                                    <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase">{cat.categoryCode}</span>
-                                </div>
-                                <p className="text-xl font-semibold text-accent">{formatCurrency(cat.totalAmount)}</p>
-                                <p className="text-xs text-gray-400 mt-1">{cat.expenseCount} khoản chi</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {summaryQuery.isError && (
+                <p className="text-sm text-danger">
+                    Không đọc được tổng hợp chi phí — hai ô trên hiện dấu "—" thay vì 0.
+                    <Button variant="ghost" size="sm" onClick={() => summaryQuery.refetch()}>Thử lại</Button>
+                </p>
+            )}
+            {!categoriesQuery.isPending && !categoriesQuery.isError && (categoriesQuery.data?.length ?? 0) === 0 && (
+                <p className="text-sm text-warning">
+                    Chưa có nhóm chi phí nào trong hệ thống nên không thể tạo khoản chi.
+                    Cần seed danh mục chi phí ở phía máy chủ (integration request W3-13 #39).
+                </p>
             )}
 
-            {/* Create Expense Modal */}
-            <CreateExpenseModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                categories={categories}
-                onSubmit={async (data) => {
-                    await createMutation.mutateAsync(data);
+            <Card className="p-4">
+                <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); setSearch(searchInput.trim()); setPage(1); }}>
+                    <Input
+                        label="Tìm kiếm" placeholder="Số chứng từ hoặc diễn giải" icon={Search}
+                        value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="sm:flex-1"
+                    />
+                    <Select
+                        label="Trạng thái" className="sm:w-48" value={status}
+                        onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                        options={[
+                            { value: '', label: 'Tất cả' },
+                            ...(Object.keys(expenseStatusLabel) as ExpenseStatus[]).map((s) => ({ value: s, label: expenseStatusLabel[s].label })),
+                        ]}
+                    />
+                    <Button type="submit" variant="outline">Lọc</Button>
+                </form>
+            </Card>
+
+            <DataTable
+                caption="Danh sách khoản chi"
+                columns={columns}
+                rows={query.data?.items}
+                rowKey={(r) => r.id}
+                loading={query.isPending}
+                error={query.error}
+                onRetry={query.refetch}
+                sort={sort}
+                onSortChange={setSort}
+                enableColumnVisibility
+                skeletonRows={8}
+                empty={{
+                    icon: Receipt,
+                    title: 'Chưa có khoản chi nào',
+                    description: 'Ghi nhận chi phí thuê mặt bằng, điện nước, vận chuyển… để báo cáo thuế TNDN đủ chi phí được trừ.',
+                    action: { label: 'Thêm khoản chi', onClick: () => { setEditing(null); setFormOpen(true); } },
                 }}
-                isSubmitting={createMutation.isPending}
+                pagination={<Pagination page={page} pageSize={PAGE_SIZE} total={query.data?.total ?? 0} onPageChange={setPage} />}
+            />
+
+            <ExpenseFormDialog
+                open={formOpen}
+                onOpenChange={(o) => { setFormOpen(o); if (!o) setEditing(null); }}
+                editing={editing}
+                categoryOptions={categoryOptions}
+                onSaved={() => { setFormOpen(false); setEditing(null); refresh(); }}
             />
         </div>
     );
 };
 
-export { ExpensesPage as default };
+export default ExpensesPage;

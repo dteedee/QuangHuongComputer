@@ -1,87 +1,86 @@
-import React from 'react';
+/**
+ * Brand rail on the homepage.
+ *
+ * Two defects fixed here (W3-1):
+ * 1. **Mobile overflow (integration request W0 #61).** The grid used
+ *    `gridTemplateColumns: repeat(${columns}, 1fr)` with `columns` up to 8, and
+ *    `1fr` resolves to the content-based minimum, so 8 tracks could not fit in
+ *    358px of usable width — `document.documentElement.scrollWidth` measured
+ *    467px at a 390px viewport. Now `repeat(auto-fill, minmax(96px, 1fr))`,
+ *    which wraps instead of overflowing.
+ * 2. **Fabricated logos.** The CMS section config ships
+ *    `https://placehold.co/160x64/...?text=ASUS` placeholder images, and every
+ *    real `brands[].logoUrl` in the catalogue is null. Placeholder art
+ *    presented as a brand logo is exactly what this overhaul removes, so the
+ *    rail renders the REAL brands from `GET /catalog/brands` as text tiles and
+ *    links each one to the listing filtered by that brand.
+ */
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Award, ChevronRight } from 'lucide-react';
-
-interface Brand {
-    name: string;
-    logoUrl: string;
-    link: string;
-}
+import { Award } from 'lucide-react';
+import { Img, Skeleton } from '../ui';
+import { Reveal } from '../motion';
+import { catalogPublicListingApi } from '../../api/catalog/public-listing';
+import { LISTING_PARAMS } from '../listing/use-listing-query';
+import { queryKeys } from '../../lib/query-keys';
+import { ROUTES } from '../../routes/route-paths';
 
 interface BrandShowcaseProps {
-    title: string;
-    config: {
-        brands?: Brand[];
-        columns?: number;
-        style?: 'grid' | 'carousel';
-        showTitle?: boolean;
-    };
+    title?: string;
+    config?: { showTitle?: boolean; limit?: number };
 }
 
-export const BrandShowcase: React.FC<BrandShowcaseProps> = ({ title, config }) => {
-    const {
-        brands = [],
-        columns = 6,
-        style = 'grid',
-        showTitle = true,
-    } = config;
+export const BrandShowcase = ({ title, config }: BrandShowcaseProps) => {
+    const { showTitle = true, limit = 12 } = config ?? {};
+    const query = useQuery({
+        queryKey: queryKeys.catalog.list({ resource: 'brands' }),
+        queryFn: catalogPublicListingApi.getBrands,
+        staleTime: 5 * 60 * 1000,
+    });
 
-    if (brands.length === 0) return null;
+    const brands = (query.data ?? [])
+        .filter((b) => b.isActive && (b.productCount ?? 0) > 0)
+        .slice(0, limit);
+
+    if (!query.isPending && brands.length === 0) return null;
 
     return (
-        <div className="max-w-[1400px] mx-auto px-4 mt-8">
+        <section className="mx-auto mt-10 w-full max-w-shell px-4">
             {showTitle && (
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight flex items-center gap-3">
-                        <span className="text-accent"><Award size={24} /></span>
-                        {title || 'THƯƠNG HIỆU NỔI BẬT'}
-                    </h2>
-                </div>
+                <h2 className="mb-3 flex items-center gap-2 text-lg font-bold uppercase tracking-tight text-fg sm:text-xl">
+                    <Award size={20} className="text-brand" aria-hidden />
+                    {title || 'Thương hiệu phân phối'}
+                </h2>
             )}
 
-            {style === 'carousel' ? (
-                <div className="overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-4 pb-2">
-                        {brands.map((brand, i) => (
-                            <BrandCard key={i} brand={brand} index={i} />
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div
-                    className="grid gap-4"
-                    style={{ gridTemplateColumns: `repeat(${Math.min(columns, 8)}, 1fr)` }}
-                >
-                    {brands.map((brand, i) => (
-                        <BrandCard key={i} brand={brand} index={i} />
-                    ))}
-                </div>
-            )}
-        </div>
+            <div
+                className="grid gap-3"
+                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))' }}
+            >
+                {query.isPending
+                    ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-[72px] w-full rounded-xl" />)
+                    : brands.map((brand, i) => (
+                          <Reveal key={brand.id} index={i} cap={6} className="h-full">
+                              <Link
+                                  to={`${ROUTES.PRODUCTS}?${LISTING_PARAMS.brand}=${encodeURIComponent(brand.slug ?? '')}`}
+                                  className="flex h-[72px] min-w-0 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-2 text-center transition-colors duration-140 hover:border-brand-line"
+                              >
+                                  {brand.logoUrl ? (
+                                      <Img
+                                          src={brand.logoUrl}
+                                          alt={brand.name}
+                                          ratio="2/1"
+                                          wrapperClassName="w-full bg-transparent"
+                                      />
+                                  ) : (
+                                      <span className="truncate text-sm font-semibold text-fg-muted">{brand.name}</span>
+                                  )}
+                              </Link>
+                          </Reveal>
+                      ))}
+            </div>
+        </section>
     );
 };
 
-const BrandCard: React.FC<{ brand: Brand; index: number }> = ({ brand, index }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.04 }}
-    >
-        <Link
-            to={brand.link || '#'}
-            className="flex items-center justify-center bg-white rounded-xl border-2 border-gray-100 hover:border-accent/30 hover:shadow-lg p-4 h-[80px] transition-all group"
-        >
-            <img
-                src={brand.logoUrl}
-                alt={brand.name}
-                className="max-h-[48px] max-w-full object-contain grayscale group-hover:grayscale-0 transition-all"
-                onError={e => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                }}
-            />
-        </Link>
-        <p className="text-center text-xs text-gray-500 mt-1 font-medium truncate">{brand.name}</p>
-    </motion.div>
-);
+export default BrandShowcase;

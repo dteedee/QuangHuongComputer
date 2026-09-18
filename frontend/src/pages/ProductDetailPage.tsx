@@ -1,32 +1,59 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+/**
+ * Product detail page (PDP).
+ *
+ * One read does the work: `GET /catalog/products/by-slug/{slug}?include=media,
+ * specs,variants` (or by GUID for the legacy `/product/:id` route). The old
+ * three-step "base, then a bundle with an include list the server does not
+ * understand, then category spec-groups, all silently swallowed" is gone.
+ *
+ * D11: `SEO` carries an ABSOLUTE canonical (it used to pass a relative path),
+ * the OG/JSON-LD head comes from the .NET SEO shell, and a missing product
+ * renders the not-found state with `noindex` instead of a blank 200.
+ */
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { catalogApi, type Product, type ProductReview, type ProductVariant, type ProductMedia, type ProductDetailBundle, type SpecificationGroup, type ProductSpecificationValue, type StockByBranch } from '../api/catalog';
+import { buildPath, ROUTES } from '../routes/route-paths';
+
+import { catalogPublicProductApi } from '../api/catalog/public-product';
+import type { ProductMediaView } from '../api/catalog/public-product';
+import type { Product, ProductVariant } from '../api/catalog';
+import { flashSalePublicApi } from '../api/promotions/public';
 import { salesApi } from '../api/sales';
-import client from '../api/client';
-import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
-import { generateProductSchema, generateBreadcrumbSchema } from '../utils/structuredData';
-import { parseLegacySpecifications, PRODUCT_ID_UUID_REGEX } from '../utils/parse-legacy-product-specifications';
+import { trackEcommerce } from '../utils/analytics';
+import { useQuery } from '@tanstack/react-query';
 
 import SEO from '../components/SEO';
-import { WriteReviewModal } from '../components/reviews';
+import { notify } from '../components/ui';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import RecommendationCarousel from '../components/recommendation-carousel';
+import { WriteReviewModal } from '../components/reviews';
 import {
-    ProductMediaGallery,
-    ProductDetailInfo,
-    ProductDetailTabs,
-    ProductDetailRelatedSection,
-    ProductDetailStickyBuyBar,
-    ProductDetailBreadcrumb,
     ProductDetailAddedToCartToast,
+    ProductDetailBreadcrumb,
+    ProductDetailErrorState,
+    ProductDetailInfo,
     ProductDetailLoadingState,
     ProductDetailNotFoundState,
+    ProductDetailRelatedSection,
+    ProductDetailStickyBuyBar,
+    ProductDetailTabs,
+    ProductKeySpecsSummary,
+    ProductMediaGallery,
     type ProductDetailTabKey,
 } from '../components/product-detail';
+import {
+    statusOf,
+    useProductDetail,
+    useProductReviews,
+    useRelatedProducts,
+    useReviewStats,
+} from '../components/product-detail/use-product-detail-data';
+
+const REVIEW_PAGE_SIZE = 5;
 
 export default function ProductDetailPage() {
     const { slug, id } = useParams<{ slug?: string; id?: string }>();
@@ -36,311 +63,295 @@ export default function ProductDetailPage() {
     const { isAuthenticated } = useAuth();
     const { addToRecentlyViewed } = useRecentlyViewed();
 
-    // ============ State ============
-    const [product, setProduct] = useState<Product | null>(null);
-    const [medias, setMedias] = useState<ProductMedia[]>([]);
-    const [variants, setVariants] = useState<ProductVariant[]>([]);
-    const [specGroups, setSpecGroups] = useState<SpecificationGroup[] | undefined>();
-    const [specValues, setSpecValues] = useState<ProductSpecificationValue[] | undefined>();
-    const [stockByBranch, setStockByBranch] = useState<StockByBranch[] | undefined>();
-    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>();
+    const productQuery = useProductDetail(param);
+    const product = productQuery.data;
 
-    const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState<ProductDetailTabKey>('description');
+    const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>();
     const [addingToCart, setAddingToCart] = useState(false);
     const [showAddedNotification, setShowAddedNotification] = useState(false);
-    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-    const [reviews, setReviews] = useState<ProductReview[]>([]);
-    const [loadingRelated, setLoadingRelated] = useState(false);
-    const [loadingReviews, setLoadingReviews] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
     const [checkingPurchase, setCheckingPurchase] = useState(false);
     const [showStickyBar, setShowStickyBar] = useState(false);
+    const [reviewPage, setReviewPage] = useState(1);
 
-    // ============ Derived ============
-    const ratingCounts = useMemo(() => {
-        const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-        reviews.forEach((r) => {
-            if (r.rating >= 1 && r.rating <= 5) counts[r.rating] = (counts[r.rating] || 0) + 1;
-        });
-        return counts;
-    }, [reviews]);
+    const relatedQuery = useRelatedProducts(product?.id);
+    const reviewsQuery = useProductReviews(product?.id, reviewPage, REVIEW_PAGE_SIZE);
+    const statsQuery = useReviewStats(product?.id);
 
-    const averageRating = useMemo(() => {
-        if (reviews.length === 0) return 0;
-        return reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
-    }, [reviews]);
+    // Flash sale: the real price + window, or nothing at all. Never a fake deal.
+    const flashQuery = useQuery({
+        queryKey: ['content', 'promotions', 'active'],
+        queryFn: flashSalePublicApi.getActive,
+        staleTime: 60 * 1000,
+    });
 
-    const legacySpecs = useMemo(
-        () => parseLegacySpecifications(product?.specifications),
-        [product?.specifications]
+    const medias = useMemo<ProductMediaView[]>(() => {
+        const rows = product?.medias ?? [];
+        return [...rows].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.sortOrder - b.sortOrder);
+    }, [product?.medias]);
+
+    const variants = useMemo<ProductVariant[]>(() => product?.variants ?? [], [product?.variants]);
+
+    const selectedVariant = useMemo(
+        () => variants.find((v) => v.id === selectedVariantId),
+        [variants, selectedVariantId]
     );
 
-    // Fallback media list from legacy imageUrl + galleryImages nếu backend chưa trả medias
-    const legacyImages = useMemo<string[]>(() => {
-        if (!product) return [];
-        const list: string[] = [];
-        if (product.imageUrl) list.push(product.imageUrl);
-        if (product.galleryImages) {
-            try {
-                const g = JSON.parse(product.galleryImages);
-                if (Array.isArray(g)) list.push(...g);
-            } catch { /* ignore */ }
+    // Pick the default variant once the product lands; reset when the slug changes.
+    useEffect(() => {
+        if (variants.length === 0) { setSelectedVariantId(undefined); return; }
+        const def = variants.find((v) => v.isDefault) ?? variants[0];
+        setSelectedVariantId(def?.id);
+    }, [variants]);
+
+    useEffect(() => {
+        setQuantity(1);
+        setReviewPage(1);
+        setActiveTab('description');
+        window.scrollTo(0, 0);
+    }, [param]);
+
+    const flashForProduct = useMemo(() => {
+        if (!product) return null;
+        for (const sale of flashQuery.data ?? []) {
+            const hit = sale.products.find(
+                (p) => p.productId === product.id
+                    && (!p.variantId || p.variantId === selectedVariantId)
+                    && !p.isSoldOut
+            );
+            if (hit && hit.flashPrice > 0) return { ...hit, endAt: sale.endAt };
         }
-        return list;
-    }, [product]);
+        return null;
+    }, [flashQuery.data, product, selectedVariantId]);
 
-    const displayMedias = useMemo<ProductMedia[]>(() => {
-        if (medias.length > 0) return medias;
-        return legacyImages.map((url, index) => ({
-            id: `legacy-${index}`,
-            productId: product?.id ?? '',
-            type: 'Image' as const,
-            url,
-            sortOrder: index,
-            isPrimary: index === 0,
-        }));
-    }, [medias, legacyImages, product?.id]);
-
-    const displayPrice = selectedVariant?.price ?? product?.price ?? 0;
-    const displayOldPrice = selectedVariant?.oldPrice ?? product?.oldPrice;
+    const displayPrice = flashForProduct?.flashPrice
+        ?? selectedVariant?.price
+        ?? product?.price
+        ?? 0;
+    const displayOldPrice = flashForProduct
+        ? selectedVariant?.price ?? product?.price
+        : selectedVariant?.oldPrice ?? product?.oldPrice;
     const discount = displayOldPrice && displayOldPrice > displayPrice
         ? Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100)
         : null;
 
-    // ============ Data loading ============
-    const loadProduct = useCallback(async (productParam: string) => {
-        setLoading(true);
-        try {
-            // Bước 1: lấy product cơ bản (theo slug/id) — luôn phải có
-            const base = PRODUCT_ID_UUID_REGEX.test(productParam)
-                ? await catalogApi.getProduct(productParam)
-                : await catalogApi.getProductBySlug(productParam);
-            setProduct(base);
+    // ---- side effects on the loaded product ---------------------------------
+    useEffect(() => {
+        if (!product?.id) return;
+        addToRecentlyViewed({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            oldPrice: product.oldPrice,
+            slug: product.slug,
+            sku: product.sku,
+            imageUrl: product.imageUrl,
+            thumbnailUrl: product.thumbnailUrl,
+            stockQuantity: product.stockQuantity,
+            status: product.status,
+            averageRating: product.averageRating,
+            reviewCount: product.reviewCount,
+        });
+        trackEcommerce('view_item', {
+            value: product.price,
+            items: [{ item_id: product.id, item_name: product.name, price: product.price }],
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [product?.id, addToRecentlyViewed]);
 
-            // Bước 2: thử fetch bundle (media/variants/specs). Nếu backend chưa hỗ trợ, silent fail.
-            try {
-                const bundle = await catalogApi.getProductWithDetails(base.id) as Partial<ProductDetailBundle>;
-                if (Array.isArray(bundle.medias)) setMedias(bundle.medias);
-                if (Array.isArray(bundle.variants)) setVariants(bundle.variants);
-                if (Array.isArray(bundle.specs)) setSpecValues(bundle.specs);
-                if (Array.isArray(bundle.specGroups)) setSpecGroups(bundle.specGroups);
-                if (Array.isArray(bundle.stockByBranch)) setStockByBranch(bundle.stockByBranch);
-
-                // Chọn variant mặc định
-                if (Array.isArray(bundle.variants) && bundle.variants.length > 0) {
-                    const def = bundle.variants.find((v) => v.isDefault) ??
-                        bundle.variants.find((v) => v.id === base.defaultVariantId) ??
-                        bundle.variants[0];
-                    setSelectedVariant(def);
-                }
-            } catch {
-                // Backend endpoint chưa sẵn — chạy chế độ legacy.
-                setMedias([]);
-                setVariants([]);
-                setSpecValues(undefined);
-                setSpecGroups(undefined);
-                setSelectedVariant(undefined);
-            }
-
-            // Bước 3: nếu có categoryId + specGroups chưa có, thử fetch riêng
-            if (base.categoryId && !specGroups) {
-                try {
-                    const groups = await catalogApi.getSpecGroupsByCategory(base.categoryId);
-                    if (Array.isArray(groups)) setSpecGroups(groups);
-                } catch { /* silent */ }
-            }
-        } catch {
-            // W0-12 (step 7): slug/id không tồn tại -> giữ `product = null` để render
-            // ProductDetailNotFoundState (dưới), KHÔNG điều hướng ngầm về /products —
-            // khách bấm nhầm link cũ/link hỏng cần biết sản phẩm không tồn tại, không phải
-            // âm thầm thấy danh sách khác mà không hiểu vì sao.
-            setProduct(null);
-        } finally {
-            setLoading(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const loadRelatedProducts = async (productId: string) => {
-        setLoadingRelated(true);
-        try {
-            const response = await client.get<Product[]>(`/catalog/products/${productId}/related`);
-            const valid = Array.isArray(response.data)
-                ? response.data.filter((p) => p?.id && p?.name && typeof p.price === 'number' && !Number.isNaN(p.price))
-                : [];
-            setRelatedProducts(valid);
-        } catch { /* silent */ } finally { setLoadingRelated(false); }
-    };
-
-    const loadReviews = async (productId: string) => {
-        setLoadingReviews(true);
-        try {
-            const response = await client.get<{ reviews?: ProductReview[] } | ProductReview[]>(`/catalog/products/${productId}/reviews`);
-            const data = response.data;
-            setReviews(Array.isArray(data) ? data : data.reviews || []);
-        } catch { setReviews([]); } finally { setLoadingReviews(false); }
-    };
-
-    const checkPurchaseStatus = async (productId: string) => {
+    useEffect(() => {
+        let cancelled = false;
+        if (!product?.id) return;
         if (!isAuthenticated) { setHasPurchased(false); return; }
         setCheckingPurchase(true);
-        try {
-            const result = await salesApi.verifyPurchase(productId);
-            setHasPurchased(result.hasPurchased);
-        } catch { setHasPurchased(false); } finally { setCheckingPurchase(false); }
-    };
+        salesApi.verifyPurchase(product.id)
+            .then((r) => { if (!cancelled) setHasPurchased(r.hasPurchased); })
+            .catch(() => { if (!cancelled) setHasPurchased(false); })
+            .finally(() => { if (!cancelled) setCheckingPurchase(false); });
+        return () => { cancelled = true; };
+    }, [product?.id, isAuthenticated]);
 
-    // ============ Effects ============
     useEffect(() => {
         const handleScroll = () => setShowStickyBar(window.scrollY > 800);
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        if (param) { void loadProduct(param); }
-        window.scrollTo(0, 0);
-    }, [param, loadProduct]);
-
-    useEffect(() => {
-        if (product?.id) {
-            void loadRelatedProducts(product.id);
-            void loadReviews(product.id);
-            void checkPurchaseStatus(product.id);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [product?.id, isAuthenticated]);
-
-    useEffect(() => { if (product?.id) addToRecentlyViewed(product.id); }, [product?.id, addToRecentlyViewed]);
-
-    // ============ Handlers ============
-    const handleAddToCart = async () => {
-        if (!product) return;
+    // ---- actions ------------------------------------------------------------
+    const handleAddToCart = useCallback(async (): Promise<boolean> => {
+        if (!product) return false;
         setAddingToCart(true);
         try {
-            await addToCart(product, quantity);
-            setShowAddedNotification(true);
-            setTimeout(() => setShowAddedNotification(false), 3000);
-        } catch { /* silent — CartContext.addToCart đã tự hiện toast lỗi */ } finally { setAddingToCart(false); }
-    };
+            const ok = await addToCart(
+                { id: product.id, name: product.name, price: displayPrice, stockQuantity: selectedVariant?.stockQuantity ?? product.stockQuantity },
+                quantity,
+                selectedVariant
+                    ? { variantId: selectedVariant.id, variantName: selectedVariant.name, silent: true }
+                    : { silent: true },
+            );
+            if (ok) {
+                setShowAddedNotification(true);
+                window.setTimeout(() => setShowAddedNotification(false), 3000);
+                trackEcommerce('add_to_cart', {
+                    value: displayPrice * quantity,
+                    items: [{ item_id: product.id, item_name: product.name, quantity }],
+                });
+            }
+            return ok;
+        } finally {
+            setAddingToCart(false);
+        }
+    }, [addToCart, displayPrice, product, quantity, selectedVariant]);
 
-    // W0-12 (step 2): "Mua ngay" phải CHỜ addToCart xong rồi mới điều hướng — trước đây gọi
-    // `void handleAddToCart()` rồi navigate ngay lập tức, tới /checkout trước khi giỏ hàng
-    // kịp cập nhật (checkout có thể tải giỏ cũ/rỗng dù API cộng giỏ vẫn đang chạy).
-    const handleBuyNow = async () => {
-        await handleAddToCart();
-        navigate('/checkout');
-    };
+    /** "Mua ngay" only navigates once the server really took the line. */
+    const handleBuyNow = useCallback(async () => {
+        const ok = await handleAddToCart();
+        if (ok) navigate(ROUTES.CHECKOUT);
+    }, [handleAddToCart, navigate]);
 
-    const handleWriteReview = () => {
+    const handleWriteReview = useCallback(() => {
         if (!isAuthenticated) {
-            toast('Vui lòng đăng nhập để viết đánh giá!', { icon: '🔐', duration: 3000 });
-            navigate('/login', { state: { from: `/san-pham/${param}` } });
+            navigate(ROUTES.LOGIN, { state: { from: buildPath(ROUTES.PRODUCT_DETAIL, param) } });
             return;
         }
         if (!hasPurchased) {
-            toast('Bạn cần mua sản phẩm này trước khi đánh giá!', { icon: '🛒', duration: 3000 });
+            notify.info('Bạn cần mua sản phẩm này trước khi đánh giá.');
             return;
         }
         setShowReviewModal(true);
-    };
+    }, [hasPurchased, isAuthenticated, navigate, param]);
 
-    const handleMarkHelpful = async (reviewId: string) => {
-        try { await client.post(`/catalog/reviews/${reviewId}/helpful`); } catch { /* silent */ }
-    };
+    const handleMarkHelpful = useCallback(async (reviewId: string) => {
+        try {
+            await catalogPublicProductApi.markReviewHelpful(reviewId);
+            void reviewsQuery.refetch();
+        } catch (err) {
+            const status = statusOf(err);
+            if (status === 401 || status === 403) notify.info('Vui lòng đăng nhập để bình chọn đánh giá.');
+            else if (status === 409) notify.info('Bạn đã bình chọn đánh giá này rồi.');
+            else notify.error('Không gửi được bình chọn. Vui lòng thử lại.');
+            throw err;
+        }
+    }, [reviewsQuery]);
 
-    const handleCompareClick = () => {
-        if (product?.id) navigate(`/compare?add=${product.id}`);
-    };
+    const handleCompareClick = useCallback(() => {
+        // The canonical path is `/so-sanh`; `/compare` is a redirect that drops
+        // the query string, so `?add=` never reached the page.
+        if (product?.id) navigate(`${ROUTES.COMPARE}?add=${product.id}`);
+    }, [navigate, product?.id]);
 
-    // ============ Render ============
-    if (loading) {
-        return <ProductDetailLoadingState />;
+    // ---- states -------------------------------------------------------------
+    if (productQuery.isPending) return <ProductDetailLoadingState />;
+
+    if (productQuery.isError && statusOf(productQuery.error) !== 404) {
+        return (
+            <>
+                <SEO title="Không tải được sản phẩm" noindex />
+                <ProductDetailErrorState
+                    error={productQuery.error}
+                    onRetry={() => void productQuery.refetch()}
+                />
+            </>
+        );
     }
 
     if (!product) {
-        return <ProductDetailNotFoundState onBackToList={() => navigate('/products')} />;
+        return (
+            <>
+                <SEO
+                    title="Không tìm thấy sản phẩm"
+                    description="Sản phẩm bạn tìm không còn tồn tại trên Quang Hưởng Computer."
+                    noindex
+                />
+                <ProductDetailNotFoundState onBackToList={() => navigate(ROUTES.PRODUCTS)} />
+            </>
+        );
     }
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const canonicalPath = buildPath(ROUTES.PRODUCT_DETAIL, product.slug || product.id);
+    const absoluteCanonical = product.canonicalUrl?.startsWith('http')
+        ? product.canonicalUrl
+        : `${origin}${product.canonicalUrl || canonicalPath}`;
+
+    const reviewData = reviewsQuery.data;
+    const stats = statsQuery.data;
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-bg">
             <SEO
                 title={product.metaTitle || product.name}
-                description={product.metaDescription || product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Mua ${product.name} chính hãng giá tốt tại Quang Hưởng Computer`}
-                keywords={product.metaKeywords || `${product.name}, mua ${product.name}, ${product.sku}`}
-                image={product.imageUrl || '/logo.png'}
+                description={
+                    product.metaDescription
+                    || product.description?.replace(/<[^>]*>/g, '').slice(0, 160)
+                    || `Mua ${product.name} chính hãng, giá tốt tại Quang Hưởng Computer.`
+                }
+                keywords={product.metaKeywords || `${product.name}, ${product.sku}`}
+                image={medias[0]?.url || product.imageUrl || undefined}
                 type="product"
-                canonicalUrl={product.canonicalUrl || `/san-pham/${product.slug || product.id}`}
-                structuredData={[
-                    generateProductSchema(product),
-                    generateBreadcrumbSchema([
-                        { name: 'Trang chủ', url: '/' },
-                        { name: 'Sản phẩm', url: '/products' },
-                        { name: product.name },
-                    ]),
-                ]}
+                url={`${origin}${canonicalPath}`}
+                canonicalUrl={absoluteCanonical}
             />
 
-            {/* Notification added to cart */}
             <ProductDetailAddedToCartToast show={showAddedNotification} />
 
-            {/* Breadcrumb */}
             <ProductDetailBreadcrumb productName={product.name} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-10 space-y-8 pb-32 lg:pb-10">
-                {/* Grid 2 cột: gallery + info */}
-                <div className="bg-white rounded-lg border border-gray-200 shadow-small overflow-hidden">
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
-                        {/* Cột trái: gallery — 60% desktop */}
-                        <div className="lg:col-span-3 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-gray-100">
-                            <div className="lg:sticky lg:top-24">
+            <div className="mx-auto max-w-7xl space-y-8 px-4 pb-32 pt-6 sm:px-6 lg:pb-10 lg:pt-10">
+                <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
+                    <div className="grid grid-cols-1 gap-0 lg:grid-cols-5">
+                        <div className="border-b border-line p-4 sm:p-6 lg:col-span-3 lg:border-b-0 lg:border-r">
+                            <div className="lg:sticky lg:top-24 space-y-4">
                                 <ProductMediaGallery
-                                    medias={displayMedias}
+                                    medias={medias}
                                     productName={product.name}
                                     activeVariantId={selectedVariant?.id}
                                     fallbackImageUrl={product.imageUrl}
                                     discountBadge={discount}
                                 />
+                                <ProductKeySpecsSummary specGroups={product.specGroups} />
                             </div>
                         </div>
 
-                        {/* Cột phải: info */}
-                        <div className="lg:col-span-2 p-4 sm:p-6">
+                        <div className="p-4 sm:p-6 lg:col-span-2">
                             <ProductDetailInfo
-                                product={product}
+                                product={product as Product}
                                 variants={variants}
                                 selectedVariant={selectedVariant}
-                                onVariantChange={setSelectedVariant}
+                                onVariantChange={(v) => setSelectedVariantId(v.id)}
                                 quantity={quantity}
                                 onQuantityChange={setQuantity}
-                                onAddToCart={handleAddToCart}
-                                onBuyNow={handleBuyNow}
+                                onAddToCart={() => { void handleAddToCart(); }}
+                                onBuyNow={() => { void handleBuyNow(); }}
                                 addingToCart={addingToCart}
-                                averageRating={averageRating}
-                                reviewCount={reviews.length}
-                                stockByBranch={stockByBranch}
+                                averageRating={stats?.averageRating ?? product.averageRating ?? 0}
+                                reviewCount={stats?.totalReviews ?? product.reviewCount ?? 0}
+                                flashPrice={flashForProduct?.flashPrice ?? null}
+                                flashEndAt={flashForProduct?.endAt ?? null}
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
                 <ProductDetailTabs
-                    product={product}
+                    product={product as Product}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
-                    medias={displayMedias}
-                    legacySpecs={legacySpecs}
-                    specGroups={specGroups}
-                    specValues={specValues}
+                    medias={medias}
+                    specGroups={product.specGroups}
                     onCompareClick={handleCompareClick}
-                    reviews={reviews}
-                    loadingReviews={loadingReviews}
-                    averageRating={averageRating}
-                    ratingCounts={ratingCounts}
+                    reviews={reviewData?.reviews ?? []}
+                    reviewTotal={reviewData?.total ?? 0}
+                    reviewPage={reviewPage}
+                    reviewPageSize={REVIEW_PAGE_SIZE}
+                    onReviewPageChange={setReviewPage}
+                    loadingReviews={reviewsQuery.isPending}
+                    reviewsError={reviewsQuery.isError ? reviewsQuery.error : undefined}
+                    onRetryReviews={() => void reviewsQuery.refetch()}
+                    stats={stats}
                     hasPurchased={hasPurchased}
                     checkingPurchase={checkingPurchase}
                     isAuthenticated={isAuthenticated}
@@ -348,44 +359,39 @@ export default function ProductDetailPage() {
                     onMarkHelpful={handleMarkHelpful}
                 />
 
-                {/* Recommendations */}
-                {product.id && <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />}
+                <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />
 
-                {/* Related */}
                 <ProductDetailRelatedSection
-                    loading={loadingRelated}
-                    relatedProducts={relatedProducts}
+                    loading={relatedQuery.isPending}
+                    isError={relatedQuery.isError}
+                    relatedProducts={relatedQuery.data ?? []}
                     categoryId={product.categoryId}
                 />
 
-                {/* Recently viewed */}
                 <RecentlyViewedProducts currentProductId={product.id} title="Bạn đã xem gần đây" />
             </div>
 
-            {/* Review modal */}
-            {product && (
-                <WriteReviewModal
-                    isOpen={showReviewModal}
-                    onClose={() => setShowReviewModal(false)}
-                    productId={product.id}
-                    productName={product.name}
-                    onReviewSubmitted={() => { if (product.id) void loadReviews(product.id); }}
-                />
-            )}
+            <WriteReviewModal
+                isOpen={showReviewModal}
+                onClose={() => setShowReviewModal(false)}
+                productId={product.id}
+                productName={product.name}
+                onReviewSubmitted={() => {
+                    void reviewsQuery.refetch();
+                    void statsQuery.refetch();
+                }}
+            />
 
-            {/* Sticky bar mobile */}
-            {product && (
-                <ProductDetailStickyBuyBar
-                    show={showStickyBar}
-                    product={product}
-                    displayMedia={displayMedias[0]}
-                    displayPrice={displayPrice}
-                    stockQuantity={selectedVariant?.stockQuantity ?? product.stockQuantity}
-                    addingToCart={addingToCart}
-                    onBuyNow={handleBuyNow}
-                    onAddToCart={handleAddToCart}
-                />
-            )}
+            <ProductDetailStickyBuyBar
+                show={showStickyBar}
+                product={product as Product}
+                displayMedia={medias[0]}
+                displayPrice={displayPrice}
+                stockQuantity={selectedVariant?.stockQuantity ?? product.stockQuantity}
+                addingToCart={addingToCart}
+                onBuyNow={() => { void handleBuyNow(); }}
+                onAddToCart={() => { void handleAddToCart(); }}
+            />
         </div>
     );
 }

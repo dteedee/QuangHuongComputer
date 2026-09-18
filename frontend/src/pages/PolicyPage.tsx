@@ -1,16 +1,23 @@
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight, Zap, FileText, Loader2 } from 'lucide-react';
+import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight, Zap, FileText, Loader2, PackageSearch, MessageSquareWarning } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
 import SEO from '../components/SEO';
+import { SafeHtml } from '../components/ui/safe-html';
+import { PolicyMatrixTable } from '../components/policy/policy-matrix-table';
 
+// D11 §2: canonical URL prefix is `/chinh-sach/:type` (Vietnamese slugs); `type` here IS the
+// content slug directly (no extra mapping layer needed — `slugMapping` used to translate short
+// English keys used by legacy `/policy/:type` links, kept only as a fallback for those redirects).
 const iconMapping: Record<string, any> = {
-    'warranty': ShieldCheck,
-    'return': RotateCcw,
-    'shipping': Truck,
-    'payment': CreditCard,
-    'news': FileText,
-    'promotions': Zap
+    'bao-hanh': ShieldCheck,
+    'doi-tra': RotateCcw,
+    'van-chuyen': Truck,
+    'huong-dan-thanh-toan': CreditCard,
+    'kiem-hang': PackageSearch,
+    'khieu-nai': MessageSquareWarning,
+    'tin-tuc': FileText,
+    'khuyen-mai': Zap,
 };
 
 const slugMapping: Record<string, string> = {
@@ -20,36 +27,36 @@ const slugMapping: Record<string, string> = {
     'payment': 'huong-dan-thanh-toan',
     'news': 'tin-tuc',
     'promotions': 'khuyen-mai',
-    // Fallback for direct english slugs if seeded differently
-    'bao-hanh': 'bao-hanh',
-    'doi-tra': 'doi-tra',
-    'van-chuyen': 'van-chuyen'
 };
 
 const titleMapping: Record<string, string> = {
-    'warranty': 'Chính sách bảo hành',
-    'return': 'Chính sách đổi trả',
-    'shipping': 'Chính sách vận chuyển',
-    'payment': 'Hướng dẫn thanh toán',
-    'news': 'Tin tức & Blog',
-    'promotions': 'Khuyến mãi'
+    'bao-hanh': 'Chính sách bảo hành',
+    'doi-tra': 'Chính sách đổi trả',
+    'van-chuyen': 'Chính sách vận chuyển',
+    'huong-dan-thanh-toan': 'Hướng dẫn thanh toán',
+    'kiem-hang': 'Chính sách kiểm hàng',
+    'khieu-nai': 'Khiếu nại & giải quyết tranh chấp',
+    'tin-tuc': 'Tin tức & Blog',
+    'khuyen-mai': 'Khuyến mãi',
 };
 
-const listTypes = ['news', 'promotions'];
+const listTypes = ['tin-tuc', 'khuyen-mai'];
 
 export const PolicyPage = () => {
-    const { type } = useParams<{ type: string }>();
-    const currentType = type || 'warranty';
+    const { type: rawType } = useParams<{ type: string }>();
+    // Old English keys (`/policy/warranty`) still reach this page one redirect hop away — accept
+    // both so a stale bookmark or an un-migrated call site never 404s.
+    const currentType = slugMapping[rawType || ''] || rawType || 'bao-hanh';
     const isListPage = listTypes.includes(currentType);
 
     // Page Logic
-    const dbSlug = slugMapping[currentType] || currentType;
+    const dbSlug = currentType;
     const Icon = iconMapping[currentType] || ShieldCheck;
 
     // List Logic - Map URL type to API PostType
     const postTypeMap: Record<string, 'News' | 'Promotion'> = {
-        'news': 'News',
-        'promotions': 'Promotion'
+        'tin-tuc': 'News',
+        'khuyen-mai': 'Promotion'
     };
 
     const { data: page, isLoading: pageLoading, error: pageError } = useQuery({
@@ -94,7 +101,7 @@ export const PolicyPage = () => {
                                 return (
                                     <Link
                                         key={key}
-                                        to={`/policy/${key}`}
+                                        to={`/chinh-sach/${key}`}
                                         className={`p-5 border-b border-gray-50 flex items-center justify-between hover:bg-gray-50 hover:text-accent transition-all ${key === currentType ? 'text-accent font-black bg-red-50' : 'text-gray-500 font-bold'}`}
                                     >
                                         <div className="flex items-center gap-3 text-sm">
@@ -162,7 +169,7 @@ export const PolicyPage = () => {
                                             <div className="p-5">
                                                 <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-accent transition-colors">{post.title}</h3>
                                                 <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.summary || (post.content || '').replace(/<[^>]*>?/gm, '').substring(0, 100)}...</p>
-                                                <Link to={`/post/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-1 hover:gap-2 transition-all">
+                                                <Link to={`/tin-tuc/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-1 hover:gap-2 transition-all">
                                                     Xem chi tiết <ChevronRight size={12} />
                                                 </Link>
                                             </div>
@@ -191,10 +198,16 @@ export const PolicyPage = () => {
                                 </div>
                                 <h1 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">{page.title}</h1>
                             </div>
-                            <div
+                            {/* Sanitized via SafeHtml (DOMPurify); never bare dangerouslySetInnerHTML (stored-XSS finding). */}
+                            <SafeHtml
+                                html={page.content}
                                 className="prose prose-red max-w-none text-gray-600 font-medium leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: page.content }}
                             />
+                            {/* D08: ma trận chính sách theo ngành hàng, lấy trực tiếp từ endpoint
+                                công khai (không qua CMS) — luôn khớp với dữ liệu vận hành thật. */}
+                            {(currentType === 'bao-hanh' || currentType === 'doi-tra') && (
+                                <PolicyMatrixTable kind={currentType === 'bao-hanh' ? 'warranty' : 'return'} />
+                            )}
                         </>
                     )}
                 </div>

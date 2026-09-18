@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck, HelpCircle, Phone, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ROUTES, buildPath } from '../routes/route-paths';
 import { WarrantyLookupForm } from '../components/warranty/warranty-lookup-form';
 import { WarrantyTimeline } from '../components/warranty/warranty-timeline';
 import { AnimatedSection } from '../components/motion/animated-section';
@@ -97,12 +98,25 @@ export const WarrantyPage = () => {
                 </section>
             </AnimatedSection>
 
-            {/* Policy + Contact */}
+            {/* Policy + Account + Contact */}
             <AnimatedSection>
                 <section className="px-4 sm:px-6 pb-16">
-                    <div className="max-w-3xl mx-auto grid gap-4 md:grid-cols-2">
+                    <div className="max-w-3xl mx-auto grid gap-4 md:grid-cols-3">
+                        {/* D08/spec fix: trước đây không có CTA nào tới khu vực bảo hành của khách
+                            đăng nhập ("current claim CTA leads nowhere") — nay trỏ thẳng vào
+                            `/tai-khoan/bao-hanh/yeu-cau-moi` (yêu cầu đăng nhập, `RequireAuth`). */}
                         <Link
-                            to="/policy/warranty"
+                            to={ROUTES.WARRANTY_CLAIM_NEW}
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-accent/40 transition-all group cursor-pointer"
+                        >
+                            <p className="text-xs uppercase tracking-wide text-accent font-bold mb-1">Của tôi</p>
+                            <p className="text-base font-bold text-gray-900 group-hover:text-accent transition-colors">
+                                Tạo yêu cầu bảo hành
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">Từ đơn hàng hoặc số serial đã mua</p>
+                        </Link>
+                        <Link
+                            to={buildPath(ROUTES.POLICY, 'bao-hanh')}
                             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-accent/40 transition-all group cursor-pointer"
                         >
                             <p className="text-xs uppercase tracking-wide text-accent font-bold mb-1">Chính sách</p>
@@ -112,7 +126,7 @@ export const WarrantyPage = () => {
                             <p className="text-sm text-gray-500 mt-1">Phạm vi, thời hạn, các trường hợp loại trừ</p>
                         </Link>
                         <Link
-                            to="/contact"
+                            to={ROUTES.CONTACT}
                             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-accent/40 transition-all group cursor-pointer"
                         >
                             <p className="text-xs uppercase tracking-wide text-accent font-bold mb-1">Cần trợ giúp?</p>

@@ -1,218 +1,208 @@
 import { useEffect, useState } from 'react';
-import { paymentApi } from '../../api/payment';
-import type { SePayTransaction, SePayStats, PaymentConfig } from '../../api/payment';
-import { toast } from 'react-hot-toast';
-import { Loader2, DollarSign, Activity, FileText, Settings, Key, Hash, Building2, Save } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, Copy, Save, ShieldAlert } from 'lucide-react';
+import {
+    Button, Card, CardBody, CardHeader, CardTitle, Input, PageHeader,
+    QueryBoundary, Skeleton, StatusBadge, Switch, notify,
+} from '../../components/ui';
+import { paymentApi, type PaymentConfigEntry, type PaymentProviderStatus } from '../../api/payment';
+import { normalizeApiError } from '../../lib/api-error';
 
-export default function SePayAdminPage() {
-    const [stats, setStats] = useState<SePayStats | null>(null);
-    const [transactions, setTransactions] = useState<SePayTransaction[]>([]);
-    const [configs, setConfigs] = useState<PaymentConfig[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'transactions' | 'config'>('transactions');
+/**
+ * Cấu hình thanh toán (`Payments.Configure`).
+ *
+ * D04 R5 (binding): **không có ô nhập secret ở đây**. HashSecret / WebhookSecret / ApiToken chỉ
+ * nằm trong biến môi trường của máy chủ; API không bao giờ trả giá trị secret. Trang này chỉ hiển
+ * thị TRẠNG THÁI ("Đã cấu hình" / "Thiếu: <tên khoá>"), các thiết lập KHÔNG mật, và URL webhook/IPN
+ * cần khai báo với nhà cung cấp.
+ */
 
-    // Config form data
-    const [formConfig, setFormConfig] = useState({
-        apiKey: '',
-        accountNumber: '',
-        bankCode: ''
-    });
+/** Thiết lập không mật, đúng tên khoá backend đọc (`docs/api-contracts/payments.md` §6). */
+const TEXT_FIELDS = [
+    { key: 'Payment:BankTransfer:BankBin', label: 'Mã BIN ngân hàng (6 số)', hint: 'VCB 970436 · BIDV 970418 · MB 970422', pattern: /^\d{6}$/, error: 'Mã BIN phải đúng 6 chữ số' },
+    { key: 'Payment:BankTransfer:BankName', label: 'Tên ngân hàng hiển thị', hint: 'Ví dụ: MB Bank' },
+    { key: 'Payment:BankTransfer:AccountNumber', label: 'Số tài khoản nhận tiền', pattern: /^\d{6,20}$/, error: 'Số tài khoản chỉ gồm 6-20 chữ số' },
+    { key: 'Payment:BankTransfer:AccountName', label: 'Tên chủ tài khoản', hint: 'Viết đúng như đăng ký với ngân hàng' },
+    { key: 'Payment:BankTransfer:HoldHours', label: 'Số giờ giữ đơn chờ chuyển khoản', pattern: /^\d{1,3}$/, error: 'Nhập số giờ (0-999)', hint: 'Mặc định 24 giờ' },
+    { key: 'Payment:Cod:MaxOrderAmount', label: 'Trần giá trị đơn COD (VND)', pattern: /^\d{1,12}$/, error: 'Nhập số tiền, 0 = không giới hạn', hint: '0 = tắt trần COD' },
+] as const;
+
+const BOOL_KEY = 'Payment:BankTransfer:Enabled';
+
+function CopyField({ label, value }: { label: string; value: string }) {
+    const [done, setDone] = useState(false);
+    return (
+        <div className="rounded-xl border border-line bg-sunken p-3">
+            <p className="text-2xs font-semibold uppercase tracking-wide text-fg-muted">{label}</p>
+            <div className="mt-1 flex items-center gap-2">
+                <code className="min-w-0 flex-1 select-all break-all font-mono text-13 text-fg">{value}</code>
+                <Button
+                    size="sm" variant="outline" icon={done ? Check : Copy}
+                    onClick={() => {
+                        navigator.clipboard.writeText(value).then(
+                            () => { setDone(true); window.setTimeout(() => setDone(false), 2000); },
+                            () => notify.error('Trình duyệt chặn sao chép, vui lòng bôi đen và copy thủ công.'),
+                        );
+                    }}
+                >
+                    {done ? 'Đã chép' : 'Chép'}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+function StatusTable({ rows }: { rows: PaymentProviderStatus[] }) {
+    return (
+        <div className="space-y-2">
+            {rows.map((r) => (
+                <div key={r.code} className="flex flex-col gap-2 rounded-xl border border-line p-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-fg">{r.name}</p>
+                        <p className="font-mono text-2xs text-fg-subtle">{r.code}</p>
+                        {!r.configured && r.missingKeys.length > 0 && (
+                            <p className="mt-1 break-words text-xs text-fg-muted">
+                                Thiếu: <span className="font-mono">{r.missingKeys.join(', ')}</span>
+                            </p>
+                        )}
+                    </div>
+                    <StatusBadge tone={r.configured ? 'success' : 'neutral'}>
+                        {r.configured ? 'Đã cấu hình' : 'Chưa cấu hình'}
+                    </StatusBadge>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+export default function PaymentSettingsPage() {
+    const qc = useQueryClient();
+    const statusQuery = useQuery({ queryKey: ['payments', 'admin', 'status'], queryFn: paymentApi.getProviderStatus });
+    const urlsQuery = useQuery({ queryKey: ['payments', 'admin', 'webhook-urls'], queryFn: paymentApi.getWebhookUrls });
+    const configQuery = useQuery({ queryKey: ['payments', 'admin', 'config'], queryFn: paymentApi.getConfigs });
+
+    const [form, setForm] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        loadData();
-    }, []);
+        if (!configQuery.data) return;
+        const byKey = new Map(configQuery.data.map((c: PaymentConfigEntry) => [c.key, c.value]));
+        const next: Record<string, string> = { [BOOL_KEY]: byKey.get(BOOL_KEY) ?? 'false' };
+        for (const f of TEXT_FIELDS) next[f.key] = byKey.get(f.key) ?? '';
+        setForm(next);
+    }, [configQuery.data]);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const [statsData, txData, configData] = await Promise.all([
-                paymentApi.getSePayStats(),
-                paymentApi.getSePayTransactions(),
-                paymentApi.getPaymentConfigs()
-            ]);
-            setStats(statsData);
-            setTransactions(txData);
-            setConfigs(configData);
+    const save = useMutation({
+        mutationFn: async (values: Record<string, string>) => {
+            const entries = Object.entries(values).filter(([, v]) => v !== '');
+            for (const [key, value] of entries) await paymentApi.saveConfig({ key, value });
+            return entries.length;
+        },
+        onSuccess: (n) => {
+            notify.success(`Đã lưu ${n} thiết lập.`);
+            void qc.invalidateQueries({ queryKey: ['payments', 'admin', 'config'] });
+        },
+        onError: (e) => notify.error(normalizeApiError(e).message),
+    });
 
-            // Map configs to form
-            const apiKey = configData.find(c => c.key === 'SePay:ApiKey')?.value || '';
-            const accNum = configData.find(c => c.key === 'SePay:AccountNumber')?.value || '';
-            const bank = configData.find(c => c.key === 'SePay:BankCode')?.value || '';
-            setFormConfig({ apiKey, accountNumber: accNum, bankCode: bank });
-
-        } catch (error) {
-            console.error('Error loading SePay data:', error);
-            toast.error('Không thể tải dữ liệu SePay');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSaveConfig = async (e: React.FormEvent) => {
+    const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            await Promise.all([
-                paymentApi.updatePaymentConfig({ key: 'SePay:ApiKey', value: formConfig.apiKey, isSecret: true, description: 'SePay API Key for Webhooks' }),
-                paymentApi.updatePaymentConfig({ key: 'SePay:AccountNumber', value: formConfig.accountNumber, isSecret: false, description: 'Bank Account Number' }),
-                paymentApi.updatePaymentConfig({ key: 'SePay:BankCode', value: formConfig.bankCode, isSecret: false, description: 'Bank Code (e.g. MB, VCB)' })
-            ]);
-            toast.success('Cập nhật cấu hình thành công!');
-            loadData();
-        } catch (error) {
-            toast.error('Lỗi khi lưu cấu hình');
+        const next: Record<string, string> = {};
+        for (const f of TEXT_FIELDS) {
+            const v = (form[f.key] ?? '').trim();
+            if (v && 'pattern' in f && f.pattern && !f.pattern.test(v)) next[f.key] = f.error!;
         }
+        setErrors(next);
+        if (Object.keys(next).length > 0) return;
+        save.mutate(form);
     };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-    };
-
-    if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">Quản lý thanh toán SePay</h1>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setActiveTab('transactions')}
-                        className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${activeTab === 'transactions' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
-                    >
-                        <Activity className="w-4 h-4" /> Giao dịch
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('config')}
-                        className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${activeTab === 'config' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
-                    >
-                        <Settings className="w-4 h-4" /> Cấu hình
-                    </button>
-                </div>
+            <PageHeader
+                title="Cấu hình thanh toán"
+                description="Trạng thái từng phương thức, thiết lập không mật và URL cần khai báo với nhà cung cấp."
+            />
+
+            <div className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-subtle p-3 text-13 text-fg">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+                <span>
+                    Khoá bí mật (HashSecret, WebhookSecret, ApiToken) chỉ đặt bằng biến môi trường trên máy chủ và
+                    không bao giờ hiển thị ở đây. Trang này không có ô nhập khoá bí mật.
+                </span>
             </div>
 
-            {/* Dashboard Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div className="text-slate-500 text-sm mb-1 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Tổng doanh thu</div>
-                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(stats?.totalRevenue || 0)}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div className="text-slate-500 text-sm mb-1 flex items-center gap-2"><DollarSign className="w-4 h-4 text-green-500" /> Doanh thu hôm nay</div>
-                    <div className="text-2xl font-bold text-green-600">{formatCurrency(stats?.todayRevenue || 0)}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div className="text-slate-500 text-sm mb-1 flex items-center gap-2"><FileText className="w-4 h-4" /> Tổng giao dịch</div>
-                    <div className="text-2xl font-bold text-slate-900">{stats?.totalTransactions}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div className="text-slate-500 text-sm mb-1 flex items-center gap-2"><Activity className="w-4 h-4" /> Tỷ lệ thành công</div>
-                    <div className="text-2xl font-bold text-blue-600">{stats?.successRate.toFixed(1)}%</div>
-                </div>
-            </div>
+            <Card padded>
+                <CardHeader><CardTitle>Trạng thái phương thức</CardTitle></CardHeader>
+                <CardBody>
+                    <QueryBoundary
+                        query={statusQuery}
+                        isEmpty={(d) => d.length === 0}
+                        skeleton={<div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>}
+                        empty={{ title: 'Máy chủ chưa khai báo phương thức nào' }}
+                    >
+                        {(rows) => <StatusTable rows={rows} />}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
 
-            {/* Content Area */}
-            {activeTab === 'transactions' ? (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                        <h2 className="font-semibold text-slate-800">Lịch sử giao dịch gần đây</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
-                                <tr>
-                                    <th className="px-6 py-3">ID</th>
-                                    <th className="px-6 py-3">Thời gian</th>
-                                    <th className="px-6 py-3">Số tiền</th>
-                                    <th className="px-6 py-3">Nội dung</th>
-                                    <th className="px-6 py-3">Đơn hàng</th>
-                                    <th className="px-6 py-3">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transactions.map((tx) => (
-                                    <tr key={tx.id} className="bg-white border-b border-slate-50 hover:bg-slate-50/50">
-                                        <td className="px-6 py-4 font-mono text-slate-500">#{tx.id}</td>
-                                        <td className="px-6 py-4">{new Date(tx.transactionDate).toLocaleString('vi-VN')}</td>
-                                        <td className="px-6 py-4 font-medium text-slate-900">{formatCurrency(tx.transferAmount)}</td>
-                                        <td className="px-6 py-4 text-slate-600">{tx.content}</td>
-                                        <td className="px-6 py-4 text-slate-600 font-mono">{tx.relatedOrderId ? tx.relatedOrderId.substring(0, 8).toUpperCase() : '-'}</td>
-                                        <td className="px-6 py-4">
-                                            {tx.isProcessed ? (
-                                                <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Thành công</span>
-                                            ) : (
-                                                <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded" title={tx.processingError}>Thất bại</span>
-                                            )}
-                                        </td>
-                                    </tr>
+            <Card padded>
+                <CardHeader><CardTitle>URL cần khai báo với nhà cung cấp</CardTitle></CardHeader>
+                <CardBody>
+                    <QueryBoundary
+                        query={urlsQuery}
+                        skeleton={<div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>}
+                    >
+                        {(u) => (
+                            <div className="space-y-3">
+                                <p className="text-13 text-fg-muted">
+                                    Dán đúng các URL này vào trang quản trị của nhà cung cấp. Sai URL thì tiền vào tài khoản
+                                    nhưng đơn không tự chuyển sang &quot;đã thanh toán&quot;.
+                                </p>
+                                <CopyField label="Webhook báo có (chuyển khoản)" value={u.sePayWebhook} />
+                                <CopyField label="VNPay Return / IPN" value={u.vnPayReturn} />
+                                <CopyField label="MoMo IPN" value={u.moMoIpn} />
+                            </div>
+                        )}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
+
+            <Card padded>
+                <CardHeader><CardTitle>Thiết lập không mật</CardTitle></CardHeader>
+                <CardBody>
+                    {configQuery.isPending ? (
+                        <div className="space-y-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+                    ) : (
+                        <form onSubmit={submit} className="space-y-4">
+                            <Switch
+                                label="Bật chuyển khoản ngân hàng (VietQR)"
+                                checked={form[BOOL_KEY] === 'true'}
+                                onCheckedChange={(v) => setForm((f) => ({ ...f, [BOOL_KEY]: v ? 'true' : 'false' }))}
+                            />
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                {TEXT_FIELDS.map((f) => (
+                                    <Input
+                                        key={f.key}
+                                        label={f.label}
+                                        hint={'hint' in f ? f.hint : undefined}
+                                        error={errors[f.key]}
+                                        value={form[f.key] ?? ''}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                                    />
                                 ))}
-                                {transactions.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Chưa có giao dịch nào</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-                    <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                        <h2 className="font-semibold text-slate-800">Cấu hình kết nối SePay</h2>
-                    </div>
-                    <form onSubmit={handleSaveConfig} className="p-6 space-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                                    <Key className="w-4 h-4" /> SePay API Key
-                                </label>
-                                <input
-                                    type="password"
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    value={formConfig.apiKey}
-                                    onChange={e => setFormConfig({ ...formConfig, apiKey: e.target.value })}
-                                    placeholder="Nhập API Key từ SePay..."
-                                />
-                                <p className="text-xs text-slate-500 mt-1">Dùng để xác thực Webhook</p>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                                        <Hash className="w-4 h-4" /> Số tài khoản
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        value={formConfig.accountNumber}
-                                        onChange={e => setFormConfig({ ...formConfig, accountNumber: e.target.value })}
-                                        placeholder="Ví dụ: 0352..."
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
-                                        <Building2 className="w-4 h-4" /> Ngân hàng (Bank Code)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        value={formConfig.bankCode}
-                                        onChange={e => setFormConfig({ ...formConfig, bankCode: e.target.value })}
-                                        placeholder="Ví dụ: MB, VCB"
-                                    />
-                                </div>
+                            <p className="text-2xs text-fg-subtle">
+                                Giá trị lưu vào bảng cấu hình của module thanh toán. Bảng trạng thái phía trên đọc từ cấu hình
+                                máy chủ, nên một thiết lập vừa lưu chỉ đổi trạng thái sau khi máy chủ nạp lại cấu hình.
+                            </p>
+                            <div className="flex justify-end">
+                                <Button type="submit" icon={Save} loading={save.isPending}>Lưu thiết lập</Button>
                             </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-100 flex justify-end">
-                            <button
-                                type="submit"
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2 transition-colors"
-                            >
-                                <Save className="w-4 h-4" /> Lưu cấu hình
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+                        </form>
+                    )}
+                </CardBody>
+            </Card>
         </div>
     );
 }

@@ -26,7 +26,10 @@ export type WorkOrderStatus =
     | 'InProgress'
     | 'OnHold'
     | 'Completed'
-    | 'Cancelled';
+    | 'Cancelled'
+    | 'ReadyForPickup'
+    | 'Paid'
+    | 'Delivered';
 
 export interface ServiceBooking {
     id: string;
@@ -83,6 +86,19 @@ export interface WorkOrder {
     approvedAt?: string;
     startedAt?: string;
     finishedAt?: string;
+    /**
+     * W2-13 new (contract `docs/api-contracts/repair.md`). Fixed 2026-09-19
+     * (adversarial verification of W3-15): `WorkOrder.cs` has no
+     * `ReadyForPickupAt` (the transition only flips `Status`), and the
+     * handover stamps are `HandoverAt`/`HandoverReceivedByName`, not
+     * `deliveredAt`/`receivedByName` — the previous names never matched a
+     * real API response, so the "delivered at / received by" line in
+     * `work-order-payment-handover-panel.tsx` always rendered blank.
+     */
+    paidAt?: string;
+    paymentReference?: string;
+    handoverAt?: string;
+    handoverReceivedByName?: string;
 }
 
 export interface WorkOrderPart {
@@ -145,8 +161,33 @@ export const getStatusColor = (status: WorkOrderStatus): string => {
         OnHold: 'bg-orange-100 text-orange-800',
         Completed: 'bg-green-100 text-green-800',
         Cancelled: 'bg-gray-100 text-gray-800',
+        ReadyForPickup: 'bg-teal-100 text-teal-800',
+        Paid: 'bg-lime-100 text-lime-800',
+        Delivered: 'bg-slate-200 text-slate-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+};
+
+/** Vietnamese labels for `WorkOrderStatus` — single source, no duplicate maps per page. */
+export const getWorkOrderStatusLabel = (status: WorkOrderStatus): string => {
+    const labels: Record<WorkOrderStatus, string> = {
+        Requested: 'Chờ tiếp nhận',
+        Assigned: 'Đã phân công',
+        Declined: 'Đã từ chối',
+        Diagnosed: 'Đã chẩn đoán',
+        Quoted: 'Đã báo giá',
+        AwaitingApproval: 'Chờ duyệt báo giá',
+        Approved: 'Đã duyệt báo giá',
+        Rejected: 'Báo giá bị từ chối',
+        InProgress: 'Đang sửa',
+        OnHold: 'Tạm dừng',
+        Completed: 'Đã hoàn thành',
+        Cancelled: 'Đã hủy',
+        ReadyForPickup: 'Sẵn sàng trả máy',
+        Paid: 'Đã thanh toán',
+        Delivered: 'Đã trả máy',
+    };
+    return labels[status] || status;
 };
 
 /** Vietnamese labels, 24h format — was hardcoded English AM/PM (IR #60, w0). */

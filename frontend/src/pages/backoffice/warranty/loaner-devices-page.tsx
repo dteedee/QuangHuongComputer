@@ -176,7 +176,10 @@ export default function LoanerDevicesPage() {
 // -------------------- Create Loaner --------------------
 
 function CreateLoanerModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-    const [eligible, setEligible] = useState<Array<{ id: string; serialNumber: string; productName: string }>>([]);
+    // Real response has no `id`/`productName` (verified against :5050) — see
+    // integration-requests-w3.md: this endpoint predates the loaner feature
+    // and cannot supply the `SerialNumberId` the create-loaner form needs.
+    const [eligible, setEligible] = useState<Array<{ serialNumber: string; productId: string }>>([]);
     const [claims, setClaims] = useState<WarrantyClaim[]>([]);
     const [serialNumberId, setSerialNumberId] = useState('');
     const [customerId, setCustomerId] = useState('');
@@ -188,8 +191,11 @@ function CreateLoanerModal({ onClose, onCreated }: { onClose: () => void; onCrea
 
     useEffect(() => {
         void warrantyApi.loaner.getEligibleSerials().then(setEligible).catch(() => setEligible([]));
-        // Chỉ hiện claim đang xử lý — cho phép gắn máy mượn
-        void warrantyApi.admin.getAllClaims({ status: 'Processing' })
+        // Chỉ hiện claim đang xử lý — cho phép gắn máy mượn.
+        // W3-15 fix: 'Processing' never existed on the backend (real lifecycle
+        // is Pending/Approved/InProgress/Resolved/Rejected) — this always
+        // returned an empty list.
+        void warrantyApi.admin.getAllClaims({ status: 'InProgress' })
             .then(setClaims)
             .catch(() => setClaims([]));
     }, []);
@@ -248,10 +254,13 @@ function CreateLoanerModal({ onClose, onCreated }: { onClose: () => void; onCrea
                             className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm"
                         >
                             <option value="">-- Chọn --</option>
-                            {eligible.map(s => (
-                                <option key={s.id} value={s.id}>{s.serialNumber} — {s.productName}</option>
+                            {eligible.filter(s => s.serialNumber).map(s => (
+                                <option key={s.serialNumber} value={s.serialNumber}>{s.serialNumber} — SP {s.productId.slice(0, 8)}</option>
                             ))}
                         </select>
+                        <p className="text-xs text-amber-600 mt-1">
+                            Danh sách chỉ có số serial, chưa có mã định danh serial thật (đang chờ backend bổ sung — xem integration-requests-w3.md).
+                        </p>
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-1">Customer ID</label>

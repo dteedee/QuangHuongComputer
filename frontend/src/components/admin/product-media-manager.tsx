@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     DndContext, closestCenter, PointerSensor, useSensor, useSensors,
     type DragEndEvent,
@@ -8,10 +8,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { Upload, Youtube, Star, StarOff, Trash2, GripVertical, Image as ImageIcon, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { catalogApi, type ProductMedia } from '../../api/catalog';
-import { resolveMediaUrl } from '../../lib/media-url';
+import { catalogAdminApi } from '../../api/catalog/admin';
+import {
+    Badge, Button, EmptyState, ErrorState, IconButton, Img, Input, RowActions, SkeletonText,
+} from '../ui';
 
 interface ProductMediaManagerProps {
     productId: string;
+    /** Gọi sau mỗi lần thêm/xoá/đổi ảnh chính — để trang cha làm mới trạng thái "đã có ảnh". */
+    onChanged?: () => void;
 }
 
 const YOUTUBE_REGEX = /^https?:\/\/(www\.)?(youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/;
@@ -22,10 +27,12 @@ function extractYoutubeId(url: string): string | null {
 }
 
 /** Quản trị media của 1 sản phẩm: kéo thả sắp xếp, tải nhiều ảnh, nhúng YouTube, đặt ảnh chính. */
-export default function ProductMediaManager({ productId }: ProductMediaManagerProps) {
+export default function ProductMediaManager({ productId, onChanged }: ProductMediaManagerProps) {
     const [items, setItems] = useState<ProductMedia[]>([]);
     const [loading, setLoading] = useState(false);
     const [youtubeUrl, setYoutubeUrl] = useState('');
+    const [error, setError] = useState<unknown>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -33,12 +40,15 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
         if (!productId) return;
         setLoading(true);
         try {
-            const bundle = await catalogApi.getProductWithDetails(productId);
+            // `include=media` — đúng chính tả hợp đồng (catalog.md §2); `medias` bị bỏ qua.
+            const bundle = await catalogAdminApi.getProductForEdit(productId);
             const list = bundle.medias || [];
             list.sort((a, b) => a.sortOrder - b.sortOrder);
             setItems(list);
-        } catch {
+            setError(null);
+        } catch (e) {
             setItems([]);
+            setError(e);
         } finally {
             setLoading(false);
         }
@@ -53,8 +63,8 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
             let nextOrder = items.length;
             const created: ProductMedia[] = [];
             for (const file of Array.from(files)) {
-                const uploaded = await catalogApi.uploadMedia(file);
                 const isImage = file.type.startsWith('image/');
+                const uploaded = await catalogApi.uploadMedia(file, productId, isImage ? 'image' : 'video');
                 const m = await catalogApi.addProductMedia(productId, {
                     type: isImage ? 'Image' : 'Video',
                     url: uploaded.url,
@@ -68,6 +78,7 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
             }
             setItems((prev) => [...prev, ...created]);
             toast.success(`Đã tải ${created.length} tệp!`, { id: loadingToast });
+            onChanged?.();
         } catch {
             toast.error('Tải lên thất bại!', { id: loadingToast });
         }
@@ -88,6 +99,7 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
             setItems((prev) => [...prev, m]);
             setYoutubeUrl('');
             toast.success('Đã thêm video YouTube.');
+            onChanged?.();
         } catch {
             toast.error('Không thể thêm video.');
         }
@@ -98,6 +110,7 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
             await catalogApi.deleteProductMedia(productId, id);
             setItems((prev) => prev.filter((x) => x.id !== id));
             toast.success('Đã xoá media.');
+            onChanged?.();
         } catch {
             toast.error('Xoá thất bại.');
         }
@@ -108,6 +121,7 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
             await catalogApi.updateProductMedia(productId, id, { isPrimary: true });
             setItems((prev) => prev.map((x) => ({ ...x, isPrimary: x.id === id })));
             toast.success('Đã đặt ảnh chính.');
+            onChanged?.();
         } catch {
             toast.error('Không đặt được ảnh chính.');
         }
@@ -130,47 +144,44 @@ export default function ProductMediaManager({ productId }: ProductMediaManagerPr
 
     return (
         <div className="space-y-4">
-            {/* Actions */}
-            <div className="flex flex-wrap items-center gap-3">
-                <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl cursor-pointer hover:bg-black transition-all text-sm font-semibold">
-                    <Upload size={16} />
-                    Tải nhiều ảnh / video
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*,video/*"
-                        className="hidden"
-                        onChange={(e) => void handleUpload(e.target.files)}
-                    />
-                </label>
-                <div className="flex items-center gap-2 flex-1 min-w-[280px]">
-                    <div className="relative flex-1">
-                        <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500 w-4 h-4" />
-                        <input
-                            type="url"
-                            value={youtubeUrl}
-                            onChange={(e) => setYoutubeUrl(e.target.value)}
-                            placeholder="Dán URL YouTube (youtu.be/... hoặc youtube.com/watch?v=...)"
-                            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-[var(--accent-primary)]"
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleAddYoutube}
-                        className="px-4 py-2 bg-[var(--accent-primary)] text-white rounded-xl text-sm font-semibold hover:bg-[var(--accent-primary-hover)] transition-colors cursor-pointer"
-                    >
-                        Thêm YouTube
-                    </button>
-                </div>
+            <div className="flex flex-wrap items-end gap-3">
+                <Button type="button" variant="ink" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <Upload size={15} /> Tải nhiều ảnh / video
+                </Button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    className="sr-only"
+                    aria-label="Chọn ảnh hoặc video để tải lên"
+                    onChange={(e) => void handleUpload(e.target.files)}
+                />
+                <Input
+                    label="Nhúng video YouTube"
+                    icon={Youtube}
+                    type="url"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    placeholder="youtu.be/… hoặc youtube.com/watch?v=…"
+                    className="min-w-[18rem] flex-1"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={handleAddYoutube} disabled={!youtubeUrl}>
+                    Thêm YouTube
+                </Button>
             </div>
 
             {loading ? (
-                <p className="text-sm text-gray-500 py-6 text-center">Đang tải...</p>
+                <SkeletonText lines={4} />
+            ) : error ? (
+                <ErrorState inline title="Không tải được thư viện ảnh" error={error} onRetry={() => void load()} />
             ) : items.length === 0 ? (
-                <div className="py-12 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 gap-2">
-                    <ImageIcon size={36} />
-                    <p className="text-sm">Chưa có media. Bấm "Tải nhiều ảnh / video" để bắt đầu.</p>
-                </div>
+                <EmptyState
+                    icon={ImageIcon}
+                    title="Chưa có ảnh nào"
+                    description="Sản phẩm cần ít nhất một ảnh trước khi được hiện trên web."
+                    action={{ label: 'Tải ảnh lên', onClick: () => fileInputRef.current?.click() }}
+                />
             ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={items.map((x) => x.id)} strategy={verticalListSortingStrategy}>
@@ -207,63 +218,60 @@ function SortableRow({ media, onDelete, onSetPrimary }: SortableRowProps) {
         opacity: isDragging ? 0.5 : 1,
     };
     const thumb = media.thumbnailUrl || (media.type === 'Image' ? media.url : undefined);
+    const isVideo = media.type === 'Video' || media.type === 'YoutubeEmbed';
 
     return (
         <li
             ref={setNodeRef}
             style={style}
-            className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 bg-white"
+            className="group/row flex items-center gap-3 rounded-xl border border-line bg-surface p-2"
         >
             <button
                 type="button"
                 {...attributes}
                 {...listeners}
-                className="p-1 text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing"
+                className="cursor-grab rounded-md p-1 text-fg-subtle hover:text-fg active:cursor-grabbing"
                 aria-label="Kéo để sắp xếp"
             >
-                <GripVertical className="w-4 h-4" />
+                <GripVertical className="h-4 w-4" />
             </button>
 
-            <div className="w-14 h-14 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 relative">
+            <div className="relative w-14 shrink-0">
                 {thumb ? (
-                    <img src={resolveMediaUrl(thumb)} alt="" className="w-full h-full object-cover" />
+                    <Img src={thumb} alt={media.altText || ''} ratio="1/1" fit="cover" wrapperClassName="rounded-lg" />
                 ) : (
-                    <Play className="w-4 h-4 text-gray-400" />
+                    <div className="flex aspect-square items-center justify-center rounded-lg bg-sunken">
+                        <Play className="h-4 w-4 text-fg-subtle" />
+                    </div>
                 )}
-                {(media.type === 'Video' || media.type === 'YoutubeEmbed') && (
-                    <span className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[9px] px-1 rounded">
+                {isVideo && (
+                    <span className="absolute bottom-0.5 right-0.5 rounded bg-fg/80 px-1 text-2xs font-semibold text-bg">
                         {media.type === 'Video' ? 'MP4' : 'YT'}
                     </span>
                 )}
             </div>
 
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{media.altText || media.url}</p>
-                <p className="text-[11px] text-gray-500 truncate">Thứ tự: {media.sortOrder}</p>
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-13 font-medium text-fg">{media.altText || media.url}</p>
+                <p className="num truncate text-xs text-fg-subtle">Thứ tự: {media.sortOrder}</p>
             </div>
 
-            <button
-                type="button"
-                onClick={() => onSetPrimary(media.id)}
-                disabled={media.isPrimary}
-                title={media.isPrimary ? 'Đang là ảnh chính' : 'Đặt làm ảnh chính'}
-                className={`p-2 rounded-lg transition-colors ${
-                    media.isPrimary
-                        ? 'text-amber-500 bg-amber-50'
-                        : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50 cursor-pointer'
-                }`}
-            >
-                {media.isPrimary ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
-            </button>
+            {media.isPrimary && <Badge variant="warning">Ảnh chính</Badge>}
 
-            <button
-                type="button"
-                onClick={() => onDelete(media.id)}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                aria-label="Xoá"
-            >
-                <Trash2 className="w-4 h-4" />
-            </button>
+            <RowActions>
+                <IconButton
+                    aria-label={media.isPrimary ? 'Đang là ảnh chính' : 'Đặt làm ảnh chính'}
+                    size="sm"
+                    variant="ghost"
+                    disabled={media.isPrimary}
+                    onClick={() => onSetPrimary(media.id)}
+                >
+                    {media.isPrimary ? <Star className="h-4 w-4 fill-current" /> : <StarOff className="h-4 w-4" />}
+                </IconButton>
+                <IconButton aria-label="Xoá media" size="sm" variant="ghost" onClick={() => onDelete(media.id)}>
+                    <Trash2 className="h-4 w-4" />
+                </IconButton>
+            </RowActions>
         </li>
     );
 }

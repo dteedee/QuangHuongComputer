@@ -22,6 +22,23 @@ interface AuthResponse {
     user: User;
 }
 
+/**
+ * `POST /auth/login` answers this shape instead of `AuthResponse` when the account has 2FA
+ * enabled (docs/api-contracts/identity.md §1). No token, no roles — nothing usable until step 2.
+ */
+export interface TwoFactorChallengeResponse {
+    requiresTwoFactor: true;
+    challengeToken: string;
+    expiresInSeconds: number;
+    message?: string;
+}
+
+export type LoginResult = AuthResponse | TwoFactorChallengeResponse;
+
+export function isTwoFactorChallenge(result: LoginResult): result is TwoFactorChallengeResponse {
+    return (result as TwoFactorChallengeResponse).requiresTwoFactor === true;
+}
+
 export interface User {
     id: string;
     email: string;
@@ -105,6 +122,27 @@ export const authApi = {
      */
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const response = await client.post<AuthResponse>('/auth/login', data);
+        return response.data;
+    },
+
+    /**
+     * Same call as `login()` but typed for the real union response (docs/api-contracts/identity.md
+     * §1): either a normal `AuthResponse` or a `{requiresTwoFactor}` challenge. `login()` above
+     * keeps its old `AuthResponse`-only signature untouched — `AuthContext.tsx` (owned by W1-8, not
+     * this track) calls it and a widened return type there would be a cross-file type error this
+     * track cannot fix. `LoginPage` (this track) calls `loginRaw` instead so it can branch safely.
+     */
+    loginRaw: async (data: LoginRequest): Promise<LoginResult> => {
+        const response = await client.post<LoginResult>('/auth/login', data);
+        return response.data;
+    },
+
+    /**
+     * Step 2 of a 2FA login (docs/api-contracts/identity.md §1). `code` XOR `backupCode`.
+     * Returns the same `AuthResponse` shape a non-2FA login would have.
+     */
+    loginTwoFactor: async (payload: { challengeToken: string; code?: string; backupCode?: string }): Promise<AuthResponse> => {
+        const response = await client.post<AuthResponse>('/auth/login/2fa', payload);
         return response.data;
     },
 

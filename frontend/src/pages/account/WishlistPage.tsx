@@ -4,6 +4,8 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { AccountLayout } from '../../layouts/account-layout';
+import { ROUTES } from '../../routes/route-paths';
 
 export function WishlistPage() {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ export function WishlistPage() {
             Vui lòng đăng nhập để xem và quản lý danh sách sản phẩm yêu thích của bạn.
           </p>
           <button
-            onClick={() => navigate('/login', { state: { from: '/account/wishlist' } })}
+            onClick={() => navigate('/login', { state: { from: '/tai-khoan/wishlist' } })}
             className="w-full bg-accent hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
           >
             Đăng nhập ngay
@@ -54,18 +56,16 @@ export function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-red-50 rounded-xl text-accent">
-            <Heart className="w-6 h-6" fill="currentColor" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sản phẩm yêu thích</h1>
-            <p className="text-gray-500 text-sm">{items.length} sản phẩm</p>
-          </div>
+    <AccountLayout breadcrumb={[{ label: 'Sản phẩm yêu thích' }]}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2.5 bg-red-50 rounded-xl text-accent">
+          <Heart className="w-6 h-6" fill="currentColor" />
         </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Sản phẩm yêu thích</h1>
+          <p className="text-gray-500 text-sm">{items.length} sản phẩm</p>
+        </div>
+      </div>
 
         {loading ? (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
@@ -82,7 +82,7 @@ export function WishlistPage() {
               Hãy khám phá và thêm những sản phẩm bạn yêu thích!
             </p>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => navigate(ROUTES.PRODUCTS)}
               className="inline-flex items-center gap-2 bg-accent hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
             >
               Khám phá sản phẩm
@@ -168,8 +168,7 @@ export function WishlistPage() {
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </AccountLayout>
   );
 }
 

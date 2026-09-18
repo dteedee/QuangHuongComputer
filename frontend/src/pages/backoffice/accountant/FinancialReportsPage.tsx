@@ -1,476 +1,200 @@
+/**
+ * Báo cáo tài chính (W3-13) — `docs/api-contracts/reporting.md` §2.
+ *
+ * Trang cũ dùng `data?.x ?? 0` ở mọi chỗ nên khi API trả 400/500 nó vẫn vẽ biểu
+ * đồ rỗng và các ô 0 ₫. Bây giờ mỗi khối nằm trong `QueryBoundary` riêng: khối
+ * nào hỏng thì khối đó hiện lỗi + nút thử lại, các khối còn lại vẫn dùng được.
+ *
+ * Giá vốn của `/profit-margin` là số ƯỚC TÍNH (`isEstimate: true` — không có
+ * ảnh chụp giá vốn theo từng lần bán), nên mọi con số lợi nhuận ở đây đều đeo
+ * nhãn "ước tính" đúng như hợp đồng ghi.
+ */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, TrendingDown, DollarSign, Download, Calendar, Wallet, CreditCard, Package, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { financialApi, type CashFlowReport, type RevenueExpenseReport, type BalanceOverview } from '../../../api/reporting';
-import { formatCurrency } from '../../../utils/format';
-import toast from 'react-hot-toast';
+import { Download, TrendingUp } from 'lucide-react';
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler,
-} from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+    Button, Card, CardBody, CardHeader, CardTitle, Input, Money, PageHeader,
+    QueryBoundary, Skeleton, StatCard, StatusBadge, Table, TBody, Td, Th, THead, Tr, notify,
+} from '../../../components/ui';
+import { Can } from '../../../components/Can';
+import { PERMISSIONS } from '../../../constants/permissions';
+import { financialApi, getProfitMarginReport } from '../../../api/reporting';
+import { formatCurrency, toVnDateInput } from '../../../api/accounting';
+import { CashFlowChart, RevenueExpenseChart } from './financial-report-charts';
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-);
+/**
+ * `getProfitMarginReport` in `api/reporting.ts` (not owned by this track) is
+ * untyped. Shape below is the documented response of `GET /reports/profit-margin`
+ * (reporting contract §1) — `isEstimate` is always true today.
+ */
+interface ProfitMarginReport {
+    products: {
+        productId: string; productName: string; revenue: number; totalCost: number;
+        profit: number; marginPercent: number; unitsSold: number; isEstimate: boolean;
+    }[];
+    totalRevenue: number;
+    isEstimate: boolean;
+}
 
 export function FinancialReportsPage() {
-    const [dateRange, setDateRange] = useState({
-        startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        endDate: new Date().toISOString().split('T')[0],
+    const today = new Date();
+    const [range, setRange] = useState({
+        startDate: toVnDateInput(new Date(today.getFullYear(), today.getMonth() - 11, 1)),
+        endDate: toVnDateInput(today),
+    });
+    const [exporting, setExporting] = useState(false);
+
+    const cashFlowQuery = useQuery({
+        queryKey: ['reports', 'cash-flow', range],
+        queryFn: () => financialApi.getCashFlow(range.startDate, range.endDate),
+    });
+    const revExpQuery = useQuery({
+        queryKey: ['reports', 'revenue-expense', range],
+        queryFn: () => financialApi.getRevenueExpense(range.startDate, range.endDate),
+    });
+    const marginQuery = useQuery({
+        queryKey: ['reports', 'profit-margin', range],
+        queryFn: (): Promise<ProfitMarginReport> => getProfitMarginReport(range.startDate, range.endDate),
     });
 
-    const { data: cashFlow, isLoading: loadingCashFlow } = useQuery({
-        queryKey: ['cash-flow', dateRange],
-        queryFn: () => financialApi.getCashFlow(dateRange.startDate, dateRange.endDate),
-        staleTime: 60000, // Cache for 1 minute
-    });
-
-    const { data: revenueExpense, isLoading: loadingRevExp } = useQuery({
-        queryKey: ['revenue-expense', dateRange],
-        queryFn: () => financialApi.getRevenueExpense(dateRange.startDate, dateRange.endDate),
-        staleTime: 60000, // Cache for 1 minute
-    });
-
-    const { data: balance, isLoading: loadingBalance } = useQuery({
-        queryKey: ['balance-overview'],
-        queryFn: () => financialApi.getBalanceOverview(),
-        staleTime: 60000, // Cache for 1 minute
-    });
-
-    const handleExport = async () => {
+    const exportReport = async () => {
+        setExporting(true);
         try {
-            await financialApi.exportFinancialReport(dateRange.startDate, dateRange.endDate);
-            toast.success('Xuất báo cáo thành công');
+            await financialApi.exportFinancialReport(range.startDate, range.endDate);
+            notify.success('Đã tải báo cáo tài chính');
         } catch {
-            toast.error('Có lỗi khi xuất báo cáo');
+            notify.error('Không xuất được báo cáo');
+        } finally {
+            setExporting(false);
         }
     };
 
-    const isLoading = loadingCashFlow || loadingRevExp || loadingBalance;
-
-    // Chart data for Revenue vs Expense
-    const revenueChartData = {
-        labels: revenueExpense?.monthlyData.map(d => d.month) || [],
-        datasets: [
-            {
-                label: 'Doanh thu',
-                data: revenueExpense?.monthlyData.map(d => d.revenue) || [],
-                backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                borderRadius: 6,
-            },
-            {
-                label: 'Chi phí',
-                data: revenueExpense?.monthlyData.map(d => d.expense) || [],
-                backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                borderRadius: 6,
-            },
-        ],
-    };
-
-    const profitChartData = {
-        labels: revenueExpense?.monthlyData.map(d => d.month) || [],
-        datasets: [
-            {
-                label: 'Lợi nhuận',
-                data: revenueExpense?.monthlyData.map(d => d.profit) || [],
-                borderColor: 'var(--accent-primary)',
-                backgroundColor: 'rgba(215, 0, 24, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: 'var(--accent-primary)',
-            },
-        ],
-    };
-
-    // Cash Flow Trend Chart
-    const cashFlowChartData = {
-        labels: cashFlow?.monthlyInflows.map(d => d.month) || [],
-        datasets: [
-            {
-                label: 'Thu vào',
-                data: cashFlow?.monthlyInflows.map(d => d.amount) || [],
-                borderColor: 'rgba(34, 197, 94, 1)',
-                backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: 'rgba(34, 197, 94, 1)',
-                borderWidth: 2,
-            },
-            {
-                label: 'Chi ra',
-                data: cashFlow?.monthlyOutflows.map(d => d.amount) || [],
-                borderColor: 'rgba(239, 68, 68, 1)',
-                backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: 'rgba(239, 68, 68, 1)',
-                borderWidth: 2,
-            },
-        ],
-    };
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top' as const,
-                labels: {
-                    font: { weight: 'bold' as const, size: 11 },
-                    usePointStyle: true,
-                },
-            },
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: (value: number | string) => {
-                        const numValue = typeof value === 'string' ? parseFloat(value) : value;
-                        return numValue >= 1000000 ? `${(numValue / 1000000).toFixed(0)}M` : numValue.toString();
-                    },
-                },
-            },
-        },
-    };
-
     return (
-        <div className="space-y-10 pb-20">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 leading-tight mb-3">
-                        Báo Cáo <span className="text-accent">Tài Chính</span>
-                    </h1>
-                    <p className="text-gray-600 font-semibold text-sm">
-                        Xem tổng quan dòng tiền, doanh thu, chi phí và tài sản
-                    </p>
+        <div className="space-y-5">
+            <PageHeader
+                title="Báo cáo tài chính"
+                description="Dòng tiền, doanh thu - chi phí và biên lợi nhuận theo kỳ."
+                breadcrumbs={[{ label: 'Tài chính', to: '/backoffice/accounting' }, { label: 'Báo cáo tài chính' }]}
+                actions={
+                    <Can permission={PERMISSIONS.ACCOUNTING_EXPORT}>
+                        <Button variant="outline" loading={exporting} onClick={exportReport}>
+                            <Download size={16} aria-hidden /> Xuất Excel
+                        </Button>
+                    </Can>
+                }
+            />
+
+            <Card className="p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <Input label="Từ ngày" type="date" value={range.startDate}
+                        onChange={(e) => setRange((r) => ({ ...r, startDate: e.target.value }))} className="sm:w-48" />
+                    <Input label="Đến ngày" type="date" value={range.endDate}
+                        onChange={(e) => setRange((r) => ({ ...r, endDate: e.target.value }))} className="sm:w-48" />
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-gray-100">
-                        <Calendar size={16} className="text-gray-400" />
-                        <input
-                            type="date"
-                            value={dateRange.startDate}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                            className="border-none text-sm font-bold focus:ring-0 p-0"
-                        />
-                        <span className="text-gray-300">-</span>
-                        <input
-                            type="date"
-                            value={dateRange.endDate}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                            className="border-none text-sm font-bold focus:ring-0 p-0"
-                        />
-                    </div>
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-3 px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white text-xs font-medium rounded-xl transition-all shadow-lg active:scale-95"
-                    >
-                        <Download size={16} />
-                        Xuất Excel
-                    </button>
-                </div>
-            </div>
+            </Card>
 
-            {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-accent"></div>
-                </div>
-            ) : (
-                <>
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-green-50">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-green-50 text-green-600 rounded-xl">
-                                    <TrendingUp size={24} />
-                                </div>
-                                <span className="flex items-center text-green-600 text-xs font-semibold">
-                                    <ArrowUpRight size={14} /> Doanh thu
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-semibold text-slate-900">
-                                {formatCurrency(revenueExpense?.summary.totalRevenue || 0)}
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-2">Tổng doanh thu trong kỳ</p>
-                        </motion.div>
-
-                        <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-red-50">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-red-50 text-red-600 rounded-xl">
-                                    <TrendingDown size={24} />
-                                </div>
-                                <span className="flex items-center text-red-600 text-xs font-semibold">
-                                    <ArrowDownRight size={14} /> Chi phí
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-semibold text-slate-900">
-                                {formatCurrency(revenueExpense?.summary.totalExpenses || 0)}
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-2">Tổng chi phí trong kỳ</p>
-                        </motion.div>
-
-                        <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-blue-50">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                                    <DollarSign size={24} />
-                                </div>
-                                <span className="text-blue-600 text-sm font-medium">Lợi nhuận</span>
-                            </div>
-                            <h3 className={`text-2xl font-bold ${(revenueExpense?.summary.grossProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatCurrency(revenueExpense?.summary.grossProfit || 0)}
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-2">
-                                Biên lợi nhuận: {(revenueExpense?.summary.profitMargin || 0).toFixed(1)}%
-                            </p>
-                        </motion.div>
-
-                        <motion.div whileHover={{ y: -5 }} className="premium-card p-8 border-2 border-purple-50">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
-                                    <Wallet size={24} />
-                                </div>
-                                <span className="text-purple-600 text-sm font-medium">Dòng tiền</span>
-                            </div>
-                            <h3 className={`text-2xl font-bold ${(cashFlow?.netCashFlow || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatCurrency(cashFlow?.netCashFlow || 0)}
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-2">Dòng tiền ròng</p>
-                        </motion.div>
-                    </div>
-
-                    {/* Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Revenue vs Expense Chart */}
-                        <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
-                                <BarChart3 size={20} className="text-accent" />
-                                Doanh thu vs Chi phí
-                            </h3>
-                            <div className="h-[300px]">
-                                <Bar data={revenueChartData} options={chartOptions} />
-                            </div>
-                        </div>
-
-                        {/* Profit Trend Chart */}
-                        <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
-                                <TrendingUp size={20} className="text-accent" />
-                                Xu hướng lợi nhuận
-                            </h3>
-                            <div className="h-[300px]">
-                                <Line data={profitChartData} options={chartOptions} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Cash Flow Trend Chart */}
-                    {cashFlow?.monthlyInflows && cashFlow.monthlyInflows.length > 0 && (
-                        <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
-                                <Wallet size={20} className="text-purple-600" />
-                                Xu hướng dòng tiền
-                            </h3>
-                            <div className="h-[300px]">
-                                <Line data={cashFlowChartData} options={chartOptions} />
-                            </div>
-                            <div className="mt-6 grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-green-50 rounded-xl border border-green-100 flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-green-700 uppercase">Tổng thu vào</span>
-                                    <span className="font-semibold text-green-700">{formatCurrency(cashFlow.totalInflows)}</span>
-                                </div>
-                                <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-red-700 uppercase">Tổng chi ra</span>
-                                    <span className="font-semibold text-red-700">{formatCurrency(cashFlow.totalOutflows)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Balance Overview */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Assets */}
-                        <div className="premium-card p-8 border-2 border-green-50">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
-                                <Package size={20} className="text-green-600" />
-                                Tài sản
-                            </h3>
+            <Card>
+                <CardHeader><CardTitle>Dòng tiền</CardTitle></CardHeader>
+                <CardBody>
+                    <QueryBoundary query={cashFlowQuery} errorTitle="Không tải được báo cáo dòng tiền"
+                        skeleton={<Skeleton className="h-64 w-full" />}>
+                        {(cf) => (
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                    <span className="text-sm font-bold text-gray-600">Công nợ phải thu (AR)</span>
-                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.assets.accountsReceivable || 0)}</span>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <StatCard label="Tiền thu vào" value={formatCurrency(cf.totalInflows)} />
+                                    <StatCard label="Tiền chi ra" value={formatCurrency(cf.totalOutflows)} />
+                                    <StatCard label="Dòng tiền thuần" value={formatCurrency(cf.netCashFlow)} icon={TrendingUp} />
                                 </div>
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                    <span className="text-sm font-bold text-gray-600">Giá trị tồn kho</span>
-                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.assets.inventoryValue || 0)}</span>
+                                <CashFlowChart inflows={cf.monthlyInflows} outflows={cf.monthlyOutflows} />
+                                <p className="text-xs text-fg-subtle">
+                                    Thu từ hoá đơn bán đã thu tiền, chi từ hoá đơn mua và khoản chi đã chi trả.
+                                </p>
+                            </div>
+                        )}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
+
+            <Card>
+                <CardHeader><CardTitle>Doanh thu và chi phí</CardTitle></CardHeader>
+                <CardBody>
+                    <QueryBoundary query={revExpQuery} errorTitle="Không tải được báo cáo doanh thu - chi phí"
+                        skeleton={<Skeleton className="h-64 w-full" />}>
+                        {(re) => (
+                            <div className="space-y-4">
+                                <div className="grid gap-3 sm:grid-cols-4">
+                                    <StatCard label="Doanh thu" value={formatCurrency(re.summary.totalRevenue)} />
+                                    <StatCard label="Chi phí" value={formatCurrency(re.summary.totalExpenses)} />
+                                    <StatCard label="Lợi nhuận gộp" value={formatCurrency(re.summary.grossProfit)} />
+                                    <StatCard label="Biên lợi nhuận" value={`${re.summary.profitMargin.toFixed(1)}%`} />
                                 </div>
-                                <div className="flex justify-between items-center p-4 bg-green-100 rounded-xl border-2 border-green-200">
-                                    <span className="text-sm font-semibold text-green-700 uppercase">Tổng tài sản</span>
-                                    <span className="font-semibold text-green-700 text-xl">{formatCurrency(balance?.assets.totalAssets || 0)}</span>
-                                </div>
-                                {/* AR Aging Breakdown */}
-                                {balance?.arAgingBreakdown && balance.arAgingBreakdown.length > 0 && (
-                                    <div className="pt-4 border-t border-gray-100">
-                                        <p className="text-xs text-slate-400 mb-3">Tuổi nợ AR</p>
-                                        <div className="space-y-2">
-                                            {balance.arAgingBreakdown.map((item, idx) => {
-                                                const maxAmount = Math.max(...balance.arAgingBreakdown.map(b => b.amount));
-                                                const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
-                                                return (
-                                                    <div key={idx} className="flex items-center gap-3">
-                                                        <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
-                                                        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                                                            <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                <RevenueExpenseChart rows={re.monthlyData} />
+                                {re.expenseByCategory.length > 0 && (
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <caption className="sr-only">Chi phí theo nhóm</caption>
+                                            <THead><Tr><Th>Nhóm chi phí</Th><Th align="right">Số chứng từ</Th><Th align="right">Số tiền</Th></Tr></THead>
+                                            <TBody>
+                                                {re.expenseByCategory.map((c) => (
+                                                    <Tr key={c.categoryName}>
+                                                        <Td>{c.categoryName}</Td>
+                                                        <Td align="right"><span className="num">{c.count}</span></Td>
+                                                        <Td align="right"><Money value={c.total} /></Td>
+                                                    </Tr>
+                                                ))}
+                                            </TBody>
+                                        </Table>
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        )}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
 
-                        {/* Liabilities */}
-                        <div className="premium-card p-8 border-2 border-red-50">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6 flex items-center gap-3">
-                                <CreditCard size={20} className="text-red-600" />
-                                Nợ phải trả
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                    <span className="text-sm font-bold text-gray-600">Công nợ phải trả (AP)</span>
-                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.liabilities.accountsPayable || 0)}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                    <span className="text-sm font-bold text-gray-600">Chi phí chờ thanh toán</span>
-                                    <span className="font-semibold text-gray-900">{formatCurrency(balance?.liabilities.pendingExpenses || 0)}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-4 bg-red-100 rounded-xl border-2 border-red-200">
-                                    <span className="text-sm font-semibold text-red-700 uppercase">Tổng nợ</span>
-                                    <span className="font-semibold text-red-700 text-xl">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</span>
-                                </div>
-                                {/* AP Aging Breakdown */}
-                                {balance?.apAgingBreakdown && balance.apAgingBreakdown.length > 0 && (
-                                    <div className="pt-4 border-t border-gray-100">
-                                        <p className="text-xs text-slate-400 mb-3">Tuổi nợ AP</p>
-                                        <div className="space-y-2">
-                                            {balance.apAgingBreakdown.map((item, idx) => {
-                                                const maxAmount = Math.max(...balance.apAgingBreakdown.map(b => b.amount));
-                                                const pct = maxAmount > 0 ? (item.amount / maxAmount) * 100 : 0;
-                                                return (
-                                                    <div key={idx} className="flex items-center gap-3">
-                                                        <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{item.bucket}</span>
-                                                        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                                                            <div className="bg-red-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-gray-700 w-24 text-right">{formatCurrency(item.amount)}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Biên lợi nhuận theo sản phẩm</CardTitle>
+                    <StatusBadge tone="warning">Giá vốn là số ước tính</StatusBadge>
+                </CardHeader>
+                <CardBody>
+                    <QueryBoundary query={marginQuery} errorTitle="Không tải được biên lợi nhuận"
+                        skeleton={<Skeleton className="h-48 w-full" />}
+                        isEmpty={(d) => (d.products?.length ?? 0) === 0}
+                        empty={{ title: 'Chưa có dữ liệu bán hàng trong kỳ', description: 'Chọn khoảng thời gian khác để xem biên lợi nhuận.' }}>
+                        {(m) => (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <caption className="sr-only">Biên lợi nhuận theo sản phẩm</caption>
+                                    <THead>
+                                        <Tr>
+                                            <Th>Sản phẩm</Th><Th align="right">Đã bán</Th><Th align="right">Doanh thu</Th>
+                                            <Th align="right">Giá vốn (ước tính)</Th><Th align="right">Lợi nhuận</Th><Th align="right">Biên</Th>
+                                        </Tr>
+                                    </THead>
+                                    <TBody>
+                                        {m.products.map((p) => (
+                                            <Tr key={p.productId}>
+                                                <Td className="max-w-[20rem] truncate">{p.productName}</Td>
+                                                <Td align="right"><span className="num">{p.unitsSold}</span></Td>
+                                                <Td align="right"><Money value={p.revenue} /></Td>
+                                                <Td align="right">
+                                                    <Money value={p.totalCost} />
+                                                    {p.isEstimate && <span className="ml-1 text-xs text-warning">ước tính</span>}
+                                                </Td>
+                                                <Td align="right"><Money value={p.profit} /></Td>
+                                                <Td align="right"><span className="num">{p.marginPercent.toFixed(1)}%</span></Td>
+                                            </Tr>
+                                        ))}
+                                    </TBody>
+                                </Table>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Net Position Card */}
-                    <div className="premium-card p-10 border-2 bg-gray-950 text-white">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-400 uppercase mb-2">Vị thế tài chính ròng</h3>
-                                <p className={`text-5xl font-bold ${(balance?.netPosition || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {formatCurrency(balance?.netPosition || 0)}
-                                </p>
-                            </div>
-                            <div className="flex gap-6">
-                                <div className="text-center">
-                                    <p className="text-xs text-slate-500 mb-1">Tài sản</p>
-                                    <p className="text-lg font-semibold text-green-400">{formatCurrency(balance?.assets.totalAssets || 0)}</p>
-                                </div>
-                                <div className="text-4xl font-thin text-gray-600">−</div>
-                                <div className="text-center">
-                                    <p className="text-xs text-slate-500 mb-1">Nợ phải trả</p>
-                                    <p className="text-lg font-semibold text-red-400">{formatCurrency(balance?.liabilities.totalLiabilities || 0)}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Expense by Category */}
-                    {revenueExpense?.expenseByCategory && revenueExpense.expenseByCategory.length > 0 && (
-                        <div className="premium-card p-8 border-2">
-                            <h3 className="text-lg font-semibold text-gray-900  mb-6">
-                                Chi phí theo danh mục
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {revenueExpense.expenseByCategory.map((cat, idx) => (
-                                    <div key={idx} className="p-6 bg-gray-50 rounded-xl border border-gray-100">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <span className="text-sm font-medium text-slate-600">{cat.categoryName}</span>
-                                            <span className="text-[9px] font-bold text-gray-400">{cat.count} khoản</span>
-                                        </div>
-                                        <p className="text-xl font-semibold text-accent">{formatCurrency(cat.total)}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Cash Flow Breakdown */}
-                    <div className="premium-card p-8 border-2">
-                        <h3 className="text-lg font-semibold text-gray-900  mb-6">
-                            Chi tiết dòng tiền
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="p-6 bg-green-50 rounded-xl border border-green-100">
-                                <p className="text-xs font-semibold text-green-600 uppercase mb-2">Thu từ AR</p>
-                                <p className="text-2xl font-semibold text-green-700">
-                                    {formatCurrency(cashFlow?.breakdown.arCollected || 0)}
-                                </p>
-                            </div>
-                            <div className="p-6 bg-red-50 rounded-xl border border-red-100">
-                                <p className="text-xs font-semibold text-red-600 uppercase mb-2">Trả cho AP</p>
-                                <p className="text-2xl font-semibold text-red-700">
-                                    {formatCurrency(cashFlow?.breakdown.apPaid || 0)}
-                                </p>
-                            </div>
-                            <div className="p-6 bg-amber-50 rounded-xl border border-amber-100">
-                                <p className="text-xs font-semibold text-amber-600 uppercase mb-2">Chi phí đã trả</p>
-                                <p className="text-2xl font-semibold text-amber-700">
-                                    {formatCurrency(cashFlow?.breakdown.expensesPaid || 0)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </>
-            )}
+                        )}
+                    </QueryBoundary>
+                </CardBody>
+            </Card>
         </div>
     );
 }
 
-export { FinancialReportsPage as default };
+export default FinancialReportsPage;

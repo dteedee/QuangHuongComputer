@@ -7,9 +7,11 @@ import { lazy } from 'react';
 import type { RouteDef, RedirectDef } from './route-types';
 import { PERMISSIONS } from '../constants/permissions';
 
-const AdminProductsPage = lazy(() => import('../pages/admin/ProductsPage').then((m) => ({ default: m.AdminProductsPage })));
-const CategoriesPage = lazy(() => import('../pages/admin/CategoriesPage').then((m) => ({ default: m.CategoriesPage })));
-const BrandsPage = lazy(() => import('../pages/admin/BrandsPage'));
+const AdminProductsPage = lazy(() => import('../pages/admin/products/product-list-page').then((m) => ({ default: m.AdminProductsPage })));
+const ProductEditorPage = lazy(() => import('../pages/admin/products/product-editor-page').then((m) => ({ default: m.ProductEditorPage })));
+const CategoriesPage = lazy(() => import('../pages/admin/taxonomy/category-tree-page').then((m) => ({ default: m.CategoryTreePage })));
+const BrandsPage = lazy(() => import('../pages/admin/taxonomy/brand-grid-page').then((m) => ({ default: m.BrandGridPage })));
+const SpecSchemaPage = lazy(() => import('../pages/admin/taxonomy/spec-schema-page').then((m) => ({ default: m.SpecSchemaPage })));
 const MenuManager = lazy(() => import('../pages/admin/MenuManager').then((m) => ({ default: m.MenuManager })));
 const HomepageBuilder = lazy(() => import('../pages/admin/HomepageBuilder').then((m) => ({ default: m.HomepageBuilder })));
 const PromotionsPage = lazy(() => import('../pages/admin/PromotionsPage'));
@@ -23,8 +25,11 @@ const ReviewsManagementPage = lazy(() => import('../pages/backoffice/admin/Revie
 
 export const adminCatalogRoutes: RouteDef[] = [
   { path: 'products', element: AdminProductsPage, layout: 'backoffice', group: 'sales', icon: 'Package', title: 'Sản phẩm', description: 'Danh sách sản phẩm', permission: PERMISSIONS.CATALOG_MANAGE, name: 'products' },
+  { path: 'products/new', element: ProductEditorPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.CATALOG_CREATE, name: 'productNew' },
+  { path: 'products/:id', element: ProductEditorPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.CATALOG_EDIT, name: 'productEdit' },
   { path: 'categories', element: CategoriesPage, layout: 'backoffice', group: 'sales', icon: 'Archive', title: 'Danh mục', description: 'Phân loại sản phẩm', permission: PERMISSIONS.CATALOG_MANAGE, name: 'categories' },
   { path: 'brands', element: BrandsPage, layout: 'backoffice', group: 'sales', icon: 'Tag', title: 'Thương hiệu', description: 'Hãng sản xuất', permission: PERMISSIONS.CATALOG_MANAGE, name: 'brands' },
+  { path: 'spec-schema', element: SpecSchemaPage, layout: 'backoffice', group: 'sales', icon: 'ListChecks', title: 'Thông số kỹ thuật', description: 'Nhóm & thuộc tính thông số', permission: PERMISSIONS.CATALOG_MANAGE, name: 'specSchema' },
   { path: 'menus', element: MenuManager, layout: 'backoffice', group: 'content', icon: 'Menu', title: 'Menu Manager', description: 'Quản lý menu', permission: PERMISSIONS.CONTENT_MANAGE_MENUS, name: 'menus' },
   { path: 'homepage-builder', element: HomepageBuilder, layout: 'backoffice', group: 'content', icon: 'Sparkles', title: 'Homepage Builder', description: 'Xây dựng trang chủ', permission: PERMISSIONS.CONTENT_MANAGE_PAGES, name: 'homepageBuilder' },
   { path: 'promotions', element: PromotionsPage, layout: 'backoffice', group: 'content', icon: 'Zap', title: 'Khuyến mãi', description: 'Giảm giá & Flash Sale', permission: PERMISSIONS.CONTENT_MANAGE_COUPONS, name: 'promotions' },

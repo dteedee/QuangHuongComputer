@@ -86,6 +86,13 @@ export function PromotionWizard({ initial, defaultType, onClose, onSaved }: Prom
     if (form.type === 'Code' && !form.code?.trim()) return 'Loại Code phải có Mã';
     if (form.discountType === 'Percent' && !form.maxDiscountAmount) return 'Giảm % bắt buộc có MaxDiscountAmount';
     if (form.endAt && form.startAt && new Date(form.endAt) <= new Date(form.startAt)) return 'Ngày kết thúc phải sau ngày bắt đầu';
+    if (form.type === 'FlashSale') {
+      if (!form.endAt) return 'Flash Sale phải có thời điểm kết thúc';
+      if (form.rewards.length === 0) return 'Flash Sale phải có ít nhất 1 sản phẩm';
+      if (form.rewards.some((r) => !r.productId?.trim() || !r.flashPrice || r.flashPrice <= 0)) {
+        return 'Mỗi sản phẩm Flash Sale cần Product ID và Giá Flash Sale > 0';
+      }
+    }
     return null;
   }, [form]);
 
@@ -141,6 +148,7 @@ export function PromotionWizard({ initial, defaultType, onClose, onSaved }: Prom
               conditions={form.conditions}
               rewards={form.rewards}
               showRewards={form.discountType === 'BuyXGetY'}
+              flashSaleMode={form.type === 'FlashSale'}
               onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
             />
           )}
@@ -195,7 +203,19 @@ function BasicInfoStep({ form, setField }: { form: FormShape; setField: SetField
         <input value={form.name} onChange={(e) => setField('name', e.target.value)} className={inputCls} placeholder="VD: Giảm 10% laptop tháng 8" />
       </Field>
       <Field label="Loại">
-        <select value={form.type} onChange={(e) => setField('type', e.target.value as FormShape['type'])} className={inputCls}>
+        <select
+          value={form.type}
+          onChange={(e) => {
+            const nextType = e.target.value as FormShape['type'];
+            setField('type', nextType);
+            setField('isAutomatic', nextType !== 'Code');
+            if (nextType !== 'Code') setField('code', null);
+            // Flash Sale luôn dùng cơ chế giá cố định theo sản phẩm (contract §1) — không phải % / tiền.
+            if (nextType === 'FlashSale') setField('discountType', 'FixedPrice');
+            else if (form.discountType === 'FixedPrice') setField('discountType', 'Percent');
+          }}
+          className={inputCls}
+        >
           <option value="Code">Mã nhập tay</option>
           <option value="Automatic">Tự động</option>
           <option value="FlashSale">Flash Sale</option>
@@ -204,18 +224,26 @@ function BasicInfoStep({ form, setField }: { form: FormShape; setField: SetField
       <Field label="Mã (chỉ với loại Code)">
         <input value={form.code ?? ''} onChange={(e) => setField('code', e.target.value.toUpperCase())} className={inputCls} placeholder="VD: BACKTOSCHOOL" disabled={form.type !== 'Code'} />
       </Field>
-      <Field label="Loại giảm">
-        <select value={form.discountType} onChange={(e) => setField('discountType', e.target.value as FormShape['discountType'])} className={inputCls}>
-          <option value="Percent">Giảm %</option>
-          <option value="Fixed">Giảm tiền cố định</option>
-          <option value="FreeShip">Miễn phí ship</option>
-          <option value="BuyXGetY">Mua X tặng Y</option>
-          <option value="Tiered">Bậc thang</option>
-        </select>
-      </Field>
-      <Field label="Giá trị giảm">
-        <input type="number" value={form.discountValue} min={0} onChange={(e) => setField('discountValue', Number(e.target.value) || 0)} className={inputCls} />
-      </Field>
+      {form.type === 'FlashSale' ? (
+        <Field label="Loại giảm">
+          <input value="Giá cố định theo sản phẩm (cấu hình ở bước sau)" disabled className={`${inputCls} bg-gray-50 text-gray-500`} />
+        </Field>
+      ) : (
+        <>
+          <Field label="Loại giảm">
+            <select value={form.discountType} onChange={(e) => setField('discountType', e.target.value as FormShape['discountType'])} className={inputCls}>
+              <option value="Percent">Giảm %</option>
+              <option value="Fixed">Giảm tiền cố định</option>
+              <option value="FreeShip">Miễn phí ship</option>
+              <option value="BuyXGetY">Mua X tặng Y</option>
+              <option value="Tiered">Bậc thang</option>
+            </select>
+          </Field>
+          <Field label="Giá trị giảm">
+            <input type="number" value={form.discountValue} min={0} onChange={(e) => setField('discountValue', Number(e.target.value) || 0)} className={inputCls} />
+          </Field>
+        </>
+      )}
       {form.discountType === 'Percent' && (
         <Field label="Trần giảm tối đa (đ) *">
           <input type="number" value={form.maxDiscountAmount ?? ''} min={0} onChange={(e) => setField('maxDiscountAmount', e.target.value ? Number(e.target.value) : null)} className={inputCls} />

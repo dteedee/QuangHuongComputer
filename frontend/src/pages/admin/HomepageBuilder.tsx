@@ -23,6 +23,20 @@ const SECTION_TYPES = [
     'post_grid', 'custom_html',
 ];
 
+/** Nhãn tiếng Việt cho từng loại khối — không hiển thị slug tiếng Anh cho admin. */
+const SECTION_TYPE_LABELS: Record<string, string> = {
+    hero_slider: 'Slide banner đầu trang',
+    banner_grid: 'Lưới banner',
+    flash_deal: 'Flash Sale',
+    product_grid: 'Lưới sản phẩm',
+    product_grid_with_panels: 'Lưới sản phẩm kèm panel',
+    category_grid: 'Lưới danh mục',
+    brand_showcase: 'Thương hiệu nổi bật',
+    service_grid: 'Lưới dịch vụ',
+    post_grid: 'Lưới bài viết',
+    custom_html: 'HTML tuỳ chỉnh',
+};
+
 // ─── Sortable Row ─────────────────────────────────────────────────────────────
 
 interface SortableSectionProps {
@@ -51,29 +65,29 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
                 <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-tight truncate">{section.title}</h3>
                     <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-gray-200 shrink-0">
-                        {section.sectionType}
+                        {SECTION_TYPE_LABELS[section.sectionType] ?? section.sectionType}
                     </span>
                     {!section.isActive && (
                         <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-red-100 flex items-center gap-1 shrink-0">
-                            <XCircle size={10} /> Hidden
+                            <XCircle size={10} /> Đã ẩn
                         </span>
                     )}
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{section.cssClass || 'No custom classes'}</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{section.cssClass || 'Không có class tuỳ chỉnh'}</p>
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
                 <button
                     onClick={() => onToggle(section.id)}
                     className={`p-2 rounded-lg transition-colors ${section.isActive ? 'text-green-500 hover:bg-green-50' : 'text-gray-300 hover:bg-gray-50'}`}
-                    title={section.isActive ? 'Hide Section' : 'Show Section'}
+                    title={section.isActive ? 'Ẩn khối' : 'Hiện khối'}
                 >
                     <CheckCircle2 size={18} />
                 </button>
                 <button
                     onClick={() => onEdit(section)}
                     className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit Configuration"
+                    title="Sửa cấu hình"
                 >
                     <Edit3 size={18} />
                 </button>
@@ -81,7 +95,7 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
                     onClick={() => onDelete(section.id)}
                     disabled={isDeleting}
                     className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                    title="Delete Section"
+                    title="Xoá khối"
                 >
                     {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                 </button>
@@ -115,7 +129,7 @@ export const HomepageBuilder = () => {
             const data = await contentApi.admin.getHomepageSections();
             setSections(data.sort((a, b) => a.displayOrder - b.displayOrder));
         } catch {
-            toast.error('Failed to fetch sections');
+            toast.error('Không tải được danh sách khối');
         } finally {
             setIsLoading(false);
         }
@@ -147,9 +161,9 @@ export const HomepageBuilder = () => {
             setSections(prev => prev.map(s =>
                 s.id === id ? { ...s, title: meta.title, cssClass: meta.cssClass, configuration: configJson } : s
             ));
-            toast.success('Configuration saved!');
+            toast.success('Đã lưu cấu hình!');
         } catch {
-            toast.error('Failed to save configuration');
+            toast.error('Không lưu được cấu hình');
             throw new Error('save failed');
         }
     };
@@ -158,7 +172,7 @@ export const HomepageBuilder = () => {
         setIsAdding(true);
         try {
             const created = await contentApi.admin.createHomepageSection({
-                title: `New ${type.replace(/_/g, ' ')} Section`,
+                title: `${SECTION_TYPE_LABELS[type] ?? type.replace(/_/g, ' ')} mới`,
                 sectionType: type,
                 configuration: '{}',
                 displayOrder: sections.length + 1,
@@ -167,24 +181,24 @@ export const HomepageBuilder = () => {
                 cssClass: '',
             });
             setSections(prev => [...prev, created]);
-            toast.success('Section added!');
+            toast.success('Đã thêm khối!');
         } catch {
-            toast.error('Failed to add section');
+            toast.error('Không thêm được khối');
         } finally {
             setIsAdding(false);
         }
     };
 
     const deleteSection = async (id: string) => {
-        const ok = await confirm({ message: 'Delete this section? This cannot be undone.', variant: 'danger' });
+        const ok = await confirm({ message: 'Xoá khối này? Không thể hoàn tác.', variant: 'danger' });
         if (!ok) return;
         setDeletingId(id);
         try {
             await contentApi.admin.deleteHomepageSection(id);
             setSections(prev => prev.filter(s => s.id !== id));
-            toast.success('Section deleted!');
+            toast.success('Đã xoá khối!');
         } catch {
-            toast.error('Failed to delete section');
+            toast.error('Không xoá được khối');
         } finally {
             setDeletingId(null);
         }
@@ -197,10 +211,10 @@ export const HomepageBuilder = () => {
         setSections(prev => prev.map(s => s.id === id ? { ...s, isActive: newIsActive } : s));
         try {
             await contentApi.admin.updateHomepageSection(id, { ...section, isActive: newIsActive, isVisible: newIsActive });
-            toast.success(newIsActive ? 'Section visible' : 'Section hidden');
+            toast.success(newIsActive ? 'Khối đã hiện' : 'Khối đã ẩn');
         } catch {
             setSections(prev => prev.map(s => s.id === id ? { ...s, isActive: !newIsActive } : s));
-            toast.error('Failed to toggle visibility');
+            toast.error('Không đổi được trạng thái hiển thị');
         }
     };
 
@@ -211,9 +225,9 @@ export const HomepageBuilder = () => {
                 sections.map((s, i) => ({ id: s.id, displayOrder: i + 1 }))
             );
             setHasOrderChanged(false);
-            toast.success('Homepage layout published!');
+            toast.success('Đã đăng bố cục trang chủ!');
         } catch {
-            toast.error('Failed to publish layout');
+            toast.error('Không đăng được bố cục');
         } finally {
             setIsSaving(false);
         }
@@ -223,7 +237,7 @@ export const HomepageBuilder = () => {
         return (
             <div className="max-w-6xl mx-auto p-8 flex flex-col items-center justify-center gap-4">
                 <Loader2 className="animate-spin text-red-500" size={48} />
-                <p className="text-gray-400 font-bold uppercase text-sm">Loading sections...</p>
+                <p className="text-gray-400 font-bold uppercase text-sm">Đang tải các khối...</p>
             </div>
         );
     }
@@ -232,15 +246,15 @@ export const HomepageBuilder = () => {
         <div className="max-w-6xl mx-auto">
             <header className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-semibold text-white uppercase tracking-wider">Homepage Builder</h1>
-                    <p className="text-gray-400 mt-1">Design and reorder sections of your homepage</p>
+                    <h1 className="text-3xl font-semibold text-white uppercase tracking-wider">Xây dựng trang chủ</h1>
+                    <p className="text-gray-400 mt-1">Thiết kế và sắp xếp lại các khối của trang chủ</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => window.open('/', '_blank')}
                         className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl transition flex items-center gap-2 text-sm"
                     >
-                        <Eye size={16} /> Preview
+                        <Eye size={16} /> Xem trước
                     </button>
                     <button
                         onClick={handlePublish}
@@ -248,7 +262,7 @@ export const HomepageBuilder = () => {
                         className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-5 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-accent-dark/20 text-sm"
                     >
                         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                        {isSaving ? 'Publishing...' : hasOrderChanged ? 'Publish Order' : 'Order Saved'}
+                        {isSaving ? 'Đang đăng...' : hasOrderChanged ? 'Đăng thứ tự' : 'Đã lưu thứ tự'}
                     </button>
                 </div>
             </header>
@@ -256,7 +270,7 @@ export const HomepageBuilder = () => {
             <div className="grid lg:grid-cols-4 gap-8">
                 {/* Section Type Palette */}
                 <div className="lg:col-span-1 border-r border-white/10 pr-8">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Add Section</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Thêm khối</h3>
                     <div className="space-y-2">
                         {SECTION_TYPES.map(type => (
                             <button
@@ -266,7 +280,7 @@ export const HomepageBuilder = () => {
                                 className="w-full bg-white/5 hover:bg-blue-500/10 hover:text-red-400 text-gray-400 p-3 rounded-xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group disabled:opacity-50"
                             >
                                 <div className="flex items-center justify-between font-bold text-xs uppercase">
-                                    {type.replace(/_/g, ' ')}
+                                    {SECTION_TYPE_LABELS[type] ?? type.replace(/_/g, ' ')}
                                     {isAdding
                                         ? <Loader2 size={14} className="animate-spin" />
                                         : <Plus size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -279,11 +293,11 @@ export const HomepageBuilder = () => {
 
                 {/* DnD Layout */}
                 <div className="lg:col-span-3">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Current Layout</h3>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Bố cục hiện tại</h3>
                     {sections.length === 0 ? (
                         <div className="text-center py-16 text-gray-500">
-                            <p className="text-lg font-bold">No sections yet</p>
-                            <p className="text-sm mt-2">Add a section from the left panel</p>
+                            <p className="text-lg font-bold">Chưa có khối nào</p>
+                            <p className="text-sm mt-2">Thêm khối từ bảng bên trái</p>
                         </div>
                     ) : (
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

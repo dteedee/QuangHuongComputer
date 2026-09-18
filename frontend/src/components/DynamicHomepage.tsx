@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import type { HomepageSection } from '../api/content';
 import { HeroSlider } from './homepage/HeroSlider';
 import { BannerGrid } from './homepage/BannerGrid';
@@ -11,6 +10,7 @@ import { PostGridSection } from './homepage/PostGridSection';
 import { CustomHtml } from './homepage/CustomHtml';
 import { ProductGridWithPanels } from './homepage/ProductGridWithPanels';
 import { BrandShowcase } from './homepage/BrandShowcase';
+import { Reveal } from './motion';
 
 interface DynamicHomepageProps {
     sections: HomepageSection[];
@@ -47,19 +47,17 @@ export const DynamicHomepage: React.FC<DynamicHomepageProps> = ({ sections }) =>
                 }
 
                 return (
-                    <motion.section
+                    <Reveal
                         key={section.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.05 }}
-                        transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
+                        as="section"
+                        index={index}
                         className={section.cssClass || undefined}
                     >
                         <Component 
                             title={section.title}
                             config={config}
                         />
-                    </motion.section>
+                    </Reveal>
                 );
             })}
         </div>

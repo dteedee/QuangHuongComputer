@@ -173,8 +173,13 @@ export function ContractForm({ isOpen, onClose, onSubmit, initial, loading, lock
     );
 }
 
+// Backend không tự sinh số hợp đồng khi tạo mới (chỉ tự sinh khi gia hạn, dạng "{số cũ}-R{n}") —
+// xem docs/api-contracts/hr.md §3. Gợi ý một số theo giờ hệ thống (không dùng Math.random để
+// tránh trùng số hợp đồng thật); người dùng luôn sửa được trước khi lưu, và DB có unique index
+// trên ContractNumber nên trùng số sẽ bị chặn ở backend (409).
 function autoNumber(): string {
     const d = new Date();
     const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-    return `HĐLĐ-${ym}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    const seq = `${d.getDate()}${d.getHours()}${d.getMinutes()}${d.getSeconds()}`;
+    return `HĐLĐ-${ym}-${seq}`;
 }

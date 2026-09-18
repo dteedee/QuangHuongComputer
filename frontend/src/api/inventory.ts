@@ -27,6 +27,37 @@ export interface InventoryItem {
     sku: string;
 }
 
+/** Row shape of `GET /api/inventory/stock` (contract §2) — one item/variant/warehouse. */
+export interface StockRow {
+    id: string;
+    productId: string;
+    /** Optional: `GET /inventory/stock` currently returns the raw entity with no
+     * productName/sku/warehouseName projection — see integration-requests-w3.md. */
+    productName?: string;
+    sku?: string;
+    variantId?: string;
+    variantName?: string;
+    warehouseId?: string;
+    warehouseName?: string;
+    quantityOnHand: number;
+    reservedQuantity: number;
+    availableQuantity: number;
+    averageCost: number;
+    lowStockThreshold?: number;
+    lastStockUpdate?: string;
+}
+
+export interface StockQueryParams {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    warehouseId?: string;
+    productId?: string;
+    lowStockOnly?: boolean;
+    sortBy?: 'quantityOnHand' | 'averageCost' | 'lastStockUpdate';
+    sortDir?: 'asc' | 'desc';
+}
+
 // ============================================
 // SUPPLIER ENUMS
 // ============================================
@@ -225,9 +256,19 @@ export interface CreatePurchaseOrderDto {
 // INVENTORY API
 // ============================================
 export const inventoryApi = {
-    getInventory: async () => {
-        const response = await client.get<InventoryItem[]>('/inventory/stock');
-        return response.data;
+    // NOTE: `/inventory/stock` is a paged endpoint on the backend (see `stockApi.getList`
+    // below, added against docs/api-contracts/inventory-stock.md §2). This wrapper stays
+    // array-shaped because `WorkOrderDetailPage.tsx` (tech track's file, not ours) still
+    // calls `.slice`/`.filter` on the result directly.
+    getInventory: async (): Promise<InventoryItem[]> => {
+        const response = await client.get<PagedResult<StockRow> | InventoryItem[]>('/inventory/stock', {
+            params: { page: 1, pageSize: 500 },
+        });
+        const data = response.data;
+        const rows = Array.isArray(data) ? data : data.items;
+        return rows.map((r): InventoryItem => ('quantity' in r
+            ? r
+            : { id: r.id, productId: r.productId, productName: r.productName, quantity: r.quantityOnHand, sku: r.sku ?? '' }));
     },
 
     // ========================================
@@ -329,6 +370,27 @@ export const inventoryApi = {
     },
 
     // ========================================
+    // STOCK API — contract §2 (W3-12 rewrite, replaces InventoryPortal's direct
+    // `catalogApi.updateProduct({ stockQuantity })` writes, which nulled SEO fields
+    // and left no movement/reason trail)
+    // ========================================
+    stock: {
+        getList: async (params?: StockQueryParams): Promise<PagedResult<StockRow>> => {
+            const response = await client.get<PagedResult<StockRow>>('/inventory/stock', { params });
+            return response.data;
+        },
+        getByProduct: async (productId: string): Promise<StockRow[]> => {
+            const response = await client.get<StockRow[]>(`/inventory/stock/${productId}`);
+            return response.data;
+        },
+        /** `PUT /inventory/stock/{id}/adjust` — empty `reason` → 400 `VALIDATION_FAILED`. */
+        adjust: async (id: string, amount: number, reason: string) => {
+            const response = await client.put(`/inventory/stock/${id}/adjust`, { amount, reason });
+            return response.data;
+        },
+    },
+
+    // ========================================
     // WAREHOUSE API (Phase 2.1)
     // ========================================
     warehouses: {
@@ -419,6 +481,14 @@ export const inventoryApi = {
             const response = await client.put(`/inventory/transfers/${id}/cancel`);
             return response.data;
         },
+        /**
+         * D09 — the transfer screen's primary action: approve + ship + receive in one
+         * transaction. The four individual steps above stay for the overflow menu.
+         */
+        complete: async (id: string): Promise<{ message: string; status: string; movedSerials: string[] }> => {
+            const response = await client.post(`/inventory/transfers/${id}/complete`);
+            return response.data;
+        },
     },
 
     // ========================================
@@ -458,6 +528,8 @@ export interface Warehouse {
     currentItemCount: number;
     isDefault: boolean;
     isActive: boolean;
+    /** D09: `Main`/`Branch`/`Showroom` = true, `KHO-LOI` (defective) = false — never read as available. */
+    isSellable: boolean;
     createdAt: string;
     updatedAt?: string;
     itemCount?: number;
@@ -578,11 +650,19 @@ export interface StockMovement {
     id: string;
     inventoryItemId: string;
     productId: string;
+    productName?: string;
+    variantId?: string;
+    warehouseId?: string;
+    warehouseName?: string;
     type: MovementType;
+    reasonCode?: string;
     quantity: number;
+    balanceAfter?: number;
+    unitCost?: number;
     reason: string;
     referenceId?: string;
     referenceType?: string;
+    documentReference?: string;
     movementDate: string;
     performedBy?: string;
     notes?: string;

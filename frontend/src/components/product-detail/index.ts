@@ -15,4 +15,7 @@ export { default as ProductDetailRelatedSection } from './product-detail-related
 export { default as ProductDetailStickyBuyBar } from './product-detail-sticky-buy-bar';
 export { default as ProductDetailBreadcrumb } from './product-detail-breadcrumb';
 export { default as ProductDetailAddedToCartToast } from './product-detail-added-to-cart-toast';
-export { ProductDetailLoadingState, ProductDetailNotFoundState } from './product-detail-status-states';
+export { ProductDetailLoadingState, ProductDetailNotFoundState, ProductDetailErrorState } from './product-detail-status-states';
+export { default as ProductKeySpecsSummary } from './product-key-specs-summary';
+export { default as ProductPolicyBlock } from './product-policy-block';
+export { default as ProductFlashCountdown } from './product-flash-countdown';

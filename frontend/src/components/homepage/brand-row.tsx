@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Award } from 'lucide-react';
+import { ROUTES } from '../../routes/route-paths';
+import { Reveal } from '../motion';
 
 // Text-logo pills (no third-party brand artwork) — matches hacom.vn's brand
 // strip pattern while staying image-free/legal-safe.
@@ -20,20 +21,14 @@ export const BrandRow = () => (
         </div>
         <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
             {BRANDS.map((brand, i) => (
-                <motion.div
-                    key={brand}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.04 }}
-                >
+                <Reveal key={brand} index={i}>
                     <Link
-                        to="/products"
+                        to={ROUTES.PRODUCTS}
                         className="flex items-center justify-center h-16 bg-white rounded-xl border-2 border-gray-100 hover:border-accent hover:text-accent text-gray-500 font-black text-sm tracking-wide transition-all hover:shadow-md"
                     >
                         {brand}
                     </Link>
-                </motion.div>
+                </Reveal>
             ))}
         </div>
     </div>

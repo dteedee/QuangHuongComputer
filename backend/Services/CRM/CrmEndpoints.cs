@@ -145,32 +145,49 @@ public static class CrmEndpoints
         {
             var recencyDist = await db.CustomerAnalytics
                 .GroupBy(c => c.RecencyScore)
-                .Select(g => new RfmSegmentCountDto(g.Key, g.Count()))
+                // Chiếu ra anonymous type rồi mới dựng DTO: EF Core 8 KHÔNG dịch được
+                // GroupBy(...).Select(g => new RecordCoConstructor(...)) sang SQL và ném
+                // "The LINQ expression could not be translated" -> endpoint trả 400 lúc chạy.
+                .Select(g => new { Score = g.Key, Count = g.Count() })
                 .OrderBy(x => x.Score)
                 .ToListAsync();
 
             var frequencyDist = await db.CustomerAnalytics
                 .GroupBy(c => c.FrequencyScore)
-                .Select(g => new RfmSegmentCountDto(g.Key, g.Count()))
+                // Chiếu ra anonymous type rồi mới dựng DTO: EF Core 8 KHÔNG dịch được
+                // GroupBy(...).Select(g => new RecordCoConstructor(...)) sang SQL và ném
+                // "The LINQ expression could not be translated" -> endpoint trả 400 lúc chạy.
+                .Select(g => new { Score = g.Key, Count = g.Count() })
                 .OrderBy(x => x.Score)
                 .ToListAsync();
 
             var monetaryDist = await db.CustomerAnalytics
                 .GroupBy(c => c.MonetaryScore)
-                .Select(g => new RfmSegmentCountDto(g.Key, g.Count()))
+                // Chiếu ra anonymous type rồi mới dựng DTO: EF Core 8 KHÔNG dịch được
+                // GroupBy(...).Select(g => new RecordCoConstructor(...)) sang SQL và ném
+                // "The LINQ expression could not be translated" -> endpoint trả 400 lúc chạy.
+                .Select(g => new { Score = g.Key, Count = g.Count() })
                 .OrderBy(x => x.Score)
                 .ToListAsync();
 
             var lifecycleDist = await db.CustomerAnalytics
                 .GroupBy(c => c.LifecycleStage)
-                .Select(g => new LifecycleStageCountDto(g.Key, g.Key.ToString(), g.Count()))
+                // Cùng lý do như trên, thêm nữa g.Key.ToString() trên enum cũng không dịch được.
+                .Select(g => new { Stage = g.Key, Count = g.Count() })
                 .ToListAsync();
 
+            var lifecycle = lifecycleDist
+                .Select(x => new LifecycleStageCountDto(x.Stage, x.Stage.ToString(), x.Count))
+                .ToList();
+            var recency = recencyDist.Select(x => new RfmSegmentCountDto(x.Score, x.Count)).ToList();
+            var frequency = frequencyDist.Select(x => new RfmSegmentCountDto(x.Score, x.Count)).ToList();
+            var monetary = monetaryDist.Select(x => new RfmSegmentCountDto(x.Score, x.Count)).ToList();
+
             return Results.Ok(new RfmDistributionDto(
-                recencyDist,
-                frequencyDist,
-                monetaryDist,
-                lifecycleDist
+                recency,
+                frequency,
+                monetary,
+                lifecycle
             ));
         });
     }

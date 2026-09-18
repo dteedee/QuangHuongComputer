@@ -1,18 +1,27 @@
-import { Users, Percent, BarChart3 } from 'lucide-react';
-import type { Promotion } from '../../api/promotions';
+import { Users, Percent, BarChart3, ShoppingCart, TicketPercent, Repeat } from 'lucide-react';
+import type { Promotion } from '../../api/promotions/admin';
+import type { PromotionEffectivenessRow } from '../../api/promotions/insights';
 
 interface PromotionEffectivenessReportProps {
   promotion: Promotion;
+  /**
+   * Real period totals from `GET /api/reports/promotion-effectiveness`
+   * (W3-18). Optional so `PromotionsPage.tsx` (W3-11), which does not fetch
+   * this report, keeps working unchanged — omitting it just keeps the older
+   * "no report endpoint yet" empty state below.
+   */
+  report?: PromotionEffectivenessRow | null;
 }
 
 /**
- * Backend chưa có endpoint báo cáo hiệu quả khuyến mãi theo ngày (doanh thu/chi phí
- * giảm giá). Trước đây component này tự sinh số liệu giả (doanh thu ước tính từ đơn
- * giá trung bình bịa) — đã bỏ để tránh hiển thị dữ liệu không có thật. Hiện chỉ hiển
- * thị số liệu thật có sẵn từ đối tượng Promotion (lượt dùng) + empty-state cho phần
- * biểu đồ doanh thu/ROI khi nào có endpoint báo cáo thật.
+ * `report` used to always be undefined (no endpoint existed — see git history).
+ * W2-16 shipped `/api/reports/promotion-effectiveness`; when the caller passes
+ * a matching row this now renders the real per-period numbers instead of the
+ * "chưa có endpoint" placeholder. There is still no per-day trend in the
+ * response (only period totals), so no line chart is drawn — that would be
+ * inventing a shape the API does not return (D12 rule 7).
  */
-export function PromotionEffectivenessReport({ promotion }: PromotionEffectivenessReportProps) {
+export function PromotionEffectivenessReport({ promotion, report }: PromotionEffectivenessReportProps) {
   const usagePct = promotion.maxTotalUsage
     ? Math.min(100, Math.round((promotion.currentUsage / promotion.maxTotalUsage) * 100))
     : null;
@@ -46,14 +55,22 @@ export function PromotionEffectivenessReport({ promotion }: PromotionEffectivene
         />
       </div>
 
-      <div className="border border-gray-200 rounded-xl p-8 bg-white flex flex-col items-center text-center gap-2">
-        <BarChart3 className="w-8 h-8 text-gray-300" />
-        <p className="text-sm font-semibold text-gray-700">Chưa có báo cáo doanh thu/ROI theo ngày</p>
-        <p className="text-xs text-gray-500 max-w-sm">
-          Hệ thống báo cáo hiệu quả khuyến mãi (doanh thu tạo ra, chi phí giảm giá, ROI theo thời gian)
-          chưa có endpoint dữ liệu thật. Sẽ bổ sung khi backend cung cấp báo cáo chuyên biệt.
-        </p>
-      </div>
+      {report ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard icon={<ShoppingCart className="w-5 h-5 text-green-600" />} label="Số đơn (kỳ)" value={report.orderCount.toLocaleString('vi-VN')} hint="Đơn đã ghi nhận doanh thu" tone="green" />
+          <StatCard icon={<TicketPercent className="w-5 h-5 text-red-600" />} label="Đã giảm (kỳ)" value={`${report.discountGiven.toLocaleString('vi-VN')}đ`} hint={`Doanh thu ${report.revenue.toLocaleString('vi-VN')}đ`} tone="red" />
+          <StatCard icon={<Repeat className="w-5 h-5 text-blue-600" />} label="Tỉ lệ dùng lại" value={`${report.redemptionRate}%`} hint={`${report.uniqueCustomers} khách khác nhau / ${report.usageCount} lượt`} tone="blue" />
+          <StatCard icon={<BarChart3 className="w-5 h-5 text-amber-600" />} label="Trung bình/đơn" value={report.orderCount > 0 ? `${Math.round(report.revenue / report.orderCount).toLocaleString('vi-VN')}đ` : '—'} hint="Doanh thu / số đơn" tone="amber" />
+        </div>
+      ) : (
+        <div className="border border-gray-200 rounded-xl p-8 bg-white flex flex-col items-center text-center gap-2">
+          <BarChart3 className="w-8 h-8 text-gray-300" />
+          <p className="text-sm font-semibold text-gray-700">Chưa có số liệu hiệu quả cho kỳ đã chọn</p>
+          <p className="text-xs text-gray-500 max-w-sm">
+            Chưa có lượt sử dụng khuyến mãi này được ghi nhận trong kỳ báo cáo đang chọn.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

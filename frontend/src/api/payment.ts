@@ -1,183 +1,237 @@
-
+/**
+ * Client thanh toán. Hợp đồng: `docs/api-contracts/payments.md`.
+ *
+ * Ba luật của D04 được phản ánh ngay trong kiểu dữ liệu ở đây:
+ *  - Không có đường "thành công giả": `mockWebhook` và `parseVNPayCallback` đã bị xoá.
+ *    Kết quả thanh toán CHỈ đọc từ `GET /payments/{id}` (tham số redirect không phải bằng chứng).
+ *  - Số tiền do server quyết định. `amount` trong body `/initiate` bị server bỏ qua hoàn toàn.
+ *  - Không API nào trả secret: `/admin/config` che mọi giá trị `isSecret`, `/admin/status` chỉ
+ *    trả TÊN khoá còn thiếu.
+ */
 import client from './client';
+import { providerEnumFor } from './payments/methods';
 
-// ============================================
-// Payment Types
-// ============================================
-export type PaymentProvider = 0 | 1 | 2 | 3 | 4; // 0=Stripe, 1=VNPay, 2=Momo, 3=COD, 4=SePay
+export type PaymentStatus =
+    | 'Pending'
+    | 'Succeeded'
+    | 'Failed'
+    | 'Cancelled'
+    | 'Refunded'
+    | 'PartiallyRefunded';
 
-export interface PaymentIntent {
+/** `GET /api/payments/{id}` — trạng thái công khai, không chứa secret. */
+export interface PaymentStatusResponse {
     id: string;
     orderId: string;
     amount: number;
+    amountRefunded: number;
     currency: string;
     status: PaymentStatus;
-    provider: PaymentProvider;
-    externalId?: string;
+    /** Tên enum backend: `COD` · `SePay` (= chuyển khoản VietQR) · `VnPay` · `Momo` · `Installment`. */
+    provider: string;
+    externalId?: string | null;
+    paymentCode?: string | null;
+    expiresAt?: string | null;
+    confirmedAt?: string | null;
+    settlement: string;
     createdAt: string;
 }
 
-export type PaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled';
+/** Dữ liệu màn VietQR (D04 mục 3b) — QR KHÔNG BAO GIỜ đứng một mình. */
+export interface PaymentTransferInfo {
+    bankBin: string;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    amount: number;
+    paymentCode: string;
+    qrPayload: string;
+    /** Đường dẫn ảnh QR; cần token nên phải tải bằng `fetchQrObjectUrl`, không đặt thẳng vào `<img src>`. */
+    qrImageUrl: string;
+    expiresAt?: string | null;
+    notice: string;
+}
+
+/** `kind`: `none` (COD) · `bank_transfer` (VietQR) · `redirect` (cổng → dùng `paymentUrl`). */
+export type PaymentInstructionKind = 'none' | 'bank_transfer' | 'redirect';
+
+export interface PaymentInitiationResponse {
+    paymentId: string;
+    status: PaymentStatus;
+    amount: number;
+    /** true khi tái sử dụng một intent `Pending` đã có của cùng (đơn, provider). */
+    reused: boolean;
+    kind: PaymentInstructionKind;
+    paymentUrl: string;
+    paymentCode?: string | null;
+    expiresAt?: string | null;
+    transfer?: PaymentTransferInfo | null;
+    message?: string | null;
+}
 
 export interface InitiatePaymentRequest {
     orderId: string;
-    amount: number;
-    provider: PaymentProvider;
+    /** Bị server BỎ QUA (giữ để không phá hợp đồng cũ) — số tiền luôn là tổng đơn đọc ở server. */
+    amount?: number;
+    /** Giá trị enum `PaymentProvider`. Dùng `initiateByMethodCode` để khỏi nhớ số. */
+    provider: number;
     bankCode?: string;
 }
 
-export interface InitiatePaymentResponse {
-    paymentId: string;
-    clientSecret: string;
-    status: PaymentStatus;
-    paymentUrl?: string;
+/** `GET /api/payments/admin/status` — bảng "Đã cấu hình / Thiếu: ...". */
+export interface PaymentProviderStatus {
+    provider: string;
+    code: string;
+    name: string;
+    configured: boolean;
+    direct: boolean;
+    /** TÊN khoá còn thiếu, không bao giờ là giá trị. */
+    missingKeys: string[];
 }
 
-// ============================================
-// Payment API Functions
-// ============================================
-export const paymentApi = {
-    // Initiate a payment
-    initiate: async (data: InitiatePaymentRequest): Promise<InitiatePaymentResponse> => {
-        const response = await client.post('/payments/initiate', data);
-        return response.data;
-    },
-
-    // Get payment status
-    getPayment: async (id: string): Promise<PaymentIntent> => {
-        const response = await client.get(`/payments/${id}`);
-        return response.data;
-    },
-
-    // Mock webhook — chỉ dùng khi dev/test local, endpoint test backend không tồn tại ở production.
-    mockWebhook: async (data: { paymentId: string; success: boolean }): Promise<void> => {
-        if (!import.meta.env.DEV) {
-            throw new Error('mockWebhook chỉ khả dụng trong môi trường development.');
-        }
-        await client.post('/payments/webhook/mock', data);
-    },
-
-    // Helper to create VNPay payment URL (frontend-side)
-    createVNPayUrl: (paymentUrl: string, returnUrl?: string): string => {
-        const baseReturnUrl = returnUrl || `${window.location.origin}/payment/callback`;
-        return paymentUrl.includes('?')
-            ? `${paymentUrl}&vnp_ReturnUrl=${encodeURIComponent(baseReturnUrl)}`
-            : `${paymentUrl}?vnp_ReturnUrl=${encodeURIComponent(baseReturnUrl)}`;
-    },
-
-    // Helper to parse VNPay callback response
-    parseVNPayCallback: (params: URLSearchParams): {
-        success: boolean;
-        orderId: string;
-        amount: number;
-        message: string;
-    } => {
-        const responseCode = params.get('vnp_ResponseCode');
-        const success = responseCode === '00';
-        const orderId = params.get('vnp_OrderInfo')?.replace('Thanh toan don hang ', '') || '';
-        const amount = parseInt(params.get('vnp_Amount') || '0') / 100;
-
-        return {
-            success,
-            orderId,
-            amount,
-            message: success ? 'Thanh toán thành công' : 'Thanh toán thất bại'
-        };
-    },
-
-    // --- Admin Endpoints ---
-    getSePayTransactions: async (): Promise<SePayTransaction[]> => {
-        const response = await client.get('/payments/admin/sepay-transactions');
-        return response.data;
-    },
-
-    getSePayStats: async (): Promise<SePayStats> => {
-        const response = await client.get('/payments/admin/sepay-stats');
-        return response.data;
-    },
-
-    getPaymentConfigs: async (): Promise<PaymentConfig[]> => {
-        const response = await client.get('/payments/admin/config');
-        return response.data;
-    },
-
-    updatePaymentConfig: async (data: PaymentConfig): Promise<PaymentConfig> => {
-        const response = await client.post('/payments/admin/config', data);
-        return response.data;
-    }
-};
-
-export interface SePayTransaction {
-    id: number;
-    gateway: string;
-    transactionDate: string;
-    accountNumber: string;
-    subAccount?: string;
-    content: string;
-    transferType: string;
-    transferAmount: number;
-    accumulated: number; // Current balance
-    code?: string;
-    referenceCode?: string;
-    description?: string;
-    isProcessed: boolean;
-    relatedOrderId?: string;
-    processingError?: string;
+export interface PaymentWebhookUrls {
+    sePayWebhook: string;
+    vnPayReturn: string;
+    moMoIpn: string;
 }
 
-export interface SePayStats {
-    totalRevenue: number;
-    todayRevenue: number;
-    totalTransactions: number;
-    successRate: number;
-}
-
-export interface PaymentConfig {
+export interface PaymentConfigEntry {
     key: string;
+    /** Giá trị đã che `****1234` khi `isSecret` — server không bao giờ trả secret thật. */
     value: string;
     description?: string;
     isSecret: boolean;
+    updatedAt?: string;
 }
 
-// ============================================
-// Convenience Payment Initiators
-// ============================================
-export async function initiateCODPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
-    const response = await client.post('/payments/initiate', { orderId, amount, provider: 3 }); // 3=COD
-    return response.data;
-}
+export const paymentApi = {
+    /** Tạo/tái dùng intent. Ném lỗi API chuẩn (`PAYMENT_METHOD_UNAVAILABLE` 400, ...). */
+    initiate: async (data: InitiatePaymentRequest): Promise<PaymentInitiationResponse> => {
+        const { data: res } = await client.post<PaymentInitiationResponse>('/payments/initiate', data);
+        return res;
+    },
 
-export async function initiateMoMoPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
-    const response = await client.post('/payments/initiate', { orderId, amount, provider: 2 }); // 2=Momo
-    return response.data;
-}
+    /** Tiện ích: nhận mã phương thức của `/methods` thay vì số enum. */
+    initiateByMethodCode: async (
+        orderId: string,
+        methodCode: string,
+        bankCode?: string,
+    ): Promise<PaymentInitiationResponse> => {
+        const provider = providerEnumFor(methodCode);
+        if (provider === null) {
+            throw new Error(`Phương thức thanh toán không được hỗ trợ: ${methodCode}`);
+        }
+        return paymentApi.initiate({ orderId, provider, bankCode });
+    },
 
-export async function initiateZaloPayPayment(orderId: string, amount: number): Promise<InitiatePaymentResponse> {
-    // ZaloPay uses provider string; extend PaymentProvider if backend supports it
-    const response = await client.post('/payments/initiate', { orderId, amount, provider: 'ZaloPay' });
-    return response.data;
-}
+    /** Nguồn sự thật DUY NHẤT của kết quả thanh toán (trang kết quả poll endpoint này). */
+    get: async (id: string): Promise<PaymentStatusResponse> => {
+        const { data } = await client.get<PaymentStatusResponse>(`/payments/${id}`);
+        return data;
+    },
 
-// Helper to get payment provider label
-export const getPaymentProviderLabel = (provider: PaymentProvider): string => {
-    const labels: Record<PaymentProvider, string> = {
-        0: 'Stripe',
-        1: 'VNPay',
-        2: 'Momo',
-        3: 'COD',
-        4: 'SePay'
-    };
-    return labels[provider] || 'Unknown';
+    /**
+     * Ảnh QR nằm trong nhóm đã yêu cầu đăng nhập ⇒ `<img src>` thuần sẽ 401.
+     * Tải kèm token rồi tạo blob URL. Nơi gọi phải `URL.revokeObjectURL` khi unmount.
+     */
+    fetchQrObjectUrl: async (id: string, guestToken?: string): Promise<string> => {
+        const url = guestToken
+            ? `/payments/guest/${id}/qr.png?token=${encodeURIComponent(guestToken)}`
+            : `/payments/${id}/qr.png`;
+        const { data } = await client.get<Blob>(url, { responseType: 'blob' });
+        return URL.createObjectURL(data);
+    },
+
+    /* --- khách vãng lai: token ký cho ĐÚNG một đơn (payments.md §3) --------- */
+    guestInitiate: async (
+        orderId: string,
+        token: string,
+        methodCode: string,
+        bankCode?: string,
+    ): Promise<PaymentInitiationResponse> => {
+        const provider = providerEnumFor(methodCode);
+        if (provider === null) {
+            throw new Error(`Phương thức thanh toán không được hỗ trợ: ${methodCode}`);
+        }
+        const { data } = await client.post<PaymentInitiationResponse>('/payments/guest/initiate', {
+            orderId, token, provider, bankCode,
+        });
+        return data;
+    },
+
+    guestGet: async (id: string, token: string): Promise<PaymentStatusResponse> => {
+        const { data } = await client.get<PaymentStatusResponse>(
+            `/payments/guest/${id}?token=${encodeURIComponent(token)}`,
+        );
+        return data;
+    },
+
+    /* --- admin (`Payments.Configure`) -------------------------------------- */
+    getProviderStatus: async (): Promise<PaymentProviderStatus[]> => {
+        const { data } = await client.get<PaymentProviderStatus[]>('/payments/admin/status');
+        return data;
+    },
+
+    getWebhookUrls: async (): Promise<PaymentWebhookUrls> => {
+        const { data } = await client.get<PaymentWebhookUrls>('/payments/admin/webhook-urls');
+        return data;
+    },
+
+    getConfigs: async (): Promise<PaymentConfigEntry[]> => {
+        const { data } = await client.get<PaymentConfigEntry[]>('/payments/admin/config');
+        return data;
+    },
+
+    /** Chỉ dùng cho thiết lập KHÔNG mật (`isSecret` luôn false — secret chỉ nằm ở env, D04 R5). */
+    saveConfig: async (entry: {
+        key: string;
+        value: string;
+        description?: string;
+    }): Promise<{ key: string; saved: boolean }> => {
+        const { data } = await client.post('/payments/admin/config', {
+            ...entry,
+            description: entry.description ?? '',
+            isSecret: false,
+        });
+        return data;
+    },
 };
 
-// Helper to get payment status color
-export const getPaymentStatusColor = (status: PaymentStatus): string => {
-    const colors: Record<PaymentStatus, string> = {
-        Pending: 'bg-yellow-100 text-yellow-800',
-        Processing: 'bg-blue-100 text-blue-800',
-        Succeeded: 'bg-green-100 text-green-800',
-        Failed: 'bg-red-100 text-red-800',
-        Cancelled: 'bg-gray-100 text-gray-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+/** Nhãn trạng thái tiếng Việt cho màn kết quả và trang admin. */
+export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+    Pending: 'Đang chờ thanh toán',
+    Succeeded: 'Đã thanh toán',
+    Failed: 'Thanh toán thất bại',
+    Cancelled: 'Đã huỷ',
+    Refunded: 'Đã hoàn tiền',
+    PartiallyRefunded: 'Đã hoàn một phần',
 };
+
+/** Trạng thái cuối — không cần poll tiếp. */
+export const isTerminalPaymentStatus = (s: PaymentStatus): boolean =>
+    s !== 'Pending';
+
+/**
+ * @deprecated Ví MoMo nằm trong backlog D04 (chưa có khoá ⇒ vắng khỏi `/methods`, `/initiate`
+ * trả 400). Chỉ còn tồn tại vì `components/checkout/use-checkout-submit.ts` (thuộc W3-2) vẫn
+ * import — xem integration-requests-w3.md, W3-2 gỡ lời gọi rồi hàm này bị xoá.
+ */
+export async function initiateMoMoPayment(
+    orderId: string,
+    /** Bị bỏ qua — server tự đọc tổng đơn. Giữ tham số cho call site cũ. */
+    _amount?: number,
+): Promise<PaymentInitiationResponse> {
+    return paymentApi.initiateByMethodCode(orderId, 'momo');
+}
+
+/**
+ * @deprecated D04 đã XOÁ ZaloPay khỏi hệ thống (không còn provider, không còn route webhook).
+ * Giữ lại nguyên nhân y hệt hàm trên; gọi vào đây luôn thất bại một cách tường minh thay vì
+ * gửi một request chắc chắn 400.
+ */
+export async function initiateZaloPayPayment(
+    _orderId?: string,
+    _amount?: number,
+): Promise<PaymentInitiationResponse> {
+    throw new Error('Phương thức ZaloPay đã ngừng hỗ trợ. Vui lòng chọn phương thức khác.');
+}

@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, ArrowLeft, Mail } from 'lucide-react';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
 import { validationMessages as msg } from '../lib/validation/messages';
 
+/**
+ * [W3-8 fix] `ResetPasswordDto` (`backend/Services/Identity/DTOs/AuthDtos.cs`) is
+ * `{ email, code, newPassword }` (`token` accepted as a legacy alias for `code`) — a reset code is
+ * looked up by e-mail, never by the code alone (that WAS a takeover bug per that file's own
+ * comment). The reset e-mail's link (`EmailService.cs`) is a bare `/reset-password` with NO query
+ * params at all — the 6-digit code is in the e-mail body, not the URL. This page previously asked
+ * only for a "token" (from a `?token=` query param that never exists) and never sent `email`, so
+ * every reset attempt failed. Now collects e-mail + the 6-digit code + new password.
+ */
 export const ResetPasswordPage = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const urlToken = searchParams.get('token');
 
-    const [token, setToken] = useState(urlToken || '');
+    const [email, setEmail] = useState(searchParams.get('email') || '');
+    const [code, setCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -23,15 +32,18 @@ export const ResetPasswordPage = () => {
         setError('');
 
         const schema = z.object({
-            token: z.string().min(1, msg.requireInput('Mã xác nhận')),
-            newPassword: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+            email: z.string().min(1, msg.requireInput('Email')).email(msg.email),
+            code: z.string().regex(/^[0-9]{6}$/, 'Mã xác nhận gồm 6 chữ số'),
+            // Mirrors the Identity password policy (RequiredLength=6, no complexity) — see
+            // `schemas/user.ts`'s `passwordPolicySchema` / `AuthRequestValidators.cs`.
+            newPassword: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự').max(128, 'Mật khẩu tối đa 128 ký tự'),
             confirmPassword: z.string().min(1, msg.requireInput('Xác nhận mật khẩu')),
         }).refine((data) => data.newPassword === data.confirmPassword, {
             message: 'Mật khẩu xác nhận không khớp',
             path: ['confirmPassword']
         });
 
-        const result = schema.safeParse({ token, newPassword, confirmPassword });
+        const result = schema.safeParse({ email, code, newPassword, confirmPassword });
         if (!result.success) {
             const fieldErrors: Record<string, string> = {};
             result.error.issues.forEach(issue => {
@@ -45,11 +57,17 @@ export const ResetPasswordPage = () => {
         setIsLoading(true);
 
         try {
-            await client.post('/auth/reset-password', { token, newPassword });
+            await client.post('/auth/reset-password', { email, code, newPassword });
             toast.success('Mật khẩu đã được đặt lại thành công!');
             navigate('/login');
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.response?.data?.Message || 'Mã xác nhận không hợp lệ hoặc đã hết hạn';
+            if (error?.response?.status === 429) {
+                const retryMessage = 'Bạn đã thử quá nhiều lần. Vui lòng thử lại sau ít phút.';
+                setError(retryMessage);
+                toast.error(retryMessage);
+                return;
+            }
+            const errorMessage = error.response?.data?.Message || error.response?.data?.message || 'Mã xác nhận không hợp lệ hoặc đã hết hạn';
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -82,23 +100,42 @@ export const ResetPasswordPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Token */}
+                        {/* Email — the code is looked up by e-mail, never by the code alone */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Mã xác nhận
+                                Email
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all ${errors.email ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
+                                    placeholder="name@gmail.com"
+                                />
+                            </div>
+                            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                        </div>
+
+                        {/* Code */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Mã xác nhận (6 số, gửi qua email)
                             </label>
                             <div className="relative">
                                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input
                                     type="text"
-                                    value={token}
-                                    onChange={(e) => setToken(e.target.value)}
-                                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all font-mono tracking-widest ${errors.token ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
+                                    inputMode="numeric"
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all font-mono tracking-widest ${errors.code ? 'border-red-400 bg-red-50/50' : 'border-gray-200'}`}
                                     placeholder="000000"
-                                    maxLength={20}
+                                    maxLength={6}
                                 />
                             </div>
-                            {errors.token && <p className="text-red-500 text-sm mt-1">{errors.token}</p>}
+                            {errors.code && <p className="text-red-500 text-sm mt-1">{errors.code}</p>}
                         </div>
 
                         {/* New Password */}

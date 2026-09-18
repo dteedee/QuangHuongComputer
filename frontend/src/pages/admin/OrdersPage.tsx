@@ -1,936 +1,133 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { SearchableSelect } from '../../components/ui/SearchableSelect';
-import { AsyncSearchableSelect } from '../../components/ui/AsyncSearchableSelect';
-import { useSearchParams } from 'react-router-dom';
-import { Eye, Filter, Loader2, Search, ArrowRight, Clock, CheckCircle2, Package, XCircle, Truck, Plus, X, Check, ShoppingCart, User, MapPin, FileText, Calendar, RefreshCw, CreditCard, DollarSign, LayoutList, KanbanSquare } from 'lucide-react';
-import { salesApi, type Order, type OrderStatus } from '../../api/sales';
-import { catalogApi, type Product } from '../../api/catalog';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+/**
+ * Admin orders (W3-10 rewrite). Was 936 LOC moving orders any-to-any through
+ * a raw status dropdown with no customer/payment data and a toy create-order
+ * modal that attributed the order to the admin — see phase-58's Overview.
+ * Now: server paging + filters, state-machine-driven actions via
+ * `OrderDetailDrawer`, kanban restricted to legal moves, and order creation
+ * routes to POS (the one real order-creation surface) instead of faking one.
+ */
+import { useState, useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Store } from 'lucide-react';
+import { salesAdminOrdersApi } from '../../api/sales/admin-orders';
+import type { Order } from '../../api/sales/types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryBoundary } from '../../components/ui/query-boundary';
+import { useConfirm, usePrompt } from '../../context/ConfirmContext';
+import { OrdersFilterBar, type OrderFilters } from './orders/orders-filter-bar';
+import { OrdersListTable } from './orders/orders-list-table';
+import { OrdersKanbanBoard } from './orders/orders-kanban-board';
+import { OrderDetailDrawer } from './orders/order-detail-drawer';
 import toast from 'react-hot-toast';
-import { formatCurrency } from '../../utils/format';
-import { DndContext, DragOverlay, useSensors, useSensor, PointerSensor, closestCorners, useDraggable, useDroppable } from '@dnd-kit/core';
-import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
-import { z } from 'zod';
-import { validationMessages as msg } from '../../lib/validation/messages';
 
-// Filter state interface
-interface OrderFilters {
-    search: string;
-    status: string;
-    paymentStatus: string;
-    dateRange: { from: string; to: string };
-}
-
-const initialFilters: OrderFilters = {
-    search: '',
-    status: 'all',
-    paymentStatus: 'all',
-    dateRange: { from: '', to: '' }
-};
-
-// Stable empty-array reference — see usage at `rawOrders` below for why this
-// matters (prevents an infinite render loop while the orders query loads).
-const EMPTY_ORDERS: Order[] = [];
-
-// Kanban Stages Configuration
-const KANBAN_STAGES = [
-    { id: 'Pending', label: 'Chờ xác nhận', color: '#f97316', bg: 'bg-orange-50' },
-    { id: 'Confirmed', label: 'Đã xác nhận', color: '#3b82f6', bg: 'bg-blue-50' },
-    { id: 'Shipped', label: 'Đang giao', color: '#a855f7', bg: 'bg-purple-50' },
-    { id: 'Delivered', label: 'Đã giao', color: '#10b981', bg: 'bg-emerald-50' },
-    { id: 'Completed', label: 'Hoàn tất', color: '#047857', bg: 'bg-emerald-100' }
-];
-
-// Kanban Droppable Column
-const DroppableColumn = ({ stage, children, count }: { stage: any, children: React.ReactNode, count: number }) => {
-    const { isOver, setNodeRef } = useDroppable({
-        id: stage.id,
-    });
-
-    return (
-        <div
-            ref={setNodeRef}
-            className={`w-80 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 flex flex-col transition-colors border-2 ${isOver ? 'border-accent/30 bg-accent/5' : 'border-transparent'}`}
-        >
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: stage.color }} />
-                    <h3 className="font-bold text-gray-800 dark:text-gray-200 uppercase tracking-tight text-sm flex items-center gap-2">
-                        {stage.label}
-                    </h3>
-                </div>
-                <span className="text-xs px-2 py-0.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full font-semibold drop-shadow-sm border border-gray-100 dark:border-gray-700">
-                    {count}
-                </span>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-3 min-h-[150px] custom-scrollbar pb-2 pr-1">
-                {children}
-            </div>
-        </div>
-    );
-};
-
-// Kanban Draggable Card
-const DraggableOrderCard = ({ order, onClick }: { order: Order, onClick: () => void }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: order.id,
-        data: { order },
-    });
-
-    const style = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: isDragging ? 999 : undefined,
-        opacity: isDragging ? 0.3 : 1,
-    } : undefined;
-
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing">
-            <div 
-                className={`bg-white dark:bg-gray-900 rounded-xl p-4 border transition-all ${isDragging ? 'shadow-md ring-2 ring-accent border-transparent' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'}`}
-                onClick={onClick}
-            >
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-semibold text-gray-900 data-card-id uppercase">#{order.orderNumber}</span>
-                    <span className="text-xs font-semibold text-gray-400 uppercase">{new Date(order.orderDate).toLocaleDateString('vi-VN')}</span>
-                </div>
-                <p className="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-1 mb-1">{order.items?.[0]?.productName || 'N/A'}</p>
-                {order.items?.length > 1 && (
-                    <p className="text-xs font-semibold text-accent uppercase bg-red-50 dark:bg-red-500/10 w-fit px-1.5 py-0.5 rounded italic mb-2">+{order.items.length - 1} sp</p>
-                )}
-                <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
-                        {order.paymentStatus === 'Paid' ? 'Đã T.Toán' : 'Chưa T.Toán'}
-                    </span>
-                    <span className="text-sm font-semibold text-accent italic">{formatCurrency(order.totalAmount)}</span>
-                </div>
-            </div>
-        </div>
-    );
-};
+const initialFilters: OrderFilters = { search: '', status: 'all', paymentStatus: 'all', channel: 'all', dateRange: { from: '', to: '' } };
 
 export const AdminOrdersPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const urlSearch = searchParams.get('search') || '';
     const urlOrderId = searchParams.get('orderId') || '';
 
-    const [filters, setFilters] = useState<OrderFilters>({
-        ...initialFilters,
-        search: urlSearch // Initialize with URL search param
-    });
-    const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [filters, setFilters] = useState<OrderFilters>({ ...initialFilters, search: searchParams.get('search') || '' });
+    const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(urlOrderId || null);
     const [page, setPage] = useState(1);
     const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(urlOrderId || null);
     const highlightedRowRef = useRef<HTMLTableRowElement>(null);
     const queryClient = useQueryClient();
-    
-    const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8, // Drag starts after 8px to allow clicking
-            },
-        })
-    );
+    const confirm = useConfirm();
+    const { promptText } = usePrompt();
 
-    // Handle URL search param changes
-    useEffect(() => {
-        if (urlSearch && urlSearch !== filters.search) {
-            setFilters(prev => ({ ...prev, search: urlSearch }));
-            setDebouncedSearch(urlSearch);
-        }
-    }, [urlSearch]);
-
-    // Handle orderId from URL - highlight the order
     useEffect(() => {
         if (urlOrderId) {
-            setHighlightedOrderId(urlOrderId);
-            // Clear the orderId from URL after 5 seconds
-            const timer = setTimeout(() => {
-                searchParams.delete('orderId');
-                setSearchParams(searchParams, { replace: true });
-                setHighlightedOrderId(null);
-            }, 5000);
+            const timer = setTimeout(() => { searchParams.delete('orderId'); setSearchParams(searchParams, { replace: true }); setHighlightedOrderId(null); }, 5000);
             return () => clearTimeout(timer);
         }
     }, [urlOrderId]);
 
-    // Scroll to highlighted order.
-    // Note: refs must not be listed as effect deps (mutating .current doesn't
-    // trigger re-renders, so React can't reliably react to it — this was
-    // previously `[highlightedOrderId, highlightedRowRef.current]`, an
-    // anti-pattern that risked unpredictable extra render passes).
     useEffect(() => {
-        if (highlightedOrderId && highlightedRowRef.current) {
-            highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (highlightedOrderId && highlightedRowRef.current) highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, [highlightedOrderId]);
 
-    // Debounce search term
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(filters.search);
-            setPage(1);
-        }, 500);
+        const timer = setTimeout(() => { setDebouncedSearch(filters.search); setPage(1); }, 500);
         return () => clearTimeout(timer);
     }, [filters.search]);
 
-    // Reset page when filters change
-    useEffect(() => {
-        setPage(1);
-    }, [filters.status, filters.paymentStatus, filters.dateRange]);
+    useEffect(() => { setPage(1); }, [filters.status, filters.paymentStatus, filters.channel, filters.dateRange]);
 
-    const handleFilterChange = (key: string, value: any) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-    };
+    const handleFilterChange = (key: keyof OrderFilters, value: any) => setFilters((prev) => ({ ...prev, [key]: value }));
+    const resetFilters = () => setFilters(initialFilters);
+    const hasActiveFilters = !!(filters.search || filters.status !== 'all' || filters.paymentStatus !== 'all' || filters.channel !== 'all' || filters.dateRange.from || filters.dateRange.to);
 
-    const resetFilters = () => {
-        setFilters(initialFilters);
-    };
-
-    const hasActiveFilters = filters.search || filters.status !== 'all' || filters.paymentStatus !== 'all' || filters.dateRange.from || filters.dateRange.to;
-
-    const { data: response, isLoading } = useQuery({
-        queryKey: ['admin-orders', page, debouncedSearch, filters.status],
-        queryFn: () => salesApi.admin.getOrders(page, 20, debouncedSearch || undefined, filters.status !== 'all' ? filters.status : undefined),
+    const ordersQuery = useQuery({
+        queryKey: ['admin-orders', page, debouncedSearch, filters.status, filters.paymentStatus, filters.channel, filters.dateRange.from, filters.dateRange.to],
+        queryFn: () => salesAdminOrdersApi.admin.getOrders(page, 20, debouncedSearch || undefined, filters.status !== 'all' ? filters.status : undefined, {
+            paymentStatus: filters.paymentStatus, channel: filters.channel, from: filters.dateRange.from || undefined, to: filters.dateRange.to || undefined,
+        }),
     });
 
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string, status: string }) => salesApi.orders.updateStatus(id, status as any),
-        onSuccess: () => {
+    const handleCancelOrder = async (order: Order) => {
+        const reason = await promptText({ title: `Huỷ đơn #${order.orderNumber}`, message: 'Lý do huỷ đơn', required: true });
+        if (!reason) return;
+        const ok = await confirm({ title: 'Xác nhận huỷ đơn?', message: `Đơn #${order.orderNumber} sẽ chuyển sang trạng thái Đã hủy.`, variant: 'danger' });
+        if (!ok) return;
+        try {
+            await salesAdminOrdersApi.cancel(order.id, reason);
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Cập nhật trạng thái thành công!');
-        },
-        onError: () => toast.error('Cập nhật thất bại!')
-    });
-
-    const cancelMutation = useMutation({
-        mutationFn: ({ id, reason }: { id: string; reason: string }) => salesApi.orders.cancel(id, reason),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            queryClient.invalidateQueries({ queryKey: ['admin-orders-stats'] });
             toast.success('Đã hủy đơn hàng!');
-            setSelectedOrder(null);
-        },
-        onError: (err: any) => toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Hủy đơn thất bại!')
-    });
-
-    // Trạng thái không thể hủy — đơn đã hoàn tất/kết thúc vòng đời.
-    const NON_CANCELLABLE_STATUSES = ['Delivered', 'Completed', 'Cancelled'];
-    const handleCancelOrder = (order: Order) => {
-        const reason = window.prompt(`Nhập lý do hủy đơn #${order.orderNumber}:`);
-        if (reason === null) return; // user bấm Hủy prompt
-        if (!window.confirm(`Xác nhận hủy đơn #${order.orderNumber}?`)) return;
-        cancelMutation.mutate({ id: order.id, reason: reason || 'Hủy bởi quản trị viên' });
-    };
-
-    const createOrderMutation = useMutation({
-        mutationFn: (data: any) => salesApi.orders.create(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Tạo đơn hàng thành công!');
-            setIsCreateModalOpen(false);
-        },
-        onError: () => toast.error('Tạo đơn hàng thất bại!')
-    });
-
-    // `response?.orders || []` would create a brand-new array reference on every
-    // render while `response` is undefined (loading). That reference then flows
-    // into the `orders` useMemo below and the `localOrders` sync effect further
-    // down, causing setLocalOrders → re-render → new [] → effect fires → ...
-    // an infinite "Maximum update depth exceeded" loop. Reuse a stable empty
-    // array so the identity doesn't change across renders while loading.
-    const rawOrders = response?.orders || EMPTY_ORDERS;
-
-    // Apply client-side filters for payment status and date range
-    const orders = useMemo(() => {
-        return rawOrders.filter(order => {
-            // Payment status filter
-            if (filters.paymentStatus !== 'all' && order.paymentStatus !== filters.paymentStatus) return false;
-
-            // Date range filter
-            if (filters.dateRange.from) {
-                const orderDate = new Date(order.orderDate);
-                const fromDate = new Date(filters.dateRange.from);
-                if (orderDate < fromDate) return false;
-            }
-            if (filters.dateRange.to) {
-                const orderDate = new Date(order.orderDate);
-                const toDate = new Date(filters.dateRange.to);
-                toDate.setHours(23, 59, 59, 999);
-                if (orderDate > toDate) return false;
-            }
-
-            return true;
-        });
-    }, [rawOrders, filters.paymentStatus, filters.dateRange.from, filters.dateRange.to]);
-    
-    
-    // Local optimistic state for Kanban
-    const [localOrders, setLocalOrders] = useState<Order[]>([]);
-    useEffect(() => {
-        setLocalOrders(orders);
-    }, [orders]);
-
-    const handleDragStart = (event: DragStartEvent) => {
-        const { active } = event;
-        const order = active.data.current?.order as Order;
-        if (order) setActiveOrder(order);
-    };
-
-    const handleDragEnd = async (event: DragEndEvent) => {
-        setActiveOrder(null);
-        const { active, over } = event;
-        if (!over) return;
-
-        const orderId = String(active.id);
-        const newStatus = String(over.id);
-
-        const currentOrder = localOrders.find(o => o.id === orderId);
-        if (!currentOrder || currentOrder.status === newStatus) return;
-
-        // Optimistic UI Update
-        setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus as OrderStatus } : o));
-
-        const toastId = toast.loading('Đang cập nhật trạng thái...');
-        try {
-            await salesApi.orders.updateStatus(orderId, newStatus as any);
-            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success('Đã cập nhật trạng thái!', { id: toastId });
-        } catch (error) {
-            console.error('Failed to update status:', error);
-            setLocalOrders(orders); // Rollback
-            toast.error('Lỗi khi cập nhật trạng thái', { id: toastId });
+        } catch (err: any) {
+            toast.error(err?.response?.data?.error || 'Hủy đơn thất bại!');
         }
     };
 
-    const total = response?.total || rawOrders.length;
-
-    const getStatusInfo = (status: string) => {
-        switch (status) {
-            case 'Draft': return { color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock size={16} />, label: 'Bản nháp' };
-            case 'Pending': return { color: 'text-orange-500', bg: 'bg-orange-50', icon: <Clock size={16} />, label: 'Chờ xác nhận' };
-            case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Đã xác nhận' };
-            case 'Paid': return { color: 'text-indigo-500', bg: 'bg-indigo-50', icon: <CheckCircle2 size={16} />, label: 'Đã thanh toán' };
-            case 'Shipped': return { color: 'text-purple-500', bg: 'bg-purple-50', icon: <Truck size={16} />, label: 'Đang giao' };
-            case 'Delivered': return { color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <Package size={16} />, label: 'Đã giao' };
-            case 'Completed': return { color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <CheckCircle2 size={16} />, label: 'Hoàn tất' };
-            case 'Cancelled': return { color: 'text-rose-500', bg: 'bg-rose-50', icon: <XCircle size={16} />, label: 'Đã hủy' };
-            default: return { color: 'text-gray-500', bg: 'bg-gray-50', icon: <Clock size={16} />, label: status };
-        }
-    };
-
-    const handleCreateOrder = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const productId = formData.get('productId') as string;
-        const quantityStr = formData.get('quantity') as string;
-        const address = formData.get('address') as string;
-
-        const schema = z.object({
-            productId: z.string().min(1, msg.requireSelect('Sản phẩm')),
-            quantity: z.number().min(1, msg.min('Số lượng', 1)),
-            address: z.string().min(1, msg.requireInput('Địa chỉ giao hàng')),
-        });
-
-        const result = schema.safeParse({
-            productId,
-            quantity: quantityStr ? Number(quantityStr) : 0,
-            address: address?.trim() || ''
-        });
-
-        if (!result.success) {
-            const fieldErrors: Record<string, string> = {};
-            result.error.issues.forEach(issue => {
-                const path = issue.path[0]?.toString();
-                if (path) fieldErrors[path] = issue.message;
-            });
-            setErrors(fieldErrors);
-            toast.error('Vui lòng kiểm tra lại thông tin!');
-            return;
-        }
-
-        setErrors({});
-
-        try {
-            const product = await catalogApi.getProduct(productId);
-            if (!product) return;
-
-            const data = {
-                items: [{
-                    productId: product.id,
-                    productName: product.name,
-                    unitPrice: product.price,
-                    quantity: Number(formData.get('quantity'))
-                }],
-                shippingAddress: formData.get('address') as string,
-                notes: formData.get('notes') as string
-            };
-
-            createOrderMutation.mutate(data);
-        } catch (error) {
-            toast.error("Lỗi khi tải thông tin sản phẩm");
-        }
-    };
-    
-    const loadProductOptions = async (search: string, page: number) => {
-        try {
-            const data = await catalogApi.searchProducts({ query: search, page, pageSize: 20 });
-            return {
-                options: data.products.map(p => ({ value: p.id, label: `${p.name} - ${formatCurrency(p.price)}` })),
-                hasMore: data.products.length === 20
-            };
-        } catch (err) {
-            console.error('Error loading product options:', err);
-            return { options: [], hasMore: false };
-        }
-    };
+    const orders = ordersQuery.data?.orders ?? [];
+    const total = ordersQuery.data?.total ?? 0;
 
     return (
         <div className="space-y-10 pb-20 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-5xl font-semibold text-gray-900 tracking-tighter  leading-none mb-3">
+                    <h1 className="text-5xl font-semibold text-gray-900 dark:text-gray-100 tracking-tighter leading-none mb-3">
                         Quản lý <span className="text-accent">Đơn hàng</span>
                     </h1>
-                    <p className="text-gray-700 font-semibold uppercase text-xs flex items-center gap-2">
-                        Hệ thống xử lý đơn hàng và vận chuyển toàn quốc
-                    </p>
+                    <p className="text-gray-700 dark:text-gray-300 font-semibold uppercase text-xs">Hệ thống xử lý đơn hàng và vận chuyển toàn quốc</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    {/* View Toggle */}
-                    <div className="flex items-center bg-gray-100 p-1.5 rounded-xl shadow-inner border border-gray-200">
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase transition-all ${
-                                viewMode === 'list' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                            <LayoutList size={16} /> Bảng
-                        </button>
-                        <button
-                            onClick={() => setViewMode('kanban')}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase transition-all ${
-                                viewMode === 'kanban' ? 'bg-white text-accent shadow-md' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                            <KanbanSquare size={16} /> Kanban
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-blue-500/15 active:scale-95 group"
-                    >
-                        <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                        Tạo đơn hàng
-                    </button>
-                </div>
+                {/* Toy create-order modal removed (phase spec step 3) — POS is the real order-creation surface. */}
+                <Link to="/backoffice/pos" className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-blue-500/15 active:scale-95">
+                    <Store size={18} /> Tạo đơn tại POS
+                </Link>
             </div>
 
-            {/* Search & Filter Bar */}
-            <div className="bg-white rounded-xl border-2 border-gray-100 p-4 shadow-sm">
-                <div className="flex flex-col lg:flex-row items-stretch gap-4">
-                    {/* Search */}
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-accent transition-colors" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm theo mã đơn hàng, địa chỉ..."
-                            value={filters.search}
-                            onChange={(e) => handleFilterChange('search', e.target.value)}
-                            className="w-full pl-14 pr-10 py-4 bg-gray-50 border-none rounded-xl text-sm font-bold text-gray-900 focus:ring-2 focus:ring-accent/10 transition-all outline-none placeholder:text-gray-400"
-                        />
-                        {filters.search && (
-                            <button
-                                onClick={() => handleFilterChange('search', '')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
+            <OrdersFilterBar filters={filters} onChange={handleFilterChange} onReset={resetFilters} hasActiveFilters={hasActiveFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
 
-                    {/* Filters */}
-                    <div className="flex flex-wrap items-center gap-3">
-                        {/* Status Filter */}
-                        <SearchableSelect
-                            value={filters.status}
-                            onChange={(val: string) => handleFilterChange('status', val)}
-                            options={[
-                                { value: 'all', label: 'Tất cả trạng thái' },
-                                { value: 'Draft', label: 'Bản nháp' },
-                                { value: 'Pending', label: 'Chờ xác nhận' },
-                                { value: 'Confirmed', label: 'Đã xác nhận' },
-                                { value: 'Shipped', label: 'Đang giao' },
-                                { value: 'Delivered', label: 'Đã giao' },
-                                { value: 'Completed', label: 'Hoàn tất' },
-                                { value: 'Cancelled', label: 'Đã hủy' },
-                            ]}
-                        />
-
-                        {/* Payment Status Filter */}
-                        <SearchableSelect
-                            value={filters.paymentStatus}
-                            onChange={(val: string) => handleFilterChange('paymentStatus', val)}
-                            options={[
-                                { value: 'all', label: 'Thanh toán' },
-                                { value: 'Pending', label: 'Chờ thanh toán' },
-                                { value: 'Paid', label: 'Đã thanh toán' },
-                                { value: 'Failed', label: 'Thất bại' },
-                                { value: 'Refunded', label: 'Hoàn tiền' },
-                            ]}
-                        />
-
-                        {/* Date Range */}
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                <input
-                                    type="date"
-                                    value={filters.dateRange.from}
-                                    onChange={(e) => handleFilterChange('dateRange', { ...filters.dateRange, from: e.target.value })}
-                                    className={`pl-9 pr-3 py-4 border rounded-xl text-xs font-bold outline-none cursor-pointer transition-all ${
-                                        filters.dateRange.from ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                                    }`}
-                                    placeholder="Từ ngày"
-                                />
-                            </div>
-                            <span className="text-gray-400">-</span>
-                            <input
-                                type="date"
-                                value={filters.dateRange.to}
-                                onChange={(e) => handleFilterChange('dateRange', { ...filters.dateRange, to: e.target.value })}
-                                className={`px-3 py-4 border rounded-xl text-xs font-bold outline-none cursor-pointer transition-all ${
-                                    filters.dateRange.to ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-gray-50 border-transparent text-gray-700'
-                                }`}
-                                placeholder="Đến ngày"
-                            />
-                        </div>
-
-                        {/* Reset Button */}
-                        {hasActiveFilters && (
-                            <button
-                                onClick={resetFilters}
-                                className="flex items-center gap-2 px-4 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-accent hover:bg-blue-50 rounded-xl transition-all"
-                            >
-                                <RefreshCw size={14} />
-                                Đặt lại
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content Area */}
-            <motion.div
-                key={viewMode}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={viewMode === 'list' ? "premium-card overflow-hidden" : ""}
-            >
-                {viewMode === 'list' ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-900 text-white text-xs font-semibold uppercase">
-                                <tr>
-                                    <th className="px-8 py-6">Đơn hàng</th>
-                                    <th className="px-8 py-6">Sản phẩm</th>
-                                    <th className="px-8 py-6">Giá trị thành tiền</th>
-                                    <th className="px-8 py-6">Trạng thái</th>
-                                    <th className="px-8 py-6">Ngày tạo</th>
-                                    <th className="px-8 py-6 text-right">Chi tiết</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan={6} className="px-8 py-20 text-center">
-                                            <Loader2 className="mx-auto text-accent animate-spin mb-4" size={40} />
-                                            <p className="text-[11px] text-gray-300 font-semibold ">Đang tải dữ liệu đơn hàng...</p>
-                                        </td>
-                                    </tr>
-                                ) : orders.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="px-8 py-20 text-center">
-                                            <Package className="mx-auto text-gray-100 mb-4" size={60} />
-                                            <p className="text-[11px] text-gray-300 font-semibold ">Chưa có đơn hàng nào.</p>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    orders.map((order) => {
-                                            const status = getStatusInfo(order.status);
-                                            const isHighlighted = order.id === highlightedOrderId;
-                                            return (
-                                                <tr
-                                                    key={order.id}
-                                                    ref={isHighlighted ? highlightedRowRef : undefined}
-                                                    className={`hover:bg-gray-50/50 transition-all group cursor-pointer ${
-                                                        isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 animate-pulse' : ''
-                                                    }`}
-                                                >
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-base font-semibold text-gray-950 group-hover:text-accent transition-colors tracking-tight">#{order.orderNumber}</span>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-sm font-bold text-gray-800 tabular-nums">{order.items?.[0]?.productName || 'N/A'}</span>
-                                                            {order.items?.length > 1 && (
-                                                                <span className="text-[11px] font-semibold text-accent uppercase leading-none bg-red-50 w-fit px-2 py-1 rounded-md">+{order.items.length - 1} sản phẩm khác</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <span className="text-lg font-semibold text-gray-950 tracking-tighter italic">{formatCurrency(order.totalAmount)}</span>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <SearchableSelect
-                                                            value={order.status}
-                                                            onChange={(val: string) => updateStatusMutation.mutate({ id: order.id, status: val })}
-                                                            disabled={updateStatusMutation.isPending}
-                                                            options={[
-                                                                { value: 'Draft', label: 'Bản nháp' },
-                                                                { value: 'Pending', label: 'Chờ xác nhận' },
-                                                                { value: 'Confirmed', label: 'Đã xác nhận' },
-                                                                { value: 'Paid', label: 'Đã thanh toán (Chờ giao)' },
-                                                                { value: 'Shipped', label: 'Đang giao' },
-                                                                { value: 'Delivered', label: 'Đã giao' },
-                                                                { value: 'Completed', label: 'Hoàn tất' },
-                                                                { value: 'Cancelled', label: 'Đã hủy' },
-                                                            ]}
-                                                        />
-                                                    </td>
-                                                    <td className="px-8 py-6 text-xs font-semibold text-gray-400 uppercase">
-                                                        {new Date(order.orderDate).toLocaleDateString('vi-VN')}
-                                                    </td>
-                                                    <td className="px-8 py-6 text-right">
-                                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                            {!NON_CANCELLABLE_STATUSES.includes(order.status) && (
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); handleCancelOrder(order); }}
-                                                                    disabled={cancelMutation.isPending}
-                                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 disabled:opacity-50"
-                                                                    title="Hủy đơn"
-                                                                >
-                                                                    <XCircle size={18} />
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() => setSelectedOrder(order)}
-                                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-300 hover:text-accent hover:bg-blue-50 transition-all shadow-sm border border-gray-100"
-                                                            >
-                                                                <Eye size={18} />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={handleDragStart as any}
-                            onDragEnd={handleDragEnd as any}
-                        >
-                            <div className="flex gap-6 min-w-max items-start h-[calc(100vh-350px)]">
-                                {KANBAN_STAGES.map((stage) => {
-                                    const columnOrders = localOrders.filter(o => o.status === stage.id);
-                                    return (
-                                        <DroppableColumn key={stage.id} stage={stage} count={columnOrders.length}>
-                                            {columnOrders.map((order) => (
-                                                <DraggableOrderCard
-                                                    key={order.id}
-                                                    order={order}
-                                                    onClick={() => setSelectedOrder(order)}
-                                                />
-                                            ))}
-                                            {columnOrders.length === 0 && (
-                                                <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-xl">
-                                                    <p className="text-xs font-semibold text-gray-400 uppercase">Trống</p>
-                                                </div>
-                                            )}
-                                        </DroppableColumn>
-                                    );
-                                })}
-                            </div>
-
-                            <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-                                {activeOrder ? (
-                                    <div className="transform scale-105 rotate-3 shadow-md opacity-90 cursor-grabbing pointer-events-none">
-                                        <div className="bg-white rounded-xl p-4 border border-accent shadow-sm ring-2 ring-accent">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-sm font-semibold text-gray-900 uppercase">#{activeOrder.orderNumber}</span>
-                                                <span className="text-xs font-semibold text-gray-400 uppercase">{new Date(activeOrder.orderDate).toLocaleDateString('vi-VN')}</span>
-                                            </div>
-                                            <p className="text-xs font-bold text-gray-800 line-clamp-1 mb-1">{activeOrder.items?.[0]?.productName || 'N/A'}</p>
-                                            {activeOrder.items?.length > 1 && (
-                                                <p className="text-xs font-semibold text-accent uppercase bg-red-50 w-fit px-1.5 py-0.5 rounded italic mb-2">+{activeOrder.items.length - 1} sp</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : null}
-                            </DragOverlay>
-                        </DndContext>
-                    </div>
-                )}
+            <motion.div key={viewMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className={viewMode === 'list' ? 'premium-card overflow-hidden' : ''}>
+                <QueryBoundary
+                    query={ordersQuery}
+                    isEmpty={() => orders.length === 0}
+                    empty={{ title: 'Chưa có đơn hàng nào', description: 'Đơn hàng tạo từ website, POS hoặc báo giá sẽ xuất hiện ở đây.' }}
+                    skeleton={<div className="p-8 space-y-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 bg-gray-50 dark:bg-gray-800 rounded-xl animate-pulse" />)}</div>}
+                    errorTitle="Không tải được danh sách đơn hàng"
+                >
+                    {() => viewMode === 'list' ? (
+                        <OrdersListTable orders={orders} highlightedOrderId={highlightedOrderId} highlightedRowRef={highlightedRowRef} onSelect={(o) => setSelectedOrderId(o.id)} onCancel={handleCancelOrder} />
+                    ) : (
+                        <OrdersKanbanBoard orders={orders} onSelect={(o) => setSelectedOrderId(o.id)} onChanged={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })} />
+                    )}
+                </QueryBoundary>
             </motion.div>
 
-            {/* Pagination */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 mt-10">
-                <span className="text-xs font-semibold text-gray-400 ">
-                    Hiển thị <span className="text-gray-900">{orders.length}</span> / <span className="text-gray-900">{total}</span> đơn hàng toàn hệ thống
+                <span className="text-xs font-semibold text-gray-400">
+                    Hiển thị <span className="text-gray-900 dark:text-gray-100">{orders.length}</span> / <span className="text-gray-900 dark:text-gray-100">{total}</span> đơn hàng
                 </span>
                 <div className="flex gap-3">
-                    <button
-                        disabled={page === 1}
-                        onClick={() => setPage(p => p - 1)}
-                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
-                    >
-                        Trang trước
-                    </button>
-                    <button
-                        disabled={orders.length < 20}
-                        onClick={() => setPage(p => p + 1)}
-                        className="px-6 py-3 bg-white border border-gray-100 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent hover:border-red-100 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm"
-                    >
-                        Trang kế &gt;
-                    </button>
+                    <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent disabled:opacity-30 transition-all shadow-sm">Trang trước</button>
+                    <button disabled={orders.length < 20} onClick={() => setPage((p) => p + 1)} className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent disabled:opacity-30 transition-all shadow-sm">Trang kế &gt;</button>
                 </div>
             </div>
 
-            {/* Order Detail Modal */}
-            <AnimatePresence>
-                {selectedOrder && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setSelectedOrder(null)}
-                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-3xl bg-white rounded-3xl shadow-md overflow-hidden max-h-[90vh] overflow-y-auto"
-                        >
-                            <div className="flex items-center justify-between p-8 border-b border-gray-50 sticky top-0 bg-white z-10">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                                        <FileText size={24} />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-semibold text-gray-900  tracking-tighter">
-                                            Đơn hàng <span className="text-accent">#{selectedOrder.orderNumber}</span>
-                                        </h2>
-                                        <p className="text-xs font-semibold text-gray-400 uppercase mt-1">
-                                            Ngày tạo: {new Date(selectedOrder.orderDate).toLocaleString('vi-VN')}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-accent transition-all">
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="p-8 space-y-6">
-                                {/* Status Update */}
-                                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-xl">
-                                    <div>
-                                        <p className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Trạng thái đơn hàng</p>
-                                        <SearchableSelect
-                                            value={selectedOrder.status}
-                                            onChange={(val: string) => updateStatusMutation.mutate({ id: selectedOrder.id, status: val })}
-                                            options={[
-                                                { value: 'Draft', label: 'Bản nháp' },
-                                                { value: 'Pending', label: 'Chờ xác nhận' },
-                                                { value: 'Confirmed', label: 'Đã xác nhận' },
-                                                { value: 'Paid', label: 'Đã thanh toán' },
-                                                { value: 'Shipped', label: 'Đang giao' },
-                                                { value: 'Delivered', label: 'Đã giao' },
-                                                { value: 'Completed', label: 'Hoàn tất' },
-                                                { value: 'Cancelled', label: 'Đã hủy' },
-                                            ]}
-                                        />
-                                    </div>
-                                    <div className="text-right flex items-center gap-4">
-                                        <div>
-                                            <p className="text-[9px] font-semibold text-gray-400 uppercase mb-1">Tổng giá trị</p>
-                                            <p className="text-2xl font-semibold text-accent italic">{formatCurrency(selectedOrder.totalAmount)}</p>
-                                        </div>
-                                        {!NON_CANCELLABLE_STATUSES.includes(selectedOrder.status) && (
-                                            <button
-                                                onClick={() => handleCancelOrder(selectedOrder)}
-                                                disabled={cancelMutation.isPending}
-                                                className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-semibold text-xs hover:bg-rose-100 transition-all disabled:opacity-50"
-                                            >
-                                                <XCircle size={16} /> Hủy đơn
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Order Items */}
-                                <div className="space-y-4">
-                                    <h3 className="text-[11px] font-semibold text-gray-900 uppercase flex items-center gap-2">
-                                        <Package size={14} className="text-accent" />
-                                        Sản phẩm ({selectedOrder.items?.length || 0})
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {selectedOrder.items?.map((item, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900">{item.productName}</p>
-                                                    <p className="text-xs text-gray-500">x{item.quantity} @ {formatCurrency(item.unitPrice)}</p>
-                                                </div>
-                                                <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.lineTotal)}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Summary */}
-                                <div className="space-y-3 p-6 bg-gray-50 rounded-xl">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Tạm tính</span>
-                                        <span className="font-bold">{formatCurrency(selectedOrder.subtotalAmount)}</span>
-                                    </div>
-                                    {selectedOrder.discountAmount > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-500">Giảm giá</span>
-                                            <span className="font-bold text-emerald-600">-{formatCurrency(selectedOrder.discountAmount)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Phí vận chuyển</span>
-                                        <span className="font-bold">{formatCurrency(selectedOrder.shippingAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Thuế</span>
-                                        <span className="font-bold">{formatCurrency(selectedOrder.taxAmount)}</span>
-                                    </div>
-                                    <div className="border-t border-gray-200 pt-3 flex justify-between">
-                                        <span className="text-sm font-bold text-gray-900">Tổng cộng</span>
-                                        <span className="text-lg font-semibold text-accent">{formatCurrency(selectedOrder.totalAmount)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Shipping Info */}
-                                <div className="space-y-4">
-                                    <h3 className="text-[11px] font-semibold text-gray-900 uppercase flex items-center gap-2">
-                                        <MapPin size={14} className="text-accent" />
-                                        Thông tin giao hàng
-                                    </h3>
-                                    <div className="p-4 bg-gray-50 rounded-xl">
-                                        <p className="text-sm text-gray-700">{selectedOrder.shippingAddress || 'Chưa có địa chỉ'}</p>
-                                        {selectedOrder.notes && (
-                                            <p className="text-xs text-gray-500 mt-2 italic">Ghi chú: {selectedOrder.notes}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Create Order Modal */}
-            <AnimatePresence>
-                {isCreateModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setIsCreateModalOpen(false)}
-                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-md overflow-hidden"
-                        >
-                            <div className="flex items-center justify-between p-8 border-b border-gray-50">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-accent">
-                                        <ShoppingCart size={24} />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-semibold text-gray-900  tracking-tighter">
-                                            Tạo <span className="text-accent">Đơn hàng mới</span>
-                                        </h2>
-                                        <p className="text-xs font-semibold text-gray-400 uppercase mt-1">Khởi tạo đơn hàng thủ công từ Admin</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-accent transition-all">
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCreateOrder} className="p-8 space-y-6">
-                                <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <h3 className="text-[11px] font-semibold text-gray-900 uppercase flex items-center gap-2">
-                                            <Package size={14} className="text-accent" />
-                                            Thông tin sản phẩm
-                                        </h3>
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="col-span-2 space-y-2">
-                                                <label className="text-[9px] font-semibold text-gray-400 uppercase ml-1">Chọn sản phẩm</label>
-                                                <div className={errors.productId ? 'ring-1 ring-red-400 rounded-xl' : ''}>
-                                                    <AsyncSearchableSelect
-                                                        name="productId"
-                                                        placeholder="Chọn sản phẩm (có thể tìm kiếm...)"
-                                                        loadOptions={loadProductOptions}
-                                                    />
-                                                </div>
-                                                {errors.productId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.productId}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] font-semibold text-gray-400 uppercase ml-1">Số lượng</label>
-                                                <input name="quantity" type="number" defaultValue={1} min={1} className={`w-full px-5 py-4 bg-gray-50 border ${errors.quantity ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400`} />
-                                                {errors.quantity && <p className="mt-1 text-xs text-red-500 font-medium">{errors.quantity}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-[11px] font-semibold text-gray-900 uppercase flex items-center gap-2">
-                                            <MapPin size={14} className="text-accent" />
-                                            Giao hàng & Ghi chú
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] font-semibold text-gray-400 uppercase ml-1">Địa chỉ giao hàng</label>
-                                                <input name="address" className={`w-full px-5 py-4 bg-gray-50 border ${errors.address ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-accent'} rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 placeholder:text-gray-400`} placeholder="Số nhà, tên đường, phường/xã..." />
-                                                {errors.address && <p className="mt-1 text-xs text-red-500 font-medium">{errors.address}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[9px] font-semibold text-gray-400 uppercase ml-1">Ghi chú đơn hàng</label>
-                                                <textarea name="notes" rows={3} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 resize-none placeholder:text-gray-400" placeholder="Lưu ý cho đơn vị vận chuyển..." />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 px-8 py-4 bg-gray-50 text-gray-400 text-xs font-semibold uppercase rounded-xl hover:bg-gray-100 transition-all">
-                                        Hủy
-                                    </button>
-                                    <button type="submit" disabled={createOrderMutation.isPending} className="flex-[2] flex items-center justify-center gap-3 px-8 py-4 bg-accent text-white text-xs font-semibold uppercase rounded-xl shadow-sm shadow-blue-500/15 hover:bg-accent-hover transition-all disabled:opacity-50">
-                                        {createOrderMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
-                                        Xác nhận tạo đơn
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            <OrderDetailDrawer orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
         </div>
     );
 };

@@ -21,6 +21,7 @@ const PayrollRunPage = lazy(() => import('../pages/backoffice/hr/payroll-run-pag
 const PayrollDetailPage = lazy(() => import('../pages/backoffice/hr/payroll-detail-page'));
 const SalaryStructurePage = lazy(() => import('../pages/backoffice/hr/salary-structure-page'));
 const PitFinalizationPage = lazy(() => import('../pages/backoffice/hr/pit-finalization-page'));
+const StatutoryParametersPage = lazy(() => import('../pages/backoffice/hr/statutory-parameters-page'));
 
 export const backofficeHrRoutes: RouteDef[] = [
   { path: 'hr', element: HRPortal, layout: 'backoffice', group: 'finance_hr', icon: 'Briefcase', title: 'Nhân sự', description: 'Quản lý nhân sự', permission: PERMISSIONS.HR_VIEW_EMPLOYEES, name: 'hr' },
@@ -42,4 +43,8 @@ export const backofficeHrRoutes: RouteDef[] = [
   { path: 'hr/payroll/:payrollId', element: PayrollDetailPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.HR_MANAGE_PAYROLL, name: 'hrPayrollDetail' },
   { path: 'hr/salary-structures', element: SalaryStructurePage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.HR_MANAGE_PAYROLL, name: 'hrSalaryStructures' },
   { path: 'hr/pit-finalization', element: PitFinalizationPage, layout: 'backoffice', hidden: true, allowedRoles: ['Admin', 'HR'], name: 'hrPitFinalization' },
+  // D06 (+4h, binding): tham số lương/thuế/BH theo mốc hiệu lực. Đọc: HR.ViewPayroll (HR xem
+  // được); ghi (thêm mốc mới) gated lại bởi <Can permission={HR_MANAGE_STATUTORY_PARAMETERS}>
+  // trong trang — chỉ Admin/Accountant có quyền đó theo docs/api-contracts/hr-statutory.md §5.
+  { path: 'hr/statutory-parameters', element: StatutoryParametersPage, layout: 'backoffice', group: 'finance_hr', icon: 'Calculator', title: 'Tham số lương/thuế/BH', description: 'Mốc hiệu lực pháp luật lương - thuế TNCN - bảo hiểm', permission: PERMISSIONS.HR_VIEW_PAYROLL, name: 'hrStatutoryParameters' },
 ];

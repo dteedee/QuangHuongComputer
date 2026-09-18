@@ -197,9 +197,9 @@ const normalizeMenuItems = (menu: unknown): MenuItem[] => {
 type MenuLocationKey = 'HeaderMain' | 'FooterMain' | 'FooterBottom';
 
 const MENU_LOCATIONS: { key: MenuLocationKey; label: string; description: string }[] = [
-    { key: 'HeaderMain', label: 'HeaderMain', description: 'Main Header' },
-    { key: 'FooterMain', label: 'FooterMain', description: 'Product Categories' },
-    { key: 'FooterBottom', label: 'FooterBottom', description: 'Policies & Links' },
+    { key: 'HeaderMain', label: 'HeaderMain', description: 'Menu chính (đầu trang)' },
+    { key: 'FooterMain', label: 'FooterMain', description: 'Danh mục sản phẩm' },
+    { key: 'FooterBottom', label: 'FooterBottom', description: 'Chính sách & liên kết' },
 ];
 
 export const MenuManager = () => {
@@ -307,7 +307,7 @@ export const MenuManager = () => {
         addMutation.mutate({
             menuId,
             item: {
-                label: 'New Link',
+                label: 'Liên kết mới',
                 url: '/',
                 order: localItems.length + 1,
                 openInNewTab: false,

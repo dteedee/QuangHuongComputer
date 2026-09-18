@@ -10,9 +10,10 @@ export * from './admin-policies';
 
 import { warrantyAdminClaimsApi } from './admin-claims';
 import { warrantyAdminLoanerApi, warrantyAdminRmaApi } from './admin-rma-loaner';
-import { warrantyAdminPoliciesApi } from './admin-policies';
+import { warrantyAdminPoliciesApi, warrantyAdminSlaPoliciesApi } from './admin-policies';
 
 export const warrantyAdminApi = warrantyAdminClaimsApi;
 export const warrantyRmaApi = warrantyAdminRmaApi;
 export const warrantyLoanerApi = warrantyAdminLoanerApi;
 export const warrantyPoliciesApi = warrantyAdminPoliciesApi;
+export const warrantySlaPoliciesApi = warrantyAdminSlaPoliciesApi;

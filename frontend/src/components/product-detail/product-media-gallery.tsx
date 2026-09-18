@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Play, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ProductMedia } from '../../api/catalog';
-import { resolveMediaUrl } from '../../lib/media-url';
+import type { ProductMediaView } from '../../api/catalog/public-product';
+import { Img } from '../ui';
 import ProductVideoPlayer from './product-video-player';
 import ProductMediaLightbox from './product-media-lightbox';
 
 interface ProductMediaGalleryProps {
-    medias: ProductMedia[];
+    medias: ProductMediaView[];
     productName: string;
     /** Ưu tiên hiển thị media của biến thể này (khi user chọn variant có ảnh riêng). */
     activeVariantId?: string;
@@ -26,12 +26,11 @@ export default function ProductMediaGallery({
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [zoomOrigin, setZoomOrigin] = useState<{ x: number; y: number } | null>(null);
-    const [mainImgError, setMainImgError] = useState(false);
     const mainRef = useRef<HTMLDivElement | null>(null);
     const touchStartX = useRef<number | null>(null);
 
     // Ưu tiên media theo biến thể; nếu không có, dùng toàn bộ.
-    const displayMedias = useMemo<ProductMedia[]>(() => {
+    const displayMedias = useMemo<ProductMediaView[]>(() => {
         if (medias.length === 0 && fallbackImageUrl) {
             return [{
                 id: 'legacy-image',
@@ -54,9 +53,6 @@ export default function ProductMediaGallery({
         const primaryIdx = displayMedias.findIndex((m) => m.isPrimary);
         setSelectedIndex(primaryIdx >= 0 ? primaryIdx : 0);
     }, [displayMedias.length, activeVariantId]);
-
-    // D02: reset lỗi tải ảnh khi đổi media đang xem, tránh giữ trạng thái lỗi của ảnh trước.
-    useEffect(() => { setMainImgError(false); }, [selectedIndex]);
 
     const handlePrev = useCallback(() => {
         setSelectedIndex((i) => (i - 1 + displayMedias.length) % displayMedias.length);
@@ -105,7 +101,7 @@ export default function ProductMediaGallery({
 
     if (displayMedias.length === 0) {
         return (
-            <div className="w-full aspect-[4/3] bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-300">
+            <div className="flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-line bg-stage text-fg-subtle">
                 <span className="text-6xl font-black">{productName?.charAt(0) || '?'}</span>
             </div>
         );
@@ -113,7 +109,6 @@ export default function ProductMediaGallery({
 
     const current = displayMedias[selectedIndex];
     const isImage = current.type === 'Image';
-    const resolvedCurrentUrl = resolveMediaUrl(current.url);
 
     return (
         <div className="w-full">
@@ -122,7 +117,7 @@ export default function ProductMediaGallery({
                 <div className="flex-1 min-w-0">
                     <div
                         ref={mainRef}
-                        className="relative aspect-[4/3] bg-white rounded-lg overflow-hidden border border-gray-200 select-none"
+                        className="relative aspect-[4/3] select-none overflow-hidden rounded-lg border border-line bg-stage"
                         onTouchStart={handleTouchStart}
                         onTouchEnd={handleTouchEnd}
                         onMouseMove={isImage ? handleMouseMove : undefined}
@@ -130,36 +125,35 @@ export default function ProductMediaGallery({
                     >
                         {!isImage ? (
                             <ProductVideoPlayer media={current} />
-                        ) : !mainImgError && resolvedCurrentUrl ? (
+                        ) : (
                             <>
-                                <img
-                                    src={resolvedCurrentUrl}
-                                    alt={current.altText || productName}
-                                    className="w-full h-full object-contain transition-transform duration-150"
+                                <Img
+                                    src={current.url}
+                                    alt={(current.alt ?? current.altText) || productName}
+                                    ratio="4/3"
+                                    fit="contain"
+                                    blend
+                                    priority
+                                    wrapperClassName="absolute inset-0 h-full w-full bg-stage"
+                                    className="transition-transform duration-220 ease-out"
                                     style={zoomOrigin ? {
                                         transform: 'scale(1.75)',
                                         transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
                                     } : undefined}
-                                    onError={() => setMainImgError(true)}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setLightboxOpen(true)}
-                                    className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-gray-700 flex items-center justify-center shadow-sm transition-colors"
-                                    aria-label="Phóng to"
+                                    className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-surface/85 text-fg-muted shadow-sm transition-colors hover:bg-surface"
+                                    aria-label="Phóng to ảnh"
                                 >
-                                    <ZoomIn className="w-4 h-4" />
+                                    <ZoomIn className="h-4 w-4" aria-hidden="true" />
                                 </button>
                             </>
-                        ) : (
-                            // D02: ảnh thiếu/tải lỗi — placeholder trung tính, không để trống trơn.
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                <span className="text-6xl font-black">{productName?.charAt(0) || '?'}</span>
-                            </div>
                         )}
 
                         {discountBadge && (
-                            <span className="absolute top-3 left-3 bg-[var(--accent-primary)] text-white px-2.5 py-1 rounded-lg font-bold text-xs">
+                            <span className="absolute left-3 top-3 rounded-md bg-brand px-2.5 py-1 text-xs font-bold text-white">
                                 -{discountBadge}%
                             </span>
                         )}
@@ -169,7 +163,7 @@ export default function ProductMediaGallery({
                                 <button
                                     type="button"
                                     onClick={handlePrev}
-                                    className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-gray-700 items-center justify-center shadow-sm transition-colors"
+                                    className="absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/85 text-fg-muted shadow-sm transition-colors hover:bg-surface md:flex"
                                     aria-label="Ảnh trước"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
@@ -177,7 +171,7 @@ export default function ProductMediaGallery({
                                 <button
                                     type="button"
                                     onClick={handleNext}
-                                    className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-gray-700 items-center justify-center shadow-sm transition-colors"
+                                    className="absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/85 text-fg-muted shadow-sm transition-colors hover:bg-surface md:flex"
                                     aria-label="Ảnh sau"
                                 >
                                     <ChevronRight className="w-4 h-4" />
@@ -186,7 +180,7 @@ export default function ProductMediaGallery({
                         )}
                     </div>
 
-                    <p className="lg:hidden mt-2 text-center text-xs text-gray-400">
+                    <p className="num mt-2 text-center text-xs text-fg-subtle lg:hidden">
                         {selectedIndex + 1} / {displayMedias.length}
                     </p>
                 </div>
@@ -205,22 +199,19 @@ export default function ProductMediaGallery({
                                     onClick={() => setSelectedIndex(index)}
                                     className={`relative w-16 h-16 lg:w-full lg:h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                                         isSelected
-                                            ? 'border-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]/30'
-                                            : 'border-gray-200 hover:border-gray-400'
+                                            ? 'border-brand ring-1 ring-brand/30'
+                                            : 'border-line hover:border-line-strong'
                                     }`}
                                     aria-label={`Xem media ${index + 1}`}
                                 >
-                                    {(m.type === 'Image' || m.thumbnailUrl) && resolveMediaUrl(thumbUrl) ? (
-                                        <img
-                                            src={resolveMediaUrl(thumbUrl)}
-                                            alt={m.altText || `${productName} ${index + 1}`}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gray-100" />
-                                    )}
+                                    <Img
+                                        src={thumbUrl}
+                                        alt={(m.alt ?? m.altText) || `${productName} - ảnh ${index + 1}`}
+                                        ratio="1/1"
+                                        fit="contain"
+                                        blend
+                                        wrapperClassName="h-full w-full bg-stage"
+                                    />
                                     {isVideoThumb && (
                                         <span className="absolute inset-0 flex items-center justify-center bg-black/25">
                                             <Play className="w-4 h-4 text-white fill-white" />

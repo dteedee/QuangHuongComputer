@@ -8,10 +8,12 @@ interface PromotionBuilderProps {
   rewards: PromotionReward[];
   /** 'BuyXGetY' → mở khối Rewards. */
   showRewards?: boolean;
+  /** Type=FlashSale → đổi khối rewards sang form giá cố định/sản phẩm (contract §1). */
+  flashSaleMode?: boolean;
   onChange: (patch: { conditions?: PromotionCondition[]; rewards?: PromotionReward[] }) => void;
 }
 
-export function PromotionBuilder({ conditions, rewards, showRewards, onChange }: PromotionBuilderProps) {
+export function PromotionBuilder({ conditions, rewards, showRewards, flashSaleMode, onChange }: PromotionBuilderProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const addCondition = (type: ConditionType) => {
@@ -29,6 +31,15 @@ export function PromotionBuilder({ conditions, rewards, showRewards, onChange }:
   };
 
   const addReward = () => {
+    if (flashSaleMode) {
+      onChange({
+        rewards: [
+          ...rewards,
+          { productId: null, variantId: null, quantity: 1, discountPercent: 0, flashPrice: 0, quantityLimit: null },
+        ],
+      });
+      return;
+    }
     onChange({ rewards: [...rewards, { productId: null, variantId: null, quantity: 1, discountPercent: 100 }] });
   };
 
@@ -119,76 +130,125 @@ export function PromotionBuilder({ conditions, rewards, showRewards, onChange }:
       </section>
 
       {/* Rewards section (BuyXGetY) */}
-      {showRewards && (
+      {(showRewards || flashSaleMode) && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <Gift className="w-4 h-4 text-accent" /> Phần thưởng (Mua X Tặng Y)
+                <Gift className="w-4 h-4 text-accent" />
+                {flashSaleMode ? 'Sản phẩm Flash Sale' : 'Phần thưởng (Mua X Tặng Y)'}
               </h3>
-              <p className="text-xs text-gray-500">Chọn sản phẩm tặng kèm và số lượng.</p>
+              <p className="text-xs text-gray-500">
+                {flashSaleMode
+                  ? 'Mỗi dòng = một sản phẩm bán giá cố định trong khung giờ sale. Giới hạn số lượng để tuỳ chọn.'
+                  : 'Chọn sản phẩm tặng kèm và số lượng.'}
+              </p>
             </div>
             <button
               type="button"
               onClick={addReward}
               className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:border-accent hover:text-accent"
             >
-              <Plus className="w-4 h-4" /> Thêm phần thưởng
+              <Plus className="w-4 h-4" /> {flashSaleMode ? 'Thêm sản phẩm' : 'Thêm phần thưởng'}
             </button>
           </div>
 
           {rewards.length === 0 ? (
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
-              Chưa có phần thưởng. Bấm "Thêm phần thưởng" để cấu hình.
+              {flashSaleMode
+                ? 'Chưa có sản phẩm nào — bấm "Thêm sản phẩm" để cấu hình giá flash.'
+                : 'Chưa có phần thưởng. Bấm "Thêm phần thưởng" để cấu hình.'}
             </div>
           ) : (
             <ul className="space-y-3">
-              {rewards.map((r, index) => (
-                <li key={index} className="border border-gray-200 rounded-xl p-4 bg-white">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <label className="text-xs font-medium text-gray-700 md:col-span-2">
-                      Product ID (variant tuỳ chọn)
-                      <input
-                        type="text"
-                        value={r.productId ?? ''}
-                        onChange={(e) => updateReward(index, { productId: e.target.value || null })}
-                        placeholder="UUID sản phẩm"
-                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
-                      />
-                    </label>
-                    <label className="text-xs font-medium text-gray-700">
-                      Số lượng
-                      <input
-                        type="number"
-                        min={1}
-                        value={r.quantity}
-                        onChange={(e) => updateReward(index, { quantity: Number(e.target.value) || 1 })}
-                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
-                      />
-                    </label>
-                    <label className="text-xs font-medium text-gray-700">
-                      % giảm (100 = tặng)
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={r.discountPercent}
-                        onChange={(e) => updateReward(index, { discountPercent: Number(e.target.value) || 0 })}
-                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
-                      />
-                    </label>
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => removeReward(index)}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Xoá phần thưởng
-                    </button>
-                  </div>
-                </li>
-              ))}
+              {rewards.map((r, index) =>
+                flashSaleMode ? (
+                  <li key={index} className="border border-gray-200 rounded-xl p-4 bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                        Product ID (variant tuỳ chọn)
+                        <input
+                          type="text"
+                          value={r.productId ?? ''}
+                          onChange={(e) => updateReward(index, { productId: e.target.value || null })}
+                          placeholder="UUID sản phẩm"
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-gray-700">
+                        Giá Flash Sale (đ) *
+                        <input
+                          type="number"
+                          min={0}
+                          value={r.flashPrice ?? ''}
+                          onChange={(e) => updateReward(index, { flashPrice: e.target.value ? Number(e.target.value) : null })}
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-gray-700">
+                        Giới hạn số lượng
+                        <input
+                          type="number"
+                          min={1}
+                          value={r.quantityLimit ?? ''}
+                          onChange={(e) => updateReward(index, { quantityLimit: e.target.value ? Number(e.target.value) : null })}
+                          placeholder="Không giới hạn"
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                    </div>
+                    {typeof r.soldCount === 'number' && (
+                      <p className="mt-2 text-xs text-gray-500">Đã bán: {r.soldCount}{r.quantityLimit ? ` / ${r.quantityLimit}` : ''}</p>
+                    )}
+                    <div className="mt-2 flex justify-end">
+                      <button type="button" onClick={() => removeReward(index)} className="text-xs text-red-500 hover:underline">
+                        Xoá sản phẩm
+                      </button>
+                    </div>
+                  </li>
+                ) : (
+                  <li key={index} className="border border-gray-200 rounded-xl p-4 bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                      <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                        Product ID (variant tuỳ chọn)
+                        <input
+                          type="text"
+                          value={r.productId ?? ''}
+                          onChange={(e) => updateReward(index, { productId: e.target.value || null })}
+                          placeholder="UUID sản phẩm"
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-gray-700">
+                        Số lượng
+                        <input
+                          type="number"
+                          min={1}
+                          value={r.quantity}
+                          onChange={(e) => updateReward(index, { quantity: Number(e.target.value) || 1 })}
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                      <label className="text-xs font-medium text-gray-700">
+                        % giảm (100 = tặng)
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={r.discountPercent}
+                          onChange={(e) => updateReward(index, { discountPercent: Number(e.target.value) || 0 })}
+                          className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button type="button" onClick={() => removeReward(index)} className="text-xs text-red-500 hover:underline">
+                        Xoá phần thưởng
+                      </button>
+                    </div>
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </section>

@@ -136,7 +136,7 @@ export const PrivacyPage = () => {
                         <p className="text-sm text-gray-700">
                             <strong>Liên hệ về bảo mật:</strong> Nếu bạn có câu hỏi về chính sách bảo mật hoặc muốn thực hiện
                             quyền của mình, vui lòng{' '}
-                            <Link to="/contact" className="text-accent font-semibold hover:underline cursor-pointer">liên hệ với chúng tôi</Link>
+                            <Link to="/lien-he" className="text-accent font-semibold hover:underline cursor-pointer">liên hệ với chúng tôi</Link>
                             {' '}hoặc email:{' '}
                             <a href="mailto:privacy@qhcomputer.com" className="text-accent font-semibold hover:underline">privacy@qhcomputer.com</a>
                         </p>

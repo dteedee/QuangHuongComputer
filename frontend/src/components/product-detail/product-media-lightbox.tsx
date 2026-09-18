@@ -1,11 +1,11 @@
 import { useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ProductMedia } from '../../api/catalog';
+import type { ProductMediaView } from '../../api/catalog/public-product';
 import { resolveMediaUrl } from '../../lib/media-url';
 import ProductVideoPlayer from './product-video-player';
 
 interface ProductMediaLightboxProps {
-    medias: ProductMedia[];
+    medias: ProductMediaView[];
     currentIndex: number;
     onClose: () => void;
     onPrev: () => void;
@@ -79,7 +79,7 @@ export default function ProductMediaLightbox({
                 {media.type === 'Image' ? (
                     <img
                         src={resolveMediaUrl(media.url)}
-                        alt={media.altText || ''}
+                        alt={(media.alt ?? media.altText) || ''}
                         className="max-w-full max-h-full object-contain"
                     />
                 ) : (

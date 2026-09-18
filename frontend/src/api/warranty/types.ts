@@ -8,14 +8,17 @@
 
 // Plain const objects instead of `enum`: tsconfig bật `erasableSyntaxOnly`
 // (enum sinh mã runtime nên không hợp lệ). Vẫn dùng được cả ở vị trí giá trị và kiểu.
+// W3-15 fix: real backend lifecycle (`docs/api-contracts/warranty.md`) is
+// Pending -> Approved -> InProgress -> Resolved (or Rejected from Pending/
+// Approved). The previous `Assigned`/`Processing`/`Completed` values never
+// existed on the backend, so status-gated UI (e.g. the "Hoàn tất claim"
+// button) never matched a real claim and the lifecycle looked stuck.
 export const ClaimStatus = {
     Pending: 'Pending',
     Approved: 'Approved',
+    InProgress: 'InProgress',
     Rejected: 'Rejected',
     Resolved: 'Resolved',
-    Assigned: 'Assigned',
-    Processing: 'Processing',
-    Completed: 'Completed',
 } as const;
 
 export type ClaimStatus = (typeof ClaimStatus)[keyof typeof ClaimStatus];
@@ -104,6 +107,19 @@ export interface WarrantyClaim {
     receivedCondition?: string;
     technicianId?: string;
     technicianName?: string;
+    /**
+     * D08 §4 "hai lớp thời gian" (binding, phase-63 decision update): the
+     * PUBLISHED deadline printed on the receipt — the Đ30.2.đ legal trigger —
+     * is `committedTurnaroundDays` counted from `deviceReceivedAt`. This is
+     * NEVER the same number as the internal SLA (`slaTargetHours` etc. above,
+     * ops-only, never shown to the customer). Set by POST .../assign.
+     */
+    deviceReceivedAt?: string;
+    deviceReturnedAt?: string;
+    committedTurnaroundDays?: number;
+    /** Only present on the POST .../resolve response — D08 "3 lần" rule (query, not a stored flag). */
+    resolvedClaimCountForSerial?: number;
+    eligibleForReplaceOrRefund?: boolean;
 }
 
 export interface ClaimHistoryItem {

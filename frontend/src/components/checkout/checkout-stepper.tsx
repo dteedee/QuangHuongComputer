@@ -1,4 +1,4 @@
-import { User, Tag, CreditCard, Check, ChevronRight } from 'lucide-react';
+import { User, Tag, CreditCard, ClipboardCheck, Check, ChevronRight } from 'lucide-react';
 import type { CheckoutStep } from './checkout-types';
 
 interface CheckoutStepperProps {
@@ -9,24 +9,24 @@ const STEPS: { key: CheckoutStep; title: string; icon: typeof User }[] = [
     { key: 1, title: 'Giao hàng', icon: User },
     { key: 2, title: 'Khuyến mãi', icon: Tag },
     { key: 3, title: 'Thanh toán', icon: CreditCard },
-    { key: 4, title: 'Hoàn tất', icon: Check },
+    { key: 4, title: 'Xác nhận', icon: ClipboardCheck },
 ];
 
 export function CheckoutStepper({ current }: CheckoutStepperProps) {
     return (
-        <div className="flex items-center gap-1 bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+        <div className="flex items-center gap-1 bg-surface px-3 py-2 rounded-xl border border-line shadow-xs overflow-x-auto">
             {STEPS.map((s, idx) => {
                 const isActive = current === s.key;
                 const isDone = current > s.key;
                 return (
                     <div key={s.key} className="flex items-center flex-shrink-0">
                         <div
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-140 ${
                                 isActive
-                                    ? 'bg-[var(--accent-primary,#dc2626)] text-white'
+                                    ? 'bg-brand text-white'
                                     : isDone
-                                        ? 'text-green-600'
-                                        : 'text-gray-400'
+                                        ? 'text-success'
+                                        : 'text-fg-subtle'
                             }`}
                         >
                             <div
@@ -39,7 +39,7 @@ export function CheckoutStepper({ current }: CheckoutStepperProps) {
                             <span className="hidden sm:block">{s.title}</span>
                         </div>
                         {idx < STEPS.length - 1 && (
-                            <ChevronRight className="w-4 h-4 mx-0.5 text-gray-300" />
+                            <ChevronRight className="w-4 h-4 mx-0.5 text-line" />
                         )}
                     </div>
                 );

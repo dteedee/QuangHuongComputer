@@ -123,11 +123,26 @@ export const RegisterPage = () => {
                                         control={control}
                                         label={<>Tôi đồng ý với <Link to="/policy/terms" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Điều khoản sử dụng</Link> của Quang Hưởng Computer</>}
                                     />
-                                    {/* D08 / Luật 122/2025 Đ11.4 — copy/placement to be finalized by W3-8. */}
+                                    {/*
+                                        D08 / Luật 122/2025 Đ11.4 — finalized by W3-8. The checkbox copy itself
+                                        must cover: (1) chủ quản (who processes the data), (2) the privacy policy,
+                                        (3) the parties' rights & obligations, (4) the complaint channel — not just
+                                        a bare "I agree" pointing at one link, since a CMS page can be thin or
+                                        missing. Complaint channel links to `/chinh-sach/khieu-nai`, which has real
+                                        CMS content (verified via DB); `/policy/privacy` is left linked for the
+                                        privacy-policy detail but content team still needs to populate that slug —
+                                        filed as an integration request, this checkbox's own text no longer
+                                        depends on it to satisfy D08.
+                                    */}
                                     <ConsentCheckbox
                                         name="acceptDataPolicy"
                                         control={control}
-                                        label={<>Tôi đồng ý để Quang Hưởng Computer xử lý dữ liệu theo <Link to="/policy/privacy" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Chính sách bảo mật</Link></>}
+                                        label={<>
+                                            Tôi đồng ý để <strong>Quang Hưởng Computer</strong> (chủ quản trang này) thu thập và xử lý dữ liệu
+                                            cá nhân của tôi theo <Link to="/policy/privacy" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">Chính sách bảo mật</Link>,
+                                            tôi đã hiểu quyền và nghĩa vụ của các bên, và có thể khiếu nại qua{' '}
+                                            <Link to="/chinh-sach/khieu-nai" target="_blank" className="text-accent hover:underline font-bold cursor-pointer">kênh khiếu nại</Link> nếu có vướng mắc.
+                                        </>}
                                     />
 
                                     <Button type="submit" variant="primary" size="lg" loading={isSubmitting} icon={ArrowRight} iconPosition="right" className="w-full cursor-pointer">

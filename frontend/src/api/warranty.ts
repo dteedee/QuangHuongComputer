@@ -10,7 +10,7 @@ export * from './warranty/public';
 export * from './warranty/admin';
 
 import { warrantyPublicApi } from './warranty/public';
-import { warrantyAdminApi, warrantyLoanerApi, warrantyPoliciesApi, warrantyRmaApi } from './warranty/admin';
+import { warrantyAdminApi, warrantyLoanerApi, warrantyPoliciesApi, warrantyRmaApi, warrantySlaPoliciesApi } from './warranty/admin';
 
 /** @deprecated import `warrantyPublicApi` / `warrantyAdminApi` / `warrantyRmaApi` / `warrantyLoanerApi` / `warrantyPoliciesApi` from `api/warranty/*` instead. */
 export const warrantyApi = {
@@ -19,4 +19,5 @@ export const warrantyApi = {
     rma: warrantyRmaApi,
     loaner: warrantyLoanerApi,
     policies: warrantyPoliciesApi,
+    slaPolicies: warrantySlaPoliciesApi,
 };

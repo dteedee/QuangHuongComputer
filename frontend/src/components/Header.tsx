@@ -1,70 +1,69 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
-import { catalogApi, type Category } from '../api/catalog';
+import { useQuery } from '@tanstack/react-query';
+import { getConfigValue } from '../api/systemConfig';
+import { catalogPublicListingApi } from '../api/catalog/public-listing';
 import { contentApi, type Menu } from '../api/content';
+import { usePublicConfig } from '../lib/use-public-config';
+import { queryKeys } from '../lib/query-keys';
 import { HeaderTopBar } from './header/header-top-bar';
 import { HeaderUtilityBar } from './header/header-utility-bar';
 import { HeaderMainBar } from './header/header-main-bar';
 import { HeaderNavBar } from './header/header-nav-bar';
 import { HeaderMobileMenu } from './header/header-mobile-menu';
+import { HeaderMobileSearchOverlay } from './header/header-mobile-search-overlay';
 
 interface HeaderProps {
     onCartClick: () => void;
     onChatClick?: () => void;
 }
 
+const CATALOG_STALE_TIME_MS = 5 * 60 * 1000;
+
 export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
-    const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
-    const [headerMenu, setHeaderMenu] = useState<Menu | null>(null);
-    const [categories, setCategories] = useState<Category[]>([]);
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
     const location = useLocation();
 
     // Scroll listener for sticky shrink
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 60);
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Fetch config and menu data
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const configData = await systemConfigApi.config.getPublic();
-                setConfigs(Array.isArray(configData) ? configData : []);
-            } catch (error) {
-                console.error('Failed to load config', error);
-            }
-            try {
-                const menuData = await contentApi.getMenu('HeaderMain');
-                setHeaderMenu(menuData);
-            } catch (error) {
-                console.error('Failed to load header menu', error);
-            }
-        };
-        fetchData();
-    }, []);
+    // One shared cache entry per resource (phase §12): the header no longer
+    // fetches `/config/public` itself, and categories are a TanStack query that
+    // the listing page and the mega menu reuse instead of refetching.
+    const { data: configs = [] } = usePublicConfig();
 
-    // Fetch categories
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await catalogApi.getCategories();
-                setCategories(data.filter(c => c.isActive));
-            } catch (error) {
-                console.error('Failed to load categories', error);
-            }
-        };
-        fetchCategories();
-    }, []);
+    const { data: headerMenu = null } = useQuery<Menu | null>({
+        queryKey: queryKeys.content.detail('menu:HeaderMain'),
+        queryFn: () => contentApi.getMenu('HeaderMain'),
+        staleTime: CATALOG_STALE_TIME_MS,
+        retry: 1,
+    });
 
-    // Close mobile menu on route change
+    const categoriesQuery = useQuery({
+        queryKey: queryKeys.catalog.list({ resource: 'categories' }),
+        queryFn: catalogPublicListingApi.getCategories,
+        staleTime: CATALOG_STALE_TIME_MS,
+    });
+
+    /* Active categories that actually have something to show. The catalogue
+     * still carries empty `w02-probe-*` rows from a wave-2 API probe; listing
+     * them in the customer-facing menu would be a defect. */
+    const categories = useMemo(
+        () => (categoriesQuery.data ?? []).filter((c) => c.isActive && (c.productCount ?? 0) > 0),
+        [categoriesQuery.data],
+    );
+
+    // Close mobile surfaces on route change
     useEffect(() => {
         setShowMobileMenu(false);
-    }, [location.pathname]);
+        setShowMobileSearch(false);
+    }, [location.pathname, location.search]);
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
@@ -72,22 +71,24 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
         return () => { document.body.style.overflow = ''; };
     }, [showMobileMenu]);
 
-    const companyBrand1 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_1', 'QUANG HUONG', (v) => v);
+    const companyBrand1 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_1', 'QUANG HƯỞNG', (v) => v);
     const companyBrand2 = getConfigValue(configs, 'COMPANY_BRAND_TEXT_2', 'COMPUTER', (v) => v);
 
     return (
         <>
-            <header className={`flex flex-col w-full z-50 sticky top-0 bg-white font-sans transition-shadow duration-200 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`}>
+            <header className={`sticky top-0 z-topbar flex w-full flex-col bg-surface font-sans transition-shadow duration-220 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`}>
                 <HeaderTopBar isScrolled={isScrolled} />
-                <HeaderUtilityBar isScrolled={isScrolled} configs={configs} />
+                <HeaderUtilityBar isScrolled={isScrolled} />
                 <HeaderMainBar
                     isScrolled={isScrolled}
                     companyBrand1={companyBrand1}
                     companyBrand2={companyBrand2}
                     categories={categories}
+                    categoriesLoading={categoriesQuery.isPending}
                     onCartClick={onCartClick}
                     onChatClick={onChatClick}
                     onMobileMenuOpen={() => setShowMobileMenu(true)}
+                    onMobileSearchOpen={() => setShowMobileSearch(true)}
                 />
                 <HeaderNavBar headerMenu={headerMenu} isScrolled={isScrolled} />
             </header>
@@ -97,6 +98,12 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
                 onClose={() => setShowMobileMenu(false)}
                 companyBrand1={companyBrand1}
                 companyBrand2={companyBrand2}
+                categories={categories}
+            />
+
+            <HeaderMobileSearchOverlay
+                open={showMobileSearch}
+                onClose={() => setShowMobileSearch(false)}
                 categories={categories}
             />
         </>

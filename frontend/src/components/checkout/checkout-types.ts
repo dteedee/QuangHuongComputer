@@ -1,5 +1,5 @@
 /**
- * Shared types cho luồng checkout 4 bước.
+ * Shared types cho luồng checkout 4 bước (Giao hàng → Khuyến mãi → Thanh toán → Xác nhận).
  * Không chứa logic — chỉ định nghĩa hình dạng dữ liệu.
  */
 
@@ -22,17 +22,36 @@ export interface ShippingFormState {
     email: string;
     phone: string;
     address: string;
+    /** Tên phường/xã (2 cấp 2025) — hiển thị và lưu vào địa chỉ đơn. */
     ward: string;
-    district: string;
+    /** Mã phường/xã do backend trả (`GET /sales/shipping/provinces/{code}/wards`). */
+    wardCode: string;
+    /** Tên tỉnh/thành. Cấp "quận/huyện" đã bị bỏ từ 01/07/2025. */
     province: string;
+    /** Mã tỉnh 2 chữ số. */
+    provinceCode: string;
     deliveryMethod: DeliveryMethod;
     pickupStoreId: string;
     pickupStoreName: string;
     /** Guest tuỳ chọn tạo tài khoản sau khi đặt (chỉ gửi cờ, không thu password ở đây). */
     createAccount: boolean;
-    /** Khoá địa chỉ đã chọn từ sổ (nếu có), để backend biết dùng lại thay vì tạo mới. */
+    /** Lưu địa chỉ này vào sổ địa chỉ sau khi đặt hàng. */
+    saveAddress: boolean;
+    /** Khoá địa chỉ đã chọn từ sổ (nếu có). */
     addressId?: string;
     notes?: string;
+}
+
+/** D07 — khối "Thông tin hóa đơn" ở bước xác nhận. */
+export interface InvoiceFormState {
+    /** Khách tick "Xuất hóa đơn cho công ty/đơn vị". */
+    requested: boolean;
+    buyerType: 'Company' | 'BudgetUnit';
+    legalName: string;
+    taxCode: string;
+    budgetUnitCode: string;
+    address: string;
+    email: string;
 }
 
 export interface PaymentFormState {
@@ -42,20 +61,20 @@ export interface PaymentFormState {
     installmentTerm?: 6 | 9 | 12;
     installmentDownPayment?: number;
     installmentMonthly?: number;
-    installmentIdFrontFileId?: string;
-    installmentIdBackFileId?: string;
+    /** D10 — khách đồng ý cho chuyển thông tin sang công ty tài chính. */
+    installmentConsent?: boolean;
 }
 
 export interface CheckoutPersistedState {
     step: CheckoutStep;
     shipping: ShippingFormState;
     payment: PaymentFormState;
+    invoice: InvoiceFormState;
     promotionCode: string | null;
     sessionId?: string;
     sessionExpiresAt?: string;
-    calculatedShippingFee: number;
-    ghnDistrictId: number;
-    ghnWardCode: string;
+    /** Phí ship do SERVER báo ở bước 1 (chỉ để hiển thị; server tính lại khi chốt đơn). */
+    quotedShippingFee: number;
 }
 
 export const initialShippingState: ShippingFormState = {
@@ -64,17 +83,29 @@ export const initialShippingState: ShippingFormState = {
     phone: '',
     address: '',
     ward: '',
-    district: '',
+    wardCode: '',
     province: '',
+    provinceCode: '',
     deliveryMethod: 'delivery',
     pickupStoreId: '',
     pickupStoreName: '',
     createAccount: false,
+    saveAddress: false,
     notes: '',
+};
+
+export const initialInvoiceState: InvoiceFormState = {
+    requested: false,
+    buyerType: 'Company',
+    legalName: '',
+    taxCode: '',
+    budgetUnitCode: '',
+    address: '',
+    email: '',
 };
 
 export const initialPaymentState: PaymentFormState = {
     paymentMethod: 'cod',
 };
 
-export const CHECKOUT_STORAGE_KEY = 'qhc.checkout.v1';
+export const CHECKOUT_STORAGE_KEY = 'qhc.checkout.v2';

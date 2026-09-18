@@ -1,76 +1,92 @@
-import { useState, useEffect } from 'react';
-import { calculateShippingFee } from '../api/sales';
+import { useEffect, useState } from 'react';
 import { Truck } from 'lucide-react';
+import { salesCartCheckoutApi, type ShippingQuoteDto } from '../api/sales/cart-checkout';
+import { normalizeApiError } from '../lib/api-error';
+import { Button, Price } from './ui';
 
 interface ShippingFeeCalculatorProps {
-  districtId: number;
-  wardCode: string;
-  weight?: number;
-  onFeeCalculated?: (fee: number) => void;
+  /** Tạm tính SAU giảm giá — server dùng đúng con số này để áp ngưỡng miễn phí. */
+  netSubtotal: number;
+  provinceCode?: string;
+  wardCode?: string;
+  isPickup?: boolean;
+  weightGrams?: number;
+  onQuote?: (quote: ShippingQuoteDto) => void;
 }
 
+const SOURCE_LABEL: Record<ShippingQuoteDto['source'], string> = {
+  pickup: 'Nhận tại cửa hàng — không tính phí giao',
+  free_threshold: 'Đơn đã đạt ngưỡng miễn phí giao hàng',
+  flat: 'Phí giao hàng đồng giá toàn quốc',
+  ghn_live: 'Phí do đơn vị vận chuyển báo',
+};
+
+/**
+ * Phí vận chuyển do SERVER báo (`POST /api/sales/shipping/quote`, hợp đồng W2-11 §1).
+ * FE không bao giờ tự tính phí và không bao giờ gửi phí lên — nếu gọi hỏng thì hiện lỗi
+ * kèm nút thử lại, chứ không đoán một con số.
+ */
 export default function ShippingFeeCalculator({
-  districtId,
-  wardCode,
-  weight = 500,
-  onFeeCalculated,
+  netSubtotal, provinceCode, wardCode, isPickup = false, weightGrams = 500, onQuote,
 }: ShippingFeeCalculatorProps) {
-  const [fee, setFee] = useState<number | null>(null);
-  const [deliveryTime, setDeliveryTime] = useState('');
+  const [quote, setQuote] = useState<ShippingQuoteDto | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!districtId || !wardCode) return;
+    let cancelled = false;
     setLoading(true);
-    setError(false);
-    calculateShippingFee(districtId, wardCode, weight)
+    setError(null);
+    salesCartCheckoutApi.shipping
+      .quote({ netSubtotal, isPickup, provinceCode, wardCode, weightGrams })
       .then((result) => {
-        setFee(result.fee);
-        setDeliveryTime(result.expectedDeliveryDays);
-        onFeeCalculated?.(result.fee);
+        if (cancelled) return;
+        setQuote(result);
+        onQuote?.(result);
       })
-      .catch(() => {
-        setFee(null);
-        setError(true);
+      .catch((err) => {
+        if (cancelled) return;
+        setQuote(null);
+        setError(normalizeApiError(err).message);
       })
-      .finally(() => setLoading(false));
-  }, [districtId, wardCode, weight]);
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    // `onQuote` cố tình không nằm trong deps: nơi gọi thường truyền arrow inline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [netSubtotal, provinceCode, wardCode, isPickup, weightGrams, attempt]);
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
-        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-        Đang tính phí vận chuyển...
-      </div>
+      <div className="h-[52px] rounded-lg bg-sunken animate-pulse" aria-label="Đang tính phí vận chuyển" />
     );
   }
 
   if (error) {
     return (
-      <div className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-        Không thể tính phí vận chuyển. Vui lòng liên hệ cửa hàng.
+      <div className="rounded-lg border border-danger/40 bg-danger-subtle px-3 py-2.5 text-13 text-danger flex items-center justify-between gap-3">
+        <span>{error}</span>
+        <Button size="sm" variant="outline" onClick={() => setAttempt(a => a + 1)}>Thử lại</Button>
       </div>
     );
   }
 
-  if (fee === null) return null;
+  if (!quote) return null;
 
   return (
-    <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm text-gray-600">
-          <Truck className="w-4 h-4 text-blue-500" />
-          Phí vận chuyển (GHN):
+    <div className="rounded-lg border border-line bg-sunken px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-13 text-fg-muted">
+          <Truck className="w-4 h-4 text-brand" aria-hidden />
+          Phí vận chuyển
         </span>
-        <span className="font-bold text-blue-600">
-          {fee === 0 ? 'Miễn phí' : `${fee.toLocaleString('vi-VN')}đ`}
-        </span>
+        {quote.isFreeShipping
+          ? <span className="font-semibold text-success text-sm">Miễn phí</span>
+          : <Price value={quote.fee} className="font-semibold text-sm" />}
       </div>
-      {deliveryTime && (
-        <div className="text-xs text-gray-500 mt-1 pl-6">
-          Dự kiến giao: {deliveryTime}
-        </div>
+      <p className="mt-1 pl-6 text-2xs text-fg-subtle">{SOURCE_LABEL[quote.source]}</p>
+      {quote.estimatedDeliveryDays && (
+        <p className="pl-6 text-2xs text-fg-subtle">Dự kiến giao: {quote.estimatedDeliveryDays}</p>
       )}
     </div>
   );

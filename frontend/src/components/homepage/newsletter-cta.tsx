@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Mail, ArrowRight } from 'lucide-react';
+import { Reveal } from '../motion';
 
 /**
  * Simple newsletter email signup bar for the homepage footer area.
@@ -19,10 +19,7 @@ export const NewsletterCta = () => {
 
     return (
         <div className="max-w-[1400px] mx-auto px-4 mt-14">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+            <Reveal
                 className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10"
             >
                 <div className="flex-1 text-center md:text-left">
@@ -50,7 +47,7 @@ export const NewsletterCta = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Email của bạn..."
                             required
-                            className="flex-1 md:w-72 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+                            className="min-w-0 flex-1 md:w-72 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
                         />
                         <button
                             type="submit"
@@ -61,7 +58,7 @@ export const NewsletterCta = () => {
                         </button>
                     </form>
                 )}
-            </motion.div>
+            </Reveal>
         </div>
     );
 };

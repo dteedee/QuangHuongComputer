@@ -1,44 +1,74 @@
-import { useState, useEffect, useRef } from 'react';
+/**
+ * ProductCard — THE product tile. One component for the homepage sections, the
+ * listing grid, search results and every carousel.
+ *
+ * Anatomy (design-direction.md §6): image on `--stage` → badges → rating + SKU →
+ * name (3 lines) → old price + saving → price → stock + add-to-cart.
+ *
+ * Badges are REAL only (phase §8): discount %, flash sale, out of stock. The
+ * invented "Quà tặng"/"Voucher" pills the audit found are gone and do not come
+ * back until a promotion payload actually carries a gift.
+ *
+ * Props are a stable contract consumed by W3-7/W3-8/W3-9: `{ product,
+ * onAddToCart?, variant? }` (+ optional `flash`, additive).
+ */
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Check, ShoppingCart, Star, Zap } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Check, Star } from 'lucide-react';
-import { formatNumber } from '../utils/format';
-import { resolveMediaUrl } from '../lib/media-url';
+import { Img, Price, formatDong } from './ui';
+import { buildPath, ROUTES } from '../routes/route-paths';
 
-interface ProductCardProps {
-    product: Product;
+/** Flash-sale terms for this product, from `GET /api/content/promotions/active`. */
+export interface ProductCardFlash {
+    flashPrice: number;
+    remaining: number | null;
+    quantityLimit: number | null;
+    soldCount: number;
 }
 
-/**
- * ProductCard — 6-tier anatomy theo hacom.vn pattern (giữ brand đỏ Quang Hưởng qua token `accent`):
- * 1. Ảnh (ratio vuông)
- * 2. Rating + "Mã: SKU"
- * 3. Tên SP 3 dòng ellipsis
- * 4. Giá cũ gạch + "(Tiết kiệm x%)"
- * 5. Giá bán đỏ bold, ₫ superscript
- * 6. "✓ Sẵn hàng" xanh + nút giỏ tròn đỏ
- *
- * D01/W0-12: đã bỏ 2 badge khuyến mãi bịa (quà tặng theo soldCount > 20, mã giảm giá không
- * gắn với sản phẩm nào) — không có dữ liệu thật đứng sau. Rebuild thật (nếu có) ở W3-1.
- */
-export const ProductCard = ({ product }: ProductCardProps) => {
+export interface ProductCardProps {
+    product: Product & { thumbnailUrl?: string | null };
+    /** Overrides the default cart add (the PDP/compare pages pass their own). */
+    onAddToCart?: (product: Product) => void | Promise<void>;
+    variant?: 'grid' | 'compact';
+    flash?: ProductCardFlash;
+}
+
+export const ProductCard = ({ product, onAddToCart, variant = 'grid', flash }: ProductCardProps) => {
     const { addToCart } = useCart();
-    const [imgError, setImgError] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [justAdded, setJustAdded] = useState(false);
     const addedTimer = useRef<number | undefined>(undefined);
 
-    useEffect(() => { setImgError(false); }, [product.imageUrl]);
-    useEffect(() => () => { if (addedTimer.current) window.clearTimeout(addedTimer.current); }, []);
+    // A flash tile only overrides the price when the promotion really carries
+    // one (`FlashPrice` is nullable server-side) — otherwise the card falls back
+    // to the catalogue price instead of printing 0 ₫.
+    const hasFlashPrice = !!flash && Number.isFinite(flash.flashPrice) && flash.flashPrice > 0;
+    const price = hasFlashPrice ? flash!.flashPrice : product.price;
+    const compareAt = hasFlashPrice ? product.price : product.oldPrice ?? null;
+    const isOutOfStock = product.stockQuantity <= 0 || product.status === 'OutOfStock';
+    const isSoldOut = flash ? flash.remaining !== null && flash.remaining <= 0 : false;
+    const disabled = isOutOfStock || isSoldOut;
+    const discount = compareAt && compareAt > price ? Math.round((1 - price / compareAt) * 100) : 0;
+    const rating = Math.round(product.averageRating || 0);
+    // Slug is the canonical PDP URL; the legacy `/product/:id` route stays live
+    // for rows whose slug has not been generated yet (storefront-product.routes.ts).
+    const productUrl = product.slug
+        ? buildPath(ROUTES.PRODUCT_DETAIL, product.slug)
+        : `/product/${product.id}`;
+    // D02: cards prefer the primary-media thumbnail; `Img` resolves `/media/...`.
+    const image = product.thumbnailUrl || product.imageUrl;
 
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (isAdding) return;
+        if (isAdding || disabled) return;
         setIsAdding(true);
         try {
-            await addToCart(product, 1);
+            if (onAddToCart) await onAddToCart(product);
+            else await addToCart(product, 1);
             setJustAdded(true);
             addedTimer.current = window.setTimeout(() => setJustAdded(false), 1200);
         } finally {
@@ -46,96 +76,107 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         }
     };
 
-    const hasOldPrice = !!product.oldPrice && product.oldPrice > product.price;
-    const savingsPercent = hasOldPrice
-        ? Math.round((1 - product.price / (product.oldPrice as number)) * 100)
-        : 0;
-    const isOutOfStock = product.stockQuantity <= 0 || product.status === 'OutOfStock';
-    const productUrl = product.slug ? `/san-pham/${product.slug}` : `/product/${product.id}`;
-    const rating = Math.round(product.averageRating || 0);
-    const resolvedImageUrl = resolveMediaUrl(product.imageUrl);
+    const soldProgress =
+        flash && flash.quantityLimit
+            ? Math.min(100, Math.round((flash.soldCount / flash.quantityLimit) * 100))
+            : null;
 
     return (
         <Link
             to={productUrl}
-            className="group relative flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5 h-full"
+            aria-label={`${product.name} — ${formatDong(price)} đồng`}
+            className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface transition duration-220 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md motion-reduce:transform-none"
         >
-            {/* Tier 1 — image */}
-            <div className="relative aspect-square bg-white p-3 overflow-hidden">
-                {resolvedImageUrl && !imgError ? (
-                    <img
-                        src={resolvedImageUrl}
-                        alt={product.name}
-                        loading="lazy"
-                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                        onError={() => setImgError(true)}
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg text-gray-300">
-                        <span className="text-4xl font-black">{product.name?.charAt(0) || '?'}</span>
-                    </div>
-                )}
+            <div className="relative">
+                <Img
+                    src={image}
+                    alt={product.name}
+                    ratio="1/1"
+                    fit="contain"
+                    blend
+                    wrapperClassName="rounded-t-2xl"
+                    className="p-3 transition-transform duration-360 ease-out group-hover:scale-[1.02] motion-reduce:transform-none"
+                />
+                <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+                    {flash && (
+                        <span className="inline-flex items-center gap-1 rounded-sm bg-brand px-1.5 py-0.5 text-2xs font-bold uppercase text-white">
+                            <Zap size={10} className="fill-current" aria-hidden /> Flash sale
+                        </span>
+                    )}
+                    {discount > 0 && (
+                        <span className="rounded-sm bg-fg px-1.5 py-0.5 text-2xs font-bold text-bg">-{discount}%</span>
+                    )}
+                    {disabled && (
+                        <span className="rounded-sm bg-fg-subtle px-1.5 py-0.5 text-2xs font-semibold text-white">
+                            {isSoldOut ? 'Hết suất' : 'Hết hàng'}
+                        </span>
+                    )}
+                </div>
             </div>
 
-            <div className="flex flex-col flex-1 px-3 pb-3 pt-1.5 border-t border-gray-100">
-                {/* Tier 2 — rating + SKU (ẩn sao khi chưa có đánh giá, đồng bộ ProductListItem) */}
-                <div className="flex items-center gap-1 mb-1 text-[11px]">
+            <div className="flex flex-1 flex-col border-t border-line px-3 pb-3 pt-2">
+                <div className="mb-1 flex h-4 items-center gap-1 overflow-hidden text-2xs">
                     {rating > 0 ? (
-                        <div className="flex items-center">
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <Star key={i} size={10} className={i <= rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
+                        <span className="flex shrink-0 items-center" aria-label={`${rating} trên 5 sao`}>
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <Star
+                                    key={i}
+                                    size={10}
+                                    aria-hidden
+                                    className={i <= rating ? 'fill-rating text-rating' : 'fill-line text-line'}
+                                />
                             ))}
-                        </div>
+                        </span>
                     ) : (
-                        <span className="text-gray-300">Chưa có đánh giá</span>
+                        <span className="shrink-0 text-fg-subtle">Chưa có đánh giá</span>
                     )}
-                    <span className="text-gray-400 ml-1 truncate">Mã: {product.sku}</span>
+                    <span className="ml-1 truncate text-fg-subtle">Mã: {product.sku}</span>
                 </div>
 
-                {/* Tier 3 — name, 3 lines */}
-                <h3 className="text-[13px] font-medium text-gray-800 line-clamp-3 min-h-[3.1em] leading-snug mb-1.5 group-hover:text-accent transition-colors">
+                <h3 className="mb-1.5 line-clamp-3 min-h-[3.1em] text-sm font-medium leading-snug text-fg transition-colors duration-140 group-hover:text-brand-text">
                     {product.name}
                 </h3>
 
-                {/* Tier 4 — old price + savings */}
-                <div className="min-h-[16px] flex items-center gap-2 text-[12px]">
-                    {hasOldPrice && (
-                        <>
-                            <span className="text-gray-400 line-through">{formatNumber(product.oldPrice as number)}₫</span>
-                            <span className="text-accent font-semibold">(Tiết kiệm {savingsPercent}%)</span>
-                        </>
+                <div className="mt-auto space-y-2">
+                    <Price value={price} compareAt={compareAt} showDiscount={false} className="flex-wrap" />
+
+                    {soldProgress !== null && (
+                        <div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-sunken">
+                                <div className="h-full rounded-full bg-brand" style={{ width: `${soldProgress}%` }} />
+                            </div>
+                            <p className="mt-1 text-2xs text-fg-muted">
+                                Đã bán {flash!.soldCount}/{flash!.quantityLimit}
+                            </p>
+                        </div>
                     )}
-                </div>
 
-                {/* Tier 5 — sale price, red bold, superscript đ */}
-                <div className="mt-0.5 mb-2">
-                    <span className="text-[18px] font-bold text-accent leading-none">
-                        {formatNumber(product.price)}
-                        <sup className="text-[11px] font-bold ml-0.5">₫</sup>
-                    </span>
-                </div>
-
-                {/* Tier 6 — stock status + cart button */}
-                <div className="mt-auto flex items-center justify-between">
-                    <span className={`text-[12px] font-semibold ${isOutOfStock ? 'text-gray-400' : 'text-stock'}`}>
-                        {isOutOfStock ? 'Hết hàng' : '✓ Sẵn hàng'}
-                    </span>
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={isOutOfStock || isAdding}
-                        aria-label={justAdded ? 'Đã thêm vào giỏ hàng' : 'Thêm vào giỏ hàng'}
-                        className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
-                            isOutOfStock
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : justAdded
-                                    ? 'bg-emerald-500 text-white scale-110'
-                                    : 'bg-accent text-white hover:bg-accent-hover active:scale-95 shadow-sm'
-                        } ${isAdding ? 'opacity-70 cursor-wait' : ''}`}
-                    >
-                        {justAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
-                    </button>
+                    <div className="flex items-center justify-between gap-2">
+                        <span className={`text-2xs font-semibold ${disabled ? 'text-fg-subtle' : 'text-stock'}`}>
+                            {disabled ? (isSoldOut ? 'Hết suất ưu đãi' : 'Hết hàng') : '✓ Sẵn hàng'}
+                        </span>
+                        {variant === 'grid' && (
+                            <button
+                                type="button"
+                                onClick={handleAddToCart}
+                                disabled={disabled || isAdding}
+                                aria-label={justAdded ? `Đã thêm ${product.name} vào giỏ hàng` : `Thêm ${product.name} vào giỏ hàng`}
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition duration-220 ease-back ${
+                                    disabled
+                                        ? 'cursor-not-allowed bg-sunken text-fg-subtle'
+                                        : justAdded
+                                          ? 'scale-110 bg-success text-white'
+                                          : 'bg-brand text-white shadow-sm hover:bg-brand-hover active:scale-95'
+                                } ${isAdding ? 'cursor-wait opacity-70' : ''}`}
+                            >
+                                {justAdded ? <Check size={16} aria-hidden /> : <ShoppingCart size={16} aria-hidden />}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </Link>
     );
 };
+
+export default ProductCard;

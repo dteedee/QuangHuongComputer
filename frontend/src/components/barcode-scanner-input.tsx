@@ -1,48 +1,45 @@
-import { useRef, useEffect } from 'react';
+/**
+ * Ô quét mã vạch. Máy quét USB gõ ký tự rồi bấm Enter — nên đây là một ô nhập bình thường,
+ * bắt phím Enter, chứ không phải bộ đệm phím toàn cục như bản cũ (bản cũ nghe `window` và nuốt
+ * cả phím của ô khác, đồng thời tự xoá bộ đệm sau 100ms nên người gõ tay không dùng được).
+ */
+import { forwardRef, useRef, useState } from 'react';
+import { ScanBarcode } from 'lucide-react';
+import { Input } from './ui';
 
 interface BarcodeScannerInputProps {
     onScan: (code: string) => void;
     placeholder?: string;
     className?: string;
+    autoFocus?: boolean;
 }
 
-export default function BarcodeScannerInput({
-    onScan,
-    placeholder = 'Quét barcode...',
-    className = '',
-}: BarcodeScannerInputProps) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const bufferRef = useRef('');
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+const BarcodeScannerInput = forwardRef<HTMLInputElement, BarcodeScannerInputProps>(
+    function BarcodeScannerInput({ onScan, placeholder = 'Quét mã vạch hoặc nhập SKU', className, autoFocus }, ref) {
+        const [value, setValue] = useState('');
+        const inner = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (document.activeElement !== inputRef.current) return;
-            if (e.key === 'Enter' && bufferRef.current.length > 3) {
-                onScan(bufferRef.current);
-                bufferRef.current = '';
-                if (inputRef.current) inputRef.current.value = '';
-                return;
-            }
-            if (e.key.length === 1) {
-                bufferRef.current += e.key;
-                clearTimeout(timerRef.current);
-                timerRef.current = setTimeout(() => {
-                    bufferRef.current = '';
-                }, 100);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onScan]);
+        return (
+            <Input
+                ref={ref ?? inner}
+                className={className}
+                icon={ScanBarcode}
+                autoFocus={autoFocus}
+                aria-label="Quét mã vạch"
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    const code = value.trim();
+                    if (!code) return;
+                    onScan(code);
+                    setValue('');
+                }}
+            />
+        );
+    }
+);
 
-    return (
-        <input
-            ref={inputRef}
-            type="text"
-            placeholder={placeholder}
-            className={`border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${className}`}
-            onChange={e => { bufferRef.current = e.target.value; }}
-        />
-    );
-}
+export default BarcodeScannerInput;

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useCompanyInfo } from '../../hooks/use-company-info';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import {
@@ -6,26 +7,29 @@ import {
     LogOut, User, Settings, Package, Sun, Moon
 } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
-import type { ConfigurationEntry } from '../../api/systemConfig';
-import { getConfigValue } from '../../api/systemConfig';
 import { STAFF_ROLES } from '../../constants/staff-roles';
+import { ROUTES } from '../../routes/route-paths';
 
 interface HeaderUtilityBarProps {
     isScrolled: boolean;
-    configs: ConfigurationEntry[];
 }
 
 /**
  * Utility bar trắng (34px) theo hacom.vn: hotline | tìm cửa hàng | hỗ trợ | tra cứu đơn hàng | tài khoản.
  * Ẩn khi cuộn để header thu gọn (sticky compact).
  */
-export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps) => {
+export const HeaderUtilityBar = ({ isScrolled }: HeaderUtilityBarProps) => {
     const { isAuthenticated, user, logout } = useAuth();
     const { isDark, toggleMode } = useTheme();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    const companyPhone = getConfigValue(configs, 'COMPANY_PHONE', '0904.235.090', (v) => v);
+    /* D09: no hardcoded number here. The old fallback '0904.235.090' disagreed
+     * with the Footer/contact page ('031 3823769' — a dialling code that no
+     * longer exists). `useCompanyInfo()` is the single source, and it already
+     * reads the shared `/api/config/public` cache entry (usePublicConfig). */
+    const { companyInfo } = useCompanyInfo();
+    const companyPhone = companyInfo.hotline;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -76,9 +80,9 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                         <Phone size={12} /> Gọi mua hàng: <span className="font-bold text-accent">{companyPhone}</span>
                     </a>
                     <span className="w-px h-3 bg-gray-200" />
-                    <Link to="/stores" className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"><MapPin size={12} /> Tìm cửa hàng</Link>
+                    <Link to={ROUTES.STORES} className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"><MapPin size={12} /> Tìm cửa hàng</Link>
                     <Link to="/support" className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"><LifeBuoy size={12} /> Hỗ trợ</Link>
-                    <Link to="/account/orders" className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"><PackageSearch size={12} /> Tra cứu đơn hàng</Link>
+                    <Link to={`${ROUTES.ACCOUNT}/orders`} className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"><PackageSearch size={12} /> Tra cứu đơn hàng</Link>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -109,11 +113,11 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                                         </div>
                                     </div>
                                     <div className="p-1">
-                                        <Link to="/account" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
+                                        <Link to={ROUTES.ACCOUNT} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
                                             <User size={15} /> Tài khoản của tôi
                                         </Link>
                                         {!isStaffRole(user?.roles) && (
-                                            <Link to="/account?tab=orders" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
+                                            <Link to={`${ROUTES.ACCOUNT}?tab=orders`} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 rounded-lg transition-colors text-gray-600 cursor-pointer" onClick={() => setShowUserMenu(false)}>
                                                 <Package size={15} /> Đơn hàng
                                             </Link>
                                         )}
@@ -134,8 +138,8 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
                         </div>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link to="/login" className="hover:text-accent transition-colors cursor-pointer">Đăng nhập</Link>
-                            <Link to="/register" className="hover:text-accent transition-colors cursor-pointer">Đăng ký</Link>
+                            <Link to={ROUTES.LOGIN} className="hover:text-accent transition-colors cursor-pointer">Đăng nhập</Link>
+                            <Link to={ROUTES.REGISTER} className="hover:text-accent transition-colors cursor-pointer">Đăng ký</Link>
                         </div>
                     )}
                 </div>

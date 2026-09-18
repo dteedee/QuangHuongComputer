@@ -1,113 +1,124 @@
+/**
+ * Phiếu in tại quầy (khổ 80mm).
+ *
+ * Số liệu vào đây PHẢI là số server trả về (`/sales/pos/quote` + `/sales/pos/orders`), không phải
+ * số client tự cộng — hoá đơn in ra và đơn lưu trong CSDL luôn phải khớp nhau đến từng đồng.
+ *
+ * Sửa IR w0#31: dòng VAT không còn nằm trong phép cộng dọc. Giá đã GỒM VAT (D01), nên VAT là
+ * dòng thông tin ("Trong đó VAT (đã gồm)"), không phải một khoản cộng thêm vào tổng.
+ * D10: thu thiếu tổng đơn ⇒ in PHIẾU THU (đặt cọc), không in hoá đơn bán lẻ.
+ */
 import { forwardRef } from 'react';
 import { useCompanyInfo } from '../hooks/use-company-info';
 
-interface ReceiptItem {
-  name: string;
-  quantity: number;
-  unitPrice: number;
+export interface ReceiptLine {
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    payable: number;
 }
 
-interface ReceiptOrder {
-  orderNumber: string;
-  orderDate: string;
-  items: ReceiptItem[];
-  subtotal: number;
-  discount: number;
-  tax: number;
-  shippingFee: number;
-  total: number;
-  paymentMethod: string;
-  customerName?: string;
-  customerPhone?: string;
+export interface ReceiptTender {
+    method: string;
+    amount: number;
 }
 
-interface PosReceiptTemplateProps {
-  order: ReceiptOrder;
+export interface ReceiptData {
+    orderNumber: string;
+    issuedAt: string;
+    cashierName?: string;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    lines: ReceiptLine[];
+    subtotal: number;
+    discount: number;
+    /** Đã nằm TRONG `total` — chỉ để khách và kế toán đối chiếu. */
+    taxAmount: number;
+    total: number;
+    collected: number;
+    changeDue: number;
+    amountDue: number;
+    isDeposit: boolean;
+    tenders: ReceiptTender[];
+    loyaltyPointsEarned?: number;
 }
 
-const PosReceiptTemplate = forwardRef<HTMLDivElement, PosReceiptTemplateProps>(
-  ({ order }, ref) => {
+const dong = (n: number) => n.toLocaleString('vi-VN');
+
+const TENDER_LABELS: Record<string, string> = {
+    Cash: 'Tiền mặt', Card: 'Thẻ', Transfer: 'Chuyển khoản', SePay: 'SePay',
+};
+
+const PosReceiptTemplate = forwardRef<HTMLDivElement, { data: ReceiptData }>(function PosReceiptTemplate({ data }, ref) {
     const { companyInfo } = useCompanyInfo();
     return (
-      <div
-        ref={ref}
-        className="w-[80mm] mx-auto font-mono text-xs p-2 bg-white print:p-0"
-        id="pos-receipt"
-      >
-        {/* Header */}
-        <div className="text-center mb-3">
-          <h1 className="text-sm font-bold">{companyInfo.name}</h1>
-          <p>{companyInfo.address}</p>
-          <p>ĐT: {companyInfo.phone2}</p>
-          <p className="text-[10px]">MST: {companyInfo.taxCode}</p>
-        </div>
-
-        {/* Order Info */}
-        <div className="border-t border-dashed border-black pt-2 mb-2">
-          <p>Số HĐ: {order.orderNumber}</p>
-          <p>Ngày: {new Date(order.orderDate).toLocaleString('vi-VN')}</p>
-          {order.customerName && <p>KH: {order.customerName}</p>}
-          {order.customerPhone && <p>SĐT: {order.customerPhone}</p>}
-        </div>
-
-        {/* Items */}
-        <div className="border-t border-dashed border-black pt-2">
-          {order.items.map((item, i) => (
-            <div key={i} className="mb-1">
-              <div className="truncate">{item.name}</div>
-              <div className="flex justify-between">
-                <span>
-                  {item.quantity} x {item.unitPrice.toLocaleString('vi-VN')}
-                </span>
-                <span>{(item.quantity * item.unitPrice).toLocaleString('vi-VN')}</span>
-              </div>
+        <div ref={ref} id="pos-receipt" className="mx-auto w-[80mm] bg-white p-2 font-mono text-xs text-black print:p-0">
+            <div className="mb-3 text-center">
+                <h1 className="text-sm font-bold">{companyInfo.name}</h1>
+                <p>{companyInfo.address}</p>
+                <p>ĐT: {companyInfo.phone2}</p>
+                <p className="text-[10px]">MST: {companyInfo.taxCode}</p>
+                <p className="mt-2 text-sm font-bold">
+                    {data.isDeposit ? 'PHIẾU THU ĐẶT CỌC' : 'HOÁ ĐƠN BÁN LẺ'}
+                </p>
             </div>
-          ))}
-        </div>
 
-        {/* Totals */}
-        <div className="border-t border-dashed border-black pt-2 mt-2">
-          <div className="flex justify-between">
-            <span>Tạm tính:</span>
-            <span>{order.subtotal.toLocaleString('vi-VN')}</span>
-          </div>
-          {order.discount > 0 && (
-            <div className="flex justify-between">
-              <span>Giảm giá:</span>
-              <span>-{order.discount.toLocaleString('vi-VN')}</span>
+            <div className="mb-2 border-t border-dashed border-black pt-2">
+                <p>Số: {data.orderNumber}</p>
+                <p>Ngày: {new Date(data.issuedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
+                {data.cashierName && <p>Thu ngân: {data.cashierName}</p>}
+                {data.customerName && <p>Khách: {data.customerName}</p>}
+                {data.customerPhone && <p>SĐT: {data.customerPhone}</p>}
             </div>
-          )}
-          {order.tax > 0 && (
-            <div className="flex justify-between">
-              <span>Thuế (VAT):</span>
-              <span>{order.tax.toLocaleString('vi-VN')}</span>
-            </div>
-          )}
-          {order.shippingFee > 0 && (
-            <div className="flex justify-between">
-              <span>Phí ship:</span>
-              <span>{order.shippingFee.toLocaleString('vi-VN')}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-bold text-sm border-t border-dashed border-black pt-1 mt-1">
-            <span>TỔNG CỘNG:</span>
-            <span>{order.total.toLocaleString('vi-VN')}đ</span>
-          </div>
-          <div className="flex justify-between mt-1">
-            <span>Thanh toán:</span>
-            <span>{order.paymentMethod}</span>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center mt-3 border-t border-dashed border-black pt-2">
-          <p>Cảm ơn quý khách!</p>
-          <p className="text-[10px]">Bảo hành theo chính sách nhà sản xuất</p>
+            <div className="border-t border-dashed border-black pt-2">
+                {data.lines.map((line, i) => (
+                    <div key={`${line.productName}-${i}`} className="mb-1">
+                        <div className="truncate">{line.productName}</div>
+                        <div className="flex justify-between">
+                            <span>{line.quantity} x {dong(line.unitPrice)}</span>
+                            <span>{dong(line.payable)}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-2 border-t border-dashed border-black pt-2">
+                <div className="flex justify-between"><span>Tạm tính:</span><span>{dong(data.subtotal)}</span></div>
+                {data.discount > 0 && (
+                    <div className="flex justify-between"><span>Giảm giá:</span><span>-{dong(data.discount)}</span></div>
+                )}
+                <div className="flex justify-between border-t border-dashed border-black pt-1 text-sm font-bold">
+                    <span>TỔNG CỘNG:</span><span>{dong(data.total)}đ</span>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                    <span>Trong đó VAT (đã gồm):</span><span>{dong(data.taxAmount)}</span>
+                </div>
+            </div>
+
+            <div className="mt-2 border-t border-dashed border-black pt-2">
+                {data.tenders.map((t, i) => (
+                    <div key={`${t.method}-${i}`} className="flex justify-between">
+                        <span>{TENDER_LABELS[t.method] ?? t.method}:</span><span>{dong(t.amount)}</span>
+                    </div>
+                ))}
+                <div className="flex justify-between"><span>Đã thu:</span><span>{dong(data.collected)}</span></div>
+                {data.changeDue > 0 && (
+                    <div className="flex justify-between font-bold"><span>Tiền thối:</span><span>{dong(data.changeDue)}</span></div>
+                )}
+                {data.amountDue > 0 && (
+                    <div className="flex justify-between font-bold"><span>Còn phải thu:</span><span>{dong(data.amountDue)}</span></div>
+                )}
+            </div>
+
+            <div className="mt-3 border-t border-dashed border-black pt-2 text-center">
+                {data.isDeposit && <p className="mb-1 font-bold">Hàng giao khi thanh toán đủ.</p>}
+                {!!data.loyaltyPointsEarned && <p>Điểm tích luỹ: +{data.loyaltyPointsEarned}</p>}
+                <p>Cảm ơn quý khách!</p>
+                <p className="text-[10px]">Bảo hành theo chính sách nhà sản xuất</p>
+            </div>
         </div>
-      </div>
     );
-  }
-);
+});
 
-PosReceiptTemplate.displayName = 'PosReceiptTemplate';
 export default PosReceiptTemplate;

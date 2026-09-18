@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Play } from 'lucide-react';
-import type { ProductMedia } from '../../api/catalog';
+import type { ProductMediaView } from '../../api/catalog/public-product';
 import { resolveMediaUrl } from '../../lib/media-url';
 
 /**
@@ -23,7 +23,7 @@ export function extractYoutubeId(url: string): string | null {
 }
 
 interface ProductVideoPlayerProps {
-    media: ProductMedia;
+    media: ProductMediaView;
     className?: string;
 }
 
@@ -72,7 +72,7 @@ export default function ProductVideoPlayer({ media, className = '' }: ProductVid
                 >
                     <img
                         src={posterUrl}
-                        alt={media.altText || 'Video sản phẩm'}
+                        alt={(media.alt ?? media.altText) || 'Video sản phẩm'}
                         loading="lazy"
                         className="w-full h-full object-cover"
                     />
@@ -88,7 +88,7 @@ export default function ProductVideoPlayer({ media, className = '' }: ProductVid
         return (
             <iframe
                 src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
-                title={media.altText || 'Video sản phẩm'}
+                title={(media.alt ?? media.altText) || 'Video sản phẩm'}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className={`w-full h-full ${className}`}

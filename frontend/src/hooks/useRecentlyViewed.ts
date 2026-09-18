@@ -1,88 +1,90 @@
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * "Đã xem gần đây" — stored per browser in localStorage.
+ *
+ * It now stores a small SNAPSHOT of each product (name, price, image, slug,
+ * stock) instead of only its id. The id-only version forced the component to
+ * call `GET /catalog/products/{id}` once per remembered product, and that
+ * endpoint increments `viewCount` on every call — so simply opening one PDP
+ * inflated the view counter of up to eight other products. No request is made
+ * to render the strip any more.
+ */
+import { useCallback, useEffect, useState } from 'react';
+
+import { browserStorage } from '../lib/browser-storage';
 
 const STORAGE_KEY = 'recentlyViewedProducts';
 const MAX_ITEMS = 10;
 
+export interface RecentlyViewedSnapshot {
+  id: string;
+  name: string;
+  price: number;
+  oldPrice?: number | null;
+  slug?: string | null;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  stockQuantity: number;
+  status?: string | null;
+  averageRating?: number;
+  reviewCount?: number;
+  sku?: string | null;
+}
+
 interface RecentlyViewedItem {
   productId: string;
   viewedAt: number;
+  product?: RecentlyViewedSnapshot;
+}
+
+function readItems(): RecentlyViewedItem[] {
+  const items = browserStorage.getJSON<RecentlyViewedItem[]>(STORAGE_KEY, []);
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((i) => i && typeof i.productId === 'string')
+    .sort((a, b) => (b.viewedAt ?? 0) - (a.viewedAt ?? 0));
+}
+
+function writeItems(items: RecentlyViewedItem[]) {
+  // Private mode / quota just means the strip stays empty — never a thrown error.
+  browserStorage.setJSON(STORAGE_KEY, items);
 }
 
 export function useRecentlyViewed() {
-  const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
+  const [items, setItems] = useState<RecentlyViewedItem[]>([]);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const items: RecentlyViewedItem[] = JSON.parse(stored);
-        // Sort by viewedAt descending and extract productIds
-        const productIds = items
-          .sort((a, b) => b.viewedAt - a.viewedAt)
-          .map(item => item.productId);
-        setRecentlyViewed(productIds);
-      }
-    } catch (error) {
-      console.error('Failed to load recently viewed products:', error);
-    }
+  useEffect(() => { setItems(readItems()); }, []);
+
+  /** Accepts the full snapshot; a bare id still works for legacy call sites. */
+  const addToRecentlyViewed = useCallback((product: RecentlyViewedSnapshot | string) => {
+    const snapshot = typeof product === 'string' ? undefined : product;
+    const productId = typeof product === 'string' ? product : product.id;
+    if (!productId) return;
+    const next = [
+      { productId, viewedAt: Date.now(), product: snapshot },
+      ...readItems().filter((i) => i.productId !== productId),
+    ].slice(0, MAX_ITEMS);
+    writeItems(next);
+    setItems(next);
   }, []);
 
-  // Add a product to recently viewed
-  const addToRecentlyViewed = useCallback((productId: string) => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      let items: RecentlyViewedItem[] = stored ? JSON.parse(stored) : [];
-
-      // Remove if already exists
-      items = items.filter(item => item.productId !== productId);
-
-      // Add to the beginning
-      items.unshift({
-        productId,
-        viewedAt: Date.now(),
-      });
-
-      // Keep only the last MAX_ITEMS
-      items = items.slice(0, MAX_ITEMS);
-
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-
-      // Update state
-      setRecentlyViewed(items.map(item => item.productId));
-    } catch (error) {
-      console.error('Failed to save recently viewed product:', error);
-    }
-  }, []);
-
-  // Remove a product from recently viewed
   const removeFromRecentlyViewed = useCallback((productId: string) => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        let items: RecentlyViewedItem[] = JSON.parse(stored);
-        items = items.filter(item => item.productId !== productId);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        setRecentlyViewed(items.map(item => item.productId));
-      }
-    } catch (error) {
-      console.error('Failed to remove recently viewed product:', error);
-    }
+    const next = readItems().filter((i) => i.productId !== productId);
+    writeItems(next);
+    setItems(next);
   }, []);
 
-  // Clear all recently viewed
   const clearRecentlyViewed = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      setRecentlyViewed([]);
-    } catch (error) {
-      console.error('Failed to clear recently viewed products:', error);
-    }
+    browserStorage.removeItem(STORAGE_KEY);
+    setItems([]);
   }, []);
 
   return {
-    recentlyViewed,
+    /** Ids, newest first — kept for call sites that only need the order. */
+    recentlyViewed: items.map((i) => i.productId),
+    /** Products that carry a usable snapshot, newest first. */
+    recentlyViewedProducts: items
+      .map((i) => i.product)
+      .filter((p): p is RecentlyViewedSnapshot => Boolean(p?.id && p?.name)),
     addToRecentlyViewed,
     removeFromRecentlyViewed,
     clearRecentlyViewed,

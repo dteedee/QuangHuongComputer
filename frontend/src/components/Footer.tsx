@@ -1,9 +1,13 @@
 import { Phone, Mail, MapPin, Clock, Facebook, Youtube, Instagram, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { systemConfigApi, getConfigValue, type ConfigurationEntry } from '../api/systemConfig';
+import { useQuery } from '@tanstack/react-query';
 import { contentApi, type Menu } from '../api/content';
 import { FooterNewsletter } from './footer/footer-newsletter';
+import { useCompanyInfo } from '../hooks/use-company-info';
+import { usePublicConfig } from '../lib/use-public-config';
+import { getConfigValue } from '../api/systemConfig';
+import { queryKeys } from '../lib/query-keys';
+import { buildPath, ROUTES } from '../routes/route-paths';
 
 const FL = ({ to, label }: { to: string; label: string }) => (
     <li>
@@ -34,39 +38,42 @@ const MenuCol = ({ title, menu, fallback }: { title: string; menu: Menu | null; 
  * Thông tin công ty lấy từ SystemConfig public config (COMPANY_*), fallback dữ liệu thật.
  */
 export const Footer = () => {
-    const [configs, setConfigs] = useState<ConfigurationEntry[]>([]);
-    const [categoryMenu, setCategoryMenu] = useState<Menu | null>(null);
-    const [supportMenu, setSupportMenu] = useState<Menu | null>(null);
+    /* One shared `/api/config/public` cache entry (W1-8's `usePublicConfig`) —
+     * the Footer used to fetch it a second time on every page. D09: company
+     * details come from `useCompanyInfo()`, which owns the real fallbacks; no
+     * phone number or opening-hours string is written here. */
+    const { data: configs = [] } = usePublicConfig();
+    const { companyInfo } = useCompanyInfo();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [configData, footerMain, footerBottom] = await Promise.all([
-                    systemConfigApi.config.getPublic(),
-                    contentApi.getMenus('FooterMain'),
-                    contentApi.getMenus('FooterBottom')
-                ]);
-                setConfigs(Array.isArray(configData) ? configData : []);
-                if (Array.isArray(footerMain) && footerMain.length > 0) setCategoryMenu(footerMain[0]);
-                if (Array.isArray(footerBottom) && footerBottom.length > 0) setSupportMenu(footerBottom[0]);
-            } catch (error) {
-                console.error('Failed to load footer data', error);
-            }
-        };
-        fetchData();
-    }, []);
+    const menusQuery = useQuery({
+        queryKey: queryKeys.content.list({ resource: 'footer-menus' }),
+        queryFn: async () => {
+            const [footerMain, footerBottom] = await Promise.all([
+                contentApi.getMenus('FooterMain'),
+                contentApi.getMenus('FooterBottom'),
+            ]);
+            return {
+                categoryMenu: (Array.isArray(footerMain) && footerMain[0]) || null,
+                supportMenu: (Array.isArray(footerBottom) && footerBottom[0]) || null,
+            } as { categoryMenu: Menu | null; supportMenu: Menu | null };
+        },
+        staleTime: 5 * 60 * 1000,
+        retry: 1,
+    });
+    const categoryMenu = menusQuery.data?.categoryMenu ?? null;
+    const supportMenu = menusQuery.data?.supportMenu ?? null;
 
     const c = (key: string, fb: string) => getConfigValue(configs, key, fb, (v) => v);
-    const brand1 = c('COMPANY_BRAND_TEXT_1', 'QUANG HUONG');
-    const brand2 = c('COMPANY_BRAND_TEXT_2', 'COMPUTER');
-    const legalName = c('COMPANY_LEGAL_NAME', 'Công ty TNHH Máy Tính Quang Hưởng');
-    const taxCode = c('COMPANY_TAX_CODE', '0200807633');
-    const representative = c('COMPANY_REPRESENTATIVE', 'Dương Thị Hạnh');
-    const address = c('COMPANY_ADDRESS', 'Số 179 khu phố 3/2, Thị Trấn Vĩnh Bảo, Huyện Vĩnh Bảo, TP Hải Phòng');
-    const phone = c('COMPANY_PHONE', '031 3823769');
-    const phone2 = c('COMPANY_PHONE_2', '0904.235.090');
-    const email = c('COMPANY_EMAIL', 'quanghuongvbhp@gmail.com');
-    const workingHours = c('COMPANY_WORKING_HOURS', '7:00 - 17h15 (Từ thứ 2 đến thứ 7)');
+    const brand1 = companyInfo.brandText1;
+    const brand2 = companyInfo.brandText2;
+    const legalName = companyInfo.name;
+    const taxCode = companyInfo.taxCode;
+    const representative = companyInfo.representative;
+    const address = companyInfo.address;
+    const phone = companyInfo.phone;
+    const phone2 = companyInfo.phone2;
+    const email = companyInfo.email;
+    const workingHours = companyInfo.workingHours;
 
     const socials = [
         { url: c('FACEBOOK_URL', '#'), Icon: Facebook, hover: 'hover:bg-blue-600' },
@@ -81,7 +88,7 @@ export const Footer = () => {
             <div className="max-w-[1400px] mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* Khối showroom Quang Hưởng */}
                 <div className="space-y-4">
-                    <Link to="/" className="inline-flex items-center gap-2.5" aria-label={`${brand1} ${brand2}`}>
+                    <Link to={ROUTES.HOME} className="inline-flex items-center gap-2.5" aria-label={`${brand1} ${brand2}`}>
                         <img src="/brand/logo-square.svg" alt="" aria-hidden="true" className="w-10 h-10 rounded-lg" />
                         <span className="flex flex-col">
                             <span className="text-xl font-black text-white uppercase tracking-tight leading-none">{brand1}</span>
@@ -107,32 +114,28 @@ export const Footer = () => {
                 <div>
                     <h4 className="text-sm font-bold text-white uppercase mb-4 pb-2 border-b border-gray-800">Về Quang Hưởng</h4>
                     <ul className="space-y-0.5">
-                        <FL to="/about" label="Giới thiệu chung" />
-                        <FL to="/policy/news" label="Tin tức công nghệ" />
-                        <FL to="/policy/promotions" label="Tin khuyến mãi" />
-                        <FL to="/recruitment" label="Tuyển dụng" />
-                        <FL to="/contact" label="Liên hệ" />
+                        <FL to={ROUTES.ABOUT} label="Giới thiệu chung" />
+                        <FL to={buildPath(ROUTES.POLICY, 'news')} label="Tin tức công nghệ" />
+                        <FL to={buildPath(ROUTES.POLICY, 'promotions')} label="Tin khuyến mãi" />
+                        <FL to={ROUTES.RECRUITMENT} label="Tuyển dụng" />
+                        <FL to={ROUTES.CONTACT} label="Liên hệ" />
                     </ul>
                 </div>
 
                 {/* Sản phẩm kinh doanh */}
                 <MenuCol title="Sản phẩm kinh doanh" menu={categoryMenu} fallback={
-                    <><FL to="/products" label="Tất cả sản phẩm" /><FL to="/repairs" label="Dịch vụ sửa chữa" /><FL to="/warranty" label="Bảo hành" /></>
+                    <><FL to={ROUTES.PRODUCTS} label="Tất cả sản phẩm" /><FL to={ROUTES.REPAIR} label="Dịch vụ sửa chữa" /><FL to={ROUTES.WARRANTY} label="Bảo hành" /></>
                 } />
 
                 {/* Chính sách & hỗ trợ */}
                 <div>
                     <MenuCol title="Chính sách & hỗ trợ" menu={supportMenu} fallback={
-                        <><FL to="/policy/warranty" label="Chính sách bảo hành" /><FL to="/policy/return" label="Chính sách đổi trả" /><FL to="/policy/shipping" label="Chính sách vận chuyển" /><FL to="/policy/payment" label="Hướng dẫn thanh toán" /></>
+                        <><FL to={buildPath(ROUTES.POLICY, 'bao-hanh')} label="Chính sách bảo hành" /><FL to={buildPath(ROUTES.POLICY, 'doi-tra')} label="Chính sách đổi trả" /><FL to={buildPath(ROUTES.POLICY, 'van-chuyen')} label="Chính sách vận chuyển" /><FL to={buildPath(ROUTES.POLICY, 'huong-dan-thanh-toan')} label="Hướng dẫn thanh toán" /></>
                     } />
-                    <div className="mt-5">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Thanh toán</p>
-                        <div className="flex flex-wrap gap-1.5">
-                            {['VISA', 'MASTER', 'NAPAS', 'VNPAY', 'COD'].map(m => (
-                                <span key={m} className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-[10px] font-bold text-gray-300">{m}</span>
-                            ))}
-                        </div>
-                    </div>
+                    {/* D04: the VISA/MASTER/NAPAS/VNPAY badges are gone — none of
+                        those rails is live. Payment methods render from
+                        `GET /api/payments/methods` in W3-19's component; this
+                        footer does not re-implement it. */}
                 </div>
             </div>
 

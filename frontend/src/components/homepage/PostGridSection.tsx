@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Reveal } from '../motion';
 import { FileText, Calendar, ChevronRight } from 'lucide-react';
 import { contentApi, type Post } from '../../api/content';
+import { buildPath, ROUTES } from '../../routes/route-paths';
 
 interface PostGridSectionProps {
     title: string;
@@ -63,15 +64,8 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                     const fallback = pool[((post.slug.length + (post.title.codePointAt(0) || 0)) % pool.length)];
 
                     return (
-                    <motion.div
-                        key={post.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
-                        className="group"
-                    >
-                        <Link to={`/post/${post.slug}`} className="block h-full bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-gray-100">
+                    <Reveal key={post.id} index={i} className="group">
+                        <Link to={buildPath(ROUTES.NEWS_DETAIL, post.slug)} className="block h-full bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-gray-100">
                             <div className="aspect-video overflow-hidden bg-gray-50">
                                 <img
                                     src={post.thumbnailUrl || fallback}
@@ -90,7 +84,7 @@ export const PostGridSection: React.FC<PostGridSectionProps> = ({ title, config 
                                 </h3>
                             </div>
                         </Link>
-                    </motion.div>
+                    </Reveal>
                     );
                 })}
             </div>

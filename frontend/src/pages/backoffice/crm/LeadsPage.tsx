@@ -30,12 +30,16 @@ export default function LeadsPage() {
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [presetStageId, setPresetStageId] = useState<string | undefined>();
 
   useEffect(() => {
     const statusParam = searchParams.get('status') as LeadStatus | null;
     if (statusParam) {
       setStatus(statusParam);
+    }
+    if (searchParams.get('new') === 'true') {
+      setPresetStageId(searchParams.get('stageId') || undefined);
+      setShowCreateModal(true);
     }
   }, [searchParams]);
 
@@ -133,9 +137,10 @@ export default function LeadsPage() {
 
           <SearchableSelect
               value={status}
-              onChange={null}
+              onChange={(v) => { setStatus(v as LeadStatus | ''); setPage(1); }}
               placeholder="Tất cả trạng thái"
               options={[
+                  { value: '', label: 'Tất cả trạng thái' },
                   { value: 'New', label: 'Mới' },
                   { value: 'Contacted', label: 'Đã liên hệ' },
                   { value: 'Qualified', label: 'Đủ điều kiện' },
@@ -148,9 +153,10 @@ export default function LeadsPage() {
 
           <SearchableSelect
               value={source}
-              onChange={null}
+              onChange={(v) => { setSource(v as LeadSource | ''); setPage(1); }}
               placeholder="Tất cả nguồn"
               options={[
+                  { value: '', label: 'Tất cả nguồn' },
                   { value: 'Website', label: 'Website' },
                   { value: 'Referral', label: 'Giới thiệu' },
                   { value: 'Advertisement', label: 'Quảng cáo' },
@@ -335,6 +341,7 @@ export default function LeadsPage() {
       {/* Create Modal - Simple version */}
       {showCreateModal && (
         <CreateLeadModal
+          presetStageId={presetStageId}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => {
             setShowCreateModal(false);
@@ -347,7 +354,7 @@ export default function LeadsPage() {
 }
 
 // Simple Create Lead Modal
-function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function CreateLeadModal({ presetStageId, onClose, onCreated }: { presetStageId?: string; onClose: () => void; onCreated: () => void }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
@@ -382,7 +389,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
     try {
       setLoading(true);
-      await crmApi.leads.create({
+      const created = await crmApi.leads.create({
         fullName: form.fullName,
         email: form.email,
         phone: form.phone || undefined,
@@ -391,8 +398,13 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
         estimatedValue: form.estimatedValue ? parseFloat(form.estimatedValue) : undefined,
         notes: form.notes || undefined,
       });
+      if (presetStageId) {
+        // Contract's CreateLeadDto has no pipelineStageId (crm.md §4) — move after create instead.
+        await crmApi.leads.moveStage(created.id, presetStageId).catch(() => {});
+      }
       onCreated();
-    } catch (error) {
+    } catch (error: any) {
+      setErrors({ fullName: error?.response?.data?.error || 'Không thể tạo lead, thử lại sau' });
       console.error('Failed to create lead:', error);
     } finally {
       setLoading(false);

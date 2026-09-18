@@ -2,71 +2,88 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { salesApi } from '../api/sales';
+import { salesCartCheckoutApi, type ShippingQuoteDto } from '../api/sales/cart-checkout';
 import { promotionApi, type AppliedPromotion, type EvaluatePromotionResponse } from '../api/promotion';
+import { normalizeApiError } from '../lib/api-error';
+import { sessionBrowserStorage } from '../lib/browser-storage';
+import { ROUTES } from '../routes/route-paths';
+import { notify } from '../components/ui';
 import CheckoutOrderSummary from '../components/checkout/checkout-order-summary';
 import CheckoutStepper from '../components/checkout/checkout-stepper';
 import CheckoutSessionTimer from '../components/checkout/checkout-session-timer';
 import ShippingStep from '../components/checkout/shipping-step';
 import PromotionStep from '../components/checkout/promotion-step';
 import PaymentStep from '../components/checkout/payment-step';
-import { useCheckoutSubmit, type ConfirmedOrder } from '../components/checkout/use-checkout-submit';
+import ReviewConsentStep from '../components/checkout/review-consent-step';
+import { useCheckoutSubmit } from '../components/checkout/use-checkout-submit';
 import { buildCheckoutSuccessUrl } from '../components/checkout/checkout-success-url';
 import {
-    CHECKOUT_STORAGE_KEY, initialPaymentState, initialShippingState,
-    type CheckoutPersistedState, type CheckoutStep, type PaymentFormState, type ShippingFormState,
+    CHECKOUT_STORAGE_KEY, initialInvoiceState, initialPaymentState, initialShippingState,
+    type CheckoutPersistedState, type CheckoutStep, type InvoiceFormState, type PaymentFormState,
+    type ShippingFormState,
 } from '../components/checkout/checkout-types';
 
 function loadPersisted(): Partial<CheckoutPersistedState> {
-    try {
-        const raw = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
-        return raw ? JSON.parse(raw) as Partial<CheckoutPersistedState> : {};
-    } catch { return {}; }
+    return sessionBrowserStorage.getJSON<Partial<CheckoutPersistedState>>(CHECKOUT_STORAGE_KEY, {});
 }
 
 export function CheckoutPage() {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
-    const { items, subtotal, discountAmount, shippingAmount, total, clearCart } = useCart();
+    const {
+        items, cartId, subtotal, discountAmount, shippingAmount, tax, vatBreakdown, clearCart, isReady,
+    } = useCart();
     const { submit, submitting } = useCheckoutSubmit();
 
     const persisted = useRef(loadPersisted());
     const [step, setStep] = useState<CheckoutStep>(persisted.current.step ?? 1);
     const [shipping, setShipping] = useState<ShippingFormState>({ ...initialShippingState, ...persisted.current.shipping });
     const [payment, setPayment] = useState<PaymentFormState>({ ...initialPaymentState, ...persisted.current.payment });
+    const [invoice, setInvoice] = useState<InvoiceFormState>({ ...initialInvoiceState, ...persisted.current.invoice });
     const [promotionCode, setPromotionCode] = useState<string | null>(persisted.current.promotionCode ?? null);
-    const [ghnDistrictId, setGhnDistrictId] = useState<number>(persisted.current.ghnDistrictId ?? 0);
-    const [ghnWardCode, setGhnWardCode] = useState<string>(persisted.current.ghnWardCode ?? '');
-    const [calculatedShippingFee, setCalculatedShippingFee] = useState<number>(persisted.current.calculatedShippingFee ?? 0);
+    const [quote, setQuote] = useState<ShippingQuoteDto | null>(null);
     const [sessionId, setSessionId] = useState<string | undefined>(persisted.current.sessionId);
     const [sessionExpiresAt, setSessionExpiresAt] = useState<string | null>(persisted.current.sessionExpiresAt ?? null);
     const [extended, setExtended] = useState(false);
     const [evaluated, setEvaluated] = useState<EvaluatePromotionResponse | null>(null);
     const [evaluating, setEvaluating] = useState(false);
-    const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
+    const [promotionError, setPromotionError] = useState<string | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [confirmed, setConfirmed] = useState(false);
 
-    // Persist mỗi khi state đổi
+    // Điền sẵn từ hồ sơ khách đã đăng nhập (chỉ khi ô còn trống, không ghi đè khách đã gõ).
+    useEffect(() => {
+        if (!user) return;
+        setShipping(prev => ({
+            ...prev,
+            fullName: prev.fullName || user.fullName || '',
+            email: prev.email || user.email || '',
+        }));
+    }, [user]);
+
     useEffect(() => {
         const s: CheckoutPersistedState = {
-            step, shipping, payment, promotionCode, sessionId, sessionExpiresAt: sessionExpiresAt ?? undefined,
-            calculatedShippingFee, ghnDistrictId, ghnWardCode,
+            step, shipping, payment, invoice, promotionCode, sessionId,
+            sessionExpiresAt: sessionExpiresAt ?? undefined,
+            quotedShippingFee: quote?.fee ?? 0,
         };
-        try { sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
-    }, [step, shipping, payment, promotionCode, sessionId, sessionExpiresAt, calculatedShippingFee, ghnDistrictId, ghnWardCode]);
+        sessionBrowserStorage.setJSON(CHECKOUT_STORAGE_KEY, s);
+    }, [step, shipping, payment, invoice, promotionCode, sessionId, sessionExpiresAt, quote]);
 
-    // Redirect nếu giỏ rỗng — KHÔNG áp dụng khi đang submit hoặc đã có confirmedOrder,
-    // vì submit() có thể khiến CartContext báo items=[] (đã đặt hàng xong, giỏ được dọn)
-    // trước khi navigate() sang trang xác nhận kịp chạy; thiếu guard này sẽ đá khách về
-    // /cart đúng lúc vừa đặt hàng thành công (bug đã sửa — xem use-checkout-submit.ts).
+    // Giỏ rỗng → về giỏ hàng. KHÔNG áp dụng khi đang submit hoặc đã đặt hàng xong: submit()
+    // làm giỏ rỗng trước khi navigate() kịp chạy, thiếu guard này khách bị đá về giỏ hàng
+    // đúng lúc vừa đặt hàng thành công.
+    // `isReady` là bắt buộc: giỏ nạp bất đồng bộ, lần render đầu `items` LUÔN rỗng. Thiếu guard
+    // này, chỉ cần tải lại trang /checkout (hoặc mở thẳng link) là khách bị đá về giỏ hàng dù
+    // giỏ đầy — effect của con chạy trước effect nạp giỏ của CartProvider.
     useEffect(() => {
-        if (submitting || confirmedOrder) return;
-        if (items.length === 0) { navigate('/cart'); }
-    }, [items.length, submitting, confirmedOrder, navigate]);
+        if (!isReady || submitting || confirmed) return;
+        if (items.length === 0) navigate(ROUTES.CART);
+    }, [isReady, items.length, submitting, confirmed, navigate]);
 
-    // Evaluate promotion (debounce 300ms) — tránh spam evaluate khi user gõ mã
+    // Xem trước khuyến mãi (debounce 300ms). Mã không hợp lệ ⇒ lỗi hiện ngay ở bước 2.
     useEffect(() => {
         if (items.length === 0) return;
         setEvaluating(true);
@@ -74,116 +91,151 @@ export function CheckoutPage() {
             try {
                 const res = await promotionApi.evaluate({
                     items: items.map(i => ({ productId: i.id, variantId: i.variantId, quantity: i.quantity, unitPrice: i.price })),
-                    couponCode: promotionCode ?? undefined, customerId: user?.id,
-                    shippingAmount: calculatedShippingFee || shippingAmount,
+                    couponCode: promotionCode ?? undefined,
+                    customerId: user?.id,
+                    shippingAmount: quote?.fee ?? shippingAmount,
                 });
                 setEvaluated(res);
-            } catch { setEvaluated(null); }
-            finally { setEvaluating(false); }
+                const warning = res.warnings?.[0];
+                setPromotionError(
+                    promotionCode && res.appliedPromotions.length === 0
+                        ? warning ?? `Mã "${promotionCode}" không áp dụng được cho đơn hàng này.`
+                        : warning ?? null,
+                );
+            } catch (err) {
+                setEvaluated(null);
+                setPromotionError(normalizeApiError(err).message);
+            } finally { setEvaluating(false); }
         }, 300);
         return () => window.clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [items, promotionCode, user?.id, calculatedShippingFee]);
+    }, [items, promotionCode, user?.id, quote?.fee]);
 
-    // Tạo CheckoutSession khi vào bước 3 lần đầu
+    // Phiên giữ chỗ tồn kho: tạo khi vào bước thanh toán, chỉ dành cho khách đã đăng nhập
+    // (giỏ vãng lai chưa có `cartId` trên server — xem integration request W3-2 #4).
     useEffect(() => {
-        if (step !== 3 || sessionId || items.length === 0) return;
-        salesApi.checkoutSession.create({
-            items: items.map(i => ({ productId: i.id, quantity: i.quantity, variantId: i.variantId })),
-        }).then(s => { setSessionId(s.id); setSessionExpiresAt(s.expiresAt); })
-            .catch(() => { /* backend chưa expose session — không chặn user */ });
-    }, [step, sessionId, items]);
+        if (step !== 3 || sessionId || !cartId || !isAuthenticated) return;
+        salesCartCheckoutApi.checkoutSession.create(cartId)
+            .then(s => { setSessionId(s.sessionId); setSessionExpiresAt(s.expiresAt); })
+            .catch(err => notify.error(normalizeApiError(err).message));
+    }, [step, sessionId, cartId, isAuthenticated]);
 
     const handleExpired = useCallback(() => {
         if (submitting) return;
-        toast.error('Phiên giữ chỗ đã hết. Bấm gia hạn hoặc quay lại giỏ hàng.');
+        notify.error('Phiên giữ chỗ đã hết. Bấm gia hạn hoặc quay lại giỏ hàng.');
     }, [submitting]);
 
     const handleExtend = async () => {
         if (!sessionId || extended) return;
         try {
-            const s = await salesApi.checkoutSession.extend(sessionId);
-            setSessionExpiresAt(s.expiresAt); setExtended(true);
-            toast.success('Đã gia hạn thêm 15 phút.');
-        } catch { toast.error('Không gia hạn được, vui lòng thử lại.'); }
+            const s = await salesCartCheckoutApi.checkoutSession.extend(sessionId);
+            setSessionExpiresAt(s.expiresAt);
+            setExtended(true);
+            notify.success('Đã gia hạn thêm 15 phút.');
+        } catch (err) { notify.error(normalizeApiError(err).message); }
     };
 
-    const displayTotal = evaluated?.finalTotal ?? total;
+    // Số hiển thị: ưu tiên kết quả evaluate của server, nếu chưa có thì dùng số của giỏ (cũng của server).
+    const isPickup = shipping.deliveryMethod === 'pickup';
+    const displayShipping = isPickup ? 0 : (quote?.fee ?? shippingAmount);
     const displayDiscount = (evaluated?.discountTotal ?? discountAmount) + (evaluated?.shippingDiscount ?? 0);
-    const displayShipping = Math.max(0, (shipping.deliveryMethod === 'pickup' ? 0 : (calculatedShippingFee || shippingAmount)) - (evaluated?.shippingDiscount ?? 0));
+    const displayTotal = evaluated?.finalTotal ?? Math.max(0, subtotal - displayDiscount + displayShipping);
     const applied: AppliedPromotion[] = evaluated?.appliedPromotions ?? [];
 
-    const handleSubmit = async () => {
+    const handleConfirm = async () => {
+        setSubmitError(null);
         const result = await submit({
-            items, shipping, payment, promotionCode, calculatedShippingFee,
-            shippingAmountFallback: shippingAmount, sessionId,
-            user, isAuthenticated, clearCart,
+            items, cartId, shipping, payment, promotionCode, sessionId, isAuthenticated, clearCart,
         });
-        if (!result) return;
-        // Set confirmedOrder TRƯỚC khi dọn giỏ/điều hướng — xem lý do ở effect redirect phía trên
-        // và comment trong use-checkout-submit.ts.
-        setConfirmedOrder(result);
-        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        if (result.redirected) return;
+        if (!result.order) {
+            setSubmitError(result.error);
+            if (result.errorStep && result.errorStep !== 3) setStep(result.errorStep);
+            return;
+        }
+        setConfirmed(true);
+        sessionBrowserStorage.removeItem(CHECKOUT_STORAGE_KEY);
         await clearCart();
         const guestEmail = !isAuthenticated ? shipping.email : undefined;
-        navigate(buildCheckoutSuccessUrl(result, payment.paymentMethod, guestEmail), { replace: true });
+        navigate(buildCheckoutSuccessUrl(result.order, payment.paymentMethod, guestEmail), { replace: true });
     };
 
     const summaryItems = useMemo(() => items.map(i => ({
-        id: i.id, name: i.name + (i.variantName ? ` (${i.variantName})` : ''),
-        price: i.price, quantity: i.quantity, imageUrl: i.imageUrl,
+        id: `${i.id}-${i.variantId ?? ''}`,
+        name: i.name + (i.variantName ? ` (${i.variantName})` : ''),
+        lineTotal: i.lineTotal, quantity: i.quantity, imageUrl: i.imageUrl,
     })), [items]);
 
     return (
-        <div className="min-h-screen bg-gray-50 py-10 font-sans">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div className="min-h-screen bg-bg py-8 lg:py-10">
+            <div className="mx-auto max-w-shell px-4 sm:px-6">
+                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <button onClick={() => step > 1 && step < 4 ? setStep((step - 1) as CheckoutStep) : navigate('/cart')}
-                            className="flex items-center gap-2 text-gray-500 hover:text-[var(--accent-primary,#dc2626)] mb-1 text-sm font-medium">
-                            <ArrowLeft className="w-4 h-4" />{step > 1 && step < 4 ? 'Quay lại bước trước' : 'Về giỏ hàng'}
+                        <button type="button"
+                            onClick={() => (step > 1 ? setStep((step - 1) as CheckoutStep) : navigate(ROUTES.CART))}
+                            className="mb-1 flex items-center gap-2 text-13 font-medium text-fg-muted hover:text-brand-text">
+                            <ArrowLeft className="h-4 w-4" aria-hidden />
+                            {step > 1 ? 'Quay lại bước trước' : 'Về giỏ hàng'}
                         </button>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            Thanh toán <span className="text-[var(--accent-primary,#dc2626)]">đơn hàng</span>
-                        </h1>
+                        <h1 className="text-2xl font-bold text-fg">Thanh toán đơn hàng</h1>
                     </div>
                     <CheckoutStepper current={step} />
                 </div>
 
-                {step >= 3 && step < 4 && (
+                {step >= 3 && sessionExpiresAt && (
                     <CheckoutSessionTimer expiresAt={sessionExpiresAt} onExpired={handleExpired}
                         onExtend={handleExtend} canExtend={!extended} />
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                     <div className="lg:col-span-3">
                         <AnimatePresence mode="wait">
                             {step === 1 && (
-                                <ShippingStep isAuthenticated={isAuthenticated} value={shipping}
+                                <ShippingStep key="s1" isAuthenticated={isAuthenticated} value={shipping}
+                                    netSubtotal={Math.max(0, subtotal - displayDiscount)}
                                     onChange={p => setShipping(prev => ({ ...prev, ...p }))}
-                                    onNext={() => { setStep(2); window.scrollTo(0, 0); }}
-                                    onLogin={() => navigate('/login', { state: { from: '/checkout' } })}
-                                    onShippingFee={setCalculatedShippingFee}
-                                    ghnDistrictId={ghnDistrictId} ghnWardCode={ghnWardCode}
-                                    onGhnChange={(d, w) => { setGhnDistrictId(d); setGhnWardCode(w); }} />
+                                    onNext={(values) => { setShipping(values); setStep(2); window.scrollTo(0, 0); }}
+                                    onLogin={() => navigate(ROUTES.LOGIN, { state: { from: ROUTES.CHECKOUT } })}
+                                    onQuote={setQuote} />
                             )}
                             {step === 2 && (
-                                <PromotionStep appliedCode={promotionCode} onCodeChange={setPromotionCode}
-                                    applied={applied} loading={evaluating}
+                                <PromotionStep key="s2" appliedCode={promotionCode} onCodeChange={setPromotionCode}
+                                    applied={applied} loading={evaluating} error={promotionError}
                                     onNext={() => { setStep(3); window.scrollTo(0, 0); }} onBack={() => setStep(1)} />
                             )}
                             {step === 3 && (
-                                <PaymentStep value={payment}
+                                <PaymentStep key="s3" value={payment}
                                     onChange={p => setPayment(prev => ({ ...prev, ...p }))}
-                                    onBack={() => setStep(2)} onSubmit={handleSubmit}
-                                    submitting={submitting} totalAmount={displayTotal} />
+                                    onBack={() => setStep(2)}
+                                    onSubmit={() => { setStep(4); window.scrollTo(0, 0); }}
+                                    submitting={false} totalAmount={displayTotal} />
+                            )}
+                            {step === 4 && (
+                                <ReviewConsentStep key="s4" items={items} shipping={shipping} payment={payment}
+                                    invoice={invoice} subtotal={subtotal} discountAmount={displayDiscount}
+                                    shippingAmount={displayShipping} total={displayTotal} tax={tax}
+                                    vatBreakdown={vatBreakdown} serverError={submitError} submitting={submitting}
+                                    onEditStep={(s) => { setStep(s); window.scrollTo(0, 0); }}
+                                    onBack={() => setStep(3)}
+                                    onConfirm={(v) => {
+                                        // Giữ lại thông tin hoá đơn để khách quay lại bước khác không phải gõ lại.
+                                        // TODO(integration W2-3): `/checkout/orchestrate` chưa nhận `buyerInvoice`
+                                        // và `termsVersion` — xem reports/integration-requests-w3.md.
+                                        setInvoice({
+                                            requested: v.requested, buyerType: v.buyerType, legalName: v.legalName,
+                                            taxCode: v.taxCode, budgetUnitCode: v.budgetUnitCode,
+                                            address: v.address, email: v.email,
+                                        });
+                                        void handleConfirm();
+                                    }} />
                             )}
                         </AnimatePresence>
                     </div>
                     <div className="lg:col-span-2">
-                        <CheckoutOrderSummary items={summaryItems} subtotal={subtotal}
-                            tax={evaluated ? Math.max(0, displayTotal - subtotal + displayDiscount - displayShipping) : 0}
-                            total={displayTotal} discountAmount={displayDiscount} shippingAmount={displayShipping} />
+                        <CheckoutOrderSummary items={summaryItems} subtotal={subtotal} tax={tax}
+                            vatBreakdown={vatBreakdown} total={displayTotal} discountAmount={displayDiscount}
+                            shippingAmount={displayShipping}
+                            shippingUnknown={!isPickup && !quote && shippingAmount === 0} />
                     </div>
                 </div>
             </div>

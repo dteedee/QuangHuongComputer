@@ -1,31 +1,18 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { repairApi, type WorkOrder, type RepairQuote, type WorkOrderStatus, getStatusColor } from '../api/repair';
+import { repairApi, type WorkOrder, type RepairQuote, type WorkOrderStatus, getStatusColor, getWorkOrderStatusLabel } from '../api/repair';
 import { formatCurrency } from '../utils/format';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useCompanyInfo } from '../hooks/use-company-info';
+import { ROUTES } from '../routes/route-paths';
 import {
     ArrowLeft, Clock, CheckCircle, XCircle, Play, AlertCircle,
     FileText, Wrench, Package, DollarSign, Calendar, User, MessageSquare
 } from 'lucide-react';
 
-const translateStatus = (status: WorkOrderStatus): string => {
-    const map: Record<WorkOrderStatus, string> = {
-        'Requested': 'Chờ tiếp nhận',
-        'Assigned': 'Đã phân công kỹ thuật viên',
-        'Declined': 'Kỹ thuật viên từ chối',
-        'Diagnosed': 'Đã chẩn đoán xong',
-        'Quoted': 'Đã có báo giá',
-        'AwaitingApproval': 'Chờ bạn xác nhận báo giá',
-        'Approved': 'Bạn đã duyệt - Đang chuẩn bị sửa',
-        'Rejected': 'Bạn đã từ chối báo giá',
-        'InProgress': 'Đang sửa chữa',
-        'OnHold': 'Tạm dừng',
-        'Completed': 'Đã hoàn thành',
-        'Cancelled': 'Đã hủy'
-    };
-    return map[status] || status;
-};
+// W3-15: see `RepairPage.tsx` — same fix, delegate to the shared label map.
+const translateStatus = getWorkOrderStatusLabel;
 
 const getStatusDescription = (status: WorkOrderStatus): string => {
     const map: Record<WorkOrderStatus, string> = {
@@ -40,7 +27,10 @@ const getStatusDescription = (status: WorkOrderStatus): string => {
         'InProgress': 'Kỹ thuật viên đang tiến hành sửa chữa thiết bị của bạn.',
         'OnHold': 'Việc sửa chữa tạm dừng. Chúng tôi sẽ cập nhật sớm.',
         'Completed': 'Sửa chữa đã hoàn thành! Bạn có thể đến lấy thiết bị.',
-        'Cancelled': 'Yêu cầu đã bị hủy.'
+        'Cancelled': 'Yêu cầu đã bị hủy.',
+        'ReadyForPickup': 'Máy đã sẵn sàng, bạn có thể đến nhận và thanh toán.',
+        'Paid': 'Đã ghi nhận thanh toán. Vui lòng đến nhận máy.',
+        'Delivered': 'Bạn đã nhận lại máy. Cảm ơn bạn đã sử dụng dịch vụ!'
     };
     return map[status] || '';
 };
@@ -51,6 +41,7 @@ export const RepairDetailPage = () => {
     const queryClient = useQueryClient();
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectModal, setShowRejectModal] = useState(false);
+    const { companyInfo } = useCompanyInfo();
 
     const { data: workOrder, isLoading } = useQuery<WorkOrder>({
         queryKey: ['work-order', id],
@@ -106,7 +97,7 @@ export const RepairDetailPage = () => {
                 <div className="text-center py-20">
                     <XCircle size={48} className="mx-auto mb-4 text-red-500" />
                     <p className="text-gray-900 font-bold text-xl mb-4">Không tìm thấy phiếu sửa chữa</p>
-                    <Link to="/repair" className="text-accent font-bold hover:underline">
+                    <Link to={ROUTES.REPAIR} className="text-accent font-bold hover:underline">
                         Quay lại trang sửa chữa
                     </Link>
                 </div>
@@ -120,7 +111,7 @@ export const RepairDetailPage = () => {
         <div className="container mx-auto px-4 py-12 max-w-4xl font-sans">
             {/* Back button */}
             <button
-                onClick={() => navigate('/repair')}
+                onClick={() => navigate(ROUTES.REPAIR)}
                 className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold mb-8 transition-colors"
             >
                 <ArrowLeft size={20} />
@@ -323,11 +314,12 @@ export const RepairDetailPage = () => {
                     Liên hệ với chúng tôi nếu bạn có bất kỳ câu hỏi nào về phiếu sửa chữa này.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                    <a href="tel:0904235090" className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition">
+                    {/* D09: số điện thoại/email lấy từ config qua useCompanyInfo() — không hardcode. */}
+                    <a href={`tel:${companyInfo.hotline.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition">
                         <User size={18} />
-                        0904 235 090
+                        {companyInfo.hotline}
                     </a>
-                    <a href="mailto:support@quanghuong.com" className="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition">
+                    <a href={`mailto:${companyInfo.email}`} className="flex items-center gap-2 px-6 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent-hover transition">
                         <MessageSquare size={18} />
                         Email hỗ trợ
                     </a>

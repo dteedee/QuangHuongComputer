@@ -14,6 +14,11 @@ export interface Order {
     customerName?: string;
     customerEmail?: string;
     customerPhone?: string;
+    /** `Web|Guest|Pos|Quotation` — list rows carry it (W3-10, admin orders columns). */
+    channel?: string;
+    /** List rows: what's still owed — `docs/api-contracts/sales-pos-returns-loyalty.md` §4. */
+    collected?: number;
+    amountDue?: number;
     status: OrderStatus;
     paymentStatus: PaymentStatus;
     fulfillmentStatus: FulfillmentStatus;
@@ -67,8 +72,21 @@ export interface OrderItem {
     lineTotal: number;
 }
 
+/**
+ * NOTE (W3-10): `docs/api-contracts/sales-orders.md` §1's state table also
+ * lists `Fulfilled` as an order status (packed/ready to ship, between
+ * Paid/Confirmed and Shipped). NOT added to this union on purpose — it is a
+ * shared type with exhaustive `Record<OrderStatus, …>` maps in
+ * `AccountPage.tsx`/`account/OrdersPage.tsx` (outside this track's
+ * ownership) that would need a matching entry each; widening it here broke
+ * `fe-tsc` for files this track may not edit. Filed as an integration
+ * request instead (see `reports/integration-requests-w3.md`) for whichever
+ * track owns those two files to add the case. Order-detail code in this
+ * track treats `status` as `OrderStatus | 'Fulfilled'` where it matters
+ * (`order-action-bar.tsx`, `order-state-machine.ts`).
+ */
 export type OrderStatus = 'Pending' | 'Draft' | 'Confirmed' | 'Paid' | 'Shipped' | 'Delivered' | 'Completed' | 'Cancelled';
-export type PaymentStatus = 'Pending' | 'Processing' | 'Paid' | 'Failed' | 'Refunded';
+export type PaymentStatus = 'Pending' | 'PartiallyPaid' | 'Processing' | 'Paid' | 'Failed' | 'Refunded';
 export type FulfillmentStatus = 'Pending' | 'Processing' | 'Fulfilled' | 'Shipped' | 'Delivered';
 
 // Order History
@@ -80,6 +98,146 @@ export interface OrderHistory {
     notes?: string;
     changedBy?: string;
     changedAt: string;
+}
+
+/**
+ * Admin order detail — shape from `GET /api/sales/admin/orders/{id}`
+ * (`docs/api-contracts/sales-pos-returns-loyalty.md` §4). Distinct from the
+ * flat `Order` above (list rows / storefront) — this is the rich drawer view
+ * with money breakdown, shipping, POS info, payments and history (W3-10).
+ */
+/** Field names verified against TEST :5050 `GET /sales/admin/orders/{id}` (2026-09-18). */
+export interface OrderDetailMoney {
+    subtotalAmount: number;
+    discountAmount: number;
+    shippingAmount: number;
+    taxAmount: number;
+    totalAmount: number;
+    collected: number;
+    amountDue: number;
+}
+
+export interface OrderDetailShipping {
+    shippingAddress?: string;
+    isPickup?: boolean;
+    pickupStoreName?: string;
+    deliveryCarrier?: string;
+    deliveryTrackingNumber?: string;
+}
+
+export interface OrderDetailPos {
+    storeId?: string;
+    shiftId?: string;
+    cashierId?: string;
+}
+
+export interface OrderDetailDates {
+    orderDate: string;
+    confirmedAt?: string;
+    paidAt?: string;
+    shippedAt?: string;
+    deliveredAt?: string;
+    completedAt?: string;
+    cancelledAt?: string;
+}
+
+export interface OrderDetailItem {
+    id: string;
+    productId: string;
+    productName: string;
+    productSku?: string;
+    variantId?: string;
+    variantName?: string;
+    unitPrice: number;
+    quantity: number;
+    /** Giảm giá phân bổ về dòng này (D01 — khớp số sẽ in trên hoá đơn). */
+    discountAmount?: number;
+    vatRate?: number;
+    vatAmount?: number;
+    isGift?: boolean;
+    lineTotal: number;
+}
+
+export interface OrderDetailPayment {
+    id: string;
+    method: string;
+    amount: number;
+    tenderedAmount?: number;
+    changeAmount?: number;
+    reference?: string;
+    receivedBy?: string;
+    receivedAt: string;
+    isReversed?: boolean;
+}
+
+export interface OrderDetailHistoryEntry {
+    id: string;
+    fromStatus?: string;
+    toStatus: string;
+    notes?: string;
+    changedBy?: string;
+    createdAt: string;
+}
+
+export interface OrderAllowedTransition {
+    status: OrderStatus;
+    label: string;
+}
+
+export interface OrderTransitionsDto {
+    status: OrderStatus;
+    statusLabel: string;
+    paymentStatus: PaymentStatus;
+    fulfillmentStatus: FulfillmentStatus;
+    isCreditOrder: boolean;
+    allowedNext: OrderAllowedTransition[];
+}
+
+/** D07 — số hoá đơn, mã tra cứu, trạng thái HĐĐT hiển thị trên đơn. */
+export interface OrderInvoiceInfo {
+    invoiceId?: string;
+    invoiceNumber?: string;
+    lookupCode?: string;
+    eInvoiceStatus?: string;
+    buyerName?: string;
+    buyerTaxCode?: string;
+    buyerAddress?: string;
+    buyerEmail?: string;
+    canEditBuyer?: boolean;
+}
+
+export interface OrderDetail {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    paymentStatus: PaymentStatus;
+    fulfillmentStatus: FulfillmentStatus;
+    channel?: string;
+    notes?: string;
+    internalNotes?: string;
+    cancellationReason?: string;
+    customer: {
+        customerId?: string;
+        name?: string;
+        phone?: string;
+        email?: string;
+    };
+    money: OrderDetailMoney;
+    shipping: OrderDetailShipping;
+    pos?: OrderDetailPos;
+    dates: OrderDetailDates;
+    items: OrderDetailItem[];
+    payments: OrderDetailPayment[];
+    history: OrderDetailHistoryEntry[];
+    /**
+     * The detail response's OWN transitions list — quirk verified on TEST
+     * :5050: it keys the status as `value`, not `status` (inconsistent with
+     * the dedicated `GET .../transitions` endpoint below, which uses
+     * `status`). The action bar always prefers the dedicated endpoint's
+     * `allowedNext` and only falls back to this one, so the field is typed
+     * loosely rather than forced into `OrderAllowedTransition`.
+     */
+    allowedTransitions?: { value: string; label: string }[];
 }
 
 export type ReturnType = 'Refund' | 'Exchange' | 'Replace';

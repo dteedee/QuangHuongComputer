@@ -3,7 +3,7 @@ import { lazy } from 'react';
 import type { RouteDef } from './route-types';
 import { PERMISSIONS } from '../constants/permissions';
 
-const InventoryPortal = lazy(() => import('../pages/backoffice/inventory/InventoryPortal').then((m) => ({ default: m.InventoryPortal })));
+const StockPage = lazy(() => import('../pages/backoffice/inventory/stock-page'));
 const SuppliersPage = lazy(() => import('../pages/backoffice/inventory/SuppliersPage').then((m) => ({ default: m.SuppliersPage })));
 const PurchaseOrdersPage = lazy(() => import('../pages/backoffice/inventory/PurchaseOrdersPage'));
 const GoodsReceivedNotesPage = lazy(() => import('../pages/backoffice/inventory/goods-received-notes-page'));
@@ -19,8 +19,8 @@ const SupplierScorecardPage = lazy(() => import('../pages/backoffice/inventory/s
 const SerialTracePage = lazy(() => import('../pages/backoffice/inventory/serial-trace-page'));
 
 export const backofficeInventoryRoutes: RouteDef[] = [
-  // Dashboard — kept at the old exact role set (Supplier included, matching the previous section wrapper).
-  { path: 'inventory', element: InventoryPortal, layout: 'backoffice', group: 'sales', icon: 'Box', title: 'Kho hàng', description: 'Quản lý tồn kho', allowedRoles: ['Admin', 'Manager', 'InventoryStaff', 'Supplier'], name: 'inventory' },
+  // W3-12: was `InventoryPortal` (edited Catalog.StockQuantity directly, no reason/ledger).
+  { path: 'inventory', element: StockPage, layout: 'backoffice', group: 'sales', icon: 'Box', title: 'Kho hàng', description: 'Quản lý tồn kho', permission: PERMISSIONS.INVENTORY_VIEW_STOCK, name: 'inventory' },
   { path: 'inventory/suppliers', element: SuppliersPage, layout: 'backoffice', group: 'sales', icon: 'Building2', title: 'Nhà cung cấp', description: 'Quản lý NCC', permission: PERMISSIONS.INVENTORY_VIEW_SUPPLIER, name: 'inventorySuppliers' },
   { path: 'inventory/purchase-orders', element: PurchaseOrdersPage, layout: 'backoffice', group: 'sales', icon: 'ShoppingCart', title: 'Đơn mua hàng', description: 'Đặt hàng NCC', permission: PERMISSIONS.INVENTORY_VIEW_PURCHASE_ORDER, name: 'purchaseOrders' },
   { path: 'inventory/grn', element: GoodsReceivedNotesPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.INVENTORY_RECEIVE_PURCHASE_ORDER, name: 'goodsReceivedNotes' },

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../../context/ConfirmContext';
 import {
     overtimeApi,
     overtimeStatusLabels,
@@ -19,6 +20,7 @@ const STATUS_COLORS: Record<OvertimeRequestStatus, string> = {
 };
 
 export default function OvertimeApprovalPage() {
+    const confirm = useConfirm();
     const [rows, setRows] = useState<OvertimeRequest[]>([]);
     const [loading, setLoading] = useState(false);
     const [filter, setFilter] = useState<FilterStatus>('Pending');
@@ -95,7 +97,8 @@ export default function OvertimeApprovalPage() {
 
     const doBatchApprove = async () => {
         if (selected.size === 0) return;
-        if (!confirm(`Duyệt ${selected.size} yêu cầu OT?`)) return;
+        const ok = await confirm({ message: `Duyệt ${selected.size} yêu cầu OT?`, variant: 'warning' });
+        if (!ok) return;
         try {
             await Promise.all(Array.from(selected).map(id => overtimeApi.approve(id)));
             toast.success(`Đã duyệt ${selected.size} yêu cầu`);

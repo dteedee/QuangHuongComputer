@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Star } from 'lucide-react';
+import { ROUTES } from '../../routes/route-paths';
 
 /**
  * Fallback hero banner displayed when the CMS returns no homepage sections.
@@ -63,7 +64,7 @@ export const FallbackHero = () => (
                         className="mt-8 flex flex-wrap gap-3"
                     >
                         <Link
-                            to="/products"
+                            to={ROUTES.PRODUCTS}
                             className="inline-flex items-center gap-2.5 bg-gradient-to-r from-accent to-[#b91c1c] text-white px-7 py-3.5 rounded-xl font-bold text-base hover:shadow-lg hover:shadow-red-500/30 transition-all duration-200 hover:-translate-y-0.5"
                         >
                             <ShoppingBag size={20} />

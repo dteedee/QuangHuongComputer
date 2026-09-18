@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../../routes/route-paths';
 import { useComparison } from '../../context/ComparisonContext';
 import { X, Scale, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { Img } from '../ui';
 
 export function ComparisonBar() {
   const { items, removeFromComparison, clearComparison } = useComparison();
@@ -38,19 +40,16 @@ export function ComparisonBar() {
                   className="flex items-center gap-3 bg-gray-50 rounded-lg p-2 pr-3 min-w-[200px] flex-shrink-0 group"
                 >
                   {/* Image */}
-                  <div className="w-16 h-16 bg-white rounded-lg overflow-hidden border flex-shrink-0">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <Scale />
-                      </div>
-                    )}
-                  </div>
+                  {/* `Img` resolves the relative `/media/...` path against the API
+                      origin (D02) — a bare <img src="/media/…"> 404s on the Vite host. */}
+                  <Img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    ratio="1/1"
+                    fit="contain"
+                    blend
+                    wrapperClassName="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-line"
+                  />
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
@@ -84,7 +83,7 @@ export function ComparisonBar() {
             <div className="flex flex-col gap-2 flex-shrink-0">
               {items.length >= 2 && (
                 <Link
-                  to="/compare"
+                  to={ROUTES.COMPARE}
                   className="px-6 py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-hover transition flex items-center gap-2"
                 >
                   <Scale />

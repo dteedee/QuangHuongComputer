@@ -1,6 +1,21 @@
-import { useState, useEffect } from 'react';
+/**
+ * "Sản phẩm gợi ý" — `GET /api/ai/recommendations/{productId}`.
+ *
+ * The payload carries only id, name, slug, price and an image. It deliberately
+ * does NOT render W3-1's `ProductCard`: that tile prints a SKU chip, a rating
+ * and a stock state, and feeding it defaults would put "Còn hàng" and an empty
+ * "Mã:" under a product whose stock this endpoint never told us about. So the
+ * rail shows exactly the four fields that are real, on the same tokens, and
+ * links to the PDP where everything else is true.
+ *
+ * Nothing at all is rendered when the endpoint returns no recommendation.
+ */
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+
 import { getRecommendations } from '../api/ai';
+import { buildPath, ROUTES } from '../routes/route-paths';
+import { Img, Skeleton, formatDong } from './ui';
 
 interface RecommendationCarouselProps {
   productId: string;
@@ -15,74 +30,77 @@ interface RecommendedProduct {
   slug?: string;
   imageUrl?: string;
   price?: number;
-  score?: number;
-  similarityScore?: number;
 }
 
 export default function RecommendationCarousel({
   productId,
   title = 'Sản phẩm gợi ý',
 }: RecommendationCarouselProps) {
-  const [products, setProducts] = useState<RecommendedProduct[]>([]);
+  const query = useQuery<RecommendedProduct[]>({
+    queryKey: ['ai', 'recommendations', productId],
+    queryFn: async () => {
+      const data = await getRecommendations(productId);
+      const list = Array.isArray(data) ? data : (data?.recommendations ?? []);
+      return Array.isArray(list) ? (list as RecommendedProduct[]) : [];
+    },
+    enabled: Boolean(productId),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
-  useEffect(() => {
-    if (!productId) return;
-    getRecommendations(productId)
-      .then(data => {
-        const list = Array.isArray(data) ? data : data.recommendations || [];
-        setProducts(list);
-      })
-      .catch(() => {});
-  }, [productId]);
+  if (query.isPending) {
+    return (
+      <section>
+        <Skeleton className="mb-4 h-7 w-56" />
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-44 w-full rounded-xl" />)}
+        </div>
+      </section>
+    );
+  }
 
-  if (products.length === 0) return null;
+  const products = (query.data ?? [])
+    .filter((p) => (p.productId || p.id) && (p.productName || p.name))
+    .slice(0, 4);
+  if (query.isError || products.length === 0) return null;
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-bold mb-4 text-gray-900">{title}</h2>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {products.map((p, idx) => {
-          const pid = p.productId || p.id || idx.toString();
-          const pname = p.productName || p.name || 'Sản phẩm';
-          const score = p.score ?? p.similarityScore ?? 0;
-          const href = `/san-pham/${p.slug || pid}`;
-
+    <section aria-labelledby="recommendations-heading">
+      <h2 id="recommendations-heading" className="mb-4 text-xl font-bold tracking-tight text-fg">
+        {title}
+      </h2>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {products.map((p) => {
+          const id = (p.productId || p.id)!;
+          const name = (p.productName || p.name)!;
           return (
             <Link
-              key={pid}
-              to={href}
-              className="min-w-[200px] max-w-[200px] bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 flex-shrink-0"
+              key={id}
+              to={buildPath(ROUTES.PRODUCT_DETAIL, p.slug || id)}
+              className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition duration-220 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md motion-reduce:transform-none"
             >
-              {p.imageUrl ? (
-                <img
-                  src={p.imageUrl}
-                  alt={pname}
-                  className="w-full h-32 object-contain mb-2"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-100 rounded flex items-center justify-center mb-2">
-                  <span className="text-3xl font-black text-gray-300 uppercase">
-                    {pname.charAt(0)}
-                  </span>
-                </div>
-              )}
-              <h3 className="text-sm font-medium line-clamp-2 text-gray-900 leading-snug">
-                {pname}
-              </h3>
-              {p.price != null && p.price > 0 && (
-                <p className="text-red-600 font-bold mt-1 text-sm">
-                  {p.price.toLocaleString('vi-VN')}đ
-                </p>
-              )}
-              {score > 0 && (
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Phù hợp: {(score * 100).toFixed(0)}%
-                </p>
-              )}
+              <Img
+                src={p.imageUrl}
+                alt={name}
+                ratio="4/3"
+                fit="contain"
+                blend
+                wrapperClassName="rounded-t-xl"
+              />
+              <div className="flex flex-1 flex-col border-t border-line p-3">
+                <h3 className="line-clamp-2 text-sm font-medium leading-snug text-fg group-hover:text-brand-text">
+                  {name}
+                </h3>
+                {p.price != null && p.price > 0 && (
+                  <p className="num price mt-auto pt-2 text-base font-bold text-brand-text">
+                    {formatDong(p.price)}
+                  </p>
+                )}
+              </div>
             </Link>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

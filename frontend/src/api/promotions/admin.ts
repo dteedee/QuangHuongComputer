@@ -11,7 +11,8 @@ import client from '../client';
 // ---------------------------------------------------------------------------
 export type PromotionType = 'Code' | 'Automatic' | 'FlashSale';
 export type PromotionStatus = 'Draft' | 'Active' | 'Paused' | 'Expired';
-export type DiscountType = 'Percent' | 'Fixed' | 'FreeShip' | 'BuyXGetY' | 'Tiered';
+/** `FixedPrice` = Flash Sale (giá cố định theo sản phẩm) — contract §1 FlashSale. */
+export type DiscountType = 'Percent' | 'Fixed' | 'FreeShip' | 'BuyXGetY' | 'Tiered' | 'FixedPrice';
 
 export type ConditionType =
   | 'MinOrderValue'
@@ -43,8 +44,18 @@ export interface PromotionReward {
   variantId?: string | null;
   productName?: string;
   quantity: number;
-  /** 100 = tặng miễn phí, <100 = giảm phần trăm. */
+  /** 100 = tặng miễn phí, <100 = giảm phần trăm. Dùng cho Type=BuyXGetY. */
   discountPercent: number;
+  /**
+   * Flash Sale (Type=FlashSale, DiscountType=FixedPrice) — một dòng reward = giá
+   * cố định của một sản phẩm trong khung giờ sale. Bắt buộc khi Type=FlashSale
+   * (contract §1 "FlashSale contract").
+   */
+  flashPrice?: number | null;
+  /** null = không giới hạn số lượng bán ở giá flash. */
+  quantityLimit?: number | null;
+  /** Đếm chạy từ server, readonly trên FE — hiển thị "đã bán x/y". */
+  soldCount?: number;
 }
 
 export interface Promotion {
@@ -206,6 +217,16 @@ export const promotionsApi = {
     await client.post(`${ADMIN}/${id}/pause`);
   },
 
+  /** Soft-archive (Status=Expired, IsActive=false). BE trả 400 nếu CurrentUsage>0. */
+  archive: async (id: string): Promise<void> => {
+    await client.post(`${ADMIN}/${id}/archive`);
+  },
+
+  /** Hard-delete. BE trả 400 nếu CurrentUsage>0 — dùng archive thay thế trong trường hợp đó. */
+  remove: async (id: string): Promise<void> => {
+    await client.delete(`${ADMIN}/${id}`);
+  },
+
   evaluate: async (req: EvaluateRequest): Promise<PricingResult> => {
     const res = await client.post<PricingResult>(`${BASE}/evaluate`, req);
     return res.data;
@@ -235,6 +256,8 @@ export const formatDiscount = (p: Pick<Promotion, 'discountType' | 'discountValu
       return 'Mua X tặng Y';
     case 'Tiered':
       return 'Giảm theo bậc';
+    case 'FixedPrice':
+      return 'Giá Flash Sale cố định';
     default:
       return '';
   }

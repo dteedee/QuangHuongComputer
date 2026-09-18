@@ -129,9 +129,10 @@ export default function CampaignsPage() {
 
           <SearchableSelect
               value={status}
-              onChange={null}
+              onChange={(v) => { setStatus(v as CampaignStatus | ''); setPage(1); }}
               placeholder="Tất cả trạng thái"
               options={[
+                  { value: '', label: 'Tất cả trạng thái' },
                   { value: 'Draft', label: 'Bản nháp' },
                   { value: 'Scheduled', label: 'Đã lên lịch' },
                   { value: 'Sending', label: 'Đang gửi' },
