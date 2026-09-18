@@ -24,11 +24,29 @@ public class ApplicationUser : IdentityUser
     public DateTime? PhoneNumberVerifiedAt { get; set; }
 }
 
+/// <summary>
+/// A pending password-reset challenge. The clear-text code is NEVER stored:
+/// only <see cref="CodeHash"/> = SHA-256(Salt : Email : code). <see cref="Email"/>
+/// binds the challenge to one account, which is what stops a code issued for one
+/// user from resetting another. <see cref="Attempts"/> caps brute force.
+/// </summary>
 public class PasswordResetToken
 {
     public int Id { get; set; }
     public string UserId { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
+
+    /// <summary>Normalised (trimmed, lower-cased) e-mail the code was issued to.</summary>
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>Base64 SHA-256 of "Salt:Email:code". Never the code itself.</summary>
+    public string CodeHash { get; set; } = string.Empty;
+
+    /// <summary>Per-row salt for <see cref="CodeHash"/>.</summary>
+    public string Salt { get; set; } = string.Empty;
+
+    /// <summary>Failed verification attempts; the row dies at 5.</summary>
+    public int Attempts { get; set; }
+
     public DateTime ExpiresAt { get; set; }
     public bool IsUsed { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -133,13 +151,16 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<PasswordResetToken>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.CodeHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.Salt).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
             entity.Property(e => e.UserId).IsRequired();
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(e => e.Token);
+            // Lookup is always by e-mail (never by code), so that is the index we need.
+            entity.HasIndex(e => new { e.Email, e.IsUsed });
         });
 
         builder.Entity<UserProfile>(entity =>

@@ -11,8 +11,15 @@ public class ContentDbContextFactory : IDesignTimeDbContextFactory<ContentDbCont
 {
     public ContentDbContext CreateDbContext(string[] args)
     {
-        var connectionString = Environment.GetEnvironmentVariable("CONTENT_DB")
-            ?? "Host=localhost;Port=5432;Database=quanghuongdb;Username=postgres;Password=postgres123";
+        // No dev fallback on purpose (D12): a bare `dotnet ef database update` must never
+        // reach the owner's database. Caller supplies CONTENT_DB explicitly.
+        var connectionString = Environment.GetEnvironmentVariable("CONTENT_DB");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "CONTENT_DB is not set. Set it to the target connection string before running `dotnet ef` " +
+                "(the database name must end with '_test' outside of a promote).");
+        }
 
         var optionsBuilder = new DbContextOptionsBuilder<ContentDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

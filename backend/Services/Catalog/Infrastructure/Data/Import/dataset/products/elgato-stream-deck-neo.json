@@ -1,0 +1,154 @@
+{
+  "name": "Elgato Stream Deck Neo - 8 phím",
+  "slug": "elgato-stream-deck-neo",
+  "sku": "ELG-10GBJ9901",
+  "brand": "Elgato",
+  "category": "Loa, Mic, Webcam, Stream",
+  "subCategory": "Stream",
+  "model": "Stream Deck Neo",
+  "officialUrl": "https://www.elgato.com/us/en/p/stream-deck-neo",
+  "priceVnd": 2700000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 2400000,
+  "priceSources": [
+    "https://gearvn.com/products/phu-kien-elgato-stream-deck-neo-8-phim"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Elgato 24 tháng 1 đổi 1 trong 30 ngày đầu nếu lỗi do nhà sản xuất",
+  "weightKg": 0.21,
+  "stockQuantity": 18,
+  "shortDescription": "Bộ điều khiển phím tắt 8 phím LCD kèm Infobar, giúp thao tác nhanh với các app livestream, họp online và công việc hàng ngày chỉ bằng một chạm.",
+  "descriptionHtml": "<h3>Bàn phím tắt thông minh cho công việc và stream</h3><p>Stream Deck Neo là thiết bị điều khiển 8 phím LCD có thể tùy chỉnh, giúp gán nhanh các thao tác lặp lại như mở app, chuyển cảnh stream, điều khiển nhạc hay dán văn bản chỉ bằng một lần chạm. Thiết kế nhỏ gọn với chân đế tích hợp 3 vị trí góc nghiêng, phù hợp đặt cạnh laptop hoặc màn hình chính.</p><h3>Infobar và Touch Points tiện lợi</h3><p>Dải Infobar LCD giữa hai Touch Points hiển thị đồng hồ số hoặc thông tin tùy chỉnh theo thời gian thực, đồng thời cho phép vuốt chạm để chuyển nhanh giữa các layout phím khác nhau mà không cần rời tay khỏi bàn phím.</p><h3>Cài đặt dễ dàng, tương thích rộng</h3><p>Sản phẩm đi kèm phần mềm Stream Deck cho Windows và macOS, hỗ trợ kéo-thả action, tích hợp Marketplace với plugin miễn phí cho hầu hết ứng dụng phổ biến như Zoom, Discord, Spotify, OBS. Kết nối qua cáp USB-C bọc dù bền bỉ, cổng khuyến nghị USB 2.0 trở lên.</p><ul><li>8 phím LCD tùy chỉnh hình ảnh</li><li>Infobar hiển thị đồng hồ/thông tin thời gian thực</li><li>2 Touch Points chuyển trang nhanh</li><li>Chân đế 3 vị trí góc nghiêng</li><li>Cáp USB-C bọc dù, dài 0.9m</li><li>Hai màu Trắng/Đen</li></ul>",
+  "highlights": [
+    "8 phím LCD tùy chỉnh hình ảnh, gán action theo ứng dụng",
+    "Infobar hiển thị đồng hồ và thông tin thời gian thực",
+    "2 Touch Points vuốt chạm chuyển đổi layout phím",
+    "Chân đế tích hợp 3 vị trí góc nghiêng linh hoạt",
+    "Phần mềm Stream Deck kéo-thả dễ dùng, kho Marketplace phong phú",
+    "Cáp USB-C bọc dù bền, tương thích Windows và macOS"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Thương hiệu",
+      "value": "Elgato",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Model",
+      "value": "Stream Deck Neo (SKU 10GBJ9901)",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Màu sắc",
+      "value": "Trắng, Đen",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Bàn phím",
+      "name": "Số phím",
+      "value": "8 phím LCD tùy chỉnh",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Bàn phím",
+      "name": "Cảm biến chạm",
+      "value": "2 x Touch Points",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Bàn phím",
+      "name": "Màn hình phụ",
+      "value": "Infobar tùy chỉnh (đồng hồ số, thông tin thời gian thực)",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "107 x 26 x 78 mm (D x H x W)",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "210 g",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chân đế",
+      "value": "Tích hợp, 3 vị trí góc nghiêng",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng kết nối",
+      "value": "USB-C, cáp bọc dù dài 0.9 m",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB khuyến nghị",
+      "value": "USB 2.0 (hoặc mới hơn) Type-C",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "Windows, macOS",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Phần mềm đi kèm",
+      "value": "Stream Deck software (Marketplace, Profiles, Multi Actions, Folders, Pages)",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Virtual Stream Deck",
+      "value": "Bàn phím ảo miễn phí trên điện thoại",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Phụ kiện tương thích",
+      "name": "Network Dock",
+      "value": "Hỗ trợ",
+      "source": "https://www.elgato.com/us/en/p/stream-deck-neo"
+    },
+    {
+      "group": "Chất liệu",
+      "name": "Vỏ ngoài",
+      "value": "Nhựa tái chế",
+      "source": "https://gearvn.com/products/phu-kien-elgato-stream-deck-neo-8-phim"
+    }
+  ],
+  "filterAttributes": {
+    "connection": "USB-C",
+    "keys": "8",
+    "color": "white-black",
+    "os": "windows-macos"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://elgato-assets.imgix.net/image/upload/f_auto/q_auto:best/v1749123662/Products/Neo%20Product%20Line/10GBJ9901%20(Stream%20Deck%20Neo)/ATF/New%20ATF%20Images%202025-06-05/Stream_Deck_Neo_ATF_01.jpg",
+      "alt": "Elgato Stream Deck Neo màu trắng, góc nghiêng, 8 phím LCD và Infobar"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://res.cloudinary.com/elgato-pwa/image/upload/q_auto,f_auto/v1723640942/Products/Neo%20Product%20Line/User%20Manual%20Guides/Stream%20Deck%20Neo/SD-Neo.jpg",
+      "alt": "Elgato Stream Deck Neo trên nền trắng, thể hiện chân đế tích hợp"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://elgato-assets.imgix.net/image/upload/f_auto/q_auto:best/v1749123661/Products/Neo%20Product%20Line/10GBJ9901%20(Stream%20Deck%20Neo)/ATF/New%20ATF%20Images%202025-06-05/Stream_Deck_Neo_ATF_03.jpg",
+      "alt": "Hai chiếc Elgato Stream Deck Neo màu trắng đặt trên bục trưng bày, thể hiện các layout phím khác nhau"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Elgato Stream Deck Neo - 8 phím LCD chính hãng | Quang Huong Computer",
+  "metaDescription": "Elgato Stream Deck Neo 8 phím LCD, Infobar, Touch Points - điều khiển stream, họp online, tác vụ nhanh. Bảo hành chính hãng 24 tháng."
+}

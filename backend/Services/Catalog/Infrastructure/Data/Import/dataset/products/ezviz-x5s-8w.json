@@ -1,0 +1,187 @@
+{
+  "name": "Đầu Ghi NVR Không Dây Ezviz X5S 8W (CS-X5S-R100-8W)",
+  "slug": "ezviz-x5s-8w",
+  "sku": "EZV-X5SR1008W",
+  "brand": "Ezviz",
+  "category": "Camera",
+  "subCategory": "NVR",
+  "model": "X5S 8W (CS-X5S-R100-8W)",
+  "officialUrl": "https://www.ezviz.com/vn/product/x5s/1450",
+  "priceVnd": 1150000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 1010000,
+  "priceSources": [
+    "https://meta.vn/dau-ghi-khong-day-8-kenh-ezviz-x5s-8w-p108729"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Ezviz Việt Nam 24 tháng qua hệ thống bảo hành ủy quyền, 1 đổi 1 trong 30 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.932,
+  "stockQuantity": 16,
+  "shortDescription": "Đầu ghi NVR không dây Ezviz X5S 8W hỗ trợ kết nối 8 camera IP qua Wi-Fi hoặc dây mạng, xuất hình đồng thời HDMI và VGA, phù hợp lắp mới hệ camera không dây cho nhà ở, cửa hàng nhỏ.",
+  "descriptionHtml": "<h3>Trung tâm lưu trữ cho hệ camera không dây</h3><p>Ezviz X5S 8W là đầu ghi NVR hỗ trợ tối đa 8 kênh camera IP Ezviz, kết nối không dây qua Wi-Fi 2.4GHz trong bán kính khoảng 100m hoặc kết nối dây qua cổng Ethernet 10/100M, giúp việc lắp đặt hệ thống giám sát không cần kéo dây tín hiệu tới từng camera. Thiết bị giải mã được độ phân giải lên tới 3K (tương đương 5MP) trên mỗi kênh, dùng chuẩn nén H.265/H.264 để tiết kiệm dung lượng lưu trữ.</p><h3>Xuất hình linh hoạt, lưu trữ mở rộng</h3><p>X5S 8W có cả cổng HDMI (tối đa 2592x1944) lẫn VGA (tối đa 1920x1080) xuất hình đồng thời ra màn hình hoặc tivi, tiện theo dõi trực tiếp tại chỗ. Máy có 1 khay SATA cho ổ cứng 3.5 inch dung lượng từ 1TB đến 8TB (bán riêng), lưu lại video ghi liên tục, ghi theo lịch hoặc ghi khi phát hiện chuyển động. Hỗ trợ giao thức mở ONVIF nên có thể phối hợp với một số dòng camera IP hãng khác ngoài Ezviz.</p><h3>Phù hợp ai</h3><ul><li>Hộ gia đình, cửa hàng muốn dựng hệ camera không dây gọn nhẹ, không đi dây tín hiệu</li><li>Người cần xem lại video qua màn hình tại chỗ (HDMI/VGA) thay vì chỉ xem qua app</li><li>Ghép cùng camera Ezviz Wi-Fi có sẵn hoặc bổ sung dần theo nhu cầu (tối đa 8 kênh)</li></ul>",
+  "highlights": [
+    "Hỗ trợ tối đa 8 kênh camera IP, kết nối không dây Wi-Fi 2.4GHz hoặc qua cổng Ethernet",
+    "Giải mã độ phân giải tới 3K (5MP)/kênh, nén H.265 & H.264 tiết kiệm dung lượng",
+    "Xuất hình đồng thời 2 cổng HDMI (2592x1944) và VGA (1920x1080)",
+    "1 khay ổ cứng SATA 3.5 inch, hỗ trợ HDD từ 1TB đến 8TB (chưa kèm ổ cứng)",
+    "Hỗ trợ giao thức mở ONVIF, tương thích thêm một số camera IP ngoài hãng",
+    "Thiết kế nhỏ gọn 235 x 270 x 44,5mm, nặng 932g, kèm chuột điều khiển"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Model",
+      "value": "CS-X5S-R100-4W, CS-X5S-R100-8W (bản 8 kênh)",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Số kênh camera IP",
+      "value": "Không dây/có dây: 3K x 8 (bản 8W)",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kết nối & Mạng",
+      "name": "Số ăng-ten",
+      "value": "2",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kết nối & Mạng",
+      "name": "Phạm vi Wi-Fi tối đa",
+      "value": "100m",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kết nối & Mạng",
+      "name": "Tần số vô tuyến",
+      "value": "2.4GHz",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kết nối & Mạng",
+      "name": "Cổng mạng",
+      "value": "1 cổng Ethernet 10/100M",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kết nối & Mạng",
+      "name": "Băng thông yêu cầu",
+      "value": "50-100 Mb/giây",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Video & Giải mã",
+      "name": "Đầu ra HDMI",
+      "value": "1 kênh, tối đa 2592x1944/30Hz",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Video & Giải mã",
+      "name": "Đầu ra VGA",
+      "value": "1 kênh, tối đa 1920x1080/60Hz",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Video & Giải mã",
+      "name": "Độ phân giải ghi hỗ trợ",
+      "value": "3K/2K+/2K/1080p/UXGA/720p/VGA/4CIF/2CIF/CIF/QCIF",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Video & Giải mã",
+      "name": "Chuẩn nén video",
+      "value": "H.265, H.264",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Video & Giải mã",
+      "name": "Giải mã phát lại",
+      "value": "Hỗ trợ 4x3K hoặc 8x3K",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Giao diện ổ cứng",
+      "value": "1 cổng SATA tích hợp",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Dung lượng HDD hỗ trợ",
+      "value": "Ổ cứng 3.5 inch, 1TB - 8TB (bán riêng)",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Giao thức",
+      "name": "Giao thức mở hỗ trợ",
+      "value": "Hikvision, ONVIF (V.2.5)",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Cổng USB",
+      "value": "2 x USB 2.0",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Audio vào/ra",
+      "value": "Không hỗ trợ",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Nguồn & Tiêu thụ",
+      "name": "Nguồn vào",
+      "value": "DC 12V/1.5A",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Nguồn & Tiêu thụ",
+      "name": "Công suất tiêu thụ (chờ)",
+      "value": "8W",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Kích thước sản phẩm",
+      "value": "235 x 270 x 44,5 mm",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Khối lượng tịnh",
+      "value": "932 gram",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    },
+    {
+      "group": "Chứng nhận",
+      "name": "Chứng nhận",
+      "value": "CE, UL, RoHS, WEEE, REACH",
+      "source": "https://www.ezviz.com/vn/product/x5s/1450"
+    }
+  ],
+  "filterAttributes": {
+    "channels": "8",
+    "connectivity": "wireless-wifi-2.4ghz",
+    "videoOutput": "hdmi-vga",
+    "maxResolution": "3k-5mp",
+    "hddSupport": "sata-3.5-1tb-8tb",
+    "networkProtocol": "onvif"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://mfs.ezvizlife.com/9510d2318282d0b904b59f66ece7b524.jpg",
+      "alt": "Đầu ghi NVR không dây Ezviz X5S 8W, mặt trước với logo Ezviz và 2 ăng-ten"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://s3.amazonaws.com/mfs.ezvizlife.com/209caf294de19a75f3b1cad37a86ae13.jpg",
+      "alt": "Đầu ghi NVR không dây Ezviz X5S nhìn mặt trước và mặt bên, kích thước 270 x 235 x 44,5mm"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Đầu Ghi NVR Không Dây Ezviz X5S 8W - Chính Hãng",
+  "metaDescription": "Đầu ghi NVR không dây Ezviz X5S 8W, 8 kênh camera IP, xuất HDMI/VGA, hỗ trợ HDD 1-8TB. Bảo hành chính hãng 24 tháng."
+}

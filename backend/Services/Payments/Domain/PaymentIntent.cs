@@ -44,16 +44,37 @@ public class PaymentIntent : AggregateRoot<Guid>
         ClientSecret = clientSecret;
     }
 
+    /// <summary>
+    /// W0-10: số tiền LUÔN lấy từ đơn hàng (server), không bao giờ từ client.
+    /// Chỉ chỉnh được khi intent còn Pending — dùng khi tái sử dụng intent cho đơn đã đổi tổng tiền.
+    /// </summary>
+    public void ReviseAmount(decimal amount)
+    {
+        if (Status != PaymentStatus.Pending)
+            throw new InvalidOperationException($"Không đổi được số tiền của intent ở trạng thái {Status}");
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), "Số tiền phải lớn hơn 0");
+        Amount = amount;
+    }
+
     public void Succeed()
     {
-        if (Status == PaymentStatus.Succeeded) return; // Idempotent check handled here ideally
-        
+        if (Status == PaymentStatus.Succeeded) return; // Idempotent
+        if (Status == PaymentStatus.Refunded)
+            throw new InvalidOperationException("Không thể Succeed một intent đã hoàn tiền");
+
         Status = PaymentStatus.Succeeded;
         RaiseDomainEvent(new PaymentSucceededDomainEvent(Id, OrderId, Amount));
     }
 
+    /// <summary>
+    /// W0-10: <see cref="PaymentStatus.Succeeded"/> là TRẠNG THÁI CUỐI.
+    /// Một callback lỗi/timeout đến sau KHÔNG được phép "gỡ" một khoản đã thu.
+    /// </summary>
     public void Fail(string reason)
     {
+        if (Status == PaymentStatus.Succeeded || Status == PaymentStatus.Refunded) return;
+
         Status = PaymentStatus.Failed;
         FailureReason = reason;
         RaiseDomainEvent(new PaymentFailedDomainEvent(Id, OrderId, reason));
@@ -62,11 +83,16 @@ public class PaymentIntent : AggregateRoot<Guid>
 
 public enum PaymentProvider
 {
+    /// <summary>D04: đã xoá code (Stripe không mở tài khoản ở Việt Nam). Giữ số enum cho dữ liệu cũ.</summary>
+    [Obsolete("D04: Stripe đã bị gỡ khỏi hệ thống. Giữ giá trị enum để không dịch số các giá trị sau.")]
     Stripe,
     VnPay,
     Momo,
     COD,
     SePay,
+
+    /// <summary>D04: đã xoá code (ZaloPay cần hợp đồng trước khi có khoá test). Giữ số enum.</summary>
+    [Obsolete("D04: ZaloPay đã bị gỡ khỏi hệ thống. Giữ giá trị enum để không dịch số các giá trị sau.")]
     ZaloPay
 }
 

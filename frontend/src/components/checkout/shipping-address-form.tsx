@@ -37,6 +37,9 @@ export function ShippingAddressForm({
     const [wards, setWards] = useState<{ name: string; code: number }[]>([]);
 
     useEffect(() => {
+        // API công khai bên thứ ba (khác origin với backend QH) — không đi qua client axios
+        // dùng chung vì baseURL của client trỏ vào API của chúng ta, không phải domain này.
+        // eslint-disable-next-line no-restricted-syntax
         fetch('https://provinces.open-api.vn/api/?depth=3')
             .then(r => r.json())
             .then((data: ProvinceApi[]) => setProvinces(data))

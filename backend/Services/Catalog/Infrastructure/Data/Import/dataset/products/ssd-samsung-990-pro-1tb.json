@@ -1,0 +1,172 @@
+{
+  "name": "Ổ Cứng SSD Samsung 990 PRO 1TB PCIe Gen4 NVMe M.2 2280 (MZ-V9P1T0BW)",
+  "slug": "ssd-samsung-990-pro-1tb",
+  "sku": "SSD-MZ-V9P1T0BW",
+  "brand": "Samsung",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "SSD",
+  "model": "Samsung MZ-V9P1T0BW",
+  "officialUrl": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/",
+  "priceVnd": 8990000,
+  "oldPriceVnd": 11990000,
+  "costPriceVnd": 7910000,
+  "priceSources": [
+    "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw",
+    "https://phongvu.vn/c/o-cung-ssd?q=samsung%20990%20pro%201tb"
+  ],
+  "warrantyMonths": 60,
+  "warrantyInfo": "Bảo hành chính hãng Samsung 5 năm (60 tháng) hoặc đến khi đạt giới hạn 600TBW, tùy điều kiện nào đến trước.",
+  "weightKg": 0.02,
+  "stockQuantity": 18,
+  "shortDescription": "SSD NVMe M.2 2280 chuẩn PCIe Gen 4.0 x4 dung lượng 1TB, tốc độ đọc/ghi tuần tự lên tới 7.450/6.900 MB/s, độ bền 600TBW và bảo hành chính hãng 5 năm từ Samsung.",
+  "descriptionHtml": "<h3>Hiệu năng đầu bảng chuẩn PCIe Gen 4.0</h3><p>Samsung 990 PRO 1TB dùng chip nhớ V-NAND TLC cùng bộ điều khiển do chính Samsung sản xuất, đạt tốc độ đọc tuần tự lên tới 7.450 MB/s và ghi tuần tự lên tới 6.900 MB/s - gần chạm giới hạn lý thuyết của chuẩn PCIe 4.0 x4. Bộ nhớ đệm 1GB LPDDR4 giúp duy trì tốc độ truy xuất ổn định khi xử lý khối lượng dữ liệu lớn, phù hợp dựng phim, xử lý ảnh RAW hay load game tức thì trên PC lẫn PlayStation 5.</p><h3>Quản lý nhiệt thông minh, bền bỉ theo thời gian</h3><p>Bộ điều khiển phủ Niken kết hợp công nghệ Dynamic Thermal Guard giúp ổ duy trì hiệu năng ổn định khi hoạt động liên tục ở cường độ cao, hạn chế tình trạng giảm tốc do quá nhiệt. Độ bền được Samsung công bố đạt 600TB dữ liệu ghi (TBW) cùng độ tin cậy MTBF 1,5 triệu giờ, đi kèm chính sách bảo hành chính hãng 5 năm.</p><h3>Bảo mật dữ liệu toàn diện</h3><p>990 PRO hỗ trợ mã hóa phần cứng chuẩn AES 256-bit cùng TCG/Opal và IEEE1667, phù hợp người dùng cần bảo vệ dữ liệu nhạy cảm. Đi kèm phần mềm Samsung Magician giúp theo dõi tình trạng sức khỏe ổ đĩa, cập nhật firmware và tối ưu hiệu năng chỉ với vài thao tác.</p><ul><li>Chuẩn M.2 2280, giao tiếp PCIe Gen 4.0 x4 / NVMe 2.0</li><li>Tốc độ đọc/ghi tuần tự lên tới 7.450/6.900 MB/s</li><li>Độ bền 600TBW, bảo hành chính hãng 5 năm</li><li>Mã hóa AES 256-bit, đi kèm Samsung Magician</li></ul>",
+  "highlights": [
+    "Tốc độ đọc/ghi tuần tự lên tới 7.450/6.900 MB/s, tối ưu chuẩn PCIe Gen 4.0 x4",
+    "Chip nhớ Samsung V-NAND TLC cùng bộ điều khiển in-house phủ Niken, quản lý nhiệt Dynamic Thermal Guard",
+    "Bộ nhớ đệm 1GB LPDDR4 giúp truy xuất ổn định khi xử lý file dung lượng lớn",
+    "Độ bền 600TBW, MTBF 1,5 triệu giờ, bảo hành chính hãng 5 năm",
+    "Mã hóa phần cứng AES 256-bit, hỗ trợ chuẩn TCG/Opal và IEEE1667",
+    "Tương thích PC, laptop hỗ trợ khe M.2 PCIe Gen4 và máy chơi game PlayStation 5"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Dung lượng",
+      "value": "1TB (1.000GB theo chuẩn IDEMA)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Giao tiếp",
+      "value": "PCIe Gen 4.0 x4, NVMe 2.0",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Chuẩn kích thước (Form Factor)",
+      "value": "M.2 2280",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Mục đích sử dụng",
+      "value": "Máy tính cá nhân, máy chơi game (PlayStation 5)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Chip nhớ NAND",
+      "value": "Samsung V-NAND TLC",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Bộ điều khiển (Controller)",
+      "value": "Samsung tự sản xuất (in-house), phủ Niken",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Bộ nhớ đệm (Cache)",
+      "value": "1GB LPDDR4",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ đọc tuần tự",
+      "value": "Lên tới 7.450 MB/s",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ ghi tuần tự",
+      "value": "Lên tới 6.900 MB/s",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "IOPS đọc ngẫu nhiên (QD32)",
+      "value": "Lên tới 1.200.000 IOPS",
+      "source": "https://org.downloadcenter.samsung.com/downloadfile/ContentsFile.aspx?CDSite=UNI_VN&OriginYN=N&ModelType=N&ModelName=MZ-V9P1T0&CttFileID=11193335&CDCttType=UM&VPath=UM%2F202512%2F20251202142154239%2Fsamsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "IOPS ghi ngẫu nhiên (QD32)",
+      "value": "Lên tới 1.550.000 IOPS",
+      "source": "https://org.downloadcenter.samsung.com/downloadfile/ContentsFile.aspx?CDSite=UNI_VN&OriginYN=N&ModelType=N&ModelName=MZ-V9P1T0&CttFileID=11193335&CDCttType=UM&VPath=UM%2F202512%2F20251202142154239%2Fsamsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "Độ bền & Bảo hành",
+      "name": "Độ bền (TBW)",
+      "value": "600 TB dữ liệu ghi (TBW)",
+      "source": "https://org.downloadcenter.samsung.com/downloadfile/ContentsFile.aspx?CDSite=UNI_VN&OriginYN=N&ModelType=N&ModelName=MZ-V9P1T0&CttFileID=11193335&CDCttType=UM&VPath=UM%2F202512%2F20251202142154239%2Fsamsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "Độ bền & Bảo hành",
+      "name": "Độ tin cậy (MTBF)",
+      "value": "1,5 triệu giờ",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Độ bền & Bảo hành",
+      "name": "Thời hạn bảo hành hãng",
+      "value": "5 năm (giới hạn bởi TBW, tùy điều kiện nào đến trước)",
+      "source": "https://org.downloadcenter.samsung.com/downloadfile/ContentsFile.aspx?CDSite=UNI_VN&OriginYN=N&ModelType=N&ModelName=MZ-V9P1T0&CttFileID=11193335&CDCttType=UM&VPath=UM%2F202512%2F20251202142154239%2Fsamsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Kích thước",
+      "value": "80 x 22 x 2,3 mm",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Trọng lượng",
+      "value": "Tối đa 9,0 g",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Điện năng & Môi trường",
+      "name": "Công suất tiêu thụ",
+      "value": "Trung bình 5,5W, tối đa 7,8W (chế độ truyền tốc độ cao)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Điện năng & Môi trường",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0 - 70°C",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Bảo mật & Tính năng",
+      "name": "Mã hóa dữ liệu",
+      "value": "AES 256-bit, TCG/Opal, Encrypted Drive (IEEE1667)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Bảo mật & Tính năng",
+      "name": "Phần mềm quản lý",
+      "value": "Samsung Magician",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    }
+  ],
+  "filterAttributes": {
+    "capacity": "1TB",
+    "interface": "PCIe Gen 4.0 x4 NVMe"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://images.samsung.com/is/image/samsung/p6pim/vn/mz-v9p1t0bw/gallery/vn-990pro-nvme-m2-ssd-mz-v9p1t0bw-539",
+      "alt": "Ổ cứng SSD Samsung 990 PRO 1TB nhìn thẳng mặt trước, tem nhãn V-NAND SSD 990 PRO"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://images.samsung.com/is/image/samsung/p6pim/vn/feature/166898694/vn-feature-990pro-nvme-m2-ssd-551092837",
+      "alt": "Ổ cứng SSD Samsung 990 PRO 1TB chụp góc nghiêng cận cảnh, thể hiện rõ bo mạch và tem sản phẩm"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "SSD Samsung 990 PRO 1TB PCIe Gen4 NVMe M.2",
+  "metaDescription": "Ổ cứng SSD Samsung 990 PRO 1TB NVMe PCIe Gen4, tốc độ đọc/ghi 7.450/6.900 MB/s, độ bền 600TBW, bảo hành chính hãng 5 năm. Giá tốt tại Quang Huong Computer."
+}

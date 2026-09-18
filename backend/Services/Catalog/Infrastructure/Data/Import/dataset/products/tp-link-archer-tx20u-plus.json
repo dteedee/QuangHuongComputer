@@ -1,0 +1,151 @@
+{
+  "name": "USB Wi-Fi TP-Link Archer TX20U Plus Wi-Fi 6 (AX1800, USB 3.0)",
+  "slug": "tp-link-archer-tx20u-plus",
+  "sku": "TPL-ARCHERTX20UPLUS",
+  "brand": "TP-Link",
+  "category": "Thiết Bị Mạng",
+  "subCategory": "USB WiFi Adapter",
+  "model": "Archer TX20U Plus",
+  "officialUrl": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/",
+  "priceVnd": 630000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 550000,
+  "priceSources": [
+    "https://cellphones.com.vn/usb-wifi-archer-tx20u-plus-1800mbps.html",
+    "https://www.phucanh.vn/cac-mang-khong-day-tp-link-usb-archer-tx20u-plus-chuan-ax-ax1800mbps-2-ang-ten-ngoai.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng tại hệ thống bảo hành TP-Link Việt Nam, 1 đổi 1 trong 15 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 0.05,
+  "stockQuantity": 22,
+  "shortDescription": "USB Wi-Fi TP-Link Archer TX20U Plus chuẩn AX1800 giúp nâng cấp PC hoặc laptop cũ lên Wi-Fi 6 chỉ qua một cổng USB 3.0, không cần mở case tháo lắp card mạng. Hai ăng-ten ngoài độ lợi cao cùng MU-MIMO/OFDMA giữ kết nối ổn định ở khoảng cách xa.",
+  "descriptionHtml": "<h3>Nâng cấp Wi-Fi 6 cho PC bàn và laptop cũ</h3><p>TP-Link Archer TX20U Plus là USB thu Wi-Fi chuẩn AX1800, giải pháp đơn giản để đưa Wi-Fi 6 vào những máy tính bàn hoặc laptop đời cũ chưa hỗ trợ chuẩn mạng không dây mới nhất. Thiết bị cắm trực tiếp qua cổng USB 3.0 tốc độ cao, kèm cáp nối dài 1 mét, không đòi hỏi tháo case hay lắp card mở rộng bên trong máy.</p><h3>Tốc độ và độ ổn định</h3><p>Với chuẩn Wi-Fi 6 (802.11ax) băng tần kép, Archer TX20U Plus đạt tốc độ lý thuyết tối đa 1201Mbps ở băng 5GHz và 574Mbps ở băng 2.4GHz, tương thích ngược 802.11ac/n/a/g/b. Hai ăng-ten ngoài độ lợi cao có thể xoay gập giúp bắt sóng ổn định hơn ở khoảng cách xa, trong khi MU-MIMO và OFDMA giúp giảm nghẽn và giảm độ trễ khi router phục vụ đồng thời nhiều thiết bị khác trong nhà.</p><h3>Bảo mật và tương thích</h3><p>Sản phẩm hỗ trợ chuẩn mã hóa WPA3 mới nhất cùng WPA/WPA2, WPA-PSK/WPA2-PSK, đảm bảo an toàn dữ liệu khi kết nối mạng không dây. Driver cài đặt tự động, tương thích tốt với Windows 10 và Windows 11. Thiết kế nhỏ gọn, đèn LED báo trạng thái kết nối, dễ đặt ở vị trí bắt sóng tối ưu trên bàn làm việc.</p><ul><li>Wi-Fi 6 AX1800, băng tần kép 2.4GHz/5GHz</li><li>Cổng USB 3.0, kèm cáp nối dài 1m</li><li>2 ăng-ten ngoài độ lợi cao, xoay gập được</li><li>MU-MIMO, OFDMA giảm nghẽn mạng</li><li>Mã hóa WPA3, tương thích Windows 10/11</li></ul>",
+  "highlights": [
+    "Wi-Fi 6 AX1800: tối đa 1201Mbps (5GHz) + 574Mbps (2.4GHz)",
+    "Cổng USB 3.0 tốc độ cao, cắm là dùng, không cần mở case máy tính",
+    "2 ăng-ten ngoài độ lợi cao, xoay gập linh hoạt, tăng vùng phủ sóng",
+    "Hỗ trợ MU-MIMO và OFDMA giảm nghẽn khi nhiều thiết bị dùng mạng cùng lúc",
+    "Bảo mật WPA3 mới nhất, tương thích Windows 10/11",
+    "Kèm cáp USB 3.0 dài 1m để dễ đặt vị trí bắt sóng tốt"
+  ],
+  "specs": [
+    {
+      "group": "Kết nối không dây",
+      "name": "Chuẩn Wi-Fi",
+      "value": "Wi-Fi 6; IEEE 802.11a/b/g/n/ac/ax",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Băng tần",
+      "value": "Băng tần kép 2.4GHz & 5GHz",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tốc độ Wi-Fi 6 (11ax)",
+      "value": "5GHz: tối đa 1201Mbps (dynamic); 2.4GHz: tối đa 574Mbps (dynamic)",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tốc độ chuẩn cũ",
+      "value": "11ac: tối đa 867Mbps (5GHz); 11n: tối đa 400Mbps (2.4GHz)/300Mbps (5GHz); 11a: 54Mbps; 11g: 54Mbps; 11b: 11Mbps",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Chế độ hoạt động",
+      "value": "Infrastructure mode",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Bảo mật không dây",
+      "value": "WEP, WPA/WPA2/WPA3, WPA-PSK/WPA2-PSK",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Công suất phát (EIRP)",
+      "value": "5GHz: 19dBm (FCC) / 16dBm (CE); 2.4GHz: 19dBm (FCC) / 14.5dBm (CE)",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Cổng kết nối",
+      "value": "USB 3.0 (kèm cáp rời dài 1 mét)",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Ăng-ten",
+      "value": "2x ăng-ten ngoài độ lợi cao, băng tần kép, xoay gập được",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Đèn LED",
+      "value": "Báo trạng thái kết nối (Status)",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Kích thước (D x R x C)",
+      "value": "84 x 156.3 x 19.2 mm",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Hệ thống & Môi trường",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "Windows 10, Windows 11",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Hệ thống & Môi trường",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0°C ~ 40°C",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Hệ thống & Môi trường",
+      "name": "Độ ẩm hoạt động / bảo quản",
+      "value": "Hoạt động: 10%~90% (không ngưng tụ); Bảo quản: 5%~90% (không ngưng tụ)",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Hệ thống & Môi trường",
+      "name": "Chứng nhận",
+      "value": "FCC, CE, RoHS",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    },
+    {
+      "group": "Phụ kiện trong hộp",
+      "name": "Bao gồm",
+      "value": "USB Wi-Fi Archer TX20U Plus, cáp USB 3.0 dài 1m, hướng dẫn cài đặt nhanh",
+      "source": "https://www.tp-link.com/us/home-networking/usb-adapter/archer-tx20u-plus/#specifications"
+    }
+  ],
+  "filterAttributes": {
+    "wifiStandard": "Wi-Fi 6 (802.11ax)",
+    "speedClass": "AX1800",
+    "bandType": "Băng tần kép (Dual-Band)",
+    "connector": "USB 3.0",
+    "antennas": "2 ăng-ten ngoài độ lợi cao"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static-product.tp-link.com/archer-tx20u-plus_v1/img/a.jpg",
+      "alt": "Cận cảnh USB Wi-Fi TP-Link Archer TX20U Plus trên bàn làm việc, ăng-ten dựng đứng, đèn LED trạng thái sáng xanh"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static-product.tp-link.com/archer-tx20u-plus_v1/img/g.jpg",
+      "alt": "USB Wi-Fi TP-Link Archer TX20U Plus đặt ở mép bàn, cáp USB 3.0 cắm vào máy tính"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "USB Wi-Fi TP-Link Archer TX20U Plus AX1800 - Chính Hãng",
+  "metaDescription": "USB thu Wi-Fi 6 TP-Link Archer TX20U Plus chuẩn AX1800, cổng USB 3.0, 2 ăng-ten ngoài độ lợi cao, hỗ trợ MU-MIMO/OFDMA. Giá tốt, bảo hành chính hãng 24 tháng."
+}

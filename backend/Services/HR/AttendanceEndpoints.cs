@@ -69,7 +69,7 @@ public static class AttendanceEndpoints
             var code = AttendanceValidator.GenerateQr(storeId);
             var expiresIn = 30 - (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 30);
             return Results.Ok(new { storeId, code, expiresInSeconds = expiresIn });
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // POST /api/hr/attendance/manual — quản lý chấm hộ
         group.MapPost("/manual", async (
@@ -92,7 +92,7 @@ public static class AttendanceEndpoints
             return result.Success
                 ? Results.Ok(new { message = result.Message, id = result.AttendanceRecordId })
                 : Results.BadRequest(new { error = result.Message });
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // GET /api/hr/attendance/today
         group.MapGet("/today", async (ClaimsPrincipal user, HRDbContext db) =>
@@ -119,7 +119,7 @@ public static class AttendanceEndpoints
                 .OrderBy(a => a.EmployeeId).ThenBy(a => a.Date)
                 .ToListAsync();
             return Results.Ok(records);
-        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+        }).RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // GET /api/hr/attendance/my-report?month=2026-05
         group.MapGet("/my-report", async (string? month, ClaimsPrincipal user, HRDbContext db) =>
@@ -141,7 +141,7 @@ public static class AttendanceEndpoints
         // ==================== ATTENDANCE RULES ====================
         group.MapGet("/rules", async (HRDbContext db) =>
             Results.Ok(await db.AttendanceRules.OrderBy(r => r.StoreId).ToListAsync())
-        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         group.MapPost("/rules", async (CreateAttendanceRuleDto dto, HRDbContext db) =>
         {
@@ -161,13 +161,23 @@ public static class AttendanceEndpoints
             db.AttendanceRules.Add(rule);
             await db.SaveChangesAsync();
             return Results.Created($"/api/hr/attendance/rules/{rule.Id}", rule);
-        }).RequireAuthorization(p => p.RequireRole("Admin"));
+        }).RequireAuthorization(p => p.RequireRole("Admin", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // ==================== MONTHLY TIMESHEET ====================
         var timesheetGroup = app.MapGroup("/api/hr/timesheet-monthly").RequireAuthorization();
 
-        timesheetGroup.MapGet("/{employeeId:guid}", async (Guid employeeId, int year, int month, HRDbContext db) =>
+        // IDOR guard: any authenticated user could read ANY employee's monthly timesheet by
+        // guessing the GUID — scope to staff roles or the timesheet's own employee.
+        timesheetGroup.MapGet("/{employeeId:guid}", async (Guid employeeId, int year, int month, HRDbContext db, ClaimsPrincipal user) =>
         {
+            var isStaff = user.IsInRole("Admin") || user.IsInRole("Manager") || user.IsInRole("Accountant") || user.IsInRole("HR");
+            if (!isStaff)
+            {
+                var callerUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                var isOwner = await db.Employees.AnyAsync(e => e.Id == employeeId && e.UserId == callerUserId);
+                if (!isOwner) return Results.Forbid();
+            }
+
             var ts = await db.MonthlyTimesheets
                 .FirstOrDefaultAsync(t => t.EmployeeId == employeeId && t.Year == year && t.Month == month);
             return ts != null ? Results.Ok(ts) : Results.NotFound(new { error = "Chưa có bảng công tháng này." });
@@ -185,7 +195,7 @@ public static class AttendanceEndpoints
                 {
                     return Results.BadRequest(new { error = ex.Message });
                 }
-            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant"));
+            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         timesheetGroup.MapPost("/{id:guid}/lock",
             async (Guid id, HRDbContext db, ClaimsPrincipal user) =>
@@ -202,7 +212,7 @@ public static class AttendanceEndpoints
                     return Results.Ok(new { message = "Bảng công đã chốt.", ts.LockedAt });
                 }
                 catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant"));
+            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
     }
 
     private static (DateTime From, DateTime To) ParseMonthRange(string? month)

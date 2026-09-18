@@ -68,6 +68,8 @@ public class PayrollRun : Entity<Guid>
     {
         if (Status != PayrollRunStatus.Draft)
             throw new InvalidOperationException($"Chỉ được MarkCalculated từ Draft, hiện tại {Status}.");
+        if (_payrolls.Count == 0)
+            throw new InvalidOperationException("Không thể chuyển sang Calculated: kỳ lương chưa có bảng lương nào.");
         RecalculateTotals();
         Status = PayrollRunStatus.Calculated;
         CalculatedAt = DateTime.UtcNow;

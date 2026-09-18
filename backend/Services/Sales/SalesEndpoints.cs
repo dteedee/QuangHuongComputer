@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Sales.Domain;
 using Sales.Infrastructure;
 using Sales.Contracts;
@@ -22,6 +23,9 @@ namespace Sales;
 
 public static class SalesEndpoints
 {
+    /// <summary>W0-4: trần số lượng mỗi dòng giỏ hàng — chặn đơn 2 tỷ cái do lỗi/khai thác.</summary>
+    private const int MaxQuantityPerCartLine = 99;
+
     public static void MapSalesEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/sales").RequireAuthorization();
@@ -35,7 +39,8 @@ public static class SalesEndpoints
             CatalogDbContext catalogDb,
             InventoryDbContext inventoryDb,
             ContentDbContext contentDb,
-            IPublishEndpoint publishEndpoint) =>
+            IPublishEndpoint publishEndpoint,
+            IConfiguration config) =>
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             try
@@ -100,10 +105,10 @@ public static class SalesEndpoints
                     orderItems.Add(orderItem);
                 }
 
-                var subtotal = orderItems.Sum(i => i.LineTotal);
-                // BUG pháp lý (giống Cart.cs): VAT VN hiện hành 8%, không phải 10%.
+                var subtotal = orderItems.Sum(i => i.UnitPrice * i.Quantity);
+                // VAT VN hiện hành 8%. W0-4/D01: giá ĐÃ bao gồm VAT → Order tự tách thuế,
+                // KHÔNG tính taxAmount cộng thêm ở đây nữa.
                 var taxRate = TaxRates.VatStandard;
-                var taxAmount = subtotal * taxRate;
 
                 // Apply coupon if provided — nguồn duy nhất: CouponValidator (Content.Coupons).
                 decimal discountAmount = 0;
@@ -117,10 +122,9 @@ public static class SalesEndpoints
                     }
                 }
 
-                // Đồng bộ ngưỡng freeship với luồng đã đăng nhập (CartContext.tsx / /checkout): 500K → miễn phí, else 30K.
-                // TRƯỚC: 5.000.000đ / 50.000đ — sai lệch 10x so với badge "Miễn phí vận chuyển" hiển thị ở giỏ hàng,
-                // khiến khách guest bị tính phí ship dù giỏ đã qua ngưỡng miễn phí hiển thị trên UI.
-                var shippingAmount = (subtotal - discountAmount) >= 500000 ? 0 : 30000;
+                // W0-4: phí ship do SERVER quyết định, một nguồn duy nhất (ShippingFeePolicy).
+                // TRƯỚC: công thức 500K/30K được chép tay ở đây + ở /checkout + ở CartContext.tsx.
+                var shippingAmount = ShippingFeePolicy.Calculate(subtotal - discountAmount, isPickup: false, config);
 
                 var order = new Order(
                     guestCustomerId,
@@ -183,55 +187,79 @@ public static class SalesEndpoints
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
-            var cart = await db.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.CustomerId == userId);
-
-            if (cart == null)
+            try
             {
-                cart = new Cart(userId);
-                db.Carts.Add(cart);
-                await db.SaveChangesAsync();
+                var cart = await db.Carts
+                    .Include(c => c.Items)
+                    .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+                if (cart == null)
+                {
+                    cart = new Cart(userId);
+                    db.Carts.Add(cart);
+                    await db.SaveChangesAsync();
+                }
+
+                var productIds = cart.Items.Select(i => i.ProductId).Distinct().ToList();
+
+                var products = await catalogDb.Products
+                    .AsNoTracking()
+                    .Where(p => productIds.Contains(p.Id))
+                    .Select(p => new { p.Id, p.ImageUrl })
+                    .ToDictionaryAsync(p => p.Id, p => p.ImageUrl);
+
+                // W0-4 FIX: TRƯỚC là `.ToDictionaryAsync(i => i.ProductId, ...)` → một sản phẩm
+                // nằm ở 2 kho = 2 dòng InventoryItems = duplicate key → ArgumentException →
+                // GET /api/sales/cart trả 400, giỏ hàng trông như rỗng, khách không checkout được.
+                // Giờ GOM theo (ProductId, VariantId) và CỘNG AvailableQuantity của mọi kho.
+                var inventoryRows = await inventoryDb.InventoryItems
+                    .AsNoTracking()
+                    .Where(i => productIds.Contains(i.ProductId))
+                    .Select(i => new { i.ProductId, i.VariantId, i.AvailableQuantity })
+                    .ToListAsync();
+
+                var stockByKey = inventoryRows
+                    .GroupBy(i => (i.ProductId, i.VariantId))
+                    .ToDictionary(g => g.Key, g => g.Sum(x => x.AvailableQuantity));
+                // Dự phòng: dòng giỏ không có VariantId nhưng kho lại tách theo biến thể.
+                var stockByProduct = inventoryRows
+                    .GroupBy(i => i.ProductId)
+                    .ToDictionary(g => g.Key, g => g.Sum(x => x.AvailableQuantity));
+
+                return Results.Ok(new CartDto(
+                    cart.Id,
+                    cart.CustomerId,
+                    cart.SubtotalAmount,
+                    cart.EffectiveDiscountAmount,
+                    // D01: VAT nằm TRONG giá → đây là phần thuế TÁCH RA, không cộng thêm vào Total.
+                    cart.TaxAmount,
+                    cart.ShippingAmount,
+                    cart.TotalAmount,
+                    cart.TaxRate,
+                    cart.CouponCode,
+                    cart.Items.Select(i => new CartItemDto(
+                        i.ProductId,
+                        i.ProductName,
+                        i.Price,
+                        i.Quantity,
+                        i.Subtotal,
+                        products.TryGetValue(i.ProductId, out var img) ? img : null,
+                        // Không còn "999" bịa ra khi thiếu dòng kho — 0 nghĩa là hết hàng thật.
+                        stockByKey.TryGetValue((i.ProductId, i.VariantId), out var stock)
+                            ? stock
+                            : (stockByProduct.TryGetValue(i.ProductId, out var pStock) ? pStock : 0),
+                        // Snapshot biến thể trong giỏ hàng — không đổi khi admin sửa tên biến thể sau.
+                        i.VariantId,
+                        i.VariantName,
+                        i.VariantSku
+                    )).ToList()
+                ));
             }
-
-            // Fetch product images and inventory in parallel
-            var productIds = cart.Items.Select(i => i.ProductId).ToList();
-            var productsTask = catalogDb.Products
-                .Where(p => productIds.Contains(p.Id))
-                .Select(p => new { p.Id, p.ImageUrl })
-                .ToDictionaryAsync(p => p.Id, p => p.ImageUrl);
-            var inventoryTask = inventoryDb.InventoryItems
-                .Where(i => productIds.Contains(i.ProductId))
-                .ToDictionaryAsync(i => i.ProductId, i => i.AvailableQuantity);
-
-            await Task.WhenAll(productsTask, inventoryTask);
-            var products = await productsTask;
-            var inventory = await inventoryTask;
-
-            return Results.Ok(new CartDto(
-                cart.Id,
-                cart.CustomerId,
-                cart.SubtotalAmount,
-                cart.DiscountAmount,
-                cart.SubtotalAmount * cart.TaxRate,
-                cart.ShippingAmount,
-                cart.TotalAmount,
-                cart.TaxRate,
-                cart.CouponCode,
-                cart.Items.Select(i => new CartItemDto(
-                    i.ProductId,
-                    i.ProductName,
-                    i.Price,
-                    i.Quantity,
-                    i.Subtotal,
-                    products.TryGetValue(i.ProductId, out var img) ? img : null,
-                    inventory.TryGetValue(i.ProductId, out var stock) ? stock : 999,
-                    // Snapshot biến thể trong giỏ hàng — không đổi khi admin sửa tên biến thể sau.
-                    i.VariantId,
-                    i.VariantName,
-                    i.VariantSku
-                )).ToList()
-            ));
+            catch (Exception)
+            {
+                // KHÔNG trả chi tiết exception ra client (trước đây lộ stack/thông điệp EF).
+                return Results.Problem("Không tải được giỏ hàng. Vui lòng thử lại.");
+            }
         });
 
         group.MapPost("/cart/items", async ([FromBody] AddToCartDto dto, SalesDbContext db, InventoryDbContext inventoryDb, CatalogDbContext catalogDb, ClaimsPrincipal user) =>
@@ -240,16 +268,35 @@ public static class SalesEndpoints
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
-            // 1. Nếu sản phẩm có biến thể → fetch snapshot Name/Sku từ Catalog (KHÔNG tin client).
-            //    Query anonymous projection để tránh import Catalog.Domain.ProductVariant.
+            if (dto.Quantity <= 0)
+                return Results.BadRequest(new { Error = "Số lượng phải lớn hơn 0" });
+
+            if (dto.Quantity > MaxQuantityPerCartLine)
+                return Results.BadRequest(new { Error = $"Số lượng tối đa mỗi sản phẩm là {MaxQuantityPerCartLine}" });
+
+            // 1. W0-4: TÊN và GIÁ lấy từ Catalog, KHÔNG tin dto.ProductName/dto.Price.
+            //    TRƯỚC: client gửi price tuỳ ý → giỏ hàng (và đơn) mang giá do khách tự đặt.
+            var productSnapshot = await catalogDb.Products
+                .AsNoTracking()
+                .Where(p => p.Id == dto.ProductId)
+                .Select(p => new { p.Name, p.Price, p.IsActive })
+                .FirstOrDefaultAsync();
+
+            if (productSnapshot == null || !productSnapshot.IsActive)
+                return Results.BadRequest(new { Error = "Sản phẩm không tồn tại hoặc đã ngừng kinh doanh" });
+
+            var productName = productSnapshot.Name;
+            var unitPrice = productSnapshot.Price;
+
+            // Nếu sản phẩm có biến thể → snapshot Name/Sku/Price của biến thể (vẫn từ Catalog).
             string? variantName = null;
             string? variantSku = null;
             if (dto.VariantId.HasValue)
             {
                 var variantSnapshot = await catalogDb.ProductVariants
                     .AsNoTracking()
-                    .Where(v => v.Id == dto.VariantId.Value)
-                    .Select(v => new { v.Name, v.Sku })
+                    .Where(v => v.Id == dto.VariantId.Value && v.ProductId == dto.ProductId)
+                    .Select(v => new { v.Name, v.Sku, v.Price })
                     .FirstOrDefaultAsync();
 
                 if (variantSnapshot == null)
@@ -257,28 +304,16 @@ public static class SalesEndpoints
 
                 variantName = variantSnapshot.Name;
                 variantSku = variantSnapshot.Sku;
+                if (variantSnapshot.Price > 0) unitPrice = variantSnapshot.Price;
             }
 
-            // 2. Kiểm tra tồn kho — ưu tiên tồn theo biến thể nếu có, ngược lại rơi về tồn tổng.
+            // 2. Tồn kho — theo (ProductId, VariantId). W0-4: KHÔNG còn tự tạo InventoryItem qty=100.
+            //    Tự tạo tồn ảo khiến mọi GUID đều "còn 100 cái" → bán hàng không có thật.
             var inventoryItem = await inventoryDb.InventoryItems
                 .FirstOrDefaultAsync(i => i.ProductId == dto.ProductId && i.VariantId == dto.VariantId);
 
             if (inventoryItem == null)
-            {
-                try
-                {
-                    // Auto-create inventory item for development convenience
-                    inventoryItem = new InventoryModule.Domain.InventoryItem(
-                        dto.ProductId, dto.VariantId, initialQuantity: 100);
-                    inventoryDb.InventoryItems.Add(inventoryItem);
-                    await inventoryDb.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    // Fallback or return error? Let's return error to debug
-                    return Results.Content("Có lỗi xảy ra. Vui lòng thử lại.", "text/plain", System.Text.Encoding.UTF8, 500);
-                }
-            }
+                return Results.BadRequest(new { Error = "Sản phẩm đã hết hàng" });
 
             var cart = await db.Carts
                 .Include(c => c.Items)
@@ -294,6 +329,9 @@ public static class SalesEndpoints
             var existingItem = cart.Items.FirstOrDefault(i =>
                 i.ProductId == dto.ProductId && i.VariantId == dto.VariantId);
             var totalQuantity = dto.Quantity + (existingItem?.Quantity ?? 0);
+
+            if (totalQuantity > MaxQuantityPerCartLine)
+                return Results.BadRequest(new { Error = $"Số lượng tối đa mỗi sản phẩm là {MaxQuantityPerCartLine}" });
 
             if (inventoryItem.AvailableQuantity < totalQuantity)
                 return Results.BadRequest(new { Error = $"Không đủ hàng trong kho. Còn lại: {inventoryItem.AvailableQuantity}" });
@@ -321,11 +359,11 @@ public static class SalesEndpoints
                 return Results.BadRequest(new { Error = "Có lỗi xảy ra. Vui lòng thử lại." });
             }
 
-            // 4. Thêm vào giỏ hàng kèm snapshot biến thể (VariantName/Sku từ Catalog, không tin client).
+            // 4. Thêm vào giỏ hàng — TÊN/GIÁ/biến thể đều là snapshot từ Catalog, không tin client.
             cart.AddItem(
                 dto.ProductId,
-                dto.ProductName,
-                dto.Price,
+                productName,
+                unitPrice,
                 dto.Quantity,
                 dto.VariantId,
                 variantName,
@@ -534,7 +572,9 @@ public static class SalesEndpoints
             return Results.Ok(new { Message = "Đã xóa mã giảm giá" });
         });
 
-        group.MapPost("/cart/set-shipping", async ([FromBody] SetShippingDto dto, SalesDbContext db, ClaimsPrincipal user) =>
+        // W0-4: phí ship KHÔNG còn do client quyết định — server tính lại từ ShippingFeePolicy.
+        // dto.ShippingAmount chỉ còn để tương thích payload cũ (giữ endpoint không 400).
+        group.MapPost("/cart/set-shipping", async ([FromBody] SetShippingDto dto, SalesDbContext db, ClaimsPrincipal user, IConfiguration config) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -547,10 +587,17 @@ public static class SalesEndpoints
             if (cart == null)
                 return Results.NotFound(new { Error = "Cart not found" });
 
-            cart.SetShippingAmount(dto.ShippingAmount);
+            var fee = ShippingFeePolicy.Calculate(
+                cart.SubtotalAmount - cart.EffectiveDiscountAmount, isPickup: false, config);
+            cart.SetShippingAmount(fee);
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { Message = "Phí ship đã được cập nhật", TotalAmount = cart.TotalAmount });
+            return Results.Ok(new
+            {
+                Message = "Phí ship đã được cập nhật",
+                ShippingAmount = fee,
+                TotalAmount = cart.TotalAmount
+            });
         });
 
         group.MapDelete("/cart/clear", async (SalesDbContext db, InventoryDbContext inventoryDb, ClaimsPrincipal user) =>
@@ -600,7 +647,52 @@ public static class SalesEndpoints
 
         // ==================== CHECKOUT ENDPOINT ====================
 
-        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ContentDbContext contentDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext) =>
+        // W0-4 — LUỒNG KHÁCH HÀNG. CheckoutDto KHÔNG còn CustomerId / ManualDiscount / ShippingFee:
+        // khách từng POST `manualDiscount: 1290000` để mua sản phẩm 1.290.000đ với giá 0đ, và
+        // `customerId` của người khác để cắm đơn vào tài khoản người ta. Field lạ trong JSON bị
+        // System.Text.Json bỏ qua (không 500) — chúng chỉ đơn giản không còn tác dụng.
+        group.MapPost("/checkout", async (CheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ContentDbContext contentDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext, IConfiguration config) =>
+            await ProcessCheckoutAsync(
+                new LegacyCheckoutRequest(
+                    model.Items, model.ShippingAddress, model.Notes, model.PaymentMethod,
+                    model.IsPickup, model.PickupStoreId, model.PickupStoreName, model.CouponCode,
+                    model.RecipientName, model.RecipientPhone,
+                    StaffCustomerId: null, StaffManualDiscount: null, StaffShippingFee: null),
+                salesDb, catalogDb, inventoryDb, contentDb, user, publishEndpoint, httpContext, config)
+        ).WithValidation<CheckoutDto>();
+
+        // W0-4 — LUỒNG NHÂN VIÊN (POS tạm thời). Chỉ Admin/Manager/Sale mới được đặt hộ khách
+        // (CustomerId), giảm giá tay (bị cap ở tạm tính, ghi người duyệt vào OrderHistory) và
+        // ghi đè phí ship (GHN). W2-3 thay endpoint này bằng POS thật.
+        group.MapPost("/staff-checkout", async (StaffCheckoutDto model, SalesDbContext salesDb, CatalogDbContext catalogDb, InventoryDbContext inventoryDb, ContentDbContext contentDb, ClaimsPrincipal user, IPublishEndpoint publishEndpoint, HttpContext httpContext, IConfiguration config) =>
+            await ProcessCheckoutAsync(
+                new LegacyCheckoutRequest(
+                    model.Items, model.ShippingAddress, model.Notes, model.PaymentMethod,
+                    model.IsPickup, model.PickupStoreId, model.PickupStoreName, model.CouponCode,
+                    model.RecipientName, model.RecipientPhone,
+                    model.CustomerId, model.ManualDiscount, model.ShippingFee),
+                salesDb, catalogDb, inventoryDb, contentDb, user, publishEndpoint, httpContext, config)
+        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Sale"))
+         .WithValidation<StaffCheckoutDto>();
+
+        MapRemainingSalesEndpoints(group);
+    }
+
+    /// <summary>
+    /// W0-4 — thân xử lý checkout dùng chung cho luồng khách và luồng nhân viên.
+    /// Mọi con số ảnh hưởng tiền (giá, phí ship, giảm giá) đều được TÍNH LẠI ở server.
+    /// </summary>
+    private static async Task<IResult> ProcessCheckoutAsync(
+        LegacyCheckoutRequest model,
+        SalesDbContext salesDb,
+        CatalogDbContext catalogDb,
+        InventoryDbContext inventoryDb,
+        ContentDbContext contentDb,
+        ClaimsPrincipal user,
+        IPublishEndpoint publishEndpoint,
+        HttpContext httpContext,
+        IConfiguration config)
+    {
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // 30 second timeout
             try
@@ -622,8 +714,10 @@ public static class SalesEndpoints
                 return Results.BadRequest(new { Error = "Cart is empty" });
             }
 
-            // POS Support: Allow overriding CustomerId (e.g., for walk-in customers)
-            var customerId = model.CustomerId ?? userId;
+            // W0-4: chỉ luồng /staff-checkout (Admin/Manager/Sale) mới được đặt hộ khách khác.
+            // Luồng khách hàng LUÔN dùng userId từ JWT — không thể cắm đơn vào tài khoản người khác.
+            var customerId = model.StaffCustomerId ?? userId;
+            var isStaffOrder = model.StaffCustomerId.HasValue && model.StaffCustomerId.Value != userId;
 
             var orderItems = new List<OrderItem>();
 
@@ -666,18 +760,11 @@ public static class SalesEndpoints
                 // Validate Stock — ưu tiên match theo (ProductId, VariantId) để cùng sản phẩm khác biến thể tính riêng.
                 var inventoryItem = inventoryItems.FirstOrDefault(i =>
                     i.ProductId == cartItem.ProductId && i.VariantId == cartItem.VariantId);
+                // W0-4: XOÁ fallback "tự tạo InventoryItem qty=100".
+                // Nó biến mọi GUID thành hàng có sẵn 100 cái → bán hàng không tồn tại trong kho.
                 if (inventoryItem == null)
                 {
-                    // Auto-create inventory for demo/development if missing — tồn theo (product, variant).
-                    inventoryItem = new InventoryModule.Domain.InventoryItem(
-                        cartItem.ProductId, cartItem.VariantId, initialQuantity: 100);
-                    inventoryDb.InventoryItems.Add(inventoryItem);
-
-                    // Reserve stock before saving
-                    inventoryItem.ReserveStock(cartItem.Quantity);
-
-                    // Save immediately to get the ID
-                    await inventoryDb.SaveChangesAsync(cts.Token);
+                    return Results.BadRequest(new { Error = $"Sản phẩm đã hết hàng: {product.Name}" });
                 }
 
                 // Kiểm tra xem có đủ reserved stock không
@@ -817,60 +904,55 @@ public static class SalesEndpoints
                     customerIp: httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     customerUserAgent: httpContext.Request.Headers.UserAgent.ToString().Length > 0 ? httpContext.Request.Headers.UserAgent.ToString() : "unknown",
                     sourceId: Guid.Parse("00000000-0000-0000-0000-000000000001"), // Default web source
-                    // Snapshot tên/email khách hàng — chỉ điền khi đặt cho chính mình (không phải POS gán CustomerId khác,
-                    // vì claims JWT lúc đó là nhân viên bán hàng, không phải khách walk-in).
-                    customerName: customerId == userId ? user.FindFirstValue("name") : null,
-                    customerEmail: customerId == userId ? email : null
+                    // Snapshot người nhận. W0-4: tên/SĐT lấy từ form checkout (RecipientName/RecipientPhone),
+                    // fallback về claims khi khách tự đặt — trước đây đơn của khách đã đăng nhập để trống
+                    // CustomerPhone nên admin không biết gọi cho ai.
+                    customerName: model.RecipientName ?? (isStaffOrder ? null : user.FindFirstValue("name")),
+                    customerEmail: isStaffOrder ? null : email,
+                    customerPhone: model.RecipientPhone ?? (isStaffOrder ? null : user.FindFirstValue(ClaimTypes.MobilePhone))
                 );
-                
-                if (model.IsPickup)
-                {
-                    order.SetShippingAmount(0);
-                }
-                else
-                {
-                    // BUG cũ: check chuỗi "Miễn phí vận chuyển" trong địa chỉ (không bao giờ đúng) rồi
-                    // luôn set 30000 — bỏ qua model.ShippingFee (phí GHN thật do frontend tính) và ngưỡng
-                    // freeship 500K (CartContext.tsx). Giờ ưu tiên ShippingFee từ client (GHN/POS truyền lên);
-                    // nếu không có, fallback công thức chuẩn: subtotal-discount ≥ 500K → 0, else 30000.
-                    if (model.ShippingFee > 0)
-                    {
-                        order.SetShippingAmount(model.ShippingFee);
-                    }
-                    else
-                    {
-                        var subtotalForShip = order.Items.Sum(i => i.UnitPrice * i.Quantity);
-                        order.SetShippingAmount(subtotalForShip >= 500000 ? 0 : 30000);
-                    }
-                }
-                
+
                 salesDb.Orders.Add(order);
 
-                // Apply manual discount if provided (e.g., POS)
-                if (model.ManualDiscount.HasValue && model.ManualDiscount.Value > 0)
+                // W0-4 — giảm giá TAY chỉ dành cho nhân viên (/staff-checkout), luôn bị cap ở tạm tính
+                // và ghi lại người duyệt vào OrderHistory. Khách hàng không còn gửi được field này.
+                if (model.StaffManualDiscount.HasValue && model.StaffManualDiscount.Value > 0)
                 {
-                    order.ApplyCoupon("POS-MANUAL", model.ManualDiscount.Value, "{}", "POS Manual Discount");
+                    var subtotalForDiscount = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+                    var cappedDiscount = Math.Min(model.StaffManualDiscount.Value, subtotalForDiscount);
+                    order.ApplyCoupon("POS-MANUAL", cappedDiscount, "{}", "POS Manual Discount");
+
+                    salesDb.OrderHistories.Add(new OrderHistory(
+                        order.Id,
+                        order.Status,
+                        order.Status,
+                        changedBy: userIdStr,
+                        notes: $"Giảm giá thủ công {cappedDiscount:N0}đ (yêu cầu {model.StaffManualDiscount.Value:N0}đ) do user {userIdStr} duyệt"));
                 }
-                
+
                 // Apply coupon: from request or from cart — nguồn duy nhất: CouponValidator (Content.Coupons).
                 // XÓA fallback giả (5/10/15/20% hardcode theo pattern tên mã) — mã không hợp lệ = 0đ + lỗi.
                 var couponToApply = !string.IsNullOrEmpty(model.CouponCode) ? model.CouponCode : cart?.CouponCode;
                 if (!string.IsNullOrEmpty(couponToApply) && order.DiscountAmount == 0)
                 {
-                    // Nếu cart đã áp coupon hợp lệ trước đó (qua /cart/apply-coupon), dùng lại số tiền đã tính.
-                    var discountAmount = cart?.DiscountAmount ?? 0;
-
-                    if (discountAmount == 0)
+                    // W0-4 — LUÔN tính lại giảm giá trên tạm tính THẬT của đơn, không bao giờ
+                    // dùng lại cart.DiscountAmount.
+                    // TRƯỚC: `var discountAmount = cart?.DiscountAmount ?? 0;` rồi chỉ validate khi
+                    // nó bằng 0. Số đó được tính trên GIỎ HÀNG, còn các dòng của đơn đến từ body
+                    // request — hai tập khác nhau. Khai thác đã tái hiện trên :5050 (2026-09-18):
+                    // bỏ laptop 18.490.000đ vào giỏ → áp mã 50% (cart.DiscountAmount = 9.245.000đ)
+                    // → checkout đúng 1 món 290.000đ ⇒ totalAmount = 30.000đ (chỉ còn phí ship).
+                    // Đây là cùng lỗ hổng "mua 0đ" mà track này đóng cho manualDiscount, chỉ khác field.
+                    // Nhánh cũ còn bỏ qua Coupon.Apply() khi giỏ đã áp mã ⇒ UsedCount không tăng,
+                    // mã giới hạn 1 lượt dùng được vô hạn lần.
+                    var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+                    var couponResult = await CouponValidator.ValidateAsync(contentDb, couponToApply, subtotal, cts.Token);
+                    if (!couponResult.Success)
                     {
-                        var subtotal = order.Items.Sum(i => i.UnitPrice * i.Quantity);
-                        var couponResult = await CouponValidator.ValidateAsync(contentDb, couponToApply, subtotal, cts.Token);
-                        if (!couponResult.Success)
-                        {
-                            return Results.BadRequest(new { Error = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ" });
-                        }
-                        discountAmount = couponResult.DiscountAmount;
-                        couponResult.Coupon!.Apply();
+                        return Results.BadRequest(new { Error = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ" });
                     }
+                    var discountAmount = couponResult.DiscountAmount;
+                    couponResult.Coupon!.Apply();
 
                     if (discountAmount > 0)
                     {
@@ -881,6 +963,20 @@ public static class SalesEndpoints
                             "Checkout Coupon"
                         );
                     }
+                }
+
+                // W0-4 — PHÍ SHIP TÍNH SAU GIẢM GIÁ, do SERVER quyết định (ShippingFeePolicy = nguồn duy nhất).
+                // TRƯỚC: `if (model.ShippingFee > 0) SetShippingAmount(model.ShippingFee)` → khách gửi
+                // shippingFee tuỳ ý (kể cả 0) và công thức 500K/30K bị chép lại ở đây lần thứ hai.
+                // Chỉ /staff-checkout (GHN/POS) mới được ghi đè.
+                if (model.StaffShippingFee.HasValue && model.StaffShippingFee.Value >= 0 && !model.IsPickup)
+                {
+                    order.SetShippingAmount(model.StaffShippingFee.Value);
+                }
+                else
+                {
+                    order.SetShippingAmount(ShippingFeePolicy.Calculate(
+                        order.SubtotalAmount - order.DiscountAmount, model.IsPickup, config));
                 }
 
                 // 4. Clear cart after successful checkout
@@ -932,8 +1028,12 @@ public static class SalesEndpoints
             {
                 cts.Dispose();
             }
-        }).WithValidation<CheckoutDto>();
+        }
+    }
 
+    /// <summary>Phần còn lại của Sales API — tách ra chỉ để ProcessCheckoutAsync dùng chung được.</summary>
+    private static void MapRemainingSalesEndpoints(RouteGroupBuilder group)
+    {
         group.MapGet("/orders", async (SalesDbContext db, ClaimsPrincipal user) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -952,6 +1052,9 @@ public static class SalesEndpoints
                     o.TotalAmount,
                     o.OrderDate,
                     o.ShippingAddress,
+                    // W0-4: trả snapshot người nhận để FE/admin hiển thị đúng tên + SĐT.
+                    o.CustomerName,
+                    o.CustomerPhone,
                     ItemCount = o.Items.Count,
                     Items = o.Items.Select(i => new
                     {
@@ -985,10 +1088,18 @@ public static class SalesEndpoints
                 order.OrderNumber,
                 order.Status,
                 order.SubtotalAmount,
+                order.DiscountAmount,
+                order.ShippingAmount,
+                // D01: TaxAmount là phần VAT ĐÃ NẰM TRONG TotalAmount (tách ra để xuất hoá đơn),
+                // KHÔNG phải khoản cộng thêm.
                 order.TaxAmount,
+                order.TaxRate,
                 order.TotalAmount,
                 order.OrderDate,
                 order.ShippingAddress,
+                // W0-4: snapshot người nhận.
+                order.CustomerName,
+                order.CustomerPhone,
                 order.Notes,
                 order.ConfirmedAt,
                 order.FulfilledAt,
@@ -1570,23 +1681,30 @@ public static class SalesEndpoints
             var lastMonthStart = thisMonth.AddMonths(-1);
             var lastMonthEnd = thisMonth.AddTicks(-1);
 
+            // W0-4: DOANH THU chỉ tính đơn ĐÃ THANH TOÁN và KHÔNG bị huỷ.
+            // TRƯỚC: SUM toàn bộ Orders → đơn huỷ và đơn COD chưa thu tiền vẫn vào doanh thu.
+            var revenueOrders = db.Orders
+                .Where(o => o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid);
+
             var totalOrders = await db.Orders.CountAsync();
             var todayOrders = await db.Orders.CountAsync(o => o.OrderDate >= today);
             var monthOrders = await db.Orders.CountAsync(o => o.OrderDate >= thisMonth);
             var lastMonthOrders = await db.Orders.CountAsync(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd);
-            var totalRevenue = await db.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var monthRevenue = await db.Orders
+            var totalRevenue = await revenueOrders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var monthRevenue = await revenueOrders
                 .Where(o => o.OrderDate >= thisMonth)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var lastMonthRevenue = await db.Orders
+            var lastMonthRevenue = await revenueOrders
                 .Where(o => o.OrderDate >= lastMonthStart && o.OrderDate <= lastMonthEnd)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-            var todayRevenue = await db.Orders
+            var todayRevenue = await revenueOrders
                 .Where(o => o.OrderDate >= today)
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var pendingOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Pending);
-            var completedOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Delivered);
-            var averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+            // CompletedOrders = trạng thái Completed (đã thanh toán + đã giao xong), không phải Delivered.
+            var completedOrders = await db.Orders.CountAsync(o => o.Status == OrderStatus.Completed);
+            var paidOrderCount = await revenueOrders.CountAsync();
+            var averageOrderValue = paidOrderCount > 0 ? totalRevenue / paidOrderCount : 0;
 
             // Growth calculations: compare current month vs previous month
             var orderGrowth = lastMonthOrders > 0
@@ -1620,7 +1738,9 @@ public static class SalesEndpoints
             var startDate = new DateTime(targetYear, 1, 1);
             var endDate = new DateTime(targetYear, 12, 31, 23, 59, 59);
 
+            // W0-4: cùng bộ lọc doanh thu với /admin/stats — loại đơn huỷ và đơn chưa thanh toán.
             var monthlyRevenue = await db.Orders
+                .Where(o => o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
                 .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
                 .GroupBy(o => o.OrderDate.Month)
                 .Select(g => new
@@ -2161,19 +2281,64 @@ public static class SalesEndpoints
     }
 }
 
+/// <summary>
+/// W0-4 — DTO checkout của KHÁCH HÀNG. Đã gỡ <c>CustomerId</c>, <c>ManualDiscount</c>,
+/// <c>ShippingFee</c>: đó là ba field cho phép khách tự giảm giá về 0đ, tự đặt phí ship
+/// và cắm đơn vào tài khoản người khác. Client vẫn gửi lên cũng không sao — System.Text.Json
+/// bỏ qua field lạ, endpoint không 500. Ba field đó nay nằm ở <see cref="StaffCheckoutDto"/>.
+/// </summary>
 public record CheckoutDto(
     List<CheckoutItemDto> Items,
     string? ShippingAddress,
     string? Notes,
-    Guid? CustomerId = null,
-    decimal? ManualDiscount = null,
     string? PaymentMethod = "COD",
     bool IsPickup = false,
     string? PickupStoreId = null,
     string? PickupStoreName = null,
     string? CouponCode = null,
-    decimal ShippingFee = 0
+    // Người nhận hàng — lưu snapshot vào Order.CustomerName/CustomerPhone (không thêm cột, không migration).
+    string? RecipientName = null,
+    string? RecipientPhone = null
 );
+
+/// <summary>
+/// W0-4 — DTO checkout của NHÂN VIÊN (POS tạm thời, RequireRole Admin/Manager/Sale).
+/// Giữ các field ảnh hưởng tiền mà khách không được phép dùng. W2-3 thay bằng POS thật.
+/// </summary>
+public record StaffCheckoutDto(
+    List<CheckoutItemDto> Items,
+    string? ShippingAddress,
+    string? Notes,
+    string? PaymentMethod = "COD",
+    bool IsPickup = false,
+    string? PickupStoreId = null,
+    string? PickupStoreName = null,
+    string? CouponCode = null,
+    string? RecipientName = null,
+    string? RecipientPhone = null,
+    Guid? CustomerId = null,
+    decimal? ManualDiscount = null,
+    decimal? ShippingFee = null
+);
+/// <summary>
+/// W0-4 — request đã chuẩn hoá dùng chung cho <c>/checkout</c> (khách) và <c>/staff-checkout</c>.
+/// Các field <c>Staff*</c> LUÔN null ở luồng khách; chỉ endpoint có RequireRole mới điền.
+/// </summary>
+internal sealed record LegacyCheckoutRequest(
+    List<CheckoutItemDto> Items,
+    string? ShippingAddress,
+    string? Notes,
+    string? PaymentMethod,
+    bool IsPickup,
+    string? PickupStoreId,
+    string? PickupStoreName,
+    string? CouponCode,
+    string? RecipientName,
+    string? RecipientPhone,
+    Guid? StaffCustomerId,
+    decimal? StaffManualDiscount,
+    decimal? StaffShippingFee);
+
 public record CheckoutItemDto(
     Guid ProductId,
     string ProductName,

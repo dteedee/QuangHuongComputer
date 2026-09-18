@@ -16,7 +16,9 @@ public static class PurchaseReturnEndpoints
 {
     public static void MapPurchaseReturnEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/purchase-returns").RequireAuthorization();
+        // W0-3: trả hàng NCC ghi giảm tồn + công nợ ⇒ chỉ nhân viên kho/quản lý.
+        var group = app.MapGroup("/api/inventory/purchase-returns")
+            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

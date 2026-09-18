@@ -4,6 +4,7 @@ import { catalogApi, type Product, type Category, type Brand } from '../api/cata
 import { aiApi } from '../api/ai';
 import { ProductFilter } from '../components/ProductFilter';
 import SEO from '../components/SEO';
+import { normalizeCategoryString, ROUTE_TO_CATEGORY_TITLE } from '../utils/category-route-mapping';
 import CatalogBreadcrumbHeader from '../components/catalog/catalog-breadcrumb-header';
 import CatalogMobileFilterDrawer from '../components/catalog/catalog-mobile-filter-drawer';
 import CatalogAiSearchBanner from '../components/catalog/catalog-ai-search-banner';
@@ -29,8 +30,12 @@ export default function ProductCatalogPage() {
   const [loadingAiResult, setLoadingAiResult] = useState(false);
 
   // Filter states
+  // W0-12 (Key Insight/step 3): trước chỉ đọc `category` — link header/mega-menu/homepage
+  // gửi `categoryId` (dynamic, GUID thật) hoặc `tag` (slug tĩnh) đều bị lờ đi -> hiện TOÀN BỘ
+  // sản phẩm thay vì lọc. `categoryId` là alias GUID trực tiếp; `tag` cần resolve qua
+  // danh mục đã tải (effect bên dưới) nên khởi tạo rỗng nếu chỉ có `tag`.
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    searchParams.get('category') || ''
+    searchParams.get('category') || searchParams.get('categoryId') || ''
   );
   const [selectedBrand, setSelectedBrand] = useState<string>(
     searchParams.get('brand') || ''
@@ -59,7 +64,7 @@ export default function ProductCatalogPage() {
 
   // Sync state with URL params when they change externally (e.g. back button)
   useEffect(() => {
-    const cat = searchParams.get('category') || '';
+    const cat = searchParams.get('category') || searchParams.get('categoryId') || '';
     const br = searchParams.get('brand') || '';
     const min = Number(searchParams.get('minPrice')) || 0;
     const max = Number(searchParams.get('maxPrice')) || 100000000;
@@ -86,6 +91,21 @@ export default function ProductCatalogPage() {
       console.error('Failed to load categories:', error);
     }
   };
+
+  // W0-12 (step 3): resolve `?tag=` (vd `laptop`, `pc-gaming` — dùng ở header/homepage tĩnh)
+  // sang categoryId thật bằng cách khớp tên, giống CategoryPage.tsx. Categories.Slug chưa được
+  // W0-5 backfill trên phần lớn danh mục thật nên KHÔNG dùng slug DB — khớp theo tên hiển thị,
+  // qua cùng ROUTE_TO_CATEGORY_TITLE dùng ở route /danh-muc/<slug>.
+  useEffect(() => {
+    const tag = searchParams.get('tag');
+    if (!tag || selectedCategory || categories.length === 0) return;
+    const target = normalizeCategoryString(ROUTE_TO_CATEGORY_TITLE[tag] || tag);
+    const match = categories.find(c => {
+      const catName = normalizeCategoryString(c.name);
+      return catName === target || catName.includes(target) || target.includes(catName);
+    });
+    if (match) setSelectedCategory(match.id);
+  }, [searchParams, categories, selectedCategory]);
 
   const loadBrands = async () => {
     try {

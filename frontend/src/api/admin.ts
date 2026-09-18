@@ -142,10 +142,16 @@ export const adminApi = {
       return response.data;
     },
 
+    // W0-13: was posting text/plain while the (old) backend bound `roleName`
+    // from the query string -> always 400. W0-1 rewrote the backend to bind
+    // CreateRoleDto { name } from a JSON body. Send JSON now AND keep
+    // ?roleName= on the URL so this still works against the old binary until
+    // the gate restarts the API.
     create: async (name: string): Promise<{ message: string }> => {
-      const response = await client.post<{ message: string }>('/auth/roles', name, {
-        headers: { 'Content-Type': 'text/plain' }
-      });
+      const response = await client.post<{ message: string }>(
+        `/auth/roles?roleName=${encodeURIComponent(name)}`,
+        { name }
+      );
       return response.data;
     },
 

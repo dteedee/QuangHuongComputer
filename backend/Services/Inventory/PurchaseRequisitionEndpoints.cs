@@ -17,7 +17,9 @@ public static class PurchaseRequisitionEndpoints
 {
     public static void MapPurchaseRequisitionEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/purchase-requisitions").RequireAuthorization();
+        // W0-3: RequireAuthorization() trống ⇒ token Customer tạo/duyệt được đề nghị mua.
+        var group = app.MapGroup("/api/inventory/purchase-requisitions")
+            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

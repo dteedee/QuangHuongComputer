@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Gift, Ticket } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 import type { Product } from '../api/catalog';
 import { formatNumber } from '../utils/format';
 import { useCart } from '../context/CartContext';
+import { resolveMediaUrl } from '../lib/media-url';
 
 interface ProductListItemProps {
     product: Product;
@@ -12,17 +13,26 @@ interface ProductListItemProps {
 /**
  * ProductListItem — hàng danh sách theo cùng anatomy với ProductCard (ProductCard.tsx),
  * chỉ đổi bố cục sang ngang (ảnh trái, thông tin giữa, giá + CTA phải).
+ *
+ * D01/W0-12: đã bỏ 2 badge khuyến mãi bịa — xem ProductCard.tsx cùng thư mục.
  */
 export const ProductListItem = ({ product }: ProductListItemProps) => {
     const { addToCart } = useCart();
     const [imgError, setImgError] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
 
     useEffect(() => { setImgError(false); }, [product.imageUrl]);
 
-    const handleAddToCart = (e: React.MouseEvent) => {
+    const handleAddToCart = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        addToCart(product);
+        if (isAdding) return;
+        setIsAdding(true);
+        try {
+            await addToCart(product);
+        } finally {
+            setIsAdding(false);
+        }
     };
 
     const hasOldPrice = !!product.oldPrice && product.oldPrice > product.price;
@@ -32,7 +42,7 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
     const isOutOfStock = product.stockQuantity <= 0;
     const productUrl = product.slug ? `/san-pham/${product.slug}` : `/product/${product.id}`;
     const rating = Math.round(product.averageRating || 0);
-    const hasGift = (product as { soldCount?: number }).soldCount != null && (product as { soldCount?: number }).soldCount! > 20;
+    const resolvedImageUrl = resolveMediaUrl(product.imageUrl);
 
     return (
         <Link
@@ -41,14 +51,9 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
         >
             {/* Ảnh */}
             <div className="relative w-full sm:w-44 h-44 flex-shrink-0 bg-white rounded-lg overflow-hidden border border-gray-100 p-3 flex items-center justify-center">
-                {hasGift && (
-                    <span className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        <Gift size={10} /> Quà tặng
-                    </span>
-                )}
-                {product.imageUrl && !imgError ? (
+                {resolvedImageUrl && !imgError ? (
                     <img
-                        src={product.imageUrl}
+                        src={resolvedImageUrl}
                         alt={product.name}
                         loading="lazy"
                         className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
@@ -107,23 +112,17 @@ export const ProductListItem = ({ product }: ProductListItemProps) => {
 
                     <button
                         onClick={handleAddToCart}
-                        disabled={isOutOfStock}
+                        disabled={isOutOfStock || isAdding}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
                             isOutOfStock
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : 'bg-accent text-white hover:bg-accent-hover shadow-sm'
-                        }`}
+                        } ${isAdding ? 'opacity-70 cursor-wait' : ''}`}
                     >
                         <ShoppingCart size={16} />
                         Thêm vào giỏ
                     </button>
                 </div>
-
-                {hasOldPrice && (
-                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-50">
-                        <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Ticket size={11} /> Voucher</span>
-                    </div>
-                )}
             </div>
         </Link>
     );

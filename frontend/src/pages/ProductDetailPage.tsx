@@ -153,12 +153,16 @@ export default function ProductDetailPage() {
                 } catch { /* silent */ }
             }
         } catch {
-            navigate('/products', { replace: true });
+            // W0-12 (step 7): slug/id không tồn tại -> giữ `product = null` để render
+            // ProductDetailNotFoundState (dưới), KHÔNG điều hướng ngầm về /products —
+            // khách bấm nhầm link cũ/link hỏng cần biết sản phẩm không tồn tại, không phải
+            // âm thầm thấy danh sách khác mà không hiểu vì sao.
+            setProduct(null);
         } finally {
             setLoading(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [navigate]);
+    }, []);
 
     const loadRelatedProducts = async (productId: string) => {
         setLoadingRelated(true);
@@ -217,13 +221,19 @@ export default function ProductDetailPage() {
         if (!product) return;
         setAddingToCart(true);
         try {
-            addToCart(product, quantity);
+            await addToCart(product, quantity);
             setShowAddedNotification(true);
             setTimeout(() => setShowAddedNotification(false), 3000);
-        } catch { /* silent */ } finally { setAddingToCart(false); }
+        } catch { /* silent — CartContext.addToCart đã tự hiện toast lỗi */ } finally { setAddingToCart(false); }
     };
 
-    const handleBuyNow = () => { void handleAddToCart(); navigate('/checkout'); };
+    // W0-12 (step 2): "Mua ngay" phải CHỜ addToCart xong rồi mới điều hướng — trước đây gọi
+    // `void handleAddToCart()` rồi navigate ngay lập tức, tới /checkout trước khi giỏ hàng
+    // kịp cập nhật (checkout có thể tải giỏ cũ/rỗng dù API cộng giỏ vẫn đang chạy).
+    const handleBuyNow = async () => {
+        await handleAddToCart();
+        navigate('/checkout');
+    };
 
     const handleWriteReview = () => {
         if (!isAuthenticated) {

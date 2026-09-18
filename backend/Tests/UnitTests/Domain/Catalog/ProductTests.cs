@@ -77,11 +77,15 @@ public class ProductTests
     }
 
     [Fact]
-    public void KhoiTao_WarrantyInfoMacDinh_Bao24Thang()
+    public void KhoiTao_KhongCoBaoHanh_ThiDeTrong()
     {
+        // D08: thời hạn bảo hành là dữ liệu của từng sản phẩm (WarrantyMonths),
+        // không còn chuỗi mặc định "Bảo hành 24 tháng" gán cứng trong constructor.
+        // Không truyền vào => để null, tầng trên rơi về ma trận theo danh mục.
         var p = NewProduct();
 
-        p.WarrantyInfo.Should().Be("Bảo hành 24 tháng");
+        p.WarrantyInfo.Should().BeNull();
+        p.WarrantyMonths.Should().BeNull();
     }
 
     [Fact]

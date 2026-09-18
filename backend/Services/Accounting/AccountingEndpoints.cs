@@ -148,6 +148,9 @@ public static class AccountingEndpoints
                 .OrderByDescending(i => i.IssueDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                // OutstandingAmount is a get-only C# expression (TotalAmount - PaidAmount), not
+                // a mapped column — EF can't translate it inside a SQL projection. Inline the
+                // arithmetic on the two real columns instead (W0-8: this threw 400 on every call).
                 .Select(i => new ARInvoiceListDto(
                     i.Id,
                     i.InvoiceNumber,
@@ -157,7 +160,7 @@ public static class AccountingEndpoints
                     i.DueDate,
                     i.TotalAmount,
                     i.PaidAmount,
-                    i.OutstandingAmount,
+                    i.TotalAmount - i.PaidAmount,
                     i.Status,
                     i.AgingBucket,
                     i.Currency))
@@ -228,7 +231,7 @@ public static class AccountingEndpoints
                            i.Status != InvoiceStatus.Paid &&
                            i.Status != InvoiceStatus.Cancelled)
                 .GroupBy(i => i.AgingBucket)
-                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.OutstandingAmount) })
+                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.TotalAmount - i.PaidAmount) })
                 .ToListAsync();
 
             var summary = new ARAgingSummaryDto(
@@ -258,6 +261,7 @@ public static class AccountingEndpoints
                 .OrderByDescending(i => i.IssueDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                // Same EF-translation issue as /ar above (W0-8).
                 .Select(i => new APInvoiceListDto(
                     i.Id,
                     i.InvoiceNumber,
@@ -266,7 +270,7 @@ public static class AccountingEndpoints
                     i.DueDate,
                     i.TotalAmount,
                     i.PaidAmount,
-                    i.OutstandingAmount,
+                    i.TotalAmount - i.PaidAmount,
                     i.Status,
                     i.AgingBucket,
                     i.Currency,
@@ -341,7 +345,7 @@ public static class AccountingEndpoints
                            i.Status != InvoiceStatus.Paid &&
                            i.Status != InvoiceStatus.Cancelled)
                 .GroupBy(i => i.AgingBucket)
-                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.OutstandingAmount) })
+                .Select(g => new { Bucket = g.Key, Total = g.Sum(i => i.TotalAmount - i.PaidAmount) })
                 .ToListAsync();
 
             var summary = new APAgingSummaryDto(

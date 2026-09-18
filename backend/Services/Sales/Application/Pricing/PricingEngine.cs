@@ -45,15 +45,17 @@ public class PricingEngine : IPricingEngine
 
         var lines = await BuildLineSnapshotsAsync(cart, ct);
         var ctx = new PricingContext(lines, customer);
-        var subtotal = ctx.Subtotal;
         var shippingFee = cart.ShippingAmount;
         var taxRate = cart.TaxRate;
         var codes = (appliedCodes ?? Array.Empty<string>())
             .Select(c => c.Trim().ToUpperInvariant())
             .ToHashSet();
 
+        // Gốc phân bổ giảm giá = các dòng KHÔNG phải hàng tặng (gift giá 0, không gánh giảm giá).
+        var payableGross = lines.Where(l => !l.IsGift).Select(l => l.Subtotal).ToList();
+
         if (lines.Count == 0)
-            return BuildResult(subtotal, 0, 0, 0, taxRate, shippingFee,
+            return BuildResult(payableGross, 0, 0, 0, taxRate, shippingFee,
                 Array.Empty<FreeGift>(), Array.Empty<AppliedPromotion>());
 
         var promotions = await LoadCandidatePromotionsAsync(ctx.EvaluatedAt, codes, ct);
@@ -88,12 +90,18 @@ public class PricingEngine : IPricingEngine
         // Clamp shipping discount ≤ shippingFee.
         var effectiveShipDiscount = Math.Min(shippingDiscount, shippingFee);
 
-        return BuildResult(subtotal, lineDiscountTotal, orderDiscount, effectiveShipDiscount,
+        return BuildResult(payableGross, lineDiscountTotal, orderDiscount, effectiveShipDiscount,
             taxRate, shippingFee, allGifts, applied);
     }
 
+    /// <summary>
+    /// W0-4 / D01 — giá đã bao gồm VAT: Total = tạm tính − giảm giá + ship ròng (KHÔNG cộng thuế).
+    /// Thuế được TÁCH theo từng dòng qua <see cref="DiscountAllocator"/> (nguồn duy nhất, dùng chung
+    /// với Cart/Order) — tách cả đơn lệch 1đ so với tách theo dòng.
+    /// TRƯỚC: `tax = round(discountedSubtotal * taxRate, 2); total = ... + tax + ship` → cộng dư 8%.
+    /// </summary>
     private static PricingResult BuildResult(
-        decimal subtotal,
+        IReadOnlyList<decimal> payableGross,
         decimal lineDiscountTotal,
         decimal orderDiscount,
         decimal shippingDiscount,
@@ -102,13 +110,17 @@ public class PricingEngine : IPricingEngine
         IReadOnlyList<FreeGift> gifts,
         IReadOnlyList<AppliedPromotion> applied)
     {
-        var discountedSubtotal = subtotal - orderDiscount - lineDiscountTotal;
-        if (discountedSubtotal < 0) discountedSubtotal = 0;
-        var tax = decimal.Round(discountedSubtotal * taxRate, 2);
-        var total = discountedSubtotal + tax + (shippingFee - shippingDiscount);
+        var shippingNet = shippingFee - shippingDiscount;
+        if (shippingNet < 0) shippingNet = 0;
+
+        var totals = DiscountAllocator.ComputeTotals(
+            payableGross, orderDiscount + lineDiscountTotal, shippingNet, taxRate);
+
+        var tax = totals.TaxAmount;
+        var total = totals.Total;
 
         return new PricingResult(
-            Subtotal: subtotal,
+            Subtotal: totals.Subtotal,
             LineDiscountTotal: lineDiscountTotal,
             OrderDiscount: orderDiscount,
             ShippingDiscount: shippingDiscount,

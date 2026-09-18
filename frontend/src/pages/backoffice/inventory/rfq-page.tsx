@@ -7,8 +7,11 @@ import RfqCreateModal from '../../../components/inventory/rfq-create-modal';
 import RfqSendModal from '../../../components/inventory/rfq-send-modal';
 import { rfqApi } from '../../../api/inventory';
 import type { RequestForQuotation, RfqStatus } from '../../../api/inventory';
+import { resolveEnumBadgeMeta, type EnumBadgeMetaMap } from './enum-badge-meta-with-unknown-fallback';
 
-const STATUS_META: Record<RfqStatus, { label: string; className: string }> = {
+// Khoá khớp `Inventory/Domain/RequestForQuotation.cs:73` RfqStatus.
+// Dùng resolver để giá trị enum mới của BE không làm sập trang (xem lỗi `urgency` ở PR).
+const STATUS_META: EnumBadgeMetaMap = {
     Draft: { label: 'Nháp', className: 'bg-gray-100 text-gray-700' },
     Sent: { label: 'Đã gửi', className: 'bg-blue-100 text-blue-700' },
     ClosedForBidding: { label: 'Đã đóng', className: 'bg-purple-100 text-purple-700' },
@@ -80,7 +83,7 @@ export default function RfqPage() {
                 >
                     <option value="all">Tất cả</option>
                     {(Object.keys(STATUS_META) as RfqStatus[]).map(s => (
-                        <option key={s} value={s}>{STATUS_META[s].label}</option>
+                        <option key={s} value={s}>{resolveEnumBadgeMeta(STATUS_META, s).label}</option>
                     ))}
                 </select>
             </AnimatedSection>
@@ -121,8 +124,8 @@ export default function RfqPage() {
                                     <td className="px-4 py-3 text-center">{rfq.supplierCount}</td>
                                     <td className="px-4 py-3 text-center">{rfq.quotationCount}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_META[rfq.status].className}`}>
-                                            {STATUS_META[rfq.status].label}
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${resolveEnumBadgeMeta(STATUS_META, rfq.status).className}`}>
+                                            {resolveEnumBadgeMeta(STATUS_META, rfq.status).label}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">

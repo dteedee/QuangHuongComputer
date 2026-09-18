@@ -1,0 +1,148 @@
+{
+  "name": "RAM Corsair Vengeance LPX 16GB (1x16GB) DDR4 3200MHz CL16 - Đen",
+  "slug": "ram-corsair-vengeance-lpx-16gb-ddr4-3200mhz",
+  "sku": "RAM-CMK16GX4M1E3200C16",
+  "brand": "Corsair",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "RAM",
+  "model": "Corsair CMK16GX4M1E3200C16",
+  "officialUrl": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black",
+  "priceVnd": 3320000,
+  "oldPriceVnd": 4250000,
+  "costPriceVnd": 2950000,
+  "priceSources": [
+    "https://gearvn.com/products/ram-corsair-vengeance-lpx-16gb-3200mhz-ddr4-cmk16gx4m1e3200c16",
+    "https://memoryzone.com.vn/ram-pc-corsair-vengeance-lpx-16gb-3200mhz-ddr4-1x16gb-cmk16gx4m1e3200c16"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Corsair (Limited Lifetime Warranty toàn cầu), nhà phân phối tại Việt Nam hỗ trợ đổi mới 1-1 trong 36 tháng đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.03,
+  "stockQuantity": 22,
+  "shortDescription": "RAM Corsair Vengeance LPX 16GB DDR4 bus 3200MHz CL16, tản nhiệt nhôm biên dạng thấp, hỗ trợ Intel XMP 2.0 để đạt xung nhịp tối đa chỉ với một thao tác trong BIOS.",
+  "descriptionHtml": "<h3>Nâng cấp RAM đơn giản, hiệu năng ổn định</h3><p>Corsair Vengeance LPX 16GB DDR4 3200MHz là lựa chọn quen thuộc khi cần bổ sung thêm bộ nhớ cho PC văn phòng lẫn máy chơi game tầm trung. Một thanh 16GB giúp máy chạy mượt hơn khi mở nhiều tab trình duyệt, phần mềm văn phòng nặng hoặc game hiện đại yêu cầu RAM lớn, đồng thời để dư khe cắm cho lần nâng cấp tiếp theo lên cấu hình dual-channel.</p><h3>Tản nhiệt thấp, dễ lắp trong mọi thùng máy</h3><p>Phần vỏ tản nhiệt bằng nhôm anod hóa nguyên khối được Corsair thiết kế theo dạng Low Profile (biên dạng thấp), giúp thanh RAM không va chạm với các loại tản nhiệt khí CPU cỡ lớn hay nắp case tầm trung - vấn đề khá phổ biến với những dòng RAM có tản cao.</p><h3>Ép xung dễ dàng với XMP 2.0</h3><p>Nhờ hỗ trợ chuẩn Intel XMP 2.0, người dùng chỉ cần bật đúng một profile trong BIOS là thanh RAM tự nhảy lên xung nhịp 3200MHz với độ trễ CL16 đã được Corsair kiểm định sẵn, không cần tự tay chỉnh timing thủ công.</p><ul><li>Dung lượng 16GB (1 x 16GB), chuẩn DDR4 UDIMM 288 chân</li><li>Bus tối đa 3200MT/s, độ trễ CAS 16, điện áp 1.35V khi bật XMP</li><li>Tản nhiệt nhôm anod hóa, thiết kế Low Profile màu đen</li><li>Tương thích nền tảng Intel 300-600 Series/X299 và AMD 300-500 Series/X570</li><li>Bảo hành giới hạn trọn đời theo chính sách toàn cầu của Corsair</li></ul>",
+  "highlights": [
+    "Dung lượng 16GB (1 thanh) DDR4 chuẩn UDIMM 288 chân, dễ mua thêm thanh thứ hai để lên dual-channel sau này",
+    "Bus 3200MHz, độ trễ CAS 16 khi bật XMP 2.0 - cân bằng tốt giữa băng thông và độ trễ",
+    "Tản nhiệt nhôm anod hóa nguyên khối, biên dạng thấp (Low Profile) không lo vướng tản CPU khí cỡ lớn",
+    "Tương thích rộng: nền tảng Intel 300/400/500/600 Series, X299 và AMD 300/400/500 Series, X570",
+    "Hỗ trợ Intel XMP 2.0, kích hoạt xung nhịp và timing tối ưu chỉ với một thao tác trong BIOS",
+    "Bảo hành giới hạn trọn đời từ Corsair, an tâm sử dụng lâu dài"
+  ],
+  "specs": [
+    {
+      "group": "Bộ nhớ",
+      "name": "Loại RAM",
+      "value": "DDR4",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Dung lượng",
+      "value": "16GB (1 x 16GB)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Chuẩn khe cắm",
+      "value": "UDIMM 288 chân (Unbuffered DIMM)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Bus tối đa (Tested Speed)",
+      "value": "3200 MT/s",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Độ trễ CAS (Tested Latency)",
+      "value": "CL16",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Điện áp hoạt động (Tested Voltage)",
+      "value": "1.35V",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Bus / độ trễ mặc định (SPD)",
+      "value": "2133MHz, CL15, 1.2V",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Chuẩn ép xung",
+      "value": "Intel XMP 2.0",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Dòng sản phẩm",
+      "value": "Vengeance LPX",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Tản nhiệt",
+      "value": "Nhôm anod hóa (Anodized Aluminum), biên dạng thấp (Low Profile)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Đen (Black)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Đèn LED RGB",
+      "value": "Không có (bản LPX thường, không RGB)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Nền tảng hỗ trợ",
+      "value": "Intel 300/400/500/600 Series, Intel X299; AMD 300/400/500 Series, AMD X570",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Chính sách bảo hành hãng",
+      "value": "Limited Lifetime Warranty (bảo hành giới hạn trọn đời)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Mã sản phẩm (SKU)",
+      "value": "CMK16GX4M1E3200C16",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    }
+  ],
+  "filterAttributes": {
+    "type": "DDR4",
+    "capacity": "16GB",
+    "speed": "3200MHz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/Memory/CMK16GX4M1E3200C16/Gallery/VENG_LPX_BLK_01.webp",
+      "alt": "RAM Corsair Vengeance LPX 16GB DDR4 3200MHz màu đen nhìn thẳng mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/Memory/CMK16GX4M1E3200C16/Gallery/VENG_LPX_BLK_02.webp",
+      "alt": "RAM Corsair Vengeance LPX 16GB DDR4 3200MHz nhìn góc nghiêng, thể hiện rõ tản nhiệt nhôm"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/Memory/CMK16GX4M1E3200C16/Gallery/VENG_LPX_BLK_04.webp",
+      "alt": "RAM Corsair Vengeance LPX 16GB DDR4 3200MHz góc chụp khác, logo Corsair và Vengeance LPX trên tản nhiệt"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "RAM Corsair Vengeance LPX 16GB DDR4 3200MHz CL16",
+  "metaDescription": "RAM Corsair Vengeance LPX 16GB (1x16GB) DDR4 3200MHz CL16, tản nhiệt nhôm Low Profile, hỗ trợ XMP 2.0, bảo hành chính hãng trọn đời. Giá tốt tại Quang Huong Computer."
+}

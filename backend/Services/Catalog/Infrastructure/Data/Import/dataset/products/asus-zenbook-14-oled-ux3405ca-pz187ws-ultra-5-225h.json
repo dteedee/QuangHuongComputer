@@ -1,0 +1,193 @@
+{
+  "name": "Laptop ASUS Zenbook 14 OLED UX3405CA-PZ187WS (Intel Core Ultra 5 225H)",
+  "slug": "asus-zenbook-14-oled-ux3405ca-pz187ws-ultra-5-225h",
+  "sku": "ASUS-UX3405CA-PZ187WS",
+  "brand": "ASUS",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop mỏng nhẹ cao cấp",
+  "model": "ASUS Zenbook 14 OLED UX3405CA-PZ187WS",
+  "officialUrl": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/",
+  "priceVnd": 30790000,
+  "oldPriceVnd": 33390000,
+  "costPriceVnd": 27100000,
+  "priceSources": [
+    "https://fptshop.com.vn/may-tinh-xach-tay/asus-zenbook-14-oled-ux3405ca-pz187ws"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng ASUS 24 tháng tại các trung tâm bảo hành ủy quyền trên toàn quốc.",
+  "weightKg": 1.28,
+  "stockQuantity": 14,
+  "shortDescription": "Zenbook 14 OLED UX3405CA-PZ187WS là ultrabook mỏng nhẹ dùng chip Intel Core Ultra 5 225H mới, màn hình OLED 3K 120Hz cảm ứng và pin 75Wh, phù hợp dân văn phòng và sáng tạo nội dung di động.",
+  "descriptionHtml": "<h3>Hiệu năng Intel Core Ultra thế hệ mới</h3><p>ASUS Zenbook 14 OLED UX3405CA-PZ187WS trang bị vi xử lý Intel Core Ultra 5 225H với 14 nhân, 16 luồng, xung nhịp tối đa 4,9GHz, đi kèm nhân xử lý AI NPU Intel AI Boost tốc độ lên đến 13 TOPS. RAM 16GB LPDDR5X cùng SSD NVMe PCIe 4.0 512GB giúp máy khởi động nhanh, xử lý đa nhiệm mượt cho công việc văn phòng, lập trình lẫn sáng tạo nội dung cơ bản.</p><h3>Màn hình OLED 3K sắc nét, cảm ứng mượt mà</h3><p>Tấm nền Lumina OLED 14 inch độ phân giải 3K (2880 x 1800) tỷ lệ 16:10 cho hình ảnh sắc nét, độ tương phản 1.000.000:1 cùng 100% dải màu DCI-P3. Tần số quét 120Hz và thời gian phản hồi 0,2ms giúp thao tác cảm ứng, cuộn trang hay xem phim mượt mà, trong khi công nghệ giảm ánh sáng xanh được TÜV Rheinland chứng nhận giúp bảo vệ mắt khi dùng lâu.</p><h3>Thiết kế bền bỉ, kết nối đầy đủ</h3><p>Khung máy nhôm dày 14,9mm, nặng 1,28kg, đạt chuẩn độ bền quân đội MIL-STD-810H, thuận tiện mang theo di chuyển thường xuyên. Máy có đủ cổng Thunderbolt 4, HDMI 2.1, USB-A, hỗ trợ Wi-Fi 7 và Bluetooth 5.4, cùng webcam hồng ngoại kèm màn trập bảo mật hỗ trợ video call và đăng nhập Windows Hello.</p><h3>Pin bền, âm thanh chất lượng</h3><p>Viên pin 75Wh cho thời gian sử dụng cả ngày làm việc, hỗ trợ sạc nhanh qua cổng USB-C 65W. Hệ thống loa được Harman Kardon tinh chỉnh, hỗ trợ Dolby Atmos mang lại âm thanh sống động khi giải trí.</p>",
+  "highlights": [
+    "Intel Core Ultra 5 225H (14 nhân/16 luồng, tối đa 4,9GHz) kèm NPU AI Boost 13 TOPS cho tác vụ AI mượt mà",
+    "Màn hình Lumina OLED 14 inch 3K (2880x1800), 120Hz, 100% DCI-P3, hỗ trợ cảm ứng",
+    "RAM 16GB LPDDR5X hàn sẵn kênh đôi và SSD NVMe PCIe 4.0 512GB tốc độ cao",
+    "Thân nhôm mỏng 14,9mm, nặng 1,28kg, đạt chuẩn bền quân đội MIL-STD-810H",
+    "Âm thanh Harman Kardon, Dolby Atmos, loa Smart Amplifier sống động",
+    "Kết nối đầy đủ: 2x Thunderbolt 4, HDMI 2.1, Wi-Fi 7, Bluetooth 5.4, webcam có màn trập bảo mật"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core Ultra 5 225H, 1.7GHz (turbo 4.9GHz), 14 nhân/16 luồng, cache 18MB",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "NPU",
+      "value": "Intel AI Boost, tối đa 13 TOPS",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "GPU",
+      "value": "Intel Arc Graphics tích hợp",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "RAM",
+      "value": "16GB LPDDR5X hàn liền, hỗ trợ kênh đôi",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "512GB SSD M.2 NVMe PCIe 4.0",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Khe mở rộng",
+      "value": "1x M.2 2280 PCIe 4.0 x4",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "14.0 inch OLED 3K (2880x1800), tỷ lệ 16:10, viền màn hình chiếm 87% thân máy",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét & phản hồi",
+      "value": "120Hz, thời gian phản hồi 0.2ms",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng & màu sắc",
+      "value": "500 nits (1000 nits HDR peak), 100% DCI-P3, tương phản 1,000,000:1, chứng nhận TÜV Rheinland & SGS",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Cảm ứng",
+      "value": "Có (bản Touch)",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/asus-zenbook-14-oled-ux3405ca-pz187ws"
+    },
+    {
+      "group": "Bàn phím & chuột",
+      "name": "Bàn phím",
+      "value": "Chiclet có đèn nền ErgoSense, hành trình phím 1.4mm, có phím Copilot",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Loa",
+      "value": "Loa kép Harman Kardon, Dolby Atmos, công nghệ Smart Amplifier",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/asus-zenbook-14-oled-ux3405ca-pz187ws"
+    },
+    {
+      "group": "Camera & bảo mật",
+      "name": "Webcam",
+      "value": "FHD kèm IR hỗ trợ Windows Hello, có màn trập riêng tư vật lý",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Camera & bảo mật",
+      "name": "Bảo mật",
+      "value": "TPM (Firmware TPM), McAfee, đăng nhập khuôn mặt qua camera IR (Windows Hello)",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Dung lượng pin",
+      "value": "75WHrs, 4-cell Li-ion (2S2P)",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Bộ sạc",
+      "value": "Type-C 65W, đầu ra 20V/3.25A",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "2x Thunderbolt 4 (40Gbps, xuất hình/sạc), 1x USB 3.2 Gen1 Type-A, 1x HDMI 2.1 TMDS, 1x jack 3.5mm",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Wi-Fi 7 (802.11be) 2x2, Bluetooth 5.4",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "1.28 kg (bản màn hình cảm ứng)",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/asus-zenbook-14-oled-ux3405ca-pz187ws"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "31.24 x 22.01 x 1.49 cm",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Độ bền & màu sắc",
+      "value": "Đạt chuẩn quân đội MIL-STD-810H, màu Xanh lam trầm (Ponder Blue)",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "OS",
+      "value": "Windows 11 Home",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    },
+    {
+      "group": "Chứng nhận",
+      "name": "Tiêu chuẩn môi trường",
+      "value": "Energy Star 8.0, EPEAT Gold, RoHS",
+      "source": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/techspec/"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core Ultra 5",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "Intel Arc Graphics (tích hợp)",
+    "screenSize": "14 inch",
+    "refreshRate": "120Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.asus.com/vn/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/",
+      "alt": "ASUS Zenbook 14 OLED UX3405CA màu Xanh lam trầm nhìn thẳng, màn hình mở hiển thị desktop Windows 11"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.asus.com/laptops/for-home/zenbook/asus-zenbook-14-oled-ux3405/",
+      "alt": "ASUS Zenbook 14 OLED UX3405CA nhìn thẳng, bàn phím ErgoSense và màn hình OLED hiển thị Copilot"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop ASUS Zenbook 14 OLED UX3405CA-PZ187WS Ultra 5 225H",
+  "metaDescription": "ASUS Zenbook 14 OLED UX3405CA-PZ187WS: Intel Core Ultra 5 225H, RAM 16GB, SSD 512GB, màn OLED 3K 120Hz cảm ứng, giá tốt, bảo hành chính hãng 24 tháng."
+}

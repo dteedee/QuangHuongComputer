@@ -1,3 +1,4 @@
+using BuildingBlocks.Database;
 using BuildingBlocks.Messaging.IntegrationEvents;
 using Identity.Infrastructure;
 using MassTransit;
@@ -22,6 +23,9 @@ public class AuditLogConsumer : IConsumer<AuditLogIntegrationEvent>
         _logger.LogInformation("Consuming AuditLogIntegrationEvent for Action: {Action}, Entity: {EntityName}, Module: {Module}", 
             message.Action, message.EntityName, message.Module ?? "N/A");
 
+        // LAST GATE before a credential is durable. This consumer is one of only two places an
+        // AuditLog row is inserted, so scrubbing here covers producers the EF interceptor never
+        // sees (hand-built LogAuditAsync payloads) and secrets nested inside a serialised value.
         var auditLog = new AuditLog
         {
             UserId = message.UserId,
@@ -29,10 +33,11 @@ public class AuditLogConsumer : IConsumer<AuditLogIntegrationEvent>
             Action = message.Action,
             EntityName = message.EntityName,
             EntityId = message.EntityId,
-            Details = message.Details,
+            Details = AuditSecretScrubber.ScrubDetails(message.Details, message.EntityName, message.EntityId)
+                      ?? string.Empty,
             Module = message.Module,
-            OldValues = message.OldValues,
-            NewValues = message.NewValues,
+            OldValues = AuditSecretScrubber.ScrubValues(message.OldValues, message.EntityName, message.EntityId),
+            NewValues = AuditSecretScrubber.ScrubValues(message.NewValues, message.EntityName, message.EntityId),
             Timestamp = DateTime.UtcNow,
             IpAddress = message.IpAddress,
             UserAgent = message.UserAgent,

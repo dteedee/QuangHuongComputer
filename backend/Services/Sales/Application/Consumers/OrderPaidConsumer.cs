@@ -45,30 +45,59 @@ public class OrderPaidConsumer : IConsumer<PaymentSucceededEvent>
             return;
         }
 
-        if (order.Status != OrderStatus.Paid && order.Status != OrderStatus.Cancelled)
+        // W0-10 (1/3): đơn đã huỷ không bao giờ trở thành "đã trả".
+        if (order.Status == OrderStatus.Cancelled)
         {
-            order.SetStatus(OrderStatus.Paid);
-            // Phase 04: chỉ tăng CurrentUsage của promotion khi đã Paid — sửa nợ Phase 01.
-            //    Trước đây Coupon.Apply() tăng lúc tạo Order → mã cháy oan khi thanh toán fail.
-            await IncrementPromotionUsageAsync(order, context.CancellationToken);
-            await _dbContext.SaveChangesAsync();
-            await _contentDb.SaveChangesAsync();
-            
-            // Trigger Invoice Creation
-            await _publishEndpoint.Publish(new InvoiceRequestedEvent(
-                order.Id,
-                order.CustomerId,
-                order.Items.Select(i => new InvoiceItemDto(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice)).ToList(),
-                order.TotalAmount
-            ));
-
-            // Fulfillment thật: gán serial InStock thật từ kho (nếu sản phẩm có theo dõi serial) và đánh dấu đã bán.
-            var fulfilledItems = await AllocateFulfilledItemsAsync(order, context.CancellationToken);
-
-            await _publishEndpoint.Publish(new OrderFulfilledEvent(order.Id, order.CustomerId, fulfilledItems));
-
-            _logger.LogInformation("Order {OrderId} marked as Paid, Invoice Requested, and Fulfilled", order.Id);
+            _logger.LogWarning(
+                "Bỏ qua PaymentSucceeded cho đơn ĐÃ HUỶ {OrderId} (payment {PaymentId}) — cần hoàn tiền thủ công",
+                order.Id, context.Message.PaymentId);
+            return;
         }
+
+        // W0-10 (2/3): idempotent theo PaymentStatus, KHÔNG theo OrderStatus.
+        // Trước đây điều kiện là `Status != Paid` nên một đơn đã Shipped/Delivered/Completed
+        // vẫn lọt vào và bị `SetStatus(Paid)` kéo LÙI trạng thái.
+        if (order.PaymentStatus == Sales.Domain.PaymentStatus.Paid)
+        {
+            _logger.LogInformation("Đơn {OrderId} đã ở PaymentStatus=Paid — bỏ qua (idempotent)", order.Id);
+            return;
+        }
+
+        // W0-10 (3/3): số tiền cổng báo về phải khớp tổng tiền đơn. Lệch ⇒ KHÔNG tự xác nhận.
+        if (context.Message.Amount != order.TotalAmount)
+        {
+            _logger.LogError(
+                "LỆCH SỐ TIỀN: payment {PaymentId} báo {Paid} nhưng đơn {OrderId} là {Total} — giữ nguyên trạng thái, chờ đối soát tay",
+                context.Message.PaymentId, context.Message.Amount, order.Id, order.TotalAmount);
+            return;
+        }
+
+        // MarkAsPaid: đặt PaymentStatus=Paid và CHỈ nâng Status lên Paid khi đang Confirmed
+        // → không kéo lùi Fulfilled/Shipped/Delivered/Completed (SetStatus thì có).
+        order.MarkAsPaid(context.Message.PaymentId.ToString());
+
+        // Phase 04: chỉ tăng CurrentUsage của promotion khi đã Paid — sửa nợ Phase 01.
+        //    Trước đây Coupon.Apply() tăng lúc tạo Order → mã cháy oan khi thanh toán fail.
+        await IncrementPromotionUsageAsync(order, context.CancellationToken);
+        await _dbContext.SaveChangesAsync();
+        await _contentDb.SaveChangesAsync();
+
+        // Trigger Invoice Creation
+        await _publishEndpoint.Publish(new InvoiceRequestedEvent(
+            order.Id,
+            order.CustomerId,
+            order.Items.Select(i => new InvoiceItemDto(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice)).ToList(),
+            order.TotalAmount
+        ));
+
+        // Fulfillment thật: gán serial InStock thật từ kho (nếu sản phẩm có theo dõi serial) và đánh dấu đã bán.
+        var fulfilledItems = await AllocateFulfilledItemsAsync(order, context.CancellationToken);
+
+        await _publishEndpoint.Publish(new OrderFulfilledEvent(order.Id, order.CustomerId, fulfilledItems));
+
+        _logger.LogInformation(
+            "Đơn {OrderId}: PaymentStatus=Paid (Status={Status}), đã yêu cầu hoá đơn và fulfil",
+            order.Id, order.Status);
     }
 
     /// <summary>

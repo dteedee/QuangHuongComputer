@@ -1,0 +1,179 @@
+{
+  "name": "Laptop Gaming Acer Nitro V 15 ANV15-51-55CA (i5-13420H, RTX 4050)",
+  "slug": "acer-nitro-v-15-anv15-51-55ca-i5-13420h-rtx4050",
+  "sku": "ACER-ANV1551-55CA",
+  "brand": "Acer",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop gaming",
+  "model": "Acer Nitro V 15 ANV15-51-55CA (NH.QN8SV.004)",
+  "officialUrl": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004",
+  "priceVnd": 23490000,
+  "oldPriceVnd": 27990000,
+  "costPriceVnd": 20670000,
+  "priceSources": [
+    "https://cellphones.com.vn/laptop-gaming-acer-nitro-v-anv15-51-55ca.html",
+    "https://hacom.vn/laptop-acer-gaming-nitro-v-anv15-51-55ca-nh.qn8sv.004-i5-13420h-16gb-ram-512gb-ssd-rtx4050-6g-15.6inch-fhd-win11-den"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng tại trung tâm bảo hành ủy quyền Acer trên toàn quốc, hỗ trợ 1 đổi 1 trong 30 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 2.11,
+  "stockQuantity": 16,
+  "shortDescription": "Acer Nitro V 15 ANV15-51-55CA là mẫu laptop gaming tầm trung, kết hợp chip Intel Core i5-13420H thế hệ 13 cùng card đồ họa rời NVIDIA RTX 4050 6GB. Máy phù hợp cho học tập, làm việc văn phòng và trải nghiệm các tựa game phổ biến ở mức thiết lập khá đến cao nhờ màn hình 144Hz mượt mà.",
+  "descriptionHtml": "<h3>Hiệu năng mạnh mẽ cho gaming và học tập</h3><p>Acer Nitro V 15 ANV15-51-55CA sở hữu bộ vi xử lý Intel Core i5-13420H 8 lõi thuộc thế hệ 13, đủ sức xử lý mượt các tác vụ văn phòng, học tập lẫn giải trí đa nhiệm. Card đồ họa rời NVIDIA GeForce RTX 4050 với 6GB bộ nhớ GDDR6 và công suất đồ họa tối đa 75W giúp máy chiến tốt phần lớn tựa game AAA hiện nay ở mức thiết lập khá đến cao, đồng thời hỗ trợ tốt các tác vụ dựng hình, chỉnh sửa video nhẹ.</p><h3>Màn hình 144Hz mượt mà, lưu trữ tốc độ cao</h3><p>Màn hình 15.6 inch Full HD (1920x1080) tấm nền IPS tần số quét 144Hz mang lại hình ảnh mượt mà, góc nhìn rộng, phù hợp cho cả chơi game lẫn xem phim. Bộ nhớ RAM 16GB chuẩn DDR5 cùng ổ cứng SSD 512GB chuẩn PCIe NVMe giúp máy khởi động nhanh, load game và mở ứng dụng gần như tức thì.</p><h3>Thiết kế bền bỉ, kết nối đầy đủ</h3><p>Máy trang bị bàn phím có đèn nền, touchpad đạt chứng nhận Microsoft Precision cho thao tác chính xác. Hệ thống cổng kết nối gồm 3 cổng USB-A, 1 cổng USB-C, HDMI và Ethernet đáp ứng tốt nhu cầu kết nối đa dạng. Pin dung lượng 57Wh cho thời gian sử dụng tối đa khoảng 8 giờ.</p><ul><li>CPU Intel Core i5-13420H, GPU RTX 4050 6GB</li><li>RAM 16GB DDR5, SSD 512GB PCIe NVMe</li><li>Màn hình 15.6\" Full HD IPS 144Hz</li><li>Trọng lượng khoảng 2.11kg, màu Đen</li></ul>",
+  "highlights": [
+    "CPU Intel Core i5-13420H 8 lõi (Thế hệ 13) xử lý đa nhiệm nhanh nhạy",
+    "Card đồ họa rời NVIDIA GeForce RTX 4050 6GB GDDR6 chiến tốt các tựa game AAA ở mức cao",
+    "RAM 16GB DDR5 và SSD 512GB PCIe NVMe cho tốc độ khởi động, tải game nhanh",
+    "Màn hình 15.6 inch Full HD, tần số quét 144Hz, hình ảnh mượt mà khi chơi game",
+    "Bàn phím có đèn nền, touchpad đạt chứng nhận Microsoft Precision, gõ và thao tác chính xác",
+    "Pin 57Wh cho thời gian sử dụng liên tục lên đến 8 giờ"
+  ],
+  "specs": [
+    {
+      "group": "Hệ điều hành",
+      "name": "Hệ điều hành",
+      "value": "Windows 11 Home Single Language",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core i5-13420H, 8 lõi, 2.10GHz, thế hệ 13",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "GPU",
+      "value": "NVIDIA GeForce RTX 4050 6GB GDDR6, xung boost tới 1695MHz, công suất đồ họa tối đa 75W",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "15.6\" (39.6cm) Full HD 1920x1080, tỷ lệ 16:9",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền & tần số quét",
+      "value": "IPS, phủ ComfyView chống chói, 144Hz, gam màu 45% NTSC",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "RAM",
+      "name": "Bộ nhớ trong",
+      "value": "16GB DDR5 SDRAM, hỗ trợ tối đa 32GB",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB, chuẩn PCIe NVMe, dạng M.2",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Wi-Fi & Bluetooth",
+      "value": "Wi-Fi chuẩn IEEE 802.11ax, Bluetooth 5.1 trở lên",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Mạng LAN",
+      "value": "Ethernet Gigabit (RJ-45)",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Cổng giao tiếp",
+      "name": "Cổng USB & HDMI",
+      "value": "3x USB 3.2 Gen 1 Type-A, 1x USB 3.2 Gen 2 Type-C, 1x HDMI, tổng 4 cổng USB",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Bàn phím",
+      "value": "Bàn phím có đèn nền, đèn báo Caps Lock, không có đầu đọc vân tay",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Touchpad",
+      "value": "Precision Touchpad đạt chứng nhận Microsoft",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Loa & Micro",
+      "value": "2 loa tích hợp, micro tích hợp",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Pin",
+      "value": "Pin Li-Polymer 57Wh, thời lượng tối đa 8 giờ",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Sạc",
+      "value": "Adapter sạc công suất tối đa 135W",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước",
+      "value": "362.3 x 239.9 x 26.9 mm",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng",
+      "value": "Xấp xỉ 2.11kg",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    },
+    {
+      "group": "Màu sắc",
+      "name": "Màu",
+      "value": "Đen",
+      "source": "https://www.acer.com/vn-vi/laptops/nitro/nitro-v-15/pdp/NH.QN8SV.004"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core i5 Gen 13 (i5-13420H)",
+    "ram": "16GB DDR5",
+    "storage": "512GB SSD",
+    "gpu": "NVIDIA RTX 4050 6GB",
+    "screenSize": "15.6 inch",
+    "refreshRate": "144Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-fingerprint-with-backlit-on-wp-black-01?wid=1000&hei=1000&fmt=jpg",
+      "alt": "Laptop Acer Nitro V 15 ANV15-51-55CA nhìn thẳng mặt trước, màn hình mở"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-fingerprint-with-backlit-on-black-05?wid=1000&hei=1000&fmt=jpg",
+      "alt": "Acer Nitro V 15 ANV15-51-55CA nhìn chéo từ phía sau, màn hình mở"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-fingerprint-with-backlit-black-06?wid=1000&hei=1000&fmt=jpg",
+      "alt": "Nắp lưng máy Acer Nitro V 15 ANV15-51-55CA với logo Nitro"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-fingerprint-with-backlit-on-wp-black-04?wid=1000&hei=1000&fmt=jpg",
+      "alt": "Bàn phím và bàn di chuột Acer Nitro V 15 ANV15-51-55CA nhìn từ trên xuống"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://images.acer.com/is/image/acer/acer-nitro-v-15-anv15-51-with-fingerprint-with-backlit-wp-black-02?wid=1000&hei=1000&fmt=jpg",
+      "alt": "Acer Nitro V 15 ANV15-51-55CA nhìn nghiêng 3/4, dàn cổng kết nối bên trái"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop Gaming Acer Nitro V 15 ANV15-51-55CA (i5-13420H, RTX 4050)",
+  "metaDescription": "Acer Nitro V 15 ANV15-51-55CA: Intel Core i5-13420H, RTX 4050 6GB, RAM 16GB DDR5, SSD 512GB, màn hình 144Hz. Bảo hành chính hãng 24 tháng."
+}

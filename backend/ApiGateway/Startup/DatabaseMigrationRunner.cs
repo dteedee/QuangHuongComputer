@@ -49,26 +49,7 @@ public static class DatabaseMigrationRunner
         var logger = services.GetRequiredService<ILogger<Program>>();
         var failFast = env.IsProduction();
 
-        // ONE authoritative list of every DbContext. All use EF migrations.
-        var contexts = new DbContext[]
-        {
-            services.GetRequiredService<CatalogDbContext>(),
-            services.GetRequiredService<SalesDbContext>(),
-            services.GetRequiredService<RepairDbContext>(),
-            services.GetRequiredService<WarrantyDbContext>(),
-            services.GetRequiredService<ContentDbContext>(),
-            services.GetRequiredService<IdentityDbContext>(),
-            services.GetRequiredService<PaymentsDbContext>(),
-            services.GetRequiredService<InventoryDbContext>(),
-            services.GetRequiredService<AccountingDbContext>(),
-            services.GetRequiredService<AiDbContext>(),
-            services.GetRequiredService<CommunicationDbContext>(),
-            services.GetRequiredService<HRDbContext>(),
-            services.GetRequiredService<SystemConfigDbContext>(),
-            // CustomFieldDbContext từng bị bỏ sót → bảng config.CustomFieldDefinitions không được tạo
-            services.GetRequiredService<CustomFieldDbContext>(),
-            services.GetRequiredService<CrmDbContext>(),
-        };
+        var contexts = ResolveAllContexts(services);
 
         foreach (var ctx in contexts)
         {
@@ -90,6 +71,32 @@ public static class DatabaseMigrationRunner
 
         await RunSeedersAsync(services, logger);
     }
+
+    /// <summary>
+    /// THE authoritative list of every module DbContext. Migrations, the schema smoke check and any
+    /// future maintenance command must all read it from here — a context missing from this list is
+    /// a context whose tables silently never get created (that is how <c>CustomFieldDbContext</c>
+    /// was lost once already).
+    /// </summary>
+    public static DbContext[] ResolveAllContexts(IServiceProvider services) => new DbContext[]
+    {
+        services.GetRequiredService<CatalogDbContext>(),
+        services.GetRequiredService<SalesDbContext>(),
+        services.GetRequiredService<RepairDbContext>(),
+        services.GetRequiredService<WarrantyDbContext>(),
+        services.GetRequiredService<ContentDbContext>(),
+        services.GetRequiredService<IdentityDbContext>(),
+        services.GetRequiredService<PaymentsDbContext>(),
+        services.GetRequiredService<InventoryDbContext>(),
+        services.GetRequiredService<AccountingDbContext>(),
+        services.GetRequiredService<AiDbContext>(),
+        services.GetRequiredService<CommunicationDbContext>(),
+        services.GetRequiredService<HRDbContext>(),
+        services.GetRequiredService<SystemConfigDbContext>(),
+        // CustomFieldDbContext từng bị bỏ sót → bảng config.CustomFieldDefinitions không được tạo
+        services.GetRequiredService<CustomFieldDbContext>(),
+        services.GetRequiredService<CrmDbContext>(),
+    };
 
     private static async Task RunSeedersAsync(IServiceProvider services, ILogger logger)
     {

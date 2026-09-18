@@ -15,7 +15,7 @@ public static class PayrollEndpoints
 {
     public static void MapPayrollEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr/payroll").RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/hr/payroll").RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // ==================== PAYROLL RUNS ====================
 
@@ -94,14 +94,10 @@ public static class PayrollEndpoints
             var uid = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(uid) || !Guid.TryParse(uid, out var approverId))
                 return Results.Unauthorized();
+            // W0-8: Payrolls giờ đã map đúng (không còn Ignore) — Include tải sẵn danh sách con,
+            // run.Approve() tự duyệt hết payroll con đang Calculated, không cần load tay riêng.
             var run = await db.PayrollRuns.Include(r => r.Payrolls).FirstOrDefaultAsync(r => r.Id == id);
             if (run == null) return Results.NotFound();
-            // Load payrolls thủ công vì Ignore ở DbContext
-            var payrolls = await db.Payrolls.Where(p => p.PayrollRunId == id).ToListAsync();
-            foreach (var p in payrolls)
-            {
-                if (p.Status == PayrollStatus.Calculated) p.Approve(approverId);
-            }
             try
             {
                 run.Approve(approverId);
@@ -199,7 +195,7 @@ public static class PayrollEndpoints
                 return Results.File(bytes, "text/csv", $"bank-transfer-{id}.csv");
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Accountant"));
+        }).RequireAuthorization(p => p.RequireRole("Admin", "Accountant", "HR")); // TODO(W1-1)
     }
 }
 

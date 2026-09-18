@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Upload, Youtube, Star, StarOff, Trash2, GripVertical, Image as ImageIcon, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { catalogApi, type ProductMedia } from '../../api/catalog';
+import { resolveMediaUrl } from '../../lib/media-url';
 
 interface ProductMediaManagerProps {
     productId: string;
@@ -225,7 +226,7 @@ function SortableRow({ media, onDelete, onSetPrimary }: SortableRowProps) {
 
             <div className="w-14 h-14 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                 {thumb ? (
-                    <img src={thumb} alt="" className="w-full h-full object-cover" />
+                    <img src={resolveMediaUrl(thumb)} alt="" className="w-full h-full object-cover" />
                 ) : (
                     <Play className="w-4 h-4 text-gray-400" />
                 )}

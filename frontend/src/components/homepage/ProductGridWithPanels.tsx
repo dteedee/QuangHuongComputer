@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { ProductCard } from '../ProductCard';
 import { useProducts } from '../../hooks/useProducts';
 import { catalogApi, type Category } from '../../api/catalog';
+import { resolveMediaUrl } from '../../lib/media-url';
 import * as LucideIcons from 'lucide-react';
 
 interface SidePanel {
@@ -124,8 +125,9 @@ export const ProductGridWithPanels: React.FC<ProductGridWithPanelsProps> = ({ ti
                         <div className="hidden lg:block shrink-0 w-[200px] p-2">
                             <Link to={leftPanel.link || '#'} className="block h-full">
                                 <img
-                                    src={leftPanel.imageUrl}
+                                    src={resolveMediaUrl(leftPanel.imageUrl)}
                                     alt="Banner"
+                                    loading="lazy"
                                     className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
                                 />
                             </Link>
@@ -146,8 +148,9 @@ export const ProductGridWithPanels: React.FC<ProductGridWithPanelsProps> = ({ ti
                         <div className="hidden lg:block shrink-0 w-[200px] p-2">
                             <Link to={rightPanel.link || '#'} className="block h-full">
                                 <img
-                                    src={rightPanel.imageUrl}
+                                    src={resolveMediaUrl(rightPanel.imageUrl)}
                                     alt="Banner"
+                                    loading="lazy"
                                     className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
                                 />
                             </Link>

@@ -13,6 +13,13 @@ public class RedisDistributedCache : ICacheService
     private readonly int _defaultTtl;
     private readonly IDatabase _database;
 
+    /// <summary>
+    /// Exactly what the API responds with - see <see cref="CacheSerializerOptions"/>. This is the
+    /// registered <see cref="ICacheService"/> (RedisConfiguration.cs), so this is the instance that
+    /// decides whether a cache HIT looks like a cache MISS in production.
+    /// </summary>
+    private static readonly JsonSerializerOptions SerializerOptions = CacheSerializerOptions.Create();
+
     public RedisDistributedCache(
         IConnectionMultiplexer connection,
         string instanceName = "quanghc:",
@@ -37,9 +44,9 @@ public class RedisDistributedCache : ICacheService
             if (!value.HasValue)
                 return null;
 
-            return JsonSerializer.Deserialize<T>(value.ToString());
+            return JsonSerializer.Deserialize<T>(value.ToString(), SerializerOptions);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log error - fail gracefully
             return null;
@@ -57,12 +64,12 @@ public class RedisDistributedCache : ICacheService
                 return;
 
             var fullKey = GetFullKey(key);
-            var serializedValue = JsonSerializer.Serialize(value);
+            var serializedValue = JsonSerializer.Serialize(value, SerializerOptions);
             var expiry = ttl ?? TimeSpan.FromSeconds(_defaultTtl);
 
             await _database.StringSetAsync(fullKey, serializedValue, expiry);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log error - fail gracefully
         }
@@ -78,7 +85,7 @@ public class RedisDistributedCache : ICacheService
             var fullKey = GetFullKey(key);
             await _database.KeyDeleteAsync(fullKey);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log error - fail gracefully
         }
@@ -93,14 +100,17 @@ public class RedisDistributedCache : ICacheService
         {
             var server = _connection.GetServer(_connection.GetEndPoints().First());
             var fullPattern = GetFullKey(pattern);
-            var keys = server.Keys(pattern: fullPattern).ToArray();
+            // `database:` is MANDATORY. IServer.Keys() defaults to database 0, so without it the TEST
+            // stack (defaultDatabase=1) would SCAN and DELETE keys in the owner's database 0 every
+            // time it invalidated its own cache — a hole straight through the D12 Redis isolation.
+            var keys = server.Keys(database: _database.Database, pattern: fullPattern).ToArray();
 
             if (keys.Length > 0)
             {
                 await _database.KeyDeleteAsync(keys);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log error - fail gracefully
         }
@@ -114,9 +124,10 @@ public class RedisDistributedCache : ICacheService
         try
         {
             var server = _connection.GetServer(_connection.GetEndPoints().First());
-            await server.FlushDatabaseAsync();
+            // Same reason as RemoveByPatternAsync: the default is database 0, which is the owner's.
+            await server.FlushDatabaseAsync(_database.Database);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log error - fail gracefully
         }
@@ -132,7 +143,7 @@ public class RedisDistributedCache : ICacheService
             var fullKey = GetFullKey(key);
             return await _database.KeyExistsAsync(fullKey);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -160,7 +171,7 @@ public class RedisDistributedCache : ICacheService
 
             return 0;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return 0;
         }

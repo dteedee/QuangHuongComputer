@@ -1,0 +1,175 @@
+{
+  "name": "Laptop Gaming Lenovo Legion 5 15AHP11 (Ryzen 7 250, RTX 5060)",
+  "slug": "lenovo-legion-5-15ahp11-83q7001jvn-r7-250-rtx5060",
+  "sku": "LEN-83Q7001JVN",
+  "brand": "Lenovo",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop gaming",
+  "model": "Lenovo Legion 5 15AHP11 (83Q7001JVN)",
+  "officialUrl": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051",
+  "priceVnd": 54990000,
+  "oldPriceVnd": 58990000,
+  "costPriceVnd": 48390000,
+  "priceSources": [
+    "https://www.thegioididong.com/tim-kiem?key=Legion%205%2015AHP11",
+    "https://www.dienmayxanh.com/tim-kiem?key=Legion%205%2015AHP11"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng tại trung tâm bảo hành ủy quyền Lenovo trên toàn quốc, riêng pin bảo hành 12 tháng theo chính sách Lenovo VN.",
+  "weightKg": 1.87,
+  "stockQuantity": 14,
+  "shortDescription": "Lenovo Legion 5 15AHP11 (83Q7001JVN) là laptop gaming AMD kết hợp Ryzen 7 250 với card đồ họa rời RTX 5060 8GB, cùng màn hình OLED 15.3 inch 165Hz sắc nét. Máy phù hợp cho game thủ vừa chơi game AAA vừa dựng nội dung nhẹ nhàng.",
+  "descriptionHtml": "<h3>Sức mạnh AMD Ryzen 7 250 kết hợp RTX 5060</h3><p>Legion 5 15AHP11 trang bị vi xử lý AMD Ryzen 7 250 (8 nhân 16 luồng, xung tối đa 5.1GHz) cùng card đồ họa rời NVIDIA GeForce RTX 5060 Laptop GPU 8GB GDDR7, hỗ trợ DLSS 4 và Ray Tracing thế hệ mới. Bộ đôi này xử lý tốt các tựa game AAA ở thiết lập đồ họa cao, đồng thời đủ sức cân các tác vụ sáng tạo nội dung, dựng video nhẹ.</p><h3>Màn hình OLED 165Hz sống động</h3><p>Máy sở hữu màn hình 15.3 inch độ phân giải WQXGA 2560x1600, tấm nền OLED tần số quét 165Hz, độ phủ màu 100% DCI-P3 và đạt chuẩn VESA DisplayHDR True Black 1000, mang lại màu đen sâu và màu sắc chân thực cho cả chơi game lẫn giải trí đa phương tiện.</p><h3>Thiết kế bền bỉ, kết nối đầy đủ</h3><p>Với RAM 16GB DDR5 cùng SSD 512GB PCIe NVMe, máy khởi động và tải ứng dụng nhanh chóng. Bàn phím Legion TrueStrike có đèn RGB, hệ thống tản nhiệt Legion Coldfront cùng cổng kết nối đầy đủ gồm USB-C 40Gbps, HDMI 2.1 và LAN Gigabit đáp ứng tốt nhu cầu kết nối đa dạng của game thủ.</p><ul><li>CPU AMD Ryzen 7 250, GPU RTX 5060 8GB GDDR7</li><li>RAM 16GB DDR5, SSD 512GB PCIe NVMe</li><li>Màn hình OLED 15.3\" WQXGA 165Hz, 100% DCI-P3</li><li>Trọng lượng từ 1.87kg, màu Đen Eclipse Black</li></ul>",
+  "highlights": [
+    "CPU AMD Ryzen 7 250 (8 nhân/16 luồng, tối đa 5.1GHz) xử lý đa nhiệm mạnh mẽ",
+    "Card đồ họa rời NVIDIA GeForce RTX 5060 Laptop GPU 8GB GDDR7, hỗ trợ DLSS 4 và Ray Tracing",
+    "Màn hình OLED 15.3 inch WQXGA (2560x1600), tần số quét 165Hz, 100% DCI-P3, chuẩn HDR True Black 1000",
+    "RAM 16GB DDR5-5600 và SSD 512GB PCIe NVMe Gen4 cho tốc độ khởi động, tải game nhanh",
+    "Bàn phím Legion TrueStrike RGB 24 vùng, hệ tản nhiệt Legion Coldfront: Hyper mát mẻ, êm ái",
+    "Kết nối đầy đủ: 2x USB-C 40Gbps, HDMI 2.1, LAN Gigabit, Wi-Fi 7"
+  ],
+  "specs": [
+    {
+      "group": "Hệ điều hành",
+      "name": "Hệ điều hành",
+      "value": "Windows 11 Home",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "AMD Ryzen 7 250, 8 nhân/16 luồng, xung nhịp cơ bản 3.3GHz, tối đa 5.1GHz, 8MB L2 + 16MB L3 Cache",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Đồ họa tích hợp & NPU",
+      "value": "AMD Radeon 780M; NPU AMD Ryzen AI tích hợp tới 16 TOPS",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "GPU rời",
+      "value": "NVIDIA GeForce RTX 5060 Laptop GPU 8GB GDDR7, công suất 115W (gồm Dynamic Boost 15W), xung Boost 2497MHz, hỗ trợ DLSS 4, Ray Tracing, Reflex 2",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "RAM",
+      "value": "16GB (1x16GB) DDR5-5600MHz, 2 khe SODIMM, tối đa nâng cấp 32GB",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB M.2 2242 PCIe Gen4 NVMe; máy có 2 khe M.2 2280 PCIe 4.0 x4, mỗi khe nâng cấp tối đa 2TB",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "15.3\" WQXGA (2560x1600) OLED, tỷ lệ 16:10, bề mặt bóng gương",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét & màu sắc",
+      "value": "165Hz, thời gian phản hồi 1ms, 100% DCI-P3, 500 nits SDR / 1000 nits HDR peak, VESA DisplayHDR True Black 1000, NVIDIA G-SYNC",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "2x USB-C (USB4 40Gbps, PD 65-100W, DisplayPort 1.4), 3x USB-A 5Gbps (1 cổng Always-on), 1x HDMI 2.1, 1x RJ45 Gigabit LAN, 1x jack tai nghe/mic 3.5mm",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Wi-Fi 7 (802.11be) 2x2 + Bluetooth 5.4 (tùy chọn Wi-Fi 6 + Bluetooth 5.3)",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Bàn phím",
+      "value": "Legion TrueStrike, hành trình phím 1.6mm, đèn nền RGB 24 vùng (tùy chọn 1 vùng), chống ma (Anti-Ghosting) 100%",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Âm thanh & Webcam",
+      "name": "Loa & Micro",
+      "value": "2x loa 2W chuẩn Harman, công nghệ âm thanh Nahimic; micro đôi tích hợp",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Âm thanh & Webcam",
+      "name": "Webcam",
+      "value": "5.0MP có nắp che E-Shutter bảo vệ quyền riêng tư",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Pin",
+      "value": "Pin Li-ion 80Wh, hỗ trợ sạc nhanh Rapid Charge Pro (50% pin trong 30 phút)",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Bộ sạc",
+      "value": "Adapter 245W đầu sạc dẹt (slim tip)",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước",
+      "value": "344 x 244.5 x 18.95-19.95 mm",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng",
+      "value": "Từ 1.87kg",
+      "source": "https://www.lenovo.com/vn/vi/p/laptops/legion-laptops/legion-series/legion-5a-gen-11-15-inch-amd/len101g0051"
+    },
+    {
+      "group": "Màu sắc & Chất liệu",
+      "name": "Màu & vỏ máy",
+      "value": "Đen Eclipse Black, nắp trên nhôm phay xước, đáy máy nhựa PC-ABS",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Bảo mật",
+      "value": "Chip bảo mật Firmware TPM 2.0 tích hợp trong SoC",
+      "source": "https://psref.lenovo.com/Product/Legion/Legion_5_15AHP11"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "AMD Ryzen 7",
+    "ram": "16GB DDR5",
+    "storage": "512GB SSD",
+    "gpu": "RTX 5060",
+    "screenSize": "15.3 inch",
+    "refreshRate": "165Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://p3-ofp.static.pub/fes/cms/2026/08/13/ap6yq9av52wjg4wyhi23ox0462rlkw102476.png",
+      "alt": "Laptop Lenovo Legion 5 15AHP11 nhìn thẳng mặt trước, màn hình mở, nền trắng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://p1-ofp.static.pub/fes/cms/2025/12/19/ndj8zuayr9wkf21k1mnt9g8bhvtplx235027.jpg",
+      "alt": "Lenovo Legion 5 15AHP11 nhìn chéo từ phía trước, màn hình mở hiển thị logo Legion"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://p4-ofp.static.pub/fes/cms/2025/12/19/idvdnp7rqu7rgzx92af6nkxmrk9ysq221994.jpg",
+      "alt": "Lenovo Legion 5 15AHP11 nhìn nghiêng 3/4, thấy rõ bàn phím RGB và bản lề máy"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop Gaming Lenovo Legion 5 15AHP11 83Q7001JVN (Ryzen 7 250, RTX 5060)",
+  "metaDescription": "Lenovo Legion 5 15AHP11 83Q7001JVN: Ryzen 7 250, RTX 5060 8GB, RAM 16GB DDR5, SSD 512GB, màn hình OLED 165Hz. Bảo hành chính hãng 24 tháng."
+}

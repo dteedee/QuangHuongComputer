@@ -1,4 +1,5 @@
 using BuildingBlocks.SharedKernel;
+using Sales.Application.Pricing;
 
 namespace Sales.Domain;
 
@@ -14,7 +15,16 @@ public class Cart : Entity<Guid>
     public decimal ShippingAmount { get; private set; }
 
     public decimal SubtotalAmount => Items.Sum(i => i.Subtotal);
-    public decimal TotalAmount => CalculateTotal();
+    public decimal TotalAmount => Totals().Total;
+
+    /// <summary>
+    /// W0-4 / D01 — VAT ĐÃ NẰM TRONG GIÁ: đây là phần thuế TÁCH RA (để hiển thị/hoá đơn),
+    /// KHÔNG phải khoản cộng thêm vào <see cref="TotalAmount"/>.
+    /// </summary>
+    public decimal TaxAmount => Totals().TaxAmount;
+
+    /// <summary>Giảm giá thực tế sau clamp (không vượt tạm tính).</summary>
+    public decimal EffectiveDiscountAmount => Totals().EffectiveDiscount;
 
     public Cart(Guid customerId)
     {
@@ -147,14 +157,17 @@ public class Cart : Entity<Guid>
         ShippingAmount = amount;
     }
 
-    private decimal CalculateTotal()
-    {
-        var subtotal = SubtotalAmount;
-        var discounted = subtotal - DiscountAmount;
-        if (discounted < 0) discounted = 0;
-        var tax = discounted * TaxRate;
-        return discounted + tax + ShippingAmount;
-    }
+    /// <summary>
+    /// W0-4 / D01 — giá đã bao gồm VAT: Total = tạm tính − giảm giá + phí ship, KHÔNG cộng thuế.
+    /// TRƯỚC: `discounted + discounted*TaxRate + ship` → cộng thêm 8% lên giá mà storefront
+    /// đã ghi "đã bao gồm VAT". Dùng chung <see cref="DiscountAllocator"/> với Order để
+    /// giỏ hàng và đơn hàng không bao giờ ra hai con số khác nhau.
+    /// </summary>
+    private VatInclusiveTotals Totals() => DiscountAllocator.ComputeTotals(
+        Items.Select(i => i.Subtotal).ToList(),
+        DiscountAmount,
+        ShippingAmount,
+        TaxRate);
 }
 
 public class CartItem

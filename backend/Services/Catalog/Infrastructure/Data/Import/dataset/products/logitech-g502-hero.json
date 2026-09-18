@@ -1,0 +1,164 @@
+{
+  "name": "Chuột chơi game Logitech G502 HERO",
+  "slug": "logitech-g502-hero",
+  "sku": "LOG-G502HERO",
+  "brand": "Logitech",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Chuột",
+  "model": "G502 HERO",
+  "officialUrl": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse",
+  "priceVnd": 920000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 810000,
+  "priceSources": [
+    "https://cellphones.com.vn/chuot-choi-game-co-day-logitech-g502-hero.html",
+    "https://gearvn.com/products/logitech-g502-hero"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Logitech 24 tháng (2 năm) phần cứng tại các trung tâm bảo hành ủy quyền ở Việt Nam.",
+  "weightKg": 0.121,
+  "stockQuantity": 24,
+  "shortDescription": "Chuột chơi game có dây Logitech G502 HERO dùng cảm biến HERO 25K độ chính xác cao, 11 nút lập trình được và bộ tạ điều chỉnh rời, phù hợp game thủ FPS/MOBA cần độ nhạy ổn định lâu dài.",
+  "descriptionHtml": "<h3>Chuột gaming huyền thoại, nâng cấp cảm biến HERO 25K</h3><p>Logitech G502 HERO là bản nâng cấp của dòng G502 đình đám, giữ nguyên phần khung bo cong quen thuộc nhưng thay cảm biến quang học bằng HERO 25K độ phân giải 100 - 25.600 DPI, tốc độ theo dõi trên 400 IPS và gia tốc trên 40G khi thử nghiệm trên bàn di Logitech G240, không làm mượt hay nhiễu tín hiệu di chuyển.</p><h3>11 nút bấm, tạ điều chỉnh, bộ nhớ trên chuột</h3><p>Với 11 nút có thể lập trình qua phần mềm Logitech G HUB, người dùng dễ dàng gán macro cho các tựa game FPS, MOBA hay MMO. Bộ tạ rời tối đa 18g (5 miếng 3,6g) giúp tinh chỉnh trọng lượng và cân bằng theo sở thích cầm nắm, trong khi bộ nhớ trên chuột lưu được tối đa 5 cấu hình để mang cài đặt sang máy khác mà không cần cài lại phần mềm.</p><h3>Thiết kế bền bỉ, đèn LIGHTSYNC RGB</h3><p>Thân chuột nặng 121g, kích thước 131,2 x 75 x 40mm phù hợp tay cầm palm hoặc claw cỡ trung - lớn. Chân trượt PTFE chịu được quãng đường hơn 250km trước khi mòn, tần suất gửi tín hiệu USB đạt 1000Hz (1ms) cho độ trễ thấp. Dải đèn LIGHTSYNC RGB một vùng đồng bộ hiệu ứng với các thiết bị Logitech G khác. Sản phẩm tương thích Windows 7 trở lên, macOS 10.11 trở lên và ChromeOS, đi kèm bảo hành phần cứng chính hãng 2 năm.</p><ul><li>Cảm biến HERO 25K, 100-25.600 DPI, không làm mượt/nhiễu tín hiệu</li><li>11 nút bấm lập trình được qua G HUB</li><li>Bộ nhớ trên chuột lưu 5 cấu hình</li><li>Tạ điều chỉnh rời tối đa 18g</li><li>Đèn LIGHTSYNC RGB 1 vùng</li><li>Bảo hành chính hãng 2 năm</li></ul>",
+  "highlights": [
+    "Cảm biến quang học HERO 25K, DPI 100-25.600, tốc độ theo dõi >400 IPS, không làm mượt hay nhiễu tín hiệu",
+    "11 nút bấm lập trình tự do qua Logitech G HUB, phù hợp FPS/MOBA/MMO",
+    "Bộ nhớ trên chuột lưu tối đa 5 cấu hình, mang cài đặt theo mọi máy",
+    "Tạ điều chỉnh rời tối đa 18g (5 x 3,6g) để tinh chỉnh trọng lượng theo ý thích",
+    "Chân trượt PTFE bền hơn 250km, tần suất phản hồi USB 1000Hz (1ms)",
+    "Đèn RGB LIGHTSYNC, bảo hành phần cứng chính hãng 2 năm"
+  ],
+  "specs": [
+    {
+      "group": "Cảm biến & Hiệu năng",
+      "name": "Cảm biến quang học",
+      "value": "HERO 25K",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Cảm biến & Hiệu năng",
+      "name": "Độ phân giải (DPI)",
+      "value": "100 - 25.600 DPI",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Cảm biến & Hiệu năng",
+      "name": "Tốc độ theo dõi tối đa",
+      "value": ">400 IPS (thử nghiệm trên bàn di Logitech G240)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Cảm biến & Hiệu năng",
+      "name": "Gia tốc tối đa",
+      "value": ">40 G (thử nghiệm trên bàn di Logitech G240)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Cảm biến & Hiệu năng",
+      "name": "Làm mượt / lọc / tăng tốc tín hiệu cảm biến",
+      "value": "Không có (zero smoothing, filtering, acceleration)",
+      "source": "https://www.logitechg.com/en-us/shop/p/g502-hero-gaming-mouse.910-005469"
+    },
+    {
+      "group": "Nút bấm & Bộ nhớ",
+      "name": "Số nút bấm có thể lập trình",
+      "value": "11 nút",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Nút bấm & Bộ nhớ",
+      "name": "Bộ nhớ trên chuột",
+      "value": "Tối đa 5 cấu hình (yêu cầu firmware 127.1.7)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Nút bấm & Bộ nhớ",
+      "name": "Đèn RGB",
+      "value": "LIGHTSYNC RGB, 1 vùng",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Thiết kế & Trọng lượng",
+      "name": "Trọng lượng (chỉ chuột)",
+      "value": "121 g",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Thiết kế & Trọng lượng",
+      "name": "Tạ điều chỉnh thêm",
+      "value": "Tối đa 18 g (5 miếng x 3,6 g)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Thiết kế & Trọng lượng",
+      "name": "Kích thước (Cao x Rộng x Dày)",
+      "value": "40 x 75 x 131,2 mm",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Kết nối & Đáp ứng",
+      "name": "Kiểu kết nối",
+      "value": "Có dây, cổng USB",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Kết nối & Đáp ứng",
+      "name": "Định dạng dữ liệu USB",
+      "value": "16 bit/trục",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Kết nối & Đáp ứng",
+      "name": "Tần suất gửi tín hiệu USB (Polling rate)",
+      "value": "1000 Hz (1 ms)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Kết nối & Đáp ứng",
+      "name": "Bộ vi xử lý",
+      "value": "32-bit ARM",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Độ bền & Bảo hành",
+      "name": "Chân trượt PTFE",
+      "value": "Độ bền >250 km (thử nghiệm trên bàn di Logitech G240)",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Độ bền & Bảo hành",
+      "name": "Bảo hành",
+      "value": "Bảo hành phần cứng chính hãng 2 năm",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    },
+    {
+      "group": "Yêu cầu hệ thống",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "Windows 7 trở lên, macOS 10.11 trở lên, ChromeOS",
+      "source": "https://www.logitechg.com/vi-vn/shop/p/g502-hero-gaming-mouse.910-005472"
+    }
+  ],
+  "filterAttributes": {
+    "sensor": "HERO 25K",
+    "dpiMax": "25600",
+    "buttons": "11",
+    "connectivity": "Có dây (USB)",
+    "weight": "121g",
+    "rgb": "LIGHTSYNC RGB"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://resource.logitechg.com/w_1440,h_660,ar_24:11,c_fill,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/non-braid/hyjal-g502-hero/2025/g502-hero-mouse-intro.png",
+      "alt": "Logitech G502 HERO màu đen, góc nghiêng cho thấy nút bấm và bánh xe cuộn, nền trắng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://resource.logitechg.com/w_952,h_560,c_fill,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/g502-hero/g502-hero-panel1-feature-1.png",
+      "alt": "Cận cảnh cụm nút bấm và đèn báo DPI trên Logitech G502 HERO, nền đen"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Chuột Chơi Game Logitech G502 HERO - Cảm Biến HERO 25K Chính Hãng",
+  "metaDescription": "Logitech G502 HERO: cảm biến HERO 25K 25.600 DPI, 11 nút lập trình, tạ điều chỉnh rời, RGB LIGHTSYNC. Giá tốt, bảo hành chính hãng 24 tháng."
+}

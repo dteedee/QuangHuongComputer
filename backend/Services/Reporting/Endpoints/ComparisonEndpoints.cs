@@ -19,11 +19,10 @@ public static class ComparisonEndpoints
             var p1s = DateTime.Parse(period1Start); var p1e = DateTime.Parse(period1End);
             var p2s = DateTime.Parse(period2Start); var p2e = DateTime.Parse(period2End);
 
-            var p1Task = GetRevenuePeriodData(salesDb, p1s, p1e);
-            var p2Task = GetRevenuePeriodData(salesDb, p2s, p2e);
-            await Task.WhenAll(p1Task, p2Task);
-
-            var p1 = await p1Task; var p2 = await p2Task;
+            // Sequential: both tasks query the same salesDb context, which throws on
+            // concurrent operations under Task.WhenAll.
+            var p1 = await GetRevenuePeriodData(salesDb, p1s, p1e);
+            var p2 = await GetRevenuePeriodData(salesDb, p2s, p2e);
             return Results.Ok(new
             {
                 Period1 = new { Label = $"{p1s:dd/MM} - {p1e:dd/MM}", p1.Revenue, p1.OrderCount, p1.AvgOrderValue },
@@ -43,11 +42,9 @@ public static class ComparisonEndpoints
             var p1s = DateTime.Parse(period1Start); var p1e = DateTime.Parse(period1End);
             var p2s = DateTime.Parse(period2Start); var p2e = DateTime.Parse(period2End);
 
-            var p1Task = GetOrderPeriodData(salesDb, p1s, p1e);
-            var p2Task = GetOrderPeriodData(salesDb, p2s, p2e);
-            await Task.WhenAll(p1Task, p2Task);
-
-            var p1 = await p1Task; var p2 = await p2Task;
+            // Sequential: same salesDb context for both.
+            var p1 = await GetOrderPeriodData(salesDb, p1s, p1e);
+            var p2 = await GetOrderPeriodData(salesDb, p2s, p2e);
             return Results.Ok(new
             {
                 Period1 = p1, Period2 = p2,
@@ -66,11 +63,9 @@ public static class ComparisonEndpoints
             var p1s = DateTime.Parse(period1Start); var p1e = DateTime.Parse(period1End);
             var p2s = DateTime.Parse(period2Start); var p2e = DateTime.Parse(period2End);
 
-            var p1Task = GetExpensePeriodData(accDb, p1s, p1e);
-            var p2Task = GetExpensePeriodData(accDb, p2s, p2e);
-            await Task.WhenAll(p1Task, p2Task);
-
-            var p1 = await p1Task; var p2 = await p2Task;
+            // Sequential: same accDb context for both.
+            var p1 = await GetExpensePeriodData(accDb, p1s, p1e);
+            var p2 = await GetExpensePeriodData(accDb, p2s, p2e);
             return Results.Ok(new
             {
                 Period1 = new { p1.Total, p1.ByCategory },
@@ -108,7 +103,11 @@ public static class ComparisonEndpoints
 
     private static async Task<(decimal Revenue, int OrderCount, decimal AvgOrderValue)> GetRevenuePeriodData(SalesDbContext db, DateTime start, DateTime end)
     {
-        var orders = await db.Orders.Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled).ToListAsync();
+        // Exclude cancelled and unpaid orders from revenue (quick correctness pass; W2-8
+        // owns the single shared recognized-revenue predicate across all reports).
+        var orders = await db.Orders
+            .Where(o => o.OrderDate >= start && o.OrderDate < end && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
+            .ToListAsync();
         var revenue = orders.Sum(o => o.TotalAmount);
         var count = orders.Count;
         var aov = count > 0 ? revenue / count : 0;

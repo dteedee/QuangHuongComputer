@@ -10,14 +10,26 @@ import type {
     CreatePurchaseReturnDto,
     PurchaseReturnItem,
 } from '../../../api/inventory';
+import { resolveEnumBadgeMeta, type EnumBadgeMetaMap } from './enum-badge-meta-with-unknown-fallback';
 
-const STATUS_META: Record<PurchaseReturnStatus, { label: string; className: string }> = {
+// Khoá = chuỗi enum THẬT của backend (`Inventory/Domain/PurchaseReturn.cs:102` PurchaseReturnStatus
+// = Draft | Sent | Accepted | Refunded | Cancelled). FE trước đây khai Confirmed/Shipped/RefundReceived
+// ⇒ mọi phiếu ngoài Draft/Cancelled sẽ tra ra undefined và làm sập trang như lỗi `urgency` ở PR.
+// Giữ alias tên cũ để không mất nhãn nếu còn dữ liệu/cache cũ.
+const STATUS_META: EnumBadgeMetaMap = {
     Draft: { label: 'Nháp', className: 'bg-gray-100 text-gray-700' },
+    Sent: { label: 'Đã gửi NCC', className: 'bg-indigo-100 text-indigo-700' },
+    Accepted: { label: 'NCC đã nhận', className: 'bg-blue-100 text-blue-700' },
+    Refunded: { label: 'Đã hoàn tiền', className: 'bg-emerald-100 text-emerald-700' },
+    Cancelled: { label: 'Đã hủy', className: 'bg-red-100 text-red-700' },
+    // alias cũ của FE
     Confirmed: { label: 'Đã xác nhận', className: 'bg-blue-100 text-blue-700' },
     Shipped: { label: 'Đã gửi NCC', className: 'bg-indigo-100 text-indigo-700' },
     RefundReceived: { label: 'Đã hoàn tiền', className: 'bg-emerald-100 text-emerald-700' },
-    Cancelled: { label: 'Đã hủy', className: 'bg-red-100 text-red-700' },
 };
+
+/** Giá trị gửi lên `?status=` — phải khớp enum backend. */
+const STATUS_FILTER_OPTIONS = ['Draft', 'Sent', 'Accepted', 'Refunded', 'Cancelled'] as const;
 
 export default function PurchaseReturnsPage() {
     const [items, setItems] = useState<PurchaseReturn[]>([]);
@@ -110,8 +122,8 @@ export default function PurchaseReturnsPage() {
                     className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                     <option value="all">Tất cả</option>
-                    {(Object.keys(STATUS_META) as PurchaseReturnStatus[]).map(s => (
-                        <option key={s} value={s}>{STATUS_META[s].label}</option>
+                    {STATUS_FILTER_OPTIONS.map(s => (
+                        <option key={s} value={s}>{resolveEnumBadgeMeta(STATUS_META, s).label}</option>
                     ))}
                 </select>
             </AnimatedSection>
@@ -145,14 +157,16 @@ export default function PurchaseReturnsPage() {
                                     <td className="px-4 py-3 font-mono font-semibold text-gray-900">{r.number}</td>
                                     <td className="px-4 py-3 font-mono text-gray-700 text-xs">{r.grnNumber || r.grnId?.slice(0, 8) || '—'}</td>
                                     <td className="px-4 py-3 text-gray-700">{r.supplierName || '—'}</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">{formatCurrency(r.total)}</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                                        {typeof r.total === 'number' ? formatCurrency(r.total) : '—'}
+                                    </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_META[r.status].className}`}>
-                                            {STATUS_META[r.status].label}
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${resolveEnumBadgeMeta(STATUS_META, r.status).className}`}>
+                                            {resolveEnumBadgeMeta(STATUS_META, r.status).label}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                                        {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                                        {r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '—'}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex justify-center gap-1.5">
@@ -162,7 +176,8 @@ export default function PurchaseReturnsPage() {
                                             >
                                                 <Eye size={13} /> Xem
                                             </button>
-                                            {(r.status === 'Draft' || r.status === 'Confirmed') && (
+                                            {/* BE: Confirm() chỉ chạy từ Draft → Sent (PurchaseReturn.cs:45) */}
+                                            {r.status === 'Draft' && (
                                                 <button
                                                     onClick={() => void handleConfirmShip(r)}
                                                     className="inline-flex items-center gap-1 px-2 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold"
@@ -170,7 +185,9 @@ export default function PurchaseReturnsPage() {
                                                     <Send size={13} /> Xác nhận gửi
                                                 </button>
                                             )}
-                                            {r.status === 'Shipped' && (
+                                            {/* BE: MarkRefunded() chỉ chạy từ Accepted (PurchaseReturn.cs:59).
+                                                Bước Sent → Accepted chưa có UI, xem integration-requests-w0.md. */}
+                                            {(r.status as string) === 'Accepted' && (
                                                 <button
                                                     onClick={() => void handleRefund(r)}
                                                     className="inline-flex items-center gap-1 px-2 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold"

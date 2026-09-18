@@ -1,0 +1,194 @@
+{
+  "name": "Router WiFi 6 TP-Link Archer AX73 (AX5400, Băng Tần Kép)",
+  "slug": "tp-link-archer-ax73",
+  "sku": "TPL-ARCHERAX73",
+  "brand": "TP-Link",
+  "category": "Thiết Bị Mạng",
+  "subCategory": "Router WiFi",
+  "model": "Archer AX73 (V2)",
+  "officialUrl": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/",
+  "priceVnd": 2400000,
+  "oldPriceVnd": 4080000,
+  "costPriceVnd": 2110000,
+  "priceSources": [
+    "https://cellphones.com.vn/router-wifi-6-gigabit-tp-link-archer-ax73-bang-tan-kep-ax5400.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng tại hệ thống bảo hành TP-Link Việt Nam, 1 đổi 1 trong 15 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 0.6,
+  "stockQuantity": 18,
+  "shortDescription": "Router WiFi 6 băng tần kép AX5400 với 6 ăng-ten ngoài, phù hợp cho nhà nhiều thiết bị cần vùng phủ rộng và kết nối ổn định. Tích hợp bảo mật HomeShield và hỗ trợ mở rộng mạng OneMesh.",
+  "descriptionHtml": "<h3>Router WiFi 6 chuẩn AX5400 cho gia đình đông thiết bị</h3><p>TP-Link Archer AX73 là router không dây băng tần kép chuẩn Wi-Fi 6 (802.11ax), cho tốc độ lý thuyết tối đa 4804 Mbps ở băng 5GHz và 574 Mbps ở băng 2.4GHz. Bộ vi xử lý 3 nhân 1.5GHz cùng công nghệ OFDMA và 4x4 MU-MIMO giúp thiết bị xử lý mượt nhiều kết nối đồng thời, phù hợp cho gia đình nhiều thành viên hoặc không gian làm việc có đông thiết bị streaming, học online, chơi game.</p><h3>Vùng phủ rộng, ổn định</h3><p>6 ăng-ten ngoài hiệu suất cao kết hợp công nghệ Beamforming và bộ khuếch đại FEM công suất cao giúp tín hiệu WiFi vươn xa hơn qua tường và vật cản trong nhà. Archer AX73 hỗ trợ chuẩn OneMesh để kết hợp cùng các thiết bị mở rộng sóng TP-Link, tạo thành một mạng WiFi liền mạch phủ khắp nhà mà không cần đổi tên WiFi khi di chuyển.</p><h3>Kết nối đầy đủ, bảo mật nâng cao</h3><p>Router có 1 cổng WAN Gigabit, 4 cổng LAN Gigabit (hỗ trợ gộp cổng LAG) và 1 cổng USB 3.0 để chia sẻ ổ cứng hoặc máy in qua mạng nội bộ. Tính năng bảo mật HomeShield tích hợp sẵn giúp quét lỗ hổng mạng gia đình, chặn website độc hại, chống tấn công DDoS và cung cấp công cụ kiểm soát của phụ huynh chi tiết theo hồ sơ từng thành viên.</p><ul><li>Wi-Fi 6 AX5400, băng tần kép 2.4GHz/5GHz</li><li>CPU 3 nhân 1.5GHz, hỗ trợ đến 200 thiết bị</li><li>6 ăng-ten ngoài, Beamforming, FEM công suất cao</li><li>1 WAN + 4 LAN Gigabit, 1 USB 3.0</li><li>Bảo mật HomeShield, hỗ trợ OneMesh</li></ul>",
+  "highlights": [
+    "Chuẩn Wi-Fi 6 AX5400: tối đa 4804 Mbps (5GHz) + 574 Mbps (2.4GHz)",
+    "CPU 3 nhân 1.5GHz, hỗ trợ kết nối cùng lúc đến 200 thiết bị",
+    "6 ăng-ten ngoài + Beamforming + FEM công suất cao cho vùng phủ rộng",
+    "OFDMA và 4x4 MU-MIMO giảm nghẽn khi nhiều thiết bị dùng mạng cùng lúc",
+    "Bảo mật HomeShield: chống DDoS, chặn web độc hại, kiểm soát phụ huynh",
+    "1 cổng USB 3.0 chia sẻ dữ liệu/máy in; hỗ trợ mở rộng mạng OneMesh"
+  ],
+  "specs": [
+    {
+      "group": "WiFi",
+      "name": "Chuẩn WiFi",
+      "value": "Wi-Fi 6; IEEE 802.11ax/ac/n/a (5GHz), 802.11ax/n/b/g (2.4GHz)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "WiFi",
+      "name": "Tốc độ WiFi",
+      "value": "AX5400 - 5GHz: 4804 Mbps (HE160); 2.4GHz: 574 Mbps",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "WiFi",
+      "name": "Ăng-ten & vùng phủ",
+      "value": "6x ăng-ten ngoài cố định, Beamforming, FEM công suất cao, 4T4R",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "WiFi",
+      "name": "Công nghệ đa thiết bị",
+      "value": "Băng tần kép, 4x4 MU-MIMO, OFDMA, DFS, 6 luồng (6-stream)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "WiFi",
+      "name": "Chế độ hoạt động",
+      "value": "Chế độ Router, Chế độ Điểm truy cập (Access Point)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Bảo mật mạng",
+      "value": "Tường lửa SPI, kiểm soát truy cập, liên kết IP & MAC, Gateway lớp ứng dụng",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "HomeShield Security",
+      "value": "Bảo vệ IoT thời gian thực, chặn web độc hại, chống xâm nhập, chống DDoS, quét mạng gia đình",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Mạng khách",
+      "value": "1 mạng khách 5GHz + 1 mạng khách 2.4GHz",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Chuẩn mã hóa WiFi",
+      "value": "WPA, WPA2, WPA3, WPA/WPA2-Enterprise (802.1x)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Bộ xử lý",
+      "value": "CPU 3 nhân 1.5 GHz",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Cổng mạng",
+      "value": "1 cổng WAN Gigabit, 4 cổng LAN Gigabit (hỗ trợ Link Aggregation 2 cổng LAN)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Cổng USB",
+      "value": "1x USB 3.0, hỗ trợ NTFS/exFAT/HFS+/FAT32, FTP/Samba/Media server, Time Machine",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Nút bấm",
+      "value": "Wi-Fi, Nguồn, LED, WPS, Reset",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Nguồn điện vào",
+      "value": "12V ⎓ 2A (phiên bản V2)",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Giao thức",
+      "value": "IPv4, IPv6",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "OneMesh",
+      "value": "Hỗ trợ TP-Link OneMesh để mở rộng vùng phủ liền mạch",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Kiểm soát của phụ huynh",
+      "value": "HomeShield: hồ sơ tùy chỉnh, lọc nội dung, giờ đi ngủ, báo cáo hàng tuần/tháng",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Loại kết nối WAN",
+      "value": "IP động, IP tĩnh, PPPoE",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "NAT / Forwarding",
+      "value": "Port Forwarding, Port Triggering, DMZ, UPnP, Virtual Server",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Quản lý",
+      "value": "Ứng dụng Tether, giao diện Web",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Kích thước (D x R x C)",
+      "value": "272.5 x 147.2 x 49.2 mm",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Phụ kiện trong hộp",
+      "value": "Router Archer AX73, bộ chuyển nguồn, cáp Ethernet RJ45, hướng dẫn cài đặt nhanh",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Chứng nhận",
+      "value": "FCC, CE, RoHS",
+      "source": "https://www.tp-link.com/vn/home-networking/wifi-router/archer-ax73/#specifications"
+    }
+  ],
+  "filterAttributes": {
+    "wifiStandard": "Wi-Fi 6 (802.11ax)",
+    "speedClass": "AX5400",
+    "bandType": "Băng tần kép (Dual-Band)",
+    "wanPort": "1x Gigabit WAN",
+    "lanPorts": "4x Gigabit LAN",
+    "usbPorts": "1x USB 3.0",
+    "antennas": "6 ăng-ten ngoài"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static.tp-link.com/assets/images/product/archer-ax73_v1/img/01-bg.jpg",
+      "alt": "Router WiFi 6 TP-Link Archer AX73 nhìn góc nghiêng với 6 ăng-ten"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.tp-link.com/assets/images/product/archer-ax73_v1/img/07-bg.jpg",
+      "alt": "Cận cảnh mặt trên router TP-Link Archer AX73 với logo TP-Link và đèn LED trạng thái"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Router WiFi 6 TP-Link Archer AX73 AX5400 - Chính Hãng",
+  "metaDescription": "Router WiFi 6 TP-Link Archer AX73 băng tần kép AX5400, 6 ăng-ten, HomeShield, hỗ trợ OneMesh. Giá tốt, bảo hành chính hãng 24 tháng."
+}

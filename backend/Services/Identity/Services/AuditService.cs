@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BuildingBlocks.Database;
 using Identity.Infrastructure;
 
 namespace Identity.Services;
@@ -26,7 +27,8 @@ public class AuditService : IAuditService
             Action = action,
             EntityName = entityName,
             EntityId = entityId,
-            Details = details,
+            // Second of the two AuditLog inserters - same last gate as AuditLogConsumer.
+            Details = AuditSecretScrubber.ScrubDetails(details, entityName, entityId) ?? string.Empty,
             Timestamp = DateTime.UtcNow
         };
         _context.AuditLogs.Add(log);

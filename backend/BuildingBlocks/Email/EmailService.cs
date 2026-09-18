@@ -28,7 +28,10 @@ public class EmailService : IEmailService
             SmtpUsername = configuration["Email:SmtpUsername"] ?? "",
             SmtpPassword = configuration["Email:SmtpPassword"] ?? "",
             FromEmail = configuration["Email:FromEmail"] ?? "noreply@quanghuongcomputer.com",
-            FromName = configuration["Email:FromName"] ?? "Quang Huong Computer"
+            FromName = configuration["Email:FromName"] ?? "Quang Huong Computer",
+            // Config-driven so a local mail sink (MailHog, no STARTTLS) can be used in TEST.
+            // Absent key keeps today's behaviour: SSL on.
+            EnableSsl = !bool.TryParse(configuration["Email:SmtpEnableSsl"], out var enableSsl) || enableSsl
         };
         _logger = logger;
         // Get frontend URL from configuration (Cors allowed origins or explicit setting)
@@ -43,7 +46,7 @@ public class EmailService : IEmailService
         {
             using var client = new SmtpClient(_config.SmtpHost, _config.SmtpPort)
             {
-                EnableSsl = true,
+                EnableSsl = _config.EnableSsl,
                 Credentials = new NetworkCredential(_config.SmtpUsername, _config.SmtpPassword)
             };
 
@@ -273,4 +276,5 @@ public class EmailConfig
     public string SmtpPassword { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;
+    public bool EnableSsl { get; set; } = true;
 }

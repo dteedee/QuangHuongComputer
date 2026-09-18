@@ -1,0 +1,266 @@
+{
+  "name": "PC Gaming QH Raider G3 - Intel Core i5-12400F / RX 9070 XT 16GB / 16GB DDR4 / 1TB SSD",
+  "slug": "pc-gaming-qh-raider-g3-i5-12400f-rx-9070-xt",
+  "sku": "QH-RAIDERG3-I5RX9070XT",
+  "brand": "QH",
+  "category": "Máy Tính Chơi Game",
+  "subCategory": "Gaming PC - Upper-Mid 1440p/4K",
+  "model": "Raider G3",
+  "officialUrl": "https://lian-li.com/product/lancool-216/",
+  "priceVnd": 47330000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 41650000,
+  "priceSources": [
+    "https://gearvn.com/products/card-man-hinh-asus-prime-radeon-rx-9070-xt-oc-edition-16gb",
+    "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw",
+    "https://gearvn.com/products/bo-mach-chu-asus-prime-b760m-a-wifi-d4-csm"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành tổng thể 36 tháng cho bo mạch chủ, CPU, VGA (đổi mới trong 12 tháng đầu nếu lỗi NSX); SSD Samsung 990 PRO bảo hành 60 tháng; nguồn Corsair RM750e bảo hành 84 tháng; case và tản nhiệt khí bảo hành 12 tháng - theo đúng chính sách hãng của từng linh kiện, phiếu bảo hành tổng hợp cấp kèm máy.",
+  "weightKg": 15.5,
+  "stockQuantity": 7,
+  "shortDescription": "PC Gaming QH Raider G3 dồn ngân sách cho GPU AMD Radeon RX 9070 XT 16GB để tối ưu trải nghiệm 1440p/4K, phối cùng Core i5-12400F và SSD NVMe Gen4 tốc độ cao trong case Lian Li LANCOOL 216 thoáng khí.",
+  "descriptionHtml": "<h3>Cấu hình dồn lực cho GPU - chuẩn build 1440p/4K</h3><p>PC Gaming QH Raider G3 theo triết lý build \"GPU-heavy\": ngân sách tập trung cho card đồ họa AMD Radeon RX 9070 XT 16GB vì ở độ phân giải 1440p và 4K, khung hình phụ thuộc chủ yếu vào GPU chứ không phải CPU. Intel Core i5-12400F 6 nhân 12 luồng vẫn dư sức nuôi GPU flagship này mà không tạo nút thắt cổ chai đáng kể trong đa số tựa game AAA hiện nay.</p><h3>Lưu trữ nhanh, nguồn khỏe, tản nhiệt ổn định</h3><p>SSD Samsung 990 PRO 1TB chuẩn NVMe PCIe Gen4 đảm nhiệm cả hệ điều hành lẫn thư viện game, tốc độ đọc/ghi tuần tự thuộc nhóm nhanh nhất phân khúc, rút ngắn đáng kể thời gian tải màn chơi. Nguồn Corsair RM750e 750W đạt chuẩn 80 Plus Gold và ATX 3.1, có sẵn đầu cáp 12V-2x6 nguyên bản cấp điện trực tiếp cho GPU, dư tải an toàn so với mức tiêu thụ đỉnh của toàn hệ thống. Tản nhiệt khí Thermalright Peerless Assassin 120 SE dạng tháp đôi ghìm nhiệt CPU hiệu quả trong các phiên chơi dài.</p><h3>Case thoáng khí, thẩm mỹ tông sáng</h3><p>Case Lian Li LANCOOL 216 RGB White với 3 mặt lưới thép cùng 3 quạt ARGB lắp sẵn tạo luồng khí đối lưu tốt, nội thất đủ rộng cho GPU dài 312mm và tản CPU khí cao tới 180mm. Mainboard ASUS PRIME B760M-A WIFI D4 hỗ trợ Wi-Fi 6 tích hợp, khe M.2 PCIe Gen4 và đủ cổng SATA cho nhu cầu mở rộng về sau.</p><ul><li>CPU Intel Core i5-12400F 6 nhân/12 luồng, Turbo 4.4GHz</li><li>GPU ASUS Prime Radeon RX 9070 XT OC 16GB GDDR6, bus 256-bit</li><li>RAM Corsair Vengeance LPX 16GB (1x16GB) DDR4-3200 CL16</li><li>SSD Samsung 990 PRO 1TB NVMe PCIe Gen4</li><li>Nguồn Corsair RM750e 750W 80 Plus Gold, chuẩn ATX 3.1</li><li>Case Lian Li LANCOOL 216 RGB White, tản khí Thermalright Peerless Assassin 120 SE</li></ul>",
+  "highlights": [
+    "GPU ASUS Prime Radeon RX 9070 XT OC 16GB GDDR6 - chiến mượt 1440p, chạm ngưỡng 4K ở nhiều tựa game",
+    "CPU Intel Core i5-12400F 6 nhân 12 luồng, đủ sức kéo GPU flagship mà không gây nghẽn cổ chai ở độ phân giải cao",
+    "SSD Samsung 990 PRO 1TB NVMe PCIe Gen4, tốc độ đọc/ghi hàng đầu phân khúc, khởi động và tải game gần như tức thì",
+    "Nguồn Corsair RM750e 750W 80 Plus Gold chuẩn ATX 3.1, kèm cáp 12V-2x6 gốc, dư tải thoải mái cho GPU đời mới",
+    "Case Lian Li LANCOOL 216 RGB White toàn lưới thoáng khí, sẵn 3 quạt ARGB, đủ chỗ cho GPU dài tới 392mm",
+    "Tản nhiệt khí Thermalright Peerless Assassin 120 SE tháp đôi, ghìm nhiệt hiệu quả mà không cần bảo trì tản nước"
+  ],
+  "specs": [
+    {
+      "group": "CPU",
+      "name": "Model",
+      "value": "Intel Core i5-12400F",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Số nhân / luồng",
+      "value": "6 nhân / 12 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Xung nhịp",
+      "value": "2.5GHz cơ bản, Turbo tối đa 4.4GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Cache / Socket / TDP",
+      "value": "18MB Smart Cache, Socket FCLGA1700, 65W cơ bản (117W Turbo)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Model",
+      "value": "ASUS PRIME B760M-A WIFI D4-CSM",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Socket / Chipset",
+      "value": "LGA1700 (hỗ trợ CPU Gen 12/13/14) / Intel B760",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "RAM hỗ trợ",
+      "value": "DDR4, 4 khe DIMM, tối đa 128GB, Dual Channel, 2133-5333MHz (OC)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Khe mở rộng / M.2",
+      "value": "1x PCIe 4.0 x16 (CPU) + 2x PCIe 4.0 x16 (chipset, x4/x1); 2x M.2 PCIe 4.0 x4; 4x SATA 6Gb/s",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Kết nối mạng",
+      "value": "Wi-Fi 6, Bluetooth 5.2, LAN Realtek 2.5G",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Form factor",
+      "value": "Micro-ATX (9.6\" x 9.6\")",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "RAM",
+      "name": "Model",
+      "value": "Corsair Vengeance LPX CMK16GX4M1E3200C16",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "RAM",
+      "name": "Dung lượng / Loại",
+      "value": "16GB (1x16GB), DDR4 UDIMM",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "RAM",
+      "name": "Bus / Độ trễ / Điện áp",
+      "value": "3200MHz, CL16, 1.35V, chuẩn Intel XMP 2.0",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "GPU",
+      "name": "Model",
+      "value": "ASUS Prime Radeon RX 9070 XT OC Edition (PRIME-RX9070XT-O16G)",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "GPU",
+      "name": "Nhân xử lý / Stream Processors",
+      "value": "AMD Radeon RX 9070 XT, 4096 Stream Processors",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "GPU",
+      "name": "Xung nhịp",
+      "value": "Base 1660MHz, Boost OC tới 3030MHz (default 3010MHz)",
+      "source": "https://gearvn.com/products/card-man-hinh-asus-prime-radeon-rx-9070-xt-oc-edition-16gb"
+    },
+    {
+      "group": "GPU",
+      "name": "VRAM",
+      "value": "16GB GDDR6, bus 256-bit, 20Gbps",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "GPU",
+      "name": "Cổng xuất hình",
+      "value": "1x HDMI 2.1b, 3x DisplayPort 2.1a, hỗ trợ tối đa 4 màn hình",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "GPU",
+      "name": "Nguồn phụ / Công suất / PSU khuyến nghị",
+      "value": "3x 8-pin, TDP 304W, khuyến nghị PSU 750W",
+      "source": "https://gearvn.com/products/card-man-hinh-asus-prime-radeon-rx-9070-xt-oc-edition-16gb"
+    },
+    {
+      "group": "GPU",
+      "name": "Kích thước",
+      "value": "312 x 130 x 50mm, độ dày 2.5 slot",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "SSD",
+      "name": "Model",
+      "value": "Samsung 990 PRO 1TB (MZ-V9P1T0BW)",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw"
+    },
+    {
+      "group": "SSD",
+      "name": "Giao tiếp / Form factor",
+      "value": "PCIe Gen4 x4, NVMe, M.2 2280",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw"
+    },
+    {
+      "group": "SSD",
+      "name": "Tốc độ đọc/ghi tuần tự",
+      "value": "Đọc tới 7.450 MB/s, ghi tới 6.900 MB/s (thông số công bố chính hãng lúc ra mắt)",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw"
+    },
+    {
+      "group": "SSD",
+      "name": "NAND / Độ bền (TBW)",
+      "value": "Samsung V-NAND TLC, 600 TBW (bản 1TB)",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-1tb-pcie-gen4-nvme-mz-v9p1t0bw"
+    },
+    {
+      "group": "PSU",
+      "name": "Model",
+      "value": "Corsair RM750e (CP-9020295-NA)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "PSU",
+      "name": "Công suất / Chuẩn / Hiệu suất",
+      "value": "750W, ATX 3.1 (tương thích PCIe 5.1), Cybenetics Gold",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "PSU",
+      "name": "Dây cáp",
+      "value": "Full Modular, kèm 1 cáp 12V-2x6 gốc + 1 dây chuyển 2xPCIe 8-pin + 1 PCIe 8-pin rời (đủ 3 đầu cho GPU)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Case",
+      "name": "Model",
+      "value": "Lian Li LANCOOL 216 RGB White",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case",
+      "name": "Hỗ trợ bo mạch / VGA / Tản CPU",
+      "value": "E-ATX(<280mm)/ATX/Micro-ATX/Mini-ITX; VGA tối đa 392mm; tản CPU khí tối đa 180.5mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case",
+      "name": "Quạt đi kèm",
+      "value": "2x ARGB 160mm (trước) + 1x PWM 140mm (sau)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Model",
+      "value": "Thermalright Peerless Assassin 120 SE",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Thông số",
+      "value": "Tháp đôi, 6 ống đồng, 2 quạt 120mm TL-C12C, cao 155mm, hỗ trợ LGA1700/AM4/AM5",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "OS",
+      "value": "Chưa cài hệ điều hành (Free DOS) - hỗ trợ cài Windows 11 theo yêu cầu",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Chính sách",
+      "value": "Bảo hành theo từng linh kiện chính hãng (CPU/Mainboard/VGA 36 tháng, SSD 60 tháng, PSU 84 tháng, Case/Tản nhiệt 12 tháng)",
+      "source": "https://gearvn.com/products/card-man-hinh-asus-prime-radeon-rx-9070-xt-oc-edition-16gb"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "Gaming 1440p/4K",
+    "cpu": "Intel Core i5-12400F",
+    "gpu": "AMD Radeon RX 9070 XT 16GB",
+    "ram": "16GB DDR4-3200",
+    "storage": "1TB NVMe PCIe Gen4",
+    "psu": "750W 80 Plus Gold"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_93-b.jpg",
+      "alt": "PC Gaming QH Raider G3 - case Lian Li LANCOOL 216 RGB White nhìn chính diện, quạt ARGB sáng đèn"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_136-c.jpg",
+      "alt": "PC Gaming QH Raider G3 - case Lian Li LANCOOL 216 RGB White nhìn góc 3/4, mặt lưới trắng và quạt ARGB"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_20-Edit.jpg",
+      "alt": "PC Gaming QH Raider G3 - nội thất case Lian Li LANCOOL 216 RGB White, khoang lắp đặt màu trắng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Gaming QH Raider G3 - i5-12400F / RX 9070 XT 16GB",
+  "metaDescription": "PC Gaming QH Raider G3: Intel Core i5-12400F, VGA ASUS Prime RX 9070 XT 16GB, RAM 16GB DDR4-3200, SSD Samsung 990 PRO 1TB NVMe Gen4, nguồn Corsair RM750e 750W Gold. Build tối ưu 1440p/4K, bảo hành chính hãng theo từng linh kiện."
+}

@@ -1,0 +1,234 @@
+{
+  "name": "Camera IP TP-Link Tapo C530WS Wifi Quay Quét Ngoài Trời 5MP",
+  "slug": "tplink-tapo-c530ws",
+  "sku": "TPL-C530WS",
+  "brand": "TP-Link",
+  "category": "Camera",
+  "subCategory": "Camera IP",
+  "model": "Tapo C530WS",
+  "officialUrl": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/",
+  "priceVnd": 990000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 860000,
+  "priceSources": [
+    "https://meta.vn/camera-ip-ngoai-troi-360-do-5mp-tp-link-tapo-c530ws-p111302"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng TP-Link 24 tháng tại các trung tâm bảo hành ủy quyền của Tapo tại Việt Nam.",
+  "weightKg": 0.4,
+  "stockQuantity": 22,
+  "shortDescription": "Camera Tapo C530WS xoay quét 360 độ, độ phân giải 3K 5MP, có màu ban đêm và phát hiện AI người/thú cưng/phương tiện, chuẩn chống nước IP66 cho lắp đặt ngoài trời.",
+  "descriptionHtml": "<h3>Camera an ninh xoay quét toàn cảnh cho không gian ngoài trời</h3><p>Tapo C530WS là camera IP dạng Pan/Tilt của TP-Link, xoay ngang tới 360 độ (góc cơ học 340°) và nghiêng dọc 135,5 độ, giúp một camera bao quát gần trọn khu vực sân vườn, cổng hay ban công thay vì lắp nhiều camera cố định. Cảm biến 1/2.7 inch cho độ phân giải 3K 5MP (2880x1620px), ống kính khẩu độ F1.6 mang lại hình ảnh sắc nét cả ngày lẫn đêm.</p><h3>Nhìn rõ ban đêm, báo động chủ động</h3><p>Nhờ Starlight Color Night Vision cùng 2 đèn spotlight tích hợp, camera lên màu ngay cả khi thiếu sáng thay vì chỉ trắng đen; đèn hồng ngoại 850nm hỗ trợ thêm tầm nhìn đêm tới gần 30m. Camera tự nhận diện người, thú cưng, phương tiện, vượt ranh giới rồi báo ngay, có thể kích còi 93dB và đèn sáng để xua đuổi khi phát hiện bất thường.</p><h3>Lưu trữ linh hoạt, bền bỉ ngoài trời</h3><p>Máy lưu video vào thẻ nhớ microSD tối đa 512GB ngay trên thân, kèm tùy chọn cloud Tapo Care khi cần xem lại từ xa dài ngày. Kết nối Wi-Fi 2.4GHz hoặc Ethernet, hỗ trợ RTSP/ONVIF để ghép đầu ghi. Vỏ đạt chuẩn IP66, hoạt động ổn định từ -30°C đến 60°C, phù hợp lắp ngoài trời quanh năm.</p><ul><li>Xoay quét 360 độ ngang, 135,5 độ dọc, phủ rộng bằng một camera</li><li>Độ phân giải 3K 5MP, ống kính F1.6 cho hình ảnh chi tiết</li><li>Nhìn đêm có màu Starlight kèm đèn spotlight và hồng ngoại 30m</li><li>AI nhận diện người, thú cưng, phương tiện, cảnh báo vượt ranh giới</li><li>Lưu thẻ nhớ microSD tới 512GB hoặc cloud Tapo Care</li><li>Chuẩn chống nước IP66, kết nối Wi-Fi/Ethernet, hỗ trợ RTSP/ONVIF</li></ul>",
+  "highlights": [
+    "Xoay quét 360 độ ngang (340° cơ học) và 135,5 độ dọc, một camera bao quát rộng",
+    "Độ phân giải 3K 5MP, ống kính F1.6 sắc nét cả ngày lẫn đêm",
+    "Nhìn đêm có màu Starlight Color Night Vision kèm 2 đèn spotlight tích hợp",
+    "AI phát hiện người, thú cưng, phương tiện và cảnh báo vượt ranh giới",
+    "Lưu trữ thẻ nhớ microSD tối đa 512GB, tùy chọn thêm cloud Tapo Care",
+    "Chuẩn chống nước IP66, hoạt động -30°C~60°C, phù hợp lắp ngoài trời"
+  ],
+  "specs": [
+    {
+      "group": "Camera",
+      "name": "Cảm biến hình ảnh",
+      "value": "1/2.7\" Progressive Scan CMOS Starlight Sensor",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Camera",
+      "name": "Ống kính",
+      "value": "Tiêu cự 4.0mm, khẩu độ F1.6",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Camera",
+      "name": "Góc nhìn (FOV)",
+      "value": "105.3° chéo, 88.0° ngang, 46° dọc",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Camera",
+      "name": "Hồng ngoại ban đêm",
+      "value": "LED hồng ngoại 850nm, xa tới 29.9m (98ft); kèm Starlight Color Night Vision",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Camera",
+      "name": "Đèn chiếu sáng",
+      "value": "2x đèn spotlight tích hợp",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Camera",
+      "name": "Góc xoay Pan/Tilt",
+      "value": "Pan cơ học 340° (phủ 360°); Tilt cơ học 90° (phủ 135.5°)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Độ phân giải tối đa",
+      "value": "3K 5MP (2880 × 1620 px)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Khung hình",
+      "value": "15/20/25/30 fps (mặc định 15fps)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Zoom kỹ thuật số",
+      "value": "12x",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Chuẩn nén video",
+      "value": "H.264",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Xử lý ảnh",
+      "value": "3DNR, WDR",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Âm thanh",
+      "value": "Mic & loa tích hợp, đàm thoại 2 chiều khử tiếng ồn",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Còi báo động",
+      "value": "93 dB (đo ở khoảng cách 10cm)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Thẻ nhớ MicroSD",
+      "value": "Khe cắm trên camera, hỗ trợ tối đa 512GB",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Lưu trữ đám mây",
+      "value": "Tapo Care Cloud Storage (yêu cầu gói trả phí)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Phát hiện thông minh",
+      "name": "Nhận diện AI",
+      "value": "Người, thú cưng, phương tiện, vượt ranh giới, chống phá hoại",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Phát hiện thông minh",
+      "name": "Vùng phát hiện tùy chỉnh",
+      "value": "Có (Activity Zones)",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Kết nối mạng",
+      "name": "Wi-Fi",
+      "value": "IEEE 802.11b/g/n/ax, băng tần 2.4GHz",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Kết nối mạng",
+      "name": "Bluetooth",
+      "value": "Có, chỉ dùng khi cài đặt ban đầu",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Kết nối mạng",
+      "name": "Cổng Ethernet",
+      "value": "1x RJ45 10/100Mbps",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Kết nối mạng",
+      "name": "RTSP / ONVIF",
+      "value": "Hỗ trợ cả hai",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Mã hóa",
+      "value": "AES 128-bit với SSL/TLS, WPA/WPA2-PSK",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Adapter nguồn vào",
+      "value": "100-240V, 50/60Hz",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Nguồn ra",
+      "value": "9V DC, 0.85A",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Chuẩn chống nước",
+      "value": "IP66",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Nhiệt độ hoạt động",
+      "value": "-30°C ~ 60°C",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Kích thước",
+      "value": "123.8 × 123 × 90 mm",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Tích hợp trợ lý ảo",
+      "value": "Google Assistant, Amazon Alexa",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Chứng nhận",
+      "value": "CE, FCC, RoHS, RCM",
+      "source": "https://www.tapo.com/vn/product/smart-camera/tapo-c530ws/"
+    }
+  ],
+  "filterAttributes": {
+    "resolution": "5MP (3K)",
+    "connectivity": "Wi-Fi / Ethernet",
+    "ptz": "Có (Pan 360° / Tilt 135.5°)",
+    "storage": "MicroSD tối đa 512GB",
+    "placement": "Ngoài trời",
+    "nightVision": "Có màu (Starlight)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static.tp-link.com/upload/image-line/Tapo_C530WS_EU_2.0_overview_01_large_20241031071947k.jpg",
+      "alt": "Camera Tapo C530WS nhìn từ góc chéo, thân trắng đầu đen kèm giá treo"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.tp-link.com/upload/image-line/Tapo_C530WS_EU_2.0_overview_02_large_20241031071957a.jpg",
+      "alt": "Camera Tapo C530WS nhìn từ góc trái, lộ giá treo tường"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://static.tp-link.com/upload/image-line/Tapo_C530WS_EU_2.0_overview_03_large_20241031072009q.jpg",
+      "alt": "Camera Tapo C530WS nhìn thẳng mặt trước, hai ăng-ten wifi hai bên"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Camera IP TP-Link Tapo C530WS Wifi Xoay 360° Ngoài Trời 5MP | Quang Huong Computer",
+  "metaDescription": "Mua camera Tapo C530WS chính hãng: xoay quét 360°, 3K 5MP, nhìn đêm có màu Starlight, AI nhận diện người/thú cưng/xe, chống nước IP66, bảo hành 24 tháng."
+}

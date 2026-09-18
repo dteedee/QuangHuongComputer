@@ -1,0 +1,167 @@
+{
+  "name": "Ổ Cứng HDD Seagate BarraCuda 1TB 3.5 inch SATA III 7200RPM (ST1000DM014)",
+  "slug": "hdd-seagate-barracuda-1tb",
+  "sku": "SGT-ST1000DM014",
+  "brand": "Seagate",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "HDD",
+  "model": "Seagate ST1000DM014",
+  "officialUrl": "https://www.seagate.com/as/en/products/hard-drives/barracuda-hard-drive/",
+  "priceVnd": 3090000,
+  "oldPriceVnd": 3290000,
+  "costPriceVnd": 2720000,
+  "priceSources": [
+    "https://gearvn.com/products/hdd-seagate-barracuda-1tb-7200rpm"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Seagate 24 tháng theo tem bảo hành của nhà phân phối tại Việt Nam.",
+  "weightKg": 0.415,
+  "stockQuantity": 18,
+  "shortDescription": "Ổ cứng HDD Seagate BarraCuda 1TB 3.5 inch tốc độ 7200RPM, chuẩn SATA III, lựa chọn tiết kiệm để nâng dung lượng lưu trữ cho PC văn phòng và gia đình.",
+  "descriptionHtml": "<h3>Ổ cứng HDD Seagate BarraCuda 1TB - lưu trữ desktop phổ thông</h3><p>Seagate BarraCuda 1TB là dòng ổ cứng cơ 3.5 inch quen thuộc cho máy tính bàn, phù hợp làm ổ lưu trữ phụ hoặc ổ chính cho các cấu hình văn phòng không đòi hỏi tốc độ cao. Ổ quay ở tốc độ 7200RPM cùng bộ nhớ đệm 256MB, kết nối qua chuẩn SATA 6Gb/s (tương thích ngược 3.0/1.5 Gb/s) giúp truy xuất file, cài đặt phần mềm và khởi động ứng dụng mượt hơn so với các ổ 5400RPM cùng dung lượng.</p><h3>Thiết kế tương thích rộng</h3><p>Với kích thước tiêu chuẩn 3.5 inch và trọng lượng khoảng 415g, ổ lắp vừa khay chứa của hầu hết case PC phổ thông trên thị trường, không cần thêm khay chuyển đổi. Đây là lựa chọn hợp lý khi cần bổ sung dung lượng lưu trữ dữ liệu, tài liệu, hình ảnh cho máy bàn tại nhà hoặc văn phòng mà không cần đầu tư ổ SSD dung lượng lớn.</p><ul><li>Dung lượng 1TB, đủ dùng cho nhu cầu lưu trữ phổ thông hàng ngày</li><li>Tốc độ quay 7200RPM, cache 256MB tối ưu tốc độ đọc/ghi</li><li>Chuẩn giao tiếp SATA 6Gb/s, tương thích mainboard desktop hiện hành</li><li>Kích thước 3.5 inch tiêu chuẩn, dễ lắp đặt</li><li>Bảo hành chính hãng Seagate 24 tháng</li></ul>",
+  "highlights": [
+    "Dung lượng 1TB đáp ứng nhu cầu lưu trữ dữ liệu, tài liệu, phim ảnh hàng ngày",
+    "Tốc độ quay 7200RPM, nhanh hơn các ổ 5400RPM cùng phân khúc",
+    "Bộ nhớ đệm 256MB hỗ trợ tối ưu luồng đọc/ghi",
+    "Chuẩn giao tiếp SATA 6Gb/s tương thích hầu hết mainboard desktop hiện nay",
+    "Thiết kế 3.5 inch tiêu chuẩn, lắp vừa khay ổ cứng đa số case PC",
+    "Bảo hành chính hãng Seagate 24 tháng"
+  ],
+  "specs": [
+    {
+      "group": "Thông số chính",
+      "name": "Dung lượng",
+      "value": "1 TB (1,000 GB)",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Thông số chính",
+      "name": "Mã sản phẩm (Model)",
+      "value": "ST1000DM014",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Thông số chính",
+      "name": "Chuẩn kết nối",
+      "value": "SATA 6 Gb/s (hỗ trợ 6.0/3.0/1.5 Gb/s)",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Thông số chính",
+      "name": "Kích thước ổ đĩa",
+      "value": "3.5 inch",
+      "source": "https://www.seagate.com/as/en/products/hard-drives/barracuda-hard-drive/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ quay",
+      "value": "7200 RPM",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Bộ nhớ đệm (Cache)",
+      "value": "256 MB",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ truyền dữ liệu tối đa (đọc tuần tự)",
+      "value": "220 MB/s",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Công nghệ ghi dữ liệu",
+      "value": "SMR (Shingled Magnetic Recording)",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Byte mỗi sector",
+      "value": "512e",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Độ tin cậy",
+      "name": "Chu kỳ Load/Unload",
+      "value": "600,000 chu kỳ",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Độ tin cậy",
+      "name": "Tỷ lệ lỗi đọc không phục hồi (tối đa)",
+      "value": "1 lỗi / 10^14 bit đọc",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Độ tin cậy",
+      "name": "Giới hạn khối lượng ghi/đọc (Workload Rate)",
+      "value": "55 TB/năm",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Độ tin cậy",
+      "name": "Số giờ hoạt động khuyến nghị",
+      "value": "2,400 giờ/năm",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất hoạt động (trung bình)",
+      "value": "5.1 W",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất chế độ chờ/ngủ",
+      "value": "0.3 W / 0.3 W",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Kích thước (Cao x Rộng x Sâu)",
+      "value": "20.2 x 101.85 x 146.99 mm",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Trọng lượng",
+      "value": "415 g",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0°C – 60°C",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Thời gian bảo hành hãng (quốc tế)",
+      "value": "2 năm",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    }
+  ],
+  "filterAttributes": {
+    "capacity": "1TB",
+    "interface": "SATA III",
+    "formFactor": "3.5 inch",
+    "rpm": "7200"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf",
+      "alt": "Ổ cứng HDD Seagate BarraCuda mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.seagate.com/content/dam/seagate/migrated-assets/www-content/products/hard-drives/barracuda-hard-drive/_shared/images/optimized-read-write-data-flow.jpg",
+      "alt": "Ổ cứng HDD Seagate BarraCuda - minh họa cấu tạo nhiều đĩa từ bên trong"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Ổ Cứng HDD Seagate BarraCuda 1TB 7200RPM SATA III | Quang Huong Computer",
+  "metaDescription": "Mua ổ cứng HDD Seagate BarraCuda 1TB 3.5 inch, 7200RPM, SATA III, cache 256MB, bảo hành chính hãng 24 tháng, giá tốt tại Quang Huong Computer."
+}

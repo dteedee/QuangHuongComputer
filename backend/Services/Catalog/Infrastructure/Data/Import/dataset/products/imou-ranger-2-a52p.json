@@ -1,0 +1,192 @@
+{
+  "name": "Camera IP Wifi Imou Ranger 2 3MP IPC-A32EP-L Xoay Quét Trong Nhà",
+  "slug": "imou-ranger-2-a52p",
+  "sku": "IMOU-A32EPL",
+  "brand": "Imou",
+  "category": "Camera",
+  "subCategory": "Camera IP",
+  "model": "IPC-A32EP-L",
+  "officialUrl": "https://www.imou.com/vn/product/detail/ranger2",
+  "priceVnd": 450000,
+  "oldPriceVnd": 925000,
+  "costPriceVnd": 400000,
+  "priceSources": [
+    "https://imou.vn/?s=A32EP"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng qua nhà phân phối Imou Việt Nam, hỗ trợ đổi mới trong 30 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.21,
+  "stockQuantity": 22,
+  "shortDescription": "Camera Wifi xoay quét Imou Ranger 2 độ phân giải 3MP, xoay ngang 355 độ và quét dọc -5~80 độ, tích hợp phát hiện người bằng AI và đàm thoại 2 chiều, phù hợp giám sát trong nhà.",
+  "descriptionHtml": "<h3>Quan sát trọn không gian trong nhà</h3><p>Imou Ranger 2 dùng cảm biến CMOS 1/2.8 inch cho ảnh 3MP (2304x1296), kết hợp cơ chế xoay ngang 355 độ và quét dọc từ -5 đến 80 độ giúp một camera bao quát gần như toàn bộ căn phòng thay vì lắp nhiều camera cố định. Ống kính tiêu cự 3.6mm cho góc nhìn ngang 93 độ, hỗ trợ thêm zoom số 8x khi cần xem rõ chi tiết ở xa.</p><h3>Cảnh báo thông minh, ít làm phiền</h3><p>Camera tích hợp AI nhận diện người, khoanh vùng phát hiện chuyển động theo khu vực tùy chỉnh và cảnh báo khi có âm thanh bất thường, hạn chế thông báo giả từ vật nuôi hay bóng cây. Tầm nhìn hồng ngoại ban đêm đạt khoảng cách 10m, tự động bật khi trời tối.</p><h3>Kết nối và lưu trữ linh hoạt</h3><p>Máy dùng Wi-Fi chuẩn 802.11b/g/n, điều khiển qua ứng dụng Imou Life trên iOS và Android, hỗ trợ chuẩn ONVIF để kết nối đầu ghi NVR ngoài lưu thẻ nhớ. Khe Micro SD hỗ trợ tới 256GB. Loa và micro tích hợp cho phép đàm thoại 2 chiều trực tiếp qua app, tiện theo dõi người thân hoặc thú cưng ở nhà.</p><ul><li>Cảm biến 3MP, ống kính 3.6mm, góc nhìn 93° ngang</li><li>Xoay ngang 355°, quét dọc -5~80°, zoom số 8x</li><li>AI phát hiện người, khoanh vùng cảnh báo tùy chỉnh</li><li>Hồng ngoại ban đêm 10m, đàm thoại 2 chiều</li><li>Wi-Fi 802.11b/g/n, ONVIF, thẻ nhớ tới 256GB</li></ul>",
+  "highlights": [
+    "Cảm biến 3MP, xoay ngang 355° và quét dọc -5~80° bao quát cả phòng",
+    "AI phát hiện người, khoanh vùng cảnh báo chuyển động tùy chỉnh",
+    "Hồng ngoại ban đêm 10m, tự động bật khi thiếu sáng",
+    "Đàm thoại 2 chiều qua loa và mic tích hợp",
+    "Lưu trữ linh hoạt: thẻ nhớ tới 256GB, hỗ trợ NVR qua ONVIF",
+    "Điều khiển qua app Imou Life trên iOS/Android"
+  ],
+  "specs": [
+    {
+      "group": "Camera",
+      "name": "Cảm biến hình ảnh",
+      "value": "CMOS 1/2.8 inch, 3 Megapixel Progressive",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Camera",
+      "name": "Độ phân giải",
+      "value": "3MP (2304 x 1296)",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Camera",
+      "name": "Ống kính",
+      "value": "Tiêu cự cố định 3.6mm",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Camera",
+      "name": "Góc nhìn",
+      "value": "93°(ngang), 48°(dọc), 115°(chéo)",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Camera",
+      "name": "Xoay quét",
+      "value": "Ngang 355°, dọc -5° đến 80°",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Camera",
+      "name": "Hồng ngoại ban đêm",
+      "value": "Khoảng cách tối đa 10m",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Wi-Fi",
+      "value": "IEEE 802.11b/g/n, tối đa 50m ngoài trời thoáng",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Ứng dụng điều khiển",
+      "value": "Imou Life (iOS, Android)",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Giao thức NVR",
+      "value": "Hỗ trợ ONVIF",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Chuẩn nén video",
+      "value": "H.265/H.264",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Khung hình",
+      "value": "Tối đa 25/30fps",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Zoom số",
+      "value": "8x",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Video & Âm thanh",
+      "name": "Đàm thoại 2 chiều",
+      "value": "Có, mic và loa tích hợp",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Thẻ nhớ",
+      "value": "Khe Micro SD, tối đa 256GB",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Cảnh báo thông minh",
+      "name": "Phát hiện chuyển động",
+      "value": "Có, khoanh vùng cấu hình tùy chỉnh",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Cảnh báo thông minh",
+      "name": "Phát hiện người (AI)",
+      "value": "Có",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Cảnh báo thông minh",
+      "name": "Cảnh báo âm thanh bất thường",
+      "value": "Có",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Nguồn điện",
+      "value": "DC 5V/1A",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Công suất tiêu thụ",
+      "value": "Dưới 3.5W",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Nhiệt độ hoạt động",
+      "value": "-10°C đến +45°C, độ ẩm dưới 95%RH",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Kích thước",
+      "value": "106.1 x 77.4 x 77.4 mm",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Trọng lượng",
+      "value": "210g",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Chứng nhận",
+      "value": "CE, FCC",
+      "source": "https://www.imou.com/vn/product/specs/ranger2"
+    }
+  ],
+  "filterAttributes": {
+    "resolution": "3MP",
+    "connectivity": "wifi",
+    "cameraType": "indoor-pan-tilt",
+    "nightVision": "10m",
+    "storageSupport": "microsd-256gb-nvr"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static-website.imou.com/f13d1ae6-51c6-4a7f-9f91-77de17e2963f.png",
+      "alt": "Camera Imou Ranger 2 3MP IPC-A32EP-L nhìn thẳng mặt trước, nền sáng đơn sắc"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static-website.imou.com/5ea45542-a2fa-4c66-afdb-7cba6126041f.png",
+      "alt": "Camera Imou Ranger 2 đặt trên bàn trong phòng khách"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Camera IP Wifi Imou Ranger 2 3MP IPC-A32EP-L | Xoay Quét Trong Nhà",
+  "metaDescription": "Camera Wifi Imou Ranger 2 3MP, xoay 355°/quét -5~80°, AI phát hiện người, hồng ngoại 10m, đàm thoại 2 chiều. Giá tốt, bảo hành chính hãng 24 tháng."
+}

@@ -1,0 +1,155 @@
+{
+  "name": "Chuột không dây Rapoo M100G Silent",
+  "slug": "rapoo-m100g-silent",
+  "sku": "RAPOO-M100GSILENT",
+  "brand": "Rapoo",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Chuột",
+  "model": "M100G Silent",
+  "officialUrl": "https://www.rapoo.com/en/product/M100G-Silent",
+  "priceVnd": 250000,
+  "oldPriceVnd": 290000,
+  "costPriceVnd": 220000,
+  "priceSources": [
+    "https://fptshop.com.vn/phu-kien/chuot-khong-day-rapoo-m100g-silent"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Rapoo 24 tháng qua hệ thống bảo hành ủy quyền tại Việt Nam, 1 đổi 1 trong thời gian đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.053,
+  "stockQuantity": 28,
+  "shortDescription": "Chuột không dây Rapoo M100G Silent nhỏ gọn, hỗ trợ kết nối kép Bluetooth và 2.4GHz, thiết kế đối xứng dùng tốt cho cả tay thuận trái và phải. Cú click êm giảm tiếng ồn, phù hợp làm việc văn phòng hoặc nơi cần yên tĩnh.",
+  "descriptionHtml": "<h3>Chuột không dây đa chế độ cho công việc hàng ngày</h3><p>Rapoo M100G Silent là mẫu chuột không dây cỡ nhỏ hướng đến người dùng văn phòng cần một thiết bị gọn nhẹ, dễ mang theo và hoạt động ổn định trong thời gian dài. Thân chuột bo tròn đối xứng, phù hợp cả người thuận tay trái lẫn tay phải, lớp vỏ nhám ở phần đáy giúp cầm chắc tay hơn khi di chuyển.</p><h3>Kết nối kép, chuyển đổi nhanh</h3><p>Sản phẩm hỗ trợ ba phương thức kết nối gồm Bluetooth 4.0, Bluetooth 5.0 và 2.4GHz qua đầu thu nano đi kèm, cho phép ghép nối cùng lúc 2 thiết bị và chuyển đổi qua lại. Nhờ vậy một chuột có thể dùng luân phiên giữa laptop và máy tính bàn mà không cần cắm rút receiver liên tục.</p><h3>Cảm biến ổn định, thao tác êm ái</h3><p>Cảm biến quang PAW3220 cho phép tùy chỉnh 5 mức DPI từ 800 đến 2400, đáp ứng tốt các thao tác văn phòng thông thường như soạn thảo, duyệt web hay chỉnh sửa bảng tính. Hệ nút bấm silent click được tinh chỉnh để giảm tiếng lách cách khi click, phù hợp khi làm việc ở không gian chung, thư viện hoặc phòng họp.</p><h3>Thời lượng pin dài</h3><p>Chuột dùng 1 pin AA tiêu chuẩn, hãng công bố thời gian sử dụng liên tục lên đến 12 tháng cho một lần thay pin, hạn chế việc phải thay pin thường xuyên. Trọng lượng máy chỉ khoảng 53g cùng kích thước nhỏ gọn 98.3 x 60.5 x 34.1mm giúp bỏ vừa túi xách hoặc balo khi di chuyển.</p><ul><li>Kết nối Bluetooth 4.0/5.0 và 2.4GHz, ghép đôi 2 thiết bị</li><li>Cảm biến PAW3220, 5 mức DPI 800-2400</li><li>Công tắc silent click giảm tiếng ồn</li><li>Thiết kế đối xứng, nặng 53g</li><li>Dùng 1 pin AA, tối đa 12 tháng</li><li>Tương thích Windows/macOS/Android/iOS/Chrome OS</li></ul>",
+  "highlights": [
+    "Kết nối linh hoạt: Bluetooth 4.0, Bluetooth 5.0 và 2.4GHz qua receiver nano USB, ghép nối tối đa 2 thiết bị",
+    "Công tắc silent click giúp giảm tiếng ồn khi bấm chuột, thích hợp không gian yên tĩnh",
+    "Cảm biến quang PAW3220 cho 5 mức DPI từ 800 đến 2400, tốc độ theo dõi tối đa 30 inch/giây",
+    "Thiết kế đối xứng (ambidextrous) nhỏ gọn 98.3 x 60.5 x 34.1mm, nặng chỉ 53g",
+    "Dùng 1 pin AA, thời lượng sử dụng liên tục lên đến 12 tháng",
+    "Tương thích rộng: Windows, macOS, Android, Chrome OS, iOS"
+  ],
+  "specs": [
+    {
+      "group": "Kết nối",
+      "name": "Chuẩn kết nối",
+      "value": "Bluetooth 4.0, Bluetooth 5.0, 2.4GHz (USB nano receiver)",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Số thiết bị ghép nối",
+      "value": "Tối đa 2 thiết bị, chuyển đổi nhanh",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Cảm biến",
+      "value": "PAW3220 quang học",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Độ phân giải DPI",
+      "value": "800/1000/1200/1600/2400 DPI (5 mức)",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ theo dõi tối đa",
+      "value": "30 inch/giây",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Gia tốc tối đa",
+      "value": "10G",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Số nút bấm",
+      "value": "4 nút, con lăn cuộn 2 chiều",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kiểu dáng",
+      "value": "Đối xứng (ambidextrous), cỡ nhỏ",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Công nghệ click",
+      "value": "Silent click - giảm tiếng ồn khi bấm",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước (D x R x C)",
+      "value": "98.3 x 60.5 x 34.1 mm",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "53 g",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc (theo hãng)",
+      "value": "Xanh dương, Xám đậm, Xám nhạt, Hồng",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Loại pin",
+      "value": "1 pin AA (alkaline)",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Thời lượng pin",
+      "value": "Lên đến 12 tháng",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Hệ điều hành",
+      "value": "Windows, macOS, Android, iOS, Chrome OS",
+      "source": "https://www.rapoo.com/en/product/M100G-Silent"
+    }
+  ],
+  "filterAttributes": {
+    "connectivity": "Bluetooth 4.0/5.0 + 2.4GHz",
+    "dpi": "800-2400",
+    "buttons": "4",
+    "sensor": "PAW3220",
+    "batteryType": "1x AA",
+    "design": "Ambidextrous"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.rapoo.com/en/product/M100G-Silent",
+      "alt": "Chuột không dây Rapoo M100G Silent màu Xanh dương, nhìn từ trên xuống"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.rapoo.com/en/product/M100G-Silent",
+      "alt": "Chuột không dây Rapoo M100G Silent màu Xám đậm, góc nghiêng 3/4"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.rapoo.com/en/product/M100G-Silent",
+      "alt": "Mặt đáy chuột Rapoo M100G Silent - cảm biến quang, công tắc DPI và Bluetooth/2.4GHz, khay pin AA"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://www.rapoo.com/en/product/M100G-Silent",
+      "alt": "Chuột không dây Rapoo M100G Silent màu Xám đậm, nhìn nghiêng cạnh bên"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Chuột không dây Rapoo M100G Silent - Bluetooth & 2.4GHz, Silent Click",
+  "metaDescription": "Rapoo M100G Silent: chuột không dây nhỏ gọn, kết nối Bluetooth 4.0/5.0 và 2.4GHz, DPI 800-2400, click êm, pin AA dùng tới 12 tháng. Giá tốt, chính hãng."
+}

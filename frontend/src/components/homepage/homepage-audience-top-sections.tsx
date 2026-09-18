@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BadgeCheck, FileText, Wrench, Percent, GraduationCap, Package } from 'lucide-react';
+import { BadgeCheck, FileText, Wrench, GraduationCap, Package } from 'lucide-react';
 import { AnimatedSection } from '../motion/animated-section';
 
 // ---------------------------------------------------------------------------
@@ -26,15 +26,11 @@ export const StudentTopSection = () => (
             <p className="text-sm md:text-base mb-5" style={{ color: 'var(--ink-600, #525252)' }}>
                 Trang bị máy tính học tập gọn nhẹ, giá tốt. Xuất trình thẻ HS-SV để nhận thêm ưu đãi tại cửa hàng.
             </p>
+            {/* W0-12 (D04): tile "Trả góp 0%" đã bỏ — chưa có phương thức trả góp thật nào lúc
+                ra mắt (xem decisions/D04); "Combo học tập" trỏ /products (bỏ ?tag= — backend
+                không có khái niệm tag lọc sản phẩm, giữ tag sẽ ngầm hiện TOÀN BỘ sản phẩm dưới
+                nhãn "combo" không có thật). */}
             <div className="flex flex-wrap gap-3">
-                <Link
-                    to="/products?installment=0"
-                    className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-white border text-sm font-medium hover:brightness-95"
-                    style={{ borderColor: 'var(--accent-primary, #D22B2B)', color: 'var(--accent-primary, #D22B2B)' }}
-                >
-                    <Percent size={18} />
-                    Trả góp 0%
-                </Link>
                 <Link
                     to="/products?maxPrice=15000000"
                     className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-white border text-sm font-medium hover:brightness-95"
@@ -44,7 +40,7 @@ export const StudentTopSection = () => (
                     Giá dưới 15 triệu
                 </Link>
                 <Link
-                    to="/products?tag=combo-hoc-tap"
+                    to="/products"
                     className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-white border text-sm font-medium hover:brightness-95"
                     style={{ borderColor: 'var(--accent-primary, #D22B2B)', color: 'var(--accent-primary, #D22B2B)' }}
                 >

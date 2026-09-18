@@ -13,7 +13,7 @@ public static class EmployeeAssetEndpoints
     public static void MapEmployeeAssetEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/employees/{employeeId:guid}/assets")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         group.MapGet("/", async (Guid employeeId, HRDbContext db) =>
             Results.Ok(await db.EmployeeAssets
@@ -49,7 +49,7 @@ public static class EmployeeAssetEndpoints
 
         // POST /api/hr/employees/{eid}/assets/{id}/return
         var single = app.MapGroup("/api/hr/employees/{employeeId:guid}/assets/{id:guid}")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         single.MapPost("/return", async (Guid employeeId, Guid id, ReturnAssetDto dto, HttpContext ctx, HRDbContext db) =>
         {

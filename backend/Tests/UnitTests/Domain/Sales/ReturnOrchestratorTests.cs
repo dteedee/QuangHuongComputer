@@ -201,8 +201,9 @@ public class ReturnOrchestratorTests : IDisposable
         var res = await orch.ProcessAfterInspectionAsync(rr.Id, "emp");
         res.Type.Should().Be(ReturnType.Exchange);
         res.ExchangeOrderId.Should().NotBeNull();
-        // Đơn mới 25M + tax 10% = 27.5M − 20M gốc = 7.5M khách bù
-        res.PriceDifference.Should().Be(27_500_000m - 20_000_000m);
+        // W0-4/D01: giá đã bao gồm VAT → đơn đổi mới = đúng 25M (KHÔNG cộng thêm thuế).
+        // Khách bù 25M − 20M = 5M. TRƯỚC: 27.5M − 20M = 7.5M vì cộng 10% lên giá niêm yết.
+        res.PriceDifference.Should().Be(25_000_000m - 20_000_000m);
     }
 
     [Fact]

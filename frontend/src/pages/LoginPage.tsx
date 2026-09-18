@@ -12,6 +12,7 @@ import { loginSchema, type LoginFormData } from '../lib/validation/schemas';
 import { useRecaptcha } from '../hooks/useRecaptcha';
 import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 import confetti from 'canvas-confetti';
+import { STAFF_ROLES } from '../constants/staff-roles';
 
 export const LoginPage = () => {
     const { login, loginWithGoogle } = useAuth();
@@ -33,8 +34,7 @@ export const LoginPage = () => {
     };
 
     const getRedirectPath = (roles: string[]) => {
-        const staffRoles = ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier', 'Marketing'];
-        return roles.some(role => staffRoles.includes(role)) ? '/backoffice' : '/';
+        return roles.some(role => (STAFF_ROLES as readonly string[]).includes(role)) ? '/backoffice' : '/';
     };
 
     const onSubmit = async (data: LoginFormData) => {

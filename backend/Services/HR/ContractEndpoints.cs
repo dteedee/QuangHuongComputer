@@ -15,7 +15,7 @@ public static class ContractEndpoints
     public static void MapContractEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/contracts")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant"));
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         group.MapGet("", async (HRDbContext db, Guid? employeeId, ContractStatus? status) =>
         {

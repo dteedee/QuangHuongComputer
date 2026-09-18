@@ -1,0 +1,167 @@
+{
+  "name": "CPU Intel Core i5-12400F Box Chính Hãng",
+  "slug": "cpu-intel-core-i5-12400f",
+  "sku": "INT-BX8071512400F",
+  "brand": "Intel",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "CPU",
+  "model": "Intel BX8071512400F",
+  "officialUrl": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html",
+  "priceVnd": 4590000,
+  "oldPriceVnd": 5490000,
+  "costPriceVnd": 4040000,
+  "priceSources": [
+    "https://gearvn.com/products/intel-core-i5-12400f"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Intel 36 tháng, 1 đổi 1 trong 12 tháng đầu tại hệ thống bảo hành ủy quyền Việt Nam.",
+  "weightKg": 0.35,
+  "stockQuantity": 14,
+  "shortDescription": "CPU Intel Core i5-12400F thuộc thế hệ Alder Lake, 6 nhân 12 luồng, xung Turbo tối đa 4.4GHz, phù hợp dàn PC gaming và làm việc tầm trung dùng kèm card đồ họa rời.",
+  "descriptionHtml": "<h3>CPU Intel Core i5-12400F - lựa chọn phổ thông cho PC gaming, văn phòng</h3><p>Intel Core i5-12400F thuộc thế hệ Alder Lake (Gen 12), sở hữu 6 nhân 12 luồng cùng xung nhịp cơ bản 2.5GHz, có thể tăng lên 4.4GHz ở chế độ Turbo Boost. Với 18MB bộ nhớ đệm Intel Smart Cache, CPU xử lý mượt các tựa game hiện đại và tác vụ đa nhiệm văn phòng, dựng video nhẹ mà không cần đầu tư CPU cao cấp.</p><h3>Tiết kiệm chi phí nhờ không tích hợp GPU</h3><p>Là phiên bản \"F\" nên i5-12400F không có nhân đồ họa tích hợp, phù hợp người dùng đã có sẵn card đồ họa rời, giúp tối ưu ngân sách khi build PC gaming tầm trung. Công suất cơ bản chỉ 65W (tối đa 117W ở chế độ Turbo) giúp hệ thống vận hành mát, không đòi hỏi tản nhiệt quá lớn.</p><h3>Tương thích rộng, dễ nâng cấp</h3><p>CPU dùng Socket FCLGA1700, tương thích các dòng mainboard LGA1700 hiện có trên thị trường, hỗ trợ cả RAM DDR4 lẫn DDR5 tối đa 128GB ở chế độ 2 kênh, giúp người dùng linh hoạt lựa chọn cấu hình theo ngân sách. Chuẩn PCIe 5.0/4.0 với tối đa 20 lane đảm bảo băng thông cho SSD NVMe tốc độ cao và card đồ họa đời mới.</p><ul><li>6 nhân 12 luồng, Turbo tối đa 4.4GHz</li><li>18MB Smart Cache, TDP cơ bản 65W</li><li>Hỗ trợ RAM DDR4/DDR5, Socket LGA1700</li><li>PCIe 5.0/4.0, tối đa 20 lane</li><li>Không tích hợp GPU - tối ưu cho cấu hình dùng VGA rời</li></ul>",
+  "highlights": [
+    "6 nhân 12 luồng, xung Turbo tối đa 4.4GHz - xử lý mượt game và ứng dụng đa nhiệm",
+    "18MB Intel Smart Cache giúp truy xuất dữ liệu nhanh, giảm độ trễ tác vụ nặng",
+    "Hỗ trợ cả RAM DDR4 và DDR5, dễ phối ráp với nhiều dòng mainboard Socket LGA1700",
+    "Không tích hợp GPU (chip F) - tối ưu chi phí khi dùng kèm card đồ họa rời",
+    "Công suất cơ bản chỉ 65W, tản nhiệt hiệu quả, phù hợp case nhỏ gọn",
+    "Bảo hành chính hãng Intel 36 tháng tại Việt Nam"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Dòng sản phẩm",
+      "value": "12th Generation Intel Core i5 Processors (Alder Lake)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Số nhân",
+      "value": "6",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Số luồng",
+      "value": "12",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp cơ bản",
+      "value": "2.50 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp Turbo tối đa",
+      "value": "4.40 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Bộ nhớ đệm",
+      "value": "18 MB Intel Smart Cache",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Công nghệ sản xuất",
+      "value": "Intel 7",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Công suất cơ bản (Processor Base Power)",
+      "value": "65 W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Công suất Turbo tối đa",
+      "value": "117 W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Đồ họa tích hợp",
+      "value": "Không có (dòng F, cần dùng card đồ họa rời)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Socket & tương thích",
+      "name": "Socket",
+      "value": "FCLGA1700",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Socket & tương thích",
+      "name": "Nhiệt độ hoạt động tối đa (Tjunction)",
+      "value": "100°C",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Socket & tương thích",
+      "name": "Chuẩn tản nhiệt đi kèm (Thermal Solution Spec)",
+      "value": "PCG 2020C",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Loại RAM hỗ trợ",
+      "value": "DDR5 lên đến 4800 MT/s hoặc DDR4 lên đến 3200 MT/s",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Dung lượng RAM tối đa",
+      "value": "128 GB",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Số kênh bộ nhớ",
+      "value": "2 kênh (Dual-channel)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Băng thông bộ nhớ tối đa",
+      "value": "76.8 GB/s",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Kết nối mở rộng",
+      "name": "Phiên bản PCI Express",
+      "value": "PCIe 5.0 và 4.0",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Kết nối mở rộng",
+      "name": "Số lane PCIe tối đa",
+      "value": "20 lane (cấu hình tối đa 1x16+4 hoặc 2x8+4)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Thông tin phát hành",
+      "name": "Trạng thái",
+      "value": "Đã phát hành (Launched)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Thông tin phát hành",
+      "name": "Ngày ra mắt",
+      "value": "Quý 1/2022 (Q1'22)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    }
+  ],
+  "filterAttributes": {
+    "socket": "LGA1700",
+    "cores": "6 Nhân / 12 Luồng",
+    "series": "Intel Core i5 Gen 12 (Alder Lake)"
+  },
+  "images": [],
+  "imageStatus": "failed",
+  "metaTitle": "CPU Intel Core i5-12400F Box Chính Hãng - Quang Huong Computer",
+  "metaDescription": "CPU Intel Core i5-12400F 6 nhân 12 luồng, Turbo 4.4GHz, Socket LGA1700, hỗ trợ RAM DDR4/DDR5. Bảo hành chính hãng 36 tháng, giá tốt tại Quang Huong Computer."
+}

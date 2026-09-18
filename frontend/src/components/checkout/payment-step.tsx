@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { CreditCard, Truck, QrCode, Smartphone, Wallet, Calendar, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { CreditCard, Truck, QrCode, Smartphone, ArrowLeft, ShieldCheck, Loader2, AlertTriangle } from 'lucide-react';
 import type { PaymentMethod, PaymentFormState, VnpayBankKind } from './checkout-types';
-import InstallmentForm from './installment-form';
+import { usePaymentMethods } from './use-payment-methods';
 
 interface PaymentStepProps {
     value: PaymentFormState;
@@ -20,14 +21,18 @@ interface Method {
     feeNote?: string;
 }
 
-const METHODS: Method[] = [
-    { id: 'cod', title: 'Thanh toán khi nhận hàng (COD)', desc: 'Tiền mặt khi shipper giao tới', icon: Truck, feeNote: 'Miễn phí' },
-    { id: 'bank_transfer', title: 'QR chuyển khoản (SePay)', desc: 'Tự động khớp trong 30 giây', icon: QrCode, feeNote: 'Không phí' },
-    { id: 'vnpay', title: 'VNPay', desc: 'Thẻ ATM/Visa/Master/JCB — chọn loại bên dưới', icon: CreditCard },
-    { id: 'momo', title: 'Ví MoMo', desc: 'Thanh toán qua app MoMo', icon: Smartphone },
-    { id: 'zalopay', title: 'ZaloPay', desc: 'Thanh toán qua app ZaloPay', icon: Wallet },
-    { id: 'installment', title: 'Trả góp', desc: 'Kỳ hạn 6/9/12 tháng, hồ sơ đơn giản', icon: Calendar },
-];
+// D04 (binding, xem decisions/D04): KHÔNG hardcode danh sách hiện cho khách — chỉ hiện phương
+// thức nằm trong GET /payments/methods (usePaymentMethods, chỉ COD khi lỗi/404). Bảng này chỉ
+// là metadata hiển thị (icon/tên/mô tả) cho các mã đã BIẾT, không tự ý bật phương thức nào.
+// ZaloPay + trả góp bị loại khỏi bảng theo D04 (ZaloPay xoá khỏi luồng thanh toán; trả góp =
+// lead-mode D10, ẩn hẳn ở W0). Không nhắc "SePay" với khách (D04 mục 2, tầng 1: "khách không
+// thấy chữ SePay") — chỉ mô tả bằng tên phương thức chuyển khoản.
+const METHOD_CATALOG: Record<string, Method> = {
+    cod: { id: 'cod', title: 'Thanh toán khi nhận hàng (COD)', desc: 'Tiền mặt khi shipper giao tới', icon: Truck, feeNote: 'Miễn phí' },
+    bank_transfer: { id: 'bank_transfer', title: 'Chuyển khoản ngân hàng (QR VietQR)', desc: 'Quét mã, tự động khớp sau khi ngân hàng báo có', icon: QrCode, feeNote: 'Không phí' },
+    vnpay: { id: 'vnpay', title: 'VNPay', desc: 'Thẻ ATM/Visa/Master/JCB — chọn loại bên dưới', icon: CreditCard },
+    momo: { id: 'momo', title: 'Ví MoMo', desc: 'Thanh toán qua app MoMo', icon: Smartphone },
+};
 
 const VNPAY_BANKS: Array<{ v: VnpayBankKind; label: string; desc: string }> = [
     { v: 'domestic', label: 'ATM nội địa', desc: 'Napas, thẻ ATM Việt Nam' },
@@ -35,7 +40,21 @@ const VNPAY_BANKS: Array<{ v: VnpayBankKind; label: string; desc: string }> = [
     { v: 'atm', label: 'QR VNPay', desc: 'App ngân hàng quét mã' },
 ];
 
-export function PaymentStep({ value, onChange, onBack, onSubmit, submitting, totalAmount }: PaymentStepProps) {
+export function PaymentStep({ value, onChange, onBack, onSubmit, submitting }: PaymentStepProps) {
+    const availableMethods = usePaymentMethods();
+    const methods = availableMethods.map(id => METHOD_CATALOG[id]).filter((m): m is Method => Boolean(m));
+    const isSelectedAvailable = availableMethods.includes(value.paymentMethod);
+
+    // Danh sách khả dụng đổi (ví dụ: đã chọn VNPay lúc trước, giờ tải lại /methods không còn
+    // VNPay nữa vì backend chưa cấu hình khoá) → tự chuyển về phương thức đầu tiên còn khả dụng
+    // thay vì để khách bấm "Đặt hàng" với một lựa chọn đã biến mất khỏi danh sách.
+    useEffect(() => {
+        if (!isSelectedAvailable && availableMethods.length > 0) {
+            onChange({ paymentMethod: availableMethods[0] });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSelectedAvailable, availableMethods.join(',')]);
+
     return (
         <motion.div key="pay" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
             className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
@@ -50,7 +69,7 @@ export function PaymentStep({ value, onChange, onBack, onSubmit, submitting, tot
             </div>
 
             <div className="space-y-3 mb-6">
-                {METHODS.map(m => {
+                {methods.map(m => {
                     const active = value.paymentMethod === m.id;
                     const Icon = m.icon;
                     return (
@@ -93,15 +112,11 @@ export function PaymentStep({ value, onChange, onBack, onSubmit, submitting, tot
                 </div>
             )}
 
-            {value.paymentMethod === 'installment' && (
-                <InstallmentForm
-                    totalAmount={totalAmount}
-                    providerCode={value.installmentProviderCode}
-                    term={value.installmentTerm}
-                    idFrontFileId={value.installmentIdFrontFileId}
-                    idBackFileId={value.installmentIdBackFileId}
-                    onChange={onChange}
-                />
+            {!isSelectedAvailable && (
+                <div className="mb-6 flex items-start gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    Phương thức đã chọn hiện không khả dụng, vui lòng chọn phương thức khác bên trên.
+                </div>
             )}
 
             <div className="flex gap-3 mt-6">
@@ -109,9 +124,9 @@ export function PaymentStep({ value, onChange, onBack, onSubmit, submitting, tot
                     className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold whitespace-nowrap hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
                     <ArrowLeft className="w-[18px] h-[18px]" /> Quay lại
                 </button>
-                <button type="button" onClick={onSubmit} disabled={submitting}
+                <button type="button" onClick={onSubmit} disabled={submitting || !isSelectedAvailable}
                     className={`flex-[2] py-3 bg-[var(--accent-primary,#dc2626)] hover:brightness-95 text-white rounded-xl text-sm font-semibold whitespace-nowrap inline-flex items-center justify-center gap-1.5 ${
-                        submitting ? 'opacity-70 cursor-not-allowed' : ''
+                        submitting || !isSelectedAvailable ? 'opacity-70 cursor-not-allowed' : ''
                     }`}>
                     {submitting ? <Loader2 className="w-[18px] h-[18px] animate-spin" /> : <><ShieldCheck className="w-[18px] h-[18px]" />Đặt hàng</>}
                 </button>

@@ -1,0 +1,168 @@
+{
+  "name": "Bàn phím cơ AKKO 3068B Black & Pink",
+  "slug": "akko-3068b-black-pink",
+  "sku": "AKKO-3068BBP",
+  "brand": "Akko",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Bàn phím",
+  "model": "3068B",
+  "officialUrl": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/",
+  "priceVnd": 1999000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 1760000,
+  "priceSources": [
+    "https://cellphones.com.vn/ban-phim-co-akko-3068b-black-pink.html",
+    "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng AKKO 12 tháng, 1 đổi 1 trong 15 ngày đầu nếu lỗi phần cứng từ nhà sản xuất.",
+  "weightKg": 0.64,
+  "stockQuantity": 14,
+  "shortDescription": "Bàn phím cơ AKKO 3068B Black & Pink layout 65% hotswap, ba chế độ kết nối Bluetooth/2.4GHz/USB-C, phối màu đen - hồng cá tính cho góc làm việc gaming.",
+  "descriptionHtml": "<h3>Gọn gàng nhưng đủ dùng với layout 65%</h3><p>AKKO 3068B Black & Pink rút gọn còn 68 phím theo chuẩn 65%, tiết kiệm diện tích bàn nhưng vẫn giữ cụm phím mũi tên và một số phím chức năng tiện thao tác. Thân máy kích thước 316 x 107 x 39mm, nặng khoảng 0.64kg, phối hai tông đen - hồng phấn nổi bật trên các phím Esc, Enter và Shift phải.</p><h3>Hotswap, tuỳ biến switch theo ý thích</h3><p>Bo mạch hỗ trợ hotswap chân 5-pin (riêng hai phím sát cổng Type-C là chân 3-pin do giới hạn thiết kế), cho phép đổi switch không cần hàn. Bản tiêu chuẩn dùng switch Akko TTC Princess kiểu linear, độ bền khoảng 50 triệu lần nhấn; ngoài ra AKKO còn có các switch CS Jelly Pink/Purple/Blue/White hoặc TTC Demon để lựa chọn thêm. Lớp foam EVA dày 3.5mm giữa plate và PCB cùng stabilizer bôi trơn sẵn giúp tiếng gõ đầm, ít vang.</p><h3>Ba chế độ kết nối, dùng được nhiều thiết bị</h3><p>Chip Beken Plus tích hợp Bluetooth 5.0 (ghép tối đa 3 thiết bị), Wireless 2.4GHz qua receiver rời và USB Type-C có dây, chuyển đổi nhanh bằng tổ hợp phím. Pin 1800mAh dùng được nhiều ngày giữa các lần sạc. Keycap PBT Double-Shot profile ASA bền màu, đi kèm 20 keycap novelty và đèn nền RGB nhiều hiệu ứng.</p><ul><li>Layout 65%, 68 phím, hotswap 5-pin</li><li>Kết nối Bluetooth 5.0 / Wireless 2.4GHz / USB-C có dây</li><li>Switch Akko TTC Princess (linear), bền ~50 triệu lần nhấn</li><li>Keycap PBT Double-Shot ASA, kèm 20 keycap novelty</li><li>Foam EVA 3.5mm, stabilizer pre-lubed, đèn RGB</li></ul>",
+  "highlights": [
+    "Layout 65% gọn gàng, 68 phím, hỗ trợ hotswap 5-pin để đổi switch không cần hàn",
+    "Ba chế độ kết nối Bluetooth 5.0 (3 thiết bị), Wireless 2.4GHz và USB-C có dây",
+    "Switch Akko TTC Princess linear tiêu chuẩn, độ bền khoảng 50 triệu lần nhấn",
+    "Foam tiêu âm EVA 3.5mm giữa plate và PCB, stabilizer bôi trơn sẵn cho tiếng gõ đầm",
+    "Keycap PBT Double-Shot profile ASA bền màu, tặng kèm 20 keycap novelty",
+    "Phối màu đen - hồng cá tính, pin 1800mAh, đèn nền RGB nhiều chế độ"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Layout / Số phím",
+      "value": "65% - 68 phím",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Kích thước",
+      "value": "316 x 107 x 39 mm",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Trọng lượng",
+      "value": "~0.64 kg",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Chất liệu vỏ",
+      "value": "Nhựa",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Chế độ kết nối",
+      "value": "Bluetooth 5.0 (tối đa 3 thiết bị), Wireless 2.4GHz, USB Type-C có dây tháo rời được",
+      "source": "https://cellphones.com.vn/ban-phim-co-akko-3068b-black-pink.html"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Chip kết nối",
+      "value": "Beken Plus multi-mode chip (BT5.0/2.4GHz/Type-C all-in-one)",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Dung lượng pin",
+      "value": "1800 mAh (chuẩn FCC)",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Switch & Keycap",
+      "name": "Switch tiêu chuẩn (bản VN)",
+      "value": "Akko TTC Princess Switch, linear",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Switch & Keycap",
+      "name": "Độ bền switch",
+      "value": "~50 triệu lần nhấn",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Switch & Keycap",
+      "name": "Tuỳ chọn switch khác (bản global)",
+      "value": "Akko CS Jelly Pink (linear 45gf), CS Jelly Purple, TTC Demon",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Switch & Keycap",
+      "name": "Hotswap",
+      "value": "5-pin (riêng phím 1 và 2 gần cổng Type-C là socket 3-pin do góc bezel)",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Switch & Keycap",
+      "name": "Keycap",
+      "value": "PBT Double-Shot, profile ASA, kèm 20 keycap novelty",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Tiện ích",
+      "name": "Đèn nền",
+      "value": "LED RGB nhiều chế độ, dạng SMT bottom không cấn switch",
+      "source": "https://cellphones.com.vn/ban-phim-co-akko-3068b-black-pink.html"
+    },
+    {
+      "group": "Tiện ích",
+      "name": "Foam tiêu âm",
+      "value": "EVA dày 3.5mm giữa plate và PCB, kèm plate foam và case foam",
+      "source": "https://en.akkogear.com/product/blackpink-3068b-mechanical-keyboard/"
+    },
+    {
+      "group": "Tiện ích",
+      "name": "Stabilizer",
+      "value": "Pre-lubed, tinh chỉnh sẵn từ nhà máy",
+      "source": "https://cellphones.com.vn/ban-phim-co-akko-3068b-black-pink.html"
+    },
+    {
+      "group": "Tiện ích",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "Windows, macOS, Linux (tự đổi phím Ctrl/Win/Alt khi dùng macOS)",
+      "source": "https://gearvn.com/products/ban-phim-co-akko-3068b-black-pink"
+    },
+    {
+      "group": "Phụ kiện",
+      "name": "Phụ kiện kèm theo",
+      "value": "Keypuller, cover chống bụi, cáp USB, USB receiver 2.4GHz, sách hướng dẫn, keycap tặng kèm",
+      "source": "https://cellphones.com.vn/ban-phim-co-akko-3068b-black-pink.html"
+    }
+  ],
+  "filterAttributes": {
+    "layout": "65%",
+    "keyCount": "68",
+    "connectivity": "Bluetooth 5.0 / 2.4GHz / USB-C",
+    "switchType": "Linear",
+    "hotSwap": "5-pin",
+    "keycapMaterial": "PBT Double-Shot"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://en.akkogear.com/wp-content/uploads/2021/10/HF-3068B-ASA.jpg",
+      "alt": "AKKO 3068B Black & Pink nhìn thẳng từ trên xuống trên nền trắng, layout 65% đen hồng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://en.akkogear.com/wp-content/uploads/2021/10/HF-3068B-ASA2.jpg",
+      "alt": "AKKO 3068B Black & Pink góc nghiêng, đèn nền RGB sáng qua khe phím"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://en.akkogear.com/wp-content/uploads/2021/10/HF-3068B-ASA4.jpg",
+      "alt": "AKKO 3068B Black & Pink góc nghiêng bên phải, phím Enter và Shift màu hồng"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://en.akkogear.com/wp-content/uploads/2021/10/HF-3068B-ASA5.jpg",
+      "alt": "AKKO 3068B Black & Pink góc nghiêng trái, logo Akko trên viền phím"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Bàn phím cơ AKKO 3068B Black & Pink - 65% Hotswap Chính Hãng",
+  "metaDescription": "AKKO 3068B Black & Pink: layout 65% 68 phím, hotswap 5-pin, Bluetooth 5.0/2.4GHz/USB-C, switch TTC Princess. Giá tốt, bảo hành chính hãng 12 tháng."
+}

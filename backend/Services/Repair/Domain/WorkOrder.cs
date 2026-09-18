@@ -76,7 +76,9 @@ public class WorkOrder : Entity<Guid>
 
     public void AssignTechnician(Guid technicianId)
     {
-        if (Status != WorkOrderStatus.Requested && Status != WorkOrderStatus.Declined)
+        // W0-11: a manager re-assigning while still Assigned (wrong technician
+        // picked, workload rebalance) used to be rejected outright.
+        if (Status != WorkOrderStatus.Requested && Status != WorkOrderStatus.Declined && Status != WorkOrderStatus.Assigned)
             throw new InvalidOperationException($"Cannot assign technician when status is {Status}");
 
         TechnicianId = technicianId;
@@ -235,16 +237,31 @@ public class WorkOrder : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Appends to the in-memory graph only. W0-11: a tracked WorkOrder loaded
+    /// via FindAsync() has ActivityLogs unloaded; a log added here already has
+    /// its client-generated Guid key set (WorkOrderActivityLog's ctor), so EF's
+    /// graph-fixup on SaveChanges marks it Modified instead of Added and issues
+    /// an UPDATE for a row that was never inserted -> DbUpdateConcurrencyException
+    /// ("expected to affect 1 row(s), but actually affected 0 row(s)"), reproduced
+    /// against :5050 2026-09-18. Every caller MUST also stage the log explicitly
+    /// with `db.WorkOrderActivityLogs.Add(log)` (same fix as ConversationRepository
+    /// .AddMessageAsync, W0-9).
+    /// </summary>
     public void AddActivityLog(WorkOrderActivityLog log)
     {
         ActivityLogs.Add(log);
     }
 
-    public void AddNote(string note, Guid? performedBy = null, string? performedByName = null)
+    /// <summary>Returns the created log so the caller can also stage it
+    /// explicitly on the DbSet (see WorkOrderActivityLog concurrency note on
+    /// AddActivityLog) - callers must not skip that step.</summary>
+    public WorkOrderActivityLog AddNote(string note, Guid? performedBy = null, string? performedByName = null)
     {
         var log = WorkOrderActivityLog.CreateNote(Id, note, performedBy, performedByName);
         ActivityLogs.Add(log);
         UpdatedAt = DateTime.UtcNow;
+        return log;
     }
 
     public void UpdateStatus(WorkOrderStatus newStatus, string? notes = null)

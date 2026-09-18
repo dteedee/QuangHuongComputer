@@ -1,0 +1,188 @@
+{
+  "name": "Microphone HyperX QuadCast 2S RGB",
+  "slug": "hyperx-quadcast-2s",
+  "sku": "MIC-HX-9A273AA",
+  "brand": "HyperX",
+  "category": "Loa, Mic, Webcam, Stream",
+  "subCategory": "Microphone",
+  "model": "QuadCast 2S",
+  "officialUrl": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone",
+  "priceVnd": 5290000,
+  "oldPriceVnd": 5590000,
+  "costPriceVnd": 4660000,
+  "priceSources": [
+    "https://gearvn.com/products/micro-kingston-hyperx-quadcast-2s-rgb"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng HyperX/HP 24 tháng tại các trung tâm bảo hành ủy quyền toàn quốc.",
+  "weightKg": 0.83,
+  "stockQuantity": 14,
+  "shortDescription": "Microphone thu âm USB-C cho streamer/podcaster, hỗ trợ 4 kiểu hướng thu, nút gạt tắt tiếng và dải LED RGB hơn 100 bóng có thể tùy chỉnh riêng từng điểm.",
+  "descriptionHtml": "<h3>Thu âm 32-bit/192kHz, 4 kiểu hướng thu trong một thân máy</h3><p>QuadCast 2S dùng cụm 3 capsule condenser 14mm, cho phép chuyển đổi giữa 4 kiểu hướng thu Cardioid, Omnidirectional, Bi-directional và Stereo ngay trên núm xoay đa năng phía trước, phù hợp từ stream một mình, gọi nhóm đến phỏng vấn 2 người ngồi đối diện. Độ phân giải ghi âm 32-bit/192kHz cùng dải tần 20Hz-20kHz giữ giọng nói rõ, ít nhiễu nền.</p><h3>Thao tác nhanh, không cần mở phần mềm</h3><p>Núm đa năng ở mặt trước dùng để chỉnh gain mic, âm lượng tai nghe và mix monitor chỉ bằng cách xoay/nhấn, quanh núm là dải LED VU báo mức tín hiệu. Cảm biến chạm ở đỉnh mic giúp tắt/mở tiếng tức thì, viền LED chuyển đỏ khi đang mute để người dùng nhận biết từ xa.</p><h3>Hơn 100 LED RGB, giá treo tháo lắp nhanh</h3><p>Thân lưới tản nhiệt bao quanh hơn 100 LED RGB riêng lẻ, tùy biến hàng triệu màu qua phần mềm HyperX NGENUITY để đồng bộ góc stream. Giá chống rung đi kèm dùng chốt lò xo, tháo lắp nhanh và tương thích ren cần mic 3/8 inch lẫn 5/8 inch phổ biến trên thị trường.</p><ul><li>3 capsule condenser 14mm, 4 kiểu hướng thu Cardioid/Omni/Bi-directional/Stereo</li><li>Ghi âm 32-bit/192kHz, dải tần 20Hz-20kHz</li><li>Núm đa năng chỉnh gain, âm lượng tai nghe, mix monitor + LED VU meter</li><li>Cảm biến chạm tắt tiếng, viền LED báo trạng thái mute</li><li>Hơn 100 LED RGB tùy chỉnh qua HyperX NGENUITY</li><li>Giá chống rung tháo nhanh, ren 3/8 và 5/8 inch, cổng USB-C</li></ul>",
+  "highlights": [
+    "3 capsule condenser 14mm, 4 kiểu hướng thu: Cardioid, Omnidirectional, Bi-directional, Stereo",
+    "Ghi âm 32-bit/192kHz, dải tần đáp ứng 20Hz - 20kHz",
+    "Núm đa năng chỉnh gain mic, âm lượng tai nghe và mix monitor ngay trên thân máy",
+    "Cảm biến chạm tắt tiếng (tap-to-mute), viền LED báo trạng thái",
+    "Hơn 100 LED RGB tùy chỉnh từng điểm qua phần mềm HyperX NGENUITY",
+    "Giá chống rung tháo lắp nhanh bằng chốt lò xo, tương thích ren 3/8 và 5/8 inch"
+  ],
+  "specs": [
+    {
+      "group": "Thông số cơ bản",
+      "name": "Model",
+      "value": "HyperX QuadCast 2 S",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Thông số cơ bản",
+      "name": "SKU hãng",
+      "value": "9A273AA",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Thông số cơ bản",
+      "name": "Màu sắc",
+      "value": "Đen (Black)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Capsule",
+      "value": "3 capsule electret condenser 14mm",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Kiểu hướng thu",
+      "value": "Cardioid, Omnidirectional, Bi-directional, Stereo",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Dải tần đáp ứng",
+      "value": "20Hz - 20kHz",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Độ nhạy",
+      "value": "-8 dBFS ±4dB (94 dBSPL tại 1kHz, mức mặc định)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Tạp âm nền (self-noise, RMS)",
+      "value": "< -80dBV (A-weighted)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Tỉ số tín hiệu/nhiễu (SNR)",
+      "value": "≥ 90dB (tại 1kHz/0dBFS, A-weighted)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Micro & thu âm",
+      "name": "Độ phân giải ghi âm",
+      "value": "32-bit / 192kHz",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Điều khiển & đèn báo",
+      "name": "Núm điều khiển",
+      "value": "Núm đa năng: gain mic, âm lượng tai nghe, mix monitor, chọn kiểu hướng thu",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Điều khiển & đèn báo",
+      "name": "Đèn báo",
+      "value": "LED VU meter + đèn báo chế độ điều khiển, trạng thái mute, kiểu hướng thu, mức âm lượng",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Điều khiển & đèn báo",
+      "name": "Cảm biến tắt tiếng",
+      "value": "Tap-to-Mute (chạm để mute/unmute)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Điều khiển & đèn báo",
+      "name": "Đèn RGB",
+      "value": "Hơn 100 LED aRGB tùy chỉnh riêng từng điểm, 16 triệu+ màu, chỉnh qua HyperX NGENUITY",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng kết nối",
+      "value": "USB-C; ngõ tai nghe 3.5mm",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Tương thích",
+      "value": "PC, Mac; phần mềm HyperX NGENUITY",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Thiết kế & giá đỡ",
+      "name": "Giá chống rung",
+      "value": "Shock mount tháo lắp nhanh bằng chốt lò xo, ren tương thích 3/8 inch và 5/8 inch",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Thiết kế & giá đỡ",
+      "name": "Khối lượng",
+      "value": "Mic 0.76 lb; giá chống rung + chân đế 0.31 lb; chân đế 0.59 lb; tổng 1.84 lb (kèm cáp USB)",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Hộp sản phẩm",
+      "name": "Phụ kiện đi kèm",
+      "value": "Cáp USB-C to USB-C dài 3m, đầu chuyển USB-C to USB-A, hướng dẫn nhanh",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Bảo hành chính hãng",
+      "value": "24 tháng",
+      "source": "https://hyperx.com/products/hyperx-quadcast-2-s-usb-microphone"
+    }
+  ],
+  "filterAttributes": {
+    "type": "microphone",
+    "connectivity": "usb_c",
+    "polarPatterns": "cardioid_omni_bidirectional_stereo",
+    "features": "rgb_led,tap_to_mute,gain_knob"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://hyperx.com/cdn/shop/files/hyperx_quadcast_2_s_9a273aa_main_1.jpg?v=1787066289",
+      "alt": "Microphone HyperX QuadCast 2S RGB - nhìn chính diện với giá đỡ"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://hyperx.com/cdn/shop/files/hyperx_quadcast_2_s_9a273aa_angle_2.jpg?v=1787066289",
+      "alt": "HyperX QuadCast 2S - góc nghiêng cho thấy núm điều khiển và dây USB-C"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://hyperx.com/cdn/shop/files/hyperx_quadcast_2_s_9a273aa_angle_5.jpg?v=1787066289",
+      "alt": "Cận cảnh núm đa năng và đèn LED VU meter trên QuadCast 2S"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://hyperx.com/cdn/shop/files/hyperx_quadcast_2_s_9a273aa_angle_7.jpg?v=1787066289",
+      "alt": "Cận cảnh cổng USB-C và khớp gắn giá chống rung của QuadCast 2S"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://hyperx.com/cdn/shop/files/hyperx_quadcast_2_s_9a273aa_angle_6.jpg?v=1787066289",
+      "alt": "Đỉnh microphone QuadCast 2S với cảm biến tap-to-mute và viền LED đỏ báo tắt tiếng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Microphone HyperX QuadCast 2S RGB Chính Hãng",
+  "metaDescription": "HyperX QuadCast 2S - mic USB-C 4 kiểu hướng thu, 32-bit/192kHz, LED RGB 100+ điểm, tap-to-mute. Giá tốt, bảo hành chính hãng 24 tháng tại Quang Huong Computer."
+}

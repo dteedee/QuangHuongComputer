@@ -1,0 +1,181 @@
+{
+  "name": "Card màn hình MSI GeForce RTX 5080 16G SHADOW 3X OC",
+  "slug": "vga-msi-geforce-rtx-5080-16g-shadow-3x-oc",
+  "sku": "VGA-MSI-G5080-16S3C",
+  "brand": "MSI",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "VGA",
+  "model": "MSI G5080-16S3C",
+  "officialUrl": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC",
+  "priceVnd": 51990000,
+  "oldPriceVnd": 52790000,
+  "costPriceVnd": 45750000,
+  "priceSources": [
+    "https://gearvn.com/products/card-man-hinh-msi-geforce-rtx-5080-16g-shadow-3x-oc"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng 36 tháng qua nhà phân phối/đại lý uỷ quyền MSI tại Việt Nam.",
+  "weightKg": 1.046,
+  "stockQuantity": 12,
+  "shortDescription": "MSI GeForce RTX 5080 16G SHADOW 3X OC dùng GPU Blackwell RTX 5080 với 16GB GDDR7, tản nhiệt 3 quạt cho hiệu năng chiến game 2K/4K mạnh mẽ, ổn định.",
+  "descriptionHtml": "<h3>Card đồ hoạ MSI GeForce RTX 5080 16G SHADOW 3X OC</h3><p>MSI GeForce RTX 5080 16G SHADOW 3X OC sử dụng nhân đồ hoạ NVIDIA GeForce RTX 5080 thuộc kiến trúc Blackwell mới nhất, trang bị 10.752 nhân CUDA cùng xung nhịp boost 2640 MHz (đạt 2655 MHz ở chế độ Extreme Performance qua phần mềm MSI Center). Card đi kèm 16GB bộ nhớ GDDR7 bus 256-bit, tốc độ 30 Gbps, đáp ứng tốt các tựa game AAA độ phân giải 2K, 4K và các tác vụ dựng hình, AI nặng.</p><h3>Tản nhiệt và thiết kế</h3><p>Thiết kế SHADOW 3X trang bị cụm 3 quạt giúp luồng khí lưu thông tốt, giữ nhiệt độ GPU và VRM ổn định khi chơi game trong thời gian dài. Card có kích thước 303 x 121 x 49 mm, nặng khoảng 1,05 kg (chưa tính hộp), dùng chuẩn giao tiếp PCI Express Gen 5 và đầu cấp nguồn 16-pin theo chuẩn ATX 3.1, khuyến nghị bộ nguồn tối thiểu 850W.</p><h3>Kết nối và tính năng</h3><p>Về xuất hình, sản phẩm có 3 cổng DisplayPort 2.1b và 1 cổng HDMI 2.1b, hỗ trợ tối đa 4 màn hình cùng lúc và độ phân giải tối đa 7680 x 4320. Card hỗ trợ đầy đủ DirectX 12 Ultimate, OpenGL 4.6 và công nghệ đồng bộ hình ảnh G-Sync, phù hợp cho game thủ và người dùng sáng tạo nội dung cần hiệu năng đồ hoạ cao cấp.</p>",
+  "highlights": [
+    "GPU NVIDIA GeForce RTX 5080 (kiến trúc Blackwell) với 10.752 nhân CUDA, xung boost 2640 MHz, chế độ Extreme Performance 2655 MHz qua MSI Center.",
+    "16GB bộ nhớ GDDR7 bus 256-bit, tốc độ 30 Gbps, băng thông lớn cho render và gaming độ phân giải cao.",
+    "Hệ thống tản nhiệt 3 quạt trục (thiết kế SHADOW 3X) giúp card hoạt động mát và êm khi tải nặng.",
+    "Chuẩn PCI Express Gen 5, đầu cấp nguồn 16-pin, khuyến nghị nguồn 850W cho hệ thống ổn định.",
+    "Xuất hình đầy đủ 3x DisplayPort 2.1b và 1x HDMI 2.1b, hỗ trợ tối đa 4 màn hình, độ phân giải tối đa 7680x4320.",
+    "Hỗ trợ DirectX 12 Ultimate, OpenGL 4.6 và công nghệ đồng bộ hình ảnh G-Sync."
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "GPU",
+      "value": "NVIDIA GeForce RTX 5080",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Mã model",
+      "value": "G5080-16S3C",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Giao tiếp",
+      "value": "PCI Express Gen 5",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Xung nhịp lõi",
+      "value": "Boost 2640 MHz, Extreme Performance (MSI Center) 2655 MHz",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Số nhân CUDA",
+      "value": "10752",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Dung lượng bộ nhớ",
+      "value": "16GB GDDR7",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ bộ nhớ",
+      "value": "30 Gbps",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Bus bộ nhớ",
+      "value": "256-bit",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Cổng kết nối",
+      "value": "DisplayPort x3 (v2.1b), HDMI x1 (v2.1b)",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Hỗ trợ HDCP",
+      "value": "Có",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Số màn hình tối đa",
+      "value": "4",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Độ phân giải số tối đa",
+      "value": "7680 x 4320",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Công nghệ G-Sync",
+      "value": "Có",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất tiêu thụ",
+      "value": "360 W",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Đầu cấp nguồn",
+      "value": "16-pin x1 (khuyến nghị nguồn chuẩn ATX 3.1)",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất nguồn khuyến nghị",
+      "value": "850 W",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Kích thước & trọng lượng",
+      "name": "Kích thước card",
+      "value": "303 x 121 x 49 mm",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Kích thước & trọng lượng",
+      "name": "Trọng lượng (card / hộp)",
+      "value": "1046 g / 1546 g",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Công nghệ hỗ trợ",
+      "name": "DirectX",
+      "value": "12 Ultimate",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Công nghệ hỗ trợ",
+      "name": "OpenGL",
+      "value": "4.6",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    }
+  ],
+  "filterAttributes": {
+    "chipset": "NVIDIA GeForce RTX 5080",
+    "vram": "16GB GDDR7"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_17370831131c2af36a59d45039c91e82642b3be40b.webp",
+      "alt": "MSI GeForce RTX 5080 16G SHADOW 3X OC - mặt trên, 3 quạt tản nhiệt"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_173708311558847cf5b06e2e6e3dacc184a283c6b6.webp",
+      "alt": "MSI GeForce RTX 5080 16G SHADOW 3X OC - góc nghiêng 3/4"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_17370831157fc9e5070af0f027dc63cf634a814a5d.webp",
+      "alt": "MSI GeForce RTX 5080 16G SHADOW 3X OC - mặt sau tấm backplate"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_173708311760fd78be5cfe933598581f3e44b71f59.webp",
+      "alt": "MSI GeForce RTX 5080 16G SHADOW 3X OC - cổng xuất hình DisplayPort và HDMI"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "MSI GeForce RTX 5080 16G SHADOW 3X OC - Card đồ hoạ RTX 5080 16GB GDDR7",
+  "metaDescription": "MSI RTX 5080 16G SHADOW 3X OC: GPU Blackwell RTX 5080, 16GB GDDR7 bus 256-bit, tản nhiệt 3 quạt, PCIe Gen5, đầu cấp nguồn 16-pin. Giá tốt, bảo hành chính hãng 36 tháng."
+}

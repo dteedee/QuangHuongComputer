@@ -40,6 +40,12 @@ public static class DependencyInjection
         services.AddScoped<Sales.Application.Returns.RestockService>();
         services.AddScoped<Sales.Application.Returns.ReturnOrchestrator>();
 
+        // W0-10: Payments hỏi Sales về đơn hàng (số tiền + chủ sở hữu) qua interface khai báo ở Payments.
+        // Thiếu đăng ký này thì `/api/payments/initiate` không chạy được — đó là hành vi đúng
+        // (fail-closed), vì không còn đường nào lấy số tiền từ client.
+        services.AddScoped<Payments.Application.IOrderPaymentInfoProvider,
+                           Sales.Application.Payments.OrderPaymentInfoProvider>();
+
         return services;
     }
 

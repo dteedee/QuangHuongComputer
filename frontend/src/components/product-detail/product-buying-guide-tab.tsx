@@ -1,29 +1,28 @@
 import {
-    ShoppingBag, MapPin, CreditCard, Wallet, QrCode, Smartphone,
-    Truck, RotateCcw, ShieldCheck, Calculator,
+    ShoppingBag, MapPin, CreditCard, Wallet, QrCode,
+    Truck, RotateCcw, ShieldCheck,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
 import { useSystemConfig } from '../../context/SystemConfigContext';
 import { useCompanyInfo } from '../../hooks/use-company-info';
 
 interface ProductBuyingGuideTabProps {
-    price: number;
     warrantyInfo?: string;
 }
 
-const INSTALLMENT_MIN = 5_000_000;
-const INSTALLMENT_TERMS = [6, 9, 12] as const;
-
 /**
- * Tab hướng dẫn mua & trả góp.
+ * Tab hướng dẫn mua hàng.
  * Phí ship / ngưỡng freeship / số ngày đổi trả đọc từ System Config
  * (khoá: SHIPPING_COST, FREESHIP_THRESHOLD, RETURN_WINDOW_DAYS — GET /api/config/public),
- * hotline đọc từ useCompanyInfo. Trả góp vẫn là ước tính minh hoạ (đã ghi chú rõ trong UI).
+ * hotline đọc từ useCompanyInfo.
+ *
+ * D04 (thanh toán lúc ra mắt): đã bỏ ô VNPay/MoMo/ZaloPay (chưa cấu hình khoá thật, sẽ chỉ
+ * hiện khi `GET /api/payments/methods` báo bật — W2-4/track VNPay riêng) và máy tính trả góp
+ * (chưa có đối tác nào tích hợp API lúc ra mắt — trả góp là lead-mode theo D10).
  */
-export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBuyingGuideTabProps) {
+export default function ProductBuyingGuideTab({ warrantyInfo }: ProductBuyingGuideTabProps) {
     const { getNumber } = useSystemConfig();
     const { companyInfo } = useCompanyInfo();
-    const showInstallment = price >= INSTALLMENT_MIN;
 
     const shippingCost = getNumber('SHIPPING_COST', 30000);
     // FREESHIP_THRESHOLD là key chuẩn (FREE_SHIPPING_THRESHOLD đã xóa khỏi seed vì trùng lặp)
@@ -69,13 +68,10 @@ export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBu
                     <CreditCard className="w-4 h-4 text-[var(--accent-primary)]" />
                     Phương thức thanh toán
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
                         { icon: Wallet, label: 'COD', sub: 'Nhận hàng trả tiền' },
                         { icon: QrCode, label: 'QR Ngân hàng', sub: 'Chuyển khoản' },
-                        { icon: CreditCard, label: 'VNPay', sub: 'Thẻ / QR' },
-                        { icon: Smartphone, label: 'MoMo', sub: 'Ví điện tử' },
-                        { icon: Smartphone, label: 'ZaloPay', sub: 'Ví điện tử' },
                     ].map(({ icon: Icon, label, sub }) => (
                         <div key={label} className="p-3 rounded-lg bg-gray-50 border border-gray-100 text-center">
                             <Icon className="w-5 h-5 mx-auto text-gray-500 mb-1.5" />
@@ -85,39 +81,6 @@ export default function ProductBuyingGuideTab({ price, warrantyInfo }: ProductBu
                     ))}
                 </div>
             </section>
-
-            {/* Trả góp 0% */}
-            {showInstallment && (
-                <section className="bg-white rounded-xl border border-gray-100 p-5">
-                    <h4 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-3">
-                        <Calculator className="w-4 h-4 text-[var(--accent-primary)]" />
-                        Trả góp 0% qua thẻ tín dụng
-                    </h4>
-                    <p className="text-xs text-gray-500 mb-3">
-                        Áp dụng cho đơn từ {formatCurrency(INSTALLMENT_MIN)}. Không cần chứng minh thu nhập.
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {INSTALLMENT_TERMS.map((term) => {
-                            const monthly = Math.round(price / term / 1000) * 1000;
-                            return (
-                                <div key={term} className="p-3 rounded-lg border border-gray-100 bg-gradient-to-b from-red-50/40 to-white">
-                                    <p className="text-xs text-gray-500 mb-1">Kỳ hạn</p>
-                                    <p className="text-2xl font-bold text-[var(--accent-primary)]">{term} tháng</p>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        Trả trước 0đ · Mỗi tháng
-                                    </p>
-                                    <p className="text-base font-semibold text-gray-900 mt-1">
-                                        {formatCurrency(monthly)}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <p className="text-[11px] text-gray-400 italic mt-3">
-                        * Số tiền chỉ mang tính minh hoạ. Ngân hàng có thể áp phí chuyển đổi 1.5–3%.
-                    </p>
-                </section>
-            )}
 
             {/* Vận chuyển */}
             <section className="bg-white rounded-xl border border-gray-100 p-5">

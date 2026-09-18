@@ -1,0 +1,112 @@
+{
+  "$comment": [
+    "W0-6 taxonomy map. The dataset's `category` string is matched against an EXISTING category",
+    "row by unaccent+lower of Name (D03: a raw string match would create an eleventh category the",
+    "moment one row carries a typo such as 'Laptop - May Tinh Xach Tay' with the wrong accent).",
+    "Categories are ENRICHED IN PLACE, never re-created: content.HomepageSections.Configuration",
+    "embeds 6 categoryId + 5 brandId as raw UUIDs in JSON with no FK, so changing an Id silently",
+    "kills the homepage. Total category count after import must stay 10.",
+    "`subCategory` is NOT a category row in wave 0 - it is written to Products.Attributes.subCategory",
+    "so W2-1 can build the facet without a schema change.",
+    "isSerialTracked comes from the D08 matrix. It is a CATEGORY-level flag, so the mixed rows are",
+    "resolved by majority and noted below."
+  ],
+  "categories": [
+    {
+      "name": "Laptop - Máy Tính Xách Tay",
+      "slug": "laptop",
+      "displayOrder": 1,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "Laptop chính hãng - Quang Huong Computer",
+      "metaDescription": "Laptop gaming, văn phòng, đồ họa và MacBook chính hãng, bảo hành đầy đủ tại Quang Huong Computer Vĩnh Bảo."
+    },
+    {
+      "name": "Máy Tính Chơi Game",
+      "slug": "pc-gaming",
+      "displayOrder": 2,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "PC Gaming lắp sẵn - Quang Huong Computer",
+      "metaDescription": "PC gaming lắp sẵn từ 1080p tới 4K, linh kiện chính hãng, bảo hành 24 tháng tại cửa hàng."
+    },
+    {
+      "name": "Máy Tính Đồ Họa",
+      "slug": "pc-do-hoa",
+      "displayOrder": 3,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "PC đồ họa - Workstation - Quang Huong Computer",
+      "metaDescription": "Máy trạm đồ họa 2D, 3D render, dựng phim và AI/Deep Learning, cấu hình kiểm định sẵn."
+    },
+    {
+      "name": "Màn Hình Máy Tính",
+      "slug": "man-hinh-may-tinh",
+      "displayOrder": 4,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "Màn hình máy tính chính hãng - Quang Huong Computer",
+      "metaDescription": "Màn hình gaming, văn phòng, đồ họa, 4K và ultrawide chính hãng, bảo hành 24 tháng."
+    },
+    {
+      "name": "Linh Kiện Máy Tính",
+      "slug": "linh-kien-may-tinh",
+      "displayOrder": 5,
+      "isSerialTracked": true,
+      "serialNote": "D08 tracks CPU/Mainboard/RAM/PSU/VGA/SSD-HDD by serial but NOT Case and Tản nhiệt. The flag lives on the category, so the 3 Case/Cooler SKUs are over-tracked until a leaf-category level exists (W2-1).",
+      "vatRate": 0.10,
+      "metaTitle": "Linh kiện máy tính - CPU, VGA, RAM, SSD - Quang Huong Computer",
+      "metaDescription": "CPU, mainboard, RAM, VGA, SSD, HDD, nguồn, case, tản nhiệt chính hãng, giá tốt tại Vĩnh Bảo."
+    },
+    {
+      "name": "Phím, Chuột - Gaming Gear",
+      "slug": "gaming-gear",
+      "displayOrder": 6,
+      "isSerialTracked": false,
+      "vatRate": 0.10,
+      "metaTitle": "Gaming Gear - Bàn phím, chuột, lót chuột - Quang Huong Computer",
+      "metaDescription": "Bàn phím cơ, chuột gaming, lót chuột chính hãng Akko, Keychron, Razer, Logitech, SteelSeries."
+    },
+    {
+      "name": "Thiết Bị Mạng",
+      "slug": "thiet-bi-mang",
+      "displayOrder": 7,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "Thiết bị mạng - Router, Switch, Mesh WiFi - Quang Huong Computer",
+      "metaDescription": "Router WiFi 6, mesh WiFi, switch, USB WiFi và bộ mở rộng sóng chính hãng TP-Link, ASUS, Mercusys."
+    },
+    {
+      "name": "Camera",
+      "slug": "camera",
+      "displayOrder": 8,
+      "isSerialTracked": true,
+      "vatRate": 0.10,
+      "metaTitle": "Camera an ninh - Quang Huong Computer",
+      "metaDescription": "Camera IP trong nhà, ngoài trời và đầu ghi NVR chính hãng Hikvision, Imou, Ezviz, TP-Link Tapo."
+    },
+    {
+      "name": "Loa, Mic, Webcam, Stream",
+      "slug": "loa-mic-webcam-stream",
+      "displayOrder": 9,
+      "isSerialTracked": false,
+      "vatRate": 0.10,
+      "metaTitle": "Loa, Micro, Webcam, thiết bị stream - Quang Huong Computer",
+      "metaDescription": "Loa kiểm âm, micro thu âm, webcam và thiết bị stream chính hãng Edifier, HyperX, Logitech, Elgato."
+    },
+    {
+      "name": "Phụ Kiện Máy Tính - Laptop",
+      "slug": "phu-kien-may-tinh-laptop",
+      "displayOrder": 10,
+      "isSerialTracked": false,
+      "vatRate": 0.10,
+      "metaTitle": "Phụ kiện máy tính và laptop - Quang Huong Computer",
+      "metaDescription": "Balo, sạc, hub USB-C, đế tản nhiệt và ổ cứng di động chính hãng Anker, Ugreen, Samsung, Tomtoc."
+    }
+  ],
+  "returnExcludedSkus": [
+    "APL-MDHH4SA-A",
+    "APL-MGDR4SA-A"
+  ],
+  "$returnExcludedNote": "D08: an activated Apple machine cannot be taken back under the voluntary buy-back scheme. IsReturnExcluded removes them from buy-back / 1-for-1 ONLY - never from warranty and never from the statutory reason codes."
+}

@@ -13,17 +13,19 @@ public static class InventoryReportEndpoints
     {
         group.MapGet("/inventory-value", async (InventoryDbContext invDb, CatalogDbContext catalogDb) =>
         {
-            var totalValueTask = invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost);
-            var itemCountTask = invDb.InventoryItems.CountAsync();
-            var totalQuantityTask = invDb.InventoryItems.SumAsync(i => (int?)i.QuantityOnHand);
+            // Sequential awaits: these all share invDb, and EF Core's DbContext does not
+            // support concurrent operations ("A second operation started on this context
+            // before a previous operation completed"). Result sets are small; measured to
+            // not need IDbContextFactory-based parallelism.
+            var totalValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
+            var itemCount = await invDb.InventoryItems.CountAsync();
+            var totalQuantity = await invDb.InventoryItems.SumAsync(i => (int?)i.QuantityOnHand) ?? 0;
 
             var lowStockItems = await invDb.InventoryItems
                 .Where(i => i.QuantityOnHand <= i.LowStockThreshold)
                 .OrderBy(i => i.QuantityOnHand)
                 .Take(10)
                 .ToListAsync();
-
-            await Task.WhenAll(totalValueTask, itemCountTask, totalQuantityTask);
 
             var productIds = lowStockItems.Select(i => i.ProductId).ToList();
             var products = await catalogDb.Products
@@ -40,9 +42,9 @@ public static class InventoryReportEndpoints
 
             return Results.Ok(new
             {
-                TotalValue = await totalValueTask ?? 0,
-                ItemCount = await itemCountTask,
-                TotalQuantity = await totalQuantityTask ?? 0,
+                TotalValue = totalValue,
+                ItemCount = itemCount,
+                TotalQuantity = totalQuantity,
                 LowStockItems = lowStock
             });
         });

@@ -161,13 +161,22 @@ public class AttendanceRecord : Entity<Guid>
         if (checkInTime.HasValue) CheckInTime = checkInTime;
         if (checkOutTime.HasValue) CheckOutTime = checkOutTime;
         if (lateMinutes.HasValue) LateMinutes = lateMinutes.Value;
-        if (status.HasValue) Status = status.Value;
 
         if (CheckInTime.HasValue && CheckOutTime.HasValue)
         {
             var h = (decimal)(CheckOutTime.Value - CheckInTime.Value).TotalHours;
             WorkHours = Math.Round(Math.Max(0, h), 2);
         }
+
+        // W0-8: mặc định record mới khởi tạo Status = Absent (xem ctor). Trước đây một
+        // giờ công chấm tay (vd 9h) vẫn bị lưu là Absent vì status không bao giờ được suy
+        // ra từ WorkHours. status truyền vào tay (quản lý override) luôn được ưu tiên.
+        if (status.HasValue)
+            Status = status.Value;
+        else if (WorkHours > 0)
+            Status = LateMinutes > 0 ? AttendanceStatus.Late : AttendanceStatus.Present;
+        else if (!CheckInTime.HasValue && !CheckOutTime.HasValue)
+            Status = AttendanceStatus.Absent;
     }
 
     public void MarkAbsent() { Status = AttendanceStatus.Absent; }

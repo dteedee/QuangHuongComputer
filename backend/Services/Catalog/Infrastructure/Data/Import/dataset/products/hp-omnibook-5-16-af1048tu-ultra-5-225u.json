@@ -1,0 +1,216 @@
+{
+  "name": "Laptop HP OmniBook 5 16-af1048TU (BZ7Q9PA) - Intel Core Ultra 5 225U",
+  "slug": "hp-omnibook-5-16-af1048tu-ultra-5-225u",
+  "sku": "HP-BZ7Q9PA",
+  "brand": "HP",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop văn phòng",
+  "model": "HP OmniBook 5 16-af1048TU (BZ7Q9PA)",
+  "officialUrl": "https://www.hp.com/vn-vi/products/laptops/product-details/2103166657",
+  "priceVnd": 25990000,
+  "oldPriceVnd": 27190000,
+  "costPriceVnd": 22870000,
+  "priceSources": [
+    "https://cellphones.com.vn/laptop-hp-omnibook-5-ai-16-af1048tu-bz7q9pa.html",
+    "https://www.anphatpc.com.vn/laptop-hp-omnibook-5-ai-16-af1048tu-bz7q9pa.html"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng HP Việt Nam 12 tháng tại trung tâm bảo hành ủy quyền, 1 đổi 1 trong 30 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 1.77,
+  "stockQuantity": 15,
+  "shortDescription": "Laptop văn phòng 16 inch dùng chip Intel Core Ultra 5 225U, RAM 16GB, SSD 512GB, màn hình 2K 16:10, vỏ nhôm Glacier Silver bền bỉ cho công việc hàng ngày.",
+  "descriptionHtml": "<h3>Hiệu năng đáng tin cậy cho công việc mỗi ngày</h3><p>HP OmniBook 5 16-af1048TU trang bị vi xử lý Intel Core Ultra 5 225U (12 nhân, 14 luồng, xung nhịp tối đa 4.8GHz, 12MB L3 cache) tích hợp NPU AI Boost, đáp ứng tốt các tác vụ văn phòng, học tập và giải trí hàng ngày. RAM 16GB LPDDR5-7467 hàn chip cùng ổ SSD PCIe Gen4 512GB mang lại tốc độ khởi động ứng dụng nhanh và thao tác đa nhiệm mượt mà.</p><h3>Màn hình rộng, sắc nét</h3><p>Máy sở hữu màn hình 16 inch độ phân giải 2K (1920 x 1200), tỉ lệ 16:10 giúp hiển thị nhiều nội dung hơn theo chiều dọc, phù hợp soạn thảo văn bản và duyệt web. Tấm nền IPS phủ lớp chống chói cùng độ sáng 300 nits cho hình ảnh rõ ràng ngay cả khi làm việc gần cửa sổ.</p><h3>Thiết kế bền bỉ, kết nối đầy đủ</h3><p>Vỏ máy nhôm màu Glacier Silver mỏng nhẹ, đã trải qua thử nghiệm độ bền HP Premium (đóng mở nắp, va đập, nhiệt độ khắc nghiệt). Đầy đủ cổng kết nối gồm 2 cổng USB-C hỗ trợ sạc và xuất hình, 2 cổng USB-A, HDMI 2.1 giúp kết nối màn hình ngoài hay ổ cứng di động mà không cần bộ chuyển đổi. Webcam FHD 1080p kèm màn trập bảo vệ quyền riêng tư và micro khử ồn hỗ trợ tốt cho các cuộc họp trực tuyến.</p><h3>Pin bền, sạc nhanh</h3><p>Viên pin 3-cell 59Wh cho thời gian sử dụng lên đến 13 giờ, hỗ trợ sạc nhanh đạt khoảng 50% dung lượng chỉ trong 30 phút, phù hợp người dùng di chuyển nhiều. Máy cài sẵn Windows 11 Home, sẵn sàng sử dụng ngay sau khi mở hộp.</p>",
+  "highlights": [
+    "Intel Core Ultra 5 225U tích hợp NPU AI Boost, 12 nhân 14 luồng, đáp ứng tốt công việc văn phòng và đa nhiệm hàng ngày",
+    "RAM 16GB LPDDR5-7467 hàn chip cùng SSD PCIe Gen4 512GB giúp khởi động nhanh, thao tác mượt mà",
+    "Màn hình 16 inch 2K (1920x1200) tỉ lệ 16:10, chống chói, hiển thị nhiều nội dung hơn khi làm việc",
+    "Pin 59Wh cho thời gian sử dụng cả ngày, hỗ trợ sạc nhanh 50% chỉ trong 30 phút",
+    "Vỏ nhôm nguyên khối Glacier Silver, đã qua thử nghiệm độ bền chuẩn HP Premium",
+    "Đầy đủ cổng kết nối USB-C, USB-A, HDMI 2.1 không cần dùng thêm hub chuyển đổi"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Dòng CPU",
+      "value": "Intel Core Ultra 5 series",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core Ultra 5 225U (tối đa 4.8GHz Turbo Boost, 12MB L3 cache, 12 nhân, 14 luồng)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Chipset",
+      "value": "SoC tích hợp Intel",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "RAM",
+      "value": "16GB LPDDR5-7467 MT/s (onboard, không nâng cấp)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "512GB SSD PCIe Gen4 NVMe M.2",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước",
+      "value": "16 inch (40.6cm)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "2K (1920 x 1200), tỉ lệ 16:10",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Công nghệ tấm nền",
+      "value": "IPS, viền mỏng micro-edge, chống chói",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng / Độ phủ màu",
+      "value": "300 nits, 62.5% sRGB",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Cảm ứng",
+      "value": "Không hỗ trợ cảm ứng",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "Card đồ họa",
+      "value": "Intel Graphics (tích hợp)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Wifi / Bluetooth",
+      "value": "Intel Wi-Fi 6E AX211 (2x2) + Bluetooth 5.3",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "1x USB-A 10Gbps; 1x USB-A 5Gbps; 2x USB-C 10Gbps (Power Delivery, DisplayPort 1.4a); 1x HDMI 2.1; 1x jack tai nghe/mic",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Bàn phím",
+      "value": "Full-size, có đèn nền, kèm phím số, màu xám nhạt",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Touchpad",
+      "value": "HP Imagepad",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Webcam & Âm thanh",
+      "name": "Webcam",
+      "value": "HP True Vision 1080p FHD, cảm biến IR, giảm nhiễu, mic đôi tích hợp",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Webcam & Âm thanh",
+      "name": "Loa",
+      "value": "2 loa, HP Audio Boost, DTS:X Ultra",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Dung lượng pin",
+      "value": "3-cell, 59Wh Li-ion polymer",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Thời lượng pin",
+      "value": "Lên đến 13 giờ",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Sạc nhanh",
+      "value": "Đạt khoảng 50% pin trong 30 phút",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Bộ sạc",
+      "value": "Adapter USB-C 65W",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Tính năng bảo mật",
+      "value": "Phím tắt tắt micro, màn trập bảo vệ webcam, hỗ trợ Trusted Platform Module (TPM)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Kích thước",
+      "value": "35.77 x 25.48 x 1.79 cm (mặt trước)",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Trọng lượng",
+      "value": "1.77 kg",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "Hệ điều hành",
+      "value": "Windows 11 Home Single Language",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Glacier Silver, vỏ nhôm",
+      "source": "https://www.hp.com/vn-vi/products/laptops/product-details/product-specifications/2103166657"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core Ultra 5",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "Intel Graphics (onboard)",
+    "screenSize": "16 inch"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://hp.widen.net/content/zmvr0af7t9/png/zmvr0af7t9.png",
+      "alt": "HP OmniBook 5 16-af1048TU Glacier Silver - nhìn thẳng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://hp.widen.net/content/ddmapa7eo0/png/ddmapa7eo0.png",
+      "alt": "HP OmniBook 5 16-af1048TU Glacier Silver - góc nghiêng trái"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://hp.widen.net/content/htdrrmchxt/png/htdrrmchxt.png",
+      "alt": "HP OmniBook 5 16-af1048TU Glacier Silver - góc nghiêng phải"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop HP OmniBook 5 16-af1048TU (BZ7Q9PA) Ultra 5 225U | Quang Huong Computer",
+  "metaDescription": "Laptop HP OmniBook 5 16-af1048TU (BZ7Q9PA): Intel Core Ultra 5 225U, RAM 16GB, SSD 512GB, màn 16 inch 2K 16:10. Giá tốt, bảo hành chính hãng 12 tháng."
+}

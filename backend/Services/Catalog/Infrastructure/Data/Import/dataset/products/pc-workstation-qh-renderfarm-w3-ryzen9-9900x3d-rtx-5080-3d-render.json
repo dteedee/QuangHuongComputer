@@ -1,0 +1,333 @@
+{
+  "name": "PC Đồ Họa QH Renderfarm W3 - Ryzen 9 9900X3D / RTX 5080 16GB (Render 3D)",
+  "slug": "pc-workstation-qh-renderfarm-w3-ryzen9-9900x3d-rtx-5080-3d-render",
+  "sku": "QH-RFW3",
+  "brand": "QH",
+  "category": "Máy Tính Đồ Họa",
+  "subCategory": "Workstation - 3D Render",
+  "model": "Renderfarm W3",
+  "officialUrl": "https://lian-li.com/product/lancool-216/",
+  "priceVnd": 102680000,
+  "oldPriceVnd": 106960000,
+  "costPriceVnd": 90360000,
+  "priceSources": [
+    "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5",
+    "https://gearvn.com/products/card-man-hinh-msi-geforce-rtx-5080-16g-shadow-3x-oc",
+    "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-2tb-pcie-gen4-nvme-mz-v9p2t0bw",
+    "https://www.anphatpc.com.vn/vo-case-lian-li-lancool-216-mesh-white-rgb-mid-tower-mau-trang-2-fan-led-argb-16cm-type-c.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành hệ thống 24 tháng tại QH (đổi mới 12 tháng đầu, lỗi 1 đổi 1 trong 30 ngày). Riêng từng linh kiện theo chính sách hãng: CPU AMD 36 tháng, RAM Kingston 36 tháng, SSD Samsung 60 tháng, PSU MSI theo tiêu chuẩn Gold, Case Lian Li 12 tháng, tản nhiệt Thermalright 12 tháng.",
+  "weightKg": 11,
+  "stockQuantity": 6,
+  "shortDescription": "Máy trạm render 3D QH Renderfarm W3 dùng Ryzen 9 9900X3D 12 nhân cùng RTX 5080 16GB GDDR7 - cân bằng CPU-render và GPU-render CUDA/OptiX cho Blender, Maya, 3ds Max, Cinema 4D.",
+  "descriptionHtml": "<h3>PC Đồ Họa QH Renderfarm W3 - Cấu hình chuyên render 3D</h3><p>QH Renderfarm W3 dựng riêng cho dân 3D làm việc với Blender, Maya, 3ds Max, Cinema 4D - cân bằng sức mạnh CPU nhiều nhân và GPU render CUDA/OptiX. Ryzen 9 9900X3D 12 nhân 24 luồng cùng 140MB cache 3D V-Cache xử lý mượt dựng hình, mô phỏng vật lý và CPU-render song song với RTX 5080 16GB GDDR7 tăng tốc GPU-render, AI denoise và viewport thời gian thực.</p><h3>Bộ nhớ và lưu trữ rộng rãi</h3><p>32GB RAM DDR5-5600 (2x16GB) chạy dual-channel đủ tải scene nhiều triệu polygon, kết hợp SSD Samsung 990 PRO 2TB chuẩn NVMe PCIe Gen4 tốc độ đọc tới 7.450MB/s giúp mở file, cache texture và scratch khi render không bị nghẽn.</p><h3>Tản nhiệt và nguồn ổn định cho render dài giờ</h3><p>Case Lian Li LANCOOL 216 RGB White với mặt lưới toàn diện tối ưu luồng khí, tản nhiệt khí Thermalright Peerless Assassin 120 SE dạng tháp đôi giữ CPU mát khi chạy full tải nhiều giờ liên tục. Nguồn MSI MAG A850GL 850W chuẩn 80+ Gold Full Modular, dư tải khoảng 50% so công suất đỉnh hệ thống, đảm bảo điện áp ổn định khi CPU và GPU cùng full tải render.</p><h3>Phù hợp cho ai</h3><ul><li>Render artist 3D chuyên nghiệp (Blender, Maya, 3ds Max, Cinema 4D)</li><li>Dựng phim, motion graphics cần GPU-render CUDA/OptiX mạnh</li><li>Studio nhỏ cần máy vừa dựng vừa render song song</li></ul>",
+  "highlights": [
+    "CPU AMD Ryzen 9 9900X3D 12 nhân/24 luồng, 3D V-Cache thế hệ 2, 140MB cache - CPU-render (Blender Cycles CPU, Corona) rất nhanh",
+    "GPU MSI GeForce RTX 5080 16GB GDDR7 - tăng tốc GPU-render CUDA/OptiX (Cycles X, Octane, Redshift, V-Ray RTX)",
+    "RAM 32GB (2x16GB) DDR5-5600 dual-channel - đủ tải scene 3D dung lượng lớn, vừa dựng vừa render",
+    "SSD Samsung 990 PRO 2TB NVMe Gen4, đọc tới 7.450MB/s - nạp texture, scene và scratch disk tức thì",
+    "Nguồn MSI MAG A850GL 850W 80+ Gold Full Modular - dư tải an toàn ~50% khi CPU/GPU cùng full tải",
+    "Case Lian Li LANCOOL 216 RGB White mesh toàn diện - giữ nhiệt ổn định khi render nhiều giờ liên tục"
+  ],
+  "specs": [
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "Kiến trúc / tiến trình",
+      "value": "Zen 5, 4nm",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "Socket",
+      "value": "AM5",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "Số nhân / luồng",
+      "value": "12 nhân / 24 luồng",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "Xung nhịp",
+      "value": "Base 4.4GHz / Boost tối đa 5.5GHz",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "Bộ nhớ đệm",
+      "value": "L2 12MB + L3 128MB (3D V-Cache) = 140MB tổng",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "TDP",
+      "value": "120W",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "RAM hỗ trợ",
+      "value": "DDR5 2 kênh, tối đa 5600MHz JEDEC",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    },
+    {
+      "group": "CPU - AMD Ryzen 9 9900X3D",
+      "name": "PCIe",
+      "value": "Gen 5.0",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-9-9900x3d.html"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Chipset / CPU hỗ trợ",
+      "value": "AMD X870, Socket AM5, Ryzen 9000/8000/7000",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Khe RAM",
+      "value": "4x DDR5, tối đa 256GB, tới DDR5-8400 (OC)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Khe M.2",
+      "value": "4x M.2 (M2_1/M2_2 PCIe 5.0 x4 từ CPU)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Khe PCIe chính",
+      "value": "1x PCIe 5.0 x16 (từ CPU) cho VGA",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Mạng",
+      "value": "LAN 5G Realtek 8126-CG, WiFi 7, Bluetooth 5.4",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Mainboard - MSI MAG X870 TOMAHAWK WIFI",
+      "name": "Form factor",
+      "value": "ATX, 304.8 x 243.84mm",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "RAM - Kingston FURY Beast 32GB DDR5-5600",
+      "name": "Dung lượng",
+      "value": "32GB, Kit 2x16GB (2x KF556C40BB-16WP) dual-channel",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "RAM - Kingston FURY Beast 32GB DDR5-5600",
+      "name": "Tốc độ / độ trễ",
+      "value": "DDR5-5600MT/s CL40-40-40 (XMP 3.0)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "RAM - Kingston FURY Beast 32GB DDR5-5600",
+      "name": "Điện áp",
+      "value": "1.25V (XMP) / 1.1V (JEDEC)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "RAM - Kingston FURY Beast 32GB DDR5-5600",
+      "name": "Tản nhiệt",
+      "value": "Nhôm đen FURY Beast Black",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "GPU / CUDA",
+      "value": "NVIDIA GeForce RTX 5080, 10752 nhân CUDA",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "VRAM",
+      "value": "16GB GDDR7, bus 256-bit, 30Gbps",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "Xung nhịp Boost",
+      "value": "2640MHz (2655MHz chế độ Extreme Performance)",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "Công suất / nguồn khuyến nghị",
+      "value": "360W, đầu cấp 16-pin, khuyến nghị PSU 850W",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "Kích thước card",
+      "value": "303 x 121 x 49mm",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "VGA - MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "name": "Cổng xuất hình",
+      "value": "DisplayPort 2.1b x3, HDMI 2.1b x1",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 2TB",
+      "name": "Dung lượng / chuẩn",
+      "value": "2TB (2000GB), M.2 2280, NVMe PCIe Gen4 x4",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-2tb-pcie-gen4-nvme-mz-v9p2t0bw"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 2TB",
+      "name": "Tốc độ đọc / ghi tuần tự",
+      "value": "7.450 MB/s đọc / 6.900 MB/s ghi",
+      "source": "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-2tb-pcie-gen4-nvme-mz-v9p2t0bw"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 2TB",
+      "name": "NAND / Cache",
+      "value": "Samsung V-NAND TLC, DRAM cache 2048MB",
+      "source": "https://gearvn.com/products/ssd-samsung-990-pro-2tb-m-2-pcie-gen-4-nvme-mz-v9p2t0bw"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 2TB",
+      "name": "Độ bền / bảo hành",
+      "value": "TBW 1200TB, bảo hành 60 tháng",
+      "source": "https://gearvn.com/products/ssd-samsung-990-pro-2tb-m-2-pcie-gen-4-nvme-mz-v9p2t0bw"
+    },
+    {
+      "group": "PSU - MSI MAG A850GL PCIE5 850W",
+      "name": "Công suất / chuẩn hiệu suất",
+      "value": "850W, 80 PLUS Gold (hiệu suất tới 90%)",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "PSU - MSI MAG A850GL PCIE5 850W",
+      "name": "Modular / quạt",
+      "value": "Full Modular, quạt 120mm Fluid Dynamic Bearing",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "PSU - MSI MAG A850GL PCIE5 850W",
+      "name": "Đầu cấp nguồn",
+      "value": "ATX 24-pin x1, EPS 4+4pin x2, PCIe 5.0 16-pin x1 (600W), PCIe 6+2pin x4, SATA x8",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "PSU - MSI MAG A850GL PCIE5 850W",
+      "name": "Bảo vệ",
+      "value": "OCP / OVP / OPP / OTP / SCP / UVP",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "PSU - MSI MAG A850GL PCIE5 850W",
+      "name": "Kích thước",
+      "value": "140 x 150 x 86mm",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Hỗ trợ mainboard",
+      "value": "E-ATX (dưới 280mm) / ATX / Micro-ATX / Mini-ITX",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Kích thước",
+      "value": "480.9(D) x 235(R) x 491.7(C) mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Chất liệu",
+      "value": "Thép, kính cường lực 4.0mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Quạt đi kèm",
+      "value": "2x160mm ARGB (trước) + 1x140mm PWM (sau)",
+      "source": "https://www.anphatpc.com.vn/vo-case-lian-li-lancool-216-mesh-white-rgb-mid-tower-mau-trang-2-fan-led-argb-16cm-type-c.html"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Giới hạn GPU / tản CPU khí",
+      "value": "GPU dài tối đa 392mm, tản khí cao tối đa 180.5mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Khoang ổ đĩa",
+      "value": "2x3.5\" + 6x2.5\" (drive cage + PSU cover + sau bo mạch)",
+      "source": "https://www.anphatpc.com.vn/vo-case-lian-li-lancool-216-mesh-white-rgb-mid-tower-mau-trang-2-fan-led-argb-16cm-type-c.html"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Cổng mặt trước",
+      "value": "2x USB 3.0, 1x USB-C, audio combo",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt CPU - Thermalright Peerless Assassin 120 SE",
+      "name": "Kích thước / kiểu",
+      "value": "L125 x W110 x H155mm, tháp đôi (dual tower), 6 ống đồng",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt CPU - Thermalright Peerless Assassin 120 SE",
+      "name": "Quạt",
+      "value": "2x quạt TL-C12C 120x120x25mm, tối đa 1550RPM, 66.17 CFM",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt CPU - Thermalright Peerless Assassin 120 SE",
+      "name": "Socket hỗ trợ",
+      "value": "AM4/AM5, LGA 115x/1200/1700/1851",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Hệ điều hành",
+      "value": "Chưa cài sẵn - tương thích Windows 11 64-bit, hỗ trợ cài đặt theo yêu cầu",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Bảo hành hệ thống",
+      "value": "24 tháng tại QH, chi tiết theo từng linh kiện xem mục Bảo hành",
+      "source": "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen9-9900x3d-4-4ghz-boost-5-5ghz-12-nhan-24-luong-140mb-am5"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "3D Render / Đồ họa workstation",
+    "cpu": "AMD Ryzen 9 9900X3D",
+    "gpu": "RTX 5080 16GB",
+    "ram": "32GB DDR5-5600",
+    "storage": "2TB NVMe PCIe Gen4",
+    "mainboard": "AM5 X870"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://lian-li.com/product/lancool-216/",
+      "alt": "Mặt trước case Lian Li LANCOOL 216 RGB White với 2 quạt ARGB 160mm"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://lian-li.com/product/lancool-216/",
+      "alt": "Góc nghiêng case Lian Li LANCOOL 216 RGB White, mặt kính cường lực bên hông"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://lian-li.com/product/lancool-216/",
+      "alt": "Bên trong case Lian Li LANCOOL 216 RGB White nhìn từ mặt sau"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Đồ Họa QH Renderfarm W3 - Ryzen 9 9900X3D / RTX 5080 16GB",
+  "metaDescription": "PC workstation QH Renderfarm W3: Ryzen 9 9900X3D 12 nhân, RTX 5080 16GB, 32GB DDR5-5600, SSD 990 PRO 2TB NVMe Gen4 - chuyên render 3D Blender, Maya, 3ds Max, Cinema 4D. Giá tốt, bảo hành chính hãng tại QH."
+}

@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { motion } from 'framer-motion';
 import {
-    Monitor, ChevronRight, Gamepad, Server, Cpu,
+    Monitor, ChevronRight, ChevronLeft, Gamepad, Server, Cpu,
     Wifi, Wrench, Zap, Laptop, Gift, Star, Speaker,
     Camera, Headset, MousePointer2
 } from 'lucide-react';
 import { catalogApi, type Category } from '../../api/catalog';
+import { resolveMediaUrl } from '../../lib/media-url';
 
 // Import Swiper styles
 import 'swiper/swiper-bundle.css';
@@ -46,6 +47,15 @@ const getCategoryIcon = (name: string) => {
 export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const { slides = [], showSidebar = true } = config;
+
+    // W0 gate: mũi điều hướng mặc định của Swiper nằm giữa hai cạnh nên ở 390px nó đè lên
+    // dòng phụ đề của slide. Thay bằng 2 nút tự dựng, gom về góc dưới bên phải và ẩn dưới `sm`
+    // (mobile vẫn quẹt được và đã có dot phân trang) ⇒ không bao giờ nằm trên chữ.
+    const prevButtonRef = useRef<HTMLButtonElement>(null);
+    const nextButtonRef = useRef<HTMLButtonElement>(null);
+    const navButtonClass =
+        'w-10 h-10 rounded-full bg-black/45 hover:bg-black/70 text-white flex items-center justify-center '
+        + 'backdrop-blur-sm transition-colors ring-1 ring-white/25';
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -97,11 +107,19 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.6 }}
-                    className={`${showSidebar ? 'lg:col-span-3' : ''} rounded-2xl overflow-hidden shadow-2xl border-4 border-white h-[500px] bg-gray-100`}
+                    className={`${showSidebar ? 'lg:col-span-3' : ''} relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white h-[500px] bg-gray-100`}
                 >
                     <Swiper
                         modules={[Navigation, Pagination, Autoplay, EffectFade]}
-                        navigation
+                        navigation={{ prevEl: prevButtonRef.current, nextEl: nextButtonRef.current }}
+                        onBeforeInit={swiper => {
+                            // Ref chưa gắn ở lần render đầu ⇒ gán lại ngay trước khi Swiper khởi tạo.
+                            const nav = swiper.params.navigation;
+                            if (nav && typeof nav !== 'boolean') {
+                                nav.prevEl = prevButtonRef.current;
+                                nav.nextEl = nextButtonRef.current;
+                            }
+                        }}
                         pagination={{ clickable: true }}
                         autoplay={{ delay: 5000, disableOnInteraction: false }}
                         effect="fade"
@@ -114,14 +132,15 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                                 <div className="relative w-full h-full">
                                     <div
                                         className="absolute inset-0 bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${slide.image && slide.image.startsWith('/uploads') ? `http://localhost:5000${slide.image}` : slide.image})` }}
+                                        style={{ backgroundImage: `url(${resolveMediaUrl(slide.image)})` }}
                                     >
                                         {/* Overlay đỏ đậm bên trái (làm nổi chữ) fade dần sang phải để lộ ảnh nền, thay vì phủ kín 1 màu */}
                                         <div className="absolute inset-0 bg-gradient-to-r from-red-800/95 via-red-700/70 to-red-900/20" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                                     </div>
 
-                                    <div className="relative h-full flex items-center p-8 md:p-16 text-white z-10">
+                                    {/* pr-* giữ khoảng trống cho cụm nút điều hướng ở góc dưới phải */}
+                                    <div className="relative h-full flex items-center px-6 py-8 sm:px-10 md:px-16 md:py-16 text-white z-10">
                                         <div className="max-w-4xl w-full">
                                             {slide.badge && (
                                                 <motion.div
@@ -159,6 +178,16 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ config }) => {
                             </SwiperSlide>
                         ))}
                     </Swiper>
+
+                    {/* Nút điều hướng: góc dưới phải, tách khỏi vùng chữ; ẩn trên mobile (quẹt + dot) */}
+                    <div className="hidden sm:flex absolute right-4 bottom-4 z-20 gap-2">
+                        <button ref={prevButtonRef} type="button" aria-label="Slide trước" className={navButtonClass}>
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button ref={nextButtonRef} type="button" aria-label="Slide sau" className={navButtonClass}>
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
                 </motion.div>
             </div>
         </div>

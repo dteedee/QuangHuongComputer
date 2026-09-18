@@ -1,0 +1,223 @@
+{
+  "name": "Camera IP Hikvision DS-2CD1043G2-LIU 4MP Thân Trụ Ống Kính 4mm",
+  "slug": "hikvision-ds-2cd1043g2-liu",
+  "sku": "HIK-2CD1043G2LIU4MM",
+  "brand": "Hikvision",
+  "category": "Camera",
+  "subCategory": "Camera IP",
+  "model": "DS-2CD1043G2-LIU (4mm)",
+  "officialUrl": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/",
+  "priceVnd": 1390000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 1220000,
+  "priceSources": [
+    "https://meta.vn/camera-ip-4mp-hikvision-ds-2cd1043g2-liu-p104202"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Hikvision Việt Nam 24 tháng, hỗ trợ 1 đổi 1 trong 12 tháng đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.27,
+  "stockQuantity": 22,
+  "shortDescription": "Camera IP thân trụ ngoài trời Hikvision DS-2CD1043G2-LIU độ phân giải 4MP, tích hợp đèn hồng ngoại và đèn trắng thông minh cho hình ảnh rõ nét cả ngày lẫn đêm. Chuẩn chống nước bụi IP67, hỗ trợ cấp nguồn PoE, phù hợp lắp ngoài trời văn phòng, cửa hàng, nhà xưởng.",
+  "descriptionHtml": "<h3>Camera IP Hikvision DS-2CD1043G2-LIU 4MP - giám sát ngoài trời sắc nét ngày và đêm</h3><p>DS-2CD1043G2-LIU thuộc dòng Value Series của Hikvision, dùng cảm biến CMOS 1/3\" cho độ phân giải tối đa 2560×1440 (4MP). Ống kính tiêu cự cố định 4mm mang lại góc nhìn ngang 78°, phù hợp giám sát khu vực vừa và cửa ra vào. Camera tích hợp công nghệ đèn kép: hồng ngoại 850nm và đèn trắng bổ sung, chiếu xa tới 30m, tự động bật theo điều kiện sáng thực tế giúp hình ảnh ban đêm vẫn lên màu thay vì chỉ đen trắng.</p><h3>Thông minh & tiết kiệm băng thông</h3><p>Tích hợp tính năng phát hiện người và phương tiện giúp giảm cảnh báo giả từ lá cây, bóng đổ hay động vật nhỏ. Nén hình ảnh chuẩn H.265+/H.264+ giúp tiết kiệm đáng kể băng thông mạng và dung lượng lưu trữ trên đầu ghi so với chuẩn nén cũ. Camera có mic thu âm tích hợp, ghi lại âm thanh hiện trường cùng hình ảnh theo thời gian thực.</p><h3>Thiết kế bền bỉ, lắp đặt linh hoạt</h3><p>Vỏ kim loại kết hợp nhựa đạt chuẩn chống nước bụi IP67, chịu được mưa nắng khi lắp ngoài trời. Camera hỗ trợ cấp nguồn qua PoE (IEEE 802.3af) hoặc adapter 12VDC rời, giảm chi phí đi dây nguồn riêng khi triển khai nhiều camera qua đầu ghi NVR PoE.</p><ul><li>Độ phân giải 4MP, ống kính 4mm góc nhìn 78°</li><li>Đèn hồng ngoại + đèn trắng thông minh, chiếu xa 30m</li><li>Phát hiện người & phương tiện, giảm báo động giả</li><li>Mic tích hợp, nén H.265+ tiết kiệm băng thông</li><li>Chuẩn chống nước bụi IP67, hỗ trợ PoE</li></ul>",
+  "highlights": [
+    "Cảm biến CMOS 4MP, độ phân giải 2560×1440 cho hình ảnh sắc nét ban ngày",
+    "Công nghệ đèn kép: hồng ngoại + đèn trắng thông minh chiếu xa 30m, rõ nét cả ban đêm",
+    "Phát hiện người & phương tiện (Human/Vehicle Detection) hạn chế báo động giả",
+    "Mic thu âm tích hợp, ghi âm thanh hiện trường theo thời gian thực",
+    "Chuẩn chống nước bụi IP67, bền bỉ khi lắp ngoài trời",
+    "Nén H.265+ tiết kiệm băng thông & dung lượng lưu trữ, hỗ trợ cấp nguồn PoE"
+  ],
+  "specs": [
+    {
+      "group": "Camera",
+      "name": "Cảm biến hình ảnh",
+      "value": "CMOS quét lũy tiến 1/3 inch",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Camera",
+      "name": "Độ phân giải tối đa",
+      "value": "2560 × 1440 (4MP)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Camera",
+      "name": "Độ nhạy sáng tối thiểu",
+      "value": "Màu: 0.005 Lux (F1.6, AGC bật); Đen trắng: 0 Lux khi bật hồng ngoại",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Camera",
+      "name": "Chuyển ngày/đêm",
+      "value": "Bộ lọc cắt hồng ngoại (IR cut filter)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Camera",
+      "name": "Góc xoay lắp đặt",
+      "value": "Pan 0-360°, Tilt 0-90°, Rotate 0-360°",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Ống kính",
+      "name": "Loại ống kính",
+      "value": "Tiêu cự cố định 4mm (tùy chọn khác: 2.8mm)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Ống kính",
+      "name": "Góc nhìn (4mm)",
+      "value": "Ngang 78°, dọc 42°, chéo 93°",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Ống kính",
+      "name": "Khẩu độ / ngàm ống kính",
+      "value": "F1.6, ngàm M12",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Đèn hỗ trợ",
+      "name": "Loại đèn bổ sung",
+      "value": "Hồng ngoại 850nm + đèn trắng (Dual Light)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Đèn hỗ trợ",
+      "name": "Khoảng cách chiếu sáng bổ sung",
+      "value": "Tối đa 30m, tự động thông minh (Smart Supplement Light)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Video",
+      "name": "Nén video luồng chính",
+      "value": "H.265+/H.265/H.264+/H.264",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Video",
+      "name": "Khung hình luồng chính",
+      "value": "20fps @2560×1440; 25fps(50Hz)/24fps(60Hz) @1920×1080",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Video",
+      "name": "Bitrate",
+      "value": "32 Kbps - 8 Mbps, chế độ CBR/VBR",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Mic tích hợp",
+      "value": "Có, mono, lọc tiếng ồn môi trường",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Chuẩn nén âm thanh",
+      "value": "G.711/G.722.1/G.726/MP2L2/AAC-LC",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Hình ảnh",
+      "name": "Dải tương phản động (WDR)",
+      "value": "120 dB",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Hình ảnh",
+      "name": "Tỷ lệ tín hiệu/nhiễu (SNR)",
+      "value": "≥ 52 dB",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Hình ảnh",
+      "name": "Che vùng riêng tư",
+      "value": "4 vùng đa giác lập trình được",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Mạng & Bảo mật",
+      "name": "Cổng kết nối",
+      "value": "1 cổng RJ45 10M/100M tự nhận",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Mạng & Bảo mật",
+      "name": "Xem trực tiếp đồng thời",
+      "value": "Tối đa 6 kênh",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Mạng & Bảo mật",
+      "name": "Giao thức / API",
+      "value": "TCP/IP, RTSP, ONVIF Profile S/T, ISAPI, SDK",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Khe thẻ nhớ microSD",
+      "value": "Không có ở bản LIU thường (chỉ bản -F hỗ trợ, tối đa 512GB)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Nguồn cấp",
+      "value": "12VDC ±25% 0.4A hoặc PoE IEEE 802.3af Class 3 (tối đa 6.5W)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Kích thước",
+      "value": "170.8 × 66 × 69.1 mm",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Trọng lượng",
+      "value": "Khoảng 270g (chưa gồm hộp)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Chất liệu vỏ",
+      "value": "Kim loại & nhựa",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Chuẩn bảo vệ & Vận hành",
+      "name": "Chuẩn chống nước/bụi",
+      "value": "IP67 (IEC 60529-2013)",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    },
+    {
+      "group": "Chuẩn bảo vệ & Vận hành",
+      "name": "Nhiệt độ hoạt động",
+      "value": "-30°C đến 60°C, độ ẩm ≤95% không ngưng tụ",
+      "source": "https://www.hikvision.com/en/products/IP-Products/Network-Cameras/Value-Series/ds-2cd1043g2-liu-f-/"
+    }
+  ],
+  "filterAttributes": {
+    "connectivity": "PoE / Ethernet",
+    "resolution": "4MP (2560x1440)",
+    "lensMm": "4mm",
+    "ipRating": "IP67",
+    "nightVisionM": "30",
+    "cameraType": "Bullet (thân trụ)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://assets.hikvision.com/prd/normal/all/image/m000064174/%E7%AD%92%E6%9C%BA39-%E7%99%BD%E5%85%89%E6%AC%BE-",
+      "alt": "Camera IP Hikvision DS-2CD1043G2-LIU 4MP nhìn thẳng vào ống kính và đèn hỗ trợ"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://assets.hikvision.com/prd/normal/all/image/sm000042445/%E7%AD%92%E6%9C%BA39-%E7%99%BD%E5%85%89%E6%AC%BE",
+      "alt": "Camera IP Hikvision DS-2CD1043G2-LIU góc nghiêng cho thấy đế xoay lắp đặt"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Camera IP Hikvision DS-2CD1043G2-LIU 4MP Thân Trụ - Chính Hãng",
+  "metaDescription": "Camera IP Hikvision DS-2CD1043G2-LIU 4MP thân trụ, đèn hồng ngoại + đèn trắng 30m, chuẩn IP67, hỗ trợ PoE. Bảo hành chính hãng 24 tháng."
+}

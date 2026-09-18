@@ -15,7 +15,7 @@ public static class HREndpoints
 {
     public static void MapHREndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // ==================== PUBLIC RECRUITMENT ====================
         app.MapGet("/api/recruitment", async (HRDbContext db) =>
@@ -47,6 +47,9 @@ public static class HREndpoints
 
         group.MapPost("/employees", async (CreateEmployeeDto dto, HRDbContext db) =>
         {
+            // W0-8: was positional — dto.IdCardNumber landed in the 8th ctor param
+            // (employeeCode) and dto.Address in the 9th (idCardNumber), writing both
+            // values into the wrong columns. Named args pin them to the right ones.
             var employee = new Employee(
                 dto.FullName,
                 dto.Email,
@@ -55,8 +58,8 @@ public static class HREndpoints
                 dto.Position,
                 dto.HireDate ?? DateTime.UtcNow,
                 dto.BaseSalary,
-                dto.IdCardNumber,
-                dto.Address
+                idCardNumber: dto.IdCardNumber,
+                address: dto.Address
             );
 
             db.Employees.Add(employee);
@@ -347,44 +350,9 @@ public static class HREndpoints
             return Results.Ok(new { Message = "Payroll marked as paid", PayrollId = payroll.Id });
         });
 
-        // Get Payroll by ID
-        group.MapGet("/payroll/{id:guid}", async (Guid id, HRDbContext db) =>
-        {
-            var payroll = await db.Payrolls
-                .Include(p => p.Employee)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (payroll == null) return Results.NotFound(new { Error = "Payroll not found" });
-
-            return Results.Ok(new
-            {
-                payroll.Id,
-                payroll.EmployeeId,
-                EmployeeName = payroll.Employee?.FullName,
-                payroll.Month,
-                payroll.Year,
-                payroll.BaseSalary,
-                payroll.Deductions,
-                payroll.Bonuses,
-                payroll.NetPay,
-                Status = payroll.Status.ToString(),
-                payroll.RegularHours,
-                payroll.OvertimeHours,
-                payroll.OvertimePay,
-                payroll.TaxDeduction,
-                payroll.InsuranceDeduction,
-                payroll.OtherDeductions,
-                payroll.PerformanceBonus,
-                payroll.AttendanceBonus,
-                payroll.CalculatedAt,
-                payroll.ApprovedAt,
-                payroll.ProcessedAt,
-                payroll.PaidAt,
-                payroll.ApprovedBy,
-                payroll.ProcessedBy,
-                payroll.Notes
-            });
-        });
+        // Get Payroll by ID — moved to PayrollEndpoints.cs (GET /api/hr/payroll/{payrollId})
+        // which returns the same route + LineItems. Having both registered threw
+        // AmbiguousMatchException on every request (W0-8).
 
         // Calculate Payroll
         group.MapPost("/payroll/{id:guid}/calculate", async (Guid id, HRDbContext db) =>

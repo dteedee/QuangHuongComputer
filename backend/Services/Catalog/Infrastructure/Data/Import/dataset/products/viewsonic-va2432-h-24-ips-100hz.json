@@ -1,0 +1,206 @@
+{
+  "name": "Màn Hình ViewSonic VA2432-H 24 inch FHD IPS 100Hz",
+  "slug": "viewsonic-va2432-h-24-ips-100hz",
+  "sku": "VS-VA2432H",
+  "brand": "ViewSonic",
+  "category": "Màn Hình Máy Tính",
+  "subCategory": "Màn hình văn phòng",
+  "model": "ViewSonic VA2432-H",
+  "officialUrl": "https://www.viewsonic.com/vn/products/lcd/VA2432-H",
+  "priceVnd": 1990000,
+  "oldPriceVnd": 2590000,
+  "costPriceVnd": 1750000,
+  "priceSources": [
+    "https://gearvn.com/products/man-hinh-viewsonic-va2432-h-2-24-ips-100hz-vien-mong"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng 36 tháng (3 năm) tại Việt Nam qua hệ thống bảo hành ủy quyền ViewSonic.",
+  "weightKg": 2.7,
+  "stockQuantity": 18,
+  "shortDescription": "Màn hình ViewSonic VA2432-H sở hữu tấm nền IPS 24 inch Full HD cho màu sắc trung thực, tần số quét 100Hz và thời gian phản hồi 1ms giúp thao tác mượt mà. Thiết kế viền mỏng, tích hợp công nghệ bảo vệ mắt phù hợp làm việc văn phòng nhiều giờ.",
+  "descriptionHtml": "<h3>Màn hình văn phòng IPS 100Hz sắc nét</h3><p>ViewSonic VA2432-H là lựa chọn màn hình 24 inch dành cho dân văn phòng, sinh viên và người dùng phổ thông cần một màn hình hiển thị rõ nét với chi phí hợp lý. Tấm nền SuperClear IPS độ phân giải Full HD 1920x1080 mang lại màu sắc trung thực, góc nhìn rộng 178 độ theo cả chiều ngang lẫn chiều dọc, hạn chế hiện tượng lệch màu khi nhìn từ nhiều hướng.</p><h3>Mượt mà hơn với 100Hz</h3><p>Khác với các màn hình văn phòng tần số quét 60Hz truyền thống, VA2432-H được nâng cấp lên 100Hz kết hợp thời gian phản hồi 1ms (MPRT), giúp thao tác cuộn trang, kéo thả cửa sổ hay xem video mượt mà hơn, giảm hiện tượng bóng mờ khi chuyển động nhanh.</p><h3>Bảo vệ mắt, tiết kiệm điện</h3><p>Máy tích hợp công nghệ lọc ánh sáng xanh và Flicker-Free giúp giảm mỏi mắt khi sử dụng liên tục nhiều giờ. Mức tiêu thụ điện năng tối đa chỉ 25W, có chế độ Eco giúp tiết kiệm chi phí điện hàng tháng.</p><ul><li>Tấm nền IPS 24 inch, Full HD, tần số quét 100Hz</li><li>Thời gian phản hồi 1ms (MPRT)</li><li>Cổng kết nối HDMI 1.4 và VGA</li><li>Chuẩn treo tường VESA 75x75mm</li><li>Công nghệ bảo vệ mắt Flicker-Free, lọc ánh sáng xanh</li><li>Bảo hành chính hãng 36 tháng tại Việt Nam</li></ul><p>Với thiết kế viền mỏng hiện đại và chân đế chắc chắn có thể ngả góc từ -3 đến 20 độ, VA2432-H phù hợp bố trí trên bàn làm việc nhỏ gọn hoặc lắp đặt theo cụm nhiều màn hình trong văn phòng.</p>",
+  "highlights": [
+    "Tấm nền SuperClear IPS 24 inch, độ phủ màu sRGB 105% cho hình ảnh sắc nét, góc nhìn rộng 178°.",
+    "Tần số quét 100Hz cùng thời gian phản hồi 1ms (MPRT), thao tác mượt hơn màn hình 60Hz thông thường.",
+    "Công nghệ lọc ánh sáng xanh và Flicker-Free giảm mỏi mắt khi làm việc nhiều giờ.",
+    "Thiết kế viền mỏng 3 cạnh, hỗ trợ treo tường chuẩn VESA 75x75mm, tiết kiệm không gian bàn làm việc.",
+    "Kết nối đầy đủ HDMI 1.4 và VGA, tương thích tốt với PC văn phòng đời cũ lẫn mới.",
+    "Tiêu thụ điện năng thấp (tối đa 25W), có chế độ Eco tiết kiệm điện."
+  ],
+  "specs": [
+    {
+      "group": "Màn hình",
+      "name": "Kích thước màn hình",
+      "value": "24 inch (23.8 inch hiển thị thực)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền",
+      "value": "IPS (SuperClear IPS Technology)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "1920 x 1080 (Full HD)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét",
+      "value": "100Hz",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian phản hồi",
+      "value": "1ms (MPRT)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "250 cd/m² (typ)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ tương phản",
+      "value": "1.000:1 (tĩnh), 50.000.000:1 (động)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Góc nhìn",
+      "value": "178° (ngang) / 178° (dọc)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phủ màu",
+      "value": "sRGB 105% size / 99% coverage (typ), NTSC 75%",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sâu màu",
+      "value": "8-bit (6-bit + FRC), 16.7 triệu màu",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Bề mặt tấm nền",
+      "value": "Chống chói (Anti-Glare), phủ cứng 3H",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Công nghệ bảo vệ mắt",
+      "value": "Lọc ánh sáng xanh (phần cứng & phần mềm), không nhấp nháy (Flicker-Free)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng kết nối",
+      "value": "1x HDMI 1.4, 1x VGA, 1x jack tai nghe 3.5mm",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng nguồn",
+      "value": "DC Socket (qua adapter nguồn ngoài)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Điều chỉnh công thái học",
+      "value": "Ngả màn hình -3°/20° (không chỉnh độ cao, không xoay dọc)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chuẩn treo tường VESA",
+      "value": "75 x 75 mm",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Khe khóa Kensington",
+      "value": "Có (1 khe)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước (có chân đế, DxRxC)",
+      "value": "540 x 406 x 185 mm",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước (không chân đế)",
+      "value": "540 x 322 x 36 mm",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng tịnh",
+      "value": "2.7 kg (2.4 kg không kèm chân đế)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất tiêu thụ",
+      "value": "Typ 22W, Max 25W, chế độ chờ 0.3W",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Điện áp vào",
+      "value": "AC 100-240V (qua adapter ngoài)",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Chính sách bảo hành",
+      "value": "3 năm chính hãng tại Việt Nam",
+      "source": "https://www.viewsonic.com/vn/products/lcd/VA2432-H"
+    }
+  ],
+  "filterAttributes": {
+    "size": "24 inch",
+    "resolution": "1920x1080",
+    "panel": "IPS",
+    "refreshRate": "100Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.viewsonic.com/vsAssetFile/vn/img/slides/_lcd_display_(new)/VA2432-H/scaled/GPG-23-MON-VA2432-h",
+      "alt": "Màn hình ViewSonic VA2432-H nhìn thẳng mặt trước, chân đế và viền mỏng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.viewsonic.com/vsAssetFile/vn/img/resize/slides/_lcd_display_(new)/VA2432-H/scaled/VA2432-H_B01",
+      "alt": "Mặt sau màn hình ViewSonic VA2432-H với logo thương hiệu và chân đế VESA"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.viewsonic.com/vsAssetFile/vn/img/resize/slides/_lcd_display_(new)/VA2432-H/scaled/VA2432-H_LB0",
+      "alt": "Góc nghiêng mặt sau màn hình ViewSonic VA2432-H"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://www.viewsonic.com/vsAssetFile/vn/img/resize/slides/_lcd_display_(new)/VA2432-H/scaled/VA2432-H_S01",
+      "alt": "Màn hình ViewSonic VA2432-H nhìn từ cạnh bên thể hiện độ mỏng"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://www.viewsonic.com/vsAssetFile/vn/img/slides/_lcd_display_(new)/VA2432-H/scaled/VA2432-H_C01_pc_m.j",
+      "alt": "Cận cảnh cổng kết nối HDMI, VGA và DC-in phía sau màn hình"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Màn Hình ViewSonic VA2432-H 24 inch FHD IPS 100Hz | Quang Huong Computer",
+  "metaDescription": "Màn hình ViewSonic VA2432-H 24 inch Full HD, tấm nền IPS, tần số quét 100Hz, phản hồi 1ms, bảo hành chính hãng 36 tháng. Mua ngay tại Quang Huong Computer."
+}

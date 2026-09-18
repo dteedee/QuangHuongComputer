@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { repairApi, type WorkOrder, type WorkOrderStatus, getStatusColor } from '../api/repair';
 import { formatCurrency } from '../utils/format';
-import { Clock, CheckCircle, XCircle, Play, AlertCircle, FileText, Wrench, ChevronRight } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Play, AlertCircle, FileText, Wrench, ChevronRight, LogIn } from 'lucide-react';
 import { z } from 'zod';
 import { validationMessages as msg } from '../lib/validation/messages';
 
@@ -89,6 +89,13 @@ export const RepairPage = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // W0-12 (step 5): landing công khai — chỉ chặn ở HÀNH ĐỘNG gửi yêu cầu, không chặn
+        // cả trang. Trước đây toàn bộ RepairPage (form + CTA đặt lịch) bị ẩn sau login wall.
+        if (!isAuthenticated) {
+            navigate('/login', { state: { from: '/repairs' } });
+            return;
+        }
+
         const schema = z.object({
             deviceModel: z.string().min(1, msg.requireInput('Tên thiết bị / Model')),
             serialNumber: z.string().min(1, msg.requireInput('Số Serial (S/N)')),
@@ -109,30 +116,6 @@ export const RepairPage = () => {
         setErrors({});
         createRepair.mutate({ deviceModel, serialNumber, description: issueDescription });
     };
-
-    if (!isAuthenticated) {
-        return (
-            <div className="bg-gray-50 min-h-screen py-8 font-sans">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="max-w-md mx-auto bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center">
-                        <div className="w-14 h-14 bg-red-50 text-accent rounded-xl flex items-center justify-center mx-auto mb-5">
-                            <Wrench size={28} />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Vui lòng đăng nhập</h2>
-                        <p className="text-gray-500 text-sm mb-6">
-                            Bạn cần đăng nhập để đặt lịch sửa chữa và theo dõi tiến độ.
-                        </p>
-                        <Link
-                            to="/login"
-                            className="inline-block px-8 py-2.5 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl transition-all cursor-pointer"
-                        >
-                            Đăng nhập ngay
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     const isLoading = loadingWorkOrders || loadingBookings;
     const allItems = [
@@ -218,11 +201,23 @@ export const RepairPage = () => {
                         </Link>
                     </div>
 
-                    {/* Right: Repair History */}
+                    {/* Right: Repair History — landing công khai, chỉ mục "của tôi" này cần đăng nhập */}
                     <div className="lg:col-span-2">
                         <h3 className="font-bold text-gray-900 mb-4">Lịch sử sửa chữa</h3>
 
-                        {isLoading ? (
+                        {!isAuthenticated ? (
+                            <div className="bg-white py-10 px-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                                <LogIn size={24} className="text-gray-300 mx-auto mb-3" />
+                                <p className="text-gray-500 text-sm mb-4">Đăng nhập để xem lịch sử sửa chữa của bạn.</p>
+                                <Link
+                                    to="/login"
+                                    state={{ from: '/repairs' }}
+                                    className="inline-block px-6 py-2 bg-accent hover:bg-[#b00014] text-white font-semibold rounded-xl text-sm transition-all cursor-pointer"
+                                >
+                                    Đăng nhập ngay
+                                </Link>
+                            </div>
+                        ) : isLoading ? (
                             <div className="text-center text-gray-500 py-10 text-sm">Đang tải dữ liệu...</div>
                         ) : allItems.length === 0 ? (
                             <div className="bg-white py-10 px-6 rounded-xl border border-gray-100 shadow-sm text-center text-gray-500 text-sm">

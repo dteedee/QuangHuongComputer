@@ -1,0 +1,322 @@
+{
+  "name": "PC Gaming QH Apex G5 - Ryzen 7 9800X3D / RTX 5080 16GB",
+  "slug": "pc-gaming-qh-apex-g5-ryzen7-9800x3d-rtx-5080",
+  "sku": "PCGM-QH-APEX-G5",
+  "brand": "QH",
+  "category": "Máy Tính Chơi Game",
+  "subCategory": "Gaming PC - Flagship 4K",
+  "model": "Apex G5",
+  "officialUrl": "https://nzxt.com/products/h5-flow",
+  "priceVnd": 111230000,
+  "oldPriceVnd": 115870000,
+  "costPriceVnd": 99000000,
+  "priceSources": [
+    "https://gearvn.com/search?type=product&q=Ryzen+7+9800X3D",
+    "https://gearvn.com/products/bo-mach-chu-msi-mag-x870-tomahawk-wifi-ddr5",
+    "https://gearvn.com/search?type=product&q=Kingston+Fury+Beast+32GB+DDR5+5600+kit",
+    "https://gearvn.com/products/card-man-hinh-msi-geforce-rtx-5080-16g-shadow-3x-oc",
+    "https://gearvn.com/products/o-cung-ssd-samsung-990-pro-2tb-pcie-gen4-nvme-mz-v9p2t0bw",
+    "https://gearvn.com/search?type=product&q=MSI+MAG+A850GL",
+    "https://www.anphatpc.com.vn/vo-case-nzxt-h5-flow-2024-all-white-cc-h52fw-01.html",
+    "https://www.tncstore.vn/vo-case-nzxt-h5-flow-all-white-cc-h52fw-01.html",
+    "https://www.anphatpc.com.vn/tan-nhiet-cpu-thermalright-dual-tower-peerless-assassin-120-se_id40061.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành đồng bộ 24 tháng tại Quang Huong Computer cho toàn bộ dàn máy; riêng CPU AMD 36 tháng, mainboard MSI 36 tháng, RAM Kingston bảo hành giới hạn trọn đời, SSD Samsung 5 năm (hoặc 1.200TBW tùy điều kiện nào đến trước), case NZXT 24 tháng chính hãng - đổi mới 1-1 trong 30 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 14.6,
+  "stockQuantity": 5,
+  "shortDescription": "Dàn PC gaming 4K flagship dựng sẵn với Ryzen 7 9800X3D 3D V-Cache và RTX 5080 16GB GDDR7, cân mọi tựa game AAA độ phân giải 4K kèm SSD 2TB dư dả cho thư viện game lớn.",
+  "descriptionHtml": "<h3>Sức mạnh Zen 5 3D V-Cache và đồ họa Blackwell</h3><p>QH Apex G5 xây dựng quanh CPU AMD Ryzen 7 9800X3D - 8 nhân 16 luồng, 96MB 3D V-Cache, boost tới 5.2GHz, mang lại khung hình game cực cao và ổn định bậc nhất phân khúc. Kết hợp card đồ họa MSI GeForce RTX 5080 16G SHADOW 3X OC kiến trúc Blackwell với 16GB GDDR7 bus 256-bit cùng tản nhiệt 3 quạt, dư sức chiến mọi tựa game AAA ở độ phân giải 4K mượt mà.</p><h3>Nền tảng AM5 sẵn sàng nâng cấp, lưu trữ tốc độ cao</h3><p>Mainboard MSI MAG X870 TOMAHAWK WIFI chipset X870 chuẩn AM5 hỗ trợ PCIe 5.0, 4 khe M.2 và Wi-Fi 7, sẵn sàng cho các đợt nâng cấp CPU Ryzen 9000 trong tương lai. RAM Kingston FURY Beast 32GB (2x16GB) DDR5-5600 chạy kênh đôi cho đa nhiệm mượt mà, đi cùng SSD Samsung 990 PRO 2TB NVMe Gen4 tốc độ đọc/ghi tới 7.450/6.900 MB/s rút ngắn thời gian tải game và xử lý file dung lượng lớn.</p><h3>Vỏ case thoáng khí, nguồn dư tải an toàn</h3><p>Case NZXT H5 Flow (2024) All White với mặt lưới toàn diện tối ưu luồng khí, khoang chứa GPU dài tới 410mm và tản CPU khí cao tới 170mm - vừa khít bộ tản Thermalright Peerless Assassin 120 SE (155mm). Nguồn MSI MAG A850GL PCIE5 850W 80 Plus Gold Full Modular có sẵn đầu 16-pin PCIe 5.0 gốc, cấp điện trực tiếp cho RTX 5080 không cần adapter, dư tải an toàn so với mức tiêu thụ đỉnh ước tính khoảng 550-600W của toàn hệ thống.</p><ul><li>CPU AMD Ryzen 7 9800X3D, 8 nhân 16 luồng, boost 5.2GHz, 96MB 3D V-Cache</li><li>VGA MSI GeForce RTX 5080 16G SHADOW 3X OC, 16GB GDDR7, PCIe Gen 5</li><li>Mainboard MSI MAG X870 TOMAHAWK WIFI, RAM Kingston FURY Beast 32GB DDR5-5600</li><li>SSD Samsung 990 PRO 2TB NVMe Gen4, đọc/ghi tới 7.450/6.900 MB/s</li><li>Case NZXT H5 Flow 2024 White, tản CPU Thermalright Peerless Assassin 120 SE</li><li>Nguồn MSI MAG A850GL PCIE5 850W 80 Plus Gold Full Modular</li></ul>",
+  "highlights": [
+    "AMD Ryzen 7 9800X3D 8 nhân/16 luồng, 96MB 3D V-Cache, boost 5.2GHz - CPU gaming đầu bảng hiện nay",
+    "VGA MSI GeForce RTX 5080 16G SHADOW 3X OC, kiến trúc Blackwell, 16GB GDDR7, PCIe Gen 5 - chiến mượt 4K",
+    "SSD Samsung 990 PRO 2TB NVMe Gen4 đọc/ghi tới 7.450/6.900 MB/s, TBW 1.200TB, bảo hành 5 năm theo datasheet hãng",
+    "Mainboard MSI MAG X870 TOMAHAWK WIFI: chipset X870, PCIe 5.0, 4 khe M.2, Wi-Fi 7, sẵn sàng nâng cấp Ryzen 9000",
+    "RAM Kingston FURY Beast 32GB (2x16GB) DDR5-5600 kênh đôi, đa nhiệm và render mượt mà",
+    "Case NZXT H5 Flow 2024 White thoáng khí (GPU tới 410mm, tản CPU tới 170mm), PSU MSI MAG A850GL 850W Gold Full Modular dư tải an toàn"
+  ],
+  "specs": [
+    {
+      "group": "CPU",
+      "name": "Model",
+      "value": "AMD Ryzen 7 9800X3D",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Kiến trúc",
+      "value": "Zen 5 (Granite Ridge), tiến trình TSMC 4nm",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Số nhân / luồng",
+      "value": "8 nhân / 16 luồng (SMT)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Xung nhịp",
+      "value": "Base 4.7GHz, Boost tối đa 5.2GHz",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Cache",
+      "value": "L2 8MB, L3 96MB (2nd Gen 3D V-Cache)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "TDP mặc định",
+      "value": "120W, nhiệt độ tối đa (Tjmax) 95°C",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Socket & bộ nhớ hỗ trợ",
+      "value": "Socket AM5, DDR5 2 kênh tối đa 256GB (DDR5-5600 2x1R)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "CPU",
+      "name": "PCIe",
+      "value": "PCIe 5.0, 28 lane (24 lane khả dụng)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Model",
+      "value": "MSI MAG X870 TOMAHAWK WIFI",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Chipset / Socket",
+      "value": "AMD X870, Socket AM5 (Ryzen 9000/8000/7000 Series)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Khe RAM",
+      "value": "4x DDR5 UDIMM tối đa 256GB, hỗ trợ AMD EXPO đến 8400+ MT/s (OC)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Khe mở rộng & M.2",
+      "value": "PCIe 5.0 x16 từ CPU, 4 khe M.2 (2 khe PCIe 5.0 x4)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Kết nối không dây & USB",
+      "value": "Wi-Fi 7, Bluetooth 5.4, LAN 5G, 2x USB4 40Gbps Type-C mặt sau",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "RAM",
+      "name": "Model",
+      "value": "Kingston FURY Beast KF556C40BB-16WP (bộ kit 2x16GB)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "RAM",
+      "name": "Loại & tốc độ",
+      "value": "DDR5-5600MT/s, CL40-40-40 @ 1.25V (hỗ trợ EXPO/XMP 3.0)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "RAM",
+      "name": "Dung lượng",
+      "value": "32GB (2x16GB), 288-pin, kênh đôi, On-Die ECC",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Model",
+      "value": "MSI GeForce RTX 5080 16G SHADOW 3X OC (G5080-16S3C)",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "GPU & CUDA cores",
+      "value": "NVIDIA GeForce RTX 5080 (Blackwell), 10.752 nhân CUDA",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Bộ nhớ",
+      "value": "16GB GDDR7, bus 256-bit, tốc độ 30 Gbps",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Xung nhịp",
+      "value": "Boost 2640 MHz, Extreme Performance (MSI Center) 2655 MHz",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Giao tiếp & điện năng",
+      "value": "PCIe Gen 5, TDP 360W, 1x đầu 16-pin, khuyến nghị PSU 850W",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Kích thước",
+      "value": "303 x 121 x 49mm, nặng 1046g (card)",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC/Specification"
+    },
+    {
+      "group": "Ổ cứng",
+      "name": "Model",
+      "value": "Samsung SSD 990 PRO 2TB (MZ-V9P2T0BW)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-2tb-nvme-pcie-gen-4-mz-v9p2t0bw/"
+    },
+    {
+      "group": "Ổ cứng",
+      "name": "Giao tiếp",
+      "value": "PCIe Gen 4.0 x4, NVMe 2.0, form factor M.2 2280",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-2tb-nvme-pcie-gen-4-mz-v9p2t0bw/"
+    },
+    {
+      "group": "Ổ cứng",
+      "name": "Hiệu năng",
+      "value": "Đọc tuần tự 7.450 MB/s, ghi tuần tự 6.900 MB/s, cache 2GB LPDDR4",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-2tb-nvme-pcie-gen-4-mz-v9p2t0bw/"
+    },
+    {
+      "group": "Ổ cứng",
+      "name": "Độ bền & bảo hành",
+      "value": "TBW 1.200TB, MTBF 1,5 triệu giờ, bảo hành giới hạn 5 năm, NAND Samsung V-NAND TLC",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "Nguồn",
+      "name": "Model",
+      "value": "MSI MAG A850GL PCIE5",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Nguồn",
+      "name": "Công suất & chuẩn 80 Plus",
+      "value": "850W, 80 Plus Gold (hiệu suất tới 90%)",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Nguồn",
+      "name": "Modular & đầu cắm",
+      "value": "Full Modular; 1x ATX 24pin, 2x EPS 4+4pin, 1x PCIe 5.0 16pin (600W), 4x PCIe 6+2pin, 8x SATA",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Nguồn",
+      "name": "Bảo vệ & quạt",
+      "value": "OCP/OVP/OPP/OTP/SCP/UVP, quạt 120mm Fluid Dynamic Bearing",
+      "source": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Case",
+      "name": "Model",
+      "value": "NZXT H5 Flow (2024) All White (CC-H52FW-01)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Kiểu dáng & hỗ trợ mainboard",
+      "value": "Mid-Tower ATX; hỗ trợ E-ATX (rộng tới 277mm), ATX, Micro-ATX, Mini-ITX",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Kích thước & khối lượng",
+      "value": "465 x 225 x 430mm, thể tích 45.0L, khối lượng 7.28kg",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Giới hạn linh kiện",
+      "value": "VGA dài tối đa 410mm, tản CPU khí cao tối đa 170mm, PSU dài tối đa 200mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Hỗ trợ radiator",
+      "value": "Trước tối đa 360mm (quạt 120) / 280mm (quạt 140); trên tối đa 240mm (120) / 280mm chỉ khi dùng RAM tản thấp (140); sau không hỗ trợ",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Quạt đi kèm",
+      "value": "2x NZXT F120Q (Case Version) 120mm, mặt trước và sau",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Model",
+      "value": "Thermalright Peerless Assassin 120 SE",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Thông số",
+      "value": "Tháp đôi, 6 ống đồng 6mm, kích thước L125 x W110 x H155mm, 2x quạt TL-C12C 120mm, hỗ trợ socket AM4/AM5/LGA1700/1851",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Hệ điều hành",
+      "value": "Không kèm hệ điều hành (hỗ trợ cài Windows 11 theo yêu cầu)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Bảo hành dàn máy",
+      "value": "24 tháng đồng bộ tại Quang Huong Computer, chi tiết theo từng linh kiện",
+      "source": "https://gearvn.com/search?type=product&q=Ryzen+7+9800X3D"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "Gaming 4K - Flagship",
+    "cpuSeries": "AMD Ryzen 7",
+    "cpuGeneration": "Ryzen 9000 Series (Zen 5, 3D V-Cache)",
+    "cpuCores": "8 cores",
+    "gpuModel": "NVIDIA GeForce RTX 5080",
+    "gpuVram": "16GB",
+    "ram": "32GB DDR5",
+    "storage": "2TB SSD NVMe Gen4",
+    "priceRange": "111-112 triệu VND"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_01_hero.png",
+      "alt": "Case NZXT H5 Flow 2024 All White nhìn góc 3/4, kính cường lực trong suốt"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_03_front.png",
+      "alt": "Mặt trước case NZXT H5 Flow 2024 White với lưới tản nhiệt toàn diện"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_02_side.png",
+      "alt": "Khoang bên trong case NZXT H5 Flow 2024 White nhìn qua tấm kính cường lực"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_04_back.png",
+      "alt": "Mặt sau case NZXT H5 Flow 2024 White, khe mở rộng PCI và quạt sau"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_07_io.png",
+      "alt": "Góc trên trước case NZXT H5 Flow 2024 White, cổng I/O và nút nguồn"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Gaming QH Apex G5 - Ryzen 7 9800X3D / RTX 5080 16GB",
+  "metaDescription": "PC Gaming QH Apex G5: AMD Ryzen 7 9800X3D, VGA MSI RTX 5080 16GB GDDR7, RAM DDR5 32GB, SSD Samsung 990 PRO 2TB, case NZXT H5 Flow 2024 White. Giá tốt, bảo hành 24 tháng.",
+  "notes": "Sửa officialUrl đề bài sai (https://nzxt.com/product/h5-flow-2024 không tồn tại) -> URL thật https://nzxt.com/products/h5-flow, xác nhận có bản màu White (SKU CC-H52FW-01) qua fetch trực tiếp trang hãng. Kiểm tra tương thích thực tế (thay số liệu ước lượng trong đề bài bằng số liệu hãng đã xác minh): CPU AM5 khớp main X870 AM5; RAM DDR5 khớp DDR5, model KF556C40BB-16WP đúng như đề bài x2 = kit 32GB; GPU MSI RTX5080 dài 303mm (đề bài ghi nhầm 336mm) < giới hạn case 410mm - dư nhiều; cooler PA120 SE cao đúng 155mm (đề bài ghi 157mm) < giới hạn case CPU cooler 170mm (đề bài ước ~165mm) - dư 15mm thoải mái chứ không 'sát'; GPU dùng đầu cấp 16-pin PCIe5.0 gốc, PSU A850GL có sẵn 1x đầu PCIe5.0 16-pin 600W - cắm thẳng không cần adapter. PSU 850W vs tải đỉnh ước tính ~550-600W (CPU PPT~162W + GPU TDP 360W + mainboard/RAM/SSD/fan ~60-80W) => dư tải ~42-55%, an toàn hơn mức 30% tối thiểu (đề bài ước ~63% dựa trên ~520W, số liệu gần đúng cùng kết luận an toàn). SSD 2TB: dùng datasheet chính hãng rev 2.0 (thu qua PDF Samsung) xác nhận TBW 1.200TB, cache 2GB LPDDR4, tốc độ đọc/ghi 7.450/6.900MB/s giống bản 1TB. Giá linh kiện VN tham khảo GearVN/AnPhat/TNCStore 2026-09-18: CPU 9800X3D box 15.690.000đ, main X870 Tomahawk 10.890.000đ, RAM Kingston 16GB DDR5-5600 x2 (không có SKU kit riêng trên GearVN nên lấy giá 1 thanh 7.290.000đ x2 = 14.580.000đ), VGA MSI RTX5080 Shadow3X OC 51.990.000đ, SSD Samsung 990 Pro 2TB 16.990.000đ, PSU MSI A850GL 2.990.000đ, case NZXT H5 Flow White 1.890.000đ, cooler PA120 SE 849.000đ (giá GearVN không có, lấy từ AnPhat) = tổng 115.869.000đ (oldPriceVnd làm tròn 115.870.000). Áp giảm giá lắp ráp ~4% ra priceVnd 111.230.000đ, gần khớp con số đề bài gợi ý (111.370.000). costPriceVnd ước ~89% priceVnd theo tỷ lệ build QH Vanguard G4 trước đó. Ảnh: 5 ảnh case NZXT H5 Flow White lấy trực tiếp từ nzxt.com/products/h5-flow (tool tự chọn đúng biến thể white nhờ --hint), đã xem cả 5 bằng Read tool - xác nhận đúng màu trắng, ảnh studio nền trắng sạch, không watermark, không chữ overlay, không lifestyle banner. Chưa tìm ảnh CPU/GPU/case rời riêng lẻ (không bắt buộc). Warranty theo linh kiện dùng thông lệ chung VN (AMD/MSI/Kingston) tương tự build QH Vanguard G4 cùng linh kiện, không re-verify từng trang bảo hành lẻ phiên này (trừ NZXT 24 tháng và Samsung 5 năm/TBW đã verify trực tiếp). Câu hỏi chưa giải quyết: (1) chưa tìm được SKU/giá niêm yết riêng cho bộ kit Kingston FURY Beast 2x16GB DDR5-5600 tại GearVN/Hacom/PhongVu - giá RAM là ước tính = 2x giá 1 thanh; (2) giá cooler Thermalright PA120 SE không có trên GearVN, chỉ lấy được từ AnPhat nên chưa chéo kiểm 2 nguồn độc lập."
+}

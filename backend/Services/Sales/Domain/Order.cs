@@ -1,4 +1,5 @@
 using BuildingBlocks.SharedKernel;
+using Sales.Application.Pricing;
 
 namespace Sales.Domain;
 
@@ -126,20 +127,35 @@ public class Order : Entity<Guid>
 
     protected Order() { }
 
+    /// <summary>
+    /// W0-4 / D01 — GIÁ ĐÃ BAO GỒM VAT. Thuế được TÁCH RA, không cộng thêm.
+    ///   Total = Σ(UnitPrice×Qty) − Discount + ShippingNet     (KHÔNG có "+ Tax")
+    ///   Tax   = Σ ExtractVat(gross_i − alloc_i) + ExtractVat(ShippingNet)   — tách THEO DÒNG
+    /// TRƯỚC: Total = net + net×TaxRate + ship → thu dư 8% trên giá mà storefront ghi
+    /// "đã bao gồm VAT". TaxAmount vẫn được ghi để xuất hoá đơn.
+    /// Giảm giá được phân bổ theo dòng (largest remainder) và ghi vào OrderItem.DiscountAmount
+    /// để hoá đơn hiển thị giảm trừ từng dòng.
+    /// KHÔNG backfill đơn cũ — chỉ đơn tạo mới đi qua đây.
+    /// </summary>
     private void CalculateAmounts()
     {
-        // BUSINESS REQUIREMENT: Consistent calculation order
-        // 1) Subtotal = sum unitPrice*qty (gift item price=0 nên không tính vào subtotal thực)
-        // 2) Tax = (Subtotal - DiscountAmount) * TaxRate  → thuế tính SAU giảm giá hàng
-        // 3) ShippingNet = ShippingAmount - ShippingDiscount (không âm; freeship riêng, không đụng gốc VAT)
-        // 4) Total = Subtotal - Discount + Tax + ShippingNet
-        SubtotalAmount = Items.Sum(i => i.UnitPrice * i.Quantity);
-        var netSubtotal = SubtotalAmount - DiscountAmount;
-        if (netSubtotal < 0) netSubtotal = 0;
-        TaxAmount = netSubtotal * TaxRate;
+        var grossPerLine = Items.Select(i => i.UnitPrice * i.Quantity).ToList();
         var shippingNet = ShippingAmount - ShippingDiscount;
         if (shippingNet < 0) shippingNet = 0;
-        TotalAmount = netSubtotal + TaxAmount + shippingNet;
+
+        var totals = DiscountAllocator.ComputeTotals(grossPerLine, DiscountAmount, shippingNet, TaxRate);
+
+        SubtotalAmount = totals.Subtotal;
+        // Clamp ngược về entity: giảm giá không bao giờ vượt tiền hàng (bảo toàn chốt chặn cũ).
+        DiscountAmount = totals.EffectiveDiscount;
+        TaxAmount = totals.TaxAmount;
+        TotalAmount = totals.Total;
+
+        for (var i = 0; i < Items.Count && i < totals.Allocations.Length; i++)
+        {
+            Items[i].ApplyDiscount(totals.Allocations[i]);
+        }
+
         UpdatedAt = DateTime.UtcNow;
     }
 

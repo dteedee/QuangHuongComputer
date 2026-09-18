@@ -1,0 +1,190 @@
+{
+  "name": "Mainboard ASUS TUF GAMING Z890-PLUS WIFI DDR5",
+  "slug": "mainboard-asus-tuf-gaming-z890-plus-wifi",
+  "sku": "MB-TUFZ890PLUSWIFI",
+  "brand": "ASUS",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "Mainboard",
+  "model": "ASUS TUF GAMING Z890-PLUS WIFI",
+  "officialUrl": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/",
+  "priceVnd": 8990000,
+  "oldPriceVnd": 12490000,
+  "costPriceVnd": 7910000,
+  "priceSources": [
+    "https://gearvn.com/search?q=z890-plus+wifi&type=product"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng 36 tháng tại trung tâm bảo hành ASUS Việt Nam.",
+  "weightKg": 1.2,
+  "stockQuantity": 15,
+  "shortDescription": "Bo mạch chủ ASUS TUF Gaming Z890-PLUS WIFI DDR5 dùng chipset Intel Z890, hỗ trợ CPU Intel Core Ultra Series 2, tích hợp WiFi 7 và Thunderbolt 4 cho dàn PC gaming hiệu năng cao, bền bỉ chuẩn quân đội.",
+  "descriptionHtml": "<h3>Nền tảng vững chắc cho CPU Intel thế hệ mới</h3><p>ASUS TUF Gaming Z890-PLUS WIFI DDR5 sử dụng chipset Intel Z890 và socket LGA1851, tương thích CPU Intel Core Ultra Series 2. Bo mạch trang bị 4 khe RAM DDR5 hỗ trợ công nghệ CUDIMM, dung lượng tối đa 256GB và có thể ép xung lên hơn 9000 MT/s, đáp ứng tốt nhu cầu gaming lẫn dựng nội dung.</p><h3>Lưu trữ và kết nối tốc độ cao</h3><p>Sản phẩm sở hữu 4 khe M.2, trong đó khe đầu tiên đạt chuẩn PCIe 5.0 cho tốc độ đọc/ghi vượt trội, cùng 4 cổng SATA 6Gb/s cho nhu cầu lưu trữ mở rộng. Kết nối mạng gồm WiFi 7 tích hợp và LAN Intel 2.5Gb, đảm bảo đường truyền ổn định. Mặt sau còn có cổng Thunderbolt 4 hỗ trợ xuất hình và truyền dữ liệu tốc độ cao.</p><h3>Bền bỉ và dễ dàng build máy</h3><p>Với triết lý TUF Gaming, bo mạch dùng linh kiện quân đội, dàn VRM 16+1+2+1 pha DrMOS 80A cùng tản nhiệt mở rộng giúp vận hành ổn định khi ép xung hoặc tải nặng trong thời gian dài. Các tính năng DIY-friendly như PCIe Q-Release, M.2 Q-Release/Q-Slide và BIOS FlashBack giúp việc lắp ráp, nâng cấp và cập nhật BIOS trở nên đơn giản hơn.</p><ul><li>Chipset Intel Z890, socket LGA1851</li><li>4 khe DDR5, tối đa 256GB, ép xung hơn 9000 MT/s</li><li>M.2 PCIe 5.0 tốc độ cao, WiFi 7, Thunderbolt 4</li><li>VRM 16+1+2+1 DrMOS 80A, thiết kế DIY-friendly</li></ul>",
+  "highlights": [
+    "Chipset Intel Z890 mới nhất, tương thích CPU Intel Core Ultra Series 2 (Socket LGA1851)",
+    "4 khe RAM DDR5 hỗ trợ CUDIMM, tối đa 256GB, ép xung tới hơn 9000 MT/s",
+    "Khe M.2 đầu tiên chuẩn PCIe 5.0 tốc độ cao, cùng 3 khe M.2 PCIe 4.0 và 4 cổng SATA",
+    "WiFi 7 tích hợp, LAN 2.5Gb Intel, cổng Thunderbolt 4 hỗ trợ xuất hình và truyền dữ liệu nhanh",
+    "Pha nguồn 16+1+2+1 DrMOS 80A cùng tản nhiệt VRM mở rộng cho hiệu năng ổn định khi ép xung",
+    "Thiết kế DIY-friendly: PCIe Q-Release, M.2 Q-Release/Q-Slide, BIOS FlashBack tiện lợi khi build/nâng cấp"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Socket CPU",
+      "value": "LGA1851, hỗ trợ CPU Intel Core Ultra Processors (Series 2)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "Chipset",
+      "name": "Chipset",
+      "value": "Intel Z890",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "RAM",
+      "name": "Loại RAM",
+      "value": "DDR5, Non-ECC, Un-buffered, hỗ trợ CUDIMM",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "RAM",
+      "name": "Số khe cắm",
+      "value": "4 x khe DIMM",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "RAM",
+      "name": "Dung lượng tối đa",
+      "value": "256GB",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "RAM",
+      "name": "Tốc độ tối đa (OC)",
+      "value": "lên đến 9066+ MT/s",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Khe mở rộng",
+      "name": "PCIe từ CPU",
+      "value": "1 x PCIe 5.0 x16",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Khe mở rộng",
+      "name": "PCIe từ chipset",
+      "value": "1 x PCIe 4.0 x16 (chạy chế độ x4), 1 x PCIe 4.0 x4, 2 x PCIe 4.0 x1",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Khe M.2",
+      "value": "4 khe M.2 (M.2_1 PCIe 5.0 x4; M.2_2/3/4 PCIe 4.0 x4)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Cổng SATA",
+      "value": "4 x SATA 6Gb/s",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Mạng LAN",
+      "name": "LAN",
+      "value": "1 x Intel 2.5Gb Ethernet",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "WiFi/Bluetooth",
+      "value": "WiFi 7 2x2 (802.11be), Bluetooth 5.4",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Codec âm thanh",
+      "value": "Realtek ALC1220P 7.1 Surround Sound",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Cổng USB (mặt sau)",
+      "name": "Cổng USB mặt sau",
+      "value": "1 Thunderbolt 4 Type-C, 1 USB 20Gbps Type-C (DP Alt mode), 3 USB 10Gbps Type-A, 3 USB 5Gbps Type-A",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Xuất hình",
+      "name": "Cổng xuất hình",
+      "value": "1 DisplayPort, 1 HDMI, 1 Thunderbolt 4 (hỗ trợ DP), 1 USB-C 20Gbps (DP Alt mode)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Fan Header",
+      "name": "Header quạt",
+      "value": "1 CPU Fan, 1 CPU OPT, 1 AIO Pump, 4 Chassis Fan (đều 4-pin)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "RGB",
+      "name": "Header RGB",
+      "value": "3 x Addressable RGB Gen 2",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "BIOS",
+      "name": "BIOS",
+      "value": "256Mb Flash ROM, UEFI AMI BIOS, hỗ trợ BIOS FlashBack",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Pha nguồn VRM",
+      "value": "16+1+2+1 pha DrMOS 80A, tản nhiệt VRM mở rộng",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Đầu cấp nguồn",
+      "value": "1 x 24-pin ATX, 2 x 8-pin CPU (+12V)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Form factor",
+      "value": "ATX, 30.5 x 24.4 cm (12 x 9.6 inch)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Phụ kiện trong hộp",
+      "name": "Phụ kiện",
+      "value": "2 cáp SATA 6Gb/s, ăng-ten WiFi Q-Antenna, bộ M.2 Q-Slide, ốc vít M.2, sticker & nameplate TUF GAMING, sách hướng dẫn nhanh",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    }
+  ],
+  "filterAttributes": {
+    "socket": "LGA1851",
+    "chipset": "Intel Z890",
+    "formFactor": "ATX",
+    "ramType": "DDR5"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/cf9f59da-5933-410c-8018-b749cc604d00/V1/img/spec/spec-performance.webp",
+      "alt": "Mainboard ASUS TUF Gaming Z890-PLUS WIFI DDR5 - mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/cf9f59da-5933-410c-8018-b749cc604d00/V1/img/kv/kv-main.webp",
+      "alt": "Mainboard ASUS TUF Gaming Z890-PLUS WIFI DDR5 - toàn cảnh bo mạch"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/cf9f59da-5933-410c-8018-b749cc604d00/V1/img/diy/ESD-Guards.jpg",
+      "alt": "Mainboard ASUS TUF Gaming Z890-PLUS WIFI DDR5 - cổng I/O mặt sau"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Mainboard ASUS TUF Gaming Z890-PLUS WIFI DDR5 - Chính hãng",
+  "metaDescription": "Bo mạch chủ ASUS TUF Gaming Z890-PLUS WIFI DDR5, chipset Intel Z890, socket LGA1851, WiFi 7, Thunderbolt 4, giá tốt, bảo hành chính hãng."
+}

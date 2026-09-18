@@ -1,0 +1,222 @@
+{
+  "name": "Bàn phím cơ không dây Keychron K4 Pro QMK/VIA Hotswap",
+  "slug": "keychron-k4-pro",
+  "sku": "KYC-K4PRO-H1",
+  "brand": "Keychron",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Bàn phím",
+  "model": "K4 Pro",
+  "officialUrl": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard",
+  "priceVnd": 2290000,
+  "oldPriceVnd": 2890000,
+  "costPriceVnd": 2020000,
+  "priceSources": [
+    "https://memoryzone.com.vn/ban-phim-co-khong-day-keychron-k4-pro-rgb-hotswap-keychron-k-pro-sw",
+    "https://thinkpro.vn/ban-phim/ban-phim-co-keychron-k4-pro-qmkvia"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng 12 tháng qua nhà phân phối Keychron tại Việt Nam, hỗ trợ đổi mới trong thời gian đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 1.28,
+  "stockQuantity": 16,
+  "shortDescription": "Bàn phím cơ không dây 96% Keychron K4 Pro hỗ trợ QMK/VIA, hot-swap switch Keychron K Pro, kết nối Bluetooth 5.1 tới 3 thiết bị hoặc dây USB-C, phù hợp dân văn phòng cần gõ nhiều và chuyển đổi máy liên tục.",
+  "descriptionHtml": "<h3>Gõ nhiều, chuyển máy liên tục vẫn mượt</h3><p>Keychron K4 Pro dùng layout 96% với 100 phím, đủ cụm số mà vẫn gọn hơn full-size. Bàn phím kết nối Bluetooth 5.1 tới 3 thiết bị cùng lúc, chuyển qua lại giữa laptop, điện thoại, máy tính bảng chỉ bằng tổ hợp phím, hoặc cắm dây USB-C khi cần độ trễ thấp và polling rate 1000Hz.</p><h3>Hot-swap, tùy chỉnh sâu qua QMK/VIA</h3><p>Đế hot-swap nhận hầu hết switch MX 3 chân/5 chân trên thị trường, thay switch không cần hàn. Firmware QMK mã nguồn mở kết hợp Keychron Launcher (web app) cho phép remap phím, tạo macro trực tiếp trên trình duyệt, không cần cài phần mềm rời.</p><h3>Cảm giác gõ được gia cố</h3><p>Bên trong có mút tiêu âm, đệm silicone đáy và tấm thép giúp gõ êm, chắc tay. Bộ ổn định (stabilizer) dạng vít bắt trực tiếp vào PCB giảm rung lắc ở các phím dài như space, enter, shift. Keycap PBT double-shot profile OSA chống bóng, đèn RGB South-facing rọi đều từ phía người gõ.</p><h3>Phù hợp ai</h3><p>Sản phẩm hướng tới người dùng văn phòng, lập trình viên cần một bàn phím cơ gõ êm, có thể tùy chỉnh layout Mac/Windows và dùng được lâu dài nhờ pin 4000mAh.</p><ul><li>Layout 96%, 100 phím, switch hot-swap Keychron K Pro</li><li>Bluetooth 5.1 đa điểm (3 thiết bị) + USB-C có dây</li><li>Firmware QMK/VIA, lập trình phím qua Keychron Launcher</li><li>Pin 4000mAh, khoảng 260 giờ khi tắt đèn nền</li></ul>",
+  "highlights": [
+    "Layout 96% 100 phím, hot-swap mọi switch MX 3 chân/5 chân không cần hàn",
+    "Kết nối kép: Bluetooth 5.1 tới 3 thiết bị hoặc dây USB-C, polling rate 1000Hz khi có dây",
+    "Firmware QMK mã nguồn mở, remap phím và tạo macro qua Keychron Launcher trên trình duyệt",
+    "Keycap PBT double-shot profile OSA, đèn RGB South-facing, 3 mức góc nghiêng gõ",
+    "Pin Li-Polymer 4000mAh, khoảng 260 giờ (tắt đèn) hoặc 130 giờ (RGB sáng thấp nhất)",
+    "Hỗ trợ đầy đủ macOS/Windows/Linux, kèm sẵn keycap cho cả 2 hệ điều hành"
+  ],
+  "specs": [
+    {
+      "group": "Bàn phím cơ",
+      "name": "Số lượng phím",
+      "value": "100 phím (layout 96%)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Switch",
+      "value": "Keychron K Pro (Red/Brown/Blue), hot-swappable",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Hướng đặt switch",
+      "value": "South-facing (hướng Nam, tối ưu ánh sáng RGB)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Bộ ổn định (stabilizer)",
+      "value": "PCB-mounted, dạng vít (screw-in)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Số phím đa phương tiện",
+      "value": "12 phím",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Chất liệu khung",
+      "value": "Nhựa ABS",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Chất liệu tấm plate",
+      "value": "Thép (Steel)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Chất liệu keycap",
+      "value": "PBT double-shot (bản Fully Assembled)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Profile keycap",
+      "value": "OSA (OEM profile, góc cầu)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Layout",
+      "value": "ANSI",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Polling rate (có dây)",
+      "value": "1000Hz",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "Polling rate (không dây)",
+      "value": "90Hz",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Bàn phím cơ",
+      "name": "N-Key Rollover (NKRO)",
+      "value": "Có, cả chế độ có dây và không dây",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Đèn nền",
+      "value": "22 kiểu RGB (hoặc bản White Backlight)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Dung lượng pin",
+      "value": "4000mAh Li-Polymer sạc lại",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Thời lượng pin (tắt đèn nền)",
+      "value": "Khoảng 260 giờ (đo trong phòng lab)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Thời lượng pin (bật RGB)",
+      "value": "Khoảng 130 giờ (độ sáng thấp nhất)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Kết nối",
+      "value": "Bluetooth 5.1 (Broadcom) và dây USB-C, tối đa 3 thiết bị qua Bluetooth",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kết nối & Pin",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "macOS / Windows / Linux",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kích thước & Vật lý",
+      "name": "Kích thước",
+      "value": "390.6 x 139.2 mm",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kích thước & Vật lý",
+      "name": "Trọng lượng",
+      "value": "Khoảng 1280g",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kích thước & Vật lý",
+      "name": "Độ cao không kể keycap (trước/sau)",
+      "value": "24mm / 31mm",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kích thước & Vật lý",
+      "name": "Độ cao kể cả keycap (trước/sau)",
+      "value": "33mm / 40mm",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Kích thước & Vật lý",
+      "name": "Góc gõ điều chỉnh",
+      "value": "3°, 7°, 10°",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Firmware",
+      "name": "Chip xử lý (MCU)",
+      "value": "ARM Cortex-M4 32-bit STM32L432 (Flash 128KB)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Firmware",
+      "name": "Firmware / phần mềm lập trình phím",
+      "value": "QMK mã nguồn mở, lập trình qua Keychron Launcher (web app)",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    },
+    {
+      "group": "Firmware",
+      "name": "Nhiệt độ hoạt động",
+      "value": "-10°C đến 50°C",
+      "source": "https://www.keychron.com/products/keychron-k4-pro-qmk-via-wireless-mechanical-keyboard"
+    }
+  ],
+  "filterAttributes": {
+    "layout": "96%",
+    "switchType": "Keychron K Pro",
+    "connectivity": "Bluetooth 5.1 + USB-C",
+    "hotSwap": "Có",
+    "backlight": "RGB"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0059/0630/1017/products/Keychron-K4-Pro-QMK-VIA-Wireless-Custom-Mechanical-Keyboard-with-96-Percent-layout-for-Mac-Windows-Linux-hot-swappable-with-MX-Switch-with-Keychron-K-pro-switch-Red_dc976177-2111-4794-bb16-002b87b1ac8d.jpg",
+      "alt": "Keychron K4 Pro màu đen, switch K Pro Red, đèn nền trắng - ảnh chính diện"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0059/0630/1017/products/Keychron-K4-Pro-QMK-VIA-Wireless-Custom-Mechanical-Keyboard-with-96-Percent-layout-for-Mac-Windows-Linux-hot-swappable-with-MX-Switch-RGB-Backlight-with-Keychron-K-pro-switch-Red_d2c21c26-23ec-4b09-a23f-788ab6074856.jpg",
+      "alt": "Keychron K4 Pro màu đen, bản đèn nền RGB"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0059/0630/1017/products/Keychron-K4-Pro-QMK-VIA-custom-mechanical-keyboard-96-percent-layout-white-Mac-Windows-Linux-hot-swappable-Keychron-K-Pro-switch-red.jpg",
+      "alt": "Keychron K4 Pro màu trắng, switch K Pro Red"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Keychron K4 Pro QMK/VIA - Bàn phím cơ không dây 96% Hotswap",
+  "metaDescription": "Bàn phím cơ Keychron K4 Pro 96%, hot-swap switch K Pro, Bluetooth 5.1 đa điểm + USB-C, QMK/VIA. Giá tốt, bảo hành chính hãng tại Quang Huong Computer."
+}

@@ -1,0 +1,181 @@
+{
+  "name": "Laptop Apple MacBook Air 13 inch M5 (16GB/512GB)",
+  "slug": "apple-macbook-air-13-m5-16gb-512gb",
+  "sku": "APL-MDHH4SA-A",
+  "brand": "Apple",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "MacBook",
+  "model": "Apple MacBook Air 13\" M5 2026 (MDHH4SA/A)",
+  "officialUrl": "https://www.apple.com/vn/macbook-air/",
+  "priceVnd": 34990000,
+  "oldPriceVnd": 35990000,
+  "costPriceVnd": 30790000,
+  "priceSources": [
+    "https://cellphones.com.vn/laptop/mac/macbook-air.html",
+    "https://shopdunk.com/macbook-air-m5"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng Apple 12 tháng tại các trung tâm Apple Authorized Service Provider trên toàn quốc.",
+  "weightKg": 1.23,
+  "stockQuantity": 18,
+  "shortDescription": "MacBook Air 13 inch chip Apple M5 (16GB/512GB) là lựa chọn máy tính xách tay mỏng nhẹ cho học tập và văn phòng, kết hợp hiệu năng đa nhân mới với thời lượng pin cả ngày trong thân nhôm nguyên khối không quạt tản nhiệt.",
+  "descriptionHtml": "<h3>Hiệu năng M5 mạnh mẽ trong thân máy siêu mỏng</h3><p>MacBook Air 13 inch phiên bản chip Apple M5 trang bị CPU 10 lõi (4 lõi hiệu năng, 6 lõi tiết kiệm điện) cùng GPU 8 lõi và Neural Engine 16 lõi, băng thông bộ nhớ hợp nhất 153GB/s. Cấu hình 16GB bộ nhớ hợp nhất và SSD 512GB đáp ứng tốt các tác vụ học tập, văn phòng, lướt web đa tab và chỉnh sửa ảnh cơ bản mà vẫn mát mẻ, yên tĩnh nhờ thiết kế không quạt tản nhiệt.</p><h3>Màn hình Liquid Retina sắc nét, âm thanh sống động</h3><p>Màn hình 13,6 inch độ phân giải 2560x1664, mật độ 224 pixel/inch, độ sáng 500 nit, hỗ trợ 1 tỷ màu và dải màu rộng P3 mang lại hình ảnh trong trẻo cho công việc và giải trí hằng ngày. Hệ thống bốn loa cùng webcam 12MP Center Stage hỗ trợ tốt cho học trực tuyến và họp video.</p><h3>Kết nối đầy đủ, pin bền bỉ cả ngày</h3><p>Hai cổng Thunderbolt 4 (USB-C), cổng sạc MagSafe 3 cùng Wi-Fi 7 và Bluetooth 6 đáp ứng nhu cầu kết nối hiện đại. Pin Li-Po 53,8Wh cho thời gian xem video trực tuyến lên đến 18 giờ, đủ dùng xuyên suốt một ngày học tập, làm việc mà không cần mang theo sạc.</p><ul><li>Chip Apple M5: CPU 10 lõi, GPU 8 lõi, Neural Engine 16 lõi</li><li>16GB bộ nhớ hợp nhất, SSD 512GB</li><li>Màn hình Liquid Retina 13,6 inch, 500 nit, dải màu P3</li><li>2 cổng Thunderbolt 4, MagSafe 3, jack tai nghe 3,5mm</li><li>Webcam Center Stage 12MP, hệ thống 4 loa</li><li>Pin 53,8Wh, thời gian xem video trực tuyến đến 18 giờ</li></ul>",
+  "highlights": [
+    "Chip Apple M5 10 lõi CPU, 8 lõi GPU cho hiệu năng đa nhiệm nhanh nhạy, thiết kế không quạt vận hành êm ái",
+    "16GB bộ nhớ hợp nhất và SSD 512GB tốc độ cao, thoải mái lưu trữ và xử lý đa tác vụ hằng ngày",
+    "Màn hình Liquid Retina 13,6 inch, độ sáng 500 nit, hỗ trợ 1 tỷ màu và dải màu rộng P3",
+    "Thân máy nhôm nguyên khối chỉ dày 1,13cm, nặng 1,23kg, dễ dàng mang theo mọi nơi",
+    "Pin Li-Po 53,8Wh cho thời lượng sử dụng liên tục lên đến 18 giờ xem video trực tuyến",
+    "Kết nối không dây Wi-Fi 7 và Bluetooth 6, webcam Center Stage 12MP cho học tập và họp trực tuyến"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Chip",
+      "value": "Apple M5: CPU 10 lõi (4 hiệu năng + 6 tiết kiệm điện), GPU 8 lõi, Neural Engine 16 lõi",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Băng thông bộ nhớ",
+      "value": "153GB/s",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "RAM",
+      "value": "16GB bộ nhớ hợp nhất (có thể nâng cấp 24GB hoặc 32GB)",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB (có thể nâng cấp 1TB, 2TB hoặc 4TB)",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "Liquid Retina 13,6 inch, 2560x1664, 224 pixel/inch",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "500 nit",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Màu sắc hiển thị",
+      "value": "1 tỷ màu, dải màu rộng P3, True Tone",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Thời lượng pin",
+      "value": "Xem video trực tuyến đến 18 giờ, duyệt web không dây đến 15 giờ",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Dung lượng pin",
+      "value": "Li-Po 53,8 watt-giờ",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Sạc",
+      "value": "Bộ tiếp hợp nguồn USB-C 30W, cáp USB-C sang MagSafe 3 (2m)",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "2x Thunderbolt 4 (USB-C), MagSafe 3, jack tai nghe 3,5mm",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Wi-Fi 7 (802.11be), Bluetooth 6",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Camera & âm thanh",
+      "name": "Camera",
+      "value": "12MP Center Stage, hỗ trợ Desk View, quay video 1080p HD",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Camera & âm thanh",
+      "name": "Âm thanh",
+      "value": "Hệ thống bốn loa",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Bàn phím & bàn di chuột",
+      "name": "Bàn phím",
+      "value": "Magic Keyboard có đèn nền, tích hợp Touch ID",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Bàn phím & bàn di chuột",
+      "name": "Bàn di chuột",
+      "value": "Force Touch, hỗ trợ Multi-Touch và Bấm Mạnh",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "Cao 1,13cm x Rộng 30,41cm x Dài 21,5cm",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "1,23 kg",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Xanh Da Trời, Bạc, Ánh Sao, Đêm",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "HĐH",
+      "value": "macOS, hỗ trợ Apple Intelligence và Siri AI",
+      "source": "https://www.apple.com/vn/macbook-air/specs/"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Apple M5",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "GPU 8 lõi tích hợp (Apple M5)",
+    "screenSize": "13.6 inch",
+    "refreshRate": "60Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.apple.com/v/macbook-air/z/images/overview/hero/hero_static__c9sislzzicq6_large.png",
+      "alt": "MacBook Air 13 inch M5 màu Xanh Da Trời mở một góc, hiện hình nền động trên màn hình"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.apple.com/v/macbook-air/z/images/overview/hero/hero_startframe__c0rhv2ultfau_large.png",
+      "alt": "MacBook Air 13 inch M5 màu Xanh Da Trời gập lại, nhìn từ cạnh bên thể hiện độ mỏng của máy"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.apple.com/vn/macbook-air/images/overview/performance/modal/modal_hero__dxdbuechqpea_large.jpg",
+      "alt": "MacBook Air 13 inch M5 màu Đêm nhìn thẳng từ mặt trước, máy đang mở nắp"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "MacBook Air 13 inch M5 16GB/512GB chính hãng Apple",
+  "metaDescription": "MacBook Air 13 inch chip Apple M5 (16GB/512GB), màn hình Liquid Retina 500 nit, pin đến 18 giờ, thân máy 1,23kg. Hàng chính hãng, bảo hành Apple 12 tháng."
+}

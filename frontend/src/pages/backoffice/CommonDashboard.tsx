@@ -3,7 +3,7 @@ import { SearchableSelect } from '../../components/ui/SearchableSelect';
 import {
     ArrowUpRight, ArrowDownRight, Package,
     ShoppingCart, Users, DollarSign, TrendingUp,
-    Clock, Bell, ShieldCheck, Zap
+    Clock, Bell, ShieldCheck, Zap, AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { salesApi } from '../../api/sales';
@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 export const CommonDashboard = () => {
     const navigate = useNavigate();
 
-    const { data: salesStats } = useQuery({
+    const { data: salesStats, isError: statsError } = useQuery({
         queryKey: ['sales', 'stats'],
         queryFn: () => salesApi.stats.get()
     });
@@ -31,45 +31,53 @@ export const CommonDashboard = () => {
         queryFn: () => salesApi.orders.getList({ page: 1, pageSize: 5 })
     });
 
+    // W0-13: badges below used to be hardcoded (+12.5% / +5.2% / -2.4%) regardless
+    // of real data - fake numbers, standing rule violation. `/sales/admin/stats`
+    // (SalesEndpoints.cs:1710-1715) actually computes real month-over-month
+    // orderGrowth/revenueGrowth, so use those and only show a trend when the API
+    // gave us one for that metric (pending/completed have no growth field -> none).
+    const formatGrowth = (v: number) => `${v > 0 ? '+' : ''}${v}%`;
     const stats = [
         {
             label: 'Tổng doanh thu',
-            value: formatCurrency(salesStats?.totalRevenue || 0),
-            change: '+12.5%',
+            value: statsError ? '—' : formatCurrency(salesStats?.totalRevenue || 0),
+            change: salesStats ? formatGrowth(salesStats.revenueGrowth) : undefined,
             icon: <DollarSign size={28} />,
-            trend: 'up',
+            trend: salesStats ? (salesStats.revenueGrowth >= 0 ? 'up' : 'down') : 'none',
             color: 'bg-rose-600'
         },
         {
             label: 'Đơn hàng mới',
-            value: salesStats?.todayOrders?.toString() || '0',
-            change: '+5.2%',
+            value: statsError ? '—' : (salesStats?.todayOrders?.toString() || '0'),
+            change: salesStats ? formatGrowth(salesStats.orderGrowth) : undefined,
             icon: <ShoppingCart size={28} />,
-            trend: 'up',
+            trend: salesStats ? (salesStats.orderGrowth >= 0 ? 'up' : 'down') : 'none',
             color: 'bg-blue-600'
         },
         {
             label: 'Đơn chờ xử lý',
-            value: salesStats?.pendingOrders?.toString() || '0',
-            change: '-2.4%',
+            value: statsError ? '—' : (salesStats?.pendingOrders?.toString() || '0'),
+            change: undefined,
             icon: <Clock size={28} />,
-            trend: 'down',
+            trend: 'none',
             color: 'bg-amber-500'
         },
         {
             label: 'Đơn hoàn thành',
-            value: salesStats?.completedOrders?.toString() || '0',
-            change: 'Đơn',
+            value: statsError ? '—' : (salesStats?.completedOrders?.toString() || '0'),
+            change: undefined,
             icon: <Package size={28} />,
             trend: 'none',
             color: 'bg-emerald-600'
         },
     ];
 
+    // W0-13: hiện tên/email khách thay vì GUID - Order đã có customerName/customerEmail
+    // (backend SalesEndpoints.cs:1430-1433 luôn trả, type trước đây chỉ thiếu field).
     const activities = latestOrders?.orders?.slice(0, 4).map(order => ({
         type: 'order',
         title: `Đơn hàng #${order.orderNumber}`,
-        user: order.customerId,
+        user: order.customerName || order.customerEmail || order.customerId,
         time: formatDate(order.orderDate),
         icon: <ShoppingCart size={16} />,
         color: 'bg-blue-600'
@@ -142,6 +150,14 @@ export const CommonDashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* W0-13: đừng render "0" giả khi request lỗi - báo lỗi rõ ràng thay vào đó */}
+            {statsError && (
+                <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">
+                    <AlertCircle size={18} className="flex-shrink-0" />
+                    Không tải được số liệu tổng quan. Vui lòng thử làm mới trang.
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -18,8 +18,9 @@ public static class PromotionEndpoints
     public static void MapPromotionEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/promotions");
+        // W0-3: thêm Marketing — role này dựng chương trình khuyến mãi nhưng trước đây bị chặn.
         var adminGroup = app.MapGroup("/api/promotions/admin")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Marketing"));
 
         // ---------- Public / Read ----------
 

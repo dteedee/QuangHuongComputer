@@ -16,7 +16,7 @@ public static class HRLeaveEndpoints
 {
     public static void MapHRLeaveEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant"));
+        var group = app.MapGroup("/api/hr").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // ============================
         // LEAVE REQUESTS

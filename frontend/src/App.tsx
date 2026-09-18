@@ -15,6 +15,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ScrollToTop } from './components/ScrollToTop';
 import AiChatWidget from './components/ai-chat-widget';
 import { useAnalyticsTracking } from './hooks/use-analytics-tracking';
+import { STAFF_ROLES } from './constants/staff-roles';
 
 // ---------------------------------------------------------------------------
 // Loading fallback
@@ -63,6 +64,7 @@ const SystemHealthPage = lazy(() => import('./pages/backoffice/SystemHealthPage'
 const ChatSupport = lazy(() => import('./components/ChatSupport').then(m => ({ default: m.ChatSupport })));
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const CheckoutSuccessPage = lazy(() => import('./pages/checkout-success-page').then(m => ({ default: m.CheckoutSuccessPage })));
 const PaymentPage = lazy(() => import('./pages/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage').then(m => ({ default: m.PaymentCallbackPage })));
 const PaymentResultPage = lazy(() => import('./pages/PaymentResultPage').then(m => ({ default: m.PaymentResultPage })));
@@ -80,12 +82,17 @@ const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const StoresPage = lazy(() => import('./pages/StoresPage'));
+const BookingPage = lazy(() => import('./pages/repair/BookingPage').then(m => ({ default: m.BookingPage })));
 
 // Auth pages
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+
+// 404 / 403
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage').then(m => ({ default: m.ForbiddenPage })));
 
 // Account pages
 const OrdersPage = lazy(() => import('./pages/account/OrdersPage').then(m => ({ default: m.OrdersPage })));
@@ -175,7 +182,8 @@ const AdminUsersPage = lazy(() => import('./pages/backoffice/admin/UsersPage').t
 const ReviewsManagementPage = lazy(() => import('./pages/backoffice/admin/ReviewsManagementPage').then(m => ({ default: m.ReviewsManagementPage })));
 const CouponsPage = lazy(() => import('./pages/backoffice/admin/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const AuditLogsPage = lazy(() => import('./pages/backoffice/admin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
-const FlashSalesPage = lazy(() => import('./pages/admin/FlashSalesPage'));
+// FlashSalesPage đã bị bỏ: route `/backoffice/flash-sales` giờ là <Navigate> khai báo thẳng
+// trong bảng route (xem khối "Admin + Manager + Marketing") thay vì một component chỉ để redirect.
 const PromotionsPage = lazy(() => import('./pages/admin/PromotionsPage'));
 const SePayAdminPage = lazy(() => import('./pages/admin/PaymentSettingsPage'));
 const CustomFieldsManager = lazy(() => import('./pages/admin/CustomFieldsManager'));
@@ -237,10 +245,12 @@ function App() {
                         <Route path="repairs" element={<RepairPage />} />
                         <Route path="repair" element={<RepairPage />} />
                         <Route path="repair/:id" element={<RepairDetailPage />} />
+                        <Route path="booking" element={<BookingPage />} />
                         <Route path="warranty" element={<WarrantyPage />} />
                         <Route path="support" element={<ChatSupport />} />
                         <Route path="cart" element={<CartPage />} />
                         <Route path="checkout" element={<CheckoutPage />} />
+                        <Route path="checkout/success/:orderId" element={<CheckoutSuccessPage />} />
                         <Route path="payment/:orderId" element={<PaymentPage />} />
                         <Route path="payment/callback" element={<PaymentCallbackPage />} />
                         <Route path="payment/success" element={<PaymentResultPage />} />
@@ -294,10 +304,13 @@ function App() {
                         <Route path="payment/vnpay-return" element={<PaymentCallbackPage />} />
                         <Route path="payment/momo-return" element={<PaymentCallbackPage />} />
                         <Route path="payment/zalopay-return" element={<PaymentCallbackPage />} />
+
+                        {/* 404 storefront — bên trong RootLayout để giữ header/footer thay vì trắng trang */}
+                        <Route path="*" element={<NotFoundPage />} />
                       </Route>
 
                       {/* Backoffice Routes */}
-                      <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier']} />}>
+                      <Route element={<RequireAuth allowedRoles={[...STAFF_ROLES]} />}>
                         <Route path="/backoffice" element={<BackofficeLayout />}>
                           <Route index element={<CommonDashboard />} />
                           <Route path="pos" element={<POSPage />} />
@@ -317,45 +330,54 @@ function App() {
                           </Route>
                           <Route path="tech" element={<TechPortal />} />
                           <Route path="tech/work-orders/:id" element={<WorkOrderDetailPage />} />
-                          <Route path="inventory" element={<InventoryPortal />} />
-                          <Route path="inventory/suppliers" element={<SuppliersPage />} />
-                          <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
-                          <Route path="inventory/grn" element={<GoodsReceivedNotesPage />} />
-                          <Route path="inventory/dn" element={<DeliveryNotesPage />} />
-                          <Route path="inventory/count" element={<InventoryCountPage />} />
-                          <Route path="inventory/purchase-requisitions" element={<PurchaseRequisitionsPage />} />
-                          <Route path="inventory/rfq" element={<RfqPage />} />
-                          <Route path="inventory/rfq/:id" element={<RfqDetailPage />} />
-                          <Route path="inventory/po-approval" element={<PoApprovalPage />} />
-                          <Route path="inventory/purchase-returns" element={<PurchaseReturnsPage />} />
-                          <Route path="inventory/landed-cost" element={<LandedCostPage />} />
-                          <Route path="inventory/supplier-scorecard" element={<SupplierScorecardPage />} />
-                          <Route path="inventory/serial-trace" element={<SerialTracePage />} />
-                          <Route path="accounting" element={<AccountingPortal />} />
-                          <Route path="accounting/ar" element={<ARPage />} />
-                          <Route path="accounting/ap" element={<APPage />} />
-                          <Route path="accounting/shifts" element={<ShiftsPage />} />
-                          <Route path="accounting/expenses" element={<ExpensesPage />} />
-                          <Route path="accounting/reports" element={<FinancialReportsPage />} />
-                          <Route path="accounting/tax-reports" element={<TaxReportsPage />} />
-                          <Route path="hr" element={<HRPortal />} />
-                          <Route path="hr/employees" element={<EmployeesPage />} />
-                          <Route path="hr/recruitment" element={<RecruitmentManagement />} />
-                          <Route path="hr/attendance" element={<AttendancePage />} />
-                          <Route path="hr/approvals" element={<LeaveApprovalPage />} />
-                          <Route path="hr/overtime-approval" element={<OvertimeApprovalPage />} />
-                          <Route path="hr/self-service" element={<EmployeeSelfServicePage />} />
-                          <Route path="hr/chat" element={<InternalChatPage />} />
-                          <Route path="hr/reports" element={<HRReportsPage />} />
-                          <Route path="hr/contracts" element={<HrContractsPage />} />
-                          <Route path="hr/attendance-rules" element={<AttendanceRulesPage />} />
-                          <Route path="hr/employee-assets" element={<EmployeeAssetsPage />} />
-                          {/* Sensitive: Payroll/Salary/PIT — Admin + HR only */}
-                          <Route element={<RequireAuth allowedRoles={['Admin', 'HR']} />}>
-                              <Route path="hr/payroll-runs" element={<PayrollRunPage />} />
-                              <Route path="hr/payroll/:payrollId" element={<PayrollDetailPage />} />
-                              <Route path="hr/salary-structures" element={<SalaryStructurePage />} />
-                              <Route path="hr/pit-finalization" element={<PitFinalizationPage />} />
+                          {/* Kho hàng — blunt per-section hint (permission manifest thật ở W1-8) */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'InventoryStaff', 'Supplier']} />}>
+                              <Route path="inventory" element={<InventoryPortal />} />
+                              <Route path="inventory/suppliers" element={<SuppliersPage />} />
+                              <Route path="inventory/purchase-orders" element={<PurchaseOrdersPage />} />
+                              <Route path="inventory/grn" element={<GoodsReceivedNotesPage />} />
+                              <Route path="inventory/dn" element={<DeliveryNotesPage />} />
+                              <Route path="inventory/count" element={<InventoryCountPage />} />
+                              <Route path="inventory/purchase-requisitions" element={<PurchaseRequisitionsPage />} />
+                              <Route path="inventory/rfq" element={<RfqPage />} />
+                              <Route path="inventory/rfq/:id" element={<RfqDetailPage />} />
+                              <Route path="inventory/po-approval" element={<PoApprovalPage />} />
+                              <Route path="inventory/purchase-returns" element={<PurchaseReturnsPage />} />
+                              <Route path="inventory/landed-cost" element={<LandedCostPage />} />
+                              <Route path="inventory/supplier-scorecard" element={<SupplierScorecardPage />} />
+                              <Route path="inventory/serial-trace" element={<SerialTracePage />} />
+                          </Route>
+                          {/* Tài chính — blunt per-section hint (permission manifest thật ở W1-8) */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Accountant']} />}>
+                              <Route path="accounting" element={<AccountingPortal />} />
+                              <Route path="accounting/ar" element={<ARPage />} />
+                              <Route path="accounting/ap" element={<APPage />} />
+                              <Route path="accounting/shifts" element={<ShiftsPage />} />
+                              <Route path="accounting/expenses" element={<ExpensesPage />} />
+                              <Route path="accounting/reports" element={<FinancialReportsPage />} />
+                              <Route path="accounting/tax-reports" element={<TaxReportsPage />} />
+                          </Route>
+                          {/* Nhân sự — blunt per-section hint (permission manifest thật ở W1-8) */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'HR']} />}>
+                              <Route path="hr" element={<HRPortal />} />
+                              <Route path="hr/employees" element={<EmployeesPage />} />
+                              <Route path="hr/recruitment" element={<RecruitmentManagement />} />
+                              <Route path="hr/attendance" element={<AttendancePage />} />
+                              <Route path="hr/approvals" element={<LeaveApprovalPage />} />
+                              <Route path="hr/overtime-approval" element={<OvertimeApprovalPage />} />
+                              <Route path="hr/self-service" element={<EmployeeSelfServicePage />} />
+                              <Route path="hr/chat" element={<InternalChatPage />} />
+                              <Route path="hr/reports" element={<HRReportsPage />} />
+                              <Route path="hr/contracts" element={<HrContractsPage />} />
+                              <Route path="hr/attendance-rules" element={<AttendanceRulesPage />} />
+                              <Route path="hr/employee-assets" element={<EmployeeAssetsPage />} />
+                              {/* Sensitive: Payroll/Salary/PIT — Admin + HR only (siết hơn nữa so với nhóm hr/* ở trên) */}
+                              <Route element={<RequireAuth allowedRoles={['Admin', 'HR']} />}>
+                                  <Route path="hr/payroll-runs" element={<PayrollRunPage />} />
+                                  <Route path="hr/payroll/:payrollId" element={<PayrollDetailPage />} />
+                                  <Route path="hr/salary-structures" element={<SalaryStructurePage />} />
+                                  <Route path="hr/pit-finalization" element={<PitFinalizationPage />} />
+                              </Route>
                           </Route>
                           <Route path="warranty" element={<WarrantyPortal />} />
                           <Route path="warranty/reports" element={<WarrantyReportsPage />} />
@@ -383,21 +405,37 @@ function App() {
                               <Route path="admin/menu-editor" element={<BackofficeMenuEditor />} />
                           </Route>
 
-                          {/* Admin + Manager: nghiệp vụ catalog/nội dung/marketing */}
+                          {/* Admin + Manager: nghiệp vụ catalog + cấu hình hệ thống.
+                              `custom-fields` / `form-builder` / `automation-rules` chạy trên
+                              `/api/config/*` — backend giới hạn Admin
+                              (`SystemConfig/{CustomField,FormDefinition,AutomationRule}Endpoints.cs`)
+                              nên KHÔNG mở cho Marketing ở đây. */}
                           <Route element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
                               <Route path="products" element={<AdminProductsPage />} />
                               <Route path="categories" element={<CategoriesPage />} />
                               <Route path="brands" element={<BrandsPage />} />
-                              <Route path="menus" element={<MenuManager />} />
-                              <Route path="homepage-builder" element={<HomepageBuilder />} />
-                              <Route path="promotions" element={<PromotionsPage />} />
-                              <Route path="flash-sales" element={<FlashSalesPage />} />
-                              <Route path="coupons" element={<CouponsPage />} />
-                              <Route path="cms" element={<CMSPortal />} />
                               <Route path="custom-fields" element={<CustomFieldsManager />} />
                               <Route path="form-builder" element={<FormBuilderPage />} />
                               <Route path="automation-rules" element={<AutomationRulesPage />} />
                               <Route path="system-health" element={<SystemHealthPage />} />
+                          </Route>
+
+                          {/* Admin + Manager + Marketing: nội dung & marketing.
+                              Khớp chính xác với backend sau W0-3: nhóm admin của Content
+                              (`ContentEndpoints.cs:281-282`) và Promotion
+                              (`PromotionEndpoints.cs:21-23`) đều cho phép Marketing, nên các
+                              trang này dùng được thật — trước W0 gate Marketing đăng nhập vào
+                              back office nhưng không có trang nào để vào. */}
+                          <Route element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Marketing']} />}>
+                              <Route path="menus" element={<MenuManager />} />
+                              <Route path="homepage-builder" element={<HomepageBuilder />} />
+                              <Route path="promotions" element={<PromotionsPage />} />
+                              {/* Alias có chủ đích: Flash Sale đã hợp nhất vào trang Khuyến mãi
+                                  (phase-04 luồng D) — chuyển hướng kèm filter để hiện đúng danh sách
+                                  Flash Sale thay vì đổ về trang trắng/bookmark chết. */}
+                              <Route path="flash-sales" element={<Navigate to="/backoffice/promotions?type=FlashSale" replace />} />
+                              <Route path="coupons" element={<CouponsPage />} />
+                              <Route path="cms" element={<CMSPortal />} />
                           </Route>
 
                           {/* CRM Routes */}
@@ -407,6 +445,9 @@ function App() {
                           <Route path="crm/leads/pipeline" element={<LeadPipelinePage />} />
                           <Route path="crm/segments" element={<CrmSegmentsPage />} />
                           <Route path="crm/campaigns" element={<CrmCampaignsPage />} />
+
+                          {/* 404 backoffice — bên trong BackofficeLayout để giữ sidebar/topbar */}
+                          <Route path="*" element={<NotFoundPage />} />
                         </Route>
                       </Route>
 
@@ -415,14 +456,17 @@ function App() {
                           <Route path="/admin/stores" element={<AdminStoresPage />} />
                       </Route>
 
-                      {/* Admin Redirects for backward compatibility */}
-                      <Route path="/admin/*" element={<RequireAuth allowedRoles={['Admin', 'Manager']} />}>
+                      {/* Admin Redirects for backward compatibility — cùng tập role với các trang đích */}
+                      <Route path="/admin/*" element={<RequireAuth allowedRoles={['Admin', 'Manager', 'Marketing']} />}>
                           <Route path="*" element={<Navigate to="/backoffice/admin" replace />} />
                           <Route path="menus" element={<Navigate to="/backoffice/menus" replace />} />
                           <Route path="homepage-builder" element={<Navigate to="/backoffice/homepage-builder" replace />} />
                           <Route path="flash-sales" element={<Navigate to="/backoffice/flash-sales" replace />} />
                           <Route path="promotions" element={<Navigate to="/backoffice/promotions" replace />} />
                       </Route>
+
+                      {/* Error pages (Standalone) */}
+                      <Route path="/403" element={<ForbiddenPage />} />
 
                       {/* Auth Pages (Standalone) */}
                       <Route path="/login" element={<LoginPage />} />

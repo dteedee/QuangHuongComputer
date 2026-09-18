@@ -1,0 +1,157 @@
+{
+  "name": "Webcam Logitech C922 Pro Stream Full HD 1080p",
+  "slug": "logitech-c922-pro-stream",
+  "sku": "WEBCAM-LOGI-C922PS",
+  "brand": "Logitech",
+  "category": "Loa, Mic, Webcam, Stream",
+  "subCategory": "Webcam",
+  "model": "C922 Pro Stream",
+  "officialUrl": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087",
+  "priceVnd": 2290000,
+  "oldPriceVnd": 2590000,
+  "costPriceVnd": 2030000,
+  "priceSources": [
+    "https://gearvn.com/products/webcam-logitech-c922",
+    "https://phongvu.vn/webcam-logitech-full-hd-c922-pro-stream--s1603530"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Logitech 24 tháng tại các trung tâm bảo hành ủy quyền ở Việt Nam (bảo hành phần cứng gốc toàn cầu theo Logitech là 12 tháng).",
+  "weightKg": 0.162,
+  "stockQuantity": 22,
+  "shortDescription": "Webcam livestream Full HD 1080p/30fps (hoặc 720p/60fps) với lấy nét tự động, góc nhìn rộng 78° và 2 micro tích hợp, kèm phần mềm Logitech Capture để dựng cảnh chuyên nghiệp.",
+  "descriptionHtml": "<h3>Webcam Logitech C922 Pro Stream - Chuẩn Livestream Full HD</h3><p>Logitech C922 Pro Stream là webcam rời được thiết kế riêng cho streamer, YouTuber và người dùng họp trực tuyến cần hình ảnh sắc nét hơn webcam laptop. Ống kính kính quang học cho hình ảnh Full HD 1080p ở 30fps, hoặc chuyển sang HD 720p ở 60fps khi cần chuyển động mượt, ít giật hình khi chơi game hay thao tác nhanh trên màn hình.</p><p>Máy tự động lấy nét theo chủ thể, góc nhìn 78° đủ rộng để lấy cả người lẫn một phần bối cảnh phía sau mà không bị méo hình. Hai micro tích hợp thu giọng nói trong bán kính khoảng 1m, đủ dùng cho stream hoặc gọi video mà không cần micro rời.</p><p>Kẹp gắn đa năng đi kèm lắp vừa laptop, màn hình LCD hoặc chân tripod tiêu chuẩn, dây cáp dài 1.5m đủ linh hoạt để đặt máy ở nhiều vị trí. C922 Pro Stream đi kèm phần mềm Logitech Capture, cho phép zoom, pan và chỉnh khung hình ngay khi đang stream hoặc ghi hình, đồng thời tương thích tốt với OBS Studio và XSplit Broadcaster.</p><p><strong>Điểm nổi bật:</strong></p><ul><li>Full HD 1080p/30fps hoặc 720p/60fps</li><li>Lấy nét tự động, ống kính kính quang học</li><li>Góc nhìn 78°, zoom số 1.2x</li><li>2 micro tích hợp, thu âm trong bán kính 1m</li><li>Kẹp đa năng: laptop, màn hình, tripod</li><li>Kèm phần mềm Logitech Capture; tương thích OBS, XSplit</li></ul>",
+  "highlights": [
+    "Quay Full HD 1080p ở 30fps hoặc HD 720p mượt ở 60fps",
+    "Ống kính kính quang học, lấy nét tự động",
+    "Góc nhìn rộng 78°, zoom số 1.2x",
+    "2 micro tích hợp, thu âm rõ trong bán kính 1m",
+    "Kẹp gắn đa năng: laptop, màn hình LCD hoặc chân tripod",
+    "Kèm phần mềm Logitech Capture, tương thích OBS/XSplit"
+  ],
+  "specs": [
+    {
+      "group": "Camera",
+      "name": "Độ phân giải tối đa",
+      "value": "1080p/30fps hoặc 720p/60fps",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Camera",
+      "name": "Độ phân giải cảm biến",
+      "value": "3 megapixel",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Camera",
+      "name": "Lấy nét",
+      "value": "Tự động (Autofocus)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Camera",
+      "name": "Loại ống kính",
+      "value": "Kính quang học (Glass lens)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Camera",
+      "name": "Góc nhìn (dFoV)",
+      "value": "78°",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Camera",
+      "name": "Zoom số",
+      "value": "1.2x",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Micro",
+      "value": "2 micro tích hợp (Stereo)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Tầm thu âm",
+      "value": "Khoảng 1m (3 ft)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Kết nối & Tương thích",
+      "name": "Cổng kết nối",
+      "value": "USB-A",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Kết nối & Tương thích",
+      "name": "Hệ điều hành",
+      "value": "Windows 8 trở lên, macOS 10.10 trở lên, ChromeOS",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Kết nối & Tương thích",
+      "name": "Phần mềm/nền tảng hỗ trợ",
+      "value": "Logitech Capture; tương thích OBS Studio, XSplit Broadcaster",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước (kèm kẹp)",
+      "value": "44 x 95 x 71 mm (Cao x Rộng x Sâu)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "162 g",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chiều dài cáp",
+      "value": "1.5 m",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kiểu gắn",
+      "value": "Kẹp đa năng cho laptop, màn hình LCD, chân tripod tiêu chuẩn",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Mã sản phẩm",
+      "value": "960-001087 (màu đen)",
+      "source": "https://www.logitech.com/en-us/shop/p/c922-pro-stream-webcam.960-001087"
+    }
+  ],
+  "filterAttributes": {
+    "type": "webcam",
+    "resolution": "1080p",
+    "maxFps": "60",
+    "connectivity": "usb-a",
+    "mic": "stereo_builtin",
+    "mount": "clip_tripod"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://resource.logitech.com/content/dam/logitech/en/products/webcams/c922/gallery/c922-gallery-2.png",
+      "alt": "Webcam Logitech C922 Pro Stream - mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://resource.logitech.com/content/dam/logitech/en/products/webcams/c922/gallery/c922-gallery-1.png",
+      "alt": "Webcam Logitech C922 Pro Stream - góc nghiêng trái"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://resource.logitech.com/content/dam/logitech/en/products/webcams/c922/gallery/c922-gallery-3.png",
+      "alt": "Webcam Logitech C922 Pro Stream - góc nghiêng phải"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Webcam Logitech C922 Pro Stream Full HD 1080p",
+  "metaDescription": "Webcam Logitech C922 Pro Stream 1080p/30fps, lấy nét tự động, góc nhìn 78°, 2 micro tích hợp. Chuẩn cho livestream, họp trực tuyến, quay video chuyên nghiệp."
+}

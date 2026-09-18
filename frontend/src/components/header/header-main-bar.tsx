@@ -4,7 +4,7 @@ import { FontSizeToggle } from '../ui/font-size-toggle';
 import { HeaderSearchPill } from './header-search-pill';
 import {
     Search, ShoppingCart, Menu as MenuIcon,
-    MessageCircle, Cpu, PackageSearch
+    MessageCircle, PackageSearch
 } from 'lucide-react';
 import type { Category } from '../../api/catalog';
 
@@ -81,14 +81,8 @@ export const HeaderMainBar = ({
                     {/* Font-size toggle — chỉ khu khách hàng, giúp người lớn tuổi đọc dễ hơn */}
                     <FontSizeToggle />
 
-                    {/* Build PC + tra cứu đơn hàng — desktop only */}
-                    <Link
-                        to="/products?tag=build-pc"
-                        className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-accent transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                        <Cpu size={18} />
-                        <span className="text-sm font-medium">Xây dựng cấu hình PC</span>
-                    </Link>
+                    {/* W0-12 (step 5): PC Builder ẩn tới khi tính năng ra mắt thật ở W3-9 —
+                        trước trỏ tới /products?tag=build-pc, không route nào xử lý -> dead-end. */}
                     <Link
                         to="/account/orders"
                         className="hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-accent transition-colors cursor-pointer whitespace-nowrap"

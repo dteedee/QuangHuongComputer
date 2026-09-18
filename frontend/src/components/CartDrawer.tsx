@@ -1,8 +1,10 @@
 
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/format';
+import { resolveMediaUrl } from '../lib/media-url';
 import { X, ShoppingBag, ArrowRight, Minus, Plus } from 'lucide-react';
 import { FreeShippingProgress } from './cart/free-shipping-progress';
 import { CartRemoveButton } from './cart/cart-remove-button';
@@ -12,8 +14,24 @@ interface CartDrawerProps {
     onClose: () => void;
 }
 
+/** Ảnh dòng giỏ hàng — resolveMediaUrl + fallback khi thiếu ảnh/tải lỗi (D02). */
+const CartLineImage = ({ src, name }: { src?: string; name: string }) => {
+    const [error, setError] = useState(false);
+    const resolved = resolveMediaUrl(src);
+    const placeholder = `https://placehold.co/100x100?text=${encodeURIComponent(name?.charAt(0) || '?')}`;
+    return (
+        <img
+            src={!resolved || error ? placeholder : resolved}
+            alt={name}
+            loading="lazy"
+            className="w-full h-full object-contain mix-blend-multiply p-1"
+            onError={() => setError(true)}
+        />
+    );
+};
+
 export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-    const { items, removeFromCart, updateQuantity, total, subtotal, shippingAmount } = useCart();
+    const { items, removeFromCart, updateQuantity, total, subtotal } = useCart();
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
@@ -85,11 +103,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                                 <div key={item.id} className="group bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex gap-3">
                                     {/* Image */}
                                     <div className="w-20 h-20 bg-gray-50 rounded-lg flex-shrink-0 border border-gray-100 overflow-hidden flex items-center justify-center">
-                                        <img
-                                            src={item.imageUrl || `https://placehold.co/100x100?text=${item?.name?.charAt(0) || '?'}`}
-                                            alt={item.name}
-                                            className="w-full h-full object-contain mix-blend-multiply p-1"
-                                        />
+                                        <CartLineImage src={item.imageUrl} name={item.name} />
                                     </div>
 
                                     {/* Content */}
@@ -145,7 +159,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                         <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
                             <div className="flex justify-between items-center mb-1">
                                 <span className="text-gray-500 text-xs font-medium uppercase tracking-wide">Tạm tính</span>
-                                <span className="font-bold text-gray-900">{formatCurrency(total)}</span>
+                                <span className="font-bold text-gray-900">{formatCurrency(subtotal)}</span>
                             </div>
                             <div className="border-t border-gray-200 my-2 pt-2 flex justify-between items-end">
                                 <span className="text-gray-900 font-bold">Tổng tiền</span>

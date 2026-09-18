@@ -30,9 +30,9 @@ export const FALLBACK_MENU: BackofficeMenuGroupConfig[] = [
             { title: 'Sản phẩm', iconName: 'Package', path: '/backoffice/products', allowedRoles: ['Admin', 'Manager'], description: 'Danh sách sản phẩm', badgeSource: null },
             { title: 'Danh mục', iconName: 'Archive', path: '/backoffice/categories', allowedRoles: ['Admin', 'Manager'], description: 'Phân loại sản phẩm', badgeSource: null },
             { title: 'Thương hiệu', iconName: 'Tag', path: '/backoffice/brands', allowedRoles: ['Admin', 'Manager'], description: 'Hãng sản xuất', badgeSource: null },
-            { title: 'Kho hàng', iconName: 'Box', path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'Supplier'], description: 'Quản lý tồn kho', badgeSource: null },
-            { title: 'Nhà cung cấp', iconName: 'Building2', path: '/backoffice/inventory/suppliers', allowedRoles: ['Admin', 'Manager'], description: 'Quản lý NCC', badgeSource: null },
-            { title: 'Đơn mua hàng', iconName: 'ShoppingCart', path: '/backoffice/inventory/purchase-orders', allowedRoles: ['Admin', 'Manager'], description: 'Đặt hàng NCC', badgeSource: null },
+            { title: 'Kho hàng', iconName: 'Box', path: '/backoffice/inventory', allowedRoles: ['Admin', 'Manager', 'InventoryStaff', 'Supplier'], description: 'Quản lý tồn kho', badgeSource: null },
+            { title: 'Nhà cung cấp', iconName: 'Building2', path: '/backoffice/inventory/suppliers', allowedRoles: ['Admin', 'Manager', 'InventoryStaff'], description: 'Quản lý NCC', badgeSource: null },
+            { title: 'Đơn mua hàng', iconName: 'ShoppingCart', path: '/backoffice/inventory/purchase-orders', allowedRoles: ['Admin', 'Manager', 'InventoryStaff'], description: 'Đặt hàng NCC', badgeSource: null },
         ]
     },
     {
@@ -46,8 +46,8 @@ export const FALLBACK_MENU: BackofficeMenuGroupConfig[] = [
         id: 'finance_hr', title: 'Tài chính & Nhân sự', iconName: 'Calculator', colorClass: 'text-emerald-500',
         items: [
             { title: 'Tài chính', iconName: 'Wallet', path: '/backoffice/accounting', allowedRoles: ['Admin', 'Manager', 'Accountant'], description: 'Kế toán tài chính', badgeSource: null },
-            { title: 'Nhân sự', iconName: 'Briefcase', path: '/backoffice/hr', allowedRoles: ['Admin', 'Manager', 'Accountant'], description: 'Quản lý nhân sự', badgeSource: null },
-            { title: 'Tuyển dụng', iconName: 'UserCheck', path: '/backoffice/hr/recruitment', allowedRoles: ['Admin', 'Manager'], description: 'Tuyển dụng nhân viên', badgeSource: null },
+            { title: 'Nhân sự', iconName: 'Briefcase', path: '/backoffice/hr', allowedRoles: ['Admin', 'Manager', 'HR', 'Accountant'], description: 'Quản lý nhân sự', badgeSource: null },
+            { title: 'Tuyển dụng', iconName: 'UserCheck', path: '/backoffice/hr/recruitment', allowedRoles: ['Admin', 'Manager', 'HR'], description: 'Tuyển dụng nhân viên', badgeSource: null },
         ]
     },
     {

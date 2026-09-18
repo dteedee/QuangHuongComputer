@@ -3,7 +3,6 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { useState, useEffect } from 'react';
 import { CartDrawer } from '../components/CartDrawer';
-import { AiChatbot } from '../components/AiChatbot';
 import { useCart } from '../context/CartContext';
 import {
     Home, Search, ShoppingCart, User, ChevronUp,
@@ -115,7 +114,9 @@ export const RootLayout = () => {
                 <Outlet />
             </main>
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-            <AiChatbot />
+            {/* Chat FAB: chỉ 1 widget toàn cục — <AiChatWidget /> đã mount ở App.tsx.
+                Trước đây RootLayout còn tự mount thêm <AiChatbot />, ra 2 nút chat chồng nhau
+                trên mọi trang storefront. */}
             <BackToTop />
             <MobileBottomNav onCartClick={() => setIsCartOpen(true)} />
             <Footer />

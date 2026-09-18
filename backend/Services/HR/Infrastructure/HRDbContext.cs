@@ -156,7 +156,13 @@ public class HRDbContext : DbContext
             entity.Property(e => e.TotalNetPay).HasPrecision(18, 2);
             entity.Property(e => e.TotalTax).HasPrecision(18, 2);
             entity.Property(e => e.TotalInsurance).HasPrecision(18, 2);
-            entity.Ignore(e => e.Payrolls); // navigation collection in-memory, không map sang DB
+            // 1-N tới Payroll qua backing field _payrolls; PayrollRunId đã tồn tại sẵn trên
+            // bảng Payrolls (không cần migration) — trước đây bị Ignore nên .Include(r => r.Payrolls)
+            // luôn throw runtime (payroll calculate/approve 500 ở mọi request).
+            entity.HasMany(e => e.Payrolls)
+                .WithOne()
+                .HasForeignKey(p => p.PayrollRunId);
+            entity.Navigation(e => e.Payrolls).UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasIndex(e => new { e.Year, e.Month }).IsUnique();
         });
 

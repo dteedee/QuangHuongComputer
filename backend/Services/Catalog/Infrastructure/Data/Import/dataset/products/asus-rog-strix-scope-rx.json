@@ -1,0 +1,165 @@
+{
+  "name": "Bàn phím cơ ASUS ROG Strix Scope RX",
+  "slug": "asus-rog-strix-scope-rx",
+  "sku": "ASUS-STRIXSCOPERX",
+  "brand": "ASUS ROG",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Bàn phím",
+  "model": "ROG Strix Scope RX",
+  "officialUrl": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/",
+  "priceVnd": 2240000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 1970000,
+  "priceSources": [
+    "https://cellphones.com.vn/ban-phim-gaming-asus-rog-strix-scope-rx-usb-rgb-rd-sw.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng ASUS 24 tháng tại trung tâm bảo hành ủy quyền toàn quốc, 1 đổi 1 trong 15 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 1.07,
+  "stockQuantity": 18,
+  "shortDescription": "Bàn phím cơ full-size dùng switch quang ROG RX Red, khung hợp kim chống bụi/nước IP57, đèn RGB Aura Sync từng phím, cổng USB pass-through tiện lợi cho game thủ.",
+  "descriptionHtml": "<h3>Switch quang ROG RX cho tốc độ phản hồi vượt trội</h3><p>ROG Strix Scope RX dùng switch quang học ROG RX Red do ASUS tự phát triển, độ bền công bố 100 triệu lần nhấn, hành trình êm và nảy nhanh phù hợp game FPS/MOBA tốc độ cao. Bàn phím đạt chuẩn Anti-Ghosting 100%, đảm bảo mọi tổ hợp phím được nhận đúng khi thao tác nhanh.</p><h3>Khung hợp kim bền bỉ, chống bụi nước IP57</h3><p>Tấm nắp trên bằng hợp kim tăng độ cứng cáp tổng thể đồng thời đạt chuẩn kháng bụi, kháng nước IP57 - yên tâm hơn khi lỡ đổ nước hay dùng trong môi trường nhiều bụi. Keycap PBT hai lớp giữ chữ bền màu, cảm giác gõ cao cấp hơn keycap ABS thông thường.</p><h3>Đèn RGB Aura Sync và tiện ích game thủ</h3><p>Đèn LED RGB đặt tại tâm mỗi phím cho ánh sáng đều, đồng bộ hiệu ứng qua Aura Sync với các thiết bị ROG khác thông qua phần mềm Armoury Crate. Bàn phím hỗ trợ ghi Macro On-the-Fly ngay trên phím, có cổng USB pass-through 2.0 tích hợp để cắm thêm chuột hoặc USB, tần số phản hồi 1000Hz cho độ trễ thấp.</p><ul><li>Switch quang ROG RX Red, 100 triệu lần nhấn</li><li>Chuẩn kháng bụi/nước IP57</li><li>Đèn RGB Aura Sync từng phím</li><li>Cổng USB pass-through tích hợp</li><li>Macro On-the-Fly, phần mềm Armoury Crate</li></ul>",
+  "highlights": [
+    "Switch quang học ROG RX Red, độ bền 100 triệu lần nhấn",
+    "Khung hợp kim đạt chuẩn kháng bụi, kháng nước IP57",
+    "Đèn nền RGB từng phím, đồng bộ Aura Sync",
+    "Anti-Ghosting 100%, tần số phản hồi 1000Hz",
+    "Cổng USB 2.0 pass-through tích hợp trên thân phím",
+    "Hỗ trợ ghi Macro On-the-Fly, phần mềm Armoury Crate"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Loại bàn phím",
+      "value": "Full-size (100%), 104 phím, có dây",
+      "source": "https://cellphones.com.vn/ban-phim-gaming-asus-rog-strix-scope-rx-usb-rgb-rd-sw.html"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Công tắc phím (switch)",
+      "value": "Switch quang học ROG RX RED cho bàn phím cơ",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Kết nối",
+      "value": "Có dây, USB 2.0 (đầu cắm TypeC sang TypeA), dây dài 1.8m",
+      "source": "https://cellphones.com.vn/ban-phim-gaming-asus-rog-strix-scope-rx-usb-rgb-rd-sw.html"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Tương thích hệ điều hành",
+      "value": "Windows 10, Windows 11",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Đèn & phần mềm",
+      "name": "Hệ thống đèn",
+      "value": "Đèn LED RGB mỗi phím",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Đèn & phần mềm",
+      "name": "AURA Sync",
+      "value": "Có",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Đèn & phần mềm",
+      "name": "Phần mềm",
+      "value": "Armoury Crate",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Tính năng gaming",
+      "name": "Anti-Ghosting",
+      "value": "100% Anti-Ghosting",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Tính năng gaming",
+      "name": "Phím Macro",
+      "value": "Tất cả phím lập trình được, hỗ trợ ghi Macro On-the-Fly",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Tính năng gaming",
+      "name": "Tần số phản hồi (polling rate)",
+      "value": "1000 Hz",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Tính năng gaming",
+      "name": "Cổng USB Pass-through",
+      "value": "Có, đầy đủ chức năng",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Chất liệu & độ bền",
+      "name": "Khung & chất liệu keycap",
+      "value": "Khung trên hợp kim; keycap PBT; chuẩn kháng bụi/nước IP57",
+      "source": "https://cellphones.com.vn/ban-phim-gaming-asus-rog-strix-scope-rx-usb-rgb-rd-sw.html"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Kích thước (dài x rộng x cao)",
+      "value": "440 x 137 x 39 mm",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Trọng lượng",
+      "value": "1.07 kg",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Màu sắc",
+      "value": "Đen (BLK)",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    },
+    {
+      "group": "Hộp sản phẩm",
+      "name": "Bên trong hộp",
+      "value": "1 bàn phím ROG Strix Scope RX, 1 thẻ bảo hành, 1 hướng dẫn nhanh, 1 sticker logo ROG",
+      "source": "https://rog.asus.com/vn/keyboards/keyboards/aura-rgb/rog-strix-scope-rx-model/spec/"
+    }
+  ],
+  "filterAttributes": {
+    "switchType": "Optical ROG RX Red",
+    "connectivity": "Wired USB",
+    "layout": "Full-size 104 phím",
+    "backlight": "RGB per-key (Aura Sync)",
+    "hasNumpad": "true"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/gain/A27E11D7-3711-4A85-B909-1957A0E409E4/w1000/h732",
+      "alt": "Bàn phím ASUS ROG Strix Scope RX nhìn thẳng từ trên xuống"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/gain/6FF3C6FB-B36D-4920-8172-83909ED8CFA7/w1000/h732",
+      "alt": "Bàn phím ASUS ROG Strix Scope RX nhìn góc nghiêng với đèn RGB"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/gain/B3361C32-D740-4292-BF87-B0E4CCDFF5C3/w1000/h732",
+      "alt": "Bàn phím ASUS ROG Strix Scope RX góc nghiêng, thấy cổng USB pass-through"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/gain/9CEFDDC3-C310-4928-9A71-390F57E9A4FD/w1000/h732",
+      "alt": "Cận cảnh switch quang học ROG RX và logo ROG trên bàn phím Strix Scope RX"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/gain/E0F356A9-5909-4E8C-A924-18B3A761B9E3/w1000/h732",
+      "alt": "Mặt lưng bàn phím ASUS ROG Strix Scope RX với chân đế và dây cáp"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Bàn phím cơ ASUS ROG Strix Scope RX - Switch quang RX Red, RGB",
+  "metaDescription": "ASUS ROG Strix Scope RX: bàn phím cơ full-size switch quang ROG RX Red, khung hợp kim IP57, đèn RGB Aura Sync, USB pass-through. Giá tốt, bảo hành 24 tháng."
+}

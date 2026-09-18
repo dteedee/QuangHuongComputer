@@ -195,16 +195,44 @@ public static class RepairEndpoints
             return Results.Ok(workOrder);
         });
 
-        adminGroup.MapPut("/work-orders/{id:guid}/assign", async (Guid id, AssignTechnicianDto dto, RepairDbContext db) =>
+        // W0-11: also handles RE-assignment (workOrder already Assigned to someone
+        // else - domain guard in WorkOrder.AssignTechnician now allows it) and
+        // logs the change. The log must be staged explicitly on the DbSet - see
+        // the concurrency note on WorkOrder.AddActivityLog.
+        adminGroup.MapPut("/work-orders/{id:guid}/assign", async (Guid id, AssignTechnicianDto dto, RepairDbContext db, ClaimsPrincipal user) =>
         {
             var workOrder = await db.WorkOrders.FindAsync(id);
             if (workOrder == null)
                 return Results.NotFound(new { Error = "Work order not found" });
 
-            workOrder.AssignTechnician(dto.TechnicianId);
-            await db.SaveChangesAsync();
+            var technician = await db.Technicians.FindAsync(dto.TechnicianId);
+            if (technician == null)
+                return Results.BadRequest(new { Error = "Technician not found" });
 
-            return Results.Ok(new { Message = "Technician assigned successfully", Status = workOrder.Status.ToString() });
+            try
+            {
+                var previousStatus = workOrder.Status;
+                var previousTechnicianId = workOrder.TechnicianId;
+                workOrder.AssignTechnician(dto.TechnicianId);
+
+                var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                Guid.TryParse(userIdStr, out var performedBy);
+                var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
+                var description = previousTechnicianId.HasValue && previousTechnicianId != dto.TechnicianId
+                    ? $"Re-assigned to {technician.Name}"
+                    : $"Assigned to {technician.Name}";
+                var log = WorkOrderActivityLog.CreateStatusChange(
+                    workOrder.Id, previousStatus, workOrder.Status, performedBy, userName, description);
+                workOrder.AddActivityLog(log);
+                db.WorkOrderActivityLogs.Add(log);
+
+                await db.SaveChangesAsync();
+                return Results.Ok(new { Message = "Technician assigned successfully", Status = workOrder.Status.ToString() });
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
+            }
         });
 
         adminGroup.MapPut("/work-orders/{id:guid}/start", async (Guid id, RepairDbContext db) =>

@@ -39,11 +39,11 @@ public class OrderPromotionSnapshotTests
     }
 
     [Fact]
-    public void ApplyPricingResult_ShippingDiscount_KhongCongVaoGocVAT()
+    public void ApplyPricingResult_ShippingDiscount_KhongAnhHuongVATHang()
     {
-        // Subtotal 10tr, ship 100k, freeship 100k.
-        // VAT tính trên subtotal-discount = 10tr → 800k VAT (không đụng shipping discount).
-        // Total = 10tr + 800k + max(100k - 100k, 0) = 10.8tr.
+        // W0-4/D01: giá ĐÃ gồm VAT. Subtotal 10tr, ship 100k, freeship 100k → ship ròng = 0.
+        // Total = 10tr − 0 + 0 = 10tr (KHÔNG cộng thêm 800k thuế như trước).
+        // Tax  = ExtractVat(10tr) = 10.000.000 − 9.259.259 = 740.741.
         var order = NewOrderVoi1Item(10_000_000m, 1);
         order.SetShippingAmount(100_000m);
         order.ApplyPricingResult(
@@ -51,8 +51,8 @@ public class OrderPromotionSnapshotTests
             shippingDiscount: 100_000m,
             appliedPromotionsJson: "[]");
 
-        order.TaxAmount.Should().Be(800_000m);
-        order.TotalAmount.Should().Be(10_800_000m);
+        order.TaxAmount.Should().Be(740_741m);
+        order.TotalAmount.Should().Be(10_000_000m);
     }
 
     [Fact]
@@ -65,9 +65,11 @@ public class OrderPromotionSnapshotTests
             shippingDiscount: 0,
             appliedPromotionsJson: "[]");
 
-        // netSubtotal clamp về 0 → VAT=0, chỉ còn ship.
-        order.TaxAmount.Should().Be(0);
+        // Chốt chặn 1 (D01): D clamp về subtotal → hàng còn 0đ, chỉ còn phí ship.
+        order.DiscountAmount.Should().Be(1_000_000m);
         order.TotalAmount.Should().Be(30_000m);
+        // VAT tách trên dòng ship: 30.000 − round(30.000/1,08) = 30.000 − 27.778 = 2.222.
+        order.TaxAmount.Should().Be(2_222m);
     }
 
     [Fact]

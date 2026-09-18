@@ -1,0 +1,220 @@
+{
+  "name": "Màn Hình Gigabyte M27UP 27 inch 4K UHD 160Hz Dual-Mode",
+  "slug": "gigabyte-m27up-27-4k-160hz-dual-mode",
+  "sku": "GIGA-M27UP",
+  "brand": "Gigabyte",
+  "category": "Màn Hình Máy Tính",
+  "subCategory": "Màn hình 4K",
+  "model": "Gigabyte M27UP",
+  "officialUrl": "https://www.gigabyte.com/vn/Monitor/M27UP",
+  "priceVnd": 8790000,
+  "oldPriceVnd": 11990000,
+  "costPriceVnd": 7740000,
+  "priceSources": [
+    "https://gearvn.com/products/man-hinh-gigabyte-m27up-27-ips-4k-160hz-fhd-320hz-chuyen-game"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng GIGABYTE 36 tháng (3 năm) tại Việt Nam qua hệ thống bảo hành ủy quyền.",
+  "weightKg": 6.65,
+  "stockQuantity": 14,
+  "shortDescription": "Màn hình gaming Gigabyte M27UP 27 inch sở hữu công nghệ Dual Mode độc quyền, chuyển đổi tức thời giữa 4K UHD 160Hz sắc nét và Full HD 320Hz siêu mượt, đáp ứng cả game AAA lẫn thể thao điện tử tốc độ cao.",
+  "descriptionHtml": "<h3>Dual Mode - hai trải nghiệm trong một màn hình</h3><p>Gigabyte M27UP nổi bật với công nghệ Dual Mode: chỉ một cú bấm nút Tactical Switch 2.0, người dùng chuyển ngay từ độ phân giải 4K UHD 160Hz sắc nét sang Full HD 320Hz cực mượt, phù hợp khi chơi game đồ hoạ nặng lẫn khi cần tốc độ khung hình cao cho game bắn súng.</p><h3>Tấm nền SuperSpeed IPS 1ms, màu sắc chuẩn xác</h3><p>Tấm nền IPS 27 inch với thời gian phản hồi 1ms GTG, độ phủ màu 95% DCI-P3 và hỗ trợ HDR400 mang lại hình ảnh sắc nét, màu sắc trung thực cho cả công việc sáng tạo lẫn giải trí. Công nghệ Smart OD tự động tối ưu overdrive theo từng tần số quét, hạn chế bóng mờ khi chuyển đổi giữa hai chế độ.</p><h3>Trang bị gaming và kết nối toàn diện</h3><ul><li>G-Sync Compatible, Aim Stabilizer Sync và Night Vision hỗ trợ trải nghiệm FPS mượt mà, dễ quan sát vùng tối</li><li>Game Assist tích hợp crosshair, timer, chế độ PIP/PBP ngay trên OSD</li><li>Cổng USB Type-C Power Delivery 18W cùng KVM switch, dùng chung một bộ chuột phím cho hai thiết bị</li><li>Chân đế chỉnh cao, nghiêng, xoay ngang và pivot đầy đủ, chuẩn treo VESA 100x100mm</li></ul><p>Thiết kế tản nhiệt bốn mặt giữ máy hoạt động ổn định khi chạy tần số quét cao trong thời gian dài, cùng chứng nhận Low Blue Light TÜV Rheinland bảo vệ mắt người dùng.</p>",
+  "highlights": [
+    "Dual Mode độc quyền: đổi tức thời giữa 4K UHD 160Hz và FHD 320Hz chỉ với 1 nút Tactical Switch 2.0",
+    "Tấm nền SuperSpeed IPS 1ms GTG, 95% DCI-P3, chuẩn HDR400, hỗ trợ G-Sync Compatible",
+    "Bộ tính năng FPS chuyên biệt: Aim Stabilizer Sync, Night Vision, Smart OD tự động tối ưu overdrive",
+    "USB-C Power Delivery 18W tích hợp KVM switch, tiện lợi dùng chung chuột phím cho 2 thiết bị",
+    "Chân đế chỉnh cao/nghiêng/xoay/pivot đầy đủ, chuẩn treo VESA 100x100mm, tản nhiệt 4 mặt",
+    "Chứng nhận Low Blue Light TÜV Rheinland, Flicker-free bảo vệ mắt khi dùng lâu"
+  ],
+  "specs": [
+    {
+      "group": "Màn hình",
+      "name": "Kích thước màn hình",
+      "value": "27 inch (SS IPS)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "3840 x 2160 (4K UHD)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền",
+      "value": "SuperSpeed IPS",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Bề mặt hiển thị",
+      "value": "Chống chói (Non-glare)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "350 cd/m² (TYP)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ tương phản",
+      "value": "1000:1 (Typ.)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Góc nhìn",
+      "value": "178°(H)/178°(V)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Không gian màu",
+      "value": "95% DCI-P3 / 125% sRGB, 1.07 tỷ màu",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Chuẩn HDR",
+      "value": "VESA DisplayHDR 400",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Chống nhấp nháy",
+      "value": "Flicker-free",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Dual Mode",
+      "value": "Chuyển đổi 4K UHD 160Hz <-> FHD 1920x1080 320Hz chỉ với 1 nút Tactical Switch 2.0",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Thời gian phản hồi",
+      "value": "1ms GTG",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Đồng bộ hình ảnh",
+      "value": "G-Sync Compatible",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Công nghệ Overdrive",
+      "value": "Smart OD - tự nhận diện tần số quét và tối ưu overdrive",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Hỗ trợ ngắm bắn",
+      "value": "Aim Stabilizer Sync - giảm mờ chuyển động",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Chế độ tối",
+      "value": "Night Vision - tăng sáng chi tiết vùng tối trong game",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Chế độ & Gaming",
+      "name": "Tiện ích OSD",
+      "value": "Game Assist: crosshair, timer, chế độ PIP/PBP",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng video",
+      "value": "2x HDMI 2.1, 1x DisplayPort 1.4 (DSC)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB",
+      "value": "3x USB 3.2 Gen1 downstream, 1x USB 3.2 Gen1 upstream, 1x USB Type-C (Alt Mode, PD 18W)",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Kết nối",
+      "name": "KVM Switch",
+      "value": "Có - chuyển đổi nhanh giữa 2 thiết bị chỉ với 1 bộ chuột phím",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Âm thanh",
+      "value": "Loa 5W x2, ngõ tai nghe 3.5mm",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Điều chỉnh chân đế",
+      "value": "Cao 130mm, nghiêng -5°~+21°, xoay ngang ±15°, pivot 0°~+90°",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Chuẩn treo VESA",
+      "value": "100 x 100 mm",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Tản nhiệt",
+      "value": "Four-sided cooling - tản nhiệt 4 mặt",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước có chân đế",
+      "value": "612 x 515 x 192 mm",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng có chân đế",
+      "value": "6.65 kg",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    },
+    {
+      "group": "Phụ kiện hộp",
+      "name": "Phụ kiện đi kèm",
+      "value": "Dây nguồn, cáp HDMI 2.1, cáp DisplayPort, cáp USB, sách hướng dẫn, phiếu bảo hành",
+      "source": "https://www.gigabyte.com/vn/Monitor/M27UP/sp"
+    }
+  ],
+  "filterAttributes": {
+    "size": "27 inch",
+    "resolution": "3840x2160 (4K UHD)",
+    "panel": "IPS",
+    "refreshRate": "160Hz (4K) / 320Hz (FHD Dual Mode)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static.gigabyte.com/StaticFile/Image/Global/d2dc04c419ec3a16dd51e80728864c19/ProductRemoveBg/47401/webp/670",
+      "alt": "Màn hình Gigabyte M27UP nhìn thẳng mặt trước, chân đế đen"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.gigabyte.com/StaticFile/Image/Global/5c1ea9e3a0c4e74772f2d5ae8da01e8b/ProductRemoveBg/47402/webp/400",
+      "alt": "Màn hình Gigabyte M27UP góc nghiêng phải, thể hiện độ mỏng viền màn và chân đế"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://static.gigabyte.com/StaticFile/Image/Global/e0749e020ebacd559cdc892f6a56b825/ProductRemoveBg/47403/webp/400",
+      "alt": "Màn hình Gigabyte M27UP góc nghiêng trái, thể hiện chân đế kim loại và logo GIGABYTE"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Màn Hình Gigabyte M27UP 27 inch 4K 160Hz Dual Mode",
+  "metaDescription": "Gigabyte M27UP 27 inch IPS 4K UHD 160Hz / FHD 320Hz Dual Mode, 1ms GTG, G-Sync Compatible, USB-C 18W, KVM switch. Giá tốt, bảo hành chính hãng tại Quang Huong Computer."
+}

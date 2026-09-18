@@ -53,10 +53,26 @@ public class MoMoService
         return JsonSerializer.Deserialize<MoMoCreateResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
     }
 
+    /// <summary>
+    /// W0-10: fail-closed. SecretKey rỗng/placeholder hoặc chữ ký rỗng ⇒ false (trước đây gọi hàm này
+    /// bị bỏ qua khi secret rỗng). Trường thiếu ⇒ chuỗi rỗng, không ném KeyNotFoundException (500).
+    /// So sánh theo thời gian hằng số.
+    /// </summary>
     public bool VerifySignature(Dictionary<string, string> data, string receivedSignature)
     {
-        var rawSignature = $"accessKey={_config.AccessKey}&amount={data["amount"]}&extraData={data.GetValueOrDefault("extraData", "")}&message={data.GetValueOrDefault("message", "")}&orderId={data["orderId"]}&orderInfo={data.GetValueOrDefault("orderInfo", "")}&orderType={data.GetValueOrDefault("orderType", "")}&partnerCode={_config.PartnerCode}&payType={data.GetValueOrDefault("payType", "")}&requestId={data["requestId"]}&responseTime={data["responseTime"]}&resultCode={data["resultCode"]}&transId={data["transId"]}";
-        return ComputeHmacSha256(rawSignature, _config.SecretKey) == receivedSignature;
+        if (!Payments.Application.Webhooks.WebhookSignature.IsConfiguredSecret(_config.SecretKey)) return false;
+        if (string.IsNullOrWhiteSpace(receivedSignature)) return false;
+
+        string F(string key) => data.GetValueOrDefault(key, "");
+        var rawSignature =
+            $"accessKey={_config.AccessKey}&amount={F("amount")}&extraData={F("extraData")}" +
+            $"&message={F("message")}&orderId={F("orderId")}&orderInfo={F("orderInfo")}" +
+            $"&orderType={F("orderType")}&partnerCode={_config.PartnerCode}&payType={F("payType")}" +
+            $"&requestId={F("requestId")}&responseTime={F("responseTime")}&resultCode={F("resultCode")}" +
+            $"&transId={F("transId")}";
+
+        return Payments.Application.Webhooks.WebhookSignature.FixedTimeEqualsHex(
+            ComputeHmacSha256(rawSignature, _config.SecretKey), receivedSignature);
     }
 
     private static string ComputeHmacSha256(string data, string key)

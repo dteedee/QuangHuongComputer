@@ -1,0 +1,221 @@
+{
+  "name": "CPU AMD Ryzen 7 9800X3D Box Chính Hãng",
+  "slug": "cpu-amd-ryzen-7-9800x3d",
+  "sku": "AMD-100100001084WOF",
+  "brand": "AMD",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "CPU",
+  "model": "AMD 100-100001084WOF",
+  "officialUrl": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html",
+  "priceVnd": 15690000,
+  "oldPriceVnd": 15990000,
+  "costPriceVnd": 13810000,
+  "priceSources": [
+    "https://gearvn.com/products/bo-vi-xu-ly-amd-ryzen-7-9800x3d",
+    "https://memoryzone.com.vn/cpu-amd-ryzen-7-9800x3d"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng AMD Việt Nam 36 tháng, 1 đổi 1 trong 12 tháng đầu tại hệ thống bảo hành ủy quyền.",
+  "weightKg": 0.35,
+  "stockQuantity": 18,
+  "shortDescription": "CPU AMD Ryzen 7 9800X3D dùng kiến trúc Zen 5 với công nghệ 3D V-Cache thế hệ 2, 8 nhân 16 luồng, xung Boost tới 5.2GHz, là lựa chọn hàng đầu cho dàn PC gaming hiệu năng cao.",
+  "descriptionHtml": "<h3>AMD Ryzen 7 9800X3D - vi xử lý gaming đầu bảng kiến trúc Zen 5</h3><p>AMD Ryzen 7 9800X3D thuộc dòng Ryzen 9000 Series, xây dựng trên kiến trúc Zen 5 tiên tiến với 8 nhân 16 luồng. Xung nhịp cơ bản đạt 4.7GHz và có thể tăng tốc lên đến 5.2GHz ở chế độ Boost, mang lại hiệu năng đơn nhân vượt trội cho các tựa game nặng cũng như tác vụ sáng tạo nội dung.</p><h3>Công nghệ 3D V-Cache thế hệ 2 - sức mạnh dành riêng cho game thủ</h3><p>Điểm nhấn của Ryzen 7 9800X3D nằm ở 96MB bộ nhớ đệm L3 nhờ công nghệ AMD 3D V-Cache thế hệ 2, giúp giảm đáng kể độ trễ truy xuất dữ liệu và tăng khung hình trong game so với CPU cùng phân khúc không có V-Cache. Công suất tiêu thụ mặc định chỉ 120W, đi kèm hệ số nhân mở khóa (Unlocked) cho phép tinh chỉnh hiệu năng qua AMD Ryzen Master.</p><h3>Nền tảng AM5 hiện đại, sẵn sàng cho tương lai</h3><p>Sử dụng Socket AM5, CPU tương thích dải mainboard rộng từ A620 đến X870E, hỗ trợ RAM DDR5 hai kênh dung lượng tối đa 256GB, tốc độ lên tới DDR5-5600. Chuẩn giao tiếp PCIe 5.0 với 28 lane đảm bảo băng thông dư dả cho SSD NVMe tốc độ cao và card đồ họa thế hệ mới, phù hợp xây dựng cấu hình gaming hoặc sáng tạo nội dung bền vững nhiều năm.</p><ul><li>8 nhân 16 luồng, Boost tối đa 5.2GHz</li><li>96MB L3 Cache với AMD 3D V-Cache thế hệ 2</li><li>Socket AM5, hỗ trợ RAM DDR5 tối đa 256GB</li><li>Chuẩn PCIe 5.0, 28 lane</li><li>TDP 120W, hỗ trợ ép xung Unlocked</li></ul>",
+  "highlights": [
+    "8 nhân 16 luồng, xung cơ bản 4.7GHz, Boost tối đa 5.2GHz - xử lý mượt mọi tựa game AAA",
+    "96MB L3 Cache nhờ công nghệ AMD 3D V-Cache thế hệ 2, giảm độ trễ, tăng FPS trong game",
+    "Hỗ trợ RAM DDR5 tối đa 256GB, 2 kênh, đạt tốc độ DDR5-5600 khi gắn 1 thanh/kênh",
+    "Chuẩn giao tiếp PCIe 5.0, tối đa 28 lane, sẵn sàng cho SSD NVMe và VGA thế hệ mới",
+    "Socket AM5, tương thích nhiều dòng mainboard từ A620 đến X870E, dễ nâng cấp lâu dài",
+    "Mở khóa hệ số nhân (Unlocked), hỗ trợ ép xung qua AMD Ryzen Master và Precision Boost Overdrive"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Dòng sản phẩm",
+      "value": "AMD Ryzen 9000 Series (Granite Ridge)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Kiến trúc",
+      "value": "Zen 5",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Số nhân",
+      "value": "8",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Số luồng",
+      "value": "16",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp cơ bản",
+      "value": "4.7 GHz",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp Boost tối đa",
+      "value": "5.2 GHz",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Bộ nhớ đệm L2",
+      "value": "8 MB",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Bộ nhớ đệm L3",
+      "value": "96 MB (2nd Gen AMD 3D V-Cache)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Công suất tiêu thụ mặc định (TDP)",
+      "value": "120W",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Nhiệt độ hoạt động tối đa (Tjmax)",
+      "value": "95°C",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Hỗ trợ ép xung",
+      "value": "Có (Unlocked)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Công nghệ sản xuất (nhân CPU)",
+      "value": "TSMC 4nm FinFET",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Socket",
+      "value": "AM5",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Chipset hỗ trợ",
+      "value": "A620, B650, B650E, B840, B850, X670, X670E, X870, X870E",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Chuẩn PCIe",
+      "value": "PCIe 5.0",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Số lane PCIe (Tổng/Khả dụng)",
+      "value": "28 / 24",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Loại RAM hỗ trợ",
+      "value": "DDR5",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Số kênh RAM",
+      "value": "2",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Dung lượng RAM tối đa",
+      "value": "256 GB",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Tốc độ RAM tối đa (1 thanh/kênh)",
+      "value": "DDR5-5600",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Bộ nhớ & Kết nối",
+      "name": "Cổng USB 3.2 Gen2 (10Gbps) tích hợp",
+      "value": "4",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "GPU tích hợp",
+      "value": "AMD Radeon Graphics",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "Số nhân đồ họa",
+      "value": "2",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "Xung nhịp đồ họa",
+      "value": "2200 MHz",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Thông tin sản phẩm",
+      "name": "Mã sản phẩm (Boxed)",
+      "value": "100-100001084WOF",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Thông tin sản phẩm",
+      "name": "Ngày ra mắt",
+      "value": "07/11/2024",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Thông tin sản phẩm",
+      "name": "Tản nhiệt kèm theo",
+      "value": "Không kèm tản (khuyến nghị dùng tản nước)",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    },
+    {
+      "group": "Thông tin sản phẩm",
+      "name": "Hệ điều hành hỗ trợ",
+      "value": "Windows 11/10 64-bit, RHEL x86 64-bit, Ubuntu x86 64-bit",
+      "source": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html"
+    }
+  ],
+  "filterAttributes": {
+    "socket": "AM5",
+    "cores": "8 Nhân / 16 Luồng",
+    "series": "AMD Ryzen 7 9000 Series (Granite Ridge)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2900400-ryzen-7-9800x3d-product.jpg",
+      "alt": "CPU AMD Ryzen 7 9800X3D Box Chính Hãng - mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2900400-ryzen-7-9800x3d.jpg",
+      "alt": "CPU AMD Ryzen 7 9800X3D Box Chính Hãng - góc nghiêng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "CPU AMD Ryzen 7 9800X3D Box Chính Hãng - Quang Huong Computer",
+  "metaDescription": "CPU AMD Ryzen 7 9800X3D 8 nhân 16 luồng, Boost 5.2GHz, 96MB 3D V-Cache, Socket AM5. Bảo hành chính hãng AMD 36 tháng, giá tốt tại Quang Huong Computer."
+}

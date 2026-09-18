@@ -105,7 +105,7 @@ export default function ProductDetailTabs({
                     )
                 )}
                 {activeTab === 'buying' && (
-                    <ProductBuyingGuideTab price={product.price} warrantyInfo={product.warrantyInfo} />
+                    <ProductBuyingGuideTab warrantyInfo={product.warrantyInfo} />
                 )}
                 {activeTab === 'reviews' && (
                     <ProductReviewsTab

@@ -158,4 +158,34 @@ public class AttendanceRecordTests
         r.CheckInMethod.Should().Be(CheckInMethod.Manual);
         r.WorkHours.Should().Be(9m);
     }
+
+    [Fact]
+    public void AdjustManually_KhongTruyenStatus_9GioCong_SuyRaPresent_KhongConAbsent()
+    {
+        // W0-8: bug gốc — record mới mặc định Status=Absent (ctor), và AdjustManually
+        // trước đây chỉ set Status khi status param được truyền tay. Manager chấm công
+        // 9h làm việc qua /manual (không gửi status) vẫn bị lưu Absent.
+        var r = NewRecord();
+        var mgr = Guid.NewGuid();
+
+        r.AdjustManually(
+            managerId: mgr,
+            reason: "Quên quẹt thẻ buổi sáng",
+            checkInTime: new DateTime(2026, 6, 15, 8, 0, 0),
+            checkOutTime: new DateTime(2026, 6, 15, 17, 0, 0));
+
+        r.WorkHours.Should().Be(9m);
+        r.Status.Should().Be(AttendanceStatus.Present);
+    }
+
+    [Fact]
+    public void AdjustManually_KhongTruyenGioCong_VanGiuAbsent()
+    {
+        var r = NewRecord();
+
+        r.AdjustManually(Guid.NewGuid(), "Nghỉ không phép, quản lý ghi nhận lại");
+
+        r.WorkHours.Should().Be(0m);
+        r.Status.Should().Be(AttendanceStatus.Absent);
+    }
 }

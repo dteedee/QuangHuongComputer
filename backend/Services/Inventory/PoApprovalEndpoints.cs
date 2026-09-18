@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using BuildingBlocks.Security;
 using InventoryModule.Application.Purchasing;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
@@ -19,9 +20,15 @@ namespace InventoryModule;
 /// </summary>
 public static class PoApprovalEndpoints
 {
+    /// <summary>W0-3: mua hàng là nghiệp vụ nội bộ. W1-1 sẽ thay bằng permission policy.</summary>
+    internal static readonly string[] ProcurementRoles =
+        { Roles.Admin, Roles.Manager, Roles.InventoryStaff };
+
     public static void MapPoApprovalEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory").RequireAuthorization();
+        // W0-3: RequireAuthorization() trống ⇒ token Customer duyệt được PO cần Manager.
+        var group = app.MapGroup("/api/inventory")
+            .RequireAuthorization(p => p.RequireRole(ProcurementRoles));
 
         group.MapPost("/po/{id:guid}/submit", async (Guid id, ClaimsPrincipal user, PoApprovalService svc) =>
         {
@@ -41,9 +48,11 @@ public static class PoApprovalEndpoints
             if (userId == null) return Results.Unauthorized();
             try
             {
-                await svc.ApproveAsync(id, userId.Value);
+                // Truyền cả ClaimsPrincipal: service tự kiểm role bắt buộc của hạn mức (không tin endpoint).
+                await svc.ApproveAsync(id, userId.Value, user);
                 return Results.Ok(new { message = "Đã duyệt PO." });
             }
+            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });
 
@@ -53,9 +62,10 @@ public static class PoApprovalEndpoints
             if (userId == null) return Results.Unauthorized();
             try
             {
-                await svc.RejectAsync(id, userId.Value, dto.Reason);
+                await svc.RejectAsync(id, userId.Value, dto.Reason, user);
                 return Results.Ok(new { message = "Đã từ chối PO." });
             }
+            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
             catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
         });

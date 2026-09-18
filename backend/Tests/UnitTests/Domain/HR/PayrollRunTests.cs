@@ -1,5 +1,7 @@
 using FluentAssertions;
 using HR.Domain;
+using HR.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace UnitTests.Domain.HR;
@@ -72,6 +74,18 @@ public class PayrollRunTests
         run.Status.Should().Be(PayrollRunStatus.Calculated);
         run.EmployeeCount.Should().Be(2);
         run.TotalGrossPay.Should().Be(35_000_000m);
+    }
+
+    [Fact]
+    public void MarkCalculated_KhongCoPayrollNao_NemLoi()
+    {
+        // W0-8: chặn strand — Run 0 nhân viên không được chuyển sang Calculated.
+        var run = NewRun();
+
+        var act = () => run.MarkCalculated();
+
+        act.Should().Throw<InvalidOperationException>();
+        run.Status.Should().Be(PayrollRunStatus.Draft);
     }
 
     [Fact]
@@ -157,5 +171,49 @@ public class PayrollRunTests
         p.RevertToDraft();
 
         p.Status.Should().Be(PayrollStatus.Draft);
+    }
+
+    // ============================================================
+    // W0-8 — EF mapping regression: PayrollRun.Payrolls từng bị Ignore()
+    // ở HRDbContext, khiến .Include(r => r.Payrolls) throw runtime trên
+    // MỌI request calculate/approve (500 ở PayrollRunService + PayrollEndpoints).
+    // ============================================================
+
+    [Fact]
+    public async Task EfMapping_IncludePayrolls_KhongThrow_VaLoadDungDuLieu()
+    {
+        var dbName = "payrollrun-mapping-" + Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<HRDbContext>()
+            .UseInMemoryDatabase(dbName)
+            .Options;
+
+        Guid runId, payrollId;
+        await using (var writeDb = new HRDbContext(options))
+        {
+            var run = new PayrollRun(2026, 9);
+            runId = run.Id;
+            var payroll = new Payroll(Guid.NewGuid(), 9, 2026, 20_000_000m);
+            payrollId = payroll.Id;
+            writeDb.PayrollRuns.Add(run);
+            writeDb.Payrolls.Add(payroll);
+            payroll.AssignToRun(run.Id);
+            run.AddPayroll(payroll);
+            await writeDb.SaveChangesAsync();
+        }
+
+        // Context MỚI (không dùng chung change tracker) để buộc EF đọc lại từ store thật
+        // qua navigation đã map, thay vì trả instance đã tracked sẵn.
+        await using var readDb = new HRDbContext(options);
+        PayrollRun? loaded = null;
+        Func<Task> act = async () =>
+        {
+            loaded = await readDb.PayrollRuns
+                .Include(r => r.Payrolls)
+                .FirstOrDefaultAsync(r => r.Id == runId);
+        };
+
+        await act.Should().NotThrowAsync();
+        loaded.Should().NotBeNull();
+        loaded!.Payrolls.Should().ContainSingle(p => p.Id == payrollId);
     }
 }

@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using BuildingBlocks.Security;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
 
@@ -10,6 +12,7 @@ namespace InventoryModule.Application.Purchasing;
 /// Điều phối quy trình duyệt PO:
 ///  - Chọn POApprovalRule khớp tổng tiền → tạo POApprovalRequest.
 ///  - Chặn tự duyệt (người tạo/gửi != người duyệt).
+///  - W0-3: kiểm role người duyệt so với RequiredRole của hạn mức (không tin endpoint).
 ///  - Cập nhật trạng thái PO (Approved/Rejected).
 ///  - Publish PoSubmittedForApprovalIntegrationEvent để Communication gửi thông báo.
 /// </summary>
@@ -55,7 +58,7 @@ public class PoApprovalService
         return request;
     }
 
-    public async Task ApproveAsync(Guid poId, Guid approverUserId, CancellationToken ct = default)
+    public async Task ApproveAsync(Guid poId, Guid approverUserId, ClaimsPrincipal approver, CancellationToken ct = default)
     {
         var po = await _db.PurchaseOrders.FirstOrDefaultAsync(p => p.Id == poId, ct)
             ?? throw new InvalidOperationException("Không tìm thấy PO.");
@@ -67,6 +70,8 @@ public class PoApprovalService
             .OrderByDescending(r => r.CreatedAt)
             .FirstOrDefaultAsync(ct)
             ?? throw new InvalidOperationException("Không có yêu cầu duyệt đang chờ cho PO này.");
+
+        EnsureApproverHasRequiredRole(approver, request.RequiredRole);
 
         po.Approve(approverUserId);
         request.Approve(approverUserId);
@@ -83,7 +88,7 @@ public class PoApprovalService
         }
     }
 
-    public async Task RejectAsync(Guid poId, Guid approverUserId, string reason, CancellationToken ct = default)
+    public async Task RejectAsync(Guid poId, Guid approverUserId, string reason, ClaimsPrincipal approver, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(reason))
             throw new ArgumentException("Phải nhập lý do từ chối.", nameof(reason));
@@ -98,6 +103,8 @@ public class PoApprovalService
             .OrderByDescending(r => r.CreatedAt)
             .FirstOrDefaultAsync(ct)
             ?? throw new InvalidOperationException("Không có yêu cầu duyệt đang chờ cho PO này.");
+
+        EnsureApproverHasRequiredRole(approver, request.RequiredRole);
 
         po.Reject(approverUserId, reason);
         request.Reject(approverUserId, reason);
@@ -122,6 +129,23 @@ public class PoApprovalService
             .OrderBy(r => r.SortOrder)
             .ToListAsync(ct);
         return rules.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// W0-3: người duyệt phải thực sự mang role mà hạn mức đòi (POApprovalRequest.RequiredRole).
+    /// Guard ở endpoint là chưa đủ — nhóm /api/inventory cho cả InventoryStaff vào, nhưng
+    /// một PO 500 triệu có RequiredRole = Manager thì InventoryStaff không được duyệt.
+    /// Admin được bỏ qua (chủ hệ thống). Không có role bắt buộc ⇒ từ chối (fail-closed).
+    /// </summary>
+    public static void EnsureApproverHasRequiredRole(ClaimsPrincipal approver, string requiredRole)
+    {
+        if (approver.IsInRole(Roles.Admin)) return;
+
+        if (string.IsNullOrWhiteSpace(requiredRole))
+            throw new UnauthorizedAccessException("Hạn mức duyệt không khai báo role bắt buộc — không thể duyệt.");
+
+        if (!approver.IsInRole(requiredRole))
+            throw new UnauthorizedAccessException($"Chỉ tài khoản có quyền '{requiredRole}' mới được duyệt/từ chối PO này.");
     }
 
     /// <summary>Chặn người tạo/gửi tự duyệt PO của mình — chỉ kiểm ở server, không tin client.</summary>

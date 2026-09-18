@@ -18,7 +18,9 @@ public static class RfqEndpoints
 {
     public static void MapRfqEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/inventory/rfq").RequireAuthorization();
+        // W0-3: RFQ lộ giá chào của nhà cung cấp ⇒ chỉ nhân viên mua hàng/quản lý.
+        var group = app.MapGroup("/api/inventory/rfq")
+            .RequireAuthorization(p => p.RequireRole(PoApprovalEndpoints.ProcurementRoles));
 
         group.MapGet("", async (string? status, InventoryDbContext db) =>
         {

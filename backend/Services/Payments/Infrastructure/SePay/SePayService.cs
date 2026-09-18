@@ -1,30 +1,55 @@
+using Payments.Application.Webhooks;
+
 namespace Payments.Infrastructure.SePay;
 
 public class SePayConfig
 {
     public string AccountNumber { get; set; } = string.Empty;
     public string BankCode { get; set; } = string.Empty;
-    public string ApiKey { get; set; } = string.Empty; // Token to verify webhook
+
+    /// <summary>Secret HMAC-SHA256 (ưu tiên) — header `X-SePay-Signature: sha256=&lt;hex&gt;`.</summary>
+    public string WebhookSecret { get; set; } = string.Empty;
+
+    /// <summary>API key — header `Authorization: Apikey &lt;KEY&gt;` (KHÔNG phải Bearer).</summary>
+    public string ApiKey { get; set; } = string.Empty;
 }
 
 public class SePayWebhookPayload
 {
-    public int Id { get; set; } // SePay transaction ID
-    public string Gateway { get; set; } = string.Empty; // e.g., "MBBank"
+    public long Id { get; set; }                                  // SePay transaction ID
+    public string Gateway { get; set; } = string.Empty;           // ví dụ "MBBank"
     public string TransactionDate { get; set; } = string.Empty;
     public string AccountNumber { get; set; } = string.Empty;
     public string? SubAccount { get; set; }
-    public string Content { get; set; } = string.Empty; // Transfer description
-    public string TransferType { get; set; } = string.Empty; // "in" or "out"
+    public string Content { get; set; } = string.Empty;           // nội dung chuyển khoản
+    public string TransferType { get; set; } = string.Empty;      // "in" | "out"
     public decimal TransferAmount { get; set; }
     public decimal Accumulated { get; set; }
     public string? Code { get; set; }
     public string? ReferenceCode { get; set; }
-    public string? Description { get; set; } // Full description from bank
+    public string? Description { get; set; }
+}
+
+/// <summary>Header cần để xác thực webhook SePay.</summary>
+public readonly record struct SePayWebhookHeaders(string? Authorization, string? Signature, string? Timestamp);
+
+public enum SePayVerifyResult
+{
+    /// <summary>Chữ ký/API key hợp lệ.</summary>
+    Valid,
+
+    /// <summary>Chưa có secret nào được cấu hình ⇒ endpoint PHẢI trả 503 (KHÔNG được nhận webhook).</summary>
+    NotConfigured,
+
+    /// <summary>Thiếu header xác thực hoặc chữ ký sai/hết hạn ⇒ 401.</summary>
+    Invalid
 }
 
 public class SePayService
 {
+    /// <summary>Cửa sổ chấp nhận cho `X-SePay-Timestamp` (tài liệu SePay: ±300s).</summary>
+    public const int TimestampWindowSeconds = 300;
+
     private readonly SePayConfig _config;
 
     public SePayService(SePayConfig config)
@@ -32,25 +57,70 @@ public class SePayService
         _config = config;
     }
 
-    public string CreatePaymentUrl(string accountNo, string bankCode, decimal amount, string content)
+    public string CreatePaymentUrl(string? accountNo, string? bankCode, decimal amount, string content)
     {
-        // SePay Quick Link format: https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={amount}&des={content}
-        // Use provided account/bank or fallback to config
-        var acc = !string.IsNullOrEmpty(accountNo) ? accountNo : _config.AccountNumber;
-        var bank = !string.IsNullOrEmpty(bankCode) ? bankCode : _config.BankCode;
-        
-        // Encode content to handle special characters
+        var acc = !string.IsNullOrWhiteSpace(accountNo) ? accountNo : _config.AccountNumber;
+        var bank = !string.IsNullOrWhiteSpace(bankCode) ? bankCode : _config.BankCode;
         var encodedContent = System.Net.WebUtility.UrlEncode(content);
-        
         return $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={amount}&des={encodedContent}";
     }
 
-    public bool VerifyWebhook(string authHeader)
+    /// <summary>
+    /// W0-10 / D04 R4c — xác thực webhook SePay FAIL-CLOSED.
+    ///
+    /// Trước đây: `if (string.IsNullOrEmpty(ApiKey)) return true;` (khoá rỗng = nhận MỌI webhook)
+    /// và `authHeader.Contains(key)` (khớp chuỗi con). Cả hai đã bị xoá.
+    ///
+    /// Bây giờ, theo đúng tài liệu hãng:
+    ///  - HMAC-SHA256 trên `{timestamp}.{raw body BYTES GỐC}`, header `X-SePay-Signature: sha256=&lt;hex&gt;`,
+    ///    kèm `X-SePay-Timestamp` trong ±300s; hoặc
+    ///  - `Authorization: Apikey &lt;KEY&gt;` khớp CHÍNH XÁC (không phải Bearer, không phải Contains).
+    ///  - Mọi so sánh bằng CryptographicOperations.FixedTimeEquals.
+    /// </summary>
+    public SePayVerifyResult VerifyWebhook(SePayWebhookHeaders headers, byte[] rawBody, DateTimeOffset now)
     {
-        if (string.IsNullOrEmpty(_config.ApiKey)) return true; // If no key configured, skip check (development)
+        var hasHmac = WebhookSignature.IsConfiguredSecret(_config.WebhookSecret);
+        var hasApiKey = WebhookSignature.IsConfiguredSecret(_config.ApiKey);
 
-        // SePay sends "Bearer <token>" or just "<token>" depending on configuration
-        // Check if the header contains the key
-        return authHeader.Contains(_config.ApiKey);
+        if (!hasHmac && !hasApiKey) return SePayVerifyResult.NotConfigured;
+
+        if (hasHmac && !string.IsNullOrWhiteSpace(headers.Signature))
+        {
+            if (!WebhookSignature.IsFreshTimestamp(headers.Timestamp, now, TimestampWindowSeconds))
+                return SePayVerifyResult.Invalid;
+
+            var received = headers.Signature!.Trim();
+            const string prefix = "sha256=";
+            if (received.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                received = received[prefix.Length..];
+
+            // Ký trên CHUỖI GỐC: "{timestamp}." + bytes body, không phải body đã parse/serialize lại.
+            var signedPayload = BuildSignedPayload(headers.Timestamp!.Trim(), rawBody);
+            var expected = WebhookSignature.HmacSha256Hex(_config.WebhookSecret, signedPayload);
+
+            return WebhookSignature.FixedTimeEqualsHex(expected, received)
+                ? SePayVerifyResult.Valid
+                : SePayVerifyResult.Invalid;
+        }
+
+        if (hasApiKey)
+        {
+            var token = WebhookSignature.ExtractAuthToken(headers.Authorization, "Apikey");
+            return token is not null && WebhookSignature.FixedTimeEquals(_config.ApiKey.Trim(), token)
+                ? SePayVerifyResult.Valid
+                : SePayVerifyResult.Invalid;
+        }
+
+        return SePayVerifyResult.Invalid;
+    }
+
+    /// <summary>`{timestamp}.` + bytes gốc của body (D04 R4c).</summary>
+    public static byte[] BuildSignedPayload(string timestamp, byte[] rawBody)
+    {
+        var prefix = System.Text.Encoding.UTF8.GetBytes(timestamp + ".");
+        var buffer = new byte[prefix.Length + rawBody.Length];
+        Buffer.BlockCopy(prefix, 0, buffer, 0, prefix.Length);
+        Buffer.BlockCopy(rawBody, 0, buffer, prefix.Length, rawBody.Length);
+        return buffer;
     }
 }

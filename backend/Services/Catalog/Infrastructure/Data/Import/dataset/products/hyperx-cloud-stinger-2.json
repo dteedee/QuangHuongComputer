@@ -1,0 +1,185 @@
+{
+  "name": "Tai Nghe Gaming HyperX Cloud Stinger 2",
+  "slug": "hyperx-cloud-stinger-2",
+  "sku": "HYX-CS2-BLK",
+  "brand": "HyperX",
+  "category": "Loa, Mic, Webcam, Stream",
+  "subCategory": "Tai nghe",
+  "model": "Cloud Stinger 2",
+  "officialUrl": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset",
+  "priceVnd": 1050000,
+  "oldPriceVnd": 1264000,
+  "costPriceVnd": 920000,
+  "priceSources": [
+    "https://cellphones.com.vn/tai-nghe-co-day-hyperx-cloud-stinger-2.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng HyperX 24 tháng.",
+  "weightKg": 0.275,
+  "stockQuantity": 18,
+  "shortDescription": "Tai nghe gaming có dây HyperX Cloud Stinger 2 trang bị driver 50mm, đệm tai memory foam êm ái và hỗ trợ âm thanh vòm ảo DTS Headphone:X, phù hợp game thủ PC dùng lâu dài.",
+  "descriptionHtml": "<h3>Cloud Stinger quen thuộc, tinh chỉnh lại toàn diện</h3><p>HyperX Cloud Stinger 2 giữ nguyên triết lý nhẹ - bền - thoải mái của dòng Cloud Stinger nhưng làm mới phần khung và đệm tai. Máy nặng 275g, driver 50mm cho dải tần 10Hz - 28kHz, tái tạo tiếng bước chân, tiếng súng rõ ràng và hỗ trợ DTS Headphone:X mô phỏng âm thanh vòm ảo giúp định vị đối thủ tốt hơn trong các tựa game bắn súng.</p><h3>Đeo êm cả buổi cày game</h3><p>Đệm tai bọc memory foam kết hợp da PU (leatherette) ôm tai vừa vặn, giảm áp lực khi đeo lâu. Cụm loa có thể xoay 90 độ để đặt hờ quanh cổ lúc nghỉ giải lao thay vì tháo hẳn ra bàn.</p><h3>Thao tác nhanh ngay trên tai nghe</h3><p>Núm chỉnh âm lượng được đặt ngay trên cup tai phải, không cần mở phần mềm. Micro dạng cần gập linh hoạt, khử ồn thụ động và tự tắt tiếng khi gập cần micro lên (swivel-to-mute), tiện lợi khi cần im lặng nhanh trong lúc trao đổi đội nhóm.</p><ul><li>Driver 50mm, đáp tuyến tần số 10Hz - 28kHz</li><li>DTS Headphone:X - âm thanh vòm ảo qua phần mềm</li><li>Đệm tai memory foam bọc da PU, gọng đệm êm</li><li>Cụm tai xoay 90 độ, micro swivel-to-mute khử ồn thụ động</li></ul>",
+  "highlights": [
+    "Driver 50mm, đáp tuyến 10Hz - 28kHz cho âm bass dày và chi tiết cao rõ ràng",
+    "Hỗ trợ DTS Headphone:X mô phỏng âm thanh vòm ảo, định vị tốt trong game bắn súng",
+    "Đệm tai memory foam bọc da PU, đeo lâu không mỏi, tổng trọng lượng chỉ 275g",
+    "Cụm tai xoay 90 độ, tiện đặt hờ quanh cổ khi nghỉ giải lao",
+    "Micro cần gập khử ồn thụ động, tự tắt tiếng khi gập lên (swivel-to-mute)",
+    "Núm chỉnh âm lượng ngay trên cup tai, thao tác nhanh không cần phần mềm"
+  ],
+  "specs": [
+    {
+      "group": "Âm thanh",
+      "name": "Driver",
+      "value": "50mm",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Đáp tuyến tần số",
+      "value": "10Hz - 28kHz",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Trở kháng",
+      "value": "32 Ω",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Độ nhạy loa",
+      "value": "97.5 dBSPL/mW tại 1kHz",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Tổng méo hài (THD)",
+      "value": "≤ 2%",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Công nghệ âm thanh vòm",
+      "value": "DTS Headphone:X ảo (qua phần mềm)",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Micro",
+      "name": "Loại micro",
+      "value": "Electret condenser, thu âm hai hướng (bi-directional), khử ồn thụ động",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Micro",
+      "name": "Độ nhạy micro",
+      "value": "-40.5 dBV",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Micro",
+      "name": "Thiết kế micro",
+      "value": "Cần micro linh hoạt, gập lên để tự tắt tiếng (swivel-to-mute)",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng kết nối",
+      "value": "3.5mm 4 chấu (CTIA), dây liền",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Phụ kiện cáp",
+      "value": "Kèm cáp chia âm thanh/micro 3.5mm dùng cho PC",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Tương thích",
+      "value": "PC (qua giắc 3.5mm)",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Đệm tai",
+      "value": "Mút memory foam bọc da PU (leatherette)",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Xoay cụm tai",
+      "value": "Xoay 90 độ, đặt hờ quanh cổ được",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Điều khiển âm lượng",
+      "value": "Núm chỉnh âm lượng tích hợp trên cup tai phải",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Đen",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước headset",
+      "value": "179 x 95 x 195 mm",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng",
+      "value": "275 g",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Bảo hành chính hãng",
+      "value": "24 tháng",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    },
+    {
+      "group": "Hộp sản phẩm",
+      "name": "Phụ kiện đi kèm",
+      "value": "Tai nghe, cáp mở rộng/chia cho PC, hướng dẫn nhanh",
+      "source": "https://row.hyperx.com/products/hyperx-cloud-stinger-2-wired-gaming-headset"
+    }
+  ],
+  "filterAttributes": {
+    "connectionType": "wired",
+    "connector": "3.5mm",
+    "driverSize": "50mm",
+    "surroundSound": "DTS Headphone:X",
+    "compatibility": "PC",
+    "color": "black"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://row.hyperx.com/cdn/shop/files/hyperx_cloud_stinger_2_1_main.jpg?v=1689094236",
+      "alt": "Tai nghe HyperX Cloud Stinger 2 màu đen - góc nghiêng 3/4"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://row.hyperx.com/cdn/shop/files/hyperx_cloud_stinger_2_3_front.jpg?v=1689094236",
+      "alt": "Tai nghe HyperX Cloud Stinger 2 - nhìn chính diện, micro cần gập"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://row.hyperx.com/cdn/shop/files/hyperx_cloud_stinger_2_2_side.jpg?v=1689094236",
+      "alt": "Tai nghe HyperX Cloud Stinger 2 - nhìn nghiêng, núm chỉnh âm lượng trên cup tai"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://row.hyperx.com/cdn/shop/files/hyperx_cloud_stinger_2_5_close_up.jpg?v=1689094236",
+      "alt": "Cận cảnh núm chỉnh âm lượng và logo HyperX trên tai nghe Cloud Stinger 2"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Tai Nghe Gaming HyperX Cloud Stinger 2 Chính Hãng",
+  "metaDescription": "Tai nghe gaming có dây HyperX Cloud Stinger 2 - driver 50mm, DTS Headphone:X, đệm memory foam, 275g. Giá tốt, bảo hành chính hãng 24 tháng tại Quang Huong Computer."
+}

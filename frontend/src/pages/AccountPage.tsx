@@ -163,14 +163,12 @@ export const AccountPage = () => {
         const ok = await confirm({ message: 'Bạn có chắc chắn muốn hủy đơn hàng này?', variant: 'warning' });
         if (!ok) return;
         try {
-            await fetch(`/api/sales/orders/${orderId}/cancel`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: JSON.stringify({ reason: 'Khách hàng yêu cầu hủy' })
-            });
+            await salesApi.orders.cancel(orderId, 'Khách hàng yêu cầu hủy');
             toast.success('Đã hủy đơn hàng');
             loadOrders();
-        } catch { toast.error('Không thể hủy đơn hàng'); }
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Không thể hủy đơn hàng');
+        }
     };
 
     const filteredOrders = orders.filter(o => orderFilter === 'all' || o.status === orderFilter);

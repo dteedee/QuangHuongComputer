@@ -34,6 +34,9 @@ public static class DependencyInjection
         // Phase 04: webhook handler idempotent.
         services.AddScoped<PaymentWebhookHandler>();
 
+        // W0-10 (D04 R2): "chỉ bật khi đã cấu hình" — nguồn duy nhất quyết định provider nào tồn tại.
+        services.AddSingleton<Payments.Application.Configuration.PaymentConfigGuard>();
+
         return services;
     }
 }

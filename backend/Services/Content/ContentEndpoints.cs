@@ -277,7 +277,9 @@ public static class ContentEndpoints
 
         // ==================== ADMIN ENDPOINTS ====================
 
-        var adminGroup = group.MapGroup("/admin").RequireAuthorization(policy => policy.RequireRole("Admin", "Manager"));
+        // W0-3: thêm Marketing — role này quản trị nội dung/khuyến mãi nhưng trước đây không vào được gì.
+        var adminGroup = group.MapGroup("/admin")
+            .RequireAuthorization(policy => policy.RequireRole("Admin", "Manager", "Marketing"));
 
         // Seed Data Endpoint (Development only)
         group.MapPost("/seed", async (ContentDbContext db, ICacheService cache, IWebHostEnvironment env) =>

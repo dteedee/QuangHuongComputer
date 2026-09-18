@@ -1,0 +1,214 @@
+{
+  "name": "Vỏ Case NZXT H5 Flow (2024) All Black CC-H52FB-01",
+  "slug": "case-nzxt-h5-flow-2024-black",
+  "sku": "NZXT-CCH52FB01",
+  "brand": "NZXT",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "Case",
+  "model": "NZXT CC-H52FB-01",
+  "officialUrl": "https://nzxt.com/products/h5-flow",
+  "priceVnd": 1990000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 1750000,
+  "priceSources": [
+    "https://www.anphatpc.com.vn/vo-case-nzxt-h5-flow-2024-all-black-cc-h52fb-01.html",
+    "https://www.tncstore.vn/vo-case-nzxt-h5-flow-all-black-cc-h52fb-01.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng NZXT 24 tháng tại hệ thống bảo hành ủy quyền Việt Nam, 1 đổi 1 trong 30 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 7.28,
+  "stockQuantity": 18,
+  "shortDescription": "Case NZXT H5 Flow (2024) All Black là mid-tower ATX tối ưu luồng khí với mặt lưới toàn diện, hỗ trợ tản nhiệt nước lớn và đi kèm sẵn 2 quạt F120Q.",
+  "descriptionHtml": "<h3>NZXT H5 Flow 2024 - mid-tower tối ưu luồng khí</h3><p>NZXT H5 Flow bản 2024 giữ phong cách tối giản đặc trưng của NZXT nhưng nâng cấp khả năng tản nhiệt nhờ vỏ nguồn (PSU shroud) đục lỗ ở cạnh bên và đáy, cho phép khí vào trực tiếp từ 2 quạt đáy (không kèm theo). Toàn bộ mặt trước, mặt trên và cạnh bên phủ lưới mịn giúp luồng khí lưu thông tối đa đồng thời lọc bụi hiệu quả.</p><h3>Không gian lắp đặt linh kiện lớn</h3><p>Thân case hỗ trợ mainboard từ Mini-ITX, Micro-ATX, ATX đến E-ATX rộng tới 277mm, tản CPU khí cao tối đa 170mm, VGA dài tối đa 410mm và nguồn ATX dài tới 200mm - đủ sức chứa cấu hình gaming tầm trung đến cao cấp.</p><h3>Sẵn sàng cho tản nhiệt nước</h3><p>Mặt trước hỗ trợ radiator lên đến 360mm, mặt trên hỗ trợ radiator 240mm (hoặc 280mm nếu dùng RAM tản nhiệt thấp), phù hợp build AIO cỡ lớn. Case đi kèm sẵn 2 quạt NZXT F120Q (Case Version) 120mm ở vị trí trước và sau.</p><h3>Tiện lợi khi build máy</h3><p>Các cạnh và tấm kính cường lực tháo lắp không cần dụng cụ, hệ thống đi dây rộng rãi với móc và dây rút sẵn có giúp việc đi dây gọn gàng, dễ dàng ngay cả với người mới build PC lần đầu.</p><ul><li>Mid-tower ATX, hỗ trợ tới E-ATX 277mm</li><li>Mặt lưới toàn diện trước/trên/cạnh, tối ưu airflow</li><li>Radiator trước tối đa 360mm, trên tối đa 240mm</li><li>Kèm sẵn 2 quạt F120Q 120mm</li><li>Tấm kính cường lực tháo tool-less</li><li>Cổng I/O trước: USB-C 20Gbps, USB-A 3.2, jack tai nghe</li></ul>",
+  "highlights": [
+    "Mid-tower ATX nhỏ gọn, hỗ trợ mainboard tới E-ATX 277mm",
+    "Mặt lưới siêu mịn phủ trước/trên/cạnh bên tối ưu luồng khí và lọc bụi",
+    "Hỗ trợ radiator tản nhiệt nước tới 360mm mặt trước, 240mm mặt trên",
+    "Đi kèm sẵn 2 quạt NZXT F120Q 120mm (trước và sau)",
+    "Cổng I/O trước gồm USB-C 20Gbps, USB-A 3.2 Gen1 và jack tai nghe",
+    "Cạnh kính cường lực và panel tháo lắp không cần dụng cụ"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Kiểu dáng",
+      "value": "Mid-Tower",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Hỗ trợ bo mạch chủ",
+      "value": "E-ATX (rộng tới 277mm), ATX, Micro-ATX, Mini-ITX",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Chất liệu",
+      "value": "Thép SGCC, kính cường lực tối màu (bản đen)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Bộ lọc bụi",
+      "value": "Lưới lọc hiệu năng cao",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Kích thước (Cao x Rộng x Sâu)",
+      "value": "465 x 225 x 430 mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Thể tích",
+      "value": "45.0 L",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Khối lượng",
+      "value": "7.28 kg",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khả năng tương thích",
+      "name": "Chiều cao tản CPU tối đa",
+      "value": "170 mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khả năng tương thích",
+      "name": "Chiều dài VGA tối đa",
+      "value": "410 mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khả năng tương thích",
+      "name": "Chiều dài PSU tối đa",
+      "value": "200 mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khả năng tương thích",
+      "name": "Không gian đi dây",
+      "value": "Tối đa 28.7 mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Cổng I/O mặt trước",
+      "name": "USB",
+      "value": "1x USB 3.2 Type-A, 1x USB 3.2 Gen2x2 Type-C (20 Gbps)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Cổng I/O mặt trước",
+      "name": "Audio",
+      "value": "1x jack tai nghe (combo)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khe mở rộng & khoang ổ đĩa",
+      "name": "Khe mở rộng PCI",
+      "value": "7 khe",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khe mở rộng & khoang ổ đĩa",
+      "name": "Khoang ổ đĩa 2.5 inch",
+      "value": "2",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Khe mở rộng & khoang ổ đĩa",
+      "name": "Khoang ổ đĩa 3.5 inch",
+      "value": "1",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Quạt mặt trước",
+      "value": "Tối đa 3x120mm / 2x140mm (kèm sẵn 1x120mm)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Quạt mặt trên",
+      "value": "Tối đa 2x120mm / 2x140mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Quạt mặt đáy",
+      "value": "Tối đa 2x120mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Quạt mặt sau",
+      "value": "1x120mm (kèm sẵn)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Radiator mặt trước",
+      "value": "Tối đa 360mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hỗ trợ tản nhiệt",
+      "name": "Radiator mặt trên",
+      "value": "Tối đa 240mm (280mm nếu dùng RAM tản nhiệt thấp)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Quạt đi kèm",
+      "name": "Model quạt",
+      "value": "NZXT F120Q (Case Version), số lượng 2",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Quạt đi kèm",
+      "name": "Tốc độ / Lưu lượng / Độ ồn",
+      "value": "1,350 ± 150 RPM, 60.2 CFM, 24.1 dBA, đầu cắm 3-pin DC",
+      "source": "https://nzxt.com/products/h5-flow"
+    }
+  ],
+  "filterAttributes": {
+    "formFactor": "Mid-Tower ATX",
+    "sidePanel": "Kính cường lực",
+    "color": "Đen",
+    "maxGpuLengthMm": "410",
+    "maxRadiatorFront": "360mm"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_black_01_hero.png",
+      "alt": "Case NZXT H5 Flow 2024 Black - góc nghiêng mặt kính cường lực"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_black_03_front.png",
+      "alt": "Case NZXT H5 Flow 2024 Black - mặt trước lưới tản nhiệt"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_black_02_side.png",
+      "alt": "Case NZXT H5 Flow 2024 Black - cạnh kính cường lực nhìn thẳng"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_black_07_io.png",
+      "alt": "Case NZXT H5 Flow 2024 Black - góc trên trước, cổng I/O"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_black_04_back.png",
+      "alt": "Case NZXT H5 Flow 2024 Black - mặt sau, khe mở rộng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Case NZXT H5 Flow (2024) All Black CC-H52FB-01 - Quang Huong Computer",
+  "metaDescription": "Vỏ case NZXT H5 Flow 2024 All Black mid-tower ATX, mặt lưới tối ưu airflow, hỗ trợ radiator 360mm, kèm sẵn 2 quạt F120Q. Bảo hành chính hãng 24 tháng, giá tốt tại Quang Huong Computer."
+}

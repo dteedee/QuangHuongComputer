@@ -1,0 +1,120 @@
+{
+  "name": "Lót chuột SteelSeries QcK Heavy (Large)",
+  "slug": "steelseries-qck-heavy-large",
+  "sku": "SS-QCKHEAVYL",
+  "brand": "SteelSeries",
+  "category": "Phím, Chuột - Gaming Gear",
+  "subCategory": "Lót chuột",
+  "model": "QcK Heavy Large",
+  "officialUrl": "https://steelseries.com/gaming-mousepads/qck-heavy",
+  "priceVnd": 590000,
+  "oldPriceVnd": 690000,
+  "costPriceVnd": 520000,
+  "priceSources": [
+    "https://phongvu.vn/tam-lot-chuot-qck-heavy-large-steelseries--s240302609"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành 12 tháng tại các trung tâm bảo hành phụ kiện gaming ủy quyền SteelSeries tại Việt Nam, đổi mới trong 10 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.5,
+  "stockQuantity": 22,
+  "shortDescription": "Lót chuột vải QcK Heavy Large khổ 450x400mm, đế cao su dày 6mm chống trượt tuyệt đối, bề mặt vải dệt mịn cho độ trượt chuột mượt và chính xác cao khi chơi game.",
+  "descriptionHtml": "<h3>Đế cao su dày 6mm, bám bàn tuyệt đối</h3><p>QcK Heavy Large dùng lớp đế cao su non-slip dày gấp nhiều lần lót chuột thường, khắc chìm hoa văn logo SteelSeries giúp pad bám chặt mặt bàn, không xê dịch dù thao tác vẩy chuột nhanh trong các pha combat tốc độ cao.</p><h3>Bề mặt vải dệt mịn, tối ưu mọi cảm biến</h3><p>Chất vải micro-woven cloth độc quyền của dòng QcK cho cảm giác lướt chuột êm tay, độ ma sát ổn định trên toàn bộ bề mặt, tương thích tốt với cả cảm biến DPI thấp lẫn cao nên phù hợp cả game FPS lẫn công việc đồ họa cần độ chính xác.</p><h3>Khổ Large rộng rãi, dễ vệ sinh</h3><p>Kích thước 450 x 400mm đủ chỗ đặt trọn bàn phím và chuột hoặc khoảng vẫy tay rộng cho lối chơi low-sens. Pad có thể giặt được, khô nhanh, giữ phom dáng bền sau thời gian dài sử dụng hàng ngày.</p><ul><li>Đế cao su dày 6mm chống trượt tuyệt đối</li><li>Bề mặt vải dệt mịn micro-woven cloth độc quyền QcK</li><li>Khổ Large 450 x 400mm, đủ rộng cho combo bàn phím + chuột</li><li>Tối ưu tracking cho cả DPI thấp và cao</li><li>Có thể giặt, dễ vệ sinh, bền bỉ</li></ul>",
+  "highlights": [
+    "Bề mặt vải dệt siêu mịn giúp chuột lướt êm, tăng độ chính xác khi ngắm bắn",
+    "Đế cao su dày 6mm chống trượt tuyệt đối, pad không xê dịch khi thao tác nhanh",
+    "Khổ Large 450x400mm rộng rãi, đủ chỗ cho cả bàn phím và chuột",
+    "Tối ưu cho cảm biến chuột từ DPI thấp đến cao, tương thích đa số chuột gaming",
+    "Có thể giặt được, dễ vệ sinh, giữ phom dáng bền theo thời gian",
+    "Viền may chắc chắn hạn chế sờn rách mép pad sau thời gian dài dùng"
+  ],
+  "specs": [
+    {
+      "group": "Kích thước & tổng quan",
+      "name": "Kích thước (Large)",
+      "value": "450 x 400 mm",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy?color=black&mousepadSize=large"
+    },
+    {
+      "group": "Kích thước & tổng quan",
+      "name": "Độ dày",
+      "value": "6 mm",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy?color=black&mousepadSize=large"
+    },
+    {
+      "group": "Kích thước & tổng quan",
+      "name": "Dòng sản phẩm",
+      "value": "QcK Heavy - có 3 khổ Medium / Large / XXL",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Kích thước & tổng quan",
+      "name": "Màu sắc",
+      "value": "Đen (Black)",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy?color=black&mousepadSize=large"
+    },
+    {
+      "group": "Chất liệu & thiết kế",
+      "name": "Chất liệu bề mặt",
+      "value": "Vải dệt mịn (micro-woven cloth) độc quyền QcK",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Chất liệu & thiết kế",
+      "name": "Chất liệu đế",
+      "value": "Cao su non-slip dày, khắc chìm hoa văn logo SteelSeries",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy?color=black&mousepadSize=large"
+    },
+    {
+      "group": "Chất liệu & thiết kế",
+      "name": "Chống trượt",
+      "value": "Đế cao su chống trượt tuyệt đối, cố định pad khi thao tác nhanh",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Tính năng",
+      "name": "Tối ưu cảm biến",
+      "value": "Tối ưu tracking cho cả cảm biến chuột DPI thấp và cao",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Tính năng",
+      "name": "Vệ sinh",
+      "value": "Có thể giặt được, dễ lau chùi, bền bỉ",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Tính năng",
+      "name": "Độ phổ biến",
+      "value": "Dòng QcK đã bán hơn 15 triệu sản phẩm trên toàn cầu",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy"
+    },
+    {
+      "group": "Giá tham khảo",
+      "name": "Giá niêm yết hãng (Mỹ)",
+      "value": "29.99 USD",
+      "source": "https://steelseries.com/gaming-mousepads/qck-heavy?color=black&mousepadSize=large"
+    }
+  ],
+  "filterAttributes": {
+    "size": "Large (450x400mm)",
+    "thickness": "6mm",
+    "surface": "Vải dệt mịn (Micro-woven cloth)",
+    "base": "Cao su chống trượt",
+    "color": "Đen"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://images.ctfassets.net/hmm5mo4qf4mf/1wOsFdI7TUDcyyHIFJHvFs/3a47f3a316a098d5279929b120af1ed5/qck_heavy_xxl_black_pdp_img_buy_02.png?fm=webp&q=90&fit=scale&w=1200",
+      "alt": "Góc lót chuột QcK Heavy màu đen lật lên để lộ đế cao su chống trượt và bề mặt vải dệt mịn"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://images.ctfassets.net/w5r1fvmogo3f/Yf3NmqYLaIa0dKuaVFoh2/07c136e43cca67d9af3a09dac3566ba0/qck_heavy_m_black_pdp_img_desktop_non_slip_1.png?fm=webp&q=90&fit=scale&w=1918",
+      "alt": "Cận cảnh góc lót chuột QcK Heavy màu đen lật lên lộ đế cao su non-slip khắc chìm logo SteelSeries"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Lót chuột SteelSeries QcK Heavy Large - Vải mịn, đế chống trượt 6mm",
+  "metaDescription": "SteelSeries QcK Heavy Large 450x400mm: bề mặt vải dệt mịn, đế cao su dày 6mm chống trượt tuyệt đối, tối ưu mọi cảm biến DPI. Giá tốt, bảo hành 12 tháng."
+}

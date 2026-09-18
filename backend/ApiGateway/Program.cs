@@ -26,6 +26,9 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -- Structured logging --------------------------------------------------------
+LoggingSetup.Configure(builder);
+
 // -- Service registration ------------------------------------------------------
 ServiceRegistration.RegisterAll(builder);
 AuthenticationSetup.Configure(builder);
@@ -36,6 +39,11 @@ var app = builder.Build();
 // Runs in every environment (gated by Database:AutoMigrate config; default true in Dev, false in Prod).
 // In Production a migration failure aborts startup — see DatabaseMigrationRunner.
 await DatabaseMigrationRunner.RunAsync(app);
+
+// -- Schema drift guard --------------------------------------------------------
+// "All migrations applied" does not mean "all tables exist": payments.PaymentIntents was mapped by
+// the model and dropped by a Down() that had no matching Up() for months. Fail fast instead.
+await SchemaSmokeCheck.RunAsync(app);
 
 // -- HTTP pipeline -------------------------------------------------------------
 MiddlewarePipeline.Configure(app);

@@ -47,12 +47,16 @@ public class ConversationRepository : IConversationRepository
         if (userRoles.Contains(BuildingBlocks.Security.Roles.Sale))
         {
             query = query.Where(c => c.AssignedToUserId == null || c.AssignedToUserId == userId);
+            return await query
+                .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
+                .ToListAsync(ct);
         }
-        // Customer only sees their own
-        else if (userRoles.Contains(BuildingBlocks.Security.Roles.Customer))
-        {
-            query = query.Where(c => c.CustomerId == userId);
-        }
+
+        // Default-deny: every other caller (customer, or any staff role with no explicit
+        // grant above, e.g. Manager/Accountant/HR/Marketing/InventoryStaff/Technician*) only
+        // ever sees conversations they own. Was previously unfiltered for these roles, which
+        // let any authenticated non-Admin/Sale staff account read every customer conversation.
+        query = query.Where(c => c.CustomerId == userId);
 
         return await query
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
@@ -76,6 +80,19 @@ public class ConversationRepository : IConversationRepository
     public async Task UpdateAsync(Conversation conversation, CancellationToken ct = default)
     {
         _context.Conversations.Update(conversation);
+        await Task.CompletedTask;
+    }
+
+    public async Task AddMessageAsync(Conversation conversation, ChatMessage message, CancellationToken ct = default)
+    {
+        // conversation is already tracked (loaded via GetByIdAsync), so mutating it in place
+        // is enough for EF to pick up the LastMessageAt/UpdatedAt changes - no Update() needed.
+        conversation.AddMessage(message);
+        // Explicitly stage the new message as Added. Relying on graph discovery via
+        // Conversations.Update(conversation) is what caused the original bug: the message's
+        // Guid key is already non-default when Update() walks the graph, so EF marks it
+        // Modified instead of Added and issues an UPDATE for a row that was never inserted.
+        _context.ChatMessages.Add(message);
         await Task.CompletedTask;
     }
 

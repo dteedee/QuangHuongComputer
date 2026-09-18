@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatNumber } from '../../utils/format';
+import { resolveMediaUrl } from '../../lib/media-url';
 import type { Product } from '../../api/catalog';
 
 interface ProductDetailRelatedSectionProps {
@@ -8,6 +10,24 @@ interface ProductDetailRelatedSectionProps {
   relatedProducts: Product[];
   categoryId?: string;
 }
+
+/** D02: resolveMediaUrl + fallback chữ cái khi thiếu ảnh/tải lỗi — không để trống trơn. */
+const RelatedProductImage = ({ src, name }: { src?: string; name: string }) => {
+  const [error, setError] = useState(false);
+  const resolved = resolveMediaUrl(src);
+  if (!resolved || error) {
+    return <span className="text-gray-300 text-4xl font-black">{name?.charAt(0) || '?'}</span>;
+  }
+  return (
+    <img
+      src={resolved}
+      alt={name}
+      loading="lazy"
+      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+      onError={() => setError(true)}
+    />
+  );
+};
 
 /** "Sản phẩm liên quan" section shown on the product detail page. */
 export default function ProductDetailRelatedSection({ loading, relatedProducts, categoryId }: ProductDetailRelatedSectionProps) {
@@ -37,11 +57,7 @@ export default function ProductDetailRelatedSection({ loading, relatedProducts, 
               className="bg-white rounded-lg border border-gray-200 hover:shadow-medium hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group overflow-hidden"
             >
               <div className="aspect-[4/3] bg-white p-4 flex items-center justify-center relative overflow-hidden">
-                {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <span className="text-gray-300 text-4xl font-black">{p.name?.charAt(0) || '?'}</span>
-                )}
+                <RelatedProductImage src={p.imageUrl} name={p.name} />
               </div>
               <div className="p-3 border-t border-gray-50 space-y-1">
                 <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm group-hover:text-accent transition-colors leading-snug min-h-[2.5rem]">

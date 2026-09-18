@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Standalone CLI that imports the curated product dataset.
+
+    Why a separate tool instead of a startup hook (W0-6 / D03):
+      * wave 0 does not restart the owner's API, and Program.cs belongs to another track;
+      * the import must be runnable against a rehearsal database with the live API untouched;
+      * it builds into its own output, never into ApiGateway/bin, which :5000 is running from.
+
+    NOT added to the .sln - that file is frozen until W4-1. Build it explicitly:
+      scripts/qh-build.sh be backend/Tools/ProductImporter/ProductImporter.csproj
+    W1-4 later calls ProductDatasetImporter from its `db seed` reference profile; this project
+    stays as the operator-facing entry point.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>QuangHuong.Tools.ProductImporter</RootNamespace>
+    <AssemblyName>ProductImporter</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Services\Catalog\Catalog.csproj" />
+    <ProjectReference Include="..\..\Services\Inventory\Inventory.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+  </ItemGroup>
+
+</Project>

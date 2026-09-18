@@ -734,21 +734,50 @@ export interface PendingApprovalPO {
     items?: { productId: string; productName?: string; quantity: number; unitPrice: number }[];
 }
 
+// W0-13: 4/4 routes below were wrong (pointed at /inventory/pos/... /
+// /inventory/pending-approval-pos which don't exist) -> real backend routes
+// are /inventory/po/{id}/submit|approve|reject + /inventory/po-approvals/pending
+// (PoApprovalEndpoints.cs).
+/** Wire shape of GET /inventory/po-approvals/pending (PoApprovalEndpoints.cs) - field
+ * names differ from PendingApprovalPO (poId not id, submittedAt not createdAt, no status/items). */
+interface PendingApprovalPoWire {
+    approvalRequestId: string;
+    poId: string;
+    poNumber: string;
+    supplierId: string;
+    totalAmount: number;
+    requiredRole: string;
+    submittedBy?: string;
+    submittedAt: string;
+    isUrgent: boolean;
+}
+
 export const poApprovalApi = {
     getPending: async (): Promise<PendingApprovalPO[]> => {
-        const { data } = await client.get<PendingApprovalPO[]>('/inventory/pending-approval-pos');
-        return data;
+        const { data } = await client.get<PendingApprovalPoWire[]>('/inventory/po-approvals/pending');
+        // W0-13: normalize wire shape -> PendingApprovalPO. `id` must be the PO id
+        // (poId) - that's what /po/{id}/approve|reject expect, not approvalRequestId.
+        return data.map((r): PendingApprovalPO => ({
+            id: r.poId,
+            poNumber: r.poNumber,
+            supplierId: r.supplierId,
+            totalAmount: r.totalAmount,
+            createdAt: r.submittedAt,
+            createdBy: r.submittedBy,
+            status: 'PendingApproval',
+            approvalLevelName: r.requiredRole,
+        }));
     },
     submitForApproval: async (id: string): Promise<{ message: string }> => {
-        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/submit-for-approval`);
+        const { data } = await client.post<{ message: string }>(`/inventory/po/${id}/submit`);
         return data;
     },
     approve: async (id: string): Promise<{ message: string }> => {
-        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/approve`);
+        const { data } = await client.post<{ message: string }>(`/inventory/po/${id}/approve`);
         return data;
     },
     reject: async (id: string, reason: string): Promise<{ message: string }> => {
-        const { data } = await client.post<{ message: string }>(`/inventory/pos/${id}/reject`, { reason });
+        const { data } = await client.post<{ message: string }>(`/inventory/po/${id}/reject`, { reason });
         return data;
     },
 };

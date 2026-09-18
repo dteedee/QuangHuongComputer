@@ -1,0 +1,155 @@
+{
+  "name": "Bo Mạch Chủ MSI MAG X870 TOMAHAWK WIFI DDR5",
+  "slug": "mainboard-msi-mag-x870-tomahawk-wifi",
+  "sku": "MSI-MAGX870TWIFI",
+  "brand": "MSI",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "Mainboard",
+  "model": "MSI MAG X870 TOMAHAWK WIFI",
+  "officialUrl": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI",
+  "priceVnd": 10890000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 9690000,
+  "priceSources": [
+    "https://gearvn.com/products/bo-mach-chu-msi-mag-x870-tomahawk-wifi-ddr5"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng MSI Việt Nam 36 tháng tại các trung tâm bảo hành ủy quyền trên toàn quốc.",
+  "weightKg": 1.2,
+  "stockQuantity": 14,
+  "shortDescription": "Bo mạch chủ MSI MAG X870 TOMAHAWK WIFI dùng chipset AMD X870, socket AM5 cho CPU Ryzen 9000/8000/7000, hỗ trợ DDR5 tối đa 256GB, 2 khe M.2 PCIe 5.0 và Wi-Fi 7 tích hợp.",
+  "descriptionHtml": "<h3>Nền tảng AM5 sẵn sàng cho Ryzen 9000</h3><p>MAG X870 TOMAHAWK WIFI dùng chipset AMD X870 kết hợp socket AM5, tương thích CPU AMD Ryzen 9000/8000/7000 Series. Bo mạch trang bị 4 khe DDR5 UDIMM, dung lượng tối đa 256GB, hỗ trợ ép xung AMD EXPO lên đến 8400+ MT/s (OC) giúp tận dụng tối đa băng thông bộ nhớ cho các tác vụ đa nhân và chơi game nặng.</p><h3>Băng thông PCIe 5.0 và lưu trữ tốc độ cao</h3><p>Khe PCI_E1 chạy chuẩn PCIe 5.0 x16 nhận trực tiếp từ CPU, đi kèm PCI_E2 (PCIe 3.0 x1) và PCI_E3 (PCIe 4.0 x4) từ chipset. Về lưu trữ, bo mạch có 4 khe M.2: hai khe M2_1/M2_2 đạt PCIe 5.0 x4 từ CPU, hai khe M2_3/M2_4 chạy PCIe 4.0 từ chipset, cộng thêm 4 cổng SATA 6Gb/s, hỗ trợ RAID 0/1/5/10 cho ổ NVMe.</p><h3>Kết nối không dây và cổng giao tiếp đa dạng</h3><p>Module Wi-Fi 7 tích hợp sẵn hỗ trợ băng tần 2.4/5/6GHz tốc độ tối đa 5.8Gbps cùng Bluetooth 5.4, đi kèm LAN Realtek 5G. Mặt sau có tới 2 cổng USB4 40Gbps Type-C, 1 cổng USB 10Gbps Type-C, dàn USB Type-A tốc độ cao và HDMI 2.1 FRL xuất hình 8K 60Hz khi dùng CPU tích hợp GPU. Âm thanh dùng chip Realtek ALC4080 hỗ trợ phát 32-bit/384kHz.</p><ul><li>Chipset AMD X870, socket AM5, hỗ trợ Ryzen 9000/8000/7000 Series</li><li>4 khe DDR5 tối đa 256GB, hỗ trợ AMD EXPO ép xung đến 8400+ MT/s (OC)</li><li>PCIe 5.0 x16 và 4 khe M.2 (2 khe PCIe 5.0 x4 từ CPU)</li><li>Wi-Fi 7, Bluetooth 5.4, LAN 5G Realtek 8126-CG</li><li>2x USB4 40Gbps Type-C mặt sau, âm thanh Realtek ALC4080</li></ul>",
+  "highlights": [
+    "Chipset AMD X870 + socket AM5, sẵn sàng cho CPU Ryzen 9000/8000/7000 Series",
+    "4 khe DDR5 UDIMM tối đa 256GB, hỗ trợ AMD EXPO ép xung đến 8400+ MT/s (OC)",
+    "Khe PCIe 5.0 x16 từ CPU cùng 4 khe M.2 (2 khe đạt PCIe 5.0 x4)",
+    "Wi-Fi 7 và Bluetooth 5.4 tích hợp sẵn, LAN Realtek 5G",
+    "2x cổng USB4 40Gbps Type-C và dàn USB tốc độ cao ở mặt sau",
+    "Âm thanh Realtek ALC4080 7.1 kênh, chuẩn ATX với đèn EZ Debug LED"
+  ],
+  "specs": [
+    {
+      "group": "Chipset & CPU",
+      "name": "Chipset",
+      "value": "AMD X870",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Chipset & CPU",
+      "name": "Hỗ trợ CPU / Socket",
+      "value": "AMD Ryzen 9000/8000/7000 Series Desktop, Socket AM5",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Khe RAM",
+      "value": "4x DDR5 UDIMM, dung lượng tối đa 256GB",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ RAM hỗ trợ",
+      "value": "DDR5 8400-5600 MT/s (OC) / 5600-4800 MT/s (JEDEC), hỗ trợ AMD EXPO",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Khe mở rộng",
+      "name": "Khe PCIe",
+      "value": "3x PCI-E x16: PCI_E1 PCIe 5.0 x16 (từ CPU), PCI_E2 PCIe 3.0 x1, PCI_E3 PCIe 4.0 x4 (từ chipset)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Khe M.2",
+      "value": "4x M.2: M2_1/M2_2 PCIe 5.0 x4 (từ CPU), M2_3 PCIe 4.0 x2, M2_4 PCIe 4.0 x4 (từ chipset)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Cổng SATA",
+      "value": "4x SATA 6Gb/s",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "RAID",
+      "value": "Hỗ trợ RAID 0/1/5/10 cho ổ M.2 NVMe (RAID 5 chỉ trên Ryzen 9000)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Chip âm thanh",
+      "value": "Realtek ALC4080, 7.1 kênh, hỗ trợ 32-bit/384kHz và S/PDIF out",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mạng & không dây",
+      "name": "LAN",
+      "value": "Realtek 8126-CG 5G LAN",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Mạng & không dây",
+      "name": "Wi-Fi / Bluetooth",
+      "value": "Wi-Fi 7 (802.11be, 2.4/5/6GHz, tối đa 5.8Gbps, MU-MIMO), Bluetooth 5.4",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "USB mặt sau",
+      "value": "2x USB4 40Gbps Type-C, 1x USB 10Gbps Type-C, 2x USB 10Gbps Type-A, 3x USB 5Gbps Type-A, 4x USB 2.0",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Xuất hình onboard",
+      "value": "1x HDMI 2.1 FRL (tối đa 8K 60Hz), 2x USB-C DisplayPort 1.4 qua USB4 (tối đa 4K 60Hz)",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Header USB nội bộ",
+      "value": "4x USB 2.0, 4x USB 5Gbps Type-A, 1x USB 20Gbps Type-C",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Đèn báo lỗi / LED",
+      "value": "4x EZ Debug LED, 1x EZ Digit Debug LED",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước bo mạch",
+      "value": "Chuẩn ATX, 304.8 x 243.84mm",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "Hỗ trợ OS",
+      "value": "Windows 11 64-bit",
+      "source": "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification"
+    }
+  ],
+  "filterAttributes": {
+    "socket": "AM5",
+    "chipset": "AMD X870",
+    "formFactor": "ATX",
+    "ramType": "DDR5"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_172723235236c3ff5efb9fbf6f2a35c9ef32a353e4.webp",
+      "alt": "Bo mạch chủ MSI MAG X870 TOMAHAWK WIFI nhìn tổng thể từ trên xuống, tản nhiệt VRM và socket AM5"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_1727232357f5eb8ea92f9c419d5e616a202718cac4.webp",
+      "alt": "Cụm cổng I/O mặt sau MSI MAG X870 TOMAHAWK WIFI với USB4, USB-C, LAN 5G và ăng-ten Wi-Fi 7"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Bo Mạch Chủ MSI MAG X870 TOMAHAWK WIFI DDR5 - Socket AM5, Wi-Fi 7",
+  "metaDescription": "MSI MAG X870 TOMAHAWK WIFI: chipset AMD X870, socket AM5 cho Ryzen 9000/8000/7000, DDR5 256GB, PCIe 5.0, Wi-Fi 7, USB4 40Gbps. Giá tốt tại Quang Huong Computer."
+}

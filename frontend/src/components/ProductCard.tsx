@@ -2,22 +2,25 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import type { Product } from '../hooks/useProducts';
-import { ShoppingCart, Check, Star, Gift, Ticket } from 'lucide-react';
+import { ShoppingCart, Check, Star } from 'lucide-react';
 import { formatNumber } from '../utils/format';
+import { resolveMediaUrl } from '../lib/media-url';
 
 interface ProductCardProps {
     product: Product;
 }
 
 /**
- * ProductCard — 7-tier anatomy theo hacom.vn pattern (giữ brand đỏ Quang Hưởng qua token `accent`):
- * 1. Ảnh (ratio vuông) + badge quà tặng
+ * ProductCard — 6-tier anatomy theo hacom.vn pattern (giữ brand đỏ Quang Hưởng qua token `accent`):
+ * 1. Ảnh (ratio vuông)
  * 2. Rating + "Mã: SKU"
  * 3. Tên SP 3 dòng ellipsis
  * 4. Giá cũ gạch + "(Tiết kiệm x%)"
  * 5. Giá bán đỏ bold, ₫ superscript
  * 6. "✓ Sẵn hàng" xanh + nút giỏ tròn đỏ
- * 7. Row promo icons
+ *
+ * D01/W0-12: đã bỏ 2 badge khuyến mãi bịa (quà tặng theo soldCount > 20, mã giảm giá không
+ * gắn với sản phẩm nào) — không có dữ liệu thật đứng sau. Rebuild thật (nếu có) ở W3-1.
  */
 export const ProductCard = ({ product }: ProductCardProps) => {
     const { addToCart } = useCart();
@@ -50,23 +53,18 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     const isOutOfStock = product.stockQuantity <= 0 || product.status === 'OutOfStock';
     const productUrl = product.slug ? `/san-pham/${product.slug}` : `/product/${product.id}`;
     const rating = Math.round(product.averageRating || 0);
-    const hasGift = product.soldCount > 20;
+    const resolvedImageUrl = resolveMediaUrl(product.imageUrl);
 
     return (
         <Link
             to={productUrl}
             className="group relative flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5 h-full"
         >
-            {/* Tier 1 — image + gift badge */}
+            {/* Tier 1 — image */}
             <div className="relative aspect-square bg-white p-3 overflow-hidden">
-                {hasGift && (
-                    <span className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        <Gift size={10} /> Quà tặng
-                    </span>
-                )}
-                {product.imageUrl && !imgError ? (
+                {resolvedImageUrl && !imgError ? (
                     <img
-                        src={product.imageUrl}
+                        src={resolvedImageUrl}
                         alt={product.name}
                         loading="lazy"
                         className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
@@ -137,18 +135,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                         {justAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
                     </button>
                 </div>
-
-                {/* Tier 7 — promo icons */}
-                {(hasOldPrice || hasGift) && (
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-50">
-                        {hasOldPrice && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Ticket size={11} /> Voucher</span>
-                        )}
-                        {hasGift && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-gray-400"><Gift size={11} /> Quà tặng</span>
-                        )}
-                    </div>
-                )}
             </div>
         </Link>
     );

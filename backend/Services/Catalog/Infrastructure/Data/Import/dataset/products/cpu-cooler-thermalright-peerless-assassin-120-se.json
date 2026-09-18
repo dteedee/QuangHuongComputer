@@ -1,0 +1,168 @@
+{
+  "name": "Tản Nhiệt Khí Thermalright Peerless Assassin 120 SE",
+  "slug": "cpu-cooler-thermalright-peerless-assassin-120-se",
+  "sku": "TR-PA120SE",
+  "brand": "Thermalright",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "Tản nhiệt",
+  "model": "Thermalright Peerless Assassin 120 SE (PA120 SE)",
+  "officialUrl": "https://www.thermalright.com/product/peerless-assassin-120-se/",
+  "priceVnd": 830000,
+  "oldPriceVnd": 900000,
+  "costPriceVnd": 730000,
+  "priceSources": [
+    "https://www.anphatpc.com.vn/tan-nhiet-cpu-thermalright-dual-tower-peerless-assassin-120-se_id40061.html",
+    "https://hacom.vn/tan-nhiet-khi-thermalright-peerless-assassin-120-se"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng Thermalright 12 tháng qua nhà phân phối tại Việt Nam, hỗ trợ đổi mới nếu lỗi do nhà sản xuất trong thời gian bảo hành.",
+  "weightKg": 1.2,
+  "stockQuantity": 18,
+  "shortDescription": "Tản nhiệt khí tháp đôi Thermalright Peerless Assassin 120 SE dùng 6 ống đồng dẫn nhiệt cùng 2 quạt 120mm TL-C12C, mang lại hiệu năng làm mát gần bằng các tản cao cấp mà giá chỉ ở phân khúc phổ thông.",
+  "descriptionHtml": "<h3>Tản nhiệt khí phổ thông, hiệu năng vượt tầm giá</h3><p>Thermalright Peerless Assassin 120 SE là mẫu tản nhiệt khí tháp đôi được giới build PC đánh giá cao nhờ khả năng làm mát mạnh mẽ dù mức giá chỉ ở phân khúc phổ thông. Với 6 ống đồng dẫn nhiệt đường kính 6mm cùng đế tiếp xúc bằng đồng nguyên khối C1100 mạ niken, sản phẩm truyền nhiệt từ CPU ra dàn lá tản rất nhanh, phù hợp cho cả nhu cầu chơi game lẫn dựng hình, làm việc nặng.</p><h3>Cặp quạt TL-C12C mát và êm</h3><p>Bộ tản đi kèm 2 quạt TL-C12C kích thước 120mm, tốc độ tối đa 1550 vòng/phút, lưu lượng gió 66.17 CFM và áp suất khí 1.53mm H2O, trong khi độ ồn chỉ dừng ở mức 25.6 dBA nhờ vòng bi S-FDB. Đầu cắm PWM 4-pin giúp mainboard tự điều chỉnh tốc độ quạt theo nhiệt độ thực tế, cân bằng giữa hiệu năng và độ yên tĩnh.</p><h3>Dễ lắp, tương thích rộng</h3><p>Chiều cao 155mm cùng thiết kế khoảng cách lá tản hợp lý giúp Peerless Assassin 120 SE không cấn các thanh RAM tản nhiệt cao và vừa với phần lớn thùng máy tầm trung trở lên. Sản phẩm hỗ trợ hầu hết các socket phổ biến hiện nay gồm Intel LGA 115X/1200/1700/1851 và AMD AM4/AM5, đi kèm bộ gá lắp đầy đủ cho từng nền tảng.</p><ul><li>6 ống đồng dẫn nhiệt 6mm, đế đồng C1100 mạ niken</li><li>2 quạt TL-C12C 120mm, tối đa 1550 RPM / 66.17 CFM / 25.6 dBA</li><li>Vòng bi S-FDB, đầu cắm PWM 4-pin</li><li>Tương thích Intel 115X/1200/1700/1851 và AMD AM4/AM5</li><li>Bảo hành chính hãng 12 tháng</li></ul>",
+  "highlights": [
+    "Thiết kế tháp đôi (dual-tower) với 6 ống đồng dẫn nhiệt Φ6mm, đế tiếp xúc đồng nguyên khối C1100 mạ niken",
+    "Đi kèm 2 quạt TL-C12C 120mm, tốc độ tối đa 1550 RPM, lưu lượng gió 66.17 CFM, độ ồn chỉ 25.6 dBA",
+    "Vòng bi S-FDB bền bỉ, đầu cắm PWM 4-pin cho phép điều chỉnh tốc độ quạt linh hoạt theo tải CPU",
+    "Chiều cao 155mm phù hợp với đa số case tầm trung, thiết kế không cấn khe RAM cao",
+    "Tương thích rộng: Intel LGA 115X/1200/1700/1851 và AMD AM4/AM5, gần như mọi hệ thống hiện nay",
+    "Bảo hành chính hãng 12 tháng, dễ dàng tìm mua tại các hệ thống linh kiện lớn trong nước"
+  ],
+  "specs": [
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Kích thước tản nhiệt",
+      "value": "L125 x W110 x H155 mm",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Kích thước & Trọng lượng",
+      "name": "Trọng lượng tản nhiệt",
+      "value": "730g",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Ống dẫn nhiệt & Đế tản",
+      "name": "Số ống dẫn nhiệt",
+      "value": "6 ống đồng Φ6mm",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Ống dẫn nhiệt & Đế tản",
+      "name": "Chất liệu đế tiếp xúc",
+      "value": "Đồng nguyên khối C1100, mạ niken",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Ống dẫn nhiệt & Đế tản",
+      "name": "Kiểu thiết kế",
+      "value": "Tháp đôi (Dual Tower), đi kèm 2 quạt",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Kích thước quạt",
+      "value": "120 x 120 x 25mm (x2 quạt)",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Trọng lượng mỗi quạt",
+      "value": "120g",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Tốc độ quay tối đa",
+      "value": "1550 RPM ±10% (MAX)",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Độ ồn tối đa",
+      "value": "25.6 dBA",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Lưu lượng gió tối đa",
+      "value": "66.17 CFM",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Áp suất khí tối đa",
+      "value": "1.53 mm H2O",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Dòng điện định mức",
+      "value": "0.20 A",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Đầu kết nối quạt",
+      "value": "4-pin PWM",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Quạt tản nhiệt (TL-C12C)",
+      "name": "Loại vòng bi",
+      "value": "S-FDB Bearing",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tương thích socket",
+      "name": "Socket Intel hỗ trợ",
+      "value": "LGA 115X / 1200 / 1700 / 1851",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tương thích socket",
+      "name": "Socket AMD hỗ trợ",
+      "value": "AM4 / AM5",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Đen (Full Black)",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Thời gian bảo hành chính hãng tại VN",
+      "value": "12 tháng",
+      "source": "https://www.anphatpc.com.vn/tan-nhiet-cpu-thermalright-dual-tower-peerless-assassin-120-se_id40061.html"
+    }
+  ],
+  "filterAttributes": {
+    "type": "Tản nhiệt khí (Air Cooler)",
+    "design": "Tháp đôi (Dual Tower)",
+    "socket": "Intel 115X/1200/1700/1851, AMD AM4/AM5",
+    "heatpipes": "6",
+    "fanSize": "120mm"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.thermalright.com/wp-content/uploads/2026/08/peerless-assassin-120-se.png",
+      "alt": "Tản nhiệt khí Thermalright Peerless Assassin 120 SE màu đen, góc chụp 3/4 thể hiện thiết kế tháp đôi và 2 quạt"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.thermalright.com/wp-content/uploads/2021/10/PA120-SE-%E4%B8%BB%E5%9B%BE-2.jpg",
+      "alt": "Cận cảnh quạt TL-C12C 120mm với logo Thermalright ở tâm quạt"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.thermalright.com/wp-content/uploads/2021/10/PA120-SE-%E4%B8%BB%E5%9B%BE-3.jpg",
+      "alt": "Tản nhiệt Peerless Assassin 120 SE nhìn từ trên xuống, thấy rõ 2 dàn lá tản và 6 ống dẫn nhiệt"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Tản Nhiệt Khí Thermalright Peerless Assassin 120 SE",
+  "metaDescription": "Tản nhiệt khí tháp đôi Thermalright Peerless Assassin 120 SE, 6 ống đồng, 2 quạt 120mm TL-C12C, tương thích Intel/AMD, bảo hành chính hãng 12 tháng."
+}

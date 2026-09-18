@@ -1,0 +1,192 @@
+{
+  "name": "Bộ Phát WiFi Mesh ASUS ZenWiFi AX XT8 AX6600 (2-Pack, Trắng)",
+  "slug": "asus-zenwifi-ax-xt8-2-pack",
+  "sku": "ASUS-XT8-W2PK",
+  "brand": "ASUS",
+  "category": "Thiết Bị Mạng",
+  "subCategory": "Mesh WiFi System",
+  "model": "XT8 (W-2-PK)",
+  "officialUrl": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/",
+  "priceVnd": 9290000,
+  "oldPriceVnd": 14649000,
+  "costPriceVnd": 8180000,
+  "priceSources": [
+    "https://hacom.vn/bo-mesh-wifi-asus-xt8-w-2-pk-zenwifi-6-chuan-ax6000"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng ASUS Việt Nam 36 tháng cho bộ phát WiFi Mesh ZenWiFi XT8, 1 đổi 1 trong 30 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 1.5,
+  "stockQuantity": 14,
+  "shortDescription": "Bộ 2 thiết bị phát WiFi Mesh ASUS ZenWiFi AX XT8 chuẩn WiFi 6 3 băng tần, tốc độ tối đa AX6600, phủ sóng đồng bộ toàn bộ nhà nhiều tầng chỉ với một tên mạng duy nhất.",
+  "descriptionHtml": "<h3>Mesh WiFi 6 3 băng tần cho nhà nhiều phòng</h3><p>ASUS ZenWiFi AX XT8 là bộ 2 thiết bị phát sóng mesh chuẩn WiFi 6 (802.11ax), tổng tốc độ lý thuyết AX6600 chia trên 3 băng tần: 574 Mbps (2.4GHz), 1201 Mbps (5GHz-1) và 4804 Mbps (5GHz-2 dùng làm backhaul riêng giữa các trạm). Nhờ băng tần backhaul riêng, tốc độ tới thiết bị đầu cuối không bị chia sẻ với đường truyền giữa hai trạm, mạng ổn định hơn khi nhà nhiều tầng, nhiều vật cản.</p><h3>Phần cứng mạnh, quản lý bằng AiMesh</h3><p>Mỗi trạm dùng CPU lõi tứ kèm chip WiFi phụ, 512MB RAM và 256MB flash, đủ sức xử lý nhiều thiết bị cùng lúc không giật lag. Công nghệ AiMesh cho phép hai trạm tự đồng bộ thành một mạng WiFi duy nhất, một tên đăng nhập, chuyển vùng mượt khi di chuyển trong nhà. Mỗi trạm có 1 cổng WAN/LAN 2.5G, 3 cổng LAN Gigabit và 1 cổng USB 3.1 Gen 1 để chia sẻ ổ cứng, máy in qua mạng.</p><h3>An toàn cho cả gia đình</h3><p>Tích hợp AiProtection Pro (Trend Micro) miễn phí trọn đời: chặn website độc hại, phát hiện thiết bị nhiễm mã độc, cùng công cụ kiểm soát nội dung và thời gian dùng mạng cho từng thành viên qua app ASUS Router.</p><ul><li>Chuẩn WiFi 6, tổng tốc độ AX6600, 3 băng tần với backhaul riêng</li><li>Công nghệ AiMesh đồng bộ toàn nhà, một tên mạng WiFi duy nhất</li><li>Mỗi trạm: 1 cổng 2.5G WAN/LAN, 3 cổng LAN Gigabit, 1 cổng USB 3.1</li><li>AiProtection Pro miễn phí trọn đời, kiểm soát của phụ huynh</li><li>Phủ sóng khoảng 510m² (5.500 sqft) cho bộ 2 trạm, 6+ phòng</li></ul>",
+  "highlights": [
+    "Chuẩn WiFi 6 (802.11ax), 3 băng tần, tổng tốc độ lý thuyết AX6600",
+    "Băng tần 5GHz-2 dùng làm backhaul riêng, không chia sẻ băng thông với thiết bị đầu cuối",
+    "Công nghệ AiMesh: 2 trạm tự đồng bộ, một tên WiFi duy nhất, chuyển vùng mượt",
+    "Mỗi trạm có cổng mạng 2.5G, 3 cổng LAN Gigabit và cổng USB 3.1 Gen 1",
+    "AiProtection Pro (Trend Micro) bảo vệ mạng và kiểm soát của phụ huynh miễn phí trọn đời",
+    "Phủ sóng khoảng 510m² (5.500 sqft), phù hợp nhà 2-3 tầng nhiều phòng"
+  ],
+  "specs": [
+    {
+      "group": "Kết nối không dây",
+      "name": "Chuẩn WiFi",
+      "value": "WiFi 6 (802.11ax)",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tổng tốc độ lý thuyết",
+      "value": "AX6600 (lên đến 6600 Mbps)",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Số băng tần",
+      "value": "Tri-band (3 băng tần, có backhaul riêng)",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tốc độ băng tần 2.4GHz",
+      "value": "Lên đến 574 Mbps",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tốc độ băng tần 5GHz-1",
+      "value": "Lên đến 1201 Mbps",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Tốc độ băng tần 5GHz-2 (backhaul)",
+      "value": "Lên đến 4804 Mbps",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Bộ xử lý & bộ nhớ",
+      "name": "Vi xử lý",
+      "value": "CPU lõi tứ (Quad-core) kèm chip WiFi phụ",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Bộ xử lý & bộ nhớ",
+      "name": "RAM",
+      "value": "512 MB",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Bộ xử lý & bộ nhớ",
+      "name": "Bộ nhớ Flash",
+      "value": "256 MB",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Ăng-ten",
+      "name": "Số lượng & kiểu ăng-ten",
+      "value": "6 ăng-ten trong mỗi trạm, góc nghiêng 45°",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Ăng-ten",
+      "name": "Cấu hình MIMO",
+      "value": "2x2 (2.4GHz), 2x2 (5GHz-1), 4x4 (5GHz-2)",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Cổng WAN",
+      "value": "1x RJ45 2.5G BaseT",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Cổng LAN",
+      "value": "3x RJ45 Gigabit BaseT",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Cổng USB",
+      "value": "1x USB 3.1 Gen 1",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Bảo mật & quản lý",
+      "name": "Bảo mật mạng",
+      "value": "AiProtection Pro (Trend Micro), miễn phí trọn đời",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Bảo mật & quản lý",
+      "name": "Công nghệ Mesh",
+      "value": "AiMesh, hỗ trợ backhaul chuyên dụng hoặc qua dây Ethernet",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Bảo mật & quản lý",
+      "name": "Chế độ hoạt động",
+      "value": "Router không dây / Access Point",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Vùng phủ sóng",
+      "name": "Diện tích phủ sóng (bộ 2 trạm)",
+      "value": "Khoảng 510m² (5.500 sqft), 6+ phòng",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Adapter nguồn",
+      "value": "Vào AC 110-240V (50-60Hz); ra 19V/1.75A và 12V/3A",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước mỗi trạm (D x R x C)",
+      "value": "160 x 75 x 161.5 mm",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Trọng lượng mỗi trạm",
+      "value": "716 g",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    },
+    {
+      "group": "Phụ kiện đi kèm",
+      "name": "Hộp sản phẩm gồm",
+      "value": "2x ZenWiFi AX, dây RJ-45, adapter nguồn, hướng dẫn nhanh, thẻ bảo hành",
+      "source": "https://www.asus.com/networking-iot-servers/whole-home-mesh-systems/asus-zenwifi/asus-zenwifi-ax-xt8/techspec/"
+    }
+  ],
+  "filterAttributes": {
+    "wifiStandard": "WiFi 6 (AX6600)",
+    "bandCount": "Tri-band (3 băng tần)",
+    "meshTech": "AiMesh",
+    "packSize": "2-Pack",
+    "wanPort": "2.5G",
+    "coverageArea": "510m2"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://dlcdnimgs.asus.com/websites/global/products/lz1oss59xzvantj2/images/overview-zenfiwi1.png",
+      "alt": "Bộ 2 thiết bị ASUS ZenWiFi AX XT8 màu trắng nhìn thẳng mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://dlcdnimgs.asus.com/websites/global/products/lz1oss59xzvantj2/images/setup_zenwifi.png",
+      "alt": "Bộ 2 thiết bị ASUS ZenWiFi AX XT8 màu trắng nhìn góc nghiêng, logo ASUS mặt trước"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://dlcdnimgs.asus.com/websites/global/products/lz1oss59xzvantj2/images/speed_zenwifi.png",
+      "alt": "Một trạm ASUS ZenWiFi AX XT8 màu trắng nhìn thẳng mặt trước, cận cảnh logo ASUS"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "ASUS ZenWiFi AX XT8 AX6600 2-Pack Trắng - Mesh WiFi 6 Chính Hãng",
+  "metaDescription": "Bộ phát WiFi Mesh ASUS ZenWiFi AX XT8 (W-2-PK) chuẩn WiFi 6 AX6600, 3 băng tần, AiMesh, AiProtection Pro. Giá tốt, bảo hành chính hãng 36 tháng tại Quang Huong Computer."
+}

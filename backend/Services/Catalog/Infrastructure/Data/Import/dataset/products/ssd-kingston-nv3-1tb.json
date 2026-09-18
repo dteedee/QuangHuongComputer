@@ -1,0 +1,153 @@
+{
+  "name": "Ổ cứng SSD Kingston NV3 1TB M.2 2280 PCIe NVMe Gen4",
+  "slug": "ssd-kingston-nv3-1tb",
+  "sku": "KST-SNV3S1000G",
+  "brand": "Kingston",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "SSD",
+  "model": "Kingston SNV3S/1000G",
+  "officialUrl": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd",
+  "priceVnd": 4990000,
+  "oldPriceVnd": 5990000,
+  "costPriceVnd": 4390000,
+  "priceSources": [
+    "https://gearvn.com/search?q=kingston+nv3+1tb",
+    "https://cellphones.com.vn/catalogsearch/result?q=kingston%20nv3%201tb"
+  ],
+  "warrantyMonths": 60,
+  "warrantyInfo": "Bảo hành chính hãng Kingston 60 tháng (5 năm), hỗ trợ kỹ thuật miễn phí qua nhà phân phối uỷ quyền tại Việt Nam.",
+  "weightKg": 0.007,
+  "stockQuantity": 25,
+  "shortDescription": "SSD Kingston NV3 1TB chuẩn PCIe 4.0 NVMe M.2 2280, tốc độ đọc/ghi tối đa 6.000/4.000MB/s, phù hợp nâng cấp tốc độ khởi động và xử lý dữ liệu cho PC, laptop phổ thông đến tầm trung.",
+  "descriptionHtml": "<h3>SSD Kingston NV3 1TB - Nâng cấp tốc độ với chuẩn PCIe 4.0 NVMe</h3><p>Kingston NV3 1TB là ổ cứng thể rắn dạng M.2 2280 dùng chuẩn giao tiếp PCIe 4.0 x4 NVMe, đạt tốc độ đọc tối đa 6.000MB/s và ghi tối đa 4.000MB/s theo công bố của nhà sản xuất. Đây là lựa chọn hợp lý cho người dùng muốn rút ngắn thời gian khởi động hệ điều hành, mở ứng dụng và xử lý file dung lượng lớn mà không cần đầu tư dòng SSD cao cấp.</p><h3>Thiết kế nhỏ gọn, tiết kiệm điện</h3><p>Kích thước 22 x 80 x 2.3mm, trọng lượng chỉ 7g giúp NV3 tương thích với phần lớn mainboard desktop lẫn nhiều laptop mỏng nhẹ có khe M.2 NVMe. Ổ dùng NAND 3D, hoạt động ổn định trong dải nhiệt 0-70°C, chịu rung 20G khi không hoạt động, phù hợp cho cả máy bàn lẫn laptop di chuyển thường xuyên.</p><h3>Độ bền và bảo hành</h3><p>Kingston công bố độ bền ghi dữ liệu (TBW) 320TB cho bản 1TB cùng chỉ số MTBF 2.000.000 giờ, đi kèm bảo hành giới hạn 5 năm và hỗ trợ kỹ thuật miễn phí. Sản phẩm còn tặng kèm phần mềm Acronis giúp sao chép dữ liệu từ ổ cũ sang ổ mới nhanh chóng.</p><ul><li>Chuẩn kết nối: PCIe 4.0 x4 NVMe, form factor M.2 2280</li><li>Tốc độ đọc/ghi tối đa: 6.000/4.000 MB/s</li><li>Độ bền: 320TB TBW, MTBF 2.000.000 giờ</li><li>Bảo hành chính hãng: 5 năm</li></ul>",
+  "highlights": [
+    "Giao tiếp PCIe Gen 4x4 NVMe, tốc độ đọc/ghi tối đa 6.000/4.000 MB/s",
+    "Form factor M.2 2280 gọn nhẹ, tương thích hầu hết mainboard và laptop có khe M.2 NVMe",
+    "Độ bền ghi dữ liệu (TBW) 320TB, MTBF 2.000.000 giờ",
+    "Bảo hành chính hãng 5 năm kèm hỗ trợ kỹ thuật miễn phí từ Kingston",
+    "Tặng kèm phần mềm sao chép ổ đĩa Acronis, thuận tiện khi chuyển dữ liệu từ ổ cũ",
+    "Thiết kế đơn mặt (single-sided), tiêu thụ điện năng thấp, toả nhiệt ít"
+  ],
+  "specs": [
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Part Number",
+      "value": "SNV3S/1000G",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Dung lượng",
+      "value": "1TB",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Chuẩn kết nối",
+      "value": "PCIe 4.0 x4 NVMe",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Chuẩn M.2 / Kích thước",
+      "value": "M.2 2280 (22mm x 80mm x 2.3mm)",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Tốc độ đọc tuần tự (tối đa)",
+      "value": "6.000 MB/s",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Tốc độ ghi tuần tự (tối đa)",
+      "value": "4.000 MB/s",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Công nghệ NAND",
+      "value": "3D NAND",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Độ bền ghi dữ liệu (TBW)",
+      "value": "320TB",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "MTBF",
+      "value": "2.000.000 giờ",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0°C ~ 70°C",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Nhiệt độ bảo quản",
+      "value": "-40°C ~ 85°C",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Chống rung (không hoạt động)",
+      "value": "20G (10-1000Hz)",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Trọng lượng",
+      "value": "7g",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Bảo hành nhà sản xuất",
+      "value": "Giới hạn 5 năm, hỗ trợ kỹ thuật miễn phí",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Phần mềm đi kèm",
+      "value": "Phần mềm sao chép ổ đĩa Acronis (Acronis cloning software)",
+      "source": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Môi trường sử dụng khuyến nghị",
+      "value": "Máy tính để bàn và laptop; không khuyến nghị cho môi trường máy chủ (Server)",
+      "source": "https://www.kingston.com/datasheets/SNV3S_us.pdf"
+    }
+  ],
+  "filterAttributes": {
+    "capacity": "1TB",
+    "interface": "PCIe 4.0 x4 NVMe"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/SNV3S_1000GB-zm-lg.jpg",
+      "alt": "SSD Kingston NV3 1TB M.2 2280 - mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/SNV3S_1000GB_angle-zm-lg.jpg",
+      "alt": "SSD Kingston NV3 1TB M.2 2280 - góc nghiêng"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/SNV3S_1000GB_pkg-zm-lg.jpg",
+      "alt": "SSD Kingston NV3 1TB M.2 2280 - hộp đóng gói bán lẻ"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "SSD Kingston NV3 1TB PCIe NVMe Gen4 M.2 2280 - Giá tốt",
+  "metaDescription": "SSD Kingston NV3 1TB chuẩn PCIe 4.0 NVMe M.2 2280, tốc độ đọc/ghi tối đa 6.000/4.000 MB/s, bảo hành chính hãng 5 năm. Mua ngay tại Quang Huong Computer."
+}

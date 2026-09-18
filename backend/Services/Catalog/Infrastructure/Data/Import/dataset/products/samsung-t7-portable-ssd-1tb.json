@@ -1,0 +1,147 @@
+{
+  "name": "Ổ Cứng Di Động SSD Samsung T7 Portable 1TB Xám Titan (MU-PC1T0T/WW)",
+  "slug": "samsung-t7-portable-ssd-1tb",
+  "sku": "SS-MUPC1T0TWW",
+  "brand": "Samsung",
+  "category": "Phụ Kiện Máy Tính - Laptop",
+  "subCategory": "External SSD / Storage",
+  "model": "MU-PC1T0T/WW",
+  "officialUrl": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/",
+  "priceVnd": 6490000,
+  "oldPriceVnd": 7990000,
+  "costPriceVnd": 5710000,
+  "priceSources": [
+    "https://cellphones.com.vn/o-cung-di-dong-ssd-samsung-t7-portable.html"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Samsung 36 tháng (3 năm) tại các trung tâm bảo hành Samsung Việt Nam.",
+  "weightKg": 0.072,
+  "stockQuantity": 22,
+  "shortDescription": "Ổ cứng di động SSD Samsung T7 Portable 1TB dùng chuẩn USB 3.2 Gen 2, tốc độ đọc/ghi tuần tự tới 1.050/1.000 MB/s, vỏ kim loại nhỏ gọn màu Xám Titan, mã hóa AES 256-bit và bảo hành chính hãng 3 năm.",
+  "descriptionHtml": "<h3>Lưu trữ di động tốc độ cao</h3><p>Samsung T7 Portable 1TB là ổ cứng SSD di động chuẩn USB 3.2 Gen 2 (10Gbps), cho tốc độ đọc/ghi tuần tự lên tới 1.050/1.000 MB/s - nhanh hơn đáng kể so với ổ cứng gắn ngoài HDD truyền thống. Với dung lượng 1TB, T7 phù hợp sao lưu ảnh RAW, video 4K, dự án dựng phim hay làm ổ cài đặt game di động cho PC và máy chơi game.</p><h3>Thiết kế nhỏ gọn, bền bỉ</h3><p>Kích thước chỉ 85 x 57 x 8,0mm, nặng 72g, T7 gọn như một tấm danh thiếp và dễ dàng bỏ túi. Vỏ ngoài kim loại chắc chắn giúp ổ chịu được va đập nhẹ, chịu rơi từ độ cao tới 2 mét trong điều kiện thử nghiệm nội bộ. Công nghệ tản nhiệt Dynamic Thermal Guard kiểm soát nhiệt độ bề mặt dưới 51°C, giữ tốc độ truyền ổn định khi làm việc liên tục.</p><h3>Bảo mật và tiện lợi khi sử dụng</h3><p>Ổ hỗ trợ mã hóa phần cứng AES 256-bit bằng mật khẩu, bảo vệ dữ liệu quan trọng khỏi truy cập trái phép. Đi kèm hộp sản phẩm là cáp USB Type C-to-C và Type C-to-A, giúp kết nối linh hoạt với laptop, PC, điện thoại, máy tính bảng hay máy chơi game mà không cần adapter rời. Phần mềm Samsung Magician hỗ trợ theo dõi tình trạng ổ, cập nhật firmware và tối ưu hiệu năng chỉ với vài thao tác. Sản phẩm được Samsung bảo hành chính hãng 3 năm.</p><ul><li>USB 3.2 Gen 2, tốc độ tới 1.050/1.000 MB/s</li><li>Vỏ kim loại nhỏ gọn, chịu rơi tới 2m</li><li>Mã hóa AES 256-bit, kèm phần mềm Samsung Magician</li><li>Bảo hành chính hãng 3 năm</li></ul>",
+  "highlights": [
+    "Tốc độ truyền tải tới 1.050 MB/s (đọc) và 1.000 MB/s (ghi) qua chuẩn USB 3.2 Gen 2 10Gbps",
+    "Thiết kế nhỏ gọn cỡ danh thiếp (85 x 57 x 8mm, 72g), vỏ kim loại chắc chắn, chịu rơi từ độ cao tới 2m",
+    "Mã hóa phần cứng AES 256-bit bằng mật khẩu, bảo vệ dữ liệu cá nhân",
+    "Công nghệ Dynamic Thermal Guard kiểm soát nhiệt, giữ hiệu năng ổn định khi truyền file lớn",
+    "Tặng kèm cáp USB Type C-to-C và Type C-to-A, tương thích Windows, macOS, Android, máy chơi game",
+    "Đi kèm phần mềm Samsung Magician theo dõi tình trạng ổ và cập nhật firmware"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Dung lượng",
+      "value": "1TB (1GB = 1.000.000.000 byte)",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Model",
+      "value": "MU-PC1T0T/WW",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Màu sắc",
+      "value": "Xám Titan (còn có Xanh Indigo, Đỏ)",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Giao tiếp",
+      "value": "USB 3.2 Gen 2 (10Gbps), cổng USB Type-C",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ đọc tuần tự",
+      "value": "Lên tới 1.050 MB/s",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ ghi tuần tự",
+      "value": "Lên tới 1.000 MB/s",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tương thích ngược",
+      "value": "USB 3.1, USB 3.0, USB 2.0",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Thiết kế & Vật lý",
+      "name": "Kích thước (RxCxS)",
+      "value": "85 x 57 x 8,0 mm",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Thiết kế & Vật lý",
+      "name": "Trọng lượng",
+      "value": "72g",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Độ bền & Bảo mật",
+      "name": "Khả năng chịu sốc",
+      "value": "Chịu rơi từ độ cao tới 2m (thử nghiệm nội bộ, điều kiện kiểm soát)",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Độ bền & Bảo mật",
+      "name": "Mã hóa dữ liệu",
+      "value": "AES 256-bit bằng mật khẩu",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Độ bền & Bảo mật",
+      "name": "Kiểm soát nhiệt",
+      "value": "Dynamic Thermal Guard, duy trì nhiệt độ bề mặt dưới 51°C khi hoạt động",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Phần mềm quản lý",
+      "value": "Samsung Magician (Windows, macOS, Android)",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Hệ điều hành / thiết bị",
+      "value": "Windows, macOS, Android, iPad, máy chơi game",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Phụ kiện đi kèm",
+      "name": "Cáp kết nối",
+      "value": "Cáp USB Type C-to-C và Type C-to-A",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Thời hạn bảo hành hãng",
+      "value": "3 năm (36 tháng)",
+      "source": "https://www.samsung.com/vn/memory-storage/portable-ssd/t7-1tb-gray-external-storage-nvme-1050-mb-s-mu-pc1t0t-ww/"
+    }
+  ],
+  "filterAttributes": {
+    "capacity": "1TB",
+    "interface": "USB 3.2 Gen 2 (10Gbps)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://images.samsung.com/is/image/samsung/p6pim/vn/mu-pc1t0t-ww/gallery/vn-portable-ssd-t7-mu-pc1t0t-ww-539160345",
+      "alt": "Ổ cứng di động SSD Samsung T7 Portable 1TB Xám Titan, góc nghiêng 3/4"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://images.samsung.com/is/image/samsung/p6pim/vn/mu-pc1t0t-ww/gallery/vn-portable-ssd-t7-mu-pc1t0t-ww-539160363",
+      "alt": "Ổ cứng di động SSD Samsung T7 Portable 1TB Xám Titan, nhìn thẳng mặt trước"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "SSD Di Động Samsung T7 Portable 1TB",
+  "metaDescription": "Ổ cứng di động SSD Samsung T7 Portable 1TB, USB 3.2 Gen 2, tốc độ tới 1.050 MB/s, mã hóa AES 256-bit, bảo hành chính hãng 3 năm. Giá tốt tại Quang Huong Computer."
+}

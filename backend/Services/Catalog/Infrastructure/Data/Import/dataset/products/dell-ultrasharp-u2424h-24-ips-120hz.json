@@ -1,0 +1,213 @@
+{
+  "name": "Màn Hình Dell UltraSharp U2424H 24 inch FHD IPS 120Hz USB-C",
+  "slug": "dell-ultrasharp-u2424h-24-ips-120hz",
+  "sku": "DELL-U2424H",
+  "brand": "Dell",
+  "category": "Màn Hình Máy Tính",
+  "subCategory": "Màn hình văn phòng",
+  "model": "Dell U2424H",
+  "officialUrl": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories",
+  "priceVnd": 5290000,
+  "oldPriceVnd": 6290000,
+  "costPriceVnd": 4650000,
+  "priceSources": [
+    "https://gearvn.com/products/man-hinh-dell-ultrasharp-u2424h-24-ips-120hz",
+    "https://www.thegioididong.com/tim-kiem?key=dell%20u2424h"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Dell 36 tháng (Advanced Exchange Service) kèm Premium Panel Exchange - đổi mới tấm nền nếu có điểm chết theo chính sách hãng.",
+  "weightKg": 5.38,
+  "stockQuantity": 18,
+  "shortDescription": "Màn hình văn phòng Dell UltraSharp U2424H 24 inch, tấm nền IPS Full HD tần số quét 120Hz hiếm có ở phân khúc văn phòng, tích hợp USB-C và chân đế chỉnh cao đầy đủ.",
+  "descriptionHtml": "<h3>Văn phòng mượt mà với tần số quét 120Hz</h3><p>Dell UltraSharp U2424H là mẫu màn hình văn phòng 23.8 inch hiếm hoi trang bị tần số quét 120Hz trên nền IPS Full HD, giúp thao tác cuộn trang, kéo thả và gõ văn bản mượt hơn hẳn màn 60Hz thông thường mà vẫn giữ được màu sắc chuẩn xác 100% sRGB.</p><h3>Kết nối đa dụng, một dây cho tất cả</h3><p>Máy có cổng USB-C upstream nhận tín hiệu dữ liệu tốc độ 10Gbps, cổng USB-C downstream sạc 15W cùng 2 cổng USB-A 10Gbps, phù hợp làm hub mở rộng cho laptop mỏng nhẹ. DisplayPort 1.4 hỗ trợ daisy chain nối tiếp nhiều màn, HDMI 1.4 vẫn đạt Full HD 120Hz.</p><h3>Thiết kế chuẩn dân văn phòng, bảo vệ mắt lâu dài</h3><p>Chân đế điều chỉnh đầy đủ 4 hướng (cao, nghiêng, xoay ngang, xoay dọc pivot) cùng cảm biến ánh sáng môi trường tự động bù sáng, đạt chứng nhận TÜV 4 sao về độ dịu mắt, phù hợp làm việc nhiều giờ liên tục.</p><ul><li>Tấm nền IPS Full HD 1920x1080, 120Hz, 5ms (Fast)</li><li>100% sRGB, 100% BT.709, Delta E trung bình dưới 2</li><li>USB-C data 10Gbps + USB-C sạc 15W + 2x USB-A 10Gbps</li><li>Chân đế chỉnh cao 150mm, nghiêng, xoay ngang, pivot xoay dọc</li><li>Chuẩn treo VESA 100x100mm, hỗ trợ daisy chain qua DisplayPort</li><li>Bảo hành chính hãng 3 năm kèm Premium Panel Exchange</li></ul>",
+  "highlights": [
+    "Tần số quét 120Hz trên nền IPS Full HD - mượt hơn màn văn phòng 60Hz thông thường",
+    "Cổng USB-C upstream 10Gbps + USB-C downstream sạc 15W, không cần dây rời",
+    "Màu sắc chuẩn 100% sRGB, 100% BT.709, Delta E trung bình dưới 2",
+    "Chân đế chỉnh cao/nghiêng/xoay ngang/pivot đầy đủ, chuẩn treo VESA 100x100mm",
+    "Cảm biến ánh sáng tự động, đạt chứng nhận TÜV 4 sao về độ dịu mắt",
+    "Bảo hành chính hãng Dell 3 năm Advanced Exchange kèm Premium Panel Exchange"
+  ],
+  "specs": [
+    {
+      "group": "Màn hình",
+      "name": "Kích thước màn hình",
+      "value": "23.8 inch (604.70 mm)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "1920 x 1080 (Full HD) tại 120Hz",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền",
+      "value": "IPS",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét",
+      "value": "120Hz",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian phản hồi",
+      "value": "8ms (Normal) / 5ms (Fast)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "250 cd/m² (typical)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ tương phản",
+      "value": "1000:1 (typical)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Góc nhìn",
+      "value": "178° dọc / 178° ngang",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Không gian màu",
+      "value": "100% sRGB, 100% BT.709, 85% DCI-P3, Delta E < 2 (trung bình, sRGB và BT.709)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sâu màu",
+      "value": "16.7 triệu màu",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Lớp phủ bề mặt",
+      "value": "Chống chói (Anti-Glare), độ cứng 3H",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Mật độ điểm ảnh",
+      "value": "92.53 PPI",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "DisplayPort",
+      "value": "1x DisplayPort 1.4 in (HDCP 1.4) + 1x DisplayPort 1.4 out (MST, daisy chain)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "HDMI",
+      "value": "1x HDMI 1.4, hỗ trợ Full HD 120Hz",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "USB-C upstream",
+      "value": "1x USB Type-C (chỉ truyền dữ liệu, SuperSpeed USB 10Gbps)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "USB-C downstream",
+      "value": "1x USB Type-C 10Gbps, sạc 15W",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "USB-A",
+      "value": "3x USB Type-A 10Gbps (2 cổng phía sau + 1 cổng góc bên hỗ trợ sạc BC1.2)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Audio",
+      "value": "1x audio line-out",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Điều chỉnh chân đế",
+      "value": "Chỉnh cao 150mm, nghiêng -5°/+21°, xoay ngang ±45°, xoay dọc (pivot) ±90°",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chuẩn treo VESA",
+      "value": "100mm x 100mm",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước (kèm chân đế)",
+      "value": "538.64 x (364.00-496.53) x 181.75 mm (R x C x S)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng",
+      "value": "5.38 kg (kèm chân đế) / 3.52 kg (chỉ panel)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất tiêu thụ",
+      "value": "13.7W (typical) / 72W (max) / 0.5W (chờ)",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Chính sách bảo hành",
+      "value": "3 năm Advanced Exchange Service và Premium Panel Exchange",
+      "source": "https://www.dell.com/en-sg/shop/dell-ultrasharp-24-monitor-u2424h/apd/210-bkmg/monitors-monitor-accessories"
+    }
+  ],
+  "filterAttributes": {
+    "size": "23.8 inch",
+    "resolution": "1920x1080 (Full HD)",
+    "panel": "IPS",
+    "refreshRate": "120Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/peripherals/monitors/u-series/u2424h/media-gallery/monitor-ultrasharp-u2424h-gy-gallery-2.psd",
+      "alt": "Màn hình Dell UltraSharp U2424H nhìn thẳng mặt trước, chân đế Dell bạc"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/peripherals/monitors/u-series/u2424h/media-gallery/monitor-ultrasharp-u2424h-gy-gallery-1.psd",
+      "alt": "Màn hình Dell UltraSharp U2424H góc nghiêng phải, thể hiện chân đế và viền mỏng"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/peripherals/monitors/u-series/u2424h/media-gallery/monitor-ultrasharp-u2424h-gy-gallery-3.psd",
+      "alt": "Mặt sau màn hình Dell U2424H với cụm cổng kết nối và lỗ VESA"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/peripherals/monitors/u-series/u2424h/media-gallery/monitor-ultrasharp-u2424h-gy-gallery-4.psd",
+      "alt": "Cận cảnh cụm cổng kết nối phía dưới màn hình Dell U2424H"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/peripherals/monitors/u-series/u2424h/media-gallery/monitor-ultrasharp-u2424h-gy-gallery-5.psd",
+      "alt": "Màn hình Dell U2424H nhìn nghiêng từ cạnh bên, thể hiện độ mỏng viền màn"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Màn Hình Dell UltraSharp U2424H 24 inch FHD IPS 120Hz USB-C",
+  "metaDescription": "Dell UltraSharp U2424H 23.8 inch IPS Full HD 120Hz, USB-C 15W, chuẩn màu 100% sRGB, bảo hành chính hãng 3 năm. Giá tốt tại Quang Huong Computer."
+}

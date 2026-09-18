@@ -1,0 +1,167 @@
+{
+  "name": "Nguồn MSI MAG A850GL PCIE5 850W 80+ Gold Full Modular",
+  "slug": "psu-msi-mag-a850gl-pcie5-850w",
+  "sku": "MSI-A850GLPCIE5",
+  "brand": "MSI",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "PSU",
+  "model": "MSI MAG A850GL PCIE5",
+  "officialUrl": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5",
+  "priceVnd": 2990000,
+  "oldPriceVnd": 3490000,
+  "costPriceVnd": 2630000,
+  "priceSources": [
+    "https://hacom.vn/nguon-may-tinh-msi-mag-a850gl-pcie5-850w",
+    "https://cellphones.com.vn/nguon-may-tinh-msi-mag-a850gl-pcie5-850w.html"
+  ],
+  "warrantyMonths": 60,
+  "warrantyInfo": "Bảo hành chính hãng MSI Việt Nam 60 tháng (5 năm) tại trung tâm bảo hành ủy quyền trên toàn quốc; một số đại lý (HACOM) áp dụng bảo hành mở rộng đến 84 tháng.",
+  "weightKg": 1.9,
+  "stockQuantity": 18,
+  "shortDescription": "Nguồn MSI MAG A850GL PCIE5 850W đạt chuẩn 80 PLUS Gold, thiết kế full modular với đầu cắm PCIe 5.1 16-pin tích hợp sẵn, phù hợp dàn PC gaming dùng card đồ họa RTX thế hệ mới.",
+  "descriptionHtml": "<h3>Nguồn chuẩn ATX 3.1, sẵn sàng cho GPU PCIe 5.0</h3><p>MSI MAG A850GL PCIE5 cung cấp công suất liên tục 850W, đạt chứng nhận hiệu suất 80 PLUS Gold với hiệu suất chuyển đổi lên đến 90%. Sản phẩm tích hợp sẵn 1 đầu cắm PCIe 5.0 16 pin cấp tối đa 600W, đáp ứng trực tiếp các dòng card đồ họa RTX thế hệ mới mà không cần bộ chuyển đổi rời.</p><h3>Thiết kế full modular gọn gàng</h3><p>Toàn bộ dây cáp đều tháo rời được, gồm 1 đầu ATX 24 pin, 2 đầu EPS 4+4 pin cấp nguồn CPU, 4 đầu PCI-E 6+2 pin, 8 đầu SATA và 4 đầu MOLEX, giúp người dùng chỉ cắm đúng số dây cần thiết, tối ưu luồng gió và thẩm mỹ bên trong case. Kích thước 140 x 150 x 86mm tương thích với đa số case ATX và M-ATX phổ thông.</p><h3>Bền bỉ và an toàn</h3><p>Quạt 120mm dùng vòng bi Fluid Dynamic Bearing cho độ ồn thấp và tuổi thọ cao, kết hợp mạch PFC chủ động cùng 6 lớp bảo vệ OCP/OVP/OPP/OTP/SCP/UVP giúp bảo vệ toàn diện linh kiện trong hệ thống. Nguồn hỗ trợ điện áp đầu vào rộng 100-240VAC, phù hợp lưới điện Việt Nam.</p><ul><li>850W, 80 PLUS Gold, hiệu suất tới 90%</li><li>PCIe 5.1 16-pin tích hợp, cấp tối đa 600W cho GPU</li><li>Full modular, đầy đủ đầu ATX/EPS/PCIe/SATA/MOLEX</li><li>Quạt 120mm Fluid Dynamic Bearing, vận hành êm</li><li>Bảo vệ toàn diện OCP/OVP/OPP/OTP/SCP/UVP</li></ul>",
+  "highlights": [
+    "Công suất 850W, chuẩn 80 PLUS Gold, hiệu suất tới 90%",
+    "Đầu cắm PCIe 5.1 16-pin tích hợp sẵn, cấp tối đa 600W cho GPU đời mới",
+    "Full modular toàn bộ dây cáp, dễ đi dây gọn trong case",
+    "Quạt 120mm vòng bi Fluid Dynamic Bearing, vận hành êm và bền",
+    "Đầy đủ bảo vệ OCP/OVP/OPP/OTP/SCP/UVP",
+    "Kích thước nhỏ gọn 140 x 150 x 86mm, vừa nhiều loại case ATX/M-ATX"
+  ],
+  "specs": [
+    {
+      "group": "Công suất & Hiệu suất",
+      "name": "Công suất",
+      "value": "850W",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Công suất & Hiệu suất",
+      "name": "Hiệu suất",
+      "value": "80 PLUS Gold (lên đến 90%)",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Công suất & Hiệu suất",
+      "name": "Công suất đỉnh (Power Excursion)",
+      "value": "1700W (lên đến 200% công suất định mức trong 100μs)",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước quạt",
+      "value": "120 mm",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "140 x 150 x 86 mm",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Modular",
+      "value": "Full Modular",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Loại PFC",
+      "value": "Active PFC",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Vòng bi quạt",
+      "value": "Fluid Dynamic Bearing",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Bảo vệ & Điện áp",
+      "name": "Bảo vệ",
+      "value": "OCP / OVP / OPP / OTP / SCP / UVP",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Bảo vệ & Điện áp",
+      "name": "Điện áp đầu vào",
+      "value": "100~240 VAC",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Bảo vệ & Điện áp",
+      "name": "Tần số đầu vào",
+      "value": "47-63 Hz",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "ATX (24 pin)",
+      "value": "1",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "EPS (4+4 pin)",
+      "value": "2",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "PCI-E 5.0 (16 pin)",
+      "value": "1 (600W)",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "PCI-E (6+2 pin)",
+      "value": "4",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "SATA (15 pin)",
+      "value": "8",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "MOLEX (4 pin)",
+      "value": "4",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "FDD (4 pin)",
+      "value": "1",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification"
+    }
+  ],
+  "filterAttributes": {
+    "wattage": "850W",
+    "rating": "80 Plus Gold",
+    "modular": "Full Modular",
+    "formFactor": "ATX 3.1 / PCIe 5.1"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_16861307271614336078f5c76c62ff157c01353710.webp",
+      "alt": "Nguồn MSI MAG A850GL PCIE5 850W nhìn góc nghiêng mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_172976436279e8200db6edb3739316441b0063bf7a.webp",
+      "alt": "Mặt sau nguồn MSI MAG A850GL PCIE5 với các cổng cắm cáp modular"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_168613072739e3e3084bec44dab95c091feade442c.webp",
+      "alt": "Quạt tản nhiệt 120mm trên nguồn MSI MAG A850GL PCIE5"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Nguồn MSI MAG A850GL PCIE5 850W 80+ Gold Full Modular",
+  "metaDescription": "Mua nguồn MSI MAG A850GL PCIE5 850W chuẩn 80 PLUS Gold, full modular, PCIe 5.1 16-pin tích hợp, bảo hành chính hãng 60 tháng. Giá tốt tại Quang Hường Computer."
+}

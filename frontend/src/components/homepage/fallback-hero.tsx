@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Star, Cpu } from 'lucide-react';
+import { ShoppingBag, Star } from 'lucide-react';
 
 /**
  * Fallback hero banner displayed when the CMS returns no homepage sections.
@@ -69,13 +69,7 @@ export const FallbackHero = () => (
                             <ShoppingBag size={20} />
                             Xem sản phẩm
                         </Link>
-                        <Link
-                            to="/build-pc"
-                            className="inline-flex items-center gap-2 bg-white/10 text-white px-7 py-3.5 rounded-xl font-bold text-base hover:bg-white/20 transition-all duration-200 backdrop-blur-md border border-white/20 hover:-translate-y-0.5"
-                        >
-                            <Cpu size={20} />
-                            Build PC
-                        </Link>
+                        {/* W0-12 (step 5): nút "Build PC" đã bỏ — /build-pc không route, ẩn tới W3-9. */}
                     </motion.div>
                 </div>
             </div>

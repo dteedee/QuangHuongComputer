@@ -15,7 +15,7 @@ public static class DependentEndpoints
     public static void MapDependentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/hr/employees/{eid:guid}/dependents")
-            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant"));
+            .RequireAuthorization(p => p.RequireRole("Admin", "Manager", "Accountant", "HR")); // TODO(W1-1): replace role list with permission policy
 
         group.MapGet("", async (Guid eid, HRDbContext db) =>
         {

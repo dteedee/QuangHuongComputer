@@ -1,0 +1,198 @@
+{
+  "name": "Laptop Apple MacBook Pro 14 inch M5 Pro (24GB/1TB)",
+  "slug": "apple-macbook-pro-14-m5-pro-24gb-1tb",
+  "sku": "APL-MGDR4SA-A",
+  "brand": "Apple",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "MacBook",
+  "model": "Apple MacBook Pro 14\" M5 Pro 2026 (MGDR4SA/A)",
+  "officialUrl": "https://www.apple.com/vn/macbook-pro/",
+  "priceVnd": 66990000,
+  "oldPriceVnd": 68990000,
+  "costPriceVnd": 59390000,
+  "priceSources": [
+    "https://www.apple.com/vn/macbook-pro/specs/",
+    "https://www.thegioididong.com/laptop/macbook-pro-14-inch-m5-pro-24gb-1tb"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng Apple 12 tháng tại các trung tâm Apple Authorized Service Provider trên toàn quốc.",
+  "weightKg": 1.6,
+  "stockQuantity": 12,
+  "shortDescription": "MacBook Pro 14 inch chip Apple M5 Pro (24GB/1TB) là lựa chọn máy trạm di động cho dân sáng tạo nội dung và lập trình, kết hợp màn hình Liquid Retina XDR tần số quét 120Hz với hiệu năng xử lý đa nhân mạnh mẽ trong thân nhôm nguyên khối mỏng nhẹ.",
+  "descriptionHtml": "<h3>Hiệu năng chuyên nghiệp trong thân máy mỏng nhẹ</h3><p>MacBook Pro 14 inch phiên bản chip Apple M5 Pro sở hữu CPU 15 lõi cùng GPU 16 lõi, kèm Neural Engine 16 lõi và băng thông bộ nhớ hợp nhất lên đến 307GB/s. Cấu hình 24GB bộ nhớ hợp nhất và SSD 1TB giúp máy xử lý mượt các tác vụ dựng phim, lập trình, thiết kế đồ họa cùng lúc chạy nhiều ứng dụng nặng mà không giật lag.</p><h3>Màn hình Liquid Retina XDR sống động</h3><p>Màn hình 14,2 inch độ phân giải 3024x1964 hỗ trợ công nghệ ProMotion thích ứng đến 120Hz, độ sáng đỉnh 1.600 nit với nội dung HDR và dải màu rộng P3, mang lại hình ảnh chân thực cho công việc hậu kỳ hình ảnh, video chuyên nghiệp.</p><h3>Kết nối và thời lượng pin cho cả ngày làm việc</h3><p>Ba cổng Thunderbolt 5 tốc độ tới 120Gb/s hỗ trợ xuất tối đa 3 màn hình ngoài, cùng Wi-Fi 7 và Bluetooth 6 qua chip Apple N1. Pin Li-Po 72,4Wh cho thời gian xem video trực tuyến lên đến 22 giờ, đủ dùng xuyên suốt một ngày làm việc di động.</p><ul><li>Chip Apple M5 Pro: CPU 15 lõi, GPU 16 lõi, Neural Engine 16 lõi</li><li>24GB bộ nhớ hợp nhất, SSD 1TB</li><li>Màn hình Liquid Retina XDR 14,2 inch, ProMotion 120Hz, 1.600 nit đỉnh</li><li>3 cổng Thunderbolt 5, MagSafe 3, HDMI, khe SDXC, jack 3,5mm</li><li>Webcam Center Stage 12MP, hệ thống 6 loa hỗ trợ Dolby Atmos</li><li>Pin 72,4Wh, thời gian xem video trực tuyến đến 22 giờ</li></ul>",
+  "highlights": [
+    "Chip Apple M5 Pro 15 lõi, GPU 16 lõi mang lại hiệu năng xử lý đa luồng và dựng hình vượt trội cho các tác vụ sáng tạo nặng",
+    "Màn hình Liquid Retina XDR 14,2 inch, tần số quét thích ứng ProMotion 120Hz, độ sáng đỉnh 1.600 nit cho nội dung HDR sắc nét",
+    "24GB bộ nhớ hợp nhất và SSD 1TB tốc độ cao, thoải mái cho đa nhiệm và lưu trữ dữ liệu dung lượng lớn",
+    "Cổng Thunderbolt 5 tốc độ tới 120Gb/s, hỗ trợ xuất tối đa 3 màn hình ngoài phục vụ workflow chuyên nghiệp",
+    "Pin Li-Po 72,4Wh cho thời lượng sử dụng liên tục lên đến 22 giờ xem video, đáp ứng cả ngày làm việc di động",
+    "Kết nối không dây Wi-Fi 7 và Bluetooth 6 qua chip Apple N1, cùng webcam Center Stage 12MP cho hội họp trực tuyến chất lượng cao"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Chip",
+      "value": "Apple M5 Pro: CPU 15 lõi, GPU 16 lõi, Neural Engine 16 lõi",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Băng thông bộ nhớ",
+      "value": "307GB/s",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "RAM",
+      "value": "24GB bộ nhớ hợp nhất (có thể nâng cấp 36/48/64/128GB tùy cấu hình chip)",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 1TB (có thể nâng cấp 2TB hoặc 4TB)",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "Liquid Retina XDR 14,2 inch, 3024x1964, 254 pixel/inch",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "1.000 nit liên tục toàn màn hình, đỉnh 1.600 nit (HDR), 1.000 nit SDR ngoài trời",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét",
+      "value": "ProMotion thích ứng lên đến 120Hz",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Màu sắc hiển thị",
+      "value": "1 tỷ màu, dải màu rộng P3, True Tone",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Thời lượng pin",
+      "value": "Xem video trực tuyến đến 22 giờ, duyệt web không dây đến 14 giờ",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Dung lượng pin",
+      "value": "Li-Po 72,4 watt-giờ",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Sạc",
+      "value": "Bộ tiếp hợp nguồn USB-C 70W, cáp USB-C sang MagSafe 3 (2m), hỗ trợ sạc nhanh USB PD 96W trở lên",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "3x Thunderbolt 5 (USB-C, đến 120Gb/s), MagSafe 3, HDMI, khe thẻ SDXC, jack tai nghe 3,5mm",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Chip Apple N1, Wi-Fi 7 (802.11be), Bluetooth 6, hỗ trợ mạng Thread",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Hỗ trợ màn hình ngoài",
+      "value": "Tối đa 3 màn hình ngoài (đến 6K@60Hz, hoặc 8K@60Hz kèm 1 màn 5K@120Hz)",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Camera & âm thanh",
+      "name": "Camera",
+      "value": "12MP Center Stage, hỗ trợ Desk View, quay video 1080p HD",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Camera & âm thanh",
+      "name": "Âm thanh",
+      "value": "Hệ thống 6 loa với loa trầm khử lực, hỗ trợ Dolby Atmos, 3 micro chuẩn studio",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Bàn phím & bàn di chuột",
+      "name": "Bàn phím",
+      "value": "Magic Keyboard có đèn nền, Touch ID, cảm biến ánh sáng môi trường",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Bàn phím & bàn di chuột",
+      "name": "Bàn di chuột",
+      "value": "Force Touch, hỗ trợ Multi-Touch và Bấm Mạnh",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "Cao 1,55cm x Rộng 31,26cm x Dài 22,12cm",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "1,60 kg (bản M5 Pro)",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Đen Không Gian, Bạc",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "HĐH",
+      "value": "macOS, hỗ trợ Apple Intelligence và Siri AI",
+      "source": "https://www.apple.com/vn/macbook-pro/specs/"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Apple M5 Pro",
+    "ram": "24GB",
+    "storage": "1TB SSD",
+    "gpu": "GPU 16 lõi tích hợp (Apple M5 Pro)",
+    "screenSize": "14.2 inch",
+    "refreshRate": "120Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.apple.com/v/macbook-pro/ax/images/overview/product-viewer/pv_colors_spaceblack__dwfpyrbaf4cy_large",
+      "alt": "MacBook Pro 14 inch màu Đen Không Gian, mặt sau với logo Apple, ảnh hero toàn bộ máy"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mac-macbook-pro-size-select-202601-14inch",
+      "alt": "MacBook Pro 14 inch màu Đen Không Gian và Bạc, nhìn từ mặt nắp đóng"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.apple.com/v/macbook-pro/ax/images/overview/welcome/hero_endframe__fwev9ebh42mq_large.jpg",
+      "alt": "MacBook Pro 14 inch mở nắp một góc, thể hiện bản lề và bàn phím"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mac-macbook-pro-size-select-202601-14inch_AV1",
+      "alt": "Bàn phím Magic Keyboard và bàn di chuột MacBook Pro 14 inch, hai màu Bạc và Đen Không Gian"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "MacBook Pro 14 inch M5 Pro 24GB/1TB chính hãng Apple",
+  "metaDescription": "MacBook Pro 14 inch chip Apple M5 Pro (24GB/1TB), màn hình Liquid Retina XDR 120Hz, pin đến 22 giờ. Hàng chính hãng, bảo hành Apple 12 tháng."
+}

@@ -1,0 +1,149 @@
+{
+  "name": "Loa Kiểm Âm Edifier MR4",
+  "slug": "edifier-mr4",
+  "sku": "EDFMR4",
+  "brand": "Edifier",
+  "category": "Loa, Mic, Webcam, Stream",
+  "subCategory": "Loa",
+  "model": "MR4",
+  "officialUrl": "https://www.edifier.com/global/p/studio-monitors/mr4",
+  "priceVnd": 1790000,
+  "oldPriceVnd": 2750000,
+  "costPriceVnd": 1580000,
+  "priceSources": [
+    "https://gearvn.com/products/loa-may-tinh-edifier-mr4"
+  ],
+  "warrantyMonths": 15,
+  "warrantyInfo": "Bảo hành chính hãng 15 tháng qua nhà phân phối tại Việt Nam, 1 đổi 1 trong 7 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 4.5,
+  "stockQuantity": 22,
+  "shortDescription": "Cặp loa kiểm âm 2 kênh Edifier MR4 dùng thùng gỗ MDF, củ treble lụa 1 inch và củ bass 4 inch, có ngõ TRS cân bằng cho phòng thu mini cùng AUX/headphone tiện lợi cho bàn làm việc.",
+  "descriptionHtml": "<h3>Kiểm âm chuẩn, thùng gỗ chống cộng hưởng</h3><p>Edifier MR4 là cặp loa kiểm âm 2 kênh (1 loa chủ động, 1 loa bị động) được hãng tinh chỉnh bằng hệ thống đo KLIPPEL để có đáp tuyến tần số phẳng, phù hợp làm loa tham chiếu cho sản xuất nhạc tại nhà. Thùng loa bằng gỗ MDF giúp giảm rung cộng hưởng, giữ âm thanh mộc và trung thực thay vì bị nhuộm màu bởi vỏ thùng.</p><h3>Driver và mạch khuếch đại số</h3><p>Mỗi loa dùng củ treble màng lụa 1 inch cho dải cao mượt, kết hợp củ bass/mid 4 inch pha thêm MICA vào màng PP để tăng độ cứng, kéo dài dải trầm xuống 60Hz. Bộ khuếch đại Class-D cùng chip số TAS5713 và ADC của TI (SNR tới 99dB) xử lý tín hiệu qua DSP nội bộ, hỗ trợ 2 chế độ Monitor (đèn đỏ, âm chuẩn để mix nhạc) và Music (đèn xanh, âm ấm hơn để nghe giải trí), chuyển đổi bằng núm vặn đa năng phía trước.</p><h3>Kết nối đa dạng</h3><p>Ngõ TRS 6.35mm cân bằng (độ nhạy +4dBu) cho phép cắm thẳng vào mixer, sound card hoặc audio interface; ngoài ra còn có RCA và AUX 3.5mm không cân bằng cho PC, laptop thông thường. Mặt trước loa bị động có thêm jack tai nghe 3.5mm để nghe riêng khi cần.</p><ul><li>Loa kiểm âm 2 kênh, thùng gỗ MDF chống cộng hưởng</li><li>Treble lụa 1 inch + bass/mid PP pha MICA 4 inch</li><li>Công suất 21W + 21W, đáp tuyến 60Hz - 20kHz</li><li>Ngõ vào TRS cân bằng, RCA, AUX 3.5mm</li><li>2 chế độ Monitor/Music, núm vặn đa năng nguồn - âm lượng - chế độ</li><li>Ngõ tai nghe 3.5mm mặt trước tiện lợi</li></ul>",
+  "highlights": [
+    "Loa kiểm âm 2 kênh, thùng gỗ MDF hạn chế rung cộng hưởng",
+    "Treble màng lụa 1 inch, bass/mid 4 inch pha MICA cho âm sạch, trầm sâu tới 60Hz",
+    "Khuếch đại Class-D với chip số TAS5713 và ADC TI, SNR chuyển đổi tới 99dB",
+    "Ngõ TRS 6.35mm cân bằng cắm thẳng mixer/audio interface, kèm RCA và AUX",
+    "2 chế độ Monitor/Music chuyển nhanh bằng núm đa năng phía trước",
+    "Jack tai nghe 3.5mm mặt trước tiện nghe riêng"
+  ],
+  "specs": [
+    {
+      "group": "Âm thanh",
+      "name": "Củ loa treble",
+      "value": "Màng lụa (silk dome) 1 inch",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Củ loa bass/mid",
+      "value": "Màng PP pha MICA 4 inch",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Công suất RMS",
+      "value": "21W + 21W (khuếch đại Class-D)",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Đáp tuyến tần số",
+      "value": "60Hz - 20kHz",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Tỷ lệ tín hiệu trên nhiễu (SNR)",
+      "value": "≥ 85dB (A)",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Chip khuếch đại số",
+      "value": "TI TAS5713, xử lý qua DSP tích hợp",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Chip ADC",
+      "value": "TI, SNR chuyển đổi tới 99dB",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Bộ phân tần",
+      "value": "Phân tần bậc 2 dùng cuộn cảm và tụ điện (LC)",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Chế độ nghe",
+      "value": "Monitor Mode (đèn đỏ) và Music Mode (đèn xanh), chuyển bằng núm đa năng",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Ngõ vào cân bằng",
+      "value": "TRS 6.35mm, độ nhạy +4dBu",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Ngõ vào không cân bằng",
+      "value": "RCA (-10dBV) và AUX 3.5mm",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Ngõ ra tai nghe",
+      "value": "Jack 3.5mm mặt trước loa bị động",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chất liệu thùng loa",
+      "value": "Gỗ MDF chống cộng hưởng",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước loa chủ động (R x C x S)",
+      "value": "140 x 228 x 197.5 mm",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước loa bị động (R x C x S)",
+      "value": "140 x 228 x 184 mm",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Khối lượng tịnh",
+      "value": "4.5 kg",
+      "source": "https://www.edifier.com/global/p/studio-monitors/mr4"
+    }
+  ],
+  "filterAttributes": {
+    "type": "Loa kiểm âm 2 kênh",
+    "connectionType": "TRS 6.35mm, RCA, AUX 3.5mm",
+    "totalPowerW": "42",
+    "frequencyResponse": "60Hz-20kHz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://new-edifier-us-oss.edifier.com/images/20240910/d91f956100bde761e3742ae881257679.png",
+      "alt": "Cặp loa kiểm âm Edifier MR4 màu trắng nhìn thẳng mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://new-edifier-us-oss.edifier.com/images/20240910/5e8e69f21bc50cf0e822f6e366ad209f.png",
+      "alt": "Cặp loa kiểm âm Edifier MR4 màu trắng nhìn nghiêng 3/4"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Loa Kiểm Âm Edifier MR4 - Chính Hãng, Giá Tốt | Quang Huong Computer",
+  "metaDescription": "Loa kiểm âm Edifier MR4 thùng gỗ MDF, treble lụa 1 inch, bass 4 inch, công suất 21W+21W, ngõ TRS/RCA/AUX. Giá tốt, bảo hành chính hãng tại Quang Huong Computer."
+}

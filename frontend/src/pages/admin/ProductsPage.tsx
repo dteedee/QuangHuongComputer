@@ -16,6 +16,7 @@ import ProductVariantEditor from '../../components/admin/product-variant-editor'
 import SpecificationEditor from '../../components/admin/specification-editor';
 import ProductAttributesEditor from '../../components/admin/product-attributes-editor';
 import { DynamicDataTable } from '../../components/backoffice/dynamic-data-table';
+import { resolveMediaUrl } from '../../lib/media-url';
 
 type FormTab = 'general' | 'catalog' | 'media' | 'variants' | 'specifications' | 'seo';
 
@@ -446,7 +447,7 @@ export const AdminProductsPage = () => {
                             categoryId: (p) => uniqueCategories?.find(c => c.id === p.categoryId)?.name || <span className="text-gray-300">—</span>,
                             imageUrl: (p) => p.imageUrl ? (
                                 <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
-                                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain" />
+                                    <img src={resolveMediaUrl(p.imageUrl)} alt={p.name} className="w-full h-full object-contain" />
                                 </div>
                             ) : <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-200"><Box size={16} /></div>,
                         }}
@@ -493,7 +494,7 @@ export const AdminProductsPage = () => {
                             >
                                 <div className="relative aspect-square rounded-[2rem] bg-gray-50 overflow-hidden mb-6 flex items-center justify-center p-8">
                                     {product.imageUrl ? (
-                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                                        <img src={resolveMediaUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                                     ) : (
                                         <div className="text-gray-200"><Box size={60} /></div>
                                     )}
@@ -652,82 +653,80 @@ export const AdminProductsPage = () => {
 
                             {/* Form Content */}
                             <form onSubmit={handleSubmit} id="mainForm" className="flex-1 overflow-y-auto p-10 custom-scrollbar space-y-10">
-                                {activeTab === 'general' ? (
-                                    <motion.div key="general" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="md:col-span-2 space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Tên sản phẩm *</label>
-                                            <input name="name" defaultValue={editingProduct?.name} placeholder="Ví dụ: Laptop Dell XPS 13" className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none" />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Danh mục</label>
-                                            <SearchableSelect
-                                                name="categoryId"
-                                                value={editingProduct?.categoryId}
-                                                options={uniqueCategories?.map(c => ({ value: c.id, label: c.name })) || []}
-                                            />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Thương hiệu</label>
-                                            <SearchableSelect
-                                                name="brandId"
-                                                value={editingProduct?.brandId}
-                                                options={brands?.map(b => ({ value: b.id, label: b.name })) || []}
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2 space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Mô tả chi tiết</label>
-                                            <textarea name="description" defaultValue={editingProduct?.description} rows={8} placeholder="Mô tả các đặc điểm nổi bật..." className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10" />
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <div className="hidden">
-                                        <input type="hidden" name="name" defaultValue={editingProduct?.name} />
-                                        <input type="hidden" name="categoryId" defaultValue={editingProduct?.categoryId} />
-                                        <input type="hidden" name="brandId" defaultValue={editingProduct?.brandId} />
-                                        <textarea className="hidden" name="description" defaultValue={editingProduct?.description} />
-                                    </div>
-                                )}
+                                {/* Stop-gap rt-admin-04 (phase-07 bước 5): TẤT CẢ tab panel giữ mounted, chỉ ẩn bằng
+                                    attribute `hidden` — trước đây tab không active bị unmount hoàn toàn nên
+                                    `new FormData(form)` ở handleSubmit không đọc được input của nó; bản vá cũ
+                                    (input ẩn trùng tên, defaultValue = giá trị GỐC) còn tệ hơn: nó GHI ĐÈ giá trị
+                                    người dùng vừa gõ về lại giá trị cũ mỗi khi chuyển tab. Fix thật (1 RHF form) ở W3-4.
 
-                                {activeTab === 'catalog' ? (
-                                    <motion.div key="catalog" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Giá bán *</label>
-                                            <div className="relative">
-                                                <input name="price" type="number" defaultValue={editingProduct?.price} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-xl text-xl font-extrabold text-accent outline-none" />
-                                                <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-500">Giá niêm yết (nếu có)</label>
-                                            <div className="relative">
-                                                <input name="oldPrice" type="number" defaultValue={editingProduct?.oldPrice} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-xl text-lg font-bold text-gray-600 line-through outline-none placeholder:text-gray-400" />
-                                                <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Mã SKU</label>
-                                            <input name="sku" defaultValue={editingProduct?.sku} placeholder="QH-PRO-001" className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-bold outline-none uppercase text-gray-900 placeholder:text-gray-400" />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Số lượng tồn kho *</label>
-                                            <input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-lg font-bold outline-none text-center text-gray-900 placeholder:text-gray-400" />
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <div className="hidden">
-                                        <input type="hidden" name="price" defaultValue={editingProduct?.price} />
-                                        <input type="hidden" name="oldPrice" defaultValue={editingProduct?.oldPrice} />
-                                        <input type="hidden" name="sku" defaultValue={editingProduct?.sku} />
-                                        <input type="hidden" name="stockQuantity" defaultValue={editingProduct?.stockQuantity} />
-                                        <input type="hidden" name="costPrice" defaultValue={editingProduct?.costPrice} />
-                                        <input type="hidden" name="barcode" defaultValue={editingProduct?.barcode} />
-                                        <input type="hidden" name="weight" defaultValue={editingProduct?.weight} />
-                                        <input type="hidden" name="lowStockThreshold" defaultValue={editingProduct?.lowStockThreshold} />
+                                    [Adversarial verifier 2026-09-18] Panel này có `className` đặt sẵn `display:grid`
+                                    (`grid grid-cols-1 ...`). CSS cascade: rule tác giả (author, class `.grid`) LUÔN
+                                    thắng rule user-agent (`[hidden]{display:none}`) bất kể độ đặc hiệu — nên chỉ dùng
+                                    attribute `hidden` KHÔNG đủ để ẩn panel này, nó vẫn hiện `display:grid` song song
+                                    với panel đang active (verified bằng test.html cô lập: a-display=grid dù có
+                                    `hidden`). Chuyển sang toggle hẳn class `hidden` (không kèm `grid`) khi không active. */}
+                                <motion.div hidden={activeTab !== 'general'} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={activeTab === 'general' ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : 'hidden'}>
+                                    <div className="md:col-span-2 space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Tên sản phẩm *</label>
+                                        <input name="name" defaultValue={editingProduct?.name} placeholder="Ví dụ: Laptop Dell XPS 13" className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-base font-semibold focus:ring-2 focus:ring-accent/10 outline-none" />
                                     </div>
-                                )}
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Danh mục</label>
+                                        <SearchableSelect
+                                            name="categoryId"
+                                            value={editingProduct?.categoryId}
+                                            options={uniqueCategories?.map(c => ({ value: c.id, label: c.name })) || []}
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Thương hiệu</label>
+                                        <SearchableSelect
+                                            name="brandId"
+                                            value={editingProduct?.brandId}
+                                            options={brands?.map(b => ({ value: b.id, label: b.name })) || []}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2 space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Mô tả chi tiết</label>
+                                        <textarea name="description" defaultValue={editingProduct?.description} rows={8} placeholder="Mô tả các đặc điểm nổi bật..." className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-accent/10" />
+                                    </div>
+                                </motion.div>
 
-                                {activeTab === 'media' ? (
-                                    <motion.div key="media" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
+                                {/* [Adversarial verifier 2026-09-18] Cùng lý do với panel "general" ở trên: `grid`
+                                    (author CSS) thắng `[hidden]` (user-agent CSS) — toggle hẳn class `hidden`. */}
+                                <motion.div hidden={activeTab !== 'catalog'} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={activeTab === 'catalog' ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : 'hidden'}>
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Giá bán *</label>
+                                        <div className="relative">
+                                            <input name="price" type="number" defaultValue={editingProduct?.price} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-xl text-xl font-extrabold text-accent outline-none" />
+                                            <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-500">Giá niêm yết (nếu có)</label>
+                                        <div className="relative">
+                                            <input name="oldPrice" type="number" defaultValue={editingProduct?.oldPrice} className="w-full pl-12 pr-6 py-4 bg-gray-50 border-none rounded-xl text-lg font-bold text-gray-600 line-through outline-none placeholder:text-gray-400" />
+                                            <Layers className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Mã SKU</label>
+                                        <input name="sku" defaultValue={editingProduct?.sku} placeholder="QH-PRO-001" className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-bold outline-none uppercase text-gray-900 placeholder:text-gray-400" />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Số lượng tồn kho *</label>
+                                        <input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-lg font-bold outline-none text-center text-gray-900 placeholder:text-gray-400" />
+                                    </div>
+                                    {/* costPrice/barcode/weight/lowStockThreshold: chưa có UI riêng (ngoài phạm vi surgical
+                                        fix này — ProductsPage rebuilt ở W3-4). Giữ hidden LUÔN MOUNTED (không còn phụ
+                                        thuộc activeTab) để save không còn xoá mất giá trị gốc của các field này nữa. */}
+                                    <input type="hidden" name="costPrice" defaultValue={editingProduct?.costPrice} />
+                                    <input type="hidden" name="barcode" defaultValue={editingProduct?.barcode} />
+                                    <input type="hidden" name="weight" defaultValue={editingProduct?.weight} />
+                                    <input type="hidden" name="lowStockThreshold" defaultValue={editingProduct?.lowStockThreshold} />
+                                </motion.div>
+
+                                <motion.div hidden={activeTab !== 'media'} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
                                         {editingProduct && (
                                             <div className="space-y-3 pb-8 border-b border-gray-100">
                                                 <label className="text-sm font-bold text-gray-700">Media chuẩn (mới) — ảnh, video, YouTube</label>
@@ -740,7 +739,7 @@ export const AdminProductsPage = () => {
                                                 <div className="w-full md:w-64 aspect-square rounded-[2.5rem] bg-gray-50 border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group">
                                                     <img
                                                         id="main-preview"
-                                                        src={editingProduct?.imageUrl || ''}
+                                                        src={resolveMediaUrl(editingProduct?.imageUrl) || ''}
                                                         className="w-full h-full object-contain"
                                                         onError={(e) => (e.currentTarget.style.display = 'none')}
                                                         onLoad={(e) => (e.currentTarget.style.display = 'block')}
@@ -758,7 +757,7 @@ export const AdminProductsPage = () => {
                                                                 name="imageUrl"
                                                                 id="imageUrlInput"
                                                                 defaultValue={editingProduct?.imageUrl}
-                                                                onChange={(e) => { const img = document.getElementById('main-preview') as HTMLImageElement; if (img) img.src = e.target.value; }}
+                                                                onChange={(e) => { const img = document.getElementById('main-preview') as HTMLImageElement; if (img) img.src = resolveMediaUrl(e.target.value); }}
                                                                 placeholder="https://example.com/image.jpg"
                                                                 className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium outline-none text-blue-600 focus:ring-2 focus:ring-accent/10"
                                                             />
@@ -790,7 +789,7 @@ export const AdminProductsPage = () => {
                                                                                     const input = document.getElementById('imageUrlInput') as HTMLInputElement;
                                                                                     const preview = document.getElementById('main-preview') as HTMLImageElement;
                                                                                     if (input) input.value = result.url;
-                                                                                    if (preview) preview.src = result.url;
+                                                                                    if (preview) preview.src = resolveMediaUrl(result.url);
                                                                                     toast.success('Tải ảnh lên thành công!', { id: loadingToast });
                                                                                 } catch (err) {
                                                                                     toast.error('Tải ảnh thất bại!', { id: loadingToast });
@@ -860,7 +859,7 @@ export const AdminProductsPage = () => {
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                                     {gallery.map((url, idx) => (
                                                         <div key={idx} className="relative aspect-square rounded-xl bg-gray-50 border border-gray-100 overflow-hidden group">
-                                                            <img src={url} className="w-full h-full object-cover" />
+                                                            <img src={resolveMediaUrl(url)} className="w-full h-full object-cover" />
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                 <button
                                                                     type="button"
@@ -880,10 +879,7 @@ export const AdminProductsPage = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    </motion.div>
-                                ) : (
-                                    <input type="hidden" name="imageUrl" defaultValue={editingProduct?.imageUrl} id="imageUrlInput_hidden" />
-                                )}
+                                </motion.div>
 
                                 {activeTab === 'variants' && editingProduct && (
                                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
@@ -983,24 +979,18 @@ export const AdminProductsPage = () => {
                                     </motion.div>
                                 )}
 
-                                {activeTab === 'seo' ? (
-                                    <motion.div key="seo" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Tiêu đề SEO</label>
-                                            <input name="metaTitle" defaultValue={editingProduct?.metaTitle} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-semibold outline-none" />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-bold text-gray-700">Mô tả Meta (Meta Description)</label>
-                                            <textarea name="metaDescription" defaultValue={editingProduct?.metaDescription} rows={4} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium outline-none" />
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <div className="hidden">
-                                        <input type="hidden" name="metaTitle" defaultValue={editingProduct?.metaTitle} />
-                                        <textarea className="hidden" name="metaDescription" defaultValue={editingProduct?.metaDescription} />
-                                        <input type="hidden" name="metaKeywords" defaultValue={editingProduct?.metaKeywords} />
+                                <motion.div hidden={activeTab !== 'seo'} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Tiêu đề SEO</label>
+                                        <input name="metaTitle" defaultValue={editingProduct?.metaTitle} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-semibold outline-none" />
                                     </div>
-                                )}
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-bold text-gray-700">Mô tả Meta (Meta Description)</label>
+                                        <textarea name="metaDescription" defaultValue={editingProduct?.metaDescription} rows={4} className="w-full px-6 py-4 bg-gray-50 border-none rounded-xl text-sm font-medium outline-none" />
+                                    </div>
+                                    {/* metaKeywords: chưa có UI riêng (ngoài phạm vi surgical fix này) — luôn mounted để save không xoá mất giá trị gốc. */}
+                                    <input type="hidden" name="metaKeywords" defaultValue={editingProduct?.metaKeywords} />
+                                </motion.div>
                             </form>
 
                             {/* Modal Footer */}

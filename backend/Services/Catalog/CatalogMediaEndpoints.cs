@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Text.RegularExpressions;
+using BuildingBlocks.Security;
 using Catalog.Application.Media;
 using Catalog.Domain;
 using Catalog.Infrastructure;
@@ -20,6 +22,9 @@ public static class CatalogMediaEndpoints
         @"^(?:https?://)?(?:www\.)?(?:youtube\.com/(?:embed/|watch\?v=)|youtu\.be/)([A-Za-z0-9_-]{6,})",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    /// <summary>W0-3: upload ghi file lên server ⇒ chỉ nhân viên nội dung. W1-1 thay bằng permission.</summary>
+    private static readonly string[] MediaRoles = { Roles.Admin, Roles.Manager, Roles.Marketing };
+
     public static void MapCatalogMediaEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/catalog");
@@ -29,6 +34,8 @@ public static class CatalogMediaEndpoints
             HttpRequest request,
             MediaValidator validator,
             MediaUploadService uploader,
+            CatalogDbContext db,
+            ClaimsPrincipal user,
             Guid productId,
             string kind /* "image" | "video" */,
             CancellationToken ct) =>
@@ -39,6 +46,17 @@ public static class CatalogMediaEndpoints
             var file = form.Files.FirstOrDefault();
             if (file == null || file.Length == 0)
                 return Results.BadRequest(new { error = "Chưa có file" });
+
+            // W0-3: productId đi thẳng vào đường dẫn lưu trữ — phải tồn tại thật.
+            if (!await db.Products.AnyAsync(p => p.Id == productId, ct))
+                return Results.BadRequest(new { error = "Sản phẩm không tồn tại" });
+
+            var uploaderId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(uploaderId)) return Results.Unauthorized();
+            if (!CatalogMediaUploadQuota.TryConsume(uploaderId, file.Length))
+                return Results.Json(
+                    new { error = $"Vượt hạn mức tải lên {CatalogMediaUploadQuota.BytesPerHour / (1024 * 1024)}MB/giờ. Thử lại sau." },
+                    statusCode: StatusCodes.Status429TooManyRequests);
 
             using var stream = file.OpenReadStream();
             MediaValidationResult v;
@@ -65,7 +83,8 @@ public static class CatalogMediaEndpoints
             });
         })
         .DisableAntiforgery()
-        .RequireAuthorization();
+        // W0-3: trước đây chỉ RequireAuthorization() ⇒ mọi token (kể cả Customer) ghi file lên server.
+        .RequireAuthorization(p => p.RequireRole(MediaRoles));
 
         // ---- Thêm media (record) vào sản phẩm ----
         group.MapPost("/products/{id:guid}/media", async (

@@ -1,0 +1,198 @@
+{
+  "name": "Màn Hình Gaming AOC 24G4E/74 23.8 inch FHD Fast IPS 180Hz",
+  "slug": "aoc-24g4e-24-fhd-fast-ips-180hz",
+  "sku": "AOC24G4E74",
+  "brand": "AOC",
+  "category": "Màn Hình Máy Tính",
+  "subCategory": "Màn hình gaming",
+  "model": "AOC 24G4E/74",
+  "officialUrl": "https://www.aoc.com/vn/gaming/monitors/24g4e_74",
+  "priceVnd": 2790000,
+  "oldPriceVnd": 3490000,
+  "costPriceVnd": 2450000,
+  "priceSources": [
+    "https://cellphones.com.vn/man-hinh/aoc.html",
+    "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng AOC Việt Nam 36 tháng 1 đổi 1 trong 30 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 3.49,
+  "stockQuantity": 18,
+  "shortDescription": "Màn hình gaming 23.8 inch tấm nền Fast IPS, tần số quét 180Hz và thời gian phản hồi 1ms GtG, phù hợp game thủ FPS cần hình ảnh mượt và sắc nét ở tầm giá phổ thông.",
+  "descriptionHtml": "<h3>Chiến game mượt mà với Fast IPS 180Hz</h3><p>AOC 24G4E/74 trang bị tấm nền Fast IPS 23.8 inch độ phân giải Full HD 1920x1080, cho góc nhìn rộng 178 độ và màu sắc trung thực hơn tấm nền VA/TN cùng tầm giá. Tốc độ quét 180Hz kết hợp thời gian phản hồi 1ms GtG (0.5ms MPRT) giúp hình ảnh chuyển động mượt, giảm bóng mờ khi chơi các tựa game bắn súng, đua xe tốc độ cao.</p><h3>Hình ảnh sống động, hạn chế mỏi mắt</h3><p>Độ sáng 300 cd/m² cùng dải màu rộng (sRGB 126%, DCI-P3 103%) và hỗ trợ HDR10 mang lại hình ảnh có chiều sâu, tương phản tốt. Máy còn có công nghệ chống nháy hình dùng đèn nền DC giúp mắt đỡ mỏi khi chơi game hoặc làm việc lâu.</p><h3>Kết nối và tính năng dành cho game thủ</h3><p>Màn hình hỗ trợ chứng nhận G-Sync Compatible cho hình ảnh không xé hình khi ghép cùng card đồ hoạ NVIDIA, có chế độ Low Input Lag giảm độ trễ và chức năng tạo tâm ngắm (Dial Point) hỗ trợ game FPS. Cổng kết nối gồm HDMI 2.0 và DisplayPort 1.4, chuẩn treo tường VESA 100x100mm tiện lắp đặt.</p><ul><li>Tấm nền Fast IPS 23.8 inch Full HD, góc nhìn 178/178 độ</li><li>Tần số quét 180Hz, phản hồi 1ms GtG / 0.5ms MPRT</li><li>Hỗ trợ G-Sync Compatible, HDR10</li><li>Cổng HDMI 2.0 và DisplayPort 1.4</li><li>Chuẩn treo tường VESA 100x100mm, chỉnh góc nghiêng -5~23 độ</li></ul>",
+  "highlights": [
+    "Tấm nền Fast IPS 23.8 inch Full HD, màu sắc và góc nhìn tốt hơn tấm nền thường",
+    "Tần số quét 180Hz, thời gian phản hồi 1ms GtG (0.5ms MPRT) cho hình ảnh mượt",
+    "Hỗ trợ G-Sync Compatible và HDR10",
+    "Chế độ Low Input Lag và chức năng tạo tâm ngắm hỗ trợ game FPS",
+    "Cổng HDMI 2.0 và DisplayPort 1.4, chuẩn treo tường VESA 100x100mm"
+  ],
+  "specs": [
+    {
+      "group": "Màn hình",
+      "name": "Kích thước màn hình",
+      "value": "23.8 inch",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Loại tấm nền",
+      "value": "IPS (Fast IPS)",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "1920 x 1080 (Full HD)",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tỷ lệ khung hình",
+      "value": "16:9",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét tối đa",
+      "value": "180 Hz",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian phản hồi (GtG)",
+      "value": "1 ms",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian phản hồi (MPRT)",
+      "value": "0.5 ms",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "300 cd/m²",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ tương phản tĩnh / động",
+      "value": "1000:1 / 80.000.000:1",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Góc nhìn (CR10)",
+      "value": "178° / 178°",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Số màu hiển thị",
+      "value": "16.7 triệu màu",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Không gian màu",
+      "value": "NTSC 113%, sRGB 126%, DCI-P3 103%",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Công nghệ đồng bộ",
+      "value": "G-Sync Compatible (Adaptive-Sync)",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Màn hình",
+      "name": "HDR",
+      "value": "HDR10",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng HDMI",
+      "value": "HDMI 2.0 x1",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng DisplayPort",
+      "value": "DisplayPort 1.4 x1",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Audio",
+      "value": "Jack tai nghe 3.5mm",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chuẩn treo tường VESA",
+      "value": "100 x 100 mm",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Góc nghiêng",
+      "value": "-5° ~ 23°",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước có chân đế (RxCxS)",
+      "value": "540 x 434.5 x 177.39 mm",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước không chân đế (RxCxS)",
+      "value": "540 x 325 x 50.6 mm",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Khối lượng tịnh (có chân đế)",
+      "value": "3.49 kg",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Khối lượng tịnh (không chân đế)",
+      "value": "2.71 kg",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất tiêu thụ (thông thường)",
+      "value": "23 W",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Điện áp vào",
+      "value": "100-240V 50/60Hz",
+      "source": "https://www.aoc.com/vn/gaming/monitors/24g4e_74"
+    }
+  ],
+  "filterAttributes": {
+    "size": "23.8 inch",
+    "resolution": "1920x1080",
+    "panel": "Fast IPS",
+    "refreshRate": "180Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://cdn.sanity.io/images/hf5b3axp/production/cb4566b424af37a9433825c028d7af14e08b28a6-2000x1500.png",
+      "alt": "Màn hình gaming AOC 24G4E nhìn thẳng từ phía trước trên chân đế, hiển thị hình nền game demo"
+    }
+  ],
+  "imageStatus": "partial",
+  "metaTitle": "Màn Hình Gaming AOC 24G4E/74 23.8 inch FHD Fast IPS 180Hz Chính Hãng",
+  "metaDescription": "AOC 24G4E/74 màn hình gaming 23.8 inch Full HD, tấm nền Fast IPS 180Hz, phản hồi 1ms GtG, G-Sync Compatible, HDR10. Giá tốt, bảo hành chính hãng 36 tháng."
+}

@@ -1,0 +1,220 @@
+{
+  "name": "Nguồn Corsair RM750e 750W Cybenetics Gold ATX 3.1 Full Modular",
+  "slug": "psu-corsair-rm750e-750w-atx-3-1",
+  "sku": "PSU-CP9020295NA",
+  "brand": "Corsair",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "PSU",
+  "model": "Corsair CP-9020295-NA",
+  "officialUrl": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply",
+  "priceVnd": 2890000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 2540000,
+  "priceSources": [
+    "https://gearvn.com/products/750w-nguon-corsair-rm750e-80-plus-gold-full-modular"
+  ],
+  "warrantyMonths": 84,
+  "warrantyInfo": "Bảo hành chính hãng Corsair 7 năm (84 tháng) tại hệ thống bảo hành ủy quyền Việt Nam, 1 đổi 1 trong 30 ngày đầu nếu lỗi nhà sản xuất.",
+  "weightKg": 2,
+  "stockQuantity": 22,
+  "shortDescription": "Nguồn Corsair RM750e 750W chuẩn ATX 3.1, đạt chứng nhận Cybenetics Gold, đi kèm cáp 12V-2x6 gốc cho card đồ họa đời mới, quạt 120mm vòng bi rifle vận hành êm với chế độ Zero RPM.",
+  "descriptionHtml": "<h3>Nguồn ATX 3.1 sẵn sàng cho GPU đời mới</h3><p>Corsair RM750e là bộ nguồn 750W full modular thuộc dòng RMe, đạt chuẩn ATX 3.1 và tương thích PCIe 5.1, trang bị sẵn 1 cáp 12V-2x6 (12+4 pin) gốc để cấp nguồn trực tiếp cho các card đồ họa flagship hiện đại mà không cần dùng adapter rời. Hiệu suất chuyển đổi điện được Cybenetics chứng nhận mức Gold, giúp tiết kiệm điện năng và giảm nhiệt tỏa ra khi vận hành liên tục.</p><h3>Vận hành êm, tối ưu luồng khí</h3><p>Quạt làm mát 120mm dùng vòng bi rifle bearing kết hợp đường cong quạt được tính toán riêng cho độ ồn thấp, hỗ trợ chế độ Zero RPM giúp quạt ngừng quay hoàn toàn khi tải thấp. Tụ điện công nghiệp chịu nhiệt 105 độ C góp phần kéo dài tuổi thọ sản phẩm, MTBF đạt 100.000 giờ.</p><h3>Full Modular, dễ đi dây</h3><p>Toàn bộ dây cáp có thể tháo rời độc lập, gồm 24-pin ATX, 2 dây EPS/ATX12V 8-pin, 1 dây 12V-2x6 gốc, 1 dây chuyển 12V-2x6 sang 2 đầu PCIe 8-pin, 1 dây PCIe 8-pin rời, cùng các dây SATA/PATA - cho phép chỉ lắp đúng số dây cần dùng, giúp thùng máy gọn gàng và thoáng khí hơn. Kích thước nhỏ gọn 140 x 150 x 86mm dễ tương thích nhiều loại case tầm trung.</p><ul><li>Công suất 750W, chuẩn ATX 3.1, tương thích PCIe 5.1</li><li>Hiệu suất Cybenetics Gold, độ ồn Cybenetics A</li><li>Kèm sẵn cáp 12V-2x6 (12+4 pin) gốc cho GPU đời mới</li><li>Full Modular, quạt 120mm rifle bearing, hỗ trợ Zero RPM Mode</li><li>Tụ điện 105 độ C, MTBF 100.000 giờ</li><li>Bảo hành chính hãng 7 năm</li></ul>",
+  "highlights": [
+    "Chuẩn ATX 3.1, tương thích PCIe 5.1, kèm sẵn cáp 12V-2x6 gốc cho GPU flagship",
+    "Chứng nhận hiệu suất Cybenetics Gold (hiệu suất tới 89%), độ ồn Cybenetics A",
+    "Full Modular toàn bộ dây cáp, dễ đi dây và tối ưu luồng khí trong case",
+    "Quạt 120mm vòng bi rifle bearing, hỗ trợ chế độ Zero RPM vận hành êm",
+    "Tụ điện công nghiệp 105 độ C, MTBF 100.000 giờ, kích thước nhỏ gọn 140mm",
+    "Bảo hành chính hãng 7 năm từ Corsair"
+  ],
+  "specs": [
+    {
+      "group": "Tổng quan",
+      "name": "Hãng sản xuất",
+      "value": "Corsair",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Mã sản phẩm",
+      "value": "CP-9020295-NA (Part No. 75-006460)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Dòng sản phẩm",
+      "value": "RMe Series",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Tổng quan",
+      "name": "Công suất tối đa",
+      "value": "750W liên tục",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Hiệu suất",
+      "name": "Chuẩn nguồn",
+      "value": "ATX 3.1, tương thích PCIe 5.1",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Hiệu suất",
+      "name": "Chứng nhận hiệu suất / độ ồn",
+      "value": "Cybenetics Gold (hiệu suất tới 89%) / Cybenetics A",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Điện áp đầu ra",
+      "name": "+3.3V",
+      "value": "20A (110W)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Điện áp đầu ra",
+      "name": "+5V",
+      "value": "20A",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Điện áp đầu ra",
+      "name": "+12V",
+      "value": "54.2A (750W)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Điện áp đầu ra",
+      "name": "+5VSB",
+      "value": "3A (15W)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Đầu vào",
+      "name": "Điện áp AC",
+      "value": "100-240V, 47-63Hz",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Đầu vào",
+      "name": "Dòng điện đầu vào",
+      "value": "10A-5A",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Quạt & làm mát",
+      "name": "Quạt tản nhiệt",
+      "value": "120mm, vòng bi rifle bearing, đường cong quạt tối ưu độ ồn thấp",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Quạt & làm mát",
+      "name": "Chế độ Zero RPM",
+      "value": "Có (quạt dừng hoàn toàn ở tải thấp)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "ATX 24-pin",
+      "value": "1 dây, 610mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "EPS/ATX12V 8-pin (4+4)",
+      "value": "2 dây, 750mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "12V-2x6 (12+4 pin)",
+      "value": "1 dây gốc, 650mm, hỗ trợ tới 600W",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "12V-2x6 sang 2x PCIe 8-pin (6+2)",
+      "value": "1 dây chuyển, 650mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "PCIe 8-pin (6+2)",
+      "value": "1 dây rời, 650mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "SATA (4 đầu thẳng)",
+      "value": "1 dây, 750mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Dây cáp (Full Modular)",
+      "name": "SATA/PATA hỗn hợp",
+      "value": "1 dây (2 SATA + 2 PATA), 750mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Kích thước (D x R x C)",
+      "value": "140 x 150 x 86 mm",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Kích thước & khối lượng",
+      "name": "Khối lượng",
+      "value": "2 kg",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Bảo hành & độ bền",
+      "name": "MTBF",
+      "value": "100.000 giờ",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Bảo hành & độ bền",
+      "name": "Bảo hành chính hãng",
+      "value": "7 năm (84 tháng)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Bảo vệ an toàn",
+      "name": "Tính năng bảo vệ",
+      "value": "OCP, OVP, UVP, SCP, OTP, OPP",
+      "source": "https://gearvn.com/products/750w-nguon-corsair-rm750e-80-plus-gold-full-modular"
+    }
+  ],
+  "filterAttributes": {
+    "wattage": "750W",
+    "rating": "Cybenetics Gold",
+    "formFactor": "ATX 3.1",
+    "modular": "Full Modular",
+    "fanSize": "120mm"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/rme-series-2025/Gallery/CP-9020295-NA_07.webp",
+      "alt": "Nguồn Corsair RM750e - hộp sản phẩm và bộ nguồn nhìn góc nghiêng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/rme-series-2025/Gallery/CP-9020295-NA_01.webp",
+      "alt": "Nguồn Corsair RM750e - góc nghiêng mặt cổng cắm dây modular"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/f_auto,q_auto/v1733872194/products/rme-series-2025/Content/Panel-3-ATX-3-1-Certified/Panel03_Image_750W_2x.png",
+      "alt": "Nguồn Corsair RM750e - thân nguồn kèm dây cáp modular bọc lưới"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://assets.corsair.com/image/upload/c_pad,q_85,h_1100,w_1100,f_auto/products/rme-series-2025/Gallery/CP-9020295-NA_08.webp",
+      "alt": "Nguồn Corsair RM750e - mặt sau với giắc nguồn AC và công tắc"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Nguồn Corsair RM750e 750W ATX 3.1 Full Modular - Quang Huong Computer",
+  "metaDescription": "Nguồn Corsair RM750e 750W chuẩn ATX 3.1, Cybenetics Gold, Full Modular, kèm cáp 12V-2x6 cho GPU đời mới. Bảo hành chính hãng 7 năm, giá tốt tại Quang Huong Computer."
+}

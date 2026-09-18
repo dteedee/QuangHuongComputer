@@ -16,6 +16,7 @@ public class EmailService : IEmailService
     private readonly string _smtpPassword;
     private readonly string _fromEmail;
     private readonly string _fromName;
+    private readonly bool _enableSsl;
 
     public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
     {
@@ -28,6 +29,9 @@ public class EmailService : IEmailService
         _smtpPassword = _configuration["Email:Smtp:Password"] ?? "";
         _fromEmail = _configuration["Email:Smtp:FromEmail"] ?? "noreply@quanghuongcomputer.com";
         _fromName = _configuration["Email:Smtp:FromName"] ?? "Quang Hưởng Computer";
+        // Config-driven so a local mail sink (MailHog, no STARTTLS) can be used in TEST.
+        // Absent key keeps today's behaviour: SSL on.
+        _enableSsl = !bool.TryParse(_configuration["Email:Smtp:EnableSsl"], out var enableSsl) || enableSsl;
     }
 
     public async Task SendPasswordResetEmailAsync(string toEmail, string resetCode)
@@ -246,7 +250,7 @@ public class EmailService : IEmailService
 
             using var smtpClient = new SmtpClient(_smtpHost, _smtpPort)
             {
-                EnableSsl = true,
+                EnableSsl = _enableSsl,
                 Credentials = new NetworkCredential(_smtpUsername, _smtpPassword)
             };
 

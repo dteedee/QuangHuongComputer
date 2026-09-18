@@ -62,6 +62,12 @@ public class RepairDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
+
+            // W0-11: one Identity user maps to at most one technician row; NULL
+            // (not yet linked) is excluded so the filtered index never blocks it.
+            entity.HasIndex(e => e.UserId)
+                .IsUnique()
+                .HasFilter("\"UserId\" IS NOT NULL");
         });
 
         modelBuilder.Entity<ServiceBooking>(entity =>

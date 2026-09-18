@@ -1,0 +1,214 @@
+{
+  "name": "Laptop LG gram Pro 16 16Z90U-G.AN55A5 (Intel Core Ultra 5 325, 16GB, 512GB SSD)",
+  "slug": "lg-gram-pro-16-16z90u-g-an55a5-ultra-5-325",
+  "sku": "LG-16Z90UG-AN55A5",
+  "brand": "LG",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop mỏng nhẹ cao cấp",
+  "model": "LG gram Pro 16Z90U-G.AN55A5",
+  "officialUrl": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/",
+  "priceVnd": 53900000,
+  "oldPriceVnd": 55000000,
+  "costPriceVnd": 47430000,
+  "priceSources": [
+    "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng LG Việt Nam 24 tháng tại các trung tâm bảo hành ủy quyền toàn quốc",
+  "weightKg": 1.239,
+  "stockQuantity": 15,
+  "shortDescription": "LG gram Pro 16 16Z90U-G.AN55A5 là laptop mỏng nhẹ 16 inch dùng chip Intel Core Ultra 5 325, RAM 16GB và SSD 512GB, hướng tới người dùng văn phòng và sáng tạo cần máy nhẹ, pin bền mà vẫn đủ sức xử lý đa nhiệm.",
+  "descriptionHtml": "<h3>Mỏng nhẹ đúng chất gram, đủ sức cân công việc hàng ngày</h3><p>LG gram Pro 16 16Z90U-G.AN55A5 giữ đúng tinh thần siêu nhẹ quen thuộc của dòng gram khi chỉ nặng 1,239kg với độ dày thân máy 13,1mm, dễ dàng mang theo suốt ngày dài di chuyển. Khung máy vẫn vượt qua 7 bài kiểm định độ bền chuẩn quân sự MIL-STD-810H nên yên tâm hơn khi dùng ngoài văn phòng.</p><h3>Màn hình lớn, hiệu năng AI mới</h3><p>Máy trang bị màn hình IPS 16 inch độ phân giải WQXGA 2560x1600, tỷ lệ 16:10 cho không gian làm việc rộng rãi, độ phủ màu DCI-P3 99% giúp hiển thị hình ảnh chân thực. Bên trong là chip Intel Core Ultra 5 325 tích hợp nhân xử lý AI (NPU), đạt chuẩn Copilot+ PC, kết hợp RAM 16GB LPDDR5X và SSD NVMe Gen4 512GB cho tốc độ khởi động và mở ứng dụng nhanh.</p><h3>Pin bền, kết nối đầy đủ</h3><p>Viên pin 77Wh cho thời gian sử dụng tới 29,5 giờ theo công bố của nhà sản xuất, đủ dùng cả ngày làm việc không cần mang sạc. Máy có 2 cổng USB4 Type-C hỗ trợ Thunderbolt 4, 2 cổng USB 3.2 Type-A, HDMI 2.1 và loa hỗ trợ Dolby Atmos, webcam FHD hỗ trợ nhận diện khuôn mặt Windows Hello, phù hợp cho dân văn phòng, sinh viên và người làm sáng tạo nội dung nhẹ.</p><ul><li>Trọng lượng 1,239kg, dày 13,1mm, đạt chuẩn bền MIL-STD-810H</li><li>Màn hình IPS 16 inch WQXGA 2560x1600, DCI-P3 99%</li><li>CPU Intel Core Ultra 5 325 tích hợp AI, chuẩn Copilot+ PC</li><li>RAM 16GB LPDDR5X, SSD 512GB NVMe Gen4</li><li>Pin 77Wh, thời lượng tới 29,5 giờ</li></ul>",
+  "highlights": [
+    "Trọng lượng chỉ 1,239kg, dày 13,1mm, đạt chuẩn bền quân sự MIL-STD-810H",
+    "Màn hình IPS 16 inch WQXGA (2560x1600), tỷ lệ 16:10, DCI-P3 99%",
+    "Chip Intel Core Ultra 5 325 tích hợp NPU cho AI, chuẩn Copilot+ PC",
+    "RAM 16GB LPDDR5X và SSD 512GB NVMe Gen4, có khe SSD thứ hai để nâng cấp",
+    "Pin 77Wh cho thời gian sử dụng tới 29,5 giờ",
+    "Đầy đủ cổng kết nối: 2x USB4 Thunderbolt 4, 2x USB 3.2, HDMI 2.1, loa Dolby Atmos"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core Ultra 5 325 (8 nhân: 4P + 4 LP-E, xung tối đa nhân P 4.5GHz, Intel Smart Cache 12MB)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Đồ họa",
+      "value": "Intel Graphics tích hợp (kiến trúc 4Xe)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "RAM",
+      "value": "16GB LPDDR5X Dual Channel, bus 7500MHz",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB M.2 NVMe Gen4, có 2 khe SSD (hỗ trợ tối đa 1TB mỗi khe)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước",
+      "value": "16 inch (40.6cm)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "WQXGA 2560 x 1600, tỷ lệ 16:10",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền",
+      "value": "IPS LCD, chống chói (bản không cảm ứng)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng / Tương phản",
+      "value": "350 nit (điển hình) / 1500:1 (điển hình)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phủ màu",
+      "value": "DCI-P3 99% (điển hình)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian phản hồi",
+      "value": "30ms (điển hình)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Pin",
+      "name": "Dung lượng pin",
+      "value": "77Wh Li-ion, thời lượng sử dụng tới 29.5 giờ (theo công bố NSX)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Trọng lượng",
+      "value": "1.239 kg",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Độ dày máy",
+      "value": "13.1mm (điểm mỏng nhất, theo công bố NSX)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Obsidian Black (khung vỏ hợp kim Mg)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Độ bền",
+      "value": "Đạt chuẩn quân sự MIL-STD-810H, vượt 7 bài kiểm định độ bền",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB-C",
+      "value": "2x USB4 Gen3x2 Type-C, hỗ trợ Power Delivery, DisplayPort, Thunderbolt 4",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB-A",
+      "value": "2x USB 3.2 Gen1 Type-A",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "HDMI",
+      "value": "HDMI 2.1, hỗ trợ 4K@60Hz",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Bluetooth 6.0",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Âm thanh & Webcam",
+      "name": "Loa",
+      "value": "Loa stereo 3.0W x2 + Smart AMP tối đa 5W, hỗ trợ Dolby Atmos",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Âm thanh & Webcam",
+      "name": "Webcam",
+      "value": "FHD IR, hỗ trợ nhận diện khuôn mặt Windows Hello, micro kép",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Bàn phím",
+      "value": "Full-size có đèn nền (97 phím, chuẩn US)",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Bàn phím & Touchpad",
+      "name": "Touchpad",
+      "value": "Precision Touchpad hỗ trợ cuộn và cử chỉ đa điểm",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "OS",
+      "value": "Windows 11 Home",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    },
+    {
+      "group": "Phụ kiện",
+      "name": "Đi kèm hộp",
+      "value": "Sạc laptop, cáp USB-C to C",
+      "source": "https://www.lg.com/vn/laptop-lg-gram/16z90u-g-16gb/"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core Ultra 5",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "Intel Graphics tích hợp",
+    "screenSize": "16 inch"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.lg.com/content/dam/channel/wcms/vn/ms/lgcom/2026/vn/laptop/gram-pro/16z90u/lcd/gallery/gallery-new/2010.jpg/jcr:content/renditions/thum-1600x1062.jpeg",
+      "alt": "Laptop LG gram Pro 16 16Z90U-G.AN55A5 nhìn chính diện, màu đen Obsidian Black"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.lg.com/content/dam/channel/wcms/vn/ms/lgcom/2026/vn/laptop/gram-pro/16z90u/lcd/feature/desktop/gram-pro-16z90u-2026-lcd-feature-01-3-01-intro-kv-lcd-black-d.jpg",
+      "alt": "LG gram Pro 16 16Z90U-G góc nghiêng, thân máy mỏng nhẹ màu đen"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.lg.com/content/dam/channel/wcms/vn/ms/lgcom/2026/vn/laptop/gram-pro/16z90u/lcd/gallery/gallery/gram-pro-16z90u-2026-lcd-gallery-non-touch-black-gallery-14.jpg",
+      "alt": "LG gram Pro 16 16Z90U-G nhìn từ cạnh bên, thể hiện độ mỏng 13.1mm"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://www.lg.com/content/dam/channel/wcms/vn/ms/lgcom/2026/vn/laptop/gram-pro/16z90u/lcd/feature/mobile/gram-pro-16z90u-2026-lcd-feature-14-2-display-m.jpg",
+      "alt": "Bàn phím và touchpad của LG gram Pro 16 16Z90U-G nhìn từ trên xuống"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop LG gram Pro 16 16Z90U-G.AN55A5 - Core Ultra 5 325, 16GB, 512GB",
+  "metaDescription": "LG gram Pro 16 16Z90U-G.AN55A5: Intel Core Ultra 5 325, RAM 16GB, SSD 512GB, màn 16 inch WQXGA, nặng 1.239kg, pin 29.5 giờ. Giá chính hãng, bảo hành 24 tháng."
+}

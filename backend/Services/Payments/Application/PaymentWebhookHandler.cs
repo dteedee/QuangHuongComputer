@@ -41,6 +41,7 @@ public class PaymentWebhookHandler
         Guid? paymentIntentId,
         bool success,
         string? failureReason,
+        decimal? gatewayAmount = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(provider))
@@ -81,6 +82,27 @@ public class PaymentWebhookHandler
             _db.ProcessedWebhooks.Add(ProcessedWebhook.Record(provider, transactionId, "Ignored"));
             await _db.SaveChangesAsync(ct);
             return new WebhookProcessResult(false, false, null, null);
+        }
+
+        // 2b) W0-10 — số tiền cổng báo về PHẢI khớp số tiền intent trước khi Succeed.
+        //     Lệch tiền = không bao giờ tự xác nhận; ghi lại để kế toán đối soát tay.
+        if (success && gatewayAmount.HasValue && gatewayAmount.Value != payment.Amount)
+        {
+            _logger.LogError(
+                "Webhook LỆCH SỐ TIỀN: {Provider}/{TxnId} cổng báo {Gateway} nhưng intent {IntentId} là {Expected} — KHÔNG xác nhận",
+                provider, transactionId, gatewayAmount.Value, payment.Id, payment.Amount);
+
+            _db.ProcessedWebhooks.Add(ProcessedWebhook.Record(
+                provider: provider,
+                transactionId: transactionId,
+                result: "AmountMismatch",
+                orderId: payment.OrderId,
+                paymentIntentId: payment.Id));
+            await _db.SaveChangesAsync(ct);
+
+            return new WebhookProcessResult(
+                Processed: false, WasIdempotent: false,
+                PaymentIntentId: payment.Id, OrderId: payment.OrderId, AmountMismatch: true);
         }
 
         // 3) Áp trạng thái + ghi ProcessedWebhook trong cùng SaveChanges.
@@ -127,4 +149,5 @@ public record WebhookProcessResult(
     bool Processed,
     bool WasIdempotent,
     Guid? PaymentIntentId,
-    Guid? OrderId);
+    Guid? OrderId,
+    bool AmountMismatch = false);

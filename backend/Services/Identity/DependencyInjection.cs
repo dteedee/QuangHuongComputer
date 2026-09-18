@@ -39,6 +39,17 @@ public static class DependencyInjection
             options.Password.RequiredLength = 6;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
+
+            // Persistent brute-force defence. The in-memory rate limiter in the
+            // login endpoint resets with the process and is per-instance; this
+            // one lives in AspNetUsers.LockoutEnd and survives a restart.
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.AllowedForNewUsers = true;
+
+            // Two accounts must never share an address - the password-reset
+            // challenge is keyed on the e-mail.
+            options.User.RequireUniqueEmail = true;
         })
         .AddEntityFrameworkStores<IdentityDbContext>()
         .AddDefaultTokenProviders();

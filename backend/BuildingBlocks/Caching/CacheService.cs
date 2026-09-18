@@ -1,7 +1,36 @@
+using BuildingBlocks.Endpoints;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
 namespace BuildingBlocks.Caching;
+
+/// <summary>
+/// The ONE serializer contract every <see cref="ICacheService"/> implementation writes and reads with.
+///
+/// It is not "camelCase like the API"; it is *literally* <see cref="ApiJsonOptions"/>, because an
+/// endpoint that reads its own cache entry back loosely typed (<c>List&lt;dynamic&gt;</c> =
+/// <see cref="JsonElement"/>) re-emits the stored bytes verbatim, so any option the cache does not
+/// share with the response pipeline becomes a visible difference between a cache MISS and a cache HIT:
+///
+///   * enums - <c>JsonSerializerDefaults.Web</c> alone has no <c>JsonStringEnumConverter</c>, so
+///     <c>GET /api/content/menus</c> returned <c>"location":"HeaderMain"</c> on a miss and
+///     <c>"location":0</c> on a hit (W0-2 probe menu-cache-casing).
+///   * DateTime - without <see cref="UtcDateTimeJsonConverter"/> the cache dropped the <c>Z</c>, so
+///     <c>GET /api/catalog/products</c> served naive timestamps from a warm cache and the browser
+///     read them as local time, a 7-hour skew (W0-2 probe utc-timestamps).
+///
+/// Reads stay case-insensitive (a Web default), so entries written before this change still load.
+/// </summary>
+public static class CacheSerializerOptions
+{
+    /// <summary>A fresh, fully configured options instance. Each cache class keeps its own.</summary>
+    public static JsonSerializerOptions Create()
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        ApiJsonOptions.Apply(options);
+        return options;
+    }
+}
 
 /// <summary>
 /// Generic cache service for distributed caching
@@ -23,6 +52,9 @@ public class CacheService : ICacheService
     private readonly IDistributedCache _cache;
     private const int DefaultExpirationMinutes = 30;
 
+    /// <summary>Exactly what the API responds with - see <see cref="CacheSerializerOptions"/>.</summary>
+    private static readonly JsonSerializerOptions SerializerOptions = CacheSerializerOptions.Create();
+
     public CacheService(IDistributedCache cache)
     {
         _cache = cache;
@@ -37,7 +69,7 @@ public class CacheService : ICacheService
             if (string.IsNullOrEmpty(cachedValue))
                 return default;
 
-            return JsonSerializer.Deserialize<T>(cachedValue);
+            return JsonSerializer.Deserialize<T>(cachedValue, SerializerOptions);
         }
         catch
         {
@@ -59,7 +91,7 @@ public class CacheService : ICacheService
                 AbsoluteExpirationRelativeToNow = expiration ?? TimeSpan.FromMinutes(DefaultExpirationMinutes)
             };
 
-            var serialized = JsonSerializer.Serialize(value);
+            var serialized = JsonSerializer.Serialize(value, SerializerOptions);
             await _cache.SetStringAsync(key, serialized, options, cancellationToken);
         }
         catch

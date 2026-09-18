@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight, Laptop, Gamepad, Monitor, Cpu, Wrench, Package } from 'lucide-react';
 
+// W0-12 (step 3): trỏ tới route /danh-muc/<slug> đã hoạt động (CategoryPage khớp theo tên
+// qua ROUTE_TO_CATEGORY_TITLE — category-route-mapping.ts), thay vì `/products?tag=...` mà
+// ProductCatalogPage không lọc được theo tên tĩnh này (man-hinh/linh-kien/phu-kien không khớp
+// tên danh mục thật trong DB).
 const SIDEBAR_ITEMS = [
-    { icon: Laptop, name: 'Laptop', href: '/products?tag=laptop' },
-    { icon: Gamepad, name: 'PC Gaming', href: '/products?tag=pc-gaming' },
-    { icon: Monitor, name: 'Màn hình', href: '/products?tag=man-hinh' },
-    { icon: Cpu, name: 'Linh kiện', href: '/products?tag=linh-kien' },
+    { icon: Laptop, name: 'Laptop', href: '/danh-muc/laptop' },
+    { icon: Gamepad, name: 'PC Gaming', href: '/danh-muc/pc-gaming' },
+    { icon: Monitor, name: 'Màn hình', href: '/danh-muc/screens' },
+    { icon: Cpu, name: 'Linh kiện', href: '/danh-muc/components' },
     { icon: Wrench, name: 'Sửa chữa', href: '/repairs' },
-    { icon: Package, name: 'Phụ kiện', href: '/products?tag=phu-kien' },
+    { icon: Package, name: 'Phụ kiện', href: '/danh-muc/accessories' },
 ];
 
 /**

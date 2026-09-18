@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { salesApi } from '../../api/sales';
 import { paymentApi, initiateMoMoPayment, initiateZaloPayPayment } from '../../api/payment';
@@ -108,11 +109,21 @@ export function useCheckoutSubmit() {
                 } catch { toast.error('Không tạo được mã QR, đơn vẫn ghi nhận'); }
             }
 
-            await p.clearCart();
+            // KHÔNG clearCart() ở đây (trước đây làm vậy) — nó khiến CheckoutPage re-render với
+            // items.length === 0 TRONG KHI step vẫn còn 3 (confirmedOrder/step 4 chưa kịp set ở
+            // caller), và effect "giỏ rỗng → về /cart" đá thẳng khách ra khỏi trang xác nhận ngay
+            // sau khi đặt hàng thành công. Giờ trả kết quả trước, caller set confirmedOrder + điều
+            // hướng sang /checkout/success/:orderId RỒI mới clear giỏ (xem CheckoutPage.handleSubmit).
             toast.success('Đặt hàng thành công!');
             return { id: resp.orderId, number: resp.orderNumber, amount: resp.totalAmount, qrUrl };
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : 'Có lỗi khi đặt hàng';
+            // Bug cũ: `err instanceof Error ? err.message : ...` — AxiosError CŨNG là instance của
+            // Error, nên khi guestCheckout() (không tự bọc try/catch như orders.create()) ném lỗi,
+            // khách thấy nguyên văn text axios kiểu "Request failed with status code 400" thay vì
+            // lý do thật từ backend (`response.data.error`/`.message`, vd "Số điện thoại không hợp lệ").
+            const msg = isAxiosError(err)
+                ? (err.response?.data?.error || err.response?.data?.message || err.message)
+                : err instanceof Error ? err.message : 'Có lỗi khi đặt hàng';
             toast.error(msg);
             return null;
         } finally {

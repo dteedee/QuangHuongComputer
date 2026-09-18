@@ -1,0 +1,200 @@
+{
+  "name": "Case Lian Li LANCOOL 216 RGB White Mid Tower",
+  "slug": "case-lian-li-lancool-216-rgb-white",
+  "sku": "CASE-LAN216RW",
+  "brand": "Lian Li",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "Case",
+  "model": "Lian Li LANCOOL 216RW",
+  "officialUrl": "https://lian-li.com/product/lancool-216/",
+  "priceVnd": 2200000,
+  "oldPriceVnd": 3000000,
+  "costPriceVnd": 1960000,
+  "priceSources": [
+    "https://hacom.vn/vo-case-lian-li-lancool-216rw-white-lancool-216r-w-rgb",
+    "https://pc79.vn/san-pham/vo-case-may-tinh-lian-li-lancool-216-rgb-white/"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng 12 tháng tại hệ thống bảo hành ủy quyền Lian Li Việt Nam, 1 đổi 1 trong 30 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 7.4,
+  "stockQuantity": 18,
+  "shortDescription": "Vỏ case Lian Li LANCOOL 216 RGB White là mid-tower màu trắng tối ưu luồng gió với 3 mặt lưới thoáng và 2 quạt ARGB 160mm cỡ lớn đi kèm. Thiết kế module cho phép chuyển đổi linh hoạt giữa tản khí và tản nước, phù hợp build gaming tông sáng.",
+  "descriptionHtml": "<h3>Case mid-tower màu trắng, tối ưu luồng khí</h3><p>Lian Li LANCOOL 216 RGB White là vỏ case tầm trung dạng mid-tower, khoác áo trắng đồng bộ toàn thân. Mặt trước, mặt trên và tấm che nguồn đều dùng lưới thép liền mạch giúp không khí lưu thông tối đa, phù hợp cho các cấu hình CPU/VGA công suất cao cần tản nhiệt tốt. Kính cường lực dày 4mm ở cạnh bên giúp khoe trọn dàn linh kiện bên trong.</p><h3>Sẵn 3 quạt ARGB, dễ nâng cấp tản nhiệt</h3><p>Case đã lắp sẵn 2 quạt ARGB 160mm phía trước và 1 quạt PWM 140mm phía sau, có thể đấu trực tiếp vào header 5V ARGB trên mainboard mà không cần bộ điều khiển rời. Khung mainboard có thể xoay giữa vị trí cao (tối ưu cho tản khí) và vị trí thấp (chừa khoảng trống cho radiator AIO/custom ở mặt trên). Case hỗ trợ radiator tối đa 360mm ở mặt trước và mặt trên, 240mm ở đáy, đủ sức cho các cấu hình tản nước tầm trung tới cao cấp.</p><h3>Không gian rộng rãi, dễ đi dây</h3><p>LANCOOL 216 RGB White nhận VGA dài tới 392mm và tản CPU khí cao 180.5mm, tương thích bo mạch E-ATX (dưới 280mm), ATX, Micro-ATX và Mini-ITX. Hệ thống quản lý cáp gồm dây rút velcro và khay ổ cứng riêng biệt (tối đa 2 SSD + 2 HDD) giúp việc lắp ráp và đi dây gọn gàng hơn.</p><ul><li>Toàn bộ mặt lưới trước - trên - hông giúp tối ưu airflow</li><li>Tặng kèm 2 quạt ARGB 160mm + 1 quạt PWM 140mm</li><li>Hỗ trợ radiator tối đa 360mm, tối đa 10 quạt trong case</li><li>Không gian VGA 392mm, tản CPU khí 180.5mm</li><li>I/O trước có thể dời vị trí, quản lý cáp linh hoạt</li></ul>",
+  "highlights": [
+    "Toàn bộ mặt trước, mặt trên và cạnh che nguồn đều là lưới thép liền mạch, tối ưu luồng khí vào case",
+    "Tặng kèm sẵn 2 quạt ARGB 160mm mặt trước và 1 quạt PWM 140mm phía sau, dùng ngay không cần mua thêm",
+    "Khung mainboard xoay được 2 vị trí cao/thấp, tối ưu cho build tản khí hoặc tản nước AIO/custom",
+    "Hỗ trợ radiator tối đa 360mm ở cả mặt trước lẫn mặt trên, và 240mm ở đáy case",
+    "Không gian rộng cho VGA dài tới 392mm và tản CPU cao 180.5mm",
+    "Cụm I/O trước (2 USB 3.0, 1 USB-C, audio) có thể dời xuống cạnh dưới mặt trước tùy bố cục bàn máy"
+  ],
+  "specs": [
+    {
+      "group": "Thông tin chung",
+      "name": "Model",
+      "value": "LANCOOL 216RW (LANCOOL 216 RGB, màu trắng)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Thông tin chung",
+      "name": "Loại case",
+      "value": "Mid Tower",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Thông tin chung",
+      "name": "Màu sắc",
+      "value": "Trắng (White RGB)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Thông tin chung",
+      "name": "Chất liệu",
+      "value": "Thép / kính cường lực 4.0mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Kích thước",
+      "name": "Kích thước (D x R x C)",
+      "value": "480.9 x 235 x 491.7 mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hỗ trợ phần cứng",
+      "name": "Bo mạch chủ hỗ trợ",
+      "value": "E-ATX (dưới 280mm) / ATX / Micro-ATX / Mini-ITX",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hỗ trợ phần cứng",
+      "name": "Khe mở rộng (PCIe slot)",
+      "value": "7",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hỗ trợ phần cứng",
+      "name": "Chiều dài VGA tối đa",
+      "value": "392mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hỗ trợ phần cứng",
+      "name": "Chiều cao tản CPU tối đa",
+      "value": "180.5mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hỗ trợ phần cứng",
+      "name": "Nguồn (PSU) hỗ trợ",
+      "value": "Chuẩn ATX, dài dưới 220mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Quạt mặt trước hỗ trợ",
+      "value": "3x120mm / 2x140mm / 2x160mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Quạt mặt trên hỗ trợ",
+      "value": "3x120mm / 2x140mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Quạt mặt sau hỗ trợ",
+      "value": "1x120mm / 1x140mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Quạt che nguồn (PSU cover)",
+      "value": "2x120mm / 2x140mm (chế độ tản khí)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Giá quạt PCIe phía sau",
+      "value": "1x120mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Radiator mặt trước",
+      "value": "360 / 280 / 240mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Radiator mặt trên",
+      "value": "360 / 280 / 240mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Radiator đáy case",
+      "value": "240mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Quạt đi kèm sẵn",
+      "value": "2x quạt ARGB 160mm (mặt trước) + 1x quạt PWM 140mm (mặt sau)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Khay ổ đĩa (Drive Cage)",
+      "value": "2x SSD 2.5\" + 2x HDD 3.5\"",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Sau tấm che nguồn (PSU Cover)",
+      "value": "2x SSD 2.5\"",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Sau khay mainboard",
+      "value": "2x SSD 2.5\"",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "I/O phía trước",
+      "value": "1x Power, 1x Reset, 2x USB 3.0, 1x USB Type-C, 1x Audio",
+      "source": "https://lian-li.com/product/lancool-216/"
+    }
+  ],
+  "filterAttributes": {
+    "caseType": "Mid Tower",
+    "color": "Trắng",
+    "material": "Thép/Kính cường lực",
+    "motherboardSupport": "E-ATX/ATX/Micro-ATX/Mini-ITX",
+    "maxGpuLengthMm": "392",
+    "radiatorSupportMm": "360",
+    "includedFans": "2x160mm ARGB + 1x140mm PWM"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_93-b.jpg",
+      "alt": "Case Lian Li LANCOOL 216 RGB White nhìn chính diện, quạt ARGB sáng đèn"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_136-c.jpg",
+      "alt": "Case Lian Li LANCOOL 216 RGB White nhìn góc 3/4, mặt lưới trắng và quạt ARGB"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_20-Edit.jpg",
+      "alt": "Bên trong case Lian Li LANCOOL 216 RGB White, khoang lắp đặt màu trắng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Case Lian Li LANCOOL 216 RGB White - Mid Tower Trắng",
+  "metaDescription": "Vỏ case Lian Li LANCOOL 216 RGB White mid-tower, toàn thân lưới thoáng khí, tặng kèm 3 quạt ARGB/PWM, hỗ trợ radiator 360mm. Bảo hành chính hãng 12 tháng."
+}

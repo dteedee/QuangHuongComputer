@@ -72,7 +72,7 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
                 <input 
                     type="text"
                     value={item.label}
-                    placeholder="Label"
+                    placeholder="Nhãn hiển thị"
                     onChange={(e) => onUpdate(item.id, { label: e.target.value })}
                     className="bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-accent"
                 />
@@ -87,7 +87,7 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
                     <input 
                         type="text"
                         value={item.icon || ''}
-                        placeholder="Icon (Lucide name)"
+                        placeholder="Icon (tên Lucide)"
                         onChange={(e) => onUpdate(item.id, { icon: e.target.value })}
                         className="flex-1 bg-gray-50 border-0 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent"
                     />
@@ -98,7 +98,7 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
                             onChange={(e) => onUpdate(item.id, { openInNewTab: e.target.checked })}
                             className="rounded text-red-600 focus:ring-accent"
                         />
-                        New Tab
+                        Tab mới
                     </label>
                 </div>
             </div>
@@ -112,6 +112,86 @@ const SortableMenuItem: React.FC<SortableItemProps> = ({ id, item, onDelete, onU
             </button>
         </div>
     );
+};
+
+// ── Chuẩn hoá payload menu (W0 gate) ──────────────────────────────
+// Hai backend đang chạy trả hai hình dạng khác nhau cho `GET /content/menus?location=`:
+//   :5000 (binary cũ) → PascalCase: { Id, Location: 0, Items: [{ Id, Label, DisplayOrder, ... }] }
+//   :5050 (binary mới) → camelCase: { id, location: "HeaderMain", items: [{ id, label, displayOrder, ... }] }
+// Trước đây code spread trực tiếp `[...selectedMenu.items]` ⇒ với PascalCase thì `items` là
+// undefined và cả trang sập vào error boundary ("selectedMenu.items is not iterable").
+// Các helper dưới đây chấp nhận cả hai hình dạng, cả `null`/thiếu trường, và không bao giờ throw.
+type RawRecord = Record<string, unknown>;
+
+const asRecord = (value: unknown): RawRecord | null =>
+    value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as RawRecord) : null;
+
+/** Lấy giá trị đầu tiên không undefined/null theo danh sách tên trường (camelCase hoặc PascalCase). */
+const pickField = (source: RawRecord, ...keys: string[]): unknown => {
+    for (const key of keys) {
+        const value = source[key];
+        if (value !== undefined && value !== null) return value;
+    }
+    return undefined;
+};
+
+const pickString = (source: RawRecord, ...keys: string[]): string => {
+    const value = pickField(source, ...keys);
+    return typeof value === 'string' ? value : value === undefined ? '' : String(value);
+};
+
+const pickNumber = (source: RawRecord, fallback: number, ...keys: string[]): number => {
+    const value = pickField(source, ...keys);
+    const parsed = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+/** `id` của menu đang chọn, bất kể hình dạng. Rỗng nghĩa là không thao tác được. */
+const menuIdOf = (menu: unknown): string => {
+    const record = asRecord(menu);
+    return record ? pickString(record, 'id', 'Id') : '';
+};
+
+/** Nhãn vị trí menu; backend cũ trả enum dạng số nên mới cần fallback về key đang chọn. */
+const menuLocationLabel = (menu: unknown, fallback: string): string => {
+    const record = asRecord(menu);
+    if (!record) return fallback;
+    const raw = pickField(record, 'location', 'Location');
+    return typeof raw === 'string' && raw.trim() !== '' ? raw : fallback;
+};
+
+/** Một item menu đã chuẩn hoá; `null` nếu payload không dùng được (thiếu id). */
+const normalizeMenuItem = (rawItem: unknown, menuId: string, fallbackOrder: number): MenuItem | null => {
+    const item = asRecord(rawItem);
+    if (!item) return null;
+    const id = pickString(item, 'id', 'Id');
+    if (!id) return null;
+    return {
+        id,
+        label: pickString(item, 'label', 'Label'),
+        url: pickString(item, 'url', 'Url'),
+        icon: pickString(item, 'icon', 'Icon') || undefined,
+        parentId: pickString(item, 'parentId', 'ParentId') || undefined,
+        order: pickNumber(item, fallbackOrder, 'order', 'Order', 'displayOrder', 'DisplayOrder'),
+        openInNewTab: pickField(item, 'openInNewTab', 'OpenInNewTab') === true,
+        cssClass: pickString(item, 'cssClass', 'CssClass') || undefined,
+        pageId: pickString(item, 'pageId', 'PageId') || undefined,
+        categoryId: pickString(item, 'categoryId', 'CategoryId') || undefined,
+        menuId: pickString(item, 'menuId', 'MenuId') || menuId,
+    };
+};
+
+/** Danh sách item đã chuẩn hoá + sắp theo thứ tự; luôn trả về array (có thể rỗng). */
+const normalizeMenuItems = (menu: unknown): MenuItem[] => {
+    const record = asRecord(menu);
+    if (!record) return [];
+    const rawItems = pickField(record, 'items', 'Items');
+    if (!Array.isArray(rawItems)) return [];
+    const menuId = pickString(record, 'id', 'Id');
+    return rawItems
+        .map((rawItem, index) => normalizeMenuItem(rawItem, menuId, index + 1))
+        .filter((item): item is MenuItem => item !== null)
+        .sort((a, b) => a.order - b.order);
 };
 
 type MenuLocationKey = 'HeaderMain' | 'FooterMain' | 'FooterBottom';
@@ -143,10 +223,15 @@ export const MenuManager = () => {
         queryFn: () => contentApi.getMenu(selectedLocation),
     });
 
+    // `menuId` rỗng ⇒ payload không có id dùng được ⇒ chặn mọi mutation thay vì gọi API với id rỗng.
+    const menuId = menuIdOf(selectedMenu);
+
     useEffect(() => {
         if (selectedMenu) {
-            setLocalItems([...selectedMenu.items].sort((a, b) => a.order - b.order));
+            setLocalItems(normalizeMenuItems(selectedMenu));
             setHasChanges(false);
+        } else {
+            setLocalItems([]);
         }
     }, [selectedMenu]);
 
@@ -155,10 +240,14 @@ export const MenuManager = () => {
         mutationFn: (data: { menuId: string; item: Partial<MenuItem> }) =>
             contentApi.admin.createMenuItem(data.menuId, data.item),
         onSuccess: (newItem: MenuItem) => {
-            setLocalItems(prev => [...prev, newItem]);
-            toast.success('Link added');
+            // API trả về item mới theo cùng hình dạng của backend đang chạy ⇒ chuẩn hoá trước khi đưa vào state.
+            setLocalItems(prev => {
+                const normalized = normalizeMenuItem(newItem, menuId, prev.length + 1);
+                return normalized ? [...prev, normalized] : prev;
+            });
+            toast.success('Đã thêm liên kết');
         },
-        onError: () => toast.error('Failed to add link'),
+        onError: () => toast.error('Không thêm được liên kết'),
     });
 
     // ── Delete menu item via API ──────────────────────────────────
@@ -168,11 +257,11 @@ export const MenuManager = () => {
         onSuccess: (_: unknown, vars: { menuId: string; itemId: string }) => {
             setLocalItems(prev => prev.filter(i => i.id !== vars.itemId));
             setDeletingId(null);
-            toast.success('Link removed');
+            toast.success('Đã xoá liên kết');
         },
         onError: () => {
             setDeletingId(null);
-            toast.error('Failed to delete link');
+            toast.error('Không xoá được liên kết');
         },
     });
 
@@ -194,9 +283,9 @@ export const MenuManager = () => {
         onSuccess: () => {
             setHasChanges(false);
             queryClient.invalidateQueries({ queryKey: ['menu', selectedLocation] });
-            toast.success('Menu saved successfully!');
+            toast.success('Đã lưu menu!');
         },
-        onError: () => toast.error('Failed to save menu'),
+        onError: () => toast.error('Không lưu được menu'),
     });
 
     // ── Handlers ──────────────────────────────────────────────────
@@ -214,9 +303,9 @@ export const MenuManager = () => {
     };
 
     const addItem = () => {
-        if (!selectedMenu) return;
+        if (!menuId) return;
         addMutation.mutate({
-            menuId: selectedMenu.id,
+            menuId,
             item: {
                 label: 'New Link',
                 url: '/',
@@ -227,11 +316,11 @@ export const MenuManager = () => {
     };
 
     const deleteItem = async (id: string) => {
-        if (!selectedMenu) return;
-        const ok = await confirm({ message: 'Remove this link?', variant: 'danger' });
+        if (!menuId) return;
+        const ok = await confirm({ message: 'Xoá liên kết này?', variant: 'danger' });
         if (!ok) return;
         setDeletingId(id);
-        deleteMutation.mutate({ menuId: selectedMenu.id, itemId: id });
+        deleteMutation.mutate({ menuId, itemId: id });
     };
 
     const updateItem = (id: string, updates: Partial<MenuItem>) => {
@@ -240,13 +329,13 @@ export const MenuManager = () => {
     };
 
     const handleSave = () => {
-        if (!selectedMenu) return;
-        saveMutation.mutate({ menuId: selectedMenu.id, items: localItems });
+        if (!menuId) return;
+        saveMutation.mutate({ menuId, items: localItems });
     };
 
     const handleLocationChange = async (loc: MenuLocationKey) => {
         if (hasChanges) {
-            const ok = await confirm({ message: 'You have unsaved changes. Switch menu anyway?', variant: 'warning' });
+            const ok = await confirm({ message: 'Bạn có thay đổi chưa lưu. Vẫn chuyển menu khác?', variant: 'warning' });
             if (!ok) return;
         }
         setSelectedLocation(loc);
@@ -254,9 +343,9 @@ export const MenuManager = () => {
 
     // ── Render ─────────────────────────────────────────────────────
     if (isLoading) return (
-        <div className="p-8 text-white flex items-center gap-3">
+        <div className="p-8 text-slate-700 flex items-center gap-3">
             <Loader2 className="animate-spin" size={24} />
-            Loading menus...
+            Đang tải menu...
         </div>
     );
 
@@ -264,20 +353,20 @@ export const MenuManager = () => {
         <div className="max-w-6xl mx-auto">
             <header className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-semibold text-white">Menu Manager</h1>
-                    <p className="text-gray-400 mt-1">Configure your site navigation menus</p>
+                    <h1 className="text-3xl font-semibold text-slate-900">Quản lý menu</h1>
+                    <p className="text-gray-500 mt-1">Cấu hình các menu điều hướng của website</p>
                 </div>
                 <div className="flex gap-4">
                     <button 
-                        onClick={() => toast('Menu locations are predefined in the system.')}
-                        className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl transition flex items-center gap-2"
+                        onClick={() => toast('Các vị trí menu được định nghĩa sẵn trong hệ thống.')}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl transition flex items-center gap-2"
                     >
                         <Info size={18} />
-                        Locations
+                        Vị trí menu
                     </button>
                     <button 
                         onClick={handleSave}
-                        disabled={!selectedMenu || saveMutation.isPending || !hasChanges}
+                        disabled={!menuId || saveMutation.isPending || !hasChanges}
                         className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-6 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-accent-dark/20"
                     >
                         {saveMutation.isPending ? (
@@ -285,7 +374,7 @@ export const MenuManager = () => {
                         ) : (
                             <Save size={18} />
                         )}
-                        {saveMutation.isPending ? 'Saving...' : hasChanges ? 'Save Changes' : 'Saved'}
+                        {saveMutation.isPending ? 'Đang lưu...' : hasChanges ? 'Lưu thay đổi' : 'Đã lưu'}
                     </button>
                 </div>
             </header>
@@ -297,13 +386,13 @@ export const MenuManager = () => {
                         <button
                             key={loc.key}
                             onClick={() => handleLocationChange(loc.key)}
-                            className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'}`}
+                            className={`w-full text-left p-4 rounded-xl transition-all border-2 ${selectedLocation === loc.key ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white border-gray-200 text-slate-700 hover:bg-slate-50'}`}
                         >
                             <div className="font-bold flex items-center justify-between">
                                 {loc.label}
                                 <ChevronRight size={16} />
                             </div>
-                            <p className={`text-xs mt-1 ${selectedLocation === loc.key ? 'text-red-100' : 'text-gray-500'}`}>
+                            <p className={`text-xs mt-1 ${selectedLocation === loc.key ? 'text-red-50' : 'text-gray-500'}`}>
                                 {loc.description}
                             </p>
                         </button>
@@ -313,27 +402,27 @@ export const MenuManager = () => {
                 {/* Editor */}
                 <div className="lg:col-span-3">
                     {!selectedMenu ? (
-                        <div className="bg-white/5 border-2 border-dashed border-white/10 rounded-3xl p-20 text-center">
-                            <Settings size={48} className="text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-400">Select a menu to start editing</h3>
+                        <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-20 text-center">
+                            <Settings size={48} className="text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-gray-500">Chọn một menu để bắt đầu chỉnh sửa</h3>
                         </div>
                     ) : (
-                        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 min-h-[500px]">
+                        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm min-h-[500px]">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-white px-2 uppercase">
-                                    Editing: {selectedMenu.location}
+                                <h2 className="text-xl font-semibold text-slate-900 px-2 uppercase">
+                                    Đang sửa: {menuLocationLabel(selectedMenu, selectedLocation)}
                                 </h2>
-                                <button 
+                                <button
                                     onClick={addItem}
-                                    disabled={addMutation.isPending}
-                                    className="text-red-400 hover:text-red-300 disabled:opacity-50 flex items-center gap-2 text-sm font-bold bg-red-400/10 px-4 py-2 rounded-xl transition"
+                                    disabled={addMutation.isPending || !menuId}
+                                    className="text-accent hover:opacity-80 disabled:opacity-50 flex items-center gap-2 text-sm font-bold bg-red-50 px-4 py-2 rounded-xl transition"
                                 >
                                     {addMutation.isPending ? (
                                         <Loader2 size={18} className="animate-spin" />
                                     ) : (
                                         <Plus size={18} />
                                     )}
-                                    {addMutation.isPending ? 'Adding...' : 'Add Link'}
+                                    {addMutation.isPending ? 'Đang thêm...' : 'Thêm liên kết'}
                                 </button>
                             </div>
 
@@ -363,13 +452,13 @@ export const MenuManager = () => {
 
                             {localItems.length === 0 && (
                                 <div className="text-center py-20 text-gray-500">
-                                    No items in this menu. Click "Add Link" to get started.
+                                    Menu này chưa có liên kết nào. Bấm "Thêm liên kết" để bắt đầu.
                                 </div>
                             )}
 
                             {hasChanges && (
-                                <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-sm text-center">
-                                    You have unsaved changes. Click <strong>"Save Changes"</strong> to apply.
+                                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm text-center">
+                                    Bạn có thay đổi chưa lưu. Bấm <strong>"Lưu thay đổi"</strong> để áp dụng.
                                 </div>
                             )}
                         </div>

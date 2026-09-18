@@ -1,0 +1,153 @@
+{
+  "name": "Card màn hình Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+  "slug": "vga-gigabyte-geforce-rtx-5060-windforce-oc-8g",
+  "sku": "VGA-GIGA-N5060WF2OC-8GD",
+  "brand": "Gigabyte",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "VGA",
+  "model": "Gigabyte GV-N5060WF2OC-8GD",
+  "officialUrl": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD",
+  "priceVnd": 13990000,
+  "oldPriceVnd": 14990000,
+  "costPriceVnd": 12310000,
+  "priceSources": [
+    "https://gearvn.com/search?q=RTX%205060%20WINDFORCE%20OC%208G"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng 36 tháng qua nhà phân phối/đại lý uỷ quyền Gigabyte tại Việt Nam.",
+  "weightKg": 0.55,
+  "stockQuantity": 18,
+  "shortDescription": "Gigabyte GeForce RTX 5060 WINDFORCE OC 8G là card đồ hoạ tầm trung dùng nhân Blackwell RTX 5060, 8GB GDDR7, tản nhiệt kép WINDFORCE giúp vận hành mát và êm khi chơi game Full HD/2K.",
+  "descriptionHtml": "<h3>Card đồ hoạ Gigabyte GeForce RTX 5060 WINDFORCE OC 8G</h3><p>Gigabyte GeForce RTX 5060 WINDFORCE OC 8G dùng nhân đồ hoạ NVIDIA GeForce RTX 5060 kiến trúc Blackwell mới nhất, trang bị 3840 nhân CUDA cùng xung nhịp boost được ép sẵn lên 2512 MHz (bản tham chiếu 2497 MHz). Card đi kèm 8GB bộ nhớ GDDR7 bus 128-bit, tốc độ 28 Gbps, đủ sức xử lý mượt các tựa game AAA ở độ phân giải Full HD, 2K và các tác vụ dựng hình nhẹ.</p><h3>Tản nhiệt và thiết kế</h3><p>Hệ thống tản nhiệt WINDFORCE trang bị 2 quạt giúp luồng khí lưu thông tốt, giữ nhiệt độ GPU và bo mạch ổn định khi chơi game trong thời gian dài. Card có kích thước gọn 199 x 116 x 40 mm theo chuẩn bo mạch ATX, dùng giao tiếp PCI Express 5.0 và chỉ cần một đầu cấp nguồn 8-pin, khuyến nghị bộ nguồn tối thiểu 550W - phù hợp nâng cấp cho nhiều cấu hình PC phổ thông sẵn có.</p><h3>Kết nối và tính năng</h3><p>Về xuất hình, sản phẩm có 3 cổng DisplayPort 2.1b và 1 cổng HDMI 2.1b, hỗ trợ tối đa 4 màn hình cùng lúc và độ phân giải tối đa 7680 x 4320. Card hỗ trợ đầy đủ DirectX 12, OpenGL 4.6 cùng các công nghệ mới của NVIDIA như DLSS 4, Ray Tracing và Reflex, phù hợp cho game thủ tầm trung muốn nâng cấp hiệu năng chơi game và làm việc sáng tạo cơ bản.</p>",
+  "highlights": [
+    "GPU NVIDIA GeForce RTX 5060 (kiến trúc Blackwell), 3840 nhân CUDA, xung boost tới 2512 MHz.",
+    "8GB bộ nhớ GDDR7 bus 128-bit, tốc độ 28 Gbps, đáp ứng tốt game AAA độ phân giải Full HD và 2K.",
+    "Tản nhiệt WINDFORCE 2 quạt giúp luồng khí lưu thông tốt, giữ nhiệt độ GPU ổn định khi chơi game dài.",
+    "Chuẩn giao tiếp PCI Express 5.0, chỉ cần 1 đầu cấp nguồn 8-pin, khuyến nghị nguồn tối thiểu 550W - dễ nâng cấp cho PC hiện có.",
+    "Xuất hình đầy đủ 3x DisplayPort 2.1b và 1x HDMI 2.1b, hỗ trợ tối đa 4 màn hình, độ phân giải tối đa 7680x4320.",
+    "Hỗ trợ DirectX 12, OpenGL 4.6, tương thích công nghệ DLSS 4 và Ray Tracing thế hệ mới của NVIDIA."
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "GPU",
+      "value": "NVIDIA GeForce RTX 5060",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Số nhân CUDA",
+      "value": "3840",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Xung nhịp lõi (Boost)",
+      "value": "2512 MHz (bản tham chiếu: 2497 MHz)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ xử lý đồ hoạ",
+      "name": "Giao tiếp",
+      "value": "PCI Express 5.0",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Dung lượng bộ nhớ",
+      "value": "8GB GDDR7",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ bộ nhớ",
+      "value": "28 Gbps",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Bus bộ nhớ",
+      "value": "128-bit",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Cổng kết nối",
+      "value": "DisplayPort 2.1b x3, HDMI 2.1b x1",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Số màn hình tối đa",
+      "value": "4",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Cổng xuất hình",
+      "name": "Độ phân giải số tối đa",
+      "value": "7680 x 4320",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Đầu cấp nguồn",
+      "value": "8-pin x1",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất nguồn khuyến nghị",
+      "value": "550W",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Kích thước & thiết kế",
+      "name": "Kích thước card",
+      "value": "199 x 116 x 40 mm",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Kích thước & thiết kế",
+      "name": "Chuẩn bo mạch",
+      "value": "ATX",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Công nghệ hỗ trợ",
+      "name": "DirectX",
+      "value": "DirectX 12",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Công nghệ hỗ trợ",
+      "name": "OpenGL",
+      "value": "4.6",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Phụ kiện",
+      "name": "Phụ kiện đi kèm",
+      "value": "Sách hướng dẫn nhanh (Quick guide)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    }
+  ],
+  "filterAttributes": {
+    "chipset": "NVIDIA GeForce RTX 5060",
+    "vram": "8GB GDDR7"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static.gigabyte.com/StaticFile/Image/Global/b84799b235e934fc37a7060d0f9d1f5e/ProductRemoveBg/44963/web",
+      "alt": "Gigabyte GeForce RTX 5060 WINDFORCE OC 8G - mặt trước, 2 quạt tản nhiệt"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.gigabyte.com/StaticFile/Image/Global/4a26330d9dc01d62d3f6bfe55a218acb/ProductRemoveBg/44962/web",
+      "alt": "Gigabyte GeForce RTX 5060 WINDFORCE OC 8G - góc nghiêng 3/4"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Gigabyte GeForce RTX 5060 WINDFORCE OC 8G - Card đồ hoạ RTX 5060 8GB GDDR7",
+  "metaDescription": "Gigabyte RTX 5060 WINDFORCE OC 8G: GPU Blackwell RTX 5060, 8GB GDDR7 bus 128-bit, tản nhiệt 2 quạt, PCIe Gen5, đầu cấp nguồn 8-pin. Giá tốt, bảo hành chính hãng 36 tháng."
+}

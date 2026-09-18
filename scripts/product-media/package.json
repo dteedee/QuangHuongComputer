@@ -1,0 +1,23 @@
+{
+  "name": "qh-product-media",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Operator tooling that captures product photographs from manufacturer pages and publishes the approved ones into the versioned seed webroot (decision D02).",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "publish-seed": "node publish-seed-media.cjs",
+    "check-seed": "node publish-seed-media.cjs --dry-run"
+  },
+  "comment": [
+    "puppeteer and sharp are NOT installed here. Both scripts resolve them from the project's",
+    "chrome-devtools skill at ../../.claude/skills/chrome-devtools/scripts/package.json, which",
+    "already ships them; installing a second copy would add ~400MB and a second Chrome download.",
+    "If that skill is ever removed, `npm install` in this directory with the versions below.",
+    "This directory is never copied into the Docker image - backend/Dockerfile only COPYs backend/."
+  ],
+  "peerDependencies": {
+    "puppeteer": ">=22",
+    "sharp": ">=0.33"
+  }
+}

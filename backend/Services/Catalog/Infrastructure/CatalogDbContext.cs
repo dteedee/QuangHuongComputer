@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Catalog.Domain;
+using Catalog.Application.Search;
 using Catalog.Infrastructure.Data.Configurations;
 using BuildingBlocks.Database;
 
@@ -35,7 +36,14 @@ public class CatalogDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CatalogDbContext).Assembly);
-        
+
+        // Ánh xạ wrapper IMMUTABLE của unaccent() để ApplySearch dùng được trong LINQ
+        // và để chỉ mục GIN trigram trên cùng biểu thức này được tối ưu hoá nhận ra.
+        modelBuilder
+            .HasDbFunction(typeof(PostgresTextFunctions).GetMethod(nameof(PostgresTextFunctions.QhUnaccent))!)
+            .HasName("qh_unaccent_immutable")
+            .HasSchema("public");
+
         // Configure PostgreSQL settings
         PostgreSQLConfig.ConfigurePostgreSQL(modelBuilder, "public");
         PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
@@ -66,6 +74,11 @@ public class CatalogDbContext : DbContext
             entity.Property(p => p.GalleryImages).HasColumnType("jsonb");
             // JSON extensibility — freeform key/value attributes, default '{}'
             entity.Property(p => p.Attributes).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb");
+
+            // D08: bảo hành theo số tháng (NULL = dùng chính sách hiệu lực của ngành hàng)
+            // + cờ loại trừ khỏi quyền đổi trả tự nguyện.
+            entity.Property(p => p.WarrantyMonths);
+            entity.Property(p => p.IsReturnExcluded).HasDefaultValue(false);
             
             // Foreign Keys with Navigation Properties
             entity.HasOne(p => p.Category)
@@ -153,6 +166,27 @@ public class CatalogDbContext : DbContext
                 .HasDatabaseName("uq_categories_slug");
 
             entity.Property(c => c.VatRate).HasPrecision(5, 2).HasDefaultValue(0.10m);
+            // D01: VatRate là thuế suất THEO LUẬT; cờ này quyết định ngành hàng có được
+            // áp mức giảm của kỳ giảm thuế hay không.
+            entity.Property(c => c.VatReductionEligible).HasDefaultValue(true);
+            // D08: bảo hành theo serial cho ngành hàng này.
+            entity.Property(c => c.IsSerialTracked).HasDefaultValue(false);
+
+            // Cây danh mục: tự tham chiếu, Restrict để không bao giờ xoá dây chuyền cả nhánh.
+            entity.HasOne(c => c.Parent)
+                .WithMany()
+                .HasForeignKey(c => c.ParentId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_categories_parent_id");
+
+            entity.Property(c => c.ImageUrl).HasMaxLength(1024);
+            entity.Property(c => c.Icon).HasMaxLength(100);
+            entity.Property(c => c.DisplayOrder).HasDefaultValue(0);
+            entity.Property(c => c.MetaTitle).HasMaxLength(200);
+            entity.Property(c => c.MetaDescription).HasMaxLength(500);
+
+            entity.HasIndex(c => new { c.ParentId, c.DisplayOrder })
+                .HasDatabaseName("ix_categories_parent_id_display_order");
         });
 
         // Brand configurations
@@ -162,6 +196,26 @@ public class CatalogDbContext : DbContext
             entity.HasKey(b => b.Id);
             entity.Property(b => b.Name).IsRequired().HasMaxLength(100);
             entity.Property(b => b.Description).HasColumnType("text");
+
+            // IsRequired(false) BẮT BUỘC: migration tạo cột "Slug" NULL được và backfill CHỈ các
+            // thương hiệu đang hoạt động (D03 - 4 hàng rác bị W0-6 xoá cứng), nên trong DB vẫn còn
+            // Slug = NULL. CLR property là `string` không-null nên nếu không khai báo nullable ở
+            // đây, EF coi cột là NOT NULL và trình vật chất hoá KHÔNG chèn kiểm tra null -> mọi
+            // truy vấn admin dùng IgnoreQueryFilters() (GET /brands?includeInactive=true, PUT,
+            // DELETE, activate trên hàng rác) sẽ ném lỗi đọc giá trị thay vì trả dữ liệu.
+            entity.Property(b => b.Slug).HasMaxLength(300).IsRequired(false);
+            // Filtered unique: các hàng rác (slug NULL/rỗng) không chặn nhau.
+            entity.HasIndex(b => b.Slug)
+                .IsUnique()
+                .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''")
+                .HasDatabaseName("uq_brands_slug");
+
+            entity.Property(b => b.LogoUrl).HasMaxLength(1024);
+            entity.Property(b => b.Website).HasMaxLength(500);
+            entity.Property(b => b.DisplayOrder).HasDefaultValue(0);
+
+            entity.HasIndex(b => b.DisplayOrder)
+                .HasDatabaseName("ix_brands_display_order");
         });
 
         // ProductReview configurations

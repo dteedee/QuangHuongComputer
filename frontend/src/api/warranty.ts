@@ -442,12 +442,16 @@ export const warrantyApi = {
         },
 
         // Gán loại xử lý + technician / workOrder
+        // W0-13: was missing /admin - route lives under adminGroup (WarrantyEndpoints.cs:362).
         assignClaim: async (id: string, data: AssignClaimRequest) => {
-            const response = await client.post<{ message: string; id: string; status: string; workOrderId?: string; rmaId?: string }>(`/warranty/claims/${id}/assign`, data);
+            const response = await client.post<{ message: string; id: string; status: string; workOrderId?: string; rmaId?: string }>(`/warranty/admin/claims/${id}/assign`, data);
             return response.data;
         },
 
-        // Hoàn tất claim
+        // W0-13: no backend route exists for POST .../claims/{id}/complete (only
+        // /resolve, with a different contract - no `result` field) -> always 404.
+        // Left uncalled-path as-is (no safe path substitution); see handover in
+        // reports/w0-13-report.md / integration-requests-w0.md for W3.
         completeClaim: async (id: string, data: CompleteClaimRequest) => {
             const response = await client.post<{ message: string; id: string; status: string }>(`/warranty/claims/${id}/complete`, data);
             return response.data;
@@ -460,8 +464,9 @@ export const warrantyApi = {
         },
 
         // Receipt (JSON để render component; backend có thể trả PDF ở endpoint khác)
+        // W0-13: was missing /admin - route lives under adminGroup (WarrantyEndpoints.cs:387).
         getClaimReceipt: async (id: string) => {
-            const response = await client.get<WarrantyReceiptData>(`/warranty/claims/${id}/receipt`);
+            const response = await client.get<WarrantyReceiptData>(`/warranty/admin/claims/${id}/receipt`);
             return response.data;
         },
 

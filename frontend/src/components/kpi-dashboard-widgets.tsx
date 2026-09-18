@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { getDashboardKPIs } from '../api/reporting';
 
 interface KPIData {
   todayRevenue: number;
@@ -10,18 +12,29 @@ interface KPIData {
 }
 
 export default function KpiDashboardWidgets() {
-  const [kpi, setKpi] = useState<KPIData | null>(null);
+  const { data: kpi, isLoading, isError } = useQuery<KPIData>({
+    queryKey: ['dashboard-kpis'],
+    queryFn: getDashboardKPIs,
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    fetch('/api/reports/dashboard-kpis', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(r => r.json())
-      .then(setKpi)
-      .catch(() => {});
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-gray-400 py-8">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span>Đang tải KPI...</span>
+      </div>
+    );
+  }
 
-  if (!kpi) return <div className="text-gray-400 text-center py-8">Đang tải KPI...</div>;
+  if (isError || !kpi) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-red-500 text-sm py-8">
+        <AlertTriangle className="w-4 h-4" />
+        <span>Không tải được KPI. Thử tải lại trang.</span>
+      </div>
+    );
+  }
 
   const cards = [
     {

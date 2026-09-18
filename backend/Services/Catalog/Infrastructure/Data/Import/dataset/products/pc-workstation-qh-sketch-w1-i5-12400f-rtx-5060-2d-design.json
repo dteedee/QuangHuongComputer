@@ -1,0 +1,291 @@
+{
+  "name": "PC Đồ Họa QH Sketch W1 - i5-12400F / RTX 5060 8GB (Thiết Kế 2D)",
+  "slug": "pc-workstation-qh-sketch-w1-i5-12400f-rtx-5060-2d-design",
+  "sku": "QH-SKETCHW1",
+  "brand": "QH",
+  "category": "Máy Tính Đồ Họa",
+  "subCategory": "Workstation - 2D Design",
+  "model": "Sketch W1",
+  "officialUrl": "https://lian-li.com/product/lancool-216/",
+  "priceVnd": 34400000,
+  "oldPriceVnd": 42350000,
+  "costPriceVnd": 30960000,
+  "priceSources": [
+    "https://gearvn.com/search?type=product&q=RTX+5060+Gigabyte+Windforce",
+    "https://gearvn.com/search?type=product&q=Samsung+990+Pro+1TB",
+    "https://gearvn.com/search?type=product&q=ASUS+PRIME+B760M-A+WIFI+D4+CSM",
+    "https://memoryzone.com.vn/ram-pc-corsair-vengeance-lpx-32gb-3200mhz-ddr4-2x16gb-cmk32gx4m2e3200c16"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành hệ thống 24 tháng (1 đổi 1 trong 12 tháng đầu nếu lỗi nhà sản xuất) tại Quang Huong Computer. Riêng từng linh kiện áp dụng bảo hành chính hãng dài hơn: CPU Intel 36 tháng, Nguồn Corsair RM750e 84 tháng, các linh kiện còn lại 12-36 tháng theo chính sách hãng.",
+  "weightKg": 9.5,
+  "stockQuantity": 7,
+  "shortDescription": "PC đồ họa QH Sketch W1 phối CPU Intel Core i5-12400F, GPU RTX 5060 8GB, RAM 32GB DDR4 và SSD NVMe Samsung 990 PRO 1TB, tối ưu cho dân thiết kế 2D dùng Photoshop, Illustrator, Figma.",
+  "descriptionHtml": "<h3>Workstation 2D chuyên xử lý ảnh, dựng hình đồ họa</h3><p>QH Sketch W1 là cấu hình PC được Quang Huong Computer lắp ráp riêng cho dân thiết kế 2D làm việc với Photoshop, Illustrator và Figma. CPU Intel Core i5-12400F (6 nhân 12 luồng, Turbo 4.4GHz) xử lý mượt các tác vụ chỉnh sửa ảnh, dựng layout đa lớp mà không giật lag, trong khi GPU Gigabyte GeForce RTX 5060 WINDFORCE OC 8GB hỗ trợ tăng tốc các bộ lọc dùng GPU và xuất file nhanh hơn.</p><h3>32GB RAM và SSD NVMe tốc độ cao</h3><p>Bộ nhớ RAM Corsair Vengeance LPX 32GB (2x16GB) DDR4-3200 chạy dual-channel giúp máy thoải mái mở nhiều file PSD/AI nặng cùng lúc, trong khi ổ SSD Samsung 990 PRO 1TB NVMe PCIe 4.0 (đọc/ghi tới 7.450/6.900 MB/s) đóng vai trò ổ scratch, giảm đáng kể thời gian load file và lưu bản nháp.</p><h3>Linh kiện nền tảng bền, dễ nâng cấp</h3><p>Nguồn Corsair RM750e 750W 80 Plus Gold dư tải rộng rãi cho phép nâng cấp GPU về sau, mainboard ASUS PRIME B760M-A WIFI D4 hỗ trợ WiFi 6 tích hợp, còn tản khí Thermalright Peerless Assassin 120 SE giữ nhiệt độ CPU ổn định khi làm việc liên tục nhiều giờ. Toàn bộ đặt trong case Lian Li LANCOOL 216 RGB White thoáng khí, tông màu sáng phù hợp bàn làm việc sáng tạo.</p><ul><li>CPU Intel Core i5-12400F 6 nhân 12 luồng, Turbo 4.4GHz</li><li>GPU Gigabyte RTX 5060 WINDFORCE OC 8GB GDDR7</li><li>RAM 32GB (2x16GB) DDR4-3200 dual-channel</li><li>SSD Samsung 990 PRO 1TB NVMe PCIe 4.0</li><li>Nguồn Corsair RM750e 750W 80 Plus Gold Full Modular</li><li>Case Lian Li LANCOOL 216 RGB White + tản khí Thermalright Peerless Assassin 120 SE</li></ul>",
+  "highlights": [
+    "CPU Intel Core i5-12400F 6 nhân 12 luồng, đủ mạnh cho dựng ảnh, xuất file hàng loạt trong Photoshop/Illustrator",
+    "RAM 32GB (2x16GB) dual-channel DDR4-3200 - thoải mái mở nhiều layer, nhiều phần mềm thiết kế cùng lúc",
+    "SSD Samsung 990 PRO 1TB NVMe PCIe 4.0, đọc/ghi tới 7.450/6.900 MB/s, dùng làm ổ scratch cho Photoshop",
+    "GPU Gigabyte RTX 5060 WINDFORCE OC 8GB tăng tốc bộ lọc GPU, xuất bản vẽ trong Illustrator/Figma mượt hơn",
+    "Nguồn Corsair RM750e 750W 80 Plus Gold dư tải lớn, vận hành ổn định, dễ nâng cấp GPU sau này",
+    "Case Lian Li LANCOOL 216 RGB White thoáng khí, tản nhiệt tốt, tông sáng phù hợp góc làm việc sáng tạo"
+  ],
+  "specs": [
+    {
+      "group": "CPU - Intel Core i5-12400F",
+      "name": "Số nhân / luồng",
+      "value": "6 nhân / 12 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU - Intel Core i5-12400F",
+      "name": "Xung nhịp cơ bản / Turbo tối đa",
+      "value": "2.50 GHz / 4.40 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU - Intel Core i5-12400F",
+      "name": "Bộ nhớ đệm",
+      "value": "18 MB Intel Smart Cache",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU - Intel Core i5-12400F",
+      "name": "Công suất cơ bản / Turbo",
+      "value": "65W / 117W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU - Intel Core i5-12400F",
+      "name": "Socket",
+      "value": "FCLGA1700",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "Chipset",
+      "value": "Intel B760",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "Socket",
+      "value": "LGA1700 (Intel Core Gen 12/13/14)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "RAM hỗ trợ",
+      "value": "4 khe DIMM DDR4, tối đa 128GB, lên đến DDR4-5333(OC), Dual Channel",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "Form factor",
+      "value": "Micro ATX",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "Khe M.2 / SATA",
+      "value": "2 x M.2 (PCIe 4.0 x4) + 4 x SATA 6Gb/s",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "Mainboard - ASUS PRIME B760M-A WIFI D4-CSM",
+      "name": "Mạng / Wi-Fi",
+      "value": "Realtek 2.5Gb Ethernet + Wi-Fi 6 (802.11ax) + Bluetooth 5.2",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/techspec/"
+    },
+    {
+      "group": "RAM - Corsair Vengeance LPX 32GB DDR4-3200",
+      "name": "Dung lượng",
+      "value": "32GB (2 x 16GB), Dual Channel",
+      "source": "https://memoryzone.com.vn/ram-pc-corsair-vengeance-lpx-32gb-3200mhz-ddr4-2x16gb-cmk32gx4m2e3200c16"
+    },
+    {
+      "group": "RAM - Corsair Vengeance LPX 32GB DDR4-3200",
+      "name": "Bus / Độ trễ",
+      "value": "DDR4 3200 MT/s, CL16, 1.35V (XMP 2.0)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "RAM - Corsair Vengeance LPX 32GB DDR4-3200",
+      "name": "Thiết kế",
+      "value": "Tản nhôm anod hóa, biên dạng thấp (Low Profile)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "GPU / CUDA Cores",
+      "value": "GeForce RTX 5060, 3840 CUDA Cores",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "Xung nhịp Core (OC Mode)",
+      "value": "2512 MHz (Reference: 2497 MHz)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "Bộ nhớ",
+      "value": "8GB GDDR7, bus 128-bit, 28 Gbps",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "Giao tiếp / Kích thước",
+      "value": "PCIe 5.0, dài 199 x rộng 116 x cao 40 mm",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "Đầu cấp nguồn / PSU khuyến nghị",
+      "value": "1 x 8-pin, khuyến nghị PSU 550W trở lên",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "VGA - Gigabyte GeForce RTX 5060 WINDFORCE OC 8G",
+      "name": "Cổng xuất hình",
+      "value": "3 x DisplayPort 2.1b, 1 x HDMI 2.1b",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "Giao tiếp",
+      "value": "PCIe Gen 4.0 x4, NVMe 2.0",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "Dung lượng / Form factor",
+      "value": "1TB, M.2 2280",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "NAND / DRAM cache",
+      "value": "Samsung V-NAND TLC, 1GB LPDDR4",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "Tốc độ đọc/ghi tuần tự (tối đa)",
+      "value": "7.450 MB/s đọc, 6.900 MB/s ghi",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "Random Read/Write (QD32)",
+      "value": "1.200K / 1.550K IOPS",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "SSD - Samsung 990 PRO 1TB NVMe",
+      "name": "Độ bền (TBW) / Bảo hành hãng",
+      "value": "600 TBW / 5 năm",
+      "source": "https://download.semiconductor.samsung.com/resources/data-sheet/samsung_nvme_ssd_990_pro_datasheet_rev.2.0.pdf"
+    },
+    {
+      "group": "PSU - Corsair RM750e 750W",
+      "name": "Công suất / Chuẩn",
+      "value": "750W liên tục, ATX 3.1, tương thích PCIe 5.1",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "PSU - Corsair RM750e 750W",
+      "name": "Hiệu suất / Độ ồn",
+      "value": "Cybenetics Gold (hiệu suất tới 89%) / Cybenetics A",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "PSU - Corsair RM750e 750W",
+      "name": "Dây cáp / Quạt",
+      "value": "Full Modular, kèm cáp 12V-2x6 gốc; quạt 120mm rifle bearing, Zero RPM Mode",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Loại case",
+      "value": "Mid Tower, mặt trước/trên lưới thép thoáng khí",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Hỗ trợ mainboard",
+      "value": "E-ATX (dưới 280mm) / ATX / Micro-ATX / Mini-ITX",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Chiều dài VGA tối đa / Tản CPU tối đa",
+      "value": "392mm / 180.5mm",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Case - Lian Li LANCOOL 216 RGB White",
+      "name": "Quạt đi kèm sẵn",
+      "value": "2 x quạt ARGB 160mm (trước) + 1 x quạt PWM 140mm (sau)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Tản nhiệt - Thermalright Peerless Assassin 120 SE",
+      "name": "Kiểu thiết kế",
+      "value": "Tản khí tháp đôi, 6 ống đồng Φ6mm",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt - Thermalright Peerless Assassin 120 SE",
+      "name": "Quạt / Chiều cao",
+      "value": "2 x quạt TL-C12C 120mm (1550 RPM, 25.6 dBA) / cao 155mm",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt - Thermalright Peerless Assassin 120 SE",
+      "name": "Socket hỗ trợ",
+      "value": "Intel LGA 115X/1200/1700/1851, AMD AM4/AM5",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Hệ điều hành",
+      "value": "Chưa bao gồm hệ điều hành bản quyền (khách có thể yêu cầu cài đặt Windows 11 khi mua)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Bảo hành hệ thống",
+      "value": "24 tháng tại Quang Huong Computer, kèm bảo hành riêng từng hãng linh kiện (CPU 36 tháng, PSU 84 tháng, còn lại 12 tháng)",
+      "source": "https://lian-li.com/product/lancool-216/"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "Đồ Họa 2D - Thiết Kế",
+    "cpu": "Intel Core i5-12400F",
+    "gpu": "RTX 5060 8GB",
+    "ram": "32GB DDR4 3200MHz",
+    "storage": "SSD NVMe 1TB PCIe 4.0",
+    "socket": "LGA1700"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_93-b.jpg",
+      "alt": "Case Lian Li LANCOOL 216 RGB White của PC QH Sketch W1, nhìn chính diện, quạt ARGB sáng đèn"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_136-c.jpg",
+      "alt": "PC QH Sketch W1 trong case Lian Li LANCOOL 216 RGB White, góc chụp 3/4 thấy mặt kính cường lực"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://lian-li.com/wp-content/uploads/2022/11/1007_20-Edit.jpg",
+      "alt": "Bên trong case Lian Li LANCOOL 216 RGB White dùng cho PC QH Sketch W1, khoang lắp đặt màu trắng"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Đồ Họa QH Sketch W1 - i5-12400F / RTX 5060 8GB - Quang Huong Computer",
+  "metaDescription": "PC đồ họa QH Sketch W1: Intel Core i5-12400F, RTX 5060 8GB, RAM 32GB DDR4, SSD NVMe Samsung 990 PRO 1TB. Tối ưu cho thiết kế 2D (Photoshop, Illustrator, Figma)."
+}

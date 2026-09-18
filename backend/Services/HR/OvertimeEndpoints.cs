@@ -38,7 +38,7 @@ public static class OvertimeEndpoints
                 .Where(o => o.Status == OvertimeStatus.Pending)
                 .OrderBy(o => o.Date)
                 .ToListAsync())
-        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+        ).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         // GET /api/hr/overtime/my — của chính nhân viên
         group.MapGet("/my", async (ClaimsPrincipal user, HRDbContext db) =>
@@ -68,7 +68,7 @@ public static class OvertimeEndpoints
                 return Results.Ok(new { message = "Đã duyệt OT.", req.Status });
             }
             catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+        }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
         group.MapPost("/{id:guid}/reject",
             async (Guid id, RejectOvertimeDto dto, HRDbContext db, ClaimsPrincipal user) =>
@@ -86,8 +86,10 @@ public static class OvertimeEndpoints
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
                     { return Results.BadRequest(new { error = ex.Message }); }
-            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager"));
+            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR")); // TODO(W1-1): replace role list with permission policy
 
+        // IDOR guard: previously open to ANY authenticated user with no role check at all —
+        // recording actual OT hours is a manager/HR-only action.
         group.MapPost("/{id:guid}/record-actual",
             async (Guid id, RecordActualHoursDto dto, HRDbContext db) =>
             {
@@ -101,7 +103,7 @@ public static class OvertimeEndpoints
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
                     { return Results.BadRequest(new { error = ex.Message }); }
-            });
+            }).RequireAuthorization(p => p.RequireRole("Admin", "Manager", "HR"));
     }
 }
 

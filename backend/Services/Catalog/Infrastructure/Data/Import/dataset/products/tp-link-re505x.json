@@ -1,0 +1,168 @@
+{
+  "name": "Bộ Kích Sóng WiFi 6 TP-Link RE505X AX1500",
+  "slug": "tp-link-re505x",
+  "sku": "TPL-RE505X",
+  "brand": "TP-Link",
+  "category": "Thiết Bị Mạng",
+  "subCategory": "Range Extender WiFi",
+  "model": "RE505X",
+  "officialUrl": "https://www.tp-link.com/us/home-networking/range-extender/re505x/",
+  "priceVnd": 1050000,
+  "oldPriceVnd": 1443000,
+  "costPriceVnd": 920000,
+  "priceSources": [
+    "https://cellphones.com.vn/bo-kich-song-wifi-6-tp-link-re505x-ax1500.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng TP-Link Việt Nam 24 tháng, 1 đổi 1 trong 7 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.16,
+  "stockQuantity": 22,
+  "shortDescription": "Bộ kích sóng WiFi 6 TP-Link RE505X chuẩn AX1500 hai băng tần, cắm trực tiếp vào ổ điện để xóa vùng lõm sóng và mở rộng WiFi cho nhà phố, căn hộ nhiều phòng.",
+  "descriptionHtml": "<h3>Mở rộng WiFi 6 cho toàn bộ ngôi nhà</h3><p>TP-Link RE505X là bộ kích sóng (range extender) chuẩn WiFi 6 (802.11ax) hai băng tần, tổng tốc độ lý thuyết AX1500: 300 Mbps ở băng 2.4GHz và 1200 Mbps ở băng 5GHz. Thiết bị cắm thẳng vào ổ điện trên tường, không cần dây nguồn rời, phù hợp đặt ở hành lang, tầng trên hoặc góc nhà hay bị yếu sóng.</p><h3>Một tên WiFi duy nhất với OneMesh</h3><p>Khi dùng cùng router TP-Link hỗ trợ OneMesh, RE505X đồng bộ thành một mạng WiFi duy nhất với router chính, thiết bị tự chuyển vùng mượt mà khi di chuyển trong nhà mà không phải đổi tên mạng hay mật khẩu. Với router không hỗ trợ OneMesh, máy vẫn hoạt động bình thường ở chế độ mở rộng sóng thông thường hoặc chế độ Access Point.</p><h3>Phần cứng gọn, có cổng mạng dây</h3><p>Máy trang bị 2 ăng-ten ngoài, 1 cổng Gigabit Ethernet để nối thêm thiết bị hữu tuyến như Smart TV, máy tính bàn hoặc loa mạng, cùng đèn tín hiệu báo cường độ sóng giúp chọn vị trí lắp đặt tối ưu. Cấu hình và quản lý qua app Tether trên điện thoại hoặc giao diện web, hỗ trợ mã hóa WPA/WPA2-PSK.</p><ul><li>Chuẩn WiFi 6 (802.11ax), 2 băng tần, tổng tốc độ AX1500</li><li>Hỗ trợ OneMesh: một tên WiFi duy nhất với router TP-Link tương thích</li><li>1 cổng Gigabit Ethernet cho thiết bị mạng dây</li><li>Cắm thẳng ổ điện, 2 ăng-ten ngoài, đèn báo cường độ tín hiệu</li><li>Cấu hình dễ dàng qua app Tether, hỗ trợ chế độ Access Point</li></ul>",
+  "highlights": [
+    "Chuẩn WiFi 6 (802.11ax), tổng tốc độ lý thuyết AX1500 (300 Mbps @2.4GHz + 1200 Mbps @5GHz)",
+    "Hỗ trợ OneMesh: đồng bộ một tên WiFi duy nhất với router TP-Link tương thích, chuyển vùng mượt",
+    "1 cổng Gigabit Ethernet để kết nối thiết bị mạng dây qua bộ kích sóng",
+    "Thiết kế cắm trực tiếp ổ điện, 2 ăng-ten ngoài, đèn LED báo cường độ tín hiệu",
+    "2 chế độ hoạt động: Range Extender (kích sóng) hoặc Access Point (phát WiFi từ mạng dây)",
+    "Cấu hình nhanh qua app TP-Link Tether hoặc nút WPS"
+  ],
+  "specs": [
+    {
+      "group": "Không dây",
+      "name": "Chuẩn WiFi",
+      "value": "WiFi 6 - IEEE 802.11ax/ac/n/a (5GHz), IEEE 802.11b/g/n (2.4GHz)",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Băng tần",
+      "value": "Dual-band 2.4GHz và 5GHz",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Tốc độ băng 2.4GHz",
+      "value": "Lên đến 300 Mbps",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Tốc độ băng 5GHz",
+      "value": "Lên đến 1200 Mbps",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Tổng tốc độ (AX rating)",
+      "value": "AX1500",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/"
+    },
+    {
+      "group": "Không dây",
+      "name": "Chế độ hoạt động",
+      "value": "Range Extender / Access Point",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Bảo mật không dây",
+      "value": "Mã hóa 64/128-bit WEP, WPA/WPA2-PSK",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Công suất phát (CE)",
+      "value": "2.4GHz ≤20dBm, 5GHz ≤30dBm",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Không dây",
+      "name": "Tính năng mesh",
+      "value": "Hỗ trợ OneMesh với router TP-Link tương thích",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Cổng mạng",
+      "value": "1x cổng Gigabit Ethernet",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Số ăng-ten",
+      "value": "2 ăng-ten ngoài",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Nút bấm",
+      "value": "Nút WPS, nút Reset",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Nguồn điện đầu vào",
+      "value": "100-240V~ 50/60Hz",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Công suất tiêu thụ tối đa",
+      "value": "10W",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Phần cứng",
+      "name": "Kích thước (W x D x H)",
+      "value": "74 x 46 x 124.8 mm (2.9 x 1.8 x 4.9 in)",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Khác",
+      "name": "Chứng nhận",
+      "value": "FCC, RoHS",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Khác",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0°C - 40°C",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Khác",
+      "name": "Độ ẩm hoạt động",
+      "value": "10% - 90% không ngưng tụ",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/#specifications"
+    },
+    {
+      "group": "Khác",
+      "name": "Ứng dụng quản lý",
+      "value": "TP-Link Tether (iOS/Android)",
+      "source": "https://www.tp-link.com/us/home-networking/range-extender/re505x/"
+    }
+  ],
+  "filterAttributes": {
+    "wifiStandard": "WiFi 6 (802.11ax)",
+    "band": "Dual-band (2.4GHz + 5GHz)",
+    "maxSpeed": "AX1500",
+    "ports": "1x Gigabit LAN/WAN",
+    "meshSupport": "OneMesh"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static.tp-link.com/01_large_1620806188591r.jpg",
+      "alt": "TP-Link RE505X bộ kích sóng WiFi 6 AX1500 - ảnh sản phẩm chính diện"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.tp-link.com/04_large_1620806226096k.jpg",
+      "alt": "Hộp đóng gói TP-Link RE505X AX1500 Wi-Fi 6 Range Extender"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "TP-Link RE505X AX1500 - Bộ Kích Sóng WiFi 6 Chính Hãng | Quang Huong Computer",
+  "metaDescription": "Bộ kích sóng WiFi 6 TP-Link RE505X AX1500, hỗ trợ OneMesh, 1 cổng Gigabit, bảo hành chính hãng 24 tháng. Giá tốt tại Quang Huong Computer."
+}

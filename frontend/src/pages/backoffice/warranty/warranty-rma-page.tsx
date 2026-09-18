@@ -24,6 +24,33 @@ const RESULT_META: Record<RmaResultT, { label: string; cls: string }> = {
     Rejected: { label: 'Từ chối', cls: 'bg-red-100 text-red-700' },
 };
 
+/**
+ * W0-11 fixed the backend RmaDto to send `code`/`items`, but until the API
+ * process is restarted the old binary may still be live and answer with
+ * `rmaNumber`/`itemsJson` (a JSON string) instead - this page must survive
+ * either shape without throwing (was: `r.items.length` -> TypeError as soon
+ * as one RMA existed).
+ */
+type RawRma = WarrantyRma & { rmaNumber?: string; itemsJson?: string };
+
+function safeParseRmaItems(itemsJson?: string): RmaItem[] {
+    if (!itemsJson) return [];
+    try {
+        const parsed: unknown = JSON.parse(itemsJson);
+        return Array.isArray(parsed) ? (parsed as RmaItem[]) : [];
+    } catch {
+        return [];
+    }
+}
+
+function normalizeRma(r: RawRma): WarrantyRma {
+    return {
+        ...r,
+        code: r.code ?? r.rmaNumber ?? '—',
+        items: r.items ?? safeParseRmaItems(r.itemsJson) ?? [],
+    };
+}
+
 export default function WarrantyRmaPage() {
     const [items, setItems] = useState<WarrantyRma[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,7 +63,7 @@ export default function WarrantyRmaPage() {
         setLoading(true);
         try {
             const list = await warrantyApi.rma.getList(statusFilter || undefined);
-            setItems(list);
+            setItems((list as RawRma[]).map(normalizeRma));
         } catch {
             toast.error('Không tải được RMA');
         } finally {

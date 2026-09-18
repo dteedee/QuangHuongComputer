@@ -52,19 +52,27 @@ public class VNPayService
         }
 
         var vnp_SecureHash = queryParams.ContainsKey("vnp_SecureHash") ? queryParams["vnp_SecureHash"] : "";
-        var isValidSignature = vnpay.ValidateSignature(vnp_SecureHash, _config.HashSecret);
+        // W0-10: thiếu chữ ký = KHÔNG hợp lệ (không bao giờ "bỏ qua kiểm tra").
+        var hasSignature = !string.IsNullOrWhiteSpace(vnp_SecureHash);
+        var isValidSignature = hasSignature
+            && !string.IsNullOrWhiteSpace(_config.HashSecret)
+            && vnpay.ValidateSignature(vnp_SecureHash, _config.HashSecret);
+        var responseCode = queryParams.TryGetValue("vnp_ResponseCode", out var rc) ? rc : "";
 
         return new VNPayPaymentResponse
         {
-            Success = isValidSignature && queryParams["vnp_ResponseCode"] == "00",
+            Success = isValidSignature && responseCode == "00",
+            HasSignature = hasSignature,
             TxnRef = queryParams.ContainsKey("vnp_TxnRef") ? queryParams["vnp_TxnRef"] : "",
-            Amount = queryParams.ContainsKey("vnp_Amount") ? long.Parse(queryParams["vnp_Amount"]) / 100 : 0,
+            Amount = queryParams.TryGetValue("vnp_Amount", out var amt) && long.TryParse(amt, out var amtLong)
+                ? amtLong / 100m
+                : 0,
             BankCode = queryParams.ContainsKey("vnp_BankCode") ? queryParams["vnp_BankCode"] : "",
             BankTranNo = queryParams.ContainsKey("vnp_BankTranNo") ? queryParams["vnp_BankTranNo"] : "",
             CardType = queryParams.ContainsKey("vnp_CardType") ? queryParams["vnp_CardType"] : "",
             OrderInfo = queryParams.ContainsKey("vnp_OrderInfo") ? queryParams["vnp_OrderInfo"] : "",
             PayDate = queryParams.ContainsKey("vnp_PayDate") ? queryParams["vnp_PayDate"] : "",
-            ResponseCode = queryParams.ContainsKey("vnp_ResponseCode") ? queryParams["vnp_ResponseCode"] : "",
+            ResponseCode = responseCode,
             TransactionNo = queryParams.ContainsKey("vnp_TransactionNo") ? queryParams["vnp_TransactionNo"] : "",
             TransactionStatus = queryParams.ContainsKey("vnp_TransactionStatus") ? queryParams["vnp_TransactionStatus"] : "",
             IsValidSignature = isValidSignature
@@ -133,8 +141,9 @@ public class VNPayLibrary
             queryString = queryString.Substring(0, queryString.Length - 1);
         }
 
+        // W0-10: so sánh theo thời gian hằng số (trước đây dùng string.Equals).
         var checkSum = HmacSHA512(secretKey, queryString);
-        return checkSum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
+        return Payments.Application.Webhooks.WebhookSignature.FixedTimeEqualsHex(checkSum, inputHash);
     }
 
     private string HmacSHA512(string key, string inputData)
@@ -154,41 +163,4 @@ public class VNPayLibrary
 
         return hash.ToString();
     }
-}
-
-public class VNPayConfig
-{
-    public string TmnCode { get; set; } = string.Empty;
-    public string HashSecret { get; set; } = string.Empty;
-    public string PaymentUrl { get; set; } = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public string ReturnUrl { get; set; } = string.Empty;
-    public string Version { get; set; } = "2.1.0";
-}
-
-public class VNPayPaymentRequest
-{
-    public string TxnRef { get; set; } = string.Empty; // Order ID or Payment Intent ID
-    public decimal Amount { get; set; }
-    public string OrderInfo { get; set; } = string.Empty;
-    public string OrderType { get; set; } = "other";
-    public string IpAddress { get; set; } = string.Empty;
-    public DateTime CreateDate { get; set; } = DateTime.Now;
-    public string? Locale { get; set; } = "vn";
-    public string? BankCode { get; set; }
-}
-
-public class VNPayPaymentResponse
-{
-    public bool Success { get; set; }
-    public string TxnRef { get; set; } = string.Empty;
-    public decimal Amount { get; set; }
-    public string BankCode { get; set; } = string.Empty;
-    public string BankTranNo { get; set; } = string.Empty;
-    public string CardType { get; set; } = string.Empty;
-    public string OrderInfo { get; set; } = string.Empty;
-    public string PayDate { get; set; } = string.Empty;
-    public string ResponseCode { get; set; } = string.Empty;
-    public string TransactionNo { get; set; } = string.Empty;
-    public string TransactionStatus { get; set; } = string.Empty;
-    public bool IsValidSignature { get; set; }
 }

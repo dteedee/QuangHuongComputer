@@ -1,0 +1,119 @@
+{
+  "name": "Switch Chia Mạng Mercusys MS108G 8 Cổng Gigabit 10/100/1000Mbps",
+  "slug": "mercusys-ms108g",
+  "sku": "MCS-MS108G",
+  "brand": "Mercusys",
+  "category": "Thiết Bị Mạng",
+  "subCategory": "Network Switch",
+  "model": "MS108G v1",
+  "officialUrl": "https://www.mercusys.com/vn/product/switch/ms108g/v1/",
+  "priceVnd": 370000,
+  "oldPriceVnd": 600000,
+  "costPriceVnd": 325000,
+  "priceSources": [
+    "https://cellphones.com.vn/bo-chia-mang-8-cong-mercusys-ms108g.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Mercusys 24 tháng cho thiết bị mạng SOHO tại Việt Nam theo chính sách bảo hành Mercusys VN.",
+  "weightKg": 0.15,
+  "stockQuantity": 25,
+  "shortDescription": "Switch mạng để bàn 8 cổng Gigabit của Mercusys, thiết kế nhỏ gọn, cắm là chạy không cần cấu hình, phù hợp mở rộng thêm cổng mạng cho gia đình và văn phòng nhỏ.",
+  "descriptionHtml": "<h3>Mở rộng cổng mạng Gigabit đơn giản với Mercusys MS108G</h3><p>Mercusys MS108G là switch mạng không quản lý (unmanaged) dạng để bàn, cung cấp 8 cổng Ethernet chuẩn 10/100/1000Mbps. Thiết bị phù hợp khi cần nối thêm nhiều máy tính, camera IP, đầu ghi hình hay TV box vào cùng một đường mạng dây mà router hoặc modem không còn đủ cổng trống.</p><h3>Cắm là chạy, không cần cấu hình</h3><p>Switch hoạt động theo cơ chế plug-and-play: cắm dây mạng vào là thiết bị tự nhận tốc độ và chế độ truyền phù hợp nhờ tự động đàm phán (auto-negotiation) và hỗ trợ Auto-MDI/MDIX, không phân biệt dây bấm thẳng hay chéo. Bộ đệm 64KB cùng hỗ trợ Jumbo Frame 9KB giúp truyền file dung lượng lớn giữa các máy trong mạng LAN mượt hơn.</p><h3>Nhỏ gọn, tiết kiệm điện</h3><p>Với kích thước chỉ 127 x 60.3 x 22mm, MS108G dễ dàng đặt gọn trên bàn làm việc hoặc giấu sau màn hình, TV. Công nghệ Ethernet xanh của Mercusys tự động điều chỉnh mức tiêu thụ điện theo độ dài dây cáp và trạng thái kết nối từng cổng, giúp thiết bị chạy mát và tiết kiệm điện khi hoạt động liên tục.</p><ul><li>8 cổng Gigabit 10/100/1000Mbps, Auto-MDI/MDIX</li><li>Chuẩn IEEE 802.3, 802.3u, 802.3x</li><li>Bộ đệm 64KB, hỗ trợ Jumbo Frame 9KB</li><li>Nguồn ngoài 9V/0.6A đi kèm hộp</li><li>Đèn LED báo trạng thái từng cổng và nguồn</li></ul>",
+  "highlights": [
+    "8 cổng Gigabit 10/100/1000Mbps, tự động nhận tốc độ kết nối",
+    "Chuẩn Auto-MDI/MDIX, cắm dây mạng thẳng hay chéo đều nhận",
+    "Công nghệ Ethernet xanh giúp tiết kiệm điện năng tiêu thụ",
+    "Vỏ nhựa nhỏ gọn 127 x 60.3 x 22mm, dễ đặt bàn hoặc giấu sau màn hình",
+    "Hoạt động plug-and-play, không cần phần mềm hay cấu hình",
+    "Bảo hành chính hãng Mercusys 24 tháng"
+  ],
+  "specs": [
+    {
+      "group": "Kết nối",
+      "name": "Số cổng LAN",
+      "value": "8 cổng 10/100/1000Mbps",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Loại cổng",
+      "value": "Auto-MDI/MDIX, tự động đàm phán tốc độ",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Tốc độ truyền",
+      "value": "10/100/1000Mbps (Half Duplex); 20/200/2000Mbps (Full Duplex)",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Phương thức chuyển tiếp",
+      "value": "Lưu trữ và chuyển tiếp (Store-and-Forward)",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Bộ đệm gói tin",
+      "value": "64KB",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Jumbo Frame",
+      "value": "9KB",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Tiêu chuẩn",
+      "name": "Chuẩn & giao thức",
+      "value": "IEEE 802.3, IEEE 802.3u, IEEE 802.3x CSMA/CD",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Thiết kế & Vật lý",
+      "name": "Kích thước (D x R x C)",
+      "value": "127 x 60.3 x 22 mm",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Thiết kế & Vật lý",
+      "name": "Đèn LED",
+      "value": "8 LED cổng Ethernet (1-8) + 1 LED nguồn",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Nguồn cấp",
+      "value": "Adapter ngoài 9V/0.6A",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/#specifications"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Công nghệ tiết kiệm điện",
+      "value": "Ethernet Xanh, tiết kiệm năng lượng đến 82%",
+      "source": "https://www.mercusys.com/vn/product/switch/ms108g/v1/"
+    }
+  ],
+  "filterAttributes": {
+    "portCount": "8",
+    "speedStandard": "Gigabit 10/100/1000Mbps",
+    "switchType": "Unmanaged",
+    "formFactor": "Desktop"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://static-product.mercusys.com/ms108g_v1/a.jpg",
+      "alt": "Switch Mercusys MS108G nhìn từ mặt trước với 8 cổng LAN màu đỏ"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://static.mercusys.com/product-image/MS108G_EU_1.0_0320190505074545.jpg",
+      "alt": "Switch Mercusys MS108G nhìn góc nghiêng, mặt trên khắc logo Mercusys"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Switch Mercusys MS108G 8 Cổng Gigabit Chính Hãng",
+  "metaDescription": "Switch mạng Mercusys MS108G 8 cổng Gigabit 10/100/1000Mbps, nhỏ gọn, cắm là chạy, bảo hành chính hãng 24 tháng. Mua tại Quang Huong Computer."
+}

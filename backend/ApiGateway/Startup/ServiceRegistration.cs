@@ -84,13 +84,75 @@ public static class ServiceRegistration
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
+        RegisterForwardedHeaders(builder);
         RateLimitingSetup.Register(builder);
 
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        // Tagged "ready": /health/ready filters on this tag and matched NOTHING before, so it always
+        // reported Healthy even with the database down. /health/live stays dependency-free (it answers
+        // "the process is up"), which is what a container restart policy must probe.
+        // Redis only degrades the service (caching falls back to the database); Postgres and RabbitMQ
+        // are hard dependencies — decision D05.
         builder.Services.AddHealthChecks()
-            .AddNpgSql(connectionString!, name: "postgres")
-            .AddRabbitMQ(rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672", name: "rabbitmq")
-            .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379", name: "redis");
+            .AddNpgSql(connectionString!, name: "postgres", tags: new[] { "ready", "db" })
+            .AddRabbitMQ(
+                rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672",
+                name: "rabbitmq",
+                tags: new[] { "ready", "bus" })
+            .AddRedis(
+                builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379",
+                name: "redis",
+                failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
+                tags: new[] { "ready", "cache" });
+    }
+
+    /// <summary>
+    /// Trust X-Forwarded-For / X-Forwarded-Proto ONLY from the reverse proxy.
+    ///
+    /// Without this the rate limiter, the audit log and every "client IP" in the system see the
+    /// proxy's address, so the whole internet shares one bucket. Trusting the header from ANY peer
+    /// would be worse: a caller could then spoof its own address and escape rate limiting entirely.
+    /// Default network is 172.16.0.0/12 (the Docker bridge Caddy runs on) — decision D05.
+    /// With no proxy in front (today's dev setup) nothing matches and the socket address is used.
+    /// </summary>
+    private static void RegisterForwardedHeaders(WebApplicationBuilder builder)
+    {
+        var networks = builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>()
+            ?? new[] { "172.16.0.0/12" };
+        var proxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>()
+            ?? Array.Empty<string>();
+
+        builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+            // One hop: Caddy. A longer chain would let a client prepend a forged address.
+            options.ForwardLimit = builder.Configuration.GetValue("ForwardedHeaders:ForwardLimit", 1);
+
+            // The defaults trust the loopback address; replace them with the configured set so the
+            // trusted list is explicit and reviewable rather than implicit.
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+
+            foreach (var network in networks)
+            {
+                var parts = network.Split('/', 2);
+                if (parts.Length == 2
+                    && System.Net.IPAddress.TryParse(parts[0], out var prefix)
+                    && int.TryParse(parts[1], out var prefixLength))
+                {
+                    options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLength));
+                }
+            }
+
+            foreach (var proxy in proxies)
+            {
+                if (System.Net.IPAddress.TryParse(proxy, out var address))
+                {
+                    options.KnownProxies.Add(address);
+                }
+            }
+        });
     }
 
     private static void RegisterCors(WebApplicationBuilder builder)
@@ -161,7 +223,8 @@ public static class ServiceRegistration
         // Promotion engine — 9 rule + evaluator + engine.
         builder.Services.AddPricingEngine();
         builder.Services.AddAiModule(builder.Configuration);
-        builder.Services.AddSignalR();
+        builder.Services.AddSignalR()
+            .AddJsonProtocol(options => BuildingBlocks.Endpoints.ApiJsonOptions.Apply(options.PayloadSerializerOptions));
         builder.Services.AddCommunicationModule(builder.Configuration);
         builder.Services.AddHRModule(builder.Configuration);
         builder.Services.AddSystemConfigModule(builder.Configuration);
@@ -186,7 +249,7 @@ public static class ServiceRegistration
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost", "/", h =>
+                cfg.Host(builder.Configuration.GetValue<string>("RabbitMQ:Host") ?? "localhost", builder.Configuration.GetValue<string>("RabbitMQ:VirtualHost") ?? "/", h =>
                 {
                     h.Username("guest");
                     h.Password("guest");
@@ -200,19 +263,19 @@ public static class ServiceRegistration
         builder.Services.AddHostedService<CRM.BackgroundServices.AutomationJobService>();
     }
 
+    /// <summary>
+    /// One JSON contract for the whole API — see <see cref="BuildingBlocks.Endpoints.ApiJsonOptions"/>.
+    /// It must be applied to all three pipelines (minimal APIs, MVC controllers, SignalR), otherwise
+    /// the same DTO is serialized differently depending on which one served it. The SignalR hub
+    /// protocol was previously left at its defaults, so chat/notification payloads went out PascalCase
+    /// with naive timestamps while the REST responses were camelCase with UTC ones.
+    /// </summary>
     private static void RegisterJsonAndControllers(WebApplicationBuilder builder)
     {
-        builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-        {
-            options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-            options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        });
+        builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(
+            options => BuildingBlocks.Endpoints.ApiJsonOptions.Apply(options.SerializerOptions));
 
         builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            });
+            .AddJsonOptions(options => BuildingBlocks.Endpoints.ApiJsonOptions.Apply(options.JsonSerializerOptions));
     }
 }

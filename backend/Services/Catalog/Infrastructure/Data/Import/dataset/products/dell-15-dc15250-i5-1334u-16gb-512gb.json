@@ -1,0 +1,156 @@
+{
+  "name": "Laptop Dell 15 DC15250 (Intel Core i5-1334U, 16GB, 512GB)",
+  "slug": "dell-15-dc15250-i5-1334u-16gb-512gb",
+  "sku": "DELL-DC15250-71092479",
+  "brand": "Dell",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop văn phòng",
+  "model": "Dell 15 DC15250 (71092479)",
+  "officialUrl": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop",
+  "priceVnd": 22990000,
+  "oldPriceVnd": 24490000,
+  "costPriceVnd": 20460000,
+  "priceSources": [
+    "https://www.thegioididong.com/laptop/dell-15-dc15250-i5-1334u-71092479"
+  ],
+  "warrantyMonths": 12,
+  "warrantyInfo": "Bảo hành chính hãng 12 tháng tại các trung tâm bảo hành ủy quyền của Dell trên toàn quốc.",
+  "weightKg": 1.62,
+  "stockQuantity": 18,
+  "shortDescription": "Laptop văn phòng Dell 15 DC15250 trang bị Core i5-1334U, RAM 16GB, SSD 512GB và màn hình Full HD tần số quét 120Hz, phù hợp công việc văn phòng, học tập và đa nhiệm hằng ngày.",
+  "descriptionHtml": "<h3>Hiệu năng ổn định cho công việc hằng ngày</h3><p>Dell 15 DC15250 dùng chip Intel Core i5-1334U thế hệ 13, 10 nhân 12 luồng, xung nhịp tối đa 4.6GHz, đủ sức xử lý mượt các tác vụ soạn thảo văn bản, bảng tính, họp trực tuyến và mở nhiều ứng dụng cùng lúc. Kết hợp RAM 16GB DDR4 và SSD NVMe 512GB, máy khởi động nhanh, mở file và chuyển đổi cửa sổ gần như tức thì.</p><h3>Màn hình sắc nét, tần số quét cao</h3><p>Màn hình 15.6 inch độ phân giải Full HD (1920x1080) tần số quét 120Hz cho thao tác cuộn trang, kéo thả mượt hơn hẳn màn hình 60Hz phổ thông, phù hợp cho dân văn phòng phải nhìn màn hình nhiều giờ mỗi ngày. Bàn phím tích hợp cụm phím số tiện cho công việc kế toán, nhập liệu.</p><h3>Kết nối đầy đủ, pin bền bỉ</h3><p>Máy có cổng USB-A, USB-C, HDMI, khe đọc thẻ SD, Wi-Fi 6 và Bluetooth 5.3 đáp ứng tốt nhu cầu kết nối thiết bị ngoại vi và mạng không dây tốc độ cao. Pin 3-cell 41Wh hỗ trợ công nghệ ExpressCharge giúp sạc nhanh đạt khoảng 80% dung lượng chỉ trong 1 giờ, thân máy nặng khoảng 1.62kg dễ mang theo di chuyển.</p><ul><li>CPU Intel Core i5-1334U, 10 nhân 12 luồng, tối đa 4.6GHz</li><li>RAM 16GB DDR4, SSD NVMe 512GB</li><li>Màn hình 15.6\" Full HD 120Hz, 250 nits</li><li>Pin 41Wh, hỗ trợ sạc nhanh ExpressCharge</li><li>Wi-Fi 6, Bluetooth 5.3, đầy đủ cổng kết nối phổ thông</li></ul>",
+  "highlights": [
+    "CPU Intel Core i5-1334U thế hệ 13, 10 nhân 12 luồng, xung nhịp tối đa 4.6GHz, xử lý mượt tác vụ văn phòng và đa nhiệm nhẹ",
+    "RAM 16GB DDR4 kết hợp SSD NVMe 512GB cho tốc độ khởi động và mở ứng dụng nhanh",
+    "Màn hình 15.6 inch Full HD tần số quét 120Hz, thao tác cuộn trang mượt mà hơn màn hình 60Hz thông thường",
+    "Pin 41Wh hỗ trợ ExpressCharge, sạc nhanh đạt khoảng 80% dung lượng chỉ trong 1 giờ",
+    "Kết nối đầy đủ: USB-A, USB-C, HDMI 1.4, khe đọc thẻ SD, Wi-Fi 6 và Bluetooth 5.3",
+    "Thiết kế gọn nhẹ khoảng 1.62kg, bàn phím có cụm phím số tiện cho công việc văn phòng, kế toán"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core i5-1334U (Raptor Lake), 10 nhân 12 luồng, tối đa 4.60GHz, TDP 15W",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Đồ họa",
+      "value": "Intel UHD Graphics (tích hợp)",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "RAM",
+      "value": "16GB (1x16GB) DDR4, bus 2666MT/s hoặc 3200MT/s tùy cấu hình cổng USB-C",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bộ nhớ & lưu trữ",
+      "name": "Ổ cứng",
+      "value": "512GB SSD M.2 PCIe NVMe",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước - Độ phân giải",
+      "value": "15.6 inch Full HD (1920x1080), WVA, chống chói",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét - Độ sáng",
+      "value": "120Hz, 250 nits, viền mỏng (Narrow Border)",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "1x USB 3.2 Gen1 Type-A, 1x USB 2.0, 1x USB 3.2 Gen1 Type-C, 1x HDMI 1.4, 1x jack âm thanh 3.5mm, 1x khe thẻ SD, 1x power jack",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Realtek Wi-Fi 6 RTL8852BE 2x2 802.11ax, Bluetooth 5.3",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bàn phím & âm thanh",
+      "name": "Bàn phím",
+      "value": "Tiếng Anh quốc tế, có cụm phím số, tùy chọn đèn nền",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bàn phím & âm thanh",
+      "name": "Loa",
+      "value": "Loa stereo Realtek ALC3204, công suất 2W x2 = 4W",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Bàn phím & âm thanh",
+      "name": "Webcam",
+      "value": "HD 720p 30fps, micro đơn tích hợp (bản vỏ nhựa)",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Dung lượng pin",
+      "value": "3-cell, 41Wh, Lithium Ion Polymer, hỗ trợ ExpressCharge",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "Rộng 358.5mm x sâu 235.6mm x cao 16.96-18.99mm",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Khối lượng",
+      "value": "Tối đa 1.62kg",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chất liệu - Màu sắc",
+      "value": "Vỏ nhựa (Plastic), màu Platinum Silver hoặc Carbon Black",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    },
+    {
+      "group": "Phần mềm",
+      "name": "Hệ điều hành",
+      "value": "Windows 11 Home",
+      "source": "https://www.dell.com/en-vn/shop/laptops/dell-15-laptop/spd/dell-dc15250-laptop"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core i5-1334U",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "Intel UHD Graphics",
+    "screenSize": "15.6 inch",
+    "refreshRate": "120Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/dell/dell-15-intel-3530/pdp/laptop-dell-15-dc15250-hero.psd?fmt=png-alpha&wid=3840&hei=2561",
+      "alt": "Laptop Dell 15 DC15250 nhìn chính diện, màu bạc, mở màn hình"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/dell/dell-15-intel-3530/pdp/laptop-dell-15-dc15250-adapt-efficiently.psd?fmt=jpg&wid=3840&hei=3072",
+      "alt": "Laptop Dell 15 DC15250 nhìn từ trên xuống, bàn phím và touchpad"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/dell/dell-15-intel-3530/pdp/laptop-dell-15-dc15250-sustainability.psd?fmt=png-alpha&wid=3840&hei=2160",
+      "alt": "Laptop Dell 15 DC15250 nhìn nghiêng 3/4, máy mở màn hình"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop Dell 15 DC15250 i5-1334U 16GB 512GB - Quang Huong Computer",
+  "metaDescription": "Dell 15 DC15250 Core i5-1334U, RAM 16GB, SSD 512GB, màn 15.6 inch Full HD 120Hz, giá tốt, bảo hành chính hãng 12 tháng tại Quang Huong Computer."
+}

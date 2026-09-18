@@ -22,17 +22,23 @@ public class ChatHub : Hub
         var userId = GetUserId();
         var userRoles = GetUserRoles();
 
-        // Sales/Admin join the support team group
         if (userRoles.Contains(Roles.Admin) || userRoles.Contains(Roles.Sale))
         {
+            // Support staff join the shared team group only; they are added to a specific
+            // conversation_{id} group on demand (AssignConversation), not auto-joined to
+            // every conversation that GetConversationsForUserAsync would return for them.
             await Groups.AddToGroupAsync(Context.ConnectionId, "SupportTeam");
         }
-
-        // Load user's conversations and join their rooms
-        var conversations = await _conversationRepository.GetConversationsForUserAsync(userId, userRoles);
-        foreach (var conversation in conversations)
+        else
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation_{conversation.Id}");
+            // Customers (and any other non-staff caller): join the room(s) they already
+            // own so a reconnect keeps receiving replies without calling StartConversation
+            // again. GetConversationsForUserAsync is default-deny for this branch.
+            var conversations = await _conversationRepository.GetConversationsForUserAsync(userId, userRoles);
+            foreach (var conversation in conversations)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation_{conversation.Id}");
+            }
         }
 
         await base.OnConnectedAsync();
@@ -70,11 +76,11 @@ public class ChatHub : Hub
         // Determine sender type
         var senderType = DetermineSenderType(userRoles);
 
-        // Create and add message
+        // Create and add message. AddMessageAsync stages the message as Added explicitly
+        // (see IConversationRepository) instead of Update()-ing the whole aggregate, which
+        // used to throw DbUpdateConcurrencyException on every send.
         var message = new ChatMessage(conversation.Id, userId, userName, senderType, text);
-        conversation.AddMessage(message);
-
-        await _conversationRepository.UpdateAsync(conversation);
+        await _conversationRepository.AddMessageAsync(conversation, message);
         await _conversationRepository.SaveChangesAsync();
 
         // Broadcast to conversation room
@@ -163,19 +169,6 @@ public class ChatHub : Hub
         await Clients.Caller.SendAsync("ConversationAssigned", conversation.Id.ToString());
         await Clients.Group($"conversation_{conversation.Id}").SendAsync("Notify", $"{userName} đã tham gia hỗ trợ");
     }
-
-    public async Task JoinChannel(string channelId) =>
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"channel_{channelId}");
-
-    public async Task LeaveChannel(string channelId) =>
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"channel_{channelId}");
-
-    public async Task SendChannelMessage(string channelId, string message) =>
-        await Clients.Group($"channel_{channelId}").SendAsync(
-            "ReceiveChannelMessage",
-            Context.UserIdentifier,
-            message,
-            DateTime.UtcNow);
 
     public async Task MarkAsRead(string messageId)
     {

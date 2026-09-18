@@ -11,7 +11,19 @@ public class Product : Entity<Guid>
     public decimal CostPrice { get; private set; }
     public string Description { get; private set; }
     public string? Specifications { get; private set; } // JSON string storing specs like RAM, SSD, etc.
+
+    /// <summary>Mô tả bảo hành tự do hiển thị trên PDP. KHÔNG có giá trị mặc định (D08).</summary>
     public string? WarrantyInfo { get; private set; }
+
+    /// <summary>
+    /// D08: số tháng bảo hành của sản phẩm. NULL = chưa khai báo riêng, dùng chính sách
+    /// hiệu lực của ngành hàng (leo cây Category.ParentId).
+    /// </summary>
+    public int? WarrantyMonths { get; private set; }
+
+    /// <summary>D08: hàng loại trừ khỏi quyền đổi trả tự nguyện (vd. hàng đặt riêng, phần mềm đã kích hoạt).</summary>
+    public bool IsReturnExcluded { get; private set; }
+
     public string? StockLocations { get; private set; } // JSON string storing list of store addresses
     public Guid CategoryId { get; private set; }
     public Guid BrandId { get; private set; }
@@ -112,7 +124,8 @@ public class Product : Entity<Guid>
         string? metaTitle = null,
         string? metaDescription = null,
         string? metaKeywords = null,
-        Guid? createdByUserId = null)
+        Guid? createdByUserId = null,
+        int? warrantyMonths = null)
     {
         // Validate nghiệp vụ: giá bán/giá vốn không được âm.
         if (price < 0)
@@ -129,7 +142,10 @@ public class Product : Entity<Guid>
         CostPrice = costPrice;
         Description = description;
         Specifications = specifications;
-        WarrantyInfo = warrantyInfo ?? "Bảo hành 24 tháng";
+        // D08: KHÔNG mặc định "Bảo hành 24 tháng" - đó là lời hứa cửa hàng chưa từng đưa ra.
+        // Không khai báo => null => PDP dùng chính sách hiệu lực của ngành hàng.
+        WarrantyInfo = warrantyInfo;
+        WarrantyMonths = warrantyMonths;
         CategoryId = categoryId;
         BrandId = brandId;
         StockQuantity = stockQuantity;
@@ -217,6 +233,33 @@ public class Product : Entity<Guid>
         if (oldPrice.HasValue) OldPrice = oldPrice;
     }
 
+    /// <summary>
+    /// Xoá giá gạch ngang. Cần một lệnh tường minh vì `UpdateDetails`/`UpdatePrice` chỉ ghi
+    /// `OldPrice` khi có giá trị - không có cách nào gửi "null" qua partial update.
+    /// </summary>
+    public void ClearOldPrice()
+    {
+        OldPrice = null;
+    }
+
+    /// <summary>D08: chính sách bảo hành / đổi trả riêng cho sản phẩm. Chỉ ghi trường được truyền.</summary>
+    public void UpdateWarrantyPolicy(int? warrantyMonths = null, bool? isReturnExcluded = null)
+    {
+        if (warrantyMonths.HasValue)
+        {
+            if (warrantyMonths.Value < 0)
+                throw new ArgumentException("Số tháng bảo hành không được âm", nameof(warrantyMonths));
+            WarrantyMonths = warrantyMonths.Value;
+        }
+        if (isReturnExcluded.HasValue) IsReturnExcluded = isReturnExcluded.Value;
+    }
+
+    /// <summary>Xoá số tháng bảo hành riêng => quay về chính sách hiệu lực của ngành hàng.</summary>
+    public void ClearWarrantyMonths()
+    {
+        WarrantyMonths = null;
+    }
+
     public void UpdateSpecifications(string specifications)
     {
         Specifications = specifications;
@@ -265,12 +308,17 @@ public class Product : Entity<Guid>
         if (galleryImages != null) GalleryImages = galleryImages;
     }
     
+    /// <summary>
+    /// Cập nhật SEO theo ngữ nghĩa PARTIAL: `null` = không đụng tới, chuỗi rỗng = xoá trường đó.
+    /// Trước đây hàm này gán thẳng cả 4 trường nên lưu sản phẩm từ tab khác của trang admin
+    /// (tab không gửi SEO) là xoá sạch MetaTitle/MetaDescription/MetaKeywords.
+    /// </summary>
     public void UpdateSeo(string? metaTitle = null, string? metaDescription = null, string? metaKeywords = null, string? canonicalUrl = null)
     {
-        MetaTitle = metaTitle;
-        MetaDescription = metaDescription;
-        MetaKeywords = metaKeywords;
-        CanonicalUrl = canonicalUrl;
+        if (metaTitle != null) MetaTitle = string.IsNullOrWhiteSpace(metaTitle) ? null : metaTitle;
+        if (metaDescription != null) MetaDescription = string.IsNullOrWhiteSpace(metaDescription) ? null : metaDescription;
+        if (metaKeywords != null) MetaKeywords = string.IsNullOrWhiteSpace(metaKeywords) ? null : metaKeywords;
+        if (canonicalUrl != null) CanonicalUrl = string.IsNullOrWhiteSpace(canonicalUrl) ? null : canonicalUrl;
     }
     
     public bool IsLowStock() => StockQuantity <= LowStockThreshold;

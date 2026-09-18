@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingCart } from 'lucide-react';
 import { formatNumber } from '../../utils/format';
+import { resolveMediaUrl } from '../../lib/media-url';
 import type { Product, ProductMedia } from '../../api/catalog';
 
 interface ProductDetailStickyBuyBarProps {
@@ -37,7 +38,7 @@ export default function ProductDetailStickyBuyBar({
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="hidden md:flex items-center gap-3 flex-1 min-w-0">
               <div className="w-10 h-10 bg-gray-50 rounded-lg p-0.5 flex-shrink-0">
-                {displayMedia && <img src={displayMedia.url} alt="" className="w-full h-full object-contain" />}
+                {displayMedia && <img src={resolveMediaUrl(displayMedia.url)} alt="" className="w-full h-full object-contain" />}
               </div>
               <div className="min-w-0">
                 <h3 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h3>

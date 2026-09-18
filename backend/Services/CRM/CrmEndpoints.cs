@@ -1,3 +1,4 @@
+using BuildingBlocks.Security;
 using CRM.Domain;
 using CRM.DTOs;
 using CRM.Infrastructure;
@@ -7,15 +8,27 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 
 namespace CRM;
 
 public static class CrmEndpoints
 {
+    /// <summary>W0-3: CRM là dữ liệu nội bộ — chỉ nhân viên mới được vào. W1-1 sẽ thay bằng permission policy.</summary>
+    private static readonly string[] CrmStaffRoles =
+        { Roles.Admin, Roles.Manager, Roles.Sale, Roles.Marketing };
+
+    /// <summary>Gửi/xoá chiến dịch email là hành động có hậu quả ra ngoài — hẹp hơn nữa (bỏ Sale).</summary>
+    private static readonly string[] CampaignDispatchRoles =
+        { Roles.Admin, Roles.Manager, Roles.Marketing };
+
     public static void MapCrmEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/crm").RequireAuthorization();
+        // W0-3: trước đây chỉ có RequireAuthorization() trống ⇒ token Customer đọc/ghi được toàn bộ CRM.
+        var group = app.MapGroup("/api/crm")
+            .RequireAuthorization(p => p.RequireRole(CrmStaffRoles));
 
         // Dashboard endpoints
         MapDashboardEndpoints(group);
@@ -840,7 +853,7 @@ public static class CrmEndpoints
         {
             var result = await service.DeleteCampaignAsync(id);
             return result ? Results.Ok() : Results.NotFound();
-        });
+        }).RequireAuthorization(p => p.RequireRole(CampaignDispatchRoles));
 
         group.MapPost("/campaigns/{id:guid}/schedule", async (
             Guid id,
@@ -861,7 +874,7 @@ public static class CrmEndpoints
         {
             var campaign = await service.SendCampaignAsync(id);
             return campaign != null ? Results.Ok() : Results.BadRequest("Failed to send campaign");
-        });
+        }).RequireAuthorization(p => p.RequireRole(CampaignDispatchRoles));
 
         group.MapPost("/campaigns/{id:guid}/pause", async (Guid id, IEmailCampaignService service) =>
         {
@@ -1051,9 +1064,15 @@ public static class CrmEndpoints
             var userAgent = context.Request.Headers.UserAgent.ToString();
             var ip = context.Connection.RemoteIpAddress?.ToString();
 
+            // W0-3: đây là endpoint ẩn danh — `url` do người gửi/kẻ tấn công kiểm soát hoàn toàn.
+            // Trước đây redirect thẳng ⇒ open redirect (phishing mượn tên miền shop).
+            // Chỉ redirect tới đường dẫn tương đối hoặc host nằm trong allow-list; còn lại 404.
+            if (!TryResolveTrackedRedirect(context, url, out var safeUrl))
+                return Results.NotFound();
+
             await service.TrackClickAsync(trackingId, url, userAgent, ip);
 
-            return Results.Redirect(url);
+            return Results.Redirect(safeUrl);
         });
 
         app.MapGet("/api/crm/unsubscribe/{trackingId}", async (
@@ -1063,5 +1082,62 @@ public static class CrmEndpoints
             await service.ProcessUnsubscribeAsync(trackingId);
             return Results.Content("<html><body><h1>Bạn đã hủy đăng ký thành công</h1></body></html>", "text/html");
         });
+    }
+
+    /// <summary>
+    /// W0-3 chống open redirect. Cho phép:
+    ///  - đường dẫn tương đối ("/khuyen-mai"), trừ dạng "//host" (protocol-relative),
+    ///  - URL tuyệt đối http/https có host trùng host của chính request,
+    ///  - hoặc host nằm trong `Crm:TrackingRedirectAllowedHosts` / `Cors:AllowedOrigins`.
+    /// Mọi trường hợp khác đều bị từ chối (fail-closed).
+    /// </summary>
+    private static bool TryResolveTrackedRedirect(HttpContext context, string? url, out string safeUrl)
+    {
+        safeUrl = string.Empty;
+        if (string.IsNullOrWhiteSpace(url)) return false;
+
+        // Control characters (tab/CR/LF) are stripped by browsers before parsing and would
+        // also be rejected by the Location header writer — never a legitimate campaign link.
+        if (url.Any(char.IsControl)) return false;
+
+        if (url.StartsWith('/'))
+        {
+            // "//host" is protocol-relative and "/\host" is the same thing to every browser
+            // that normalises '\' to '/' in the authority position — both are off-site.
+            if (url.StartsWith("//", StringComparison.Ordinal) || url.Contains('\\')) return false;
+            safeUrl = url;
+            return true;
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var target)) return false;
+        if (target.Scheme != Uri.UriSchemeHttp && target.Scheme != Uri.UriSchemeHttps) return false;
+
+        if (string.Equals(target.Host, context.Request.Host.Host, StringComparison.OrdinalIgnoreCase))
+        {
+            safeUrl = target.AbsoluteUri;
+            return true;
+        }
+
+        var config = context.RequestServices.GetRequiredService<IConfiguration>();
+        foreach (var allowed in AllowedRedirectHosts(config))
+        {
+            if (string.Equals(target.Host, allowed, StringComparison.OrdinalIgnoreCase))
+            {
+                safeUrl = target.AbsoluteUri;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Host được phép: cấu hình riêng của CRM cộng với host của các origin CORS đã khai báo.</summary>
+    private static IEnumerable<string> AllowedRedirectHosts(IConfiguration config)
+    {
+        foreach (var host in config.GetSection("Crm:TrackingRedirectAllowedHosts").Get<string[]>() ?? Array.Empty<string>())
+            if (!string.IsNullOrWhiteSpace(host)) yield return host.Trim();
+
+        foreach (var origin in config.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>())
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var o)) yield return o.Host;
     }
 }

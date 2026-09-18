@@ -5,6 +5,10 @@ export interface Order {
     id: string;
     orderNumber: string;
     customerId: string;
+    /** W0-13: backend /sales/admin/orders đã trả các field này (SalesEndpoints.cs:1430-1433) - trước đây type thiếu nên dashboard hiện GUID thay vì tên khách. */
+    customerName?: string;
+    customerEmail?: string;
+    customerPhone?: string;
     status: OrderStatus;
     paymentStatus: PaymentStatus;
     fulfillmentStatus: FulfillmentStatus;
@@ -508,6 +512,8 @@ export const salesApi = {
             },
 
             // Admin: Kiểm hàng nhận về (Phase 07)
+            // W0-13: đường dẫn cũ /sales/returns/{id}/inspect không khớp route backend
+            // (nằm trong adminGroup -> /sales/admin/returns/{id}/inspect) -> luôn 404.
             inspect: async (
                 id: string,
                 data: {
@@ -517,13 +523,14 @@ export const salesApi = {
                     restockingFee?: number;
                 }
             ) => {
-                const response = await client.post<{ message: string; status: string; grnId?: string }>(`/sales/returns/${id}/inspect`, data);
+                const response = await client.post<{ message: string; status: string; grnId?: string }>(`/sales/admin/returns/${id}/inspect`, data);
                 return response.data;
             },
 
             // Admin: Hoàn tất return (sau khi inspect + refund)
+            // W0-13: cùng lỗi path như inspect ở trên.
             complete: async (id: string) => {
-                const response = await client.post<{ message: string; status: string }>(`/sales/returns/${id}/complete`);
+                const response = await client.post<{ message: string; status: string }>(`/sales/admin/returns/${id}/complete`);
                 return response.data;
             },
         },

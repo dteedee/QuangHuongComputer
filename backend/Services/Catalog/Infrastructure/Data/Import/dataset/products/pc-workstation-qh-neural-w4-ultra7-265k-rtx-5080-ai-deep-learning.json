@@ -1,0 +1,226 @@
+{
+  "name": "PC Đồ Họa QH Neural W4 - Core Ultra 7 265K / RTX 5080 16GB (AI/Deep Learning)",
+  "slug": "pc-workstation-qh-neural-w4-ultra7-265k-rtx-5080-ai-deep-learning",
+  "sku": "QH-NEURALW4",
+  "brand": "QH",
+  "category": "Máy Tính Đồ Họa",
+  "subCategory": "Workstation - AI/Deep Learning",
+  "model": "Neural W4",
+  "officialUrl": "https://nzxt.com/products/h5-flow",
+  "priceVnd": 114950000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 103450000,
+  "priceSources": [
+    "https://gearvn.com/products/card-man-hinh-msi-geforce-rtx-5080-16g-shadow-3x-oc",
+    "https://gearvn.com/search?type=product&q=samsung+990+pro+2tb"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành tổng thể 36 tháng cho cụm CPU/Mainboard/GPU theo chính sách Intel, ASUS và MSI tại Việt Nam; nguồn MSI MAG A850GL riêng 60 tháng; case NZXT 24 tháng; tản nhiệt khí Thermalright 12 tháng. 1 đổi 1 trong 30 ngày đầu nếu lỗi nhà sản xuất, hỗ trợ lắp đặt và bảo trì tại trung tâm QH Computer.",
+  "weightKg": 12.5,
+  "stockQuantity": 6,
+  "shortDescription": "PC workstation AI/Deep Learning với CPU Intel Core Ultra 7 265K và GPU MSI RTX 5080 16GB VRAM, RAM 64GB DDR5, tối ưu cho train/infer LLM cục bộ, Stable Diffusion và PyTorch/TensorFlow.",
+  "descriptionHtml": "<h3>Cấu hình dồn lực cho AI và Deep Learning</h3><p>QH Neural W4 xây dựng quanh CPU Intel Core Ultra 7 265K (20 nhân 20 luồng, Turbo 5.5GHz) và GPU MSI GeForce RTX 5080 16G SHADOW 3X OC - card đồ họa có dung lượng VRAM lớn nhất dải sản phẩm QH, giúp load được các model ngôn ngữ lớn và pipeline Stable Diffusion nặng mà không tràn bộ nhớ. Mainboard ASUS TUF GAMING Z890-PLUS WIFI chuẩn Z890 hỗ trợ đầy đủ PCIe 5.0 và DDR5 tốc độ cao cho CPU thế hệ mới.</p><h3>64GB RAM và SSD tốc độ cao cho dataset lớn</h3><p>Bộ nhớ RAM Kingston FURY Beast 64GB (4x16GB) DDR5-5600 giúp cache dataset và mô hình mà không phải swap ra ổ đĩa khi train batch lớn. Lưu trữ chính là SSD Samsung 990 PRO 2TB NVMe PCIe Gen4, tốc độ đọc/ghi cao rút ngắn thời gian nạp dataset và checkpoint model.</p><h3>Nguồn điện và tản nhiệt an toàn</h3><p>Nguồn MSI MAG A850GL PCIE5 850W 80+ Gold đúng bằng công suất khuyến nghị chính hãng của RTX 5080, đảm bảo hệ thống vận hành ổn định khi GPU và CPU cùng full tải kéo dài. Case NZXT H5 Flow (2024) màu trắng luồng khí tốt, tản nhiệt khí Thermalright Peerless Assassin 120 SE tháp đôi giữ CPU mát khi chạy training nhiều giờ liên tục.</p><ul><li>CPU Intel Core Ultra 7 265K - 20 nhân 20 luồng</li><li>GPU MSI RTX 5080 16GB GDDR7 - VRAM lớn cho AI/LLM</li><li>RAM 64GB (4x16GB) DDR5-5600</li><li>SSD Samsung 990 PRO 2TB NVMe Gen4</li><li>Nguồn 850W 80+ Gold đúng khuyến nghị GPU</li></ul>",
+  "highlights": [
+    "GPU MSI RTX 5080 16GB GDDR7 - VRAM lớn nhất dải QH, chạy tốt LLM cục bộ và Stable Diffusion",
+    "CPU Intel Core Ultra 7 265K 20 nhân 20 luồng, Turbo 5.5GHz cho tiền xử lý dữ liệu nhanh",
+    "RAM 64GB (4x16GB) DDR5-5600 cache dataset và model lớn, tránh swap ổ đĩa",
+    "SSD Samsung 990 PRO 2TB NVMe Gen4 tốc độ đọc 7450MB/s cho I/O dataset",
+    "Nguồn MSI MAG A850GL 850W 80+ Gold đúng công suất khuyến nghị chính hãng của RTX 5080",
+    "Case NZXT H5 Flow 2024 trắng, luồng khí tối ưu + tản nhiệt khí Thermalright dual-tower"
+  ],
+  "specs": [
+    {
+      "group": "CPU",
+      "name": "Model",
+      "value": "Intel Core Ultra 7 265K (Arrow Lake-S)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Nhân/Luồng",
+      "value": "20 nhân (8P+12E) / 20 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Xung nhịp",
+      "value": "P-core 3.9GHz, Turbo tới 5.5GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Socket",
+      "value": "FCLGA1851",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Model",
+      "value": "ASUS TUF GAMING Z890-PLUS WIFI",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Chipset / Socket",
+      "value": "Intel Z890, socket LGA1851",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Khe RAM",
+      "value": "4 khe DDR5, tối đa 256GB",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "Mainboard",
+      "name": "Form factor",
+      "value": "ATX",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/"
+    },
+    {
+      "group": "RAM",
+      "name": "Model",
+      "value": "Kingston FURY Beast DDR5 KF556C40BB-16WP (x4)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "RAM",
+      "name": "Dung lượng kit",
+      "value": "64GB (4x16GB)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "RAM",
+      "name": "Tốc độ / CAS",
+      "value": "DDR5-5600MHz CL40",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "GPU",
+      "name": "Model",
+      "value": "MSI GeForce RTX 5080 16G SHADOW 3X OC",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "GPU",
+      "name": "VRAM",
+      "value": "16GB GDDR7, bus 256-bit",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "GPU",
+      "name": "Công suất / Nguồn khuyến nghị",
+      "value": "360W, khuyến nghị PSU 850W",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "GPU",
+      "name": "Kích thước card",
+      "value": "303 x 121 x 49 mm",
+      "source": "https://www.msi.com/Graphics-Card/GeForce-RTX-5080-16G-SHADOW-3X-OC"
+    },
+    {
+      "group": "SSD",
+      "name": "Model",
+      "value": "Samsung 990 PRO 2TB (MZ-V9P2T0BW)",
+      "source": "https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-2tb-mz-v9p2t0b-am/"
+    },
+    {
+      "group": "SSD",
+      "name": "Giao tiếp",
+      "value": "PCIe 4.0 NVMe M.2 2280",
+      "source": "https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-2tb-mz-v9p2t0b-am/"
+    },
+    {
+      "group": "SSD",
+      "name": "Tốc độ đọc/ghi",
+      "value": "7450 MB/s đọc, 6900 MB/s ghi",
+      "source": "https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-2tb-mz-v9p2t0b-am/"
+    },
+    {
+      "group": "PSU",
+      "name": "Model",
+      "value": "MSI MAG A850GL PCIE5",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5"
+    },
+    {
+      "group": "PSU",
+      "name": "Công suất / Chuẩn hiệu suất",
+      "value": "850W, 80 PLUS Gold, Full Modular",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5"
+    },
+    {
+      "group": "Case",
+      "name": "Model",
+      "value": "NZXT H5 Flow (2024) White CC-H52FW-01",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Form factor hỗ trợ",
+      "value": "Mid-Tower, ATX/Micro-ATX/Mini-ITX/E-ATX tới 277mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Case",
+      "name": "Giới hạn lắp đặt",
+      "value": "VGA tối đa 410mm, tản CPU tối đa 170mm, PSU tối đa 200mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Model",
+      "value": "Thermalright Peerless Assassin 120 SE (Dual Tower)",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt",
+      "name": "Loại / Chiều cao",
+      "value": "Tản khí 2 quạt 120mm, cao 155mm",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "OS",
+      "value": "Chưa cài hệ điều hành (tùy chọn cài Windows 11 theo yêu cầu)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Thời gian",
+      "value": "36 tháng tổng thể (CPU/Mainboard/GPU), PSU 60 tháng, Case 24 tháng, Cooler 12 tháng",
+      "source": "https://vn.msi.com/Power-Supply/MAG-A850GL-PCIE5"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "AI/Deep Learning",
+    "cpu": "Intel Core Ultra 7 265K",
+    "gpu": "RTX 5080 16GB",
+    "ram": "64GB DDR5-5600"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_07_io.png",
+      "alt": "Case NZXT H5 Flow 2024 màu trắng nhìn góc 3/4, mặt trước lưới tản nhiệt và cụm nút nguồn/IO"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_01_hero.png",
+      "alt": "Case NZXT H5 Flow 2024 màu trắng mở cửa kính cường lực, lộ khoang máy bên trong"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_03_front.png",
+      "alt": "Mặt trước lưới tản nhiệt kim loại của case NZXT H5 Flow 2024 màu trắng"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_02_side.png",
+      "alt": "Nội thất case NZXT H5 Flow 2024 màu trắng nhìn thẳng qua tấm kính bên hông"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Đồ Họa QH Neural W4 - Ultra 7 265K / RTX 5080 16GB AI Deep Learning",
+  "metaDescription": "PC workstation AI/Deep Learning QH Neural W4: Core Ultra 7 265K, RTX 5080 16GB GDDR7, RAM 64GB DDR5-5600, SSD 990 PRO 2TB, PSU 850W Gold. Bảo hành chính hãng, giao hàng toàn quốc."
+}

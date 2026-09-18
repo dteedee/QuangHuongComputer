@@ -16,7 +16,9 @@ export const RequireAuth = ({ allowedRoles }: RequireAuthProps) => {
     if (allowedRoles && user) {
         const hasRole = user.roles.some(role => allowedRoles.includes(role));
         if (!hasRole) {
-            return <Navigate to="/" replace />;
+            // Trước đây redirect âm thầm về "/" — người dùng không hiểu vì sao bị đá ra.
+            // Giờ đưa tới trang 403 rõ ràng (client-side guard, KHÔNG thay cho backend authorization).
+            return <Navigate to="/403" replace />;
         }
     }
 

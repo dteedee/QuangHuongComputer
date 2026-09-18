@@ -13,8 +13,8 @@ import CheckoutSessionTimer from '../components/checkout/checkout-session-timer'
 import ShippingStep from '../components/checkout/shipping-step';
 import PromotionStep from '../components/checkout/promotion-step';
 import PaymentStep from '../components/checkout/payment-step';
-import OrderConfirmation from '../components/checkout/order-confirmation';
 import { useCheckoutSubmit, type ConfirmedOrder } from '../components/checkout/use-checkout-submit';
+import { buildCheckoutSuccessUrl } from '../components/checkout/checkout-success-url';
 import {
     CHECKOUT_STORAGE_KEY, initialPaymentState, initialShippingState,
     type CheckoutPersistedState, type CheckoutStep, type PaymentFormState, type ShippingFormState,
@@ -57,12 +57,14 @@ export function CheckoutPage() {
         try { sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
     }, [step, shipping, payment, promotionCode, sessionId, sessionExpiresAt, calculatedShippingFee, ghnDistrictId, ghnWardCode]);
 
-    useEffect(() => { if (step === 4) sessionStorage.removeItem(CHECKOUT_STORAGE_KEY); }, [step]);
-
-    // Redirect nếu giỏ rỗng
+    // Redirect nếu giỏ rỗng — KHÔNG áp dụng khi đang submit hoặc đã có confirmedOrder,
+    // vì submit() có thể khiến CartContext báo items=[] (đã đặt hàng xong, giỏ được dọn)
+    // trước khi navigate() sang trang xác nhận kịp chạy; thiếu guard này sẽ đá khách về
+    // /cart đúng lúc vừa đặt hàng thành công (bug đã sửa — xem use-checkout-submit.ts).
     useEffect(() => {
-        if (items.length === 0 && step !== 4) { navigate('/cart'); }
-    }, [items.length, step, navigate]);
+        if (submitting || confirmedOrder) return;
+        if (items.length === 0) { navigate('/cart'); }
+    }, [items.length, submitting, confirmedOrder, navigate]);
 
     // Evaluate promotion (debounce 300ms) — tránh spam evaluate khi user gõ mã
     useEffect(() => {
@@ -117,7 +119,14 @@ export function CheckoutPage() {
             shippingAmountFallback: shippingAmount, sessionId,
             user, isAuthenticated, clearCart,
         });
-        if (result) { setConfirmedOrder(result); setStep(4); window.scrollTo(0, 0); }
+        if (!result) return;
+        // Set confirmedOrder TRƯỚC khi dọn giỏ/điều hướng — xem lý do ở effect redirect phía trên
+        // và comment trong use-checkout-submit.ts.
+        setConfirmedOrder(result);
+        sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+        await clearCart();
+        const guestEmail = !isAuthenticated ? shipping.email : undefined;
+        navigate(buildCheckoutSuccessUrl(result, payment.paymentMethod, guestEmail), { replace: true });
     };
 
     const summaryItems = useMemo(() => items.map(i => ({
@@ -168,12 +177,6 @@ export function CheckoutPage() {
                                     onChange={p => setPayment(prev => ({ ...prev, ...p }))}
                                     onBack={() => setStep(2)} onSubmit={handleSubmit}
                                     submitting={submitting} totalAmount={displayTotal} />
-                            )}
-                            {step === 4 && confirmedOrder && (
-                                <OrderConfirmation orderId={confirmedOrder.id} orderNumber={confirmedOrder.number}
-                                    totalAmount={confirmedOrder.amount} paymentMethod={payment.paymentMethod}
-                                    guestEmail={!isAuthenticated ? shipping.email : undefined}
-                                    qrPaymentUrl={confirmedOrder.qrUrl} isGuest={!isAuthenticated} />
                             )}
                         </AnimatePresence>
                     </div>

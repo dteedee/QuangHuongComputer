@@ -1,0 +1,257 @@
+{
+  "name": "PC Đồ Họa QH Cutscene W2 - Core Ultra 7 265K / RTX 5060 8GB (Dựng Phim)",
+  "slug": "pc-workstation-qh-cutscene-w2-ultra7-265k-rtx-5060-video-editing",
+  "sku": "QH-CUTSCENEW2",
+  "brand": "QH",
+  "category": "Máy Tính Đồ Họa",
+  "subCategory": "Workstation - Video Editing",
+  "model": "Cutscene W2",
+  "officialUrl": "https://nzxt.com/products/h5-flow",
+  "priceVnd": 60820000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 53520000,
+  "priceSources": [
+    "https://gearvn.com/search?type=product&q=RTX+5060+Gigabyte+Windforce",
+    "https://www.anphatpc.com.vn/vo-case-nzxt-h5-flow-2024-all-white-cc-h52fw-01.html"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành 36 tháng theo linh kiện chính hãng: CPU Intel 36 tháng, Mainboard ASUS 36 tháng, RAM Kingston 36 tháng, VGA Gigabyte 36 tháng, SSD Samsung 60 tháng, HDD Seagate 24 tháng, Nguồn Corsair 84 tháng, Case NZXT 24 tháng, Tản nhiệt Thermalright 12 tháng. Bảo hành lắp ráp và hỗ trợ kỹ thuật trọn đời sản phẩm tại QH.",
+  "weightKg": 13,
+  "stockQuantity": 6,
+  "shortDescription": "PC dựng phim QH Cutscene W2 dùng Intel Core Ultra 7 265K và RTX 5060 8GB NVENC AV1, 32GB DDR5-5600, SSD NVMe 1TB, tối ưu cho Premiere Pro, DaVinci Resolve và After Effects.",
+  "descriptionHtml": "<h3>Cấu hình dựng phim mạnh mẽ, tối ưu NVENC AV1</h3><p>QH Cutscene W2 xây dựng trên nền tảng Intel Core Ultra 7 265K (20 nhân 20 luồng, Turbo 5.5GHz) kết hợp mainboard ASUS TUF Gaming Z890-PLUS WIFI hỗ trợ PCIe 5.0 và Thunderbolt 4, đáp ứng tốt các tác vụ dựng, encode video đa luồng trong Premiere Pro, DaVinci Resolve và After Effects.</p><h3>Card đồ họa RTX 5060 8GB tăng tốc encode</h3><p>Gigabyte GeForce RTX 5060 WINDFORCE OC 8G trang bị 3840 nhân CUDA cùng bộ mã hoá NVENC hỗ trợ AV1, giúp export video nhanh hơn và preview mượt hơn khi làm việc với timeline 4K. RAM Kingston FURY Beast 32GB DDR5-5600 (2x16GB) đảm bảo đa nhiệm mượt mà giữa nhiều phần mềm dựng hình cùng lúc.</p><h3>Lưu trữ hai tầng, tản nhiệt và nguồn dư tải</h3><p>SSD Samsung 990 PRO 1TB NVMe PCIe 4.0 (đọc/ghi tới 7.450/6.900 MB/s) làm ổ project chính, kết hợp HDD Seagate BarraCuda 1TB làm kho lưu trữ media dung lượng lớn. Nguồn Corsair RM750e 750W 80+ Gold dư tải rộng rãi so với mức tiêu thụ đỉnh của hệ thống, tản khí Thermalright Peerless Assassin 120 SE giữ nhiệt độ CPU ổn định khi render kéo dài. Toàn bộ đặt trong case NZXT H5 Flow 2024 màu trắng, luồng khí thoáng và không gian lắp đặt rộng rãi.</p><ul><li>CPU Intel Core Ultra 7 265K 20 nhân 20 luồng, Turbo 5.5GHz</li><li>VGA RTX 5060 8GB GDDR7, NVENC hỗ trợ AV1</li><li>RAM 32GB DDR5-5600 (2x16GB), Mainboard Z890 PCIe 5.0</li><li>SSD NVMe 1TB tốc độ cao + HDD 1TB lưu trữ media</li><li>Nguồn Corsair RM750e 750W 80+ Gold, dư tải an toàn</li></ul>",
+  "highlights": [
+    "CPU Intel Core Ultra 7 265K 20 nhân 20 luồng, Turbo tới 5.5GHz, xử lý mượt các tác vụ dựng phim đa luồng",
+    "VGA Gigabyte RTX 5060 WINDFORCE OC 8G GDDR7 với NVENC hỗ trợ AV1, tăng tốc export video rõ rệt",
+    "RAM 32GB (2x16GB) DDR5-5600 Kingston FURY Beast, đa nhiệm mượt giữa Premiere, Resolve, After Effects",
+    "SSD Samsung 990 PRO 1TB NVMe PCIe 4.0 tốc độ tới 7.450 MB/s làm ổ project, kèm HDD 1TB lưu trữ media",
+    "Mainboard ASUS Z890-PLUS WIFI chuẩn PCIe 5.0, Thunderbolt 4, WiFi 7",
+    "Nguồn Corsair RM750e 750W 80+ Gold dư tải rộng, case NZXT H5 Flow 2024 trắng thoáng khí"
+  ],
+  "specs": [
+    {
+      "group": "Bộ vi xử lý (CPU)",
+      "name": "Model",
+      "value": "Intel Core Ultra 7 265K",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ vi xử lý (CPU)",
+      "name": "Số nhân / luồng",
+      "value": "20 nhân (8 P-core + 12 E-core) / 20 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ vi xử lý (CPU)",
+      "name": "Xung nhịp",
+      "value": "Cơ bản P-core 3.9GHz / E-core 3.3GHz, Turbo tới 5.5GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ vi xử lý (CPU)",
+      "name": "Cache",
+      "value": "36MB L2 + 30MB Smart Cache (L3)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ vi xử lý (CPU)",
+      "name": "Socket / TDP",
+      "value": "FCLGA1851, PBP 125W / MTP 250W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bo mạch chủ (Mainboard)",
+      "name": "Model",
+      "value": "ASUS TUF GAMING Z890-PLUS WIFI",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Bo mạch chủ (Mainboard)",
+      "name": "Chipset / Socket",
+      "value": "Intel Z890, Socket LGA1851 (hỗ trợ Core Ultra Series 2)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Bo mạch chủ (Mainboard)",
+      "name": "RAM",
+      "value": "4 khe DDR5, tối đa 256GB, OC tới 9000+ MT/s",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Bo mạch chủ (Mainboard)",
+      "name": "Lưu trữ / Kết nối",
+      "value": "4 khe M.2 (M.2_1 PCIe 5.0 x4), 4 SATA 6Gb/s, WiFi 7, LAN 2.5G, Thunderbolt 4",
+      "source": "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-z890-plus-wifi/techspec/"
+    },
+    {
+      "group": "Bộ nhớ RAM",
+      "name": "Model",
+      "value": "Kingston FURY Beast DDR5 (KF556C40BB-16WP) x2",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16WP.pdf"
+    },
+    {
+      "group": "Bộ nhớ RAM",
+      "name": "Dung lượng",
+      "value": "32GB (2x16GB) Dual Channel",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16WP.pdf"
+    },
+    {
+      "group": "Bộ nhớ RAM",
+      "name": "Bus / Độ trễ",
+      "value": "DDR5-5600 CL40-40-40 @1.25V (Intel XMP 3.0), On-Die ECC",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16WP.pdf"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "Model",
+      "value": "Gigabyte GeForce RTX 5060 WINDFORCE OC 8G (GV-N5060WF2OC-8GD)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "GPU / CUDA Cores",
+      "value": "GeForce RTX 5060, 3840 nhân CUDA",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "VRAM",
+      "value": "8GB GDDR7, bus 128-bit, 28 Gbps",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "Xung nhịp Boost (OC)",
+      "value": "2512 MHz",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "Kích thước / Nguồn phụ",
+      "value": "199 x 116 x 40mm, 1x 8-pin, khuyến nghị PSU 550W",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa (VGA)",
+      "name": "Xuất hình",
+      "value": "3x DisplayPort 2.1b, 1x HDMI 2.1b",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5060WF2OC-8GD/sp"
+    },
+    {
+      "group": "Ổ cứng SSD (project)",
+      "name": "Model",
+      "value": "Samsung 990 PRO 1TB (MZ-V9P1T0BW)",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Ổ cứng SSD (project)",
+      "name": "Giao tiếp",
+      "value": "PCIe Gen 4.0 x4, NVMe 2.0, M.2 2280",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Ổ cứng SSD (project)",
+      "name": "Tốc độ đọc/ghi",
+      "value": "Tới 7.450 MB/s đọc, 6.900 MB/s ghi",
+      "source": "https://www.samsung.com/vn/memory-storage/nvme-ssd/990-pro-1tb-nvme-pcie-gen-4-mz-v9p1t0bw/"
+    },
+    {
+      "group": "Ổ cứng HDD (lưu trữ media)",
+      "name": "Model",
+      "value": "Seagate BarraCuda 1TB (ST1000DM014)",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Ổ cứng HDD (lưu trữ media)",
+      "name": "Thông số",
+      "value": "SATA 6Gb/s, 7200RPM, cache 256MB, 3.5 inch",
+      "source": "https://www.seagate.com/content/dam/seagate/en_as/content-fragments/products/datasheets/barracuda-3-5-hdd/barracuda-3-5-hdd-DS17-2-2603US-en_AS.pdf"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Model",
+      "value": "Corsair RM750e 750W (CP-9020295-NA)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Chuẩn / Hiệu suất",
+      "value": "750W, ATX 3.1 (PCIe 5.1), Cybenetics Gold (80+ Gold), Full Modular",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020295-na/rm750e-fully-modular-low-noise-atx-power-supply"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Model",
+      "value": "NZXT H5 Flow 2024 All White (CC-H52FW-01)",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Kiểu dáng",
+      "value": "Mid-Tower ATX, hỗ trợ tới E-ATX 277mm, kèm 2 quạt F120Q 120mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Giới hạn lắp đặt",
+      "value": "Tản CPU tới 170mm, VGA tới 410mm, PSU tới 200mm",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Model",
+      "value": "Thermalright Peerless Assassin 120 SE",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Tản nhiệt CPU",
+      "name": "Thông số",
+      "value": "Tháp đôi, 6 ống đồng 6mm, 2 quạt TL-C12C 120mm, cao 155mm, hỗ trợ LGA1851/AM5",
+      "source": "https://www.thermalright.com/product/peerless-assassin-120-se/"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Hệ điều hành",
+      "value": "Chưa cài hệ điều hành (No OS), hỗ trợ cài Windows 11 theo yêu cầu",
+      "source": "https://nzxt.com/products/h5-flow"
+    },
+    {
+      "group": "Hệ điều hành & Bảo hành",
+      "name": "Bảo hành tổng",
+      "value": "36 tháng theo linh kiện chính hãng, xem chi tiết ở warrantyInfo",
+      "source": "https://nzxt.com/products/h5-flow"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "video-editing",
+    "cpu": "Intel Core Ultra 7 265K",
+    "gpu": "RTX 5060 8GB",
+    "ram": "32GB DDR5-5600",
+    "storage": "SSD 1TB NVMe + HDD 1TB"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_01_hero.png",
+      "alt": "PC QH Cutscene W2 - vỏ case NZXT H5 Flow 2024 trắng nhìn nghiêng"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_03_front.png",
+      "alt": "PC QH Cutscene W2 - mặt lưới trước case NZXT H5 Flow trắng"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_02_side.png",
+      "alt": "PC QH Cutscene W2 - khoang lắp đặt bên trong case nhìn thẳng"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_06_overlook.png",
+      "alt": "PC QH Cutscene W2 - nhìn từ trên xuống, cổng I/O phía trước"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Đồ Họa QH Cutscene W2 - Ultra 7 265K / RTX 5060 8GB | Dựng Phim",
+  "metaDescription": "PC dựng phim QH Cutscene W2: Core Ultra 7 265K, RTX 5060 8GB NVENC AV1, 32GB DDR5-5600, SSD 990 PRO 1TB, case NZXT H5 Flow trắng. Bảo hành 36 tháng."
+}

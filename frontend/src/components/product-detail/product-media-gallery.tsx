@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Play, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ProductMedia } from '../../api/catalog';
+import { resolveMediaUrl } from '../../lib/media-url';
 import ProductVideoPlayer from './product-video-player';
 import ProductMediaLightbox from './product-media-lightbox';
 
@@ -25,6 +26,7 @@ export default function ProductMediaGallery({
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [zoomOrigin, setZoomOrigin] = useState<{ x: number; y: number } | null>(null);
+    const [mainImgError, setMainImgError] = useState(false);
     const mainRef = useRef<HTMLDivElement | null>(null);
     const touchStartX = useRef<number | null>(null);
 
@@ -52,6 +54,9 @@ export default function ProductMediaGallery({
         const primaryIdx = displayMedias.findIndex((m) => m.isPrimary);
         setSelectedIndex(primaryIdx >= 0 ? primaryIdx : 0);
     }, [displayMedias.length, activeVariantId]);
+
+    // D02: reset lỗi tải ảnh khi đổi media đang xem, tránh giữ trạng thái lỗi của ảnh trước.
+    useEffect(() => { setMainImgError(false); }, [selectedIndex]);
 
     const handlePrev = useCallback(() => {
         setSelectedIndex((i) => (i - 1 + displayMedias.length) % displayMedias.length);
@@ -108,6 +113,7 @@ export default function ProductMediaGallery({
 
     const current = displayMedias[selectedIndex];
     const isImage = current.type === 'Image';
+    const resolvedCurrentUrl = resolveMediaUrl(current.url);
 
     return (
         <div className="w-full">
@@ -122,16 +128,19 @@ export default function ProductMediaGallery({
                         onMouseMove={isImage ? handleMouseMove : undefined}
                         onMouseLeave={handleMouseLeave}
                     >
-                        {isImage ? (
+                        {!isImage ? (
+                            <ProductVideoPlayer media={current} />
+                        ) : !mainImgError && resolvedCurrentUrl ? (
                             <>
                                 <img
-                                    src={current.url}
+                                    src={resolvedCurrentUrl}
                                     alt={current.altText || productName}
                                     className="w-full h-full object-contain transition-transform duration-150"
                                     style={zoomOrigin ? {
                                         transform: 'scale(1.75)',
                                         transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
                                     } : undefined}
+                                    onError={() => setMainImgError(true)}
                                 />
                                 <button
                                     type="button"
@@ -143,7 +152,10 @@ export default function ProductMediaGallery({
                                 </button>
                             </>
                         ) : (
-                            <ProductVideoPlayer media={current} />
+                            // D02: ảnh thiếu/tải lỗi — placeholder trung tính, không để trống trơn.
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <span className="text-6xl font-black">{productName?.charAt(0) || '?'}</span>
+                            </div>
                         )}
 
                         {discountBadge && (
@@ -198,12 +210,13 @@ export default function ProductMediaGallery({
                                     }`}
                                     aria-label={`Xem media ${index + 1}`}
                                 >
-                                    {m.type === 'Image' || m.thumbnailUrl ? (
+                                    {(m.type === 'Image' || m.thumbnailUrl) && resolveMediaUrl(thumbUrl) ? (
                                         <img
-                                            src={thumbUrl}
+                                            src={resolveMediaUrl(thumbUrl)}
                                             alt={m.altText || `${productName} ${index + 1}`}
                                             className="w-full h-full object-cover"
                                             loading="lazy"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-gray-100" />

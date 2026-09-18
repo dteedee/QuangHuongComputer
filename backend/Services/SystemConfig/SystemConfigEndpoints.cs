@@ -209,7 +209,11 @@ public static class SystemConfigEndpoints
                 if (!ok) return Results.BadRequest(new { error = $"{e.Key}: {err}" });
             }
 
-            await using var tx = await db.Database.BeginTransactionAsync();
+            // NO explicit transaction here. SystemConfigDbContext is registered with
+            // EnableRetryOnFailure (DependencyInjection.cs:28), and NpgsqlRetryingExecutionStrategy
+            // refuses a user-initiated transaction — BeginTransactionAsync threw on EVERY call, so
+            // /api/config/bulk never once succeeded. A single SaveChangesAsync is already atomic:
+            // EF opens its own transaction around the batch and the retry strategy can replay it.
             var keys = entries.Select(e => e.Key).ToList();
             var existingMap = await db.Configurations.Where(c => keys.Contains(c.Key)).ToDictionaryAsync(c => c.Key);
             foreach (var e in entries)
@@ -234,7 +238,6 @@ public static class SystemConfigEndpoints
                 }
             }
             await db.SaveChangesAsync();
-            await tx.CommitAsync();
 
             await httpContext.LogAuditAsync("BulkUpdate", "Configuration", string.Join(",", keys.Take(20)), $"{entries.Count} keys");
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);

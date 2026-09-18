@@ -47,15 +47,28 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("text");
 
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -63,9 +76,21 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeactivatedAt");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("ix_brands_display_order");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("uq_brands_slug")
+                        .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''");
 
                     b.HasIndex("Name", "IsActive")
                         .IsUnique()
@@ -98,15 +123,44 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("text");
 
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsSerialTracked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MetaDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("MetaTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -125,6 +179,11 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasDefaultValue(0.10m);
 
+                    b.Property<bool>("VatReductionEligible")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.HasKey("Id");
 
                     b.HasIndex("DeactivatedAt");
@@ -133,6 +192,9 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("uq_categories_slug")
                         .HasFilter("\"Slug\" IS NOT NULL AND \"Slug\" != ''");
+
+                    b.HasIndex("ParentId", "DisplayOrder")
+                        .HasDatabaseName("ix_categories_parent_id_display_order");
 
                     b.HasIndex("Name", "IsActive")
                         .IsUnique()
@@ -196,7 +258,15 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsReturnExcluded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("LowStockThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WarrantyMonths")
                         .HasColumnType("integer");
 
                     b.Property<string>("MetaDescription")
@@ -1092,6 +1162,17 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_specification_groups_category_id");
 
                     b.ToTable("SpecificationGroups", "public");
+                });
+
+            modelBuilder.Entity("Catalog.Domain.Category", b =>
+                {
+                    b.HasOne("Catalog.Domain.Category", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_categories_parent_id");
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("Catalog.Domain.Product", b =>

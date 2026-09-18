@@ -1,0 +1,150 @@
+{
+  "name": "Hub Chuyển Đổi USB-C Ugreen Revodok 60515 (CM512) 7-in-1 - HDMI 4K, PD 100W, LAN Gigabit",
+  "slug": "ugreen-revodok-60515",
+  "sku": "UGR-60515",
+  "brand": "Ugreen",
+  "category": "Phụ Kiện Máy Tính - Laptop",
+  "subCategory": "USB-C Hub / Docking Station",
+  "model": "60515 / CM512",
+  "officialUrl": "https://www.ugreen.com/en-ae/products/ae-60515",
+  "priceVnd": 1070000,
+  "oldPriceVnd": 1360000,
+  "costPriceVnd": 960000,
+  "priceSources": [
+    "https://cellphones.com.vn/hub-chuyen-doi-ugreen-7-in-1-cm512-60515.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Ugreen 24 tháng, 1 đổi 1 trong thời gian bảo hành theo chính sách nhà phân phối tại Việt Nam.",
+  "weightKg": 0.065,
+  "stockQuantity": 22,
+  "shortDescription": "Bộ chia Ugreen Revodok 60515 (CM512) gộp 7 cổng vào một thân nhôm nhỏ gọn: xuất hình 4K@60Hz qua HDMI, sạc pass-through 100W và LAN Gigabit, phù hợp cho MacBook, laptop Windows hay máy tính bảng dùng cổng USB-C.",
+  "descriptionHtml": "<h3>Mở rộng cổng kết nối cho laptop USB-C</h3><p>Ugreen Revodok 60515 (mã CM512) là hub chuyển đổi 7-trong-1 dùng một cổng USB-C duy nhất để mở rộng thành HDMI, LAN, 2 cổng USB-A và khe đọc thẻ nhớ. Thân hub bằng hợp kim nhôm nguyên khối giúp tản nhiệt tốt hơn nhựa thường, giữ tốc độ truyền ổn định khi dùng liên tục.</p><h3>Xuất hình 4K, sạc pass-through 100W</h3><p>Cổng HDMI hỗ trợ xuất hình tối đa 4K@60Hz (yêu cầu thiết bị nguồn có cổng USB-C hỗ trợ DP1.4 Alt Mode), phù hợp nối máy chiếu, TV hoặc màn hình rời khi thuyết trình hay xem phim. Cổng USB-C còn lại nhận nguồn pass-through tới 100W, vừa cắm hub vừa sạc cho MacBook hay laptop USB-C khác mà không cần rút sạc riêng.</p><h3>LAN Gigabit và đọc thẻ nhớ nhanh</h3><p>Cổng Ethernet RJ45 tự nhận tốc độ 10/100/1000Mbps, cho kết nối mạng dây ổn định hơn Wi-Fi ở nơi đông người dùng. Hai cổng USB-A chuẩn 3.0 đạt tốc độ tới 5Gbps, cùng khe đọc thẻ SD và TF (microSD) tốc độ tối đa 104MB/s, tiện cho người chụp ảnh, quay video cần đổ thẻ nhớ nhanh.</p><h3>Tương thích rộng</h3><p>Sản phẩm cắm là chạy, không cần cài driver, tương thích MacBook Air/Pro M1/M2, iPad, laptop Windows, Chromebook, Steam Deck và nhiều thiết bị USB-C khác.</p><ul><li>7 cổng: HDMI, USB-C PD, LAN, 2x USB-A 3.0, SD, TF</li><li>Xuất hình HDMI tối đa 4K@60Hz</li><li>Sạc pass-through USB-C tới 100W</li><li>LAN Gigabit tự nhận 10/100/1000Mbps</li><li>Đọc thẻ SD/TF tốc độ tới 104MB/s</li></ul>",
+  "highlights": [
+    "7 cổng trong 1 thân nhôm nhỏ gọn: HDMI 4K@60Hz, USB-C PD 100W, LAN Gigabit, 2x USB-A 3.0, khe đọc thẻ SD/TF",
+    "Xuất hình sắc nét tối đa 4K@60Hz qua cổng HDMI, phù hợp trình chiếu, xem phim, chơi game trên màn ngoài",
+    "Cổng USB-C hỗ trợ sạc pass-through tới 100W, vừa truyền dữ liệu vừa sạc cho laptop khi cắm hub",
+    "Cổng LAN Gigabit tự nhận tốc độ 10/100/1000Mbps, kết nối mạng dây ổn định hơn Wi-Fi",
+    "2 cổng USB-A chuẩn 3.0 tốc độ tới 5Gbps, cùng khe đọc thẻ SD/TF tốc độ đọc tối đa 104MB/s",
+    "Vỏ nhôm nguyên khối tản nhiệt kép, tương thích rộng với MacBook, laptop Windows/Linux, iPad, Steam Deck"
+  ],
+  "specs": [
+    {
+      "group": "Kết nối",
+      "name": "Tổng số cổng",
+      "value": "7-in-1 (HDMI, USB-C PD, Ethernet, 2x USB 3.0, SD, TF)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng kết nối máy chủ",
+      "value": "1x USB-C (USB Type C)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng HDMI",
+      "value": "1x HDMI, xuất hình tối đa 4K@60Hz (cần cổng USB-C nguồn hỗ trợ DP1.4 Alt Mode)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng sạc PD",
+      "value": "1x USB-C PD, sạc pass-through tối đa 100W",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng Ethernet",
+      "value": "1x RJ45 Gigabit, tự nhận tốc độ 10/100/1000Mbps",
+      "source": "https://cellphones.com.vn/hub-chuyen-doi-ugreen-7-in-1-cm512-60515.html"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB-A",
+      "value": "2x USB 3.0, tốc độ truyền tới 5Gbps",
+      "source": "https://cellphones.com.vn/hub-chuyen-doi-ugreen-7-in-1-cm512-60515.html"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Khe đọc thẻ nhớ",
+      "value": "1x SD + 1x TF (microSD), tốc độ đọc tối đa 104MB/s",
+      "source": "https://cellphones.com.vn/hub-chuyen-doi-ugreen-7-in-1-cm512-60515.html"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Độ phân giải hiển thị",
+      "value": "4K@60Hz/30Hz hoặc Full HD 1080p@60Hz tuỳ thiết bị nguồn",
+      "source": "https://cellphones.com.vn/hub-chuyen-doi-ugreen-7-in-1-cm512-60515.html"
+    },
+    {
+      "group": "Hiệu năng",
+      "name": "Chuẩn truyền dữ liệu USB",
+      "value": "USB 3.0 (5Gbps)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Chất liệu vỏ",
+      "value": "Hợp kim nhôm nguyên khối, tản nhiệt kép",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước thân hub",
+      "value": "124 x 33 x 16 mm (chưa gồm dây USB-C)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu sắc",
+      "value": "Xám (Card Reader + RJ45 Hub)",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Thiết bị hỗ trợ",
+      "value": "MacBook Air/Pro M1/M2, iPad, laptop Windows/macOS/Linux/Chromebook, Steam Deck và các thiết bị USB-C full-function khác",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Bảo hành & phụ kiện",
+      "name": "Bảo hành chính hãng",
+      "value": "24 tháng",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    },
+    {
+      "group": "Bảo hành & phụ kiện",
+      "name": "Hộp sản phẩm gồm",
+      "value": "1x Hub USB-C 7-in-1, 1x sách hướng dẫn sử dụng",
+      "source": "https://www.ugreen.com/en-ae/products/ae-60515"
+    }
+  ],
+  "filterAttributes": {
+    "portCount": "7",
+    "hdmiOutput": "4K@60Hz",
+    "pdWattage": "100W",
+    "lanSpeed": "Gigabit (10/100/1000Mbps)",
+    "usbStandard": "USB 3.0 (5Gbps)",
+    "cardReader": "SD + TF (104MB/s)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.ugreen.com/cdn/shop/files/a2975fc6ac421ea0c1cf7dcd04f6b0e6_a098219b-cbd9-42ae-95c9-1f7333e81340.webp?v=1766051948",
+      "alt": "Hub Ugreen Revodok 60515 CM512 - mặt trước cùng dây USB-C, cổng HDMI, USB-A và khe đọc thẻ"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.ugreen.com/cdn/shop/files/71oaJLsifAL.jpg?v=1765190126",
+      "alt": "Hub Ugreen Revodok 60515 kèm phụ kiện minh hoạ: cáp HDMI, USB-C, USB flash, thẻ nhớ SD/TF, dây mạng LAN"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.ugreen.com/cdn/shop/files/61bhKhW49WL.jpg?v=1765190126",
+      "alt": "Hub Ugreen Revodok 60515 CM512 nhìn nghiêng cùng cáp HDMI, USB-C và phụ kiện kết nối"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Hub Ugreen Revodok 60515 CM512 7-in-1 - HDMI 4K, PD 100W",
+  "metaDescription": "Hub chuyển đổi USB-C Ugreen Revodok 60515 (CM512) 7-in-1: HDMI 4K@60Hz, sạc pass-through 100W, LAN Gigabit, USB 3.0, đọc thẻ SD/TF. Giá 1.070.000đ, bảo hành 24 tháng."
+}

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,10 @@ namespace Warranty;
 
 public static class WarrantyEndpoints
 {
+    /// <summary>W0-3: chỉ nhân viên mới được tạo bản ghi bảo hành (trước đây khách tự cấp bảo hành cho mình).</summary>
+    private static readonly string[] WarrantyStaffRoles =
+        { Roles.Admin, Roles.Manager, Roles.Sale, Roles.TechnicianInShop, Roles.TechnicianOnSite };
+
     public static void MapWarrantyEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/warranty").RequireAuthorization();
@@ -30,6 +35,14 @@ public static class WarrantyEndpoints
             var warranty = await db.ProductWarranties.FirstOrDefaultAsync(w => w.SerialNumber == model.SerialNumber);
             if (warranty == null)
                 return Results.NotFound(new { Message = "Warranty not found for this serial number" });
+
+            // W0-3: trước đây bất kỳ ai cũng mở được yêu cầu bảo hành trên serial của người khác
+            // (chỉ cần biết số serial). Chỉ chủ sở hữu bảo hành hoặc nhân viên mới được mở.
+            var isStaff = WarrantyStaffRoles.Any(user.IsInRole);
+            if (!isStaff && warranty.CustomerId != userId)
+                return Results.Json(
+                    new { Message = "Serial này không thuộc về tài khoản của bạn" },
+                    statusCode: StatusCodes.Status403Forbidden);
 
             // Check if warranty is expired (unless manager override)
             var isManager = user.IsInRole("Admin") || user.IsInRole("Manager");
@@ -88,11 +101,19 @@ public static class WarrantyEndpoints
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Results.Unauthorized();
 
-            var warranty = new ProductWarranty(model.ProductId, model.SerialNumber, userId, model.PurchaseDate, model.WarrantyPeriodMonths);
+            // W0-3 (verifier): endpoint này giờ chỉ nhân viên gọi được, nhưng chủ sở hữu bảo hành
+            // vẫn bị gán bằng id người gọi ⇒ mọi bản ghi tạo tay thuộc về nhân viên, và guard
+            // owner-scope ở POST /claims (:42) khoá luôn chính khách hàng khỏi serial của họ.
+            // Cho phép nhân viên chỉ định khách hàng thật; không truyền thì giữ hành vi cũ.
+            if (model.CustomerId == Guid.Empty)
+                return Results.BadRequest(new { Message = "customerId không hợp lệ" });
+            var ownerId = model.CustomerId ?? userId;
+
+            var warranty = new ProductWarranty(model.ProductId, model.SerialNumber, ownerId, model.PurchaseDate, model.WarrantyPeriodMonths);
             db.ProductWarranties.Add(warranty);
             await db.SaveChangesAsync();
             return Results.Ok(warranty);
-        });
+        }).RequireAuthorization(policy => policy.RequireRole(WarrantyStaffRoles));
 
         // Check Coverage by Serial Number
         group.MapGet("/lookup/serial/{serialNumber}", async (string serialNumber, WarrantyDbContext db) =>
@@ -340,8 +361,10 @@ public static class WarrantyEndpoints
             if (claim == null)
                 return Results.NotFound(new { Message = "Không tìm thấy yêu cầu bảo hành" });
 
-            if (claim.Status != ClaimStatus.Approved)
-                return Results.BadRequest(new { Message = "Chỉ có thể hoàn thành yêu cầu đã được duyệt" });
+            // W0-3: AssignHandling chuyển claim sang InProgress, nhưng guard cũ chỉ nhận Approved
+            // ⇒ mọi claim đã giao xử lý đều kẹt, không bao giờ đóng được. Nhận cả hai trạng thái.
+            if (claim.Status != ClaimStatus.Approved && claim.Status != ClaimStatus.InProgress)
+                return Results.BadRequest(new { Message = "Chỉ có thể hoàn thành yêu cầu đã được duyệt hoặc đang xử lý" });
 
             claim.Resolve(dto.Notes);
             await db.SaveChangesAsync();
@@ -457,7 +480,10 @@ public record RegisterWarrantyDto(
     string SerialNumber,
     DateTime PurchaseDate,
     int WarrantyPeriodMonths,
-    string? OrderNumber = null
+    string? OrderNumber = null,
+    // Khách hàng sở hữu bảo hành. Chỉ nhân viên gọi được endpoint này (RequireRole), nên
+    // trường này an toàn: bỏ trống ⇒ gán cho chính người gọi (hành vi cũ).
+    Guid? CustomerId = null
 );
 
 public record RejectClaimDto(string Reason);

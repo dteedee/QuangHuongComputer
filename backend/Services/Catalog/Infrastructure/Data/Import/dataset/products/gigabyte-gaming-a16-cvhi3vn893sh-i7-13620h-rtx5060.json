@@ -1,0 +1,165 @@
+{
+  "name": "Laptop Gaming Gigabyte GAMING A16 CVHI3VN893SH (i7-13620H, RTX 5060)",
+  "slug": "gigabyte-gaming-a16-cvhi3vn893sh-i7-13620h-rtx5060",
+  "sku": "GIGA-A16-CVH893SH",
+  "brand": "Gigabyte",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop gaming",
+  "model": "Gigabyte GAMING A16 GA6H (CVHI3VN893SH)",
+  "officialUrl": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H",
+  "priceVnd": 37590000,
+  "oldPriceVnd": 39990000,
+  "costPriceVnd": 33080000,
+  "priceSources": [
+    "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html",
+    "https://www.thegioididong.com/laptop/gigabyte-a16-ga6h-i7-13620h-gaming-a16-cvhi3vn893sh"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng Gigabyte 24 tháng tại trung tâm bảo hành ủy quyền toàn quốc, riêng pin và sạc bảo hành 12 tháng, hỗ trợ 1 đổi 1 trong 30 ngày đầu nếu lỗi phần cứng do nhà sản xuất.",
+  "weightKg": 2.233,
+  "stockQuantity": 14,
+  "shortDescription": "Laptop gaming 16 inch của Gigabyte kết hợp vi xử lý Intel Core i7-13620H thế hệ 13 với card đồ họa rời RTX 5060 8GB, đáp ứng tốt các tựa game AAA và tác vụ sáng tạo nội dung.",
+  "descriptionHtml": "<h3>Hiệu năng mạnh mẽ cho game thủ</h3><p>Gigabyte GAMING A16 CVHI3VN893SH trang bị vi xử lý Intel Core i7-13620H thế hệ 13 với 10 nhân 16 luồng, xung nhịp tối đa 4.9GHz, kết hợp card đồ họa rời NVIDIA GeForce RTX 5060 8GB GDDR7 hỗ trợ công nghệ MUX Switch giúp máy xử lý tốt các tựa game AAA hiện nay lẫn công việc dựng hình, chỉnh sửa video.</p><h3>Màn hình mượt mà, lưu trữ tốc độ cao</h3><p>Máy sở hữu màn hình 16 inch tỷ lệ 16:10 độ phân giải WUXGA (1920x1200), tấm nền IPS chống chói với tần số quét 165Hz mang lại trải nghiệm hình ảnh mượt mà. Bộ nhớ RAM 16GB DDR5 5200MHz cùng ổ SSD 512GB chuẩn PCIe NVMe cho tốc độ khởi động và tải ứng dụng nhanh, máy còn dư khe M.2 để nâng cấp thêm dung lượng lưu trữ khi cần.</p><h3>Thiết kế bền bỉ, kết nối đầy đủ</h3><p>Bàn phím RGB backlit hành trình phím sâu mang lại cảm giác gõ tốt cho cả công việc lẫn giải trí. Hệ thống cổng kết nối gồm USB-A, USB-C hỗ trợ xuất hình DisplayPort và sạc, HDMI 2.1, LAN Gigabit cùng Wi-Fi 6E, Bluetooth 5.2 đáp ứng tốt nhu cầu kết nối đa dạng. Pin dung lượng 76Wh cùng sạc nhanh 150W giúp máy sẵn sàng cho các phiên chơi game hoặc làm việc dài.</p><ul><li>CPU Intel Core i7-13620H, GPU RTX 5060 8GB GDDR7</li><li>RAM 16GB DDR5, SSD 512GB PCIe NVMe</li><li>Màn hình 16 inch WUXGA IPS 165Hz</li><li>Trọng lượng khoảng 2.233kg, màu Đen</li></ul>",
+  "highlights": [
+    "CPU Intel Core i7-13620H 10 nhân 16 luồng, xung nhịp tối đa 4.9GHz xử lý đa nhiệm mượt mà",
+    "Card đồ họa rời NVIDIA GeForce RTX 5060 8GB GDDR7 kèm công nghệ MUX Switch tối ưu hiệu năng gaming",
+    "RAM 16GB DDR5 5200MHz, còn khe trống nâng cấp tối đa 64GB",
+    "SSD 512GB PCIe NVMe, còn 1 khe M.2 để mở rộng thêm dung lượng",
+    "Màn hình 16 inch WUXGA tần số quét 165Hz cho hình ảnh mượt mà khi chơi game",
+    "Kết nối đầy đủ với Wi-Fi 6E, Bluetooth 5.2, cổng USB-C hỗ trợ xuất hình và sạc"
+  ],
+  "specs": [
+    {
+      "group": "Hệ điều hành",
+      "name": "Hệ điều hành",
+      "value": "Windows 11 Home Single Language 64-bit",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core i7-13620H, 24MB cache, 10 nhân 16 luồng, tốc độ tối đa 4.9GHz",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "GPU",
+      "value": "NVIDIA GeForce RTX 5060 Laptop GPU 8GB GDDR7 (bus 128-bit) + Intel UHD Graphics tích hợp",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "RAM",
+      "name": "Bộ nhớ trong",
+      "value": "16GB DDR5 5200MHz (1x16GB), 2 khe SO-DIMM, nâng cấp tối đa 64GB",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB chuẩn PCIe NVMe M.2 2280, còn 1 khe M.2 trống, hỗ trợ tối đa 4TB",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "16 inch, tỷ lệ 16:10, WUXGA 1920x1200",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tấm nền & tần số quét",
+      "value": "IPS chống chói, 165Hz, độ sáng 300nits (typical)",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Bàn phím",
+      "name": "Bàn phím",
+      "value": "RGB Backlit 1 vùng, hành trình phím tối đa 1.7mm",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Cổng kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "1x USB 2.0 Type-A, 2x USB 3.2 Gen1 Type-A, 1x USB 3.2 Gen1 Type-C (DisplayPort 1.4 + Power Delivery 3.0), 1x HDMI 2.1, 1x RJ-45 LAN, 1x jack combo 3.5mm",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Loa",
+      "value": "2 loa 2W, hỗ trợ công nghệ Dolby Atmos",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Kết nối không dây",
+      "name": "Wi-Fi & Bluetooth",
+      "value": "Wi-Fi 6E (802.11ax 2x2), Bluetooth 5.2",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Webcam",
+      "name": "Webcam",
+      "value": "FHD (1080p) hồng ngoại, hỗ trợ đăng nhập khuôn mặt Windows Hello",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "TPM",
+      "value": "TPM dạng firmware, hỗ trợ Intel Platform Trust Technology (PTT)",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Dung lượng pin",
+      "value": "Pin Li-ion 4-cell 76Wh",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "Pin & sạc",
+      "name": "Sạc",
+      "value": "Adapter 150W",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Kích thước & trọng lượng",
+      "name": "Kích thước",
+      "value": "358.3 x 262.5 x 19.45~22.99 mm",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    },
+    {
+      "group": "Kích thước & trọng lượng",
+      "name": "Trọng lượng",
+      "value": "Khoảng 2.233kg",
+      "source": "https://cellphones.com.vn/laptop-gigabyte-gaming-a16-ga6h-cvhi3vn893sh.html"
+    },
+    {
+      "group": "Màu sắc",
+      "name": "Màu sắc",
+      "value": "Đen (Black Steel)",
+      "source": "https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H/sp"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core i7 Gen 13 (i7-13620H)",
+    "ram": "16GB DDR5",
+    "storage": "512GB SSD",
+    "gpu": "NVIDIA RTX 5060 8GB",
+    "screenSize": "16 inch",
+    "refreshRate": "165Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.gigabyte.com/FileUpload/Global/KeyFeature/3896/innergigabyte/images/bg-outlook.jpg",
+      "alt": "Laptop Gigabyte GAMING A16 GA6H nhìn chéo, màn hình mở và bàn phím LED, mặt lưng khắc logo GIGABYTE"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.gigabyte.com/FileUpload/Global/KeyFeature/3896/innergigabyte/images/kv.jpg",
+      "alt": "Laptop Gigabyte GAMING A16 GA6H - ảnh chủ đạo trang sản phẩm chính hãng GIGABYTE"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Laptop Gaming Gigabyte GAMING A16 CVHI3VN893SH (i7-13620H, RTX 5060)",
+  "metaDescription": "Gigabyte GAMING A16 CVHI3VN893SH: Intel Core i7-13620H, RTX 5060 8GB, RAM 16GB DDR5, SSD 512GB, màn hình 16 inch WUXGA 165Hz. Bảo hành chính hãng 24 tháng.",
+  "notes": "W0-6 2026-09-18: 4 anh cu lay tu cdnv2.tgdd.vn (The Gioi Di Dong - nha ban le doi thu) => vi pham D02, da xoa. Thay bang 2 anh chup tu chinh trang hang https://www.gigabyte.com/vn/Laptop/GIGABYTE-GAMING-A16-GA6H (key visual + outlook). Day la anh marketing nen toi, khong phai anh studio nen trang; mau may trong anh kv.jpg CHUA doi chieu duoc voi dung ma SKU CVHI3VN893SH. Trang hang khong co anh studio nen trang cho model nay. Ngoai ra: 1 phan specs cua ban ghi nay van dan nguon cellphones.com.vn (nha ban le) - can re-source o W2-1."
+}

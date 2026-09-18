@@ -1,0 +1,271 @@
+{
+  "name": "PC Gaming QH Falcon G1 - Intel Core i5-12400F / RTX 5050 8GB / RAM 16GB DDR4 / SSD 1TB",
+  "slug": "pc-gaming-qh-falcon-g1-i5-12400f-rtx-5050",
+  "sku": "QH-FALCONG1-12400F-5050",
+  "brand": "QH",
+  "category": "Máy Tính Chơi Game",
+  "subCategory": "PC Gaming 1080p Tầm Trung",
+  "model": "Falcon G1",
+  "officialUrl": "https://nzxt.com/products/h5-flow?bt=0",
+  "priceVnd": 27420000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 24130000,
+  "priceSources": [
+    "https://gearvn.com/search?type=product&q=RTX+5050+Gigabyte",
+    "https://gearvn.com/search?type=product&q=i5+12400F",
+    "https://gearvn.com/search?type=product&q=B760M-A+WIFI+D4",
+    "https://gearvn.com/search?type=product&q=Kingston+NV3+1TB",
+    "https://gearvn.com/search?type=product&q=Corsair+CV750"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành đồng bộ 36 tháng tại Quang Huong Computer cho toàn bộ dàn máy (1 đổi 1 trong 12 tháng đầu nếu lỗi do NSX). Từng linh kiện còn được bảo hành riêng theo chính sách hãng: CPU Intel 36 tháng, Mainboard ASUS 36 tháng, RAM Corsair bảo hành giới hạn trọn đời, VGA Gigabyte 36 tháng, SSD Kingston 60 tháng, nguồn Corsair CV750 36 tháng, case NZXT 24 tháng.",
+  "weightKg": 11.5,
+  "stockQuantity": 10,
+  "shortDescription": "Dàn PC chơi game tầm trung dựng sẵn từ Intel Core i5-12400F và RTX 5050 8GB, đáp ứng tốt game AAA ở độ phân giải 1080p cùng dung lượng SSD NVMe 1TB cho tốc độ nạp game nhanh.",
+  "descriptionHtml": "<h3>Cấu hình cân bằng cho game thủ 1080p</h3><p>QH Falcon G1 kết hợp Intel Core i5-12400F (6 nhân 12 luồng, xung tối đa 4.4GHz) cùng card đồ họa Gigabyte GeForce RTX 5050 WINDFORCE OC 8GB - bộ đôi vừa đủ mạnh để chiến mượt phần lớn tựa game esports và AAA ở độ phân giải Full HD, thiết lập đồ họa cao. Mainboard ASUS PRIME B760M-A WIFI D4 CSM tích hợp sẵn Wi-Fi 6, hỗ trợ nâng cấp CPU thế hệ 13-14 sau này.</p><h3>Khởi động và nạp game gần như tức thì</h3><p>RAM Corsair Vengeance LPX 16GB DDR4 3200MHz cho đa nhiệm mượt mà, phối hợp cùng SSD Kingston NV3 1TB chuẩn NVMe Gen4 giúp Windows khởi động và game nạp màn nhanh hơn hẳn so với ổ cứng cơ truyền thống.</p><h3>Nguồn dư tải, vỏ case thoáng khí</h3><p>Nguồn Corsair CV750 750W 80 Plus Bronze cho biên độ tải rộng rãi, đảm bảo hệ thống vận hành ổn định kể cả khi ép xung nhẹ card đồ họa. Vỏ case NZXT H5 Flow màu trắng với mặt lưới tản nhiệt toàn diện, đi kèm 2 quạt 120mm nguyên bản, hỗ trợ card đồ họa dài tới 410mm - dư sức chứa RTX 5050 dài 199mm.</p><ul><li>CPU Intel Core i5-12400F 6 nhân/12 luồng, boost 4.4GHz</li><li>VGA Gigabyte RTX 5050 WINDFORCE OC 8GB GDDR6</li><li>RAM Corsair Vengeance LPX 16GB DDR4 3200MHz CL16</li><li>SSD Kingston NV3 1TB NVMe PCIe Gen4</li><li>Nguồn Corsair CV750 750W 80 Plus Bronze</li><li>Case NZXT H5 Flow màu trắng, airflow tối ưu</li></ul>",
+  "highlights": [
+    "CPU Intel Core i5-12400F 6 nhân 12 luồng, xung nhịp tối đa 4.4GHz, đủ mạnh cho game và đa nhiệm văn phòng nặng",
+    "VGA Gigabyte GeForce RTX 5050 WINDFORCE OC 8GB GDDR6 - chiến tốt game AAA 1080p thiết lập cao, hỗ trợ DLSS/Ray Tracing thế hệ mới",
+    "RAM Corsair Vengeance LPX 16GB DDR4 3200MHz CL16, dễ nâng cấp thêm 1 thanh lên dual-channel",
+    "SSD Kingston NV3 1TB chuẩn NVMe PCIe Gen4, tốc độ đọc tới 6.000MB/s - khởi động và nạp game nhanh",
+    "Nguồn Corsair CV750 750W 80 Plus Bronze, dư tải an toàn so với công suất tiêu thụ thực tế của hệ thống",
+    "Case NZXT H5 Flow mặt lưới toàn diện, luồng khí tối ưu, hỗ trợ GPU dài tới 410mm"
+  ],
+  "specs": [
+    {
+      "group": "CPU",
+      "name": "Model",
+      "value": "Intel Core i5-12400F",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Số nhân / luồng",
+      "value": "6 nhân / 12 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Xung nhịp",
+      "value": "Cơ bản 2.5GHz - Turbo tối đa 4.4GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Bộ nhớ đệm",
+      "value": "18MB Intel Smart Cache",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Công suất (TDP)",
+      "value": "Base Power 65W - Max Turbo Power 117W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Socket / Đồ họa tích hợp",
+      "value": "FCLGA1700, không có iGPU (bản F)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "CPU",
+      "name": "Tản nhiệt đi kèm",
+      "value": "Tản nhiệt khí zin theo CPU (bản Box của Intel)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/134587/intel-core-i512400f-processor-18m-cache-up-to-4-40-ghz/specifications.html"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "Model",
+      "value": "ASUS PRIME B760M-A WIFI D4-CSM",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "Chipset / Socket",
+      "value": "Intel B760, socket LGA1700 (hỗ trợ CPU thế hệ 12/13/14)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "RAM hỗ trợ",
+      "value": "DDR4, 4 khe (Max 128GB), dual-channel, công nghệ OptiMem II",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "Khe mở rộng",
+      "value": "1x PCIe 4.0 x16, 1x PCIe 4.0 @x4, 1x PCIe 4.0 @x1",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "Khe M.2",
+      "value": "2x M.2 2280 PCIe 4.0 x4",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "Bo mạch chủ",
+      "name": "Form factor / Wifi",
+      "value": "Micro-ATX, Wi-Fi 6 (802.11ax)",
+      "source": "https://www.asus.com/motherboards-components/motherboards/prime/prime-b760m-a-wifi-d4-csm/"
+    },
+    {
+      "group": "RAM",
+      "name": "Model",
+      "value": "Corsair Vengeance LPX CMK16GX4M1E3200C16",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "RAM",
+      "name": "Dung lượng / Loại",
+      "value": "16GB (1x16GB), DDR4 UDIMM 288 chân",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "RAM",
+      "name": "Bus / Độ trễ",
+      "value": "3200MT/s, CL16, 1.35V (XMP 2.0)",
+      "source": "https://www.corsair.com/us/en/p/memory/cmk16gx4m1e3200c16/vengeance-lpx-16gb-1-x-16gb-ddr4-3200mhz-c16-memory-kit-black"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Model",
+      "value": "Gigabyte GeForce RTX 5050 WINDFORCE OC 8G (GV-N5050WF2OC-8GD)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5050WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Bộ nhớ",
+      "value": "8GB GDDR6, bus 128-bit, 20Gbps",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5050WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Xung nhịp",
+      "value": "Boost 2587MHz (bản OC) / 2572MHz (bản Reference)",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5050WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Kích thước / Nguồn phụ",
+      "value": "Dài 199mm, PSU khuyến nghị 550W, 1x đầu 8-pin",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5050WF2OC-8GD/sp"
+    },
+    {
+      "group": "Card đồ họa",
+      "name": "Cổng xuất hình",
+      "value": "2x DisplayPort 2.1b, 2x HDMI 2.1b",
+      "source": "https://www.gigabyte.com/Graphics-Card/GV-N5050WF2OC-8GD/sp"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Model",
+      "value": "Kingston NV3 1TB (SNV3S/1000G)",
+      "source": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Giao tiếp / Form factor",
+      "value": "PCIe 4.0 NVMe (Gen 4x4), M.2 2280",
+      "source": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Tốc độ",
+      "value": "Đọc tới 6.000MB/s, ghi tới 4.000MB/s (bản 1TB)",
+      "source": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd"
+    },
+    {
+      "group": "Ổ cứng SSD",
+      "name": "Bảo hành hãng",
+      "value": "5 năm, kèm phần mềm clone Acronis",
+      "source": "https://www.kingston.com/en/ssd/nv3-nvme-pcie-ssd"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Model",
+      "value": "Corsair CV750 (CP-9020237-NA)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020237-na/cv-series-cv750-80-plus-bronze-certified-atx-power-supply-cp-9020237-na"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Công suất / Chuẩn hiệu suất",
+      "value": "750W liên tục, 80 Plus Bronze (~88%)",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020237-na/cv-series-cv750-80-plus-bronze-certified-atx-power-supply-cp-9020237-na"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Loại dây / Quạt",
+      "value": "Non-modular (dây liền), quạt 120mm điều tốc theo nhiệt độ",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020237-na/cv-series-cv750-80-plus-bronze-certified-atx-power-supply-cp-9020237-na"
+    },
+    {
+      "group": "Nguồn (PSU)",
+      "name": "Đầu cấp nguồn",
+      "value": "1x 24-pin ATX, 2x 8-pin(4+4) EPS, 2x 8-pin(6+2) PCIe, 7x SATA",
+      "source": "https://www.corsair.com/us/en/p/psu/cp-9020237-na/cv-series-cv750-80-plus-bronze-certified-atx-power-supply-cp-9020237-na"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Model",
+      "value": "NZXT H5 Flow (2024) - màu trắng",
+      "source": "https://nzxt.com/products/h5-flow?bt=0"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Kích thước / Form factor",
+      "value": "465 x 225 x 430mm, dung tích 45L, hỗ trợ E-ATX/ATX/Micro-ATX/Mini-ITX",
+      "source": "https://nzxt.com/products/h5-flow?bt=0"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Hỗ trợ linh kiện",
+      "value": "GPU dài tối đa 410mm, radiator trước 360mm / trên 240mm",
+      "source": "https://nzxt.com/products/h5-flow?bt=0"
+    },
+    {
+      "group": "Vỏ case",
+      "name": "Quạt đi kèm",
+      "value": "2x quạt 120mm (trước hút, sau xả)",
+      "source": "https://nzxt.com/products/h5-flow?bt=0"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "Hệ điều hành đi kèm",
+      "value": "Không kèm bản quyền Windows (Free DOS) - hỗ trợ cài Windows 11 bản quyền khi khách có nhu cầu",
+      "source": "https://nzxt.com/products/h5-flow?bt=0"
+    }
+  ],
+  "filterAttributes": {
+    "purpose": "Gaming 1080p",
+    "cpu": "Intel Core i5-12400F",
+    "gpu": "RTX 5050 8GB",
+    "ram": "16GB DDR4"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_01_hero.png?v=1789351747&width=2000",
+      "alt": "Case NZXT H5 Flow màu trắng góc nghiêng, mặt kính hông mở lộ khung máy"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_02_side.png?v=1789351747&width=2000",
+      "alt": "Case NZXT H5 Flow màu trắng nhìn thẳng qua mặt kính cường lực"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_03_front.png?v=1789351747&width=2000",
+      "alt": "Mặt trước lưới tản nhiệt toàn diện của case NZXT H5 Flow màu trắng"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://nzxt.com/cdn/shop/files/h5-flow_white_04_back.png?v=1789351747&width=2000",
+      "alt": "Mặt sau case NZXT H5 Flow màu trắng với khe PCI và lỗ thông gió"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "PC Gaming QH Falcon G1 - i5-12400F / RTX 5050 8GB",
+  "metaDescription": "PC Gaming QH Falcon G1: Intel Core i5-12400F, VGA RTX 5050 8GB, RAM 16GB DDR4, SSD NVMe 1TB, nguồn Corsair CV750 750W, case NZXT H5 Flow. Chiến tốt game 1080p, bảo hành 36 tháng."
+}

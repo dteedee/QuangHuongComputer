@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Payments.Application.Webhooks;
 using Sales.Infrastructure;
 using Sales.Domain;
 using System.Text.Json;
@@ -92,23 +94,42 @@ public static class ShippingEndpoints
             return Results.Ok(order);
         }).RequireAuthorization();
 
-        // 4. GHN webhook — delivery status updates
+        // 4. GHN webhook — delivery status updates.
+        //    W0-10: FAIL-CLOSED. Trước đây `if (!string.IsNullOrEmpty(expectedToken) && ...)` nghĩa là
+        //    token chưa cấu hình ⇒ BẤT KỲ AI cũng POST được "delivered" và đơn tự chuyển trạng thái.
         app.MapPost("/api/shipping/webhook", async (
             HttpContext ctx,
             SalesDbContext db,
-            IConfiguration config) =>
+            IConfiguration config,
+            ILoggerFactory lf) =>
         {
+            var logger = lf.CreateLogger("GHNWebhook");
+            var expectedToken = config["Shipping:GHN:WebhookToken"];
+
+            if (!WebhookSignature.IsConfiguredSecret(expectedToken))
+            {
+                logger.LogError("GHN webhook bị gọi nhưng Shipping:GHN:WebhookToken CHƯA cấu hình — từ chối 503");
+                return Results.Json(
+                    new { error = "SHIPPING_WEBHOOK_NOT_CONFIGURED", message = "Webhook vận chuyển chưa được cấu hình" },
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
             var token = ctx.Request.Headers["Token"].ToString();
-            var expectedToken = config["Shipping:GHN:WebhookToken"] ?? "";
-            if (!string.IsNullOrEmpty(expectedToken) && token != expectedToken)
-                return Results.Unauthorized();
+            if (!WebhookSignature.FixedTimeEquals(expectedToken!.Trim(), token.Trim()))
+            {
+                logger.LogWarning("GHN webhook: token sai — từ chối 401");
+                return Results.Json(new { error = "INVALID_TOKEN" }, statusCode: StatusCodes.Status401Unauthorized);
+            }
 
             string body;
             using (var reader = new System.IO.StreamReader(ctx.Request.Body))
                 body = await reader.ReadToEndAsync();
 
-            var payload = JsonSerializer.Deserialize<JsonElement>(body);
-            if (!payload.TryGetProperty("OrderCode", out var codeEl)) return Results.BadRequest();
+            JsonElement payload;
+            try { payload = JsonSerializer.Deserialize<JsonElement>(body); }
+            catch (JsonException) { return Results.BadRequest(new { error = "INVALID_JSON" }); }
+            if (payload.ValueKind != JsonValueKind.Object
+                || !payload.TryGetProperty("OrderCode", out var codeEl)) return Results.BadRequest();
 
             var trackingCode = codeEl.GetString() ?? "";
             var status = payload.TryGetProperty("Status", out var statusEl) ? statusEl.GetString() : "";

@@ -1,0 +1,172 @@
+{
+  "name": "CPU Intel Core Ultra 7 265K Box Chính Hãng",
+  "slug": "cpu-intel-core-ultra-7-265k",
+  "sku": "INT-BX80768265K",
+  "brand": "Intel",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "CPU",
+  "model": "Intel BX80768265K",
+  "officialUrl": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html",
+  "priceVnd": 9200000,
+  "oldPriceVnd": null,
+  "costPriceVnd": 8100000,
+  "priceSources": [
+    "https://www.anphatpc.com.vn/cpu-intel-core-ultra-7-265k-intel-lga1851-20-core-20-thread-base-3.3ghz-turbo-5.5ghz-cache-30mb.html",
+    "https://gearvn.com/products/bo-vi-xu-ly-intel-core-ultra-7-265k"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Intel 36 tháng thông qua hệ thống nhà phân phối ủy quyền tại Việt Nam, 1 đổi 1 trong 30 ngày đầu nếu lỗi do nhà sản xuất.",
+  "weightKg": 0.12,
+  "stockQuantity": 18,
+  "shortDescription": "CPU Intel Core Ultra 7 265K dùng kiến trúc hybrid Arrow Lake-S với 20 nhân 20 luồng, xung Turbo tới 5.5GHz, phù hợp cho dàn PC gaming hiệu năng cao và dựng nội dung chuyên nghiệp.",
+  "descriptionHtml": "<h3>Kiến trúc hybrid thế hệ mới, 20 nhân 20 luồng</h3><p>Intel Core Ultra 7 265K thuộc dòng Core Ultra Series 2 (Arrow Lake-S), kết hợp 8 nhân hiệu năng P-core xung cơ bản 3.9GHz và 12 nhân tiết kiệm điện E-core xung cơ bản 3.3GHz, tổng cộng 20 nhân 20 luồng. Nhờ công nghệ Intel Turbo Boost Max 3.0, xung nhịp có thể đạt tới 5.5GHz, đảm bảo xử lý mượt các tác vụ đa nhiệm nặng, render video hay chơi game đồ họa cao.</p><h3>Bộ nhớ đệm lớn, hỗ trợ RAM DDR5 tốc độ cao</h3><p>Chip trang bị 36MB L2 Cache cùng 30MB Smart Cache, hỗ trợ RAM DDR5 tốc độ tới 6400 MT/s với dung lượng tối đa 256GB trên 2 kênh, kèm khả năng dùng bộ nhớ ECC cho các tác vụ đòi hỏi độ ổn định cao. Chip được sản xuất trên tiến trình TSMC N3B 3nm, giúp cải thiện hiệu năng trên mỗi watt so với thế hệ trước.</p><h3>Đồ họa tích hợp và nền tảng socket mới</h3><p>Core Ultra 7 265K tích hợp GPU Intel Graphics 4 nhân Xe, xung tối đa 2GHz, xuất được tối đa 4 màn hình, đủ dùng cho tác vụ văn phòng khi chưa lắp card đồ họa rời. Chip dùng socket FCLGA1851 hoàn toàn mới, cần mainboard chipset Z890 tương ứng, hỗ trợ PCIe 5.0/4.0 với tối đa 24 lane cho SSD NVMe và VGA tốc độ cao.</p><ul><li>20 nhân 20 luồng (8 P-core + 12 E-core), Turbo tới 5.5GHz</li><li>36MB L2 Cache, 30MB Smart Cache</li><li>Hỗ trợ DDR5-6400, tối đa 256GB, 2 kênh, có ECC</li><li>Đồ họa tích hợp Intel Graphics 4 nhân Xe</li><li>Socket FCLGA1851, tiến trình TSMC N3B 3nm</li><li>Công suất cơ bản 125W, Turbo tối đa 250W</li></ul>",
+  "highlights": [
+    "20 nhân 20 luồng (8 P-core + 12 E-core) kiến trúc hybrid Arrow Lake-S, xử lý đa nhiệm nặng mượt mà",
+    "Turbo Boost Max 3.0 đạt tới 5.5GHz, đáp ứng tốt game AAA và dựng nội dung chuyên nghiệp",
+    "36MB L2 Cache + 30MB Smart Cache giúp truy xuất dữ liệu nhanh hơn",
+    "Hỗ trợ RAM DDR5 tốc độ tới 6400 MT/s, dung lượng tối đa 256GB, có ECC",
+    "Đồ họa tích hợp Intel Graphics 4 nhân Xe, xuất hình khi chưa lắp VGA rời",
+    "Sản xuất trên tiến trình TSMC N3B 3nm, tối ưu hiệu năng trên mỗi watt"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "Số nhân",
+      "value": "20 nhân (8 P-core + 12 E-core)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Số luồng",
+      "value": "20 luồng",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp cơ bản",
+      "value": "P-core 3.9 GHz / E-core 3.3 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Xung nhịp Turbo tối đa",
+      "value": "P-core 5.4 GHz, Turbo Boost Max 3.0 tới 5.5 GHz; E-core 4.6 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Bộ nhớ đệm L2",
+      "value": "36 MB",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Bộ nhớ đệm Smart Cache (L3)",
+      "value": "30 MB",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ xử lý",
+      "name": "Tiến trình sản xuất",
+      "value": "TSMC N3B (3nm)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất cơ bản (PBP)",
+      "value": "125 W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Công suất Turbo tối đa (MTP)",
+      "value": "250 W",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Điện năng",
+      "name": "Nhiệt độ hoạt động tối đa",
+      "value": "105°C",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Socket & đóng gói",
+      "name": "Socket",
+      "value": "FCLGA1851",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Socket & đóng gói",
+      "name": "Kích thước gói chip",
+      "value": "45 x 37.5 mm",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Loại RAM",
+      "value": "DDR5 tối đa 6400 MT/s, 2 kênh",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ hỗ trợ",
+      "name": "Dung lượng RAM tối đa",
+      "value": "256 GB, hỗ trợ ECC",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Đồ họa tích hợp",
+      "name": "Chip đồ họa",
+      "value": "Intel Graphics, 4 nhân Xe, xung 300 MHz - 2 GHz",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Đồ họa tích hợp",
+      "name": "Xuất hình ảnh",
+      "value": "Hỗ trợ tối đa 4 màn hình",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Kết nối mở rộng",
+      "name": "PCIe",
+      "value": "Hỗ trợ PCIe 5.0 và 4.0, tối đa 24 lane",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Kết nối mở rộng",
+      "name": "DMI",
+      "value": "DMI 4, tối đa 8 lane",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    },
+    {
+      "group": "Thông tin ra mắt",
+      "name": "Ngày ra mắt",
+      "value": "Quý 4/2024",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html"
+    }
+  ],
+  "filterAttributes": {
+    "socket": "LGA1851",
+    "cores": "20 (8P+12E)",
+    "series": "Intel Core Ultra Series 2 (Arrow Lake-S)"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://www.intel.com/content/dam/www/central-libraries/us/en/images/2024-10/newsroom-intel-arl-chip-2.jpg",
+      "alt": "Chip Intel Core Ultra 200S (Arrow Lake-S) nhìn thẳng từ trên xuống, nền trắng, logo Intel Core Ultra trên nắp tản nhiệt"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.intel.com/content/dam/www/central-libraries/us/en/images/2024-10/newsroom-intel-arl-chip-1.jpg",
+      "alt": "Chip Intel Core Ultra 200S (Arrow Lake-S) nhìn góc nghiêng, nền trắng, logo Intel Core Ultra trên nắp tản nhiệt"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.intel.com/content/dam/www/central-libraries/us/en/images/2024-10/newsroom-intel-arl-chip-8.jpg",
+      "alt": "Chip Intel Core Ultra 200S (Arrow Lake-S) đặt trên nền phản chiếu studio, thể hiện chi tiết die chip"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "CPU Intel Core Ultra 7 265K Box Chính Hãng - Giá Tốt",
+  "metaDescription": "CPU Intel Core Ultra 7 265K 20 nhân 20 luồng, Turbo 5.5GHz, socket LGA1851, hỗ trợ DDR5-6400. Hàng chính hãng, bảo hành 36 tháng, giá tốt tại Quang Huong Computer."
+}

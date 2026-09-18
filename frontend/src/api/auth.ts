@@ -311,10 +311,13 @@ export const authApi = {
     /**
      * Create new role
      */
+    // W0-13: same fix as admin.ts roles.create - JSON body { name } (W0-1
+    // backend contract) + ?roleName= kept on the URL for the pre-restart binary.
     createRole: async (name: string): Promise<{ message: string }> => {
-        const response = await client.post<{ message: string }>('/auth/roles', name, {
-            headers: { 'Content-Type': 'text/plain' }
-        });
+        const response = await client.post<{ message: string }>(
+            `/auth/roles?roleName=${encodeURIComponent(name)}`,
+            { name }
+        );
         return response.data;
     },
 

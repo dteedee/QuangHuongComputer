@@ -118,35 +118,37 @@ public static class SalesReportEndpoints
             var thisMonth = new DateTime(today.Year, today.Month, 1);
             var lastMonth = thisMonth.AddMonths(-1);
 
-            var thisMonthRevenueTask = salesDb.Orders
-                .Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.TotalAmount);
-            var lastMonthRevenueTask = salesDb.Orders
-                .Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth && o.Status != OrderStatus.Cancelled)
-                .SumAsync(o => (decimal?)o.TotalAmount);
-            var pendingOrdersTask = salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
-            var inventoryValueTask = invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost);
-            var lowStockCountTask = invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
-            var pendingRepairsTask = repairDb.WorkOrders.CountAsync(w => w.Status == Repair.Domain.WorkOrderStatus.Pending || w.Status == Repair.Domain.WorkOrderStatus.InProgress);
-            var thisMonthRepairRevenueTask = repairDb.WorkOrders
+            // Sequential awaits per DbContext: salesDb/invDb/repairDb/accDb each had 2-3
+            // concurrent operations started on the SAME context via Task.WhenAll, which
+            // throws "A second operation started on this context before a previous
+            // operation completed". Result sets are small; not worth IDbContextFactory.
+            // Revenue also now excludes unpaid orders, not just Cancelled ones (W2-8 owns
+            // the single shared "recognized revenue" predicate; this is a local patch only
+            // for this endpoint - see also ComparisonEndpoints.GetRevenuePeriodData).
+            var thisMonthRevenue = await salesDb.Orders
+                .Where(o => o.OrderDate >= thisMonth && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var lastMonthRevenue = await salesDb.Orders
+                .Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth && o.Status != OrderStatus.Cancelled && o.PaymentStatus == PaymentStatus.Paid)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var pendingOrders = await salesDb.Orders.CountAsync(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Confirmed);
+            var inventoryValue = await invDb.InventoryItems.SumAsync(i => (decimal?)i.QuantityOnHand * i.AverageCost) ?? 0;
+            var lowStockCount = await invDb.InventoryItems.CountAsync(i => i.QuantityOnHand <= i.LowStockThreshold);
+            var pendingRepairs = await repairDb.WorkOrders.CountAsync(w => w.Status == Repair.Domain.WorkOrderStatus.Pending || w.Status == Repair.Domain.WorkOrderStatus.InProgress);
+            var thisMonthRepairRevenue = await repairDb.WorkOrders
                 .Where(w => w.FinishedAt >= thisMonth && w.Status == Repair.Domain.WorkOrderStatus.Completed)
-                .SumAsync(w => (decimal?)w.ActualCost);
-            var totalARTask = accDb.Accounts.SumAsync(a => (decimal?)a.Balance);
+                .SumAsync(w => (decimal?)w.ActualCost) ?? 0;
+            var totalAR = await accDb.Accounts.SumAsync(a => (decimal?)a.Balance) ?? 0;
 
-            await Task.WhenAll(thisMonthRevenueTask, lastMonthRevenueTask, pendingOrdersTask,
-                inventoryValueTask, lowStockCountTask, pendingRepairsTask, thisMonthRepairRevenueTask, totalARTask);
-
-            var thisMonthRevenue = await thisMonthRevenueTask ?? 0;
-            var lastMonthRevenue = await lastMonthRevenueTask ?? 0;
             var revenueGrowth = lastMonthRevenue > 0
                 ? Math.Round((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100, 1) : 100;
 
             return Results.Ok(new
             {
-                Sales = new { ThisMonthRevenue = thisMonthRevenue, LastMonthRevenue = lastMonthRevenue, GrowthPercent = revenueGrowth, PendingOrders = await pendingOrdersTask },
-                Inventory = new { TotalValue = await inventoryValueTask ?? 0, LowStockCount = await lowStockCountTask },
-                Repairs = new { PendingCount = await pendingRepairsTask, ThisMonthRevenue = await thisMonthRepairRevenueTask ?? 0 },
-                Accounting = new { TotalReceivables = await totalARTask ?? 0 }
+                Sales = new { ThisMonthRevenue = thisMonthRevenue, LastMonthRevenue = lastMonthRevenue, GrowthPercent = revenueGrowth, PendingOrders = pendingOrders },
+                Inventory = new { TotalValue = inventoryValue, LowStockCount = lowStockCount },
+                Repairs = new { PendingCount = pendingRepairs, ThisMonthRevenue = thisMonthRepairRevenue },
+                Accounting = new { TotalReceivables = totalAR }
             });
         });
     }

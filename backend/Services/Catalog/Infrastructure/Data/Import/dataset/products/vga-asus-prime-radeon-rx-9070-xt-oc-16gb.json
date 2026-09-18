@@ -1,0 +1,182 @@
+{
+  "name": "Card màn hình ASUS Prime Radeon RX 9070 XT OC Edition 16GB GDDR6",
+  "slug": "vga-asus-prime-radeon-rx-9070-xt-oc-16gb",
+  "sku": "VGA-ASUS-PR9070XT-O16G",
+  "brand": "ASUS",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "VGA",
+  "model": "PRIME-RX9070XT-O16G",
+  "officialUrl": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/",
+  "priceVnd": 23490000,
+  "oldPriceVnd": 24990000,
+  "costPriceVnd": 20670000,
+  "priceSources": [
+    "https://gearvn.com/products/card-man-hinh-asus-prime-radeon-rx-9070-xt-oc-edition-16gb"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng 36 tháng qua nhà phân phối/đại lý ủy quyền ASUS tại Việt Nam.",
+  "weightKg": 1.15,
+  "stockQuantity": 8,
+  "shortDescription": "ASUS Prime Radeon RX 9070 XT OC Edition 16GB GDDR6 dùng nhân đồ hoạ AMD Radeon RX 9070 XT kiến trúc RDNA 4, tản nhiệt 3 quạt trục và bo mạch PRIME bền bỉ, phù hợp chiến game 2K/4K mượt mà.",
+  "descriptionHtml": "<h3>Card đồ hoạ ASUS Prime Radeon RX 9070 XT OC Edition 16GB</h3><p>ASUS Prime Radeon RX 9070 XT OC Edition 16GB GDDR6 dùng nhân đồ hoạ AMD Radeon RX 9070 XT thuộc kiến trúc RDNA 4 mới nhất, sở hữu 4096 nhân Stream Processor. Ở chế độ OC qua phần mềm GPU Tweak III, xung Boost đạt tới 3030 MHz (Game Clock 2480 MHz); chế độ mặc định xung Boost 3010 MHz (Game Clock 2460 MHz). Card trang bị 16GB bộ nhớ GDDR6 bus 256-bit, tốc độ 20 Gbps, đáp ứng tốt các tựa game AAA ở độ phân giải 2K, 4K.</p><h3>Tản nhiệt và thiết kế</h3><p>Hệ thống tản nhiệt 3 quạt cỡ lớn cùng tấm backplate kim loại giúp card duy trì nhiệt độ ổn định khi chơi game hay dựng hình trong thời gian dài. Card dày 2.5 slot, kích thước 312 x 130 x 50mm, dùng chuẩn giao tiếp PCI Express 5.0 và đầu cấp nguồn 3x 8-pin, khuyến nghị bộ nguồn tối thiểu 750W.</p><h3>Kết nối và phần mềm</h3><p>Về xuất hình, sản phẩm có 1 cổng HDMI 2.1b và 3 cổng DisplayPort 2.1a, hỗ trợ tối đa 4 màn hình cùng lúc, độ phân giải tối đa 7680x4320. Đi kèm phần mềm ASUS GPU Tweak III giúp theo dõi và tinh chỉnh xung nhịp, tốc độ quạt theo nhu cầu sử dụng.</p>",
+  "highlights": [
+    "GPU AMD Radeon RX 9070 XT (kiến trúc RDNA 4) với 4096 nhân Stream Processor, xung Boost tới 3030 MHz ở chế độ OC qua GPU Tweak III.",
+    "16GB bộ nhớ GDDR6 bus 256-bit, tốc độ 20 Gbps, đủ sức cân các tựa game AAA độ phân giải cao.",
+    "Tản nhiệt 3 quạt trục cùng tấm backplate kim loại giúp card mát và bền khi tải nặng.",
+    "Xuất hình đầy đủ 1x HDMI 2.1b và 3x DisplayPort 2.1a, hỗ trợ tối đa 4 màn hình, độ phân giải tới 7680x4320.",
+    "Chuẩn giao tiếp PCI Express 5.0, đầu cấp nguồn 3x 8-pin, khuyến nghị nguồn tối thiểu 750W.",
+    "Thiết kế 2.5 slot nhỏ gọn (312 x 130 x 50mm), đi kèm phần mềm ASUS GPU Tweak III để tinh chỉnh xung nhịp/quạt."
+  ],
+  "specs": [
+    {
+      "group": "Thông số chung",
+      "name": "Mã sản phẩm",
+      "value": "PRIME-RX9070XT-O16G",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Nhân đồ hoạ (GPU)",
+      "value": "AMD Radeon RX 9070 XT",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Giao tiếp bus",
+      "value": "PCI Express 5.0",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Thông số chung",
+      "name": "Hỗ trợ OpenGL",
+      "value": "OpenGL 4.6",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Dung lượng bộ nhớ",
+      "value": "16GB GDDR6",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Bus bộ nhớ",
+      "value": "256-bit",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ bộ nhớ",
+      "value": "20 Gbps",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xung nhịp",
+      "name": "Xung nhịp chế độ OC (GPU Tweak III)",
+      "value": "Boost tới 3030 MHz / Game Clock tới 2480 MHz",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xung nhịp",
+      "name": "Xung nhịp chế độ mặc định",
+      "value": "Boost tới 3010 MHz / Game Clock tới 2460 MHz",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xung nhịp",
+      "name": "Số nhân Stream Processor",
+      "value": "4096",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xuất hình",
+      "name": "Độ phân giải tối đa",
+      "value": "7680 x 4320",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xuất hình",
+      "name": "Cổng xuất hình",
+      "value": "1x HDMI 2.1b, 3x DisplayPort 2.1a (hỗ trợ HDCP 2.3)",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Xuất hình",
+      "name": "Số màn hình hỗ trợ tối đa",
+      "value": "4",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước",
+      "value": "312 x 130 x 50 mm",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Độ dày khe cắm",
+      "value": "2.5 Slot",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Đầu cấp nguồn",
+      "value": "3x 8-pin",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Nguồn điện",
+      "name": "Công suất nguồn khuyến nghị",
+      "value": "750W",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Phụ kiện & phần mềm",
+      "name": "Phụ kiện đi kèm",
+      "value": "Thank you card, Speedsetup Manual",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    },
+    {
+      "group": "Phụ kiện & phần mềm",
+      "name": "Phần mềm hỗ trợ",
+      "value": "ASUS GPU Tweak III & Drivers",
+      "source": "https://www.asus.com/motherboards-components/graphics-cards/prime/prime-rx9070xt-o16g/techspec/"
+    }
+  ],
+  "filterAttributes": {
+    "chipset": "AMD Radeon RX 9070 XT",
+    "vram": "16GB GDDR6"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/e1de8382-9ddb-4eb0-916c-615f9f357f7a/v1/img/kv/pd.png",
+      "alt": "ASUS Prime Radeon RX 9070 XT OC Edition - góc nghiêng 3/4 mặt trước"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/e1de8382-9ddb-4eb0-916c-615f9f357f7a/v1/img/cooling/pd.png",
+      "alt": "ASUS Prime Radeon RX 9070 XT OC Edition - mặt trên, logo RADEON PRIME"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/e1de8382-9ddb-4eb0-916c-615f9f357f7a/v1/img/reliability/backplate.png",
+      "alt": "ASUS Prime Radeon RX 9070 XT OC Edition - mặt sau tấm backplate kim loại"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/e1de8382-9ddb-4eb0-916c-615f9f357f7a/v1/img/reliability/bracket.png",
+      "alt": "ASUS Prime Radeon RX 9070 XT OC Edition - cổng xuất hình HDMI và DisplayPort"
+    },
+    {
+      "file": "05.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/e1de8382-9ddb-4eb0-916c-615f9f357f7a/v1/img/cooling/backplate.png",
+      "alt": "ASUS Prime Radeon RX 9070 XT OC Edition - góc nghiêng tấm backplate và hệ tản nhiệt"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "ASUS Prime Radeon RX 9070 XT OC Edition 16GB - Card đồ hoạ RDNA 4",
+  "metaDescription": "ASUS Prime RX 9070 XT OC Edition: GPU AMD Radeon RX 9070 XT (RDNA 4), 16GB GDDR6 bus 256-bit, tản nhiệt 3 quạt, PCIe 5.0, đầu nguồn 3x8-pin. Bảo hành chính hãng 36 tháng.",
+  "replacedWith": "ASUS Prime Radeon RX 9070 XT OC Edition 16GB GDDR6 (PRIME-RX9070XT-O16G)",
+  "notes": "Sapphire NITRO+ RX 9070 XT 16GB (11348-01-20G) khong tim thay tai cac nha ban le VN lon (GearVN, An Phat, Hacom, Phong Vu, CellphoneS) - An Phat co dong Sapphire NITRO+ nhung dung o RX 7900 XT, chua len toi RX 9000 series; GearVN/Phong Vu khong co tu khoa 'sapphire'. Da thay bang ASUS Prime Radeon RX 9070 XT OC Edition 16GB (PRIME-RX9070XT-O16G) - cung phan khuc gia, xac nhan ban that tai GearVN. Slug thu muc giu nguyen theo yeu cau. weightKg (1.15) la uoc luong tu kich thuoc/thiet ke 2.5-slot vi ASUS khong cong bo can nang chinh thuc, khong phai so lieu sourced. Chi tim duoc 1 nguon gia VN xac nhan (GearVN); khong tim duoc nguon thu 2 co gia cu the (An Phat/Hacom hien 'Lien he', Phong Vu khong co SKU nay). specs deu lay tu ASUS techspec chinh thuc, khong co dong TDP vi ASUS khong cong bo TDP rieng tren trang nay."
+}

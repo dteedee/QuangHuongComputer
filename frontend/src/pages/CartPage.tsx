@@ -1,14 +1,34 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
+import { resolveMediaUrl } from '../lib/media-url';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import { FreeShippingProgress } from '../components/cart/free-shipping-progress';
 import { CartRemoveButton } from '../components/cart/cart-remove-button';
 
+/** Ảnh dòng giỏ hàng — resolveMediaUrl + fallback chữ cái khi thiếu ảnh/tải lỗi (D02). */
+const CartLineImage = ({ src, name }: { src?: string; name: string }) => {
+    const [error, setError] = useState(false);
+    const resolved = resolveMediaUrl(src);
+    if (!resolved || error) {
+        return <span className="text-xl font-bold text-gray-300">{name?.charAt(0) || '?'}</span>;
+    }
+    return (
+        <img
+            src={resolved}
+            alt={name}
+            loading="lazy"
+            className="w-full h-full object-cover"
+            onError={() => setError(true)}
+        />
+    );
+};
+
 export const CartPage = () => {
     // Phase 04-C: mã giảm giá chỉ áp ở Checkout (bước 2). Cart chỉ hiển thị mã đã áp nếu có.
-    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, subtotal, tax, shippingAmount, total, isLoading } = useCart();
+    const { items, removeFromCart, updateQuantity, clearCart, couponCode, discountAmount, subtotal, tax, taxRate, shippingAmount, total, isLoading } = useCart();
     const navigate = useNavigate();
 
     if (isLoading && items.length === 0) {
@@ -67,11 +87,7 @@ export const CartPage = () => {
                             {items.map((item) => (
                                 <div key={item.id} className="flex items-center gap-4 p-4">
                                     <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                        {item.imageUrl ? (
-                                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-xl font-bold text-gray-300">{item?.name?.charAt(0) || '?'}</span>
-                                        )}
+                                        <CartLineImage src={item.imageUrl} name={item.name} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">{item.name}</h3>
@@ -130,13 +146,17 @@ export const CartPage = () => {
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between text-gray-600"><span>Tạm tính</span><span className="font-semibold text-gray-900">{formatCurrency(subtotal)}</span></div>
                                 {discountAmount > 0 && <div className="flex justify-between text-emerald-600"><span>Giảm giá</span><span className="font-semibold">-{formatCurrency(discountAmount)}</span></div>}
-                                <div className="flex justify-between text-gray-600"><span>Thuế GTGT (10%)</span><span className="font-semibold text-gray-900">{formatCurrency(tax)}</span></div>
                                 <div className="flex justify-between text-gray-600 pb-4 border-b border-gray-100"><span>Vận chuyển</span>{shippingAmount === 0 ? <span className="font-semibold text-emerald-600">Miễn phí</span> : <span className="font-semibold text-gray-900">{formatCurrency(shippingAmount)}</span>}</div>
                                 <div className="flex justify-between items-end pt-2">
                                     <span className="font-bold text-gray-900">Tổng cộng</span>
                                     <div className="text-right">
                                         <p className="text-2xl font-bold text-accent">{formatCurrency(total)}</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">Đã bao gồm VAT</p>
+                                        {/* D01: dòng mờ, THÔNG TIN — đã nằm trong Tổng cộng, không cộng thêm */}
+                                        {taxRate > 0 && (
+                                            <p className="text-[11px] text-gray-400 mt-0.5">
+                                                Trong đó VAT ({Math.round(taxRate * 100)}%): {formatCurrency(tax)}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

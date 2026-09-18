@@ -12,24 +12,64 @@ import {
 import type {
     PurchaseRequisition,
     RequisitionStatus,
-    UrgencyLevel,
     SupplierDropdownItem,
 } from '../../../api/inventory';
+import { resolveEnumBadgeMeta, type EnumBadgeMetaMap } from './enum-badge-meta-with-unknown-fallback';
 
-const URGENCY_META: Record<UrgencyLevel, { label: string; className: string }> = {
+// Khoá = chuỗi enum THẬT của backend (`Inventory/Domain/PurchaseRequisition.cs:145` UrgencyLevel
+// = Low | Medium | High | Urgent). FE trước đây khai "Normal" ⇒ `URGENCY_META[...]` trả undefined
+// và cả trang sập. Giữ alias "Normal" cho dữ liệu/FE cũ.
+const URGENCY_META: EnumBadgeMetaMap = {
     Low: { label: 'Thấp', className: 'bg-gray-100 text-gray-700' },
+    Medium: { label: 'Thường', className: 'bg-blue-100 text-blue-700' },
     Normal: { label: 'Thường', className: 'bg-blue-100 text-blue-700' },
     High: { label: 'Cao', className: 'bg-orange-100 text-orange-700' },
     Urgent: { label: 'Khẩn cấp', className: 'bg-red-100 text-red-700' },
 };
 
-const STATUS_META: Record<RequisitionStatus, { label: string; className: string }> = {
+// `PurchaseRequisitionStatus` (cùng file BE, :135) = Draft | Submitted | Approved | Rejected
+// | ConvertedToPO | Cancelled. Alias "Converted" là tên cũ phía FE.
+const STATUS_META: EnumBadgeMetaMap = {
     Draft: { label: 'Nháp', className: 'bg-gray-100 text-gray-700' },
     Submitted: { label: 'Chờ duyệt', className: 'bg-yellow-100 text-yellow-800' },
     Approved: { label: 'Đã duyệt', className: 'bg-emerald-100 text-emerald-700' },
     Rejected: { label: 'Từ chối', className: 'bg-red-100 text-red-700' },
+    ConvertedToPO: { label: 'Đã chuyển PO', className: 'bg-indigo-100 text-indigo-700' },
     Converted: { label: 'Đã chuyển PO', className: 'bg-indigo-100 text-indigo-700' },
     Cancelled: { label: 'Đã hủy', className: 'bg-red-50 text-red-500' },
+};
+
+/** Giá trị gửi lên `?status=` — phải khớp `Enum.TryParse<PurchaseRequisitionStatus>` của backend. */
+const STATUS_FILTER_OPTIONS = ['Draft', 'Submitted', 'Approved', 'Rejected', 'ConvertedToPO', 'Cancelled'] as const;
+
+/**
+ * BE trả `requesterName` (`PurchaseRequisition.cs:15`); `api/inventory.ts` chỉ khai
+ * `requestedByName` nên đọc qua accessor chịu được cả hai tên trường
+ * (đề xuất sửa type: xem `reports/integration-requests-w0.md`).
+ */
+const requesterLabel = (req: PurchaseRequisition) =>
+    (req as { requesterName?: string }).requesterName || req.requestedByName || '—';
+
+/** BE `GET /purchase-requisitions` trả entity thô (không có itemCount) ⇒ suy ra từ `items`. */
+const itemCountOf = (req: PurchaseRequisition) => req.itemCount ?? req.items?.length ?? 0;
+
+/**
+ * BE chưa trả `estimatedTotal` và item chưa có giá ⇒ trả `null` để hiện "—"
+ * thay vì `formatCurrency(undefined)` ra "NaN ₫".
+ */
+const estimatedTotalOf = (req: PurchaseRequisition): number | null => {
+    if (typeof req.estimatedTotal === 'number') return req.estimatedTotal;
+    const items = req.items;
+    if (!Array.isArray(items) || items.length === 0) return null;
+    let total = 0;
+    let hasPrice = false;
+    for (const item of items) {
+        if (typeof item.estimatedPrice === 'number') {
+            hasPrice = true;
+            total += item.estimatedPrice * (item.quantity ?? 0);
+        }
+    }
+    return hasPrice ? total : null;
 };
 
 export default function PurchaseRequisitionsPage() {
@@ -60,8 +100,8 @@ export default function PurchaseRequisitionsPage() {
         const q = search.trim().toLowerCase();
         if (!q) return items;
         return items.filter(r =>
-            r.number.toLowerCase().includes(q)
-            || (r.requestedByName || '').toLowerCase().includes(q)
+            (r.number || '').toLowerCase().includes(q)
+            || requesterLabel(r).toLowerCase().includes(q)
             || (r.reason || '').toLowerCase().includes(q)
         );
     }, [items, search]);
@@ -128,8 +168,8 @@ export default function PurchaseRequisitionsPage() {
                     className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                     <option value="all">Tất cả trạng thái</option>
-                    {(Object.keys(STATUS_META) as RequisitionStatus[]).map(s => (
-                        <option key={s} value={s}>{STATUS_META[s].label}</option>
+                    {STATUS_FILTER_OPTIONS.map(s => (
+                        <option key={s} value={s}>{resolveEnumBadgeMeta(STATUS_META, s).label}</option>
                     ))}
                 </select>
             </AnimatedSection>
@@ -159,24 +199,30 @@ export default function PurchaseRequisitionsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map(req => (
+                            {filtered.map(req => {
+                                const urgencyMeta = resolveEnumBadgeMeta(URGENCY_META, req.urgency);
+                                const statusMeta = resolveEnumBadgeMeta(STATUS_META, req.status);
+                                const total = estimatedTotalOf(req);
+                                return (
                                 <tr key={req.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                                     <td className="px-4 py-3 font-mono font-semibold text-gray-900">{req.number}</td>
-                                    <td className="px-4 py-3 text-gray-700">{req.requestedByName || '-'}</td>
+                                    <td className="px-4 py-3 text-gray-700">{requesterLabel(req)}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${URGENCY_META[req.urgency].className}`}>
-                                            {URGENCY_META[req.urgency].label}
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${urgencyMeta.className}`}>
+                                            {urgencyMeta.label}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-center">{req.itemCount}</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">{formatCurrency(req.estimatedTotal)}</td>
+                                    <td className="px-4 py-3 text-center">{itemCountOf(req)}</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                                        {total === null ? '—' : formatCurrency(total)}
+                                    </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_META[req.status].className}`}>
-                                            {STATUS_META[req.status].label}
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${statusMeta.className}`}>
+                                            {statusMeta.label}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                                        {new Date(req.createdAt).toLocaleDateString('vi-VN')}
+                                        {req.createdAt ? new Date(req.createdAt).toLocaleDateString('vi-VN') : '—'}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex justify-center gap-1.5">
@@ -199,7 +245,8 @@ export default function PurchaseRequisitionsPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 )}

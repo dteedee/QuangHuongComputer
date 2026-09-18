@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Play } from 'lucide-react';
 import type { ProductMedia } from '../../api/catalog';
+import { resolveMediaUrl } from '../../lib/media-url';
 
 /**
  * Trích YouTube ID an toàn.
@@ -41,8 +42,8 @@ export default function ProductVideoPlayer({ media, className = '' }: ProductVid
             <video
                 controls
                 preload="none"
-                poster={media.thumbnailUrl}
-                src={media.url}
+                poster={resolveMediaUrl(media.thumbnailUrl)}
+                src={resolveMediaUrl(media.url)}
                 className={`w-full h-full object-contain bg-black ${className}`}
             >
                 Trình duyệt của bạn không hỗ trợ video HTML5.
@@ -61,7 +62,7 @@ export default function ProductVideoPlayer({ media, className = '' }: ProductVid
         }
 
         if (!activated) {
-            const posterUrl = media.thumbnailUrl || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+            const posterUrl = resolveMediaUrl(media.thumbnailUrl) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
             return (
                 <button
                     type="button"

@@ -64,21 +64,10 @@ public class NotificationHub : Hub
         await Clients.Group($"user_{userId}").SendAsync("AllNotificationsRead");
     }
 
-    /// <summary>
-    /// Join a specific notification group (e.g., for order-specific notifications)
-    /// </summary>
-    public async Task JoinGroup(string groupName)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-    }
-
-    /// <summary>
-    /// Leave a specific notification group
-    /// </summary>
-    public async Task LeaveGroup(string groupName)
-    {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-    }
+    // JoinGroup/LeaveGroup were removed: they let any authenticated client subscribe to an
+    // arbitrary group name (e.g. "role_Admin") with no ownership check. Nothing legitimate
+    // needs it today; if an order-scoped group is needed later it must validate ownership
+    // server-side before joining (see W2-8).
 
     private string GetUserId()
     {

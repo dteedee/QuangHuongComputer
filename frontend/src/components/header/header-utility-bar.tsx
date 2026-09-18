@@ -8,6 +8,7 @@ import {
 import { useRef, useEffect, useState } from 'react';
 import type { ConfigurationEntry } from '../../api/systemConfig';
 import { getConfigValue } from '../../api/systemConfig';
+import { STAFF_ROLES } from '../../constants/staff-roles';
 
 interface HeaderUtilityBarProps {
     isScrolled: boolean;
@@ -44,7 +45,9 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
         if (roles.includes('Sale')) return 'Nhân viên bán hàng';
         if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Kỹ thuật viên';
         if (roles.includes('Accountant')) return 'Kế toán';
+        if (roles.includes('InventoryStaff')) return 'Nhân viên kho';
         if (roles.includes('Supplier')) return 'Nhà cung cấp';
+        if (roles.includes('HR')) return 'Nhân sự';
         if (roles.includes('Marketing')) return 'Marketing';
         return 'Khách hàng';
     };
@@ -55,13 +58,15 @@ export const HeaderUtilityBar = ({ isScrolled, configs }: HeaderUtilityBarProps)
         if (roles.includes('Sale')) return 'Quản lý bán hàng';
         if (roles.includes('TechnicianInShop') || roles.includes('TechnicianOnSite')) return 'Bảng điều khiển kỹ thuật';
         if (roles.includes('Accountant')) return 'Quản lý tài chính';
+        if (roles.includes('InventoryStaff')) return 'Quản lý kho hàng';
         if (roles.includes('Supplier')) return 'Quản lý kho hàng';
+        if (roles.includes('HR')) return 'Quản lý nhân sự';
         if (roles.includes('Marketing')) return 'Quản lý marketing';
         return 'Quản trị';
     };
 
     const isStaffRole = (roles: string[] = []) =>
-        roles.some(r => ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite', 'Accountant', 'Supplier', 'Marketing'].includes(r));
+        roles.some(r => (STAFF_ROLES as readonly string[]).includes(r));
 
     return (
         <div className={`bg-white text-gray-600 text-[12px] font-medium hidden md:block border-b border-gray-100 overflow-hidden transition-all duration-200 ${isScrolled ? 'max-h-0 py-0 opacity-0' : 'max-h-9 py-1.5 opacity-100'}`}>

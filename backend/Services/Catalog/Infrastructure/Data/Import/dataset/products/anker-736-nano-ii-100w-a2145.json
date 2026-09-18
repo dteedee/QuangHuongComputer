@@ -1,0 +1,127 @@
+{
+  "name": "Củ Sạc Nhanh Anker 736 Nano II 100W (A2145)",
+  "slug": "anker-736-nano-ii-100w-a2145",
+  "sku": "ANK-A2145",
+  "brand": "Anker",
+  "category": "Phụ Kiện Máy Tính - Laptop",
+  "subCategory": "Laptop Charger / Power Adapter",
+  "model": "A2145",
+  "officialUrl": "https://www.anker.com/ca/products/a2145",
+  "priceVnd": 1290000,
+  "oldPriceVnd": 1800000,
+  "costPriceVnd": 1140000,
+  "priceSources": [
+    "https://cellphones.com.vn/cu-sac-anker-736-nano-ii-2c1a-100w-b2c-a2145121.html"
+  ],
+  "warrantyMonths": 18,
+  "warrantyInfo": "Bảo hành chính hãng Anker 18 tháng, 1 đổi 1 trong thời gian bảo hành theo chính sách nhà phân phối tại Việt Nam.",
+  "weightKg": 0.2,
+  "stockQuantity": 18,
+  "shortDescription": "Củ sạc nhanh Anker 736 Nano II 100W (A2145) dùng công nghệ GaN II, 2 cổng USB-C và 1 cổng USB-A, sạc được cùng lúc laptop, điện thoại và tai nghe.",
+  "descriptionHtml": "<h3>Nhỏ gọn, mạnh mẽ nhờ GaN II</h3><p>Anker 736 Nano II 100W (mã A2145) là củ sạc GaN 3 cổng nén công suất 100W vào khối nhựa chỉ 67 x 31.5 x 57 mm, nhỏ hơn khoảng 34% so với sạc rời 96W đi kèm MacBook. Công nghệ GaN II giúp tần số hoạt động cao hơn, mạch in được tối ưu lại nên thân sạc gọn hơn mà vẫn giữ nguyên công suất đầu ra.</p><h3>3 cổng, sạc cùng lúc nhiều thiết bị</h3><p>Máy có 2 cổng USB-C và 1 cổng USB-A. Khi dùng một mình, mỗi cổng USB-C cấp tối đa 100W, đủ sạc nhanh các laptop USB-C như MacBook Pro 14/16, Dell XPS hay ThinkPad. Khi cắm cả 3 thiết bị, tổng công suất được chia linh hoạt tối đa 93W (45W + 30W + 18W) để vừa sạc laptop vừa sạc điện thoại và tai nghe true wireless cùng lúc.</p><h3>Tương thích rộng, an toàn khi sạc</h3><p>PowerIQ 3.0 tự nhận diện chuẩn sạc của từng thiết bị (PD, PPS, QC...) nên dùng tốt với cả hệ sinh thái Apple lẫn Android/Windows. Điện áp vào 100-240V phù hợp lưới điện Việt Nam, dùng được khi đi công tác nước ngoài chỉ cần đổi đầu cắm.</p><ul><li>Công suất tối đa 100W qua cổng USB-C</li><li>2x USB-C + 1x USB-A, sạc cùng lúc 3 thiết bị</li><li>Công nghệ GaN II, kích thước siêu nhỏ gọn</li><li>PowerIQ 3.0 tương thích đa nền tảng</li></ul>",
+  "highlights": [
+    "Công suất tối đa 100W qua cổng USB-C, đủ sạc nhanh đa số laptop USB-C hiện nay",
+    "3 cổng (2x USB-C + 1x USB-A), sạc cùng lúc laptop, điện thoại, tai nghe",
+    "Công nghệ GaN II giúp thân sạc nhỏ hơn 34% so với sạc rời 96W của MacBook",
+    "PowerIQ 3.0 tự nhận diện chuẩn sạc, tương thích iOS/Android/Windows",
+    "Kích thước 67 x 31.5 x 57 mm, dễ mang theo khi di chuyển",
+    "Đạt giải CES 2022 Innovation Awards"
+  ],
+  "specs": [
+    {
+      "group": "Công suất",
+      "name": "Tổng công suất đầu ra",
+      "value": "100W",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Công suất",
+      "name": "Điện áp đầu vào",
+      "value": "100-240V~ 2.1A 50-60Hz",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Cổng",
+      "name": "Số cổng",
+      "value": "2x USB-C + 1x USB-A",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Cổng",
+      "name": "Công suất 1 cổng (dùng riêng)",
+      "value": "USB-C 1: 100W Max / USB-C 2: 100W Max / USB-A: 22.5W Max",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Cổng",
+      "name": "Công suất 2 cổng cùng lúc",
+      "value": "USB-C1+USB-C2: 60W+40W Max; USB-C1+USB-A: 80W+18W Max; USB-C2+USB-A: 60W+22.5W Max",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Cổng",
+      "name": "Công suất 3 cổng cùng lúc",
+      "value": "USB-C1: 45W, USB-C2: 30W, USB-A: 18W (tổng 93W)",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Công nghệ",
+      "name": "Công nghệ sạc",
+      "value": "GaN II, PowerIQ 3.0",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Vật lý",
+      "name": "Kích thước",
+      "value": "67 x 31.5 x 56.97 mm (2.64 x 1.24 x 2.24 in)",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Bảo hành theo hãng",
+      "value": "18 tháng (Anker worry-free warranty)",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Hộp sản phẩm",
+      "name": "Phụ kiện đi kèm",
+      "value": "Củ sạc Anker 736, sách hướng dẫn",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Thiết bị hỗ trợ",
+      "value": "MacBook Pro 16/14/13, MacBook Air, iPhone 13/14 series, iPad Pro/Air/mini, Samsung Galaxy S/Note series, AirPods, Apple Watch (cần cáp riêng)",
+      "source": "https://www.anker.com/ca/products/a2145"
+    },
+    {
+      "group": "Chứng nhận",
+      "name": "Giải thưởng",
+      "value": "CES 2022 Innovation Awards Honoree",
+      "source": "https://www.anker.com/ca/products/a2145"
+    }
+  ],
+  "filterAttributes": {
+    "chargerType": "GaN Fast Charger",
+    "maxWattage": "100W",
+    "portCount": "3",
+    "portType": "2x USB-C + 1x USB-A",
+    "powerDelivery": "PD 3.0 / PPS",
+    "technology": "GaN II"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0743/7769/1325/files/A2145111_TD01_V11.png?v=1778667781",
+      "alt": "Anker 736 Charger Nano II 100W A2145 - mặt trước với 2 cổng USB-C và 1 cổng USB-A"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.ankerjapan.com/cdn/shop/products/a2145_0001_51zn49Zp0OL._AC_SL1500_1200x1200.jpg?v=1669251403",
+      "alt": "Anker 736 Charger Nano II 100W A2145 - góc nghiêng 3/4, logo Anker và cổng sạc"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Củ Sạc Anker 736 Nano II 100W A2145 - GaN II, 3 Cổng Sạc Nhanh",
+  "metaDescription": "Anker 736 Nano II 100W (A2145) - củ sạc GaN II 100W, 2x USB-C + 1x USB-A, sạc cùng lúc laptop/điện thoại/tai nghe. Giá 1.290.000đ, bảo hành 18 tháng."
+}

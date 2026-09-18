@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, WifiOff } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import SEO from '../components/SEO';
 import { contentApi, type HomepageSection } from '../api/content';
 import { DynamicHomepage } from '../components/DynamicHomepage';
 import { HomepageSkeleton } from '../components/homepage/homepage-skeleton';
+import { PromoMarqueeStrip } from '../components/homepage/promo-marquee-strip';
 import { FallbackHero } from '../components/homepage/fallback-hero';
 import { FallbackCategories } from '../components/homepage/fallback-categories';
 import { FallbackFlashStrip } from '../components/homepage/fallback-flash-strip';
@@ -58,22 +58,9 @@ export const HomePage = () => {
                 description="Quang Hưởng Computer - Chuyên cung cấp linh kiện máy tính, laptop, PC gaming chính hãng giá tốt tại Hải Phòng. Hệ thống bán lẻ máy tính uy tín số 1."
             />
 
-            {/* Promotional marquee banner */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-accent to-[#b91c1c] text-white py-2.5 text-center overflow-hidden"
-            >
-                <div className="flex items-center justify-center gap-2">
-                    <Zap className="text-yellow-300 flex-shrink-0" size={18} />
-                    <div className="overflow-hidden">
-                        <p className="text-sm font-bold tracking-wide whitespace-nowrap animate-marquee">
-                            Miễn phí giao hàng cho đơn từ 500K &nbsp;&bull;&nbsp; Trả góp 0% lãi suất &nbsp;&bull;&nbsp; Bảo hành chính hãng &nbsp;&bull;&nbsp; Hỗ trợ 24/7 &ensp;|&ensp; Hotline: 0904.235.090
-                        </p>
-                    </div>
-                    <Zap className="text-yellow-300 flex-shrink-0" size={18} />
-                </div>
-            </motion.div>
+            {/* Promotional marquee banner — tách ra component để xử lý riêng mobile/desktop
+                (W0 gate: dải chữ bị cắt giữa từ ở 390px). */}
+            <PromoMarqueeStrip />
 
             {/* Audience switcher — gọn, sát hero thay vì dải trắng riêng chiếm hết chiều rộng */}
             <div className="max-w-[1400px] mx-auto px-4 pt-3">

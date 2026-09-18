@@ -1,0 +1,215 @@
+{
+  "name": "Màn Hình ASUS ProArt PA247CV 24 inch FHD IPS Chuyên Đồ Họa",
+  "slug": "asus-proart-pa247cv-24-ips",
+  "sku": "ASUS-PA247CV",
+  "brand": "ASUS",
+  "category": "Màn Hình Máy Tính",
+  "subCategory": "Màn hình đồ họa",
+  "model": "ASUS PA247CV",
+  "officialUrl": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/",
+  "priceVnd": 5050000,
+  "oldPriceVnd": 7190000,
+  "costPriceVnd": 4440000,
+  "priceSources": [
+    "https://gearvn.com/products/man-hinh-asus-proart-pa247cv-24-ips-75hz-usbc-chuyen-do-hoa",
+    "https://cellphones.com.vn/man-hinh-asus-24-inch-proart-pa247cv.html"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng ASUS 36 tháng cho màn hình, áp dụng chính sách ZBD (Zero Bright Dot) đổi mới tấm nền nếu phát hiện điểm chết sáng ngay từ khi mua.",
+  "weightKg": 6.3,
+  "stockQuantity": 16,
+  "shortDescription": "Màn hình đồ họa ASUS ProArt PA247CV 23.8 inch tấm nền IPS Full HD 75Hz, chuẩn màu 100% sRGB đạt chứng nhận Calman Verified, tích hợp USB-C sạc 65W và chân đế chỉnh đầy đủ 4 hướng.",
+  "descriptionHtml": "<h3>Tấm nền IPS chuẩn màu cho dân thiết kế</h3><p>ASUS ProArt PA247CV trang bị tấm nền IPS 23.8 inch độ phân giải Full HD, phủ 100% dải màu sRGB và Rec.709, hỗ trợ thêm DCI-P3. Mỗi máy được hiệu chỉnh màu xuất xưởng đạt chứng nhận Calman Verified với Delta E trung bình dưới 2, kèm phiếu đo màu riêng trong hộp. Tần số quét 75Hz cùng thời gian phản hồi 5ms (GTG) giúp thao tác cuộn trang, kéo thả mượt hơn hẳn màn hình 60Hz phổ thông.</p><h3>Kết nối đa dụng, một dây cho cả màn hình lẫn laptop</h3><p>Cổng USB-C hỗ trợ DisplayPort Alt Mode kiêm sạc ngược 65W, đủ cấp nguồn cho phần lớn laptop mỏng nhẹ chỉ với một sợi cáp duy nhất. Hai cổng DisplayPort hỗ trợ daisy-chain nối tiếp nhiều màn hình, cùng HDMI 1.4 và hub 4 cổng USB-A 3.2 Gen 1 để cắm thêm chuột, bàn phím hay ổ cứng ngoài.</p><h3>Chân đế linh hoạt, bảo vệ mắt lâu dài</h3><p>Chân đế điều chỉnh đủ 4 hướng gồm nâng hạ 130mm, nghiêng, xoay ngang và xoay dọc pivot, kèm chuẩn treo VESA 100x100mm cho ai muốn gắn tay treo riêng. Công nghệ Ultra-Low Blue Light và Flicker-Free giúp giảm mỏi mắt khi ngồi làm việc, chỉnh sửa ảnh nhiều giờ liên tục.</p><ul><li>Tấm nền IPS Full HD 75Hz, 100% sRGB, Delta E trung bình dưới 2</li><li>USB-C DisplayPort Alt Mode kiêm sạc 65W cho laptop</li><li>2x DisplayPort daisy-chain, HDMI 1.4, hub 4x USB-A 3.2 Gen 1</li><li>Chân đế chỉnh cao/nghiêng/xoay ngang/pivot đầy đủ, chuẩn VESA 100x100mm</li></ul>",
+  "highlights": [
+    "Tấm nền IPS Full HD 75Hz, 100% sRGB/Rec.709, Delta E < 2 - chứng nhận Calman Verified kèm phiếu đo màu riêng từng máy",
+    "Cổng USB-C DisplayPort Alt Mode kiêm sạc 65W - một dây cho cả hình ảnh lẫn nguồn điện laptop",
+    "2x DisplayPort hỗ trợ daisy-chain, HDMI 1.4, hub 4 cổng USB-A 3.2 Gen 1",
+    "Chân đế chỉnh cao 130mm, nghiêng, xoay ngang, pivot xoay dọc - chuẩn treo VESA 100x100mm",
+    "Công nghệ Ultra-Low Blue Light, Flicker-Free giảm mỏi mắt khi làm việc lâu",
+    "Bảo hành chính hãng ASUS 3 năm, chính sách ZBD đổi mới nếu có điểm chết sáng"
+  ],
+  "specs": [
+    {
+      "group": "Màn hình",
+      "name": "Kích thước màn hình",
+      "value": "23.8 inch",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Loại tấm nền",
+      "value": "IPS (WLED backlight)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phân giải",
+      "value": "1920 x 1080 (Full HD), tỷ lệ 16:9",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Mật độ điểm ảnh",
+      "value": "93 PPI (0.2745mm)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Bề mặt tấm nền",
+      "value": "Chống chói (Anti-Glare)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ phủ màu",
+      "value": "100% sRGB, 100% Rec.709, hỗ trợ DCI-P3",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ chính xác màu",
+      "value": "Delta E < 2 (Calman Verified)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Số màu hiển thị",
+      "value": "16.7 triệu màu",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ sáng",
+      "value": "300 cd/m²",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Độ tương phản",
+      "value": "1000:1",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Thời gian đáp ứng",
+      "value": "5ms (GTG)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Tần số quét",
+      "value": "75Hz, Adaptive-Sync 48-75Hz",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Góc nhìn",
+      "value": "178°/178° (H/V)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng USB-C",
+      "value": "1x, DisplayPort Alt Mode, sạc ngược 65W",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng DisplayPort",
+      "value": "2x, hỗ trợ daisy-chain",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng HDMI",
+      "value": "1x HDMI v1.4",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "USB Hub",
+      "value": "4x USB 3.2 Gen 1 Type-A",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Âm thanh",
+      "value": "Jack tai nghe 3.5mm, loa 2W x2",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Chuẩn treo VESA",
+      "value": "100x100mm",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Điều chỉnh chân đế",
+      "value": "Nghiêng +35°/-5°, xoay ngang ±90°, pivot ±90°, nâng hạ 130mm",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Thiết kế & Chân đế",
+      "name": "Khóa Kensington",
+      "value": "Có",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Điện năng & Kích thước",
+      "name": "Công suất tiêu thụ",
+      "value": "11.07W (typical), <0.5W (Eco), 0W (Standby)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Điện năng & Kích thước",
+      "name": "Điện áp vào",
+      "value": "100-240V, 50/60Hz",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Điện năng & Kích thước",
+      "name": "Kích thước có chân đế",
+      "value": "53.97 x 47.18 x 21.14 cm",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Điện năng & Kích thước",
+      "name": "Trọng lượng",
+      "value": "6.3kg (có chân đế) / 4.2kg (không chân đế)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Bảo hành chính hãng",
+      "value": "3 năm, chính sách ZBD (Zero Bright Dot)",
+      "source": "https://www.asus.com/vn/displays-desktops/monitors/proart/proart-display-pa247cv/techspec/"
+    }
+  ],
+  "filterAttributes": {
+    "size": "23.8 inch",
+    "resolution": "1920x1080 (Full HD)",
+    "panel": "IPS",
+    "refreshRate": "75Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://dlcdnwebimgs.asus.com/files/media/3d445087-4957-421b-8d58-f08d7d57a809/images/pd_PA247CV.png",
+      "alt": "Màn hình ASUS ProArt PA247CV nhìn thẳng mặt trước, chân đế bạc, tem chứng nhận Calman Verified"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://www.asus.com/websites/global/products/0hsvs65d9munx2ek/images/pic_true_beauty.png",
+      "alt": "Màn hình ASUS ProArt PA247CV nhìn nghiêng 3/4, thể hiện viền mỏng và chân đế kim loại"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://www.asus.com/websites/global/products/0hsvs65d9munx2ek/images/pic_caretechnology_pd.png",
+      "alt": "Màn hình ASUS ProArt PA247CV nhìn thẳng, minh họa chế độ màu Standard trong ProArt Preset"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "Màn Hình ASUS ProArt PA247CV 24 inch FHD IPS Chuyên Đồ Họa",
+  "metaDescription": "ASUS ProArt PA247CV 23.8 inch IPS Full HD 75Hz, chuẩn màu 100% sRGB Calman Verified, USB-C sạc 65W, bảo hành chính hãng 3 năm. Giá tốt tại Quang Huong Computer."
+}

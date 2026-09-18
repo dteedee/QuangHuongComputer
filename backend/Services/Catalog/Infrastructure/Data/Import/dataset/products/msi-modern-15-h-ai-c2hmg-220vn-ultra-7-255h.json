@@ -1,0 +1,144 @@
+{
+  "name": "Laptop MSI Modern 15 H AI C2HMG-220VN (Intel Core Ultra 7 255H)",
+  "slug": "msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h",
+  "sku": "MSI-C2HMG220VN",
+  "brand": "MSI",
+  "category": "Laptop - Máy Tính Xách Tay",
+  "subCategory": "Laptop văn phòng",
+  "model": "MSI Modern 15 H AI C2HMG-220VN",
+  "officialUrl": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification",
+  "priceVnd": 23990000,
+  "oldPriceVnd": 24990000,
+  "costPriceVnd": 21100000,
+  "priceSources": [
+    "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h",
+    "https://www.anphatpc.com.vn/laptop-msi-modern-15-h-ai-c2hmg-220vn.html"
+  ],
+  "warrantyMonths": 24,
+  "warrantyInfo": "Bảo hành chính hãng 24 tháng tại trung tâm bảo hành uỷ quyền MSI Việt Nam, 12 tháng riêng cho pin và sạc.",
+  "weightKg": 1.9,
+  "stockQuantity": 18,
+  "shortDescription": "MSI Modern 15 H AI C2HMG-220VN dùng chip Intel Core Ultra 7 255H tích hợp AI Engine, RAM DDR5 16GB, SSD 512GB, phù hợp học tập và văn phòng cần máy mỏng nhẹ.",
+  "descriptionHtml": "<h3>Mỏng nhẹ, xử lý mượt cho công việc hàng ngày</h3><p>MSI Modern 15 H AI C2HMG-220VN mang thiết kế nắp nhôm tối giản, nặng 1.9kg, hướng đến người dùng văn phòng và sinh viên cần mang máy di chuyển thường xuyên. Máy chạy chip Intel Core Ultra 7 255H (16 lõi, xung tối đa 5.1GHz, đệm 24MB) kết hợp đồ hoạ tích hợp Intel Arc Graphics, đủ sức xử lý đa nhiệm văn phòng, học tập và các tác vụ AI cơ bản nhờ NPU tích hợp cùng Copilot trên Windows 11.</p><h3>Cấu hình đáp ứng đa nhiệm</h3><p>RAM DDR5 16GB bus 5600MHz (2 khe, nâng cấp tối đa 96GB) cùng SSD NVMe PCIe Gen4 512GB giúp khởi động nhanh, mở nhiều ứng dụng cùng lúc không giật lag. Màn hình 15.6 inch Full HD tấm nền IPS góc nhìn rộng, phủ chống chói, phù hợp làm việc trong nhiều điều kiện ánh sáng.</p><h3>Kết nối và tiện ích</h3><p>Máy trang bị đầy đủ 3 cổng USB-A, 1 USB-C hỗ trợ DisplayPort/sạc, HDMI 2.1, khe đọc thẻ MicroSD, Wifi 6E và Bluetooth 5.3. Bàn phím có đèn nền LED trắng, webcam HD kèm nắp che vật lý bảo vệ riêng tư. Pin 39.3Wh cùng sạc nhanh 90W đảm bảo dùng đủ một buổi làm việc.</p><ul><li>CPU Intel Core Ultra 7 255H, 16 lõi/16 luồng, xung tối đa 5.1GHz</li><li>RAM DDR5 16GB (2x8GB) 5600MHz, tối đa 96GB</li><li>SSD 512GB NVMe PCIe Gen4</li><li>Màn hình 15.6\" FHD IPS, chống chói, 250 nits</li><li>Wifi 6E, Bluetooth 5.3, webcam HD có nắp che</li><li>Trọng lượng 1.9kg, vỏ nắp nhôm màu đen</li></ul>",
+  "highlights": [
+    "Chip Intel Core Ultra 7 255H tích hợp AI Engine và NPU cho Copilot",
+    "RAM DDR5 16GB 5600MHz, nâng cấp tối đa 96GB",
+    "SSD NVMe PCIe Gen4 512GB tốc độ cao",
+    "Màn hình 15.6\" Full HD IPS chống chói",
+    "Thân máy nắp nhôm mỏng nhẹ 1.9kg, bàn phím có đèn nền",
+    "Wifi 6E, Bluetooth 5.3, webcam có nắp che vật lý"
+  ],
+  "specs": [
+    {
+      "group": "Bộ xử lý",
+      "name": "CPU",
+      "value": "Intel Core Ultra 7 255H, 16 lõi/16 luồng, xung tối đa 5.1GHz, đệm 24MB",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h"
+    },
+    {
+      "group": "Đồ họa",
+      "name": "Card đồ họa",
+      "value": "Intel Arc 140T Graphics (tích hợp, 8 Xe-core, dùng chung RAM hệ thống, không có VRAM riêng)",
+      "source": "https://www.intel.com/content/www/us/en/products/sku/241751/intel-core-ultra-7-processor-255h-24m-cache-up-to-5-10-ghz/specifications.html"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "RAM",
+      "value": "16GB DDR5 5600MHz (2x8GB), 2 khe, tối đa 96GB",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h"
+    },
+    {
+      "group": "Lưu trữ",
+      "name": "Ổ cứng",
+      "value": "SSD 512GB NVMe PCIe Gen4, khe M.2 2280 (1 khe, đã dùng hết)",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h"
+    },
+    {
+      "group": "Màn hình",
+      "name": "Kích thước & độ phân giải",
+      "value": "15.6\" FHD 1920x1080, IPS-Level, chống chói, 60Hz, 250 nits",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Cổng giao tiếp",
+      "value": "1x USB-C 3.2 Gen2 (DP/PD 3.0), 3x USB-A 3.2 Gen1, 1x HDMI 2.1 (4K@60Hz), 1x MicroSD, jack combo 3.5mm",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Kết nối",
+      "name": "Không dây",
+      "value": "Wifi 6E (802.11ax), Bluetooth 5.3",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Hệ điều hành",
+      "name": "OS",
+      "value": "Windows 11 Home Single Language",
+      "source": "https://fptshop.com.vn/may-tinh-xach-tay/msi-modern-15-h-ai-c2hmg-220vn-ultra-7-255h"
+    },
+    {
+      "group": "Bàn phím & Webcam",
+      "name": "Bàn phím / Webcam",
+      "value": "Bàn phím đơn vùng đèn LED trắng có phím Copilot; Webcam HD 720p có nắp che vật lý",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Âm thanh",
+      "name": "Loa",
+      "value": "2x loa 2W",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Pin & Sạc",
+      "name": "Dung lượng pin / Adapter",
+      "value": "Pin 3-cell 39.3Wh, adapter sạc 90W",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước / Trọng lượng / Màu",
+      "value": "359 x 241 x 19.6mm, 1.9kg, nắp nhôm màu đen (Classic Black)",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    },
+    {
+      "group": "Bảo mật",
+      "name": "Bảo mật",
+      "value": "Firmware TPM 2.0, nắp che webcam",
+      "source": "https://www.msi.com/Business-Productivity/Modern-15-H-AI-C2HMX/Specification"
+    }
+  ],
+  "filterAttributes": {
+    "cpuSeries": "Intel Core Ultra 7",
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "gpu": "Intel Arc 140T Graphics (tích hợp)",
+    "screenSize": "15.6 inch",
+    "refreshRate": "60Hz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_1735104625c4d1d9a88c412369c3b641d404ece70a.webp",
+      "alt": "MSI Modern 15 H AI C2HMG-220VN mở nắp góc 3/4, màu đen"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_1735104628a6b64f068319930b222d45436358b958.webp",
+      "alt": "MSI Modern 15 H AI C2HMG-220VN góc nghiêng, hiển thị bàn phím và cổng kết nối"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_17351046283fc100f21038b8b26ebeab2f09e56bfc.webp",
+      "alt": "MSI Modern 15 H AI C2HMG-220VN nhìn từ trên xuống, bàn phím có đèn nền"
+    },
+    {
+      "file": "04.webp",
+      "sourceUrl": "https://storage-asset.msi.com/global/picture/product/product_17351046301ad4b20d738f15e56c534c79d22b05e8.webp",
+      "alt": "MSI Modern 15 H AI C2HMG-220VN nhìn nghiêng từ trên, máy mở một góc nhỏ"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "MSI Modern 15 H AI C2HMG-220VN - Ultra 7 255H, 16GB, 512GB | Quang Huong Computer",
+  "metaDescription": "Laptop MSI Modern 15 H AI C2HMG-220VN, Intel Core Ultra 7 255H, RAM DDR5 16GB, SSD 512GB, màn hình 15.6\" FHD IPS. Giá tốt, bảo hành chính hãng 24 tháng."
+}

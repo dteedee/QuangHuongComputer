@@ -1,0 +1,148 @@
+{
+  "name": "RAM Kingston FURY Beast 16GB (1x16GB) DDR5 5600MHz CL40 - KF556C40BB-16",
+  "slug": "ram-kingston-fury-beast-16gb-ddr5-5600mhz",
+  "sku": "KST-KF556C40BB16",
+  "brand": "Kingston",
+  "category": "Linh Kiện Máy Tính",
+  "subCategory": "RAM",
+  "model": "Kingston KF556C40BB-16",
+  "officialUrl": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory",
+  "priceVnd": 6690000,
+  "oldPriceVnd": 9490000,
+  "costPriceVnd": 5890000,
+  "priceSources": [
+    "https://cellphones.com.vn/ram-kingston-fury-ddr5-5600mhz-16gb-kf556c40bb-16wp.html",
+    "https://phongvu.vn/ram-pc-kingston-fury-beast-16gb-ddr5-5600mhz-kf556c40bb-16wp--s250809133"
+  ],
+  "warrantyMonths": 36,
+  "warrantyInfo": "Bảo hành chính hãng Kingston 36 tháng 1 đổi 1 tại hệ thống bảo hành ủy quyền Việt Nam.",
+  "weightKg": 0.03,
+  "stockQuantity": 22,
+  "shortDescription": "RAM Kingston FURY Beast 16GB DDR5 5600MHz CL40, tích hợp On-Die ECC và hỗ trợ Intel XMP 3.0, phù hợp nâng cấp PC gaming và làm việc đa nhiệm.",
+  "descriptionHtml": "<h3>RAM Kingston FURY Beast 16GB DDR5 5600MHz - nâng cấp hiệu năng cho PC hiện đại</h3><p>Kingston FURY Beast DDR5 5600MHz 16GB (KF556C40BB-16) là thanh RAM đơn dung lượng 16GB dành cho hệ thống desktop dùng khe cắm DDR5, tương thích cả nền tảng Intel lẫn AMD. Sản phẩm dùng tản nhiệt kim loại profile thấp màu đen, vừa hỗ trợ giải nhiệt vừa giữ độ tương thích cao với nhiều loại tản CPU khí và tản nước AIO trên thị trường.</p><h3>Hiệu năng ổn định, độ trễ thấp</h3><p>Với cấu hình 2G x 64-bit (1Rx8), module chạy mặc định theo chuẩn JEDEC DDR5-4800 CL40-39-39 và có thể kích hoạt profile Intel XMP 3.0 để đạt DDR5-5600 CL40-40-40 ở điện áp 1.25V, giúp rút ngắn thời gian tải ứng dụng và tăng tốc xử lý đa nhiệm cho các tác vụ nặng.</p><h3>Công nghệ On-Die ECC</h3><p>Kingston FURY Beast DDR5 tích hợp On-Die ECC (ODECC) ngay trên chip nhớ, tự động phát hiện và sửa lỗi bit trong lúc vận hành, mang lại độ ổn định cao hơn khi dựng phim, lập trình hay chơi game cường độ cao trong thời gian dài.</p><h3>Ưu điểm nổi bật</h3><ul><li>Dung lượng 16GB, chuẩn DDR5-5600 CL40, điện áp 1.25V khi bật XMP</li><li>Hỗ trợ Intel XMP 3.0, dễ dàng tối ưu tốc độ và độ trễ qua BIOS</li><li>On-Die ECC giúp tăng độ ổn định và độ bền dữ liệu</li><li>Tản nhiệt nhôm profile thấp màu đen, tương thích rộng với tản CPU</li><li>288 chân mạ vàng, hạn chế oxy hóa, tín hiệu ổn định lâu dài</li></ul>",
+  "highlights": [
+    "Dung lượng 16GB, tốc độ DDR5-5600MHz, độ trễ CL40 cho đa nhiệm mượt mà",
+    "Hỗ trợ Intel XMP 3.0, dễ ép xung an toàn qua BIOS",
+    "Công nghệ On-Die ECC giúp tự sửa lỗi bit, tăng độ ổn định hệ thống",
+    "Tản nhiệt nhôm màu đen profile thấp, tương thích tốt với tản CPU khí lẫn AIO",
+    "288 chân mạ vàng, hạn chế oxy hóa, độ bền cao",
+    "Bảo hành chính hãng 36 tháng tại Việt Nam"
+  ],
+  "specs": [
+    {
+      "group": "Bộ nhớ",
+      "name": "Loại RAM",
+      "value": "DDR5 SDRAM",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Dung lượng",
+      "value": "16GB (1x16GB)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Cấu hình module",
+      "value": "2G x 64-bit, 1Rx8 (single rank)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ Bus (XMP Profile #1)",
+      "value": "DDR5-5600MT/s",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Độ trễ CAS (XMP Profile #1)",
+      "value": "CL40-40-40 @ 1.25V",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Tốc độ mặc định (JEDEC)",
+      "value": "DDR5-4800 CL40-39-39 @ 1.1V",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bộ nhớ",
+      "name": "Số chân cắm",
+      "value": "288-pin DIMM, chân mạ vàng",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Công nghệ",
+      "name": "Hỗ trợ ép xung",
+      "value": "Intel XMP 3.0",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "Công nghệ",
+      "name": "On-Die ECC",
+      "value": "Có (ODECC hỗ trợ ổn định dữ liệu)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Điện áp",
+      "name": "Điện áp hoạt động (VDD)",
+      "value": "1.25V (XMP) / 1.1V (JEDEC)",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Kích thước module (D x C x R)",
+      "value": "133.35 x 34.9 x 6.62 mm",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Thiết kế",
+      "name": "Màu tản nhiệt",
+      "value": "Đen (FURY Beast Black)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "Tương thích",
+      "name": "Nền tảng hỗ trợ",
+      "value": "Intel và AMD (khe DIMM DDR5)",
+      "source": "https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory"
+    },
+    {
+      "group": "Vận hành",
+      "name": "Nhiệt độ hoạt động",
+      "value": "0°C đến +85°C",
+      "source": "https://www.kingston.com/datasheets/KF556C40BB-16.pdf"
+    },
+    {
+      "group": "Bảo hành",
+      "name": "Chính sách bảo hành tại Việt Nam",
+      "value": "36 tháng chính hãng",
+      "source": "https://cellphones.com.vn/ram-kingston-fury-ddr5-5600mhz-16gb-kf556c40bb-16wp.html"
+    }
+  ],
+  "filterAttributes": {
+    "type": "DDR5",
+    "capacity": "16GB",
+    "speed": "5600MHz"
+  },
+  "images": [
+    {
+      "file": "01.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/FURY_Beast_Black_DDR5_1-zm-lg.jpg",
+      "alt": "RAM Kingston FURY Beast 16GB DDR5 5600MHz - mặt trước module"
+    },
+    {
+      "file": "02.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/FURY_Beast_Black_DDR5_1_angle-zm-lg.jpg",
+      "alt": "RAM Kingston FURY Beast 16GB DDR5 5600MHz - góc nghiêng"
+    },
+    {
+      "file": "03.webp",
+      "sourceUrl": "https://media.kingston.com/kingston/product/FURY_Beast_Black_DDR5_1_pkg-zm-lg.jpg",
+      "alt": "RAM Kingston FURY Beast 16GB DDR5 5600MHz - hộp đóng gói bán lẻ"
+    }
+  ],
+  "imageStatus": "ok",
+  "metaTitle": "RAM Kingston FURY Beast 16GB DDR5 5600MHz CL40 - Chính Hãng",
+  "metaDescription": "RAM Kingston FURY Beast 16GB DDR5 5600MHz CL40 (KF556C40BB-16), On-Die ECC, hỗ trợ Intel XMP 3.0, bảo hành chính hãng 36 tháng, giá tốt tại Quang Huong Computer."
+}

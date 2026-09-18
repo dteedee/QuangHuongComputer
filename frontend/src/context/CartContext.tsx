@@ -45,7 +45,10 @@ interface CartContextType {
 
     // Pricing
     subtotal: number;
+    /** VAT — THÔNG TIN, đã nằm trong `price` từng dòng. KHÔNG cộng vào `total` (D01). */
     tax: number;
+    /** Thuế suất server trả trên giỏ hàng (vd 0.08). Dùng để hiển thị nhãn "Trong đó VAT (x%)". */
+    taxRate: number;
     shippingAmount: number;
     total: number;
     itemCount: number;
@@ -64,9 +67,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const [items, setItems] = useState<CartItem[]>([]);
     const [couponCode, setCouponCode] = useState<string | null>(null);
     const [discountAmount, setDiscountAmount] = useState<number>(0);
-    // VAT VN hiện hành 8%. Backend là nguồn sự thật (BuildingBlocks.TaxRates.VatStandard).
-    // Giá trị này chỉ dùng cho lần render đầu trước khi cart API trả về; refreshCart() sẽ ghi đè.
-    const [taxRate, setTaxRate] = useState<number>(0.08);
+    // D01: thuế suất do SERVER trả trên giỏ hàng (cart.taxRate), không hardcode 1.08/0.08 ở FE.
+    // 0 trước khi refreshCart() trả về lần đầu -> dòng VAT tạm ẩn (không suy đoán số sai).
+    const [taxRate, setTaxRate] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -305,19 +308,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         [items]
     );
 
-    const tax = useMemo(() =>
-        Math.max(0, (subtotal - discountAmount) * taxRate),
-        [subtotal, discountAmount, taxRate]
-    );
+    // D01 (binding, phase-40): giá đã BAO GỒM VAT. `tax` chỉ là phần tách ra để HIỂN THỊ
+    // ("Trong đó VAT"), không bao giờ cộng vào `total`. Tách THEO DÒNG — Σ(gross_i − round(gross_i/(1+rate)))
+    // — không tách trên tổng cả giỏ (lệch vài đồng do làm tròn, xem golden vectors D01).
+    // rate = cart.taxRate do SERVER trả (refreshCart) — không hardcode 1.08 / nhân 0.1.
+    const tax = useMemo(() => {
+        if (taxRate <= 0) return 0;
+        return items.reduce((sum, item) => {
+            const gross = item.price * item.quantity;
+            if (gross <= 0) return sum;
+            const net = Math.round(gross / (1 + taxRate));
+            return sum + (gross - net);
+        }, 0);
+    }, [items, taxRate]);
 
     const shippingAmount = useMemo(() => {
         if (items.length === 0) return 0;
         return (subtotal - discountAmount) >= 500000 ? 0 : 30000;
     }, [subtotal, discountAmount, items.length]);
 
+    // D01: Total = tạm tính − giảm giá + ship. KHÔNG cộng `tax` (thuế đã nằm trong giá từng dòng).
     const total = useMemo(() =>
-        Math.max(0, subtotal - discountAmount + tax + shippingAmount),
-        [subtotal, discountAmount, tax, shippingAmount]
+        Math.max(0, subtotal - discountAmount + shippingAmount),
+        [subtotal, discountAmount, shippingAmount]
     );
 
     const itemCount = items.length;
@@ -340,6 +353,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         removeCoupon,
         subtotal,
         tax,
+        taxRate,
         shippingAmount,
         total,
         itemCount,
@@ -350,7 +364,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }), [
         items, addToCart, removeFromCart, updateQuantity, clearCart, checkout,
         couponCode, discountAmount, applyCoupon, removeCoupon,
-        subtotal, tax, shippingAmount, total, itemCount, totalQuantity,
+        subtotal, tax, taxRate, shippingAmount, total, itemCount, totalQuantity,
         isLoading, isUpdating, refreshCart
     ]);
 
