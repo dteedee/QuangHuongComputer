@@ -19,6 +19,9 @@ namespace Sales.Endpoints.Checkout;
 /// </summary>
 internal static class GuestCartEndpoints
 {
+    /// <summary>Trần số lượng mỗi dòng giỏ, giống giỏ của tài khoản đã đăng nhập.</summary>
+    private const int MaxQuantityPerCartLine = 99;
+
     /// <summary>Tên cookie định danh phiên khách vãng lai.</summary>
     public const string AnonymousCookie = "qh_aid";
 
@@ -46,14 +49,32 @@ internal static class GuestCartEndpoints
         }).AllowAnonymous();
 
         app.MapPost("/api/sales/public/cart/items", async (
-            AddToCartDto dto, SalesDbContext db, HttpContext http, CancellationToken ct) =>
+            AddToCartDto dto, SalesDbContext db, Catalog.Infrastructure.CatalogDbContext catalogDb,
+            HttpContext http, CancellationToken ct) =>
         {
             if (dto.Quantity <= 0) return Results.BadRequest(new { Error = "Số lượng phải lớn hơn 0" });
+            if (dto.Quantity > MaxQuantityPerCartLine)
+                return Results.BadRequest(new { Error = $"Số lượng tối đa mỗi sản phẩm là {MaxQuantityPerCartLine}" });
+
+            // TÊN lấy từ Catalog, KHÔNG tin dto.ProductName — giống hệt giỏ của tài khoản đã đăng
+            // nhập (Cart/CartItemAddEndpoint.cs). Trước đây nhánh khách vãng lai lưu thẳng chuỗi do
+            // client gửi: giá đã bị chốt 0 nên không mất tiền, nhưng tên là chuỗi tuỳ ý được lưu
+            // xuống CSDL rồi hiện lại ở giỏ hàng và màn hình quản trị -> đường stored-XSS, và cũng
+            // cho phép bịa tên sản phẩm không có thật. Đồng thời chặn luôn productId không tồn tại
+            // hoặc đã ngừng kinh doanh, thay vì tạo dòng giỏ rác.
+            var product = await catalogDb.Products
+                .AsNoTracking()
+                .Where(p => p.Id == dto.ProductId)
+                .Select(p => new { p.Name, p.IsActive })
+                .FirstOrDefaultAsync(ct);
+
+            if (product is null || !product.IsActive)
+                return Results.BadRequest(new { Error = "Sản phẩm không tồn tại hoặc đã ngừng kinh doanh" });
 
             var anonymousId = ResolveAnonymousId(http);
             var cart = await CheckoutCartResolver.ForGuestAsync(db, anonymousId, ct);
             // Giá KHÔNG lấy từ client; chốt đơn sẽ đọc lại giá thật từ CSDL.
-            cart.AddItem(dto.ProductId, dto.ProductName, 0m, dto.Quantity, dto.VariantId, null, null);
+            cart.AddItem(dto.ProductId, product.Name, 0m, dto.Quantity, dto.VariantId, null, null);
 
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { cart.Id, ItemCount = cart.Items.Count });

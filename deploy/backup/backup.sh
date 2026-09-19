@@ -97,7 +97,11 @@ prune_tier() {
     ts_part="${base#quanghuong_backup_"${tier}"_}"
     rm -f "${BACKUP_DIR}/${base}.dump" "${BACKUP_DIR}/${base}.dump.age" "${BACKUP_DIR}/${base}.meta.json"
     rm -f "${BACKUP_DIR}/quanghuong_media_${tier}_${ts_part}.tar.gz" "${BACKUP_DIR}/quanghuong_media_${tier}_${ts_part}.tar.gz.age"
-  done
+  done || true
+  # `|| true`: with `set -o pipefail`, the `ls` above exits non-zero when that tier has no files
+  # yet (every new server, for its first month of `monthly`), which propagated out of this
+  # function and made the WHOLE script exit 1 after a perfectly good dump — cron and `make backup`
+  # both reported failure on every successful backup (W4-5 rehearsal).
 }
 
 case "${TIER}" in

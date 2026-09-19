@@ -47,7 +47,14 @@ public class CreditNoteService
         decimal grossAmount,
         CreditNoteReason reasonCode,
         string reason,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        // Hoá đơn LẬP TAY không có OrderId (Invoice.OrderId là Guid?). Trước đây endpoint truyền
+        // orderId = Guid.Empty, service tra hoá đơn theo OrderId nên KHÔNG tìm thấy gì, và vì toàn
+        // bộ khối chặn trần nằm trong `if (invoice is not null)` nên nó bị bỏ qua hoàn toàn:
+        // ghi giảm được N lần × giá trị hoá đơn, VAT đầu ra không bao giờ được ghi giảm
+        // (ResolveRate(0,0,0) = 0), và giấy báo có không trỏ về hoá đơn gốc.
+        // Truyền invoiceId để tra thẳng theo hoá đơn.
+        Guid? invoiceId = null)
     {
         if (grossAmount <= 0)
         {
@@ -61,8 +68,11 @@ public class CreditNoteService
             return null;
         }
 
+        var hasOrder = orderId != Guid.Empty;
         var invoice = await _db.Invoices.AsNoTracking()
-            .Where(i => i.OrderId == orderId && i.Type == InvoiceType.Receivable)
+            .Where(i => invoiceId.HasValue
+                ? i.Id == invoiceId.Value
+                : hasOrder && i.OrderId == orderId && i.Type == InvoiceType.Receivable)
             .Select(i => new { i.Id, i.InvoiceNumber, i.VatRate, i.SubTotal, i.VatAmount, i.TotalAmount })
             .FirstOrDefaultAsync(ct);
 
@@ -70,10 +80,21 @@ public class CreditNoteService
         // vượt giá trị hoá đơn gốc: vượt là ghi giảm doanh thu/thuế đầu ra nhiều hơn số đã ghi
         // tăng. Đây là lớp chặn cuối cho mọi đường phát sinh (sự kiện chồng lấn, phát lại với
         // khoá mới, thao tác tay), độc lập với chống trùng theo SourceKey.
-        if (invoice is not null)
+        // Không xác định được hoá đơn gốc thì TỪ CHỐI, không phát hành mù: không có hoá đơn thì
+        // không có trần để chặn và không có thuế suất để ghi giảm VAT.
+        if (invoice is null)
         {
+            _logger.LogWarning(
+                "Bỏ qua giấy báo có {SourceKey}: không tìm thấy hoá đơn gốc (invoiceId={InvoiceId}, orderId={OrderId}).",
+                sourceKey, invoiceId, orderId);
+            return null;
+        }
+
+        {
+            var invId = invoice.Id;
             var alreadyCredited = await _db.CreditNotes.AsNoTracking()
-                .Where(c => c.OrderId == orderId && c.Status != CreditNoteStatus.Cancelled)
+                .Where(c => c.Status != CreditNoteStatus.Cancelled
+                            && (c.OriginalInvoiceId == invId || (hasOrder && c.OrderId == orderId)))
                 .SumAsync(c => c.Amount, ct);
 
             var allowance = invoice.TotalAmount - alreadyCredited;
@@ -97,7 +118,7 @@ public class CreditNoteService
         // Thuế suất dùng để tách VAT của khoản điều chỉnh: lấy thuế suất của hoá đơn gốc;
         // hoá đơn nhiều thuế suất (VatRate = 0) thì suy ra thuế suất BÌNH QUÂN thực tế của nó,
         // vì đó mới là tỷ lệ thuế đã thực sự kê khai trên số tiền này.
-        var rate = ResolveRate(invoice?.VatRate ?? 0m, invoice?.SubTotal ?? 0m, invoice?.VatAmount ?? 0m);
+        var rate = ResolveRate(invoice.VatRate, invoice.SubTotal, invoice.VatAmount);
         var extracted = VietnameseTaxEngine.ExtractVat(grossAmount, rate);
 
         var nowUtc = _clock.UtcNow.UtcDateTime;
@@ -115,9 +136,9 @@ public class CreditNoteService
             vatRatePercent: rate <= 0m ? 0m : Math.Round(rate * 100m, 2),
             issueDate: nowUtc,
             businessDate: _clock.TodayVn,
-            originalInvoiceId: invoice?.Id,
-            originalInvoiceNumber: invoice?.InvoiceNumber,
-            orderId: orderId,
+            originalInvoiceId: invoice.Id,
+            originalInvoiceNumber: invoice.InvoiceNumber,
+            orderId: hasOrder ? orderId : null,
             customerId: customerId);
 
         note.Issue(nowUtc);

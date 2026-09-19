@@ -19,6 +19,16 @@ public sealed class EndpointAuthorizationAuditor : IHostedService
     public const string FailOnViolationKey = "Security:EndpointAuthorizationAudit:FailOnViolation";
     public const string LogPrefix = "[authz-audit]";
 
+    /// <summary>
+    /// W4-5: đặt true khi <see cref="RunOn"/> đã quét xong bảng route THẬT trong Program.cs.
+    /// Hosted service chạy SAU đó và luôn thấy DI rỗng (xem ghi chú ở <see cref="Run"/>);
+    /// nếu không có cái chốt này thì bật <see cref="FailOnViolationKey"/> = true sẽ làm app
+    /// KHÔNG BAO GIỜ khởi động được, kể cả khi bảng route hoàn toàn sạch.
+    /// Vẫn fail-closed: chốt chỉ mở khi RunOn thực sự đã chạy: xoá lời gọi trong Program.cs
+    /// thì hosted service lại ném lỗi như cũ.
+    /// </summary>
+    private static bool _routeTableAudited;
+
     private readonly IServiceProvider _services;
     private readonly ILogger<EndpointAuthorizationAuditor> _logger;
     private readonly bool _failOnViolation;
@@ -60,12 +70,19 @@ public sealed class EndpointAuthorizationAuditor : IHostedService
                 // trả về rỗng và audit không kiểm tra được gì. Cách duy nhất là gọi
                 // RunOn(app) một dòng trong Program.cs (không thuộc quyền sửa của W1-1).
                 // Log ở mức Warning để cổng W1-G không đọc nhầm "im lặng" thành "sạch".
+                if (_routeTableAudited)
+                {
+                    // Program.cs đã gọi RunOn trên bảng route thật — không có gì để làm thêm.
+                    _logger.LogDebug("{Prefix} bảng route đã được RunOn kiểm tra trước đó.", LogPrefix);
+                    return;
+                }
+
                 _logger.LogWarning(
                     "{Prefix} KHÔNG CHẠY ĐƯỢC: DI không có EndpointDataSource nào. " +
                     "Thêm `app.Services.GetRequiredService<EndpointAuthorizationAuditor>()` … hoặc đơn giản " +
                     "`EndpointAuthorizationAuditor.RunOn(app, logger, failOnViolation)` vào Program.cs sau các lệnh app.Map*.",
                     LogPrefix);
-                if (_failOnViolation)
+                if (_failOnViolation && !_routeTableAudited)
                 {
                     throw new InvalidOperationException(
                         $"{LogPrefix} bật {FailOnViolationKey}=true nhưng audit không đọc được bảng route — " +
@@ -111,6 +128,7 @@ public sealed class EndpointAuthorizationAuditor : IHostedService
     {
         var endpoints = app.DataSources.SelectMany(s => s.Endpoints).Distinct().ToList();
         var violations = EndpointAuthorizationConvention.Analyze(endpoints);
+        _routeTableAudited = true;
 
         new EndpointAuthorizationAuditor(null!, logger, failOnViolation).Report(endpoints.Count, violations);
 

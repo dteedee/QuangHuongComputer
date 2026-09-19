@@ -261,7 +261,10 @@ public static class PromotionEndpoints
             });
             // W1-10: alias cũ của tra cứu mã giảm giá ở giỏ hàng, khách chưa đăng nhập dùng được
             // (đồng bộ với /api/promotions/{code} đã có trong allow-list). IR W1: thêm rule.
-        }).AllowAnonymous();
+            // W4-5: endpoint này PHÂN BIỆT mã có thật (200 + số tiền) với mã sai (404) nên là một
+            // oracle dò mã. Không thể bỏ phân biệt (giỏ hàng cần biết vì sao mã không áp được),
+            // nên chặn bằng rate limit "lookup" (30 lần/phút/IP) — giống mọi tra cứu công khai khác.
+        }).AllowAnonymous().RequireRateLimiting("lookup");
     }
 
     private static object ToDto(Promotion p) => new

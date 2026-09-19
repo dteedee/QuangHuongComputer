@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using BuildingBlocks.Security;
 using FluentAssertions;
 using IntegrationTests.Infrastructure;
@@ -102,6 +103,81 @@ public sealed class AuthorizationMatrixTests
         var roles = scope.ServiceProvider
             .GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>();
         (await roles.RoleExistsAsync(Roles.Admin)).Should().BeTrue("role Admin phải còn nguyên sau khi bị từ chối");
+    }
+
+    /// <summary>
+    /// W4-5: các route CÔNG KHAI đã được thẩm định và ghi vào <see cref="PublicEndpointAllowList"/>.
+    /// Mặt đối xứng của ma trận trên: những đường này PHẢI mở cho khách chưa đăng nhập, nếu không
+    /// storefront gãy. Một lần siết quyền quá tay ở đây sẽ làm test đỏ ngay.
+    /// </summary>
+    public static TheoryData<string> PublicEndpoints => new()
+    {
+        "/api/repair/onsite-fee",
+        "/api/warranty/policies/public-matrix",
+        "/api/sales/return-policies/public-matrix",
+        "/api/sales/shipping/provinces",
+        "/api/recruitment",
+        "/api/config/public",
+        "/api/sales/public/cart",
+        "/robots.txt",
+        "/sitemap.xml",
+        // Hai đường tra cứu 2 yếu tố: dữ liệu bịa nên phải 404, nhưng KHÔNG được 401.
+        "/api/sales/public/orders/track?orderNumber=KHONG-CO&phone=0912345678",
+        "/api/repair/track/KHONG-CO?phone=0912345678",
+        "/api/coupons/apply?code=KHONGCOMANAY&orderAmount=1000000",
+    };
+
+    [Theory(DisplayName = "Ma trận quyền: route công khai trong allow-list vẫn mở cho khách chưa đăng nhập")]
+    [MemberData(nameof(PublicEndpoints))]
+    public async Task EndpointCongKhai_KhachChuaDangNhapVaoDuoc(string path)
+    {
+        var status = await SendAsync(_fixture.CreateClient(), "GET", path);
+
+        ((int)status).Should().NotBe(401, $"GET {path} nằm trong PublicEndpointAllowList — siết quyền ở đây là gãy storefront");
+        ((int)status).Should().NotBe(403, $"GET {path} nằm trong PublicEndpointAllowList");
+        ((int)status).Should().BeLessThan(500, $"GET {path} không được 5xx");
+    }
+
+    [Fact(DisplayName = "W4-5: tra cứu đơn khách vãng lai cần CẢ mã đơn VÀ số điện thoại, sai thì 404 chứ không lộ mã nào có thật")]
+    public async Task TraDonVangLai_ThieuSoDienThoai_KhongTraDuLieu()
+    {
+        using var client = _fixture.CreateClient();
+
+        var thieuPhone = await SendAsync(client, "GET", "/api/sales/public/orders/track?orderNumber=KHONG-CO");
+        thieuPhone.Should().Be(HttpStatusCode.BadRequest, "chỉ mã đơn thôi thì không đủ — nếu không, ai đoán được mã là đọc được đơn người khác");
+
+        var saiCaHai = await SendAsync(client, "GET", "/api/sales/public/orders/track?orderNumber=KHONG-CO&phone=0912345678");
+        saiCaHai.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact(DisplayName = "W4-5: bước 2 của đăng nhập 2FA ẩn danh được (400 vì challengeToken bịa), không phải 401")]
+    public async Task DangNhap2Fa_AnDanh_KhongTra401()
+    {
+        using var client = _fixture.CreateClient();
+
+        using var response = await client.PostAsJsonAsync("/api/auth/login/2fa",
+            new { challengeToken = "khong-phai-challenge-that", code = "000000" });
+
+        ((int)response.StatusCode).Should().NotBe(401,
+            "bước 1 chưa phát token nào nên bước 2 bắt buộc ẩn danh");
+        ((int)response.StatusCode).Should().BeLessThan(500);
+    }
+
+    [Fact(DisplayName = "W4-5: revoke-all-tokens chặn ẩn danh (401) và chỉ thu hồi phiên của CHÍNH người gọi")]
+    public async Task RevokeAllTokens_ChanAnDanh_VaTuGioiHanNguoiGoi()
+    {
+        var anonymous = await SendAsync(_fixture.CreateClient(), "POST", "/api/auth/revoke-all-tokens");
+        anonymous.Should().Be(HttpStatusCode.Unauthorized);
+
+        // Customer bình thường PHẢI gọi được (đây là "đăng xuất khỏi mọi thiết bị" của chính mình),
+        // và endpoint không nhận userId từ đầu vào nên không chạm được tài khoản khác.
+        var customer = await TestAuthentication.SharedAccountAsync(_fixture, Roles.Customer);
+        using var customerClient = TestAuthentication.ClientFor(_fixture, customer);
+        var status = await SendAsync(customerClient, "POST", "/api/auth/revoke-all-tokens");
+
+        ((int)status).Should().NotBe(401);
+        ((int)status).Should().NotBe(403, "tự thu hồi phiên của mình là quyền của mọi tài khoản đăng nhập");
+        ((int)status).Should().BeLessThan(500);
     }
 
     private static async Task<HttpStatusCode> SendAsync(HttpClient client, string method, string path)

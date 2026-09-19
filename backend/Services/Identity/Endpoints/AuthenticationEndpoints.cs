@@ -151,7 +151,11 @@ public static class AuthenticationEndpoints
             return Results.Ok(new { Message = "Logged out successfully" });
         });
 
-        group.MapPost("/revoke-all-tokens", [Authorize] async (IRefreshTokenService refreshTokenService,
+        // W4-5: chỉ thu hồi token CỦA CHÍNH NGƯỜI GỌI — userId lấy từ claim, không nhận từ body/query.
+        // Đổi [Authorize] trống sang policy có tên (SecurityPolicies.Authenticated) để audit
+        // không còn xếp vào AuthenticatedOnly: mọi tài khoản đăng nhập ĐỀU được gọi, nhưng
+        // chỉ tác động lên phiên của chính mình.
+        group.MapPost("/revoke-all-tokens", async (IRefreshTokenService refreshTokenService,
             UserManager<ApplicationUser> userManager, IUserStateCache stateCache,
             ClaimsPrincipal principal, HttpContext httpContext) =>
         {
@@ -171,6 +175,6 @@ public static class AuthenticationEndpoints
                 Message = "All tokens revoked successfully. You have been logged out from all devices.",
                 RefreshTokensRevoked = killed
             });
-        });
+        }).RequireAuthorization(SecurityPolicies.Authenticated);
     }
 }

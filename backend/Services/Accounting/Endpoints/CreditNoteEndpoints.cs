@@ -76,6 +76,7 @@ public static class CreditNoteEndpoints
             var note = await service.IssueForOrderAsync(
                 sourceKey: $"manual:{Guid.NewGuid():N}",
                 orderId: invoice.OrderId ?? Guid.Empty,
+                invoiceId: invoice.Id,
                 customerId: invoice.CustomerId,
                 grossAmount: request.Amount,
                 reasonCode: request.ReasonCode,

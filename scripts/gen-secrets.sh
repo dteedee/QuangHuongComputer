@@ -59,5 +59,9 @@ fill POSTGRES_PASSWORD 32
 fill REDIS_PASSWORD 32
 fill RABBITMQ_PASSWORD 32
 fill JWT_KEY 64
+# Nếu thiếu dòng này, ADMIN_INITIAL_PASSWORD giữ nguyên giá trị mẫu CÔNG KHAI trong
+# .env.prod.example — tức tài khoản quản trị của một server mở ra Internet dùng mật khẩu
+# ai đọc repo cũng biết. Sinh ngẫu nhiên như mọi bí mật khác; lần đăng nhập đầu vẫn buộc đổi.
+fill ADMIN_INITIAL_PASSWORD 24
 
 echo "gen-secrets: done — review ${TARGET} (chmod 600, never committed) before starting the stack"

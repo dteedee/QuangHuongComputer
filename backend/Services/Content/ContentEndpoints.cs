@@ -336,8 +336,9 @@ public static class ContentEndpoints
                 id = message.Id
             });
             // W1-10: form liên hệ ở storefront — khách chưa đăng nhập phải gửi được.
-            // Cần rule POST /api/content/contact trong PublicEndpointAllowList (IR W1).
-        }).AllowAnonymous();
+            // W4-5: ghi thẳng vào ContactMessages mà không giới hạn -> spam/flood.
+            // Policy "contact" (5/phút/IP) sinh ra đúng cho form công khai kiểu này.
+        }).AllowAnonymous().RequireRateLimiting("contact");
 
         // ==================== ADMIN ENDPOINTS ====================
 

@@ -43,7 +43,11 @@ public static class HREndpoints
 
         app.MapGet("/api/recruitment/{id:guid}", async (Guid id, HRDbContext db) =>
         {
-            var job = await db.JobListings.FindAsync(id);
+            // W4-5: FindAsync trả về MỌI tin, kể cả Draft/Closed/đã hết hạn — tức là bản nháp
+            // tuyển dụng chưa đăng cũng đọc được nếu biết id. Lọc đúng cùng điều kiện với
+            // danh sách công khai ở trên.
+            var job = await db.JobListings.FirstOrDefaultAsync(j =>
+                j.Id == id && j.Status == JobStatus.Active && j.ExpiryDate > DateTime.UtcNow);
             return job != null ? Results.Ok(job) : Results.NotFound();
             // W1-10: chi tiết tin tuyển dụng công khai (IR W1: allow-list).
         }).AllowAnonymous();

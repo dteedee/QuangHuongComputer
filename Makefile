@@ -23,7 +23,7 @@ export COMPOSE_PROJECT_NAME
 PROD_COMPOSE := docker compose -p $(COMPOSE_PROJECT_NAME) -f docker-compose.yml -f docker-compose.prod.yml --env-file $(ENV_FILE)
 DEV_COMPOSE  := docker compose -p $(COMPOSE_PROJECT_NAME) -f docker-compose.yml --env-file .env.docker
 
-.PHONY: help up dev down reset-demo logs backup restore-drill deploy prod-build prod-status \
+.PHONY: help up dev down reset-demo logs backup backup-up restore-drill check-secrets deploy prod-build prod-status \
         db-shell docker-prune docker-size
 
 help: ## Show available commands
@@ -65,19 +65,40 @@ logs: ## Tail every running container's logs
 # ============================================
 # BACKUP / RESTORE DRILL (deploy/backup/*, D05 §6/§7 — prod stack only)
 # ============================================
-backup: ## Run an on-demand backup through the sidecar
+# scripts/stack-up.sh brings up postgres/redis/rabbitmq then api/web BY NAME, so the backup
+# sidecar is never started by it — without this target a deployed server silently has no cron
+# backups at all and `make backup` fails with "service backup is not running" (W4-5 rehearsal).
+backup-up: ## Build (if needed) and start the backup sidecar — cron backups only run while it is up
+	$(PROD_COMPOSE) up -d --build backup
+
+backup: backup-up ## Run an on-demand backup through the sidecar
 	$(PROD_COMPOSE) exec backup /scripts/backup.sh manual
 
-restore-drill: ## Prove the latest backup restores (pass AGE_PRIVATE_KEY=<key> if dumps are encrypted)
+restore-drill: backup-up ## Prove the latest backup restores (pass AGE_PRIVATE_KEY=<key> if dumps are encrypted)
 	$(PROD_COMPOSE) exec -e BACKUP_AGE_PRIVATE_KEY=$(AGE_PRIVATE_KEY) backup /scripts/restore-drill.sh
 
 # ============================================
 # PRODUCTION (and UAT, via ENV_FILE — see file header)
 # ============================================
-deploy: ## Pull ONLY api+web (never infra), migrate, restart — make deploy TAG=v1.2.3
+# `scripts/gen-secrets.sh` fills POSTGRES/REDIS/RABBITMQ/JWT only — ADMIN_INITIAL_PASSWORD keeps
+# the CHANGE_ME_* value straight out of the public .env.prod.example, and `db seed` would create
+# the administrator with a password anyone can read in the repo (W4-5 rehearsal). Fail closed.
+check-secrets: ## Refuse to deploy while $(ENV_FILE) still holds a CHANGE_ME_* placeholder
+	@missing=$$(grep -nE '^[A-Z_]+=(CHANGE_ME.*)$$' $(ENV_FILE) || true); \
+	if [ -n "$$missing" ]; then \
+		echo "REFUSED: $(ENV_FILE) still has placeholder values — set them before deploying:" >&2; \
+		echo "$$missing" >&2; \
+		echo "  hint: scripts/gen-secrets.sh fills the infra passwords; ADMIN_INITIAL_PASSWORD is yours to choose," >&2; \
+		echo "        e.g. ADMIN_INITIAL_PASSWORD=\"$$(openssl rand -base64 18)\"" >&2; \
+		exit 1; \
+	fi
+	@echo "check-secrets: $(ENV_FILE) has no placeholder values left"
+
+deploy: check-secrets ## Pull ONLY api+web (never infra), migrate, restart — make deploy TAG=v1.2.3
 	@[ -n "$(TAG)" ] || (echo "usage: make deploy TAG=v1.2.3" >&2; exit 2)
 	APP_VERSION=$(TAG) $(PROD_COMPOSE) pull api web
 	APP_VERSION=$(TAG) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) scripts/stack-up.sh --prod --env-file $(ENV_FILE)
+	$(MAKE) backup-up
 
 prod-build: ## Build prod images locally instead of pulling (fallback when CI/registry is unavailable)
 	$(PROD_COMPOSE) build api web

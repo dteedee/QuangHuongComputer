@@ -32,6 +32,13 @@ public partial class ReturnOrchestrator
         if (rr.InspectedAt == null)
             throw new InvalidOperationException("Chưa kiểm hàng (chống gian lận): gọi RecordInspection trước.");
 
+        // W4-5 (bảo mật): CHẶN TRƯỚC KHI NHẬP KHO. rr.Complete() cũng kiểm tra Status nhưng nó
+        // chạy SAU bước 1, mà RestockService ghi vào InventoryDbContext bằng SaveChanges RIÊNG —
+        // nên lần gọi thứ hai (double-click / retry) đã cộng tồn + sinh GRN trùng rồi mới ném lỗi.
+        // Kết quả cũ: caller nhận 400 trong khi kho đã bị cộng khống vĩnh viễn.
+        if (rr.Status != ReturnStatus.Approved)
+            throw new ConflictException($"Chỉ hoàn tất yêu cầu đã duyệt. Hiện: {rr.Status}");
+
         // 1. Nhập lại kho (mọi luồng đều nhập lại hàng khách trả về).
         var restock = await _restockService.RestockAsync(rr.Id, ct);
 

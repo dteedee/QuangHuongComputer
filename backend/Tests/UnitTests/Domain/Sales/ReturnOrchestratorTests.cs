@@ -160,6 +160,34 @@ public class ReturnOrchestratorTests : IDisposable
         (await _inventory.StockMovements.CountAsync(m => m.ReferenceId == rr.Id.ToString())).Should().Be(1);
     }
 
+    /// <summary>
+    /// W4-5 (bảo mật): gọi ProcessAfterInspection LẦN HAI (double-click / retry) không được
+    /// cộng tồn kho thêm lần nữa. Trước khi vá, RestockService chạy TRƯỚC khi rr.Complete()
+    /// kiểm tra Status và commit bằng DbContext riêng ⇒ tồn kho bị cộng khống vĩnh viễn
+    /// trong khi caller chỉ thấy lỗi 400.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAfterInspection_GoiLanHai_KhongNhapKhoThemLanNua()
+    {
+        var customerId = Guid.NewGuid();
+        var (order, item, _, mainWh) = await SeedSoldAsync(customerId);
+        var orch = NewOrch();
+        var rr = await orch.RequestAsync(new CreateReturnRequestInput(order.Id, item.Id, ReturnType.Refund, "x"), customerId);
+        rr.Approve("emp");
+        rr.RecordInspection(ReceivedCondition.Intact, mainWh.Id, Guid.NewGuid());
+        await _sales.SaveChangesAsync();
+
+        await orch.ProcessAfterInspectionAsync(rr.Id, "emp");
+
+        await Assert.ThrowsAsync<ConflictException>(async () =>
+            await orch.ProcessAfterInspectionAsync(rr.Id, "emp"));
+
+        var inv = await _inventory.InventoryItems.FirstAsync(i => i.ProductId == item.ProductId && i.WarehouseId == mainWh.Id);
+        inv.QuantityOnHand.Should().Be(1, "lần gọi thứ hai không được cộng tồn");
+        (await _inventory.StockMovements.CountAsync(m => m.ReferenceId == rr.Id.ToString())).Should().Be(1);
+        (await _inventory.GoodsReceivedNotes.CountAsync(g => g.ReferenceOrderId == rr.Id)).Should().Be(1);
+    }
+
     [Fact]
     public async Task Refund_DoiY_ThieuPhuKien_TruPhiTheoChinhSach()
     {

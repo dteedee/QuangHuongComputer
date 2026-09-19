@@ -19,7 +19,11 @@ internal static class PromotionPreviewEndpoints
     public static void Map(IEndpointRouteBuilder app)
     {
         // Khách vãng lai cũng phải xem được ưu đãi -> công khai tường minh.
-        app.MapPost("/api/promotions/evaluate", EvaluatePromotionsAsync).AllowAnonymous();
+        // W4-5: warnings trả về tiết lộ mã coupon nào có thật, và mỗi lần gọi chạy cả PricingEngine
+        // lẫn CouponValidator trên DB -> vừa là oracle dò mã vừa là đòn bẩy DoS. Rate limit "lookup".
+        app.MapPost("/api/promotions/evaluate", EvaluatePromotionsAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting("lookup");
     }
 
     /// <summary>

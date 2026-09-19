@@ -117,5 +117,12 @@ compose up -d --wait api web
 site_url="$(grep -E '^SITE_URL=' "${ENV_FILE}" | tail -n1 | cut -d= -f2-)"
 admin_email="$(grep -E '^ADMIN_EMAIL=' "${ENV_FILE}" | tail -n1 | cut -d= -f2-)"
 log "[5/5] up. URL: ${site_url:-http://localhost:8080}"
-[ -n "${admin_email:-}" ] && log "Admin: ${admin_email} (forced password change on first login)"
-[ "${SEED_PROFILE}" = "demo" ] && log "Demo accounts: docs/deployment-guide.md §2 (Development only)."
+# `[ ... ] && log ...` ở DÒNG CUỐI dưới `set -e` làm cả script thoát 1 khi điều kiện sai —
+# một lần deploy thành công vẫn bị `make deploy` báo lỗi. Dùng if để mã thoát luôn là 0.
+if [ -n "${admin_email:-}" ]; then
+  log "Admin: ${admin_email} (forced password change on first login)"
+fi
+if [ "${SEED_PROFILE}" = "demo" ]; then
+  log "Demo accounts: docs/deployment-guide.md §2 (Development only)."
+fi
+exit 0

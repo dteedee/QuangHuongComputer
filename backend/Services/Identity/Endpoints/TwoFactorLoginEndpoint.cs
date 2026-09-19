@@ -91,6 +91,11 @@ public static class TwoFactorLoginEndpoint
             await challenges.ConsumeAsync(challenge);
 
             return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
-        }).WithValidation<LoginTwoFactorDto>().RequireRateLimiting("auth");
+        }).WithValidation<LoginTwoFactorDto>()
+          // W4-5: bước 2 của đăng nhập BẮT BUỘC ẩn danh (chưa có token nào được phát ở bước 1).
+          // Không lộ tài khoản có tồn tại hay không: đầu vào là challengeToken chứ không phải
+          // email/username, và token sai/hết hạn luôn trả cùng một thông báo.
+          .AllowAnonymous()
+          .RequireRateLimiting("auth");
     }
 }

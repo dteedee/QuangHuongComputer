@@ -75,7 +75,9 @@ internal static class GuestOrderTrackingEndpoints
                     i.IsGift,
                 }),
             });
-        }).AllowAnonymous();
+            // W4-5: mã đơn + SĐT là hai yếu tố, nhưng vẫn dò được nếu gọi không giới hạn —
+            // rate limit "lookup" (30/phút/IP) như mọi tra cứu công khai khác.
+        }).AllowAnonymous().RequireRateLimiting("lookup");
     }
 
     private static string Digits(string? value)

@@ -20,7 +20,9 @@ public static class PolicyEndpoints
     public static void MapPolicyEndpoints(this IEndpointRouteBuilder app)
     {
         // D08 §2/§9 (binding): công khai, KHÔNG PII, KHÔNG cần đăng nhập.
-        var publicGroup = app.MapGroup("/api/warranty/policies");
+        // W4-5: khai báo tường minh thay vì "không có metadata nào" — chỉ tham số chính sách
+        // (số tháng, phạm vi, loại trừ), không hồ sơ bảo hành, không PII.
+        var publicGroup = app.MapGroup("/api/warranty/policies").AllowAnonymous();
 
         publicGroup.MapGet("/effective", async (
             [FromQuery] Guid? productId,

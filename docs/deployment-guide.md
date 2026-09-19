@@ -4,10 +4,80 @@
 **Status:** frozen contract as of 2026-09-18. Later tracks build on the verbs and the seed
 registry described here; change them only with a decision record.
 
-This document covers **getting a database from empty to a usable shop**. The container topology,
-compose files, reverse proxy, CI/CD and backup schedule are owned by **W1-14**
-(`phase-64-w1-deploy-stack.md`, decision D05) and land in this file later. If you came here
-looking for `make up`, that is W1-14.
+This document covers **getting a database from empty to a usable shop** (§1–§5, §7) and, since
+the W4-5 deployment rehearsal, **the container topology that actually runs it on a VPS** (§0, §6).
+Everything in §0 and §6 was executed end to end from a clean clone on 2026-09-19 — see
+`plans/260917-2100-full-system-overhaul/reports/w4-5-deploy-rehearsal.md` for the transcript and
+the defects it found.
+
+---
+
+## 0. Putting it on a VPS (the whole thing, from a clean clone)
+
+Prerequisites on the server: Docker Engine + Compose v2.24 or newer (the prod override uses the
+`!reset` merge tag), a DNS A record already pointing at the box, and ports 80/443 free.
+
+```bash
+git clone <repo> /opt/quanghuong && cd /opt/quanghuong
+cp .env.prod.example .env.prod && chmod 600 .env.prod
+scripts/gen-secrets.sh                    # fills POSTGRES/REDIS/RABBITMQ/JWT passwords
+
+# You MUST edit these four by hand — gen-secrets.sh does not touch them:
+#   SITE_URL=https://your-domain.vn      ACME_EMAIL=you@your-domain.vn
+#   ADMIN_EMAIL=you@your-domain.vn       ADMIN_INITIAL_PASSWORD="$(openssl rand -base64 18)"
+# `make deploy` refuses to run while any CHANGE_ME_* value is left (target `check-secrets`).
+
+make prod-build                            # or: make deploy TAG=v1.2.3 to pull from the registry
+COMPOSE_PROJECT_NAME=quanghuong scripts/stack-up.sh --prod --env-file .env.prod
+make backup-up                             # start the backup sidecar — nothing backs up without it
+```
+
+Measured on a 16-core dev box, from a clean clone with a cold Docker cache:
+
+| Step | Time |
+|---|---|
+| `build api web` (both Dockerfiles, no cache) | **6 min 15 s** |
+| infra up + healthy, pre-migrate dump | ~10 s |
+| `db migrate` + `db seed --profile reference` on an **empty** database | **~20 s** |
+| api + web up and healthy | ~20 s |
+| Total cold start after the images exist | **37 s** |
+
+`stack-up.sh` prints `[5/5] up. URL: …` when it is done. **Known wart:** the script's last line is
+a bare `[ "$SEED_PROFILE" = "demo" ] && log …`, so under `set -e` it exits **1 on a successful
+prod run**. Ignore the exit code; read the `[5/5]` line. (One-line fix: append `|| true`.)
+
+### What "healthy" looks like
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://your-domain.vn/health/ready   # 200
+curl -s 'https://your-domain.vn/api/catalog/products?page=1&pageSize=1' | head -c 80
+#   {"total":68,...
+```
+
+`GET /api/catalog/products` must report **68** products. If it reports 0, the catalogue dataset
+was not visible to the seeder — see §3, "Catalogue dataset".
+
+### Ports, Caddy and HTTPS
+
+`deploy/Caddyfile` binds **the port written in `SITE_URL`**. `https://your-domain.vn` (no port)
+makes Caddy listen on 443 plus the automatic HTTP→HTTPS redirect on 80, which is why
+`docker-compose.yml` publishes `${WEB_HTTP_PORT}:${WEB_HTTP_PORT}` and
+`${WEB_HTTPS_PORT}:${WEB_HTTPS_PORT}` **1:1** rather than mapping to 80/443. Set
+`WEB_HTTP_PORT=80` and `WEB_HTTPS_PORT=443` in `.env.prod`. For a rehearsal on a busy machine,
+set `SITE_URL=http://localhost:18080` **and** `WEB_HTTP_PORT=18080` — the two must agree or
+nothing answers on the published port.
+
+Caddy obtains and renews the certificate itself; there is no certbot and nothing to schedule.
+Certificates live in the `caddy-data` volume — do not delete it casually or you re-issue on every
+restart and will hit Let's Encrypt rate limits.
+
+### Running a second stack on the same host
+
+Set `COMPOSE_PROJECT_NAME` (containers, volumes **and the network** are all named from it) and a
+different `SITE_URL`/`WEB_HTTP_PORT`. Before the rehearsal the network name was hard-coded, which
+put two stacks on one bridge where both `postgres` services answered to the same `postgres` DNS
+name and Docker round-robined between them — an api container could silently talk to the wrong
+database. Fixed; do not re-hardcode it.
 
 ---
 
@@ -38,6 +108,13 @@ info: db[0] db seed --profile reference: 252 row(s) changed
 is the contract: every seeder is an upsert by natural key, so running it again is a no-op. If a
 run reports a non-zero total on a database nobody touched, a seeder is rewriting a row it should
 have left alone — find it by the per-step lines, do not "fix" it by ignoring the total.
+
+**This contract is currently broken and the breakage is known.** As of 2026-09-19 a second
+`db seed --profile reference` reports `catalog.products: 10 change(s)` forever: the importer's
+`categories updated : 10` counter fires on every run (products themselves report
+`0 created, 0 updated, 68 unchanged, 2 rejected`). It is harmless — 10 category rows are rewritten
+with identical values — but until it is fixed, "10" is the new floor and anything above it is the
+signal to investigate.
 
 ### Running the verbs without the API binary
 
@@ -126,10 +203,14 @@ schema change is a deliberate step in a deploy rather than a side effect of a re
 
 `db seed` imports the 70-record product dataset from
 `backend/Services/Catalog/Infrastructure/Data/Import/dataset/`, verifying every image against
-`media-manifest.json` before writing a row. The dataset is **not embedded in the binary**: a
-published deployment must either ship the directory or set `QH_IMPORT_DATASET`. When neither is
-present the step logs a warning and is skipped — the rest of the seed still completes, and the
-shop comes up with no products rather than not at all.
+`media-manifest.json` before writing a row. The dataset is **not embedded in the binary and is not
+copied into the api image by `dotnet publish`** — a container that cannot see it logs
+`catalog.products: dataset not found … skipping` and the shop comes up with **zero products**.
+
+`docker-compose.yml` therefore bind-mounts the directory into the one-shot `migrate` service from
+the checkout that holds the compose file, and sets `QH_IMPORT_DATASET=/app/dataset`. Keep the git
+checkout on the server (you need it for the compose files anyway); a deploy that only copies
+`docker-compose*.yml` and `.env.prod` will seed an empty catalogue.
 
 Two of the 70 records are rejected on purpose by the fail-closed image rule
 (`aoc-24g4e-24-fhd-fast-ips-180hz` has partial images, `cpu-intel-core-i5-12400f` has failed
@@ -200,17 +281,55 @@ Ordering that already matters, and must not be broken:
 
 ## 6. Backup and restore
 
-```bash
-# backup (custom format, compressed, restorable selectively)
-docker exec quanghuong-postgres pg_dump -U postgres -Fc quanghuongdb > qh-$(date +%F).dump
+The `backup` sidecar (`deploy/backup/`, prod stack only) owns this: `pg_dump -Fc` hourly 08–22h and
+nightly at 02:30, a tar of the `media-data` volume alongside, optional `age` encryption, optional
+`rclone` push offsite, and a GFS retention of 48 hourly / 14 daily / 12 monthly under `./backups`.
 
-# restore into a NEW database, never over a live one
+**The sidecar is not started by `stack-up.sh`.** Run `make backup-up` after every first deploy, or
+the server has no backups at all and `make backup` fails with `service "backup" is not running`.
+`make deploy` now does it for you.
+
+```bash
+make backup-up                     # start (and build) the sidecar; cron runs inside it
+make backup                        # on-demand dump right now
+make restore-drill AGE_PRIVATE_KEY="$(cat offsite.age.key)"
+```
+
+### Encryption and the offsite copy
+
+Generate a key pair once, on a machine that is **not** the server:
+
+```bash
+docker run --rm ghcr.io/quanghuongcomputer/backup age-keygen   # or: age-keygen
+```
+
+Put the **public** key in `.env.prod` as `BACKUP_AGE_PUBLIC_KEY` and keep the private key offline.
+The server can then encrypt but never decrypt. Leave it blank and the dumps are written in the
+clear — acceptable only while they never leave the box. For the offsite copy set
+`BACKUP_S3_REMOTE=<rclone remote>:bucket/path` and `BACKUP_S3_RCLONE_CONF_HOST=/absolute/path/to/
+rclone.conf` on the host; both blank means local-only, which is a valid state, not an error.
+
+### The restore drill
+
+`make restore-drill` decrypts the newest dump, restores it into a throwaway `qh_restore_test`
+database, asserts the schema and the catalogue came back, checks the dump's **own age** (< 26 h),
+drops the scratch database and writes `backups/restore-drill.heartbeat.json` for an external
+uptime check. It runs monthly from the sidecar's crontab. Verified on 2026-09-19 against an
+age-encrypted dump: `PASS … tables=172 products=68 orders=0 dumpAgeHours=0`.
+
+Order count is **reported, not asserted** — a shop that has not sold anything yet, or simply had a
+quiet day, is not a backup failure.
+
+### By hand, without the sidecar
+
+```bash
+docker exec quanghuong-postgres pg_dump -U postgres -Fc quanghuongdb > qh-$(date +%F).dump
 docker exec quanghuong-postgres createdb -U postgres quanghuongdb_restored
 docker exec -i quanghuong-postgres pg_restore -U postgres -d quanghuongdb_restored < qh-2026-09-18.dump
 ```
 
 Restore into a new name and switch the connection string once you have checked it. A restore that
-targets the live database has no undo. Scheduling, retention and the restore drill are W1-14's.
+targets the live database has no undo.
 
 ---
 
@@ -224,6 +343,11 @@ targets the live database has no undo. Scheduling, retention and the restore dri
 | `catalog.products: dataset not found` | dataset not shipped | set `QH_IMPORT_DATASET`, see §3 |
 | storefront has 0 products after a successful seed | dataset skipped, or images failed the manifest check | read the `catalog.products` summary line |
 | `db reset REFUSED` | database name is not `*_test` / `*_demo` | intended; see §4 |
+| `stack-up.sh` exits 1 after printing `[5/5] up.` | its last line is a bare `[ … ] && log …` under `set -e` | cosmetic; check `[5/5]` and `docker compose ps`, not the exit code |
+| `service "backup" is not running` | the sidecar is not started by `stack-up.sh` | `make backup-up` |
+| `catalog.products: dataset not found` in a container | the dataset is not in the api image | the `migrate` service bind-mounts it; keep the git checkout on the server (§3) |
+| stack starts but nothing answers on the published port | `SITE_URL`'s port and `WEB_HTTP_PORT` disagree — Caddy binds the port in `SITE_URL` | make them match (§0) |
+| second stack on the host talks to the wrong database | old hard-coded network name | set `COMPOSE_PROJECT_NAME`; the network is named from it (§0) |
 
 ---
 

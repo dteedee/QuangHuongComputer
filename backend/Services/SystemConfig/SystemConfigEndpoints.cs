@@ -112,6 +112,8 @@ public static class SystemConfigEndpoints
                 query = query.Where(c => c.Module == module);
 
             var configs = await query.OrderBy(c => c.Module).ThenBy(c => c.SortOrder).ToListAsync();
+            // Che giá trị bí mật TRƯỚC khi cache: nếu không, bản rõ nằm trong Redis suốt 1 giờ.
+            MaskSecrets(configs);
             await cache.SetAsync(cacheKey, configs, TimeSpan.FromHours(1));
             return Results.Ok(configs);
         });
@@ -135,6 +137,7 @@ public static class SystemConfigEndpoints
             var entry = await db.Configurations.FindAsync(key);
             if (entry == null) return Results.NotFound();
 
+            MaskSecret(entry);
             await cache.SetAsync(cacheKey, entry, TimeSpan.FromHours(1));
             return Results.Ok(entry);
         });
@@ -271,5 +274,29 @@ public static class SystemConfigEndpoints
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
             return Results.NoContent();
         });
+    }
+
+    /// <summary>
+    /// Che giá trị của mục cấu hình có <see cref="ConfigValueType.Secret"/> trước khi trả ra API.
+    ///
+    /// Trước đây hai endpoint đọc cấu hình của quản trị trả thẳng entity, nên BẤT KỲ nhân viên nào
+    /// có quyền đọc cấu hình (đo thật: vai trò Manager) đều thấy bản rõ — trong khi chính route
+    /// công khai /public lại đã lọc Secret. Đường đọc của quản trị vì vậy còn hở hơn đường công
+    /// khai. Bảng này từng chứa Email:Smtp:Password; phần ghi audit đã được vá, đường đọc thì chưa.
+    ///
+    /// Giữ lại 4 ký tự cuối để người vận hành vẫn đối chiếu được "đã đặt đúng khoá chưa" mà không
+    /// lộ giá trị. Muốn đổi thì ghi đè bằng PUT/POST, không cần đọc ra.
+    /// </summary>
+    private static void MaskSecret(ConfigurationEntry entry)
+    {
+        if (entry.ValueType != ConfigValueType.Secret || string.IsNullOrEmpty(entry.Value)) return;
+        entry.Value = entry.Value.Length <= 4
+            ? "****"
+            : "****" + entry.Value[^4..];
+    }
+
+    private static void MaskSecrets(IEnumerable<ConfigurationEntry> entries)
+    {
+        foreach (var e in entries) MaskSecret(e);
     }
 }

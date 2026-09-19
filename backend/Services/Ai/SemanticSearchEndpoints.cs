@@ -19,6 +19,10 @@ public static class SemanticSearchEndpoints
         var group = app.MapGroup("/api/ai");
 
         // POST /api/ai/search — keyword search with ILIKE + unaccent (pgvector future)
+        // W4-5: KHÔNG gọi nhà cung cấp AI nào (xem ghi chú trên: ILIKE trên CatalogDb), nên không
+        // tốn tiền mỗi lượt gọi — nhưng vẫn là POST ẩn danh chạy tới 5 mệnh đề ILIKE/unaccent,
+        // tức đòn bẩy DoS rẻ. Rate limit "lookup" (30/phút/IP) thay vì "ai" (20) để ô tìm kiếm
+        // của khách thật sau NAT chung không bị 429.
         group.MapPost("/search", async ([FromBody] SemanticSearchRequest request, CatalogDbContext catalogDb) =>
         {
             // W2-15: FE sends {message: query} in one call site (frontend/src/api/ai.ts:33) and

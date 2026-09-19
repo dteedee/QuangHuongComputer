@@ -59,16 +59,24 @@ table_count="$(psql -h "${DB_HOST}" -U "${DB_USER}" -d "${RESTORE_DB}" -Atc \
   "SELECT count(*) FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema')")"
 [ "${table_count}" -gt 0 ] || fail "0 tables after restore — dump is empty or restore silently failed"
 
-order_count="$(psql -h "${DB_HOST}" -U "${DB_USER}" -d "${RESTORE_DB}" -Atc 'SELECT count(*) FROM public."Orders"')"
-[ "${order_count}" -gt 0 ] || fail "0 rows in public.\"Orders\" — a restore that proves nothing about real data is not a passing drill"
+# The shop itself must be in the dump, not just an empty schema: products are seeded on day one
+# and only grow, so 0 products means the dump does not contain a usable shop.
+product_count="$(psql -h "${DB_HOST}" -U "${DB_USER}" -d "${RESTORE_DB}" -Atc 'SELECT count(*) FROM public."Products"')"
+[ "${product_count}" -gt 0 ] || fail "0 rows in public.\"Products\" — a restore that proves nothing about real data is not a passing drill"
 
-newest_age_hours="$(psql -h "${DB_HOST}" -U "${DB_USER}" -d "${RESTORE_DB}" -Atc \
-  'SELECT EXTRACT(EPOCH FROM (now() - max("CreatedAt"))) / 3600 FROM public."Orders"')"
-[ -n "${newest_age_hours}" ] || fail "could not read max(\"CreatedAt\") from public.\"Orders\""
-awk -v h="${newest_age_hours}" 'BEGIN { exit !(h < 26) }' || fail "newest order is ${newest_age_hours}h old (>= ${MAX_AGE_HOURS}h) — backup is stale"
+# Orders are NOT a pass condition. A new shop has none, and a shop that simply sold nothing
+# yesterday has no new ones — neither is a backup problem, and failing on it trains the owner to
+# ignore the alert. Reported, not asserted.
+order_count="$(psql -h "${DB_HOST}" -U "${DB_USER}" -d "${RESTORE_DB}" -Atc 'SELECT count(*) FROM public."Orders"')"
+
+# Staleness is a property of the BACKUP FILE, not of shop activity (the old check read
+# max("Orders"."CreatedAt"), so a quiet weekend failed the drill while a stale dump with one old
+# order passed it — W4-5 rehearsal).
+dump_age_hours="$(( ( $(date -u +%s) - $(stat -c %Y "${newest}") ) / 3600 ))"
+[ "${dump_age_hours}" -lt "${MAX_AGE_HOURS}" ] || fail "newest dump $(basename "${newest}") is ${dump_age_hours}h old (>= ${MAX_AGE_HOURS}h) — backups have stopped running"
 
 dropdb -h "${DB_HOST}" -U "${DB_USER}" "${RESTORE_DB}"
 
-detail="{\"file\":\"$(basename "${newest}")\",\"tables\":${table_count},\"orders\":${order_count},\"newestOrderAgeHours\":${newest_age_hours}}"
+detail="{\"file\":\"$(basename "${newest}")\",\"tables\":${table_count},\"products\":${product_count},\"orders\":${order_count},\"dumpAgeHours\":${dump_age_hours}}"
 heartbeat "PASS" "${detail}"
-echo "RESTORE-DRILL PASS: file=$(basename "${newest}") tables=${table_count} orders=${order_count} newestOrderAgeHours=${newest_age_hours}"
+echo "RESTORE-DRILL PASS: file=$(basename "${newest}") tables=${table_count} products=${product_count} orders=${order_count} dumpAgeHours=${dump_age_hours}"

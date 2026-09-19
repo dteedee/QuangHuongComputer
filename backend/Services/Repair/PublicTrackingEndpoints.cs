@@ -27,7 +27,8 @@ public static class PublicTrackingEndpoints
                 Enabled = enabled,
                 FeeVnd = enabled ? settings.GetDecimal("Warranty.OnsiteFeeVnd", 0m) : 0m
             });
-        });
+            // W4-5: chỉ trả 2 con số niêm yết công khai, không đọc DB, không PII.
+        }).AllowAnonymous();
 
         var group = app.MapGroup("/api/repair/track");
 
@@ -81,7 +82,8 @@ public static class PublicTrackingEndpoints
                     .OrderBy(l => l.CreatedAt)
                     .Select(l => new { l.Activity, l.Description, l.CreatedAt })
             });
-        }).RequireRateLimiting("contact");
+            // W4-5: mã phiếu + SĐT phải khớp cùng một phiếu; sai một trong hai trả CÙNG một 404.
+        }).AllowAnonymous().RequireRateLimiting("contact");
     }
 
     private static string NormalizePhone(string? phone) =>
