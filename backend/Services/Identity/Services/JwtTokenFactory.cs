@@ -71,8 +71,8 @@ public static class JwtTokenFactory
         Guid? sessionId = null)
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "super_secret_key_1234567890123456"));
+        // W4-5 / M11: cùng một nguồn khoá với AddIdentityModule, không fallback cứng trong code.
+        var key = new SymmetricSecurityKey(JwtSigningKeyResolver.ResolveBytes(configuration));
 
         // `iat`/`nbf` are emitted explicitly. JwtSecurityToken only writes `exp` when it is given
         // nothing else, and a token that carries an expiry but no issue time cannot be checked:

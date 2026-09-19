@@ -376,4 +376,86 @@ public class PromotionEvaluatorTests
 
         ctx.Subtotal.Should().Be(1_000_000m);
     }
+
+    /// <summary>
+    /// W4-5 / M3 — `percent` của bậc thang đến từ JSON free-text trong Description, không qua
+    /// validate nào. Bậc ngoài biên 0..100 là cấu hình hỏng và phải bị loại, không được giảm quá đơn.
+    /// </summary>
+    [Fact]
+    public void Tiered_PercentVuot100_BiLoaiBo()
+    {
+        var p = Promotion.Create(
+            code: "TIERBAD", name: "tb",
+            description: "[{\"minQty\":1,\"percent\":5},{\"minQty\":3,\"percent\":500}]",
+            type: PromotionType.Code,
+            startAt: DateTime.UtcNow.AddMinutes(-1),
+            endAt: DateTime.UtcNow.AddDays(1),
+            discountType: PromotionDiscountType.Tiered,
+            discountValue: 0,
+            maxDiscountAmount: null);
+        p.Activate();
+        var ctx = CtxWith((100_000m, 4)); // Subtotal 400k
+
+        var result = MakeEvaluator().Evaluate(p, ctx);
+
+        result.IsApplicable.Should().BeTrue();
+        result.OrderDiscountAmount.Should().Be(20_000m, "bậc 500% bị loại, rơi về bậc 5% hợp lệ");
+        result.OrderDiscountAmount.Should().BeLessThanOrEqualTo(400_000m);
+    }
+
+    /// <summary>W4-5 / M3 — không còn bậc hợp lệ nào thì không áp khuyến mãi.</summary>
+    [Fact]
+    public void Tiered_MoiBacDeuNgoaiBien_ThiKhongApDung()
+    {
+        var p = Promotion.Create(
+            code: "TIERBAD2", name: "tb2",
+            description: "[{\"minQty\":1,\"percent\":150},{\"minQty\":2,\"percent\":-10}]",
+            type: PromotionType.Code,
+            startAt: DateTime.UtcNow.AddMinutes(-1),
+            endAt: DateTime.UtcNow.AddDays(1),
+            discountType: PromotionDiscountType.Tiered,
+            discountValue: 0,
+            maxDiscountAmount: null);
+        p.Activate();
+
+        var result = MakeEvaluator().Evaluate(p, CtxWith((100_000m, 4)));
+
+        result.IsApplicable.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// W4-5 / M4 (D01 §3.1) — số tiền giảm phải TRÒN ĐỒNG. Làm tròn 2 số lẻ để lại phần xu
+    /// trong số báo cho khách và đẩy sang Kế toán ⇒ Subtotal − Discount + Ship ≠ Total.
+    /// </summary>
+    [Fact]
+    public void PhanTram_LamTronDong_KhongDeLaiPhanLe()
+    {
+        // Subtotal 333.333đ, giảm 7% = 23.333,31đ → 23.333đ.
+        var p = ActivePromo(PromotionDiscountType.Percent, 7, maxDiscount: 1_000_000m);
+
+        var result = MakeEvaluator().Evaluate(p, CtxWith((333_333m, 1)));
+
+        result.OrderDiscountAmount.Should().Be(23_333m);
+        (result.OrderDiscountAmount % 1m).Should().Be(0m, "tiền VND không có phần lẻ");
+    }
+
+    /// <summary>W4-5 / M4 — bậc thang cũng phải tròn đồng.</summary>
+    [Fact]
+    public void Tiered_LamTronDong_KhongDeLaiPhanLe()
+    {
+        var p = Promotion.Create(
+            code: "TIERR", name: "tr",
+            description: "[{\"minQty\":1,\"percent\":7}]",
+            type: PromotionType.Code,
+            startAt: DateTime.UtcNow.AddMinutes(-1),
+            endAt: DateTime.UtcNow.AddDays(1),
+            discountType: PromotionDiscountType.Tiered,
+            discountValue: 0,
+            maxDiscountAmount: null);
+        p.Activate();
+
+        var result = MakeEvaluator().Evaluate(p, CtxWith((333_333m, 1)));
+
+        result.OrderDiscountAmount.Should().Be(23_333m);
+    }
 }

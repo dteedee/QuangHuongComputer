@@ -28,7 +28,13 @@ public static class CatalogDbSeeder
     /// <param name="context">Catalog database context</param>
     public static async Task SeedAsync(CatalogDbContext context)
     {
-        // The ten leaf categories the shop actually sells. Seeded only into an empty catalogue
+        // The ten leaf categories the shop actually sells. NAME + SLUG PHẢI KHỚP
+        // Infrastructure/Data/Import/dataset/category-taxonomy.json — đó là nguồn chuẩn duy nhất và
+        // là slug đang chạy trên CSDL thật (URL storefront + sitemap dùng chúng).
+        // Trước đây danh sách này gán cứng slug tiếng Anh (components, screens, gear, network...)
+        // lệch 7/10 so với taxonomy: trên CSDL đã có thì importer làm giàu tại chỗ nên không lộ,
+        // nhưng MỘT LẦN DEPLOY MỚI sẽ sinh ra slug tiếng Anh rồi importer tạo thêm bộ tiếng Việt
+        // => 13 danh mục và URL khác hẳn máy của chủ đầu tư. Seeded only into an empty catalogue
         // (a fresh staging/production database); on the owner's database they already exist and
         // W0-6's importer enriches them in place, keeping their ids - content.HomepageSections
         // embeds six of those ids as raw UUIDs in JSON with no foreign key to protect them.
@@ -39,14 +45,14 @@ public static class CatalogDbSeeder
             {
                 new Category("Laptop - Máy Tính Xách Tay", "laptop"),
                 new Category("Máy Tính Chơi Game", "pc-gaming"),
-                new Category("Máy Tính Đồ Họa", "workstation"),
-                new Category("Màn Hình Máy Tính", "screens"),
-                new Category("Linh Kiện Máy Tính", "components"),
-                new Category("Phím, Chuột - Gaming Gear", "gear"),
-                new Category("Thiết Bị Mạng", "network"),
+                new Category("Máy Tính Đồ Họa", "pc-do-hoa"),
+                new Category("Màn Hình Máy Tính", "man-hinh-may-tinh"),
+                new Category("Linh Kiện Máy Tính", "linh-kien-may-tinh"),
+                new Category("Phím, Chuột - Gaming Gear", "gaming-gear"),
+                new Category("Thiết Bị Mạng", "thiet-bi-mang"),
                 new Category("Camera", "camera"),
-                new Category("Loa, Mic, Webcam, Stream", "audio"),
-                new Category("Phụ Kiện Máy Tính - Laptop", "accessories")
+                new Category("Loa, Mic, Webcam, Stream", "loa-mic-webcam-stream"),
+                new Category("Phụ Kiện Máy Tính - Laptop", "phu-kien-may-tinh-laptop"),
             };
             await context.Categories.AddRangeAsync(categories);
             await context.SaveChangesAsync();

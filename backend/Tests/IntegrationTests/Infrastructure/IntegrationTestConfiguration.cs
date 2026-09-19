@@ -20,7 +20,9 @@ public static class IntegrationTestConfiguration
     /// <summary>API key webhook SePay dùng riêng cho test.</summary>
     public const string SePayApiKey = "qh-test-sepay-api-key";
 
-    public static Dictionary<string, string?> Build(string postgresConnectionString)
+    /// <param name="databaseName">Tên database của collection — cũng dùng làm prefix khoá Redis
+    /// để hai host test (hai database khác nhau) không đọc trúng cache của nhau.</param>
+    public static Dictionary<string, string?> Build(string postgresConnectionString, string databaseName)
     {
         var appSettings = LoadApiGatewaySettings();
         var redis = WithRedisDatabaseOne(appSettings["Redis:ConnectionString"] ?? "localhost:6379");
@@ -32,7 +34,7 @@ public static class IntegrationTestConfiguration
             ["ConnectionStrings:Redis"] = redis,
             ["RabbitMQ:VirtualHost"] = RabbitVirtualHost,
             ["Redis:ConnectionString"] = redis,
-            ["Redis:InstanceName"] = RedisInstanceName,
+            ["Redis:InstanceName"] = $"{RedisInstanceName}{databaseName}:",
             ["Jwt:Key"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
             ["Jwt:Issuer"] = "QuangHuongComputer",
             ["Jwt:Audience"] = "QuangHuongComputer",

@@ -45,12 +45,11 @@ public class PaymentRefund : Entity<Guid>
         Guid? requestedBy,
         string idempotencyKey)
     {
-        if (amount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(amount), "Số tiền hoàn phải lớn hơn 0");
-        if (intent.Status is not (PaymentStatus.Succeeded or PaymentStatus.PartiallyRefunded))
-            throw new InvalidOperationException("Chỉ hoàn được khoản đã thu");
-        if (intent.AmountRefunded + amount > intent.Amount)
-            throw new InvalidOperationException("Tổng hoàn vượt quá số tiền đã thu");
+        // W4-5 / H2 — giữ chỗ NGAY trên intent (số tiền + trạng thái đều kiểm trong đó).
+        // Chốt cũ chỉ so `AmountRefunded`, vốn chỉ tăng lúc HOÀN TẤT, nên N phiếu trọn giá trị
+        // cùng tồn tại ở trạng thái Approved và mỗi phiếu được chuyển khoản tay một lần.
+        // Người gọi phải lưu intent trong cùng SaveChanges với phiếu này.
+        intent.ReserveRefund(amount);
 
         return new PaymentRefund
         {

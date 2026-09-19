@@ -47,7 +47,10 @@ public static class OpeningBalanceSeeder
                     row.AdjustStock(delta, "opening balance (db seed)");
                     db.StockMovements.Add(Movement(row, delta, unitCost));
                 }
-                if (row.AverageCost != unitCost) row.UpdateAverageCost(unitCost);
+                // W4-5 / M7: `UpdateAverageCost` TRỘN thêm 1 đơn vị vào bình quân gia quyền chứ
+                // không GÁN. Với qty > 0 kết quả không bao giờ bằng `unitCost`, và mỗi lần seed lại
+                // giá vốn đầu kỳ lại trôi thêm một nấc. Số dư đầu kỳ là một con số TUYỆT ĐỐI.
+                if (row.AverageCost != unitCost) row.OverrideAverageCost(unitCost);
                 if (summary is not null) summary.InventoryItemsUpdated++;
                 changes++;
                 continue;

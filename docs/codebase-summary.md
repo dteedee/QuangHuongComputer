@@ -1,6 +1,21 @@
 # Codebase Summary
 
-Quick reference for Quang Hưởng Computer architecture, module inventory, roles, and key files. See `docs/modules-features-roles-matrix.md` for detailed permission matrix; `docs/system-architecture.md` for infrastructure; `docs/hacom-design-reference.md` for design tokens.
+Quick reference for Quang Hưởng Computer architecture, module inventory, roles, and key files. See `docs/permission-matrix.md` and `docs/modules-features-roles-matrix.md` for the permission matrix; `docs/system-architecture.md` for infrastructure; `docs/design-guidelines.md` + `docs/ui-kit-components.md` for the design system and UI kit.
+
+## The numbers (2026-09-19, branch `feat/full-system-overhaul`)
+
+| | |
+|---|---|
+| Backend modules | 15 |
+| HTTP endpoints | 938 — all on a permission policy or the 66-entry public allow-list; startup audit fails closed |
+| Roles | 11 |
+| Backend unit tests | 1330 |
+| Backend integration tests | 63 (real ApiGateway on a throwaway Postgres Testcontainer) |
+| Frontend tests | 140 (17 files) |
+| E2E specs | 42 (Playwright, TEST stack only) |
+| Seeded catalogue | 70 curated records → **68 imported, 2 rejected** (fail-closed image rule, D02) |
+
+Build and test only through the wrapper: `scripts/qh-build.sh be <Module.csproj> | be-test | be-test-integration | be-test-all | fe-tsc | fe-lint | fe-test`.
 
 ## Tech Stack
 
@@ -90,7 +105,7 @@ All in `backend/Services/{ModuleName}/`, each with:
 
 ---
 
-## 11 Roles (11 is the canonical count as of 2026-08-19)
+## 11 Roles (canonical count, unchanged through the overhaul)
 
 **Canonical source**: `backend/BuildingBlocks/Security/Permissions.cs` (Roles static class)
 
@@ -99,12 +114,12 @@ All in `backend/Services/{ModuleName}/`, each with:
 | **Admin** | All | Full RW on all modules | Can delete, audit, configure |
 | **Manager** | Sales/Inventory | RW sales/inventory, R accounting, RW HR | Cannot modify config or delete critical records |
 | **Sale** | Sales/Customers | RW orders/cart, R catalog, R CRM | Can view customer history, create quotes |
-| **InventoryStaff** | Inventory | RW inventory (stock/PO/GRN/barcode/scorecard), R catalog/suppliers | NEW (2026-08-19) |
+| **InventoryStaff** | Inventory | RW inventory (stock/PO/GRN/barcode/scorecard), R catalog/suppliers | |
 | **Accountant** | Accounting | RW invoices/AP/AR, R sales/inventory, R tax config | Cannot delete ledger entries |
 | **TechnicianInShop** | Repair/Warranty | RW repair scheduling, R warranty claims, limited warranty lookup | Cannot close claims without manager approval |
 | **TechnicianOnSite** | Repair | RW repair orders (onsite jobs), R customer address | Cannot access inventory |
 | **Marketing** | Content/Campaigns | RW content/coupons/banners, R reporting | No access to customer PII beyond segment |
-| **HR** | HR/Payroll | RW HR (attendance/payroll/contracts), R employee directory | NEW (2026-08-19), no access to accounting |
+| **HR** | HR/Payroll | RW HR (attendance/payroll/contracts), R employee directory | no access to accounting |
 | **Customer** | Self-service | R own orders/warranty, RW cart/checkout, limited RW profile | Highest restriction; orders public API |
 | **Supplier** | Self-service | R RFQ/PO for their SKUs, R scorecard metrics | Read-only supplier portal |
 
@@ -112,40 +127,29 @@ All in `backend/Services/{ModuleName}/`, each with:
 
 ---
 
-## Key New Files (2026-08-19)
-
-### Frontend
-- `frontend/src/hooks/use-company-info.ts` — Typed company info hook (cached, config fallback). Returns: `{ name, nameEn, shortName, taxCode, address, phone, email, hotline, workingHours, brandText1, brandText2, ... }`
-- `frontend/src/components/header/header-top-bar.tsx` — Quang Hưởng brand strip (red bg, tagline, category link)
-- `frontend/src/components/header/header-utility-bar.tsx` — Hotline, store finder, support, order lookup, account
-- `frontend/src/components/header/header-search-pill.tsx` — Search box with red border, icon
-- `frontend/src/components/homepage/category-sidebar-menu.tsx` — Sidebar category navigation (desktop)
-- `frontend/src/components/product-section-header.tsx` — Reusable section title + brand pills + "Xem tất cả"
-- `frontend/src/components/backoffice/backoffice-sidebar.tsx` — Collapsible sidebar (persist state)
-- `frontend/src/components/backoffice/backoffice-sidebar-menu-config.ts` — Menu fallback + icon map
-- `frontend/src/components/backoffice/backoffice-topbar.tsx` — Minimal topbar
-- `frontend/src/layouts/BackofficeLayout.tsx` — Refactored < 150 lines (was 982)
+## Key files of the 2026-09 overhaul
 
 ### Backend
-- `backend/Services/SystemConfig/Infrastructure/Data/SystemConfigSeedData*.cs` — Split seeder (company, operations, system) for readability
-- `backend/BuildingBlocks/TaxEngine/ITaxSettingsProvider.cs` — Abstraction for config-driven tax constants
-- `backend/BuildingBlocks/Validation/ValidationEndpointFilter.cs` — Endpoint middleware for request validation
-- `backend/BuildingBlocks/Validation/FluentValidationExtensions.cs` — `AddApplicationValidators()`, `WithValidation<T>()` extension
-- `backend/Services/{Module}/Validators/{Request}Validator.cs` — FluentValidation per module (Accounting, CRM, Inventory)
-- `backend/Services/Accounting/Templates/InvoiceHtmlTemplate.cs` — Real HTML invoice render (company info from config)
-- `backend/Services/Inventory/BarcodeEndpoints.cs` — Code128 + QR generation (base64 PNG)
-- `backend/Services/Inventory/Application/Suppliers/SupplierScorecardService.cs` — Added `ExpectedDeliveryDate`, on-time rate calc
-- `backend/Tests/UnitTests/SystemConfig/ConfigSeederIdempotentTests.cs` — Seeder test
-- `backend/Tests/UnitTests/Security/PermissionsAndRolesTests.cs` — Permission/role validation
+- `backend/ApiGateway/Startup/DatabaseMigrationRunner.cs` - the `db migrate` / `db seed --profile <reference|demo>` CLI, the ordered seed-step registry, and the production admin bootstrap. Every step reports how many rows it changed; a re-run must total **0**.
+- `backend/Services/Catalog/Infrastructure/Data/Import/` - the versioned product dataset (`dataset/`, 70 records) and its idempotent importer: deterministic ids, canonicalised jsonb, normalised decimals, media rows upserted by `(SKU, path)`, and the fail-closed rule that refuses any product whose `imageStatus` is not `ok`.
+- `backend/BuildingBlocks/Security/EndpointAuthorizationAuditor.cs` + `PublicEndpointAllowList.cs` - the startup audit over the real route table and the 66-entry public allow-list (each entry carries its file:line justification). `Security:EndpointAuthorizationAudit:FailOnViolation` turns a warning into a refusal to start.
+- `backend/BuildingBlocks/TaxEngine/` - D01 money kernel: VAT extracted per line from VAT-inclusive prices, discount allocator with clamp / zero-denominator / tie-break rules, totals rounded to the dong (AwayFromZero).
+- `backend/BuildingBlocks/Platform/` - `IAppSettings`, `IBusinessClock` (Vietnam time), document numbering, error / validation / paging conventions.
+- `backend/ApiGateway/Seo/` - the SEO shell: head + JSON-LD rendering per route, `sitemap.xml`, `robots.txt`, output caching, real status codes (D11).
+- `backend/Tests/IntegrationTests/` - the real ApiGateway on a throwaway Postgres Testcontainer: fresh install (every migration applied, every table present, every DbSet queryable, **seed run twice changes 0 rows**), the authorization matrix, session lifecycle, checkout money integrity, SePay webhook signature.
 
-### Docs
-- `docs/project-changelog.md` — Detailed 2026-08-19 entry (new file)
-- `docs/development-roadmap.md` — Phases, backlog, metrics, risks (new file)
-- `docs/modules-features-roles-matrix.md` — 15 modules × 11 roles, feature list per module (created Aug 19)
-- `docs/hacom-design-reference.md` — Design patterns, tokens (existing, reference for UI)
-- `docs/system-architecture.md` — Modular monolith, .NET 8, Vite 6 (updated Aug 19)
+### Frontend
+- `frontend/src/design-system/` - semantic light/dark tokens, type scale, motion spec (`motion/`), variants.
+- `frontend/src/components/ui/` - the single UI kit (see `docs/ui-kit-components.md`); no parallel primitive sets.
+- `frontend/src/routes/*.routes.ts` - typed route manifest per area; guards and the backoffice menu are generated from it.
+- `frontend/src/schemas/` + form kit - React Hook Form + Zod (`docs/frontend-form-kit.md`).
+- `frontend/src/api/` - one client per module, written against `docs/api-contracts/`.
 
----
+### Ops
+- `scripts/stack-up.sh` - the one bring-up sequence (`make up` and `make deploy` both call it), including the safety stop that refuses a Postgres container owned by a different compose project.
+- `scripts/qh-build.sh` - the only sanctioned compile/test entry point (serialised by a lock, capped MSBuild, artifacts kept out of the running tree).
+- `deploy/Caddyfile`, `deploy/backup/backup.sh`, `deploy/backup/restore-drill.sh` - TLS edge, tiered (optionally age-encrypted) dumps, and a restore drill that really restores.
+
 
 ## Directory Structure (Backend)
 
@@ -266,33 +270,43 @@ frontend/
 | `backend/ApiGateway/Program.cs` | DI + middleware | Register new validator/service |
 | `frontend/src/design-system/brand-tokens.ts` | Colors, spacing | Update brand/theme |
 | `frontend/src/hooks/use-company-info.ts` | Company data | Never (config-driven) |
-| `docs/modules-features-roles-matrix.md` | Role matrix | After permission change |
+| `backend/BuildingBlocks/Security/PublicEndpointAllowList.cs` | The only way an endpoint may be public | Adding a genuinely public route — with a file:line justification |
+| `backend/ApiGateway/Startup/DatabaseMigrationRunner.cs` | Seed steps and their order | Adding reference data (a re-run must still total 0 changes) |
+| `docs/modules-features-roles-matrix.md`, `docs/permission-matrix.md` | Role matrix | After permission change |
 | `docs/system-architecture.md` | Tech overview | After infra upgrade |
+| `docs/development-roadmap.md` | What is done and what is open | After closing or finding a defect |
 
 ---
 
 ## Testing
 
-- **Unit tests**: `backend/Tests/UnitTests/` (677 tests, all PASS)
-- **Test categories**: Config seeding, Tax engine, Permissions, Validation, RFM, Barcode, Invoice HTML
-- **Frontend type check**: `cd frontend && npx tsc --noEmit`
-- **Frontend build**: `npm run build` (13.15s)
+Four layers, all run through `scripts/qh-build.sh` (never `dotnet test` directly — the wrapper
+holds the lock that keeps parallel work from exhausting the machine):
 
-**Run tests**: `dotnet test backend/Tests/UnitTests/UnitTests.csproj`
+| Layer | Command | Count |
+|---|---|---|
+| Backend unit | `scripts/qh-build.sh be-test` | 1330 |
+| Backend integration (real ApiGateway + throwaway Postgres container) | `scripts/qh-build.sh be-test-integration` | 63 |
+| Both (wave gate) | `scripts/qh-build.sh be-test-all` | — |
+| Frontend unit | `scripts/qh-build.sh fe-test` | 140 |
+| Frontend typecheck / lint | `scripts/qh-build.sh fe-tsc` / `fe-lint` | 0 errors |
+| E2E | `npx playwright test` against the TEST stack (`scripts/qh-test-env.sh`) | 42 |
+
+The integration suite starts from an **empty** database in one command and covers: every migration
+applied, every model table present, every DbSet queryable, **`db seed` run twice changing 0 rows**,
+the authorization matrix, the session lifecycle (refresh rotation, reuse detection), checkout money
+integrity, and the SePay webhook signature. The E2E suite refuses to run unless the base URL is the
+TEST stack (:5050), so it cannot write into live data.
 
 ---
 
-## Deployment Checklist
+## Deployment
 
-- [ ] Backend: `dotnet build` PASS, `dotnet test` all PASS
-- [ ] Frontend: `tsc --noEmit` 0 errors, `npm run build` success
-- [ ] DB: migrations applied (`dotnet ef database update`)
-- [ ] Redis: connection OK
-- [ ] RabbitMQ: connection OK, queues created
-- [ ] Config seeded: grep `0200807633` in DB
-- [ ] No hardcoded secrets in code (use env vars)
-- [ ] CORS policy set for frontend domain
-- [ ] HTTPS enabled (self-signed OK for staging)
+`docs/deployment-guide.md` is the authority — it was rewritten from an actual rehearsal on a clean
+clone (build → empty DB → migrate → seed → HTTPS edge → 68 products → admin login → encrypted
+backup → restore drill). In short: `scripts/stack-up.sh` is the one bring-up sequence,
+`make check-secrets` blocks a deploy while a `CHANGE_ME` placeholder remains, and `make backup-up`
+must be run or there are no backups at all. Do not re-derive the procedure from this file.
 
 ---
 
@@ -317,6 +331,5 @@ Two complementary mechanisms let admins extend the data model and admin data-gri
 
 ---
 
-**Last updated**: 2026-08-19  
-**Maintained by**: docs-manager agent  
-**See also**: `docs/development-roadmap.md`, `docs/system-architecture.md`, `docs/modules-features-roles-matrix.md`, `docs/hacom-design-reference.md`
+**Last updated**: 2026-09-19 (after wave 4 of the full-system overhaul)  
+**See also**: `docs/development-roadmap.md` (what is left), `docs/system-architecture.md`, `docs/permission-matrix.md`, `docs/deployment-guide.md`, `docs/design-guidelines.md`

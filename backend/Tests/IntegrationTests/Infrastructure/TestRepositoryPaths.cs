@@ -15,6 +15,10 @@ public static class TestRepositoryPaths
 
     public static string ApiGatewayContentRoot => Path.Combine(RepoRoot, "backend", "ApiGateway");
 
+    /// <summary>Thư mục dataset catalogue (QH_IMPORT_DATASET) của bước seed "catalog.products".</summary>
+    public static string CatalogDatasetRoot => Path.Combine(
+        RepoRoot, "backend", "Services", "Catalog", "Infrastructure", "Data", "Import", "dataset");
+
     private static string ResolveRepoRoot()
     {
         var embedded = Assembly.GetExecutingAssembly()

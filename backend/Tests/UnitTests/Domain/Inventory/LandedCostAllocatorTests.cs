@@ -202,4 +202,29 @@ public class LandedCostAllocatorTests
         result.TotalCost.Should().Be(7_000_000m);
         item.AverageCost.Should().Be(10_070_000m);
     }
+
+    /// <summary>
+    /// W4-5 / M8 — lô đã bán một phần: chỉ phần cước thuộc số ĐƠN VỊ CÒN TRONG KHO được vốn hoá.
+    /// Công thức cũ (tử số = số NHẬN, mẫu số = số CÒN) thổi giá vốn lên gấp 10 lần.
+    /// </summary>
+    [Fact]
+    public async Task LoDaBanMotPhan_PhanBoCuocKhongThoiGiaVon()
+    {
+        using var db = NewDb();
+        var (grn, item) = SeedOneLineGrn(db, qty: 10, unitCost: 100_000m);
+
+        // Bán 9 cái trước khi hoá đơn cước về.
+        item.IssueStock(9);
+        await db.SaveChangesAsync();
+        item.QuantityOnHand.Should().Be(1);
+
+        db.LandedCosts.Add(new LandedCost(grn.Id, LandedCostType.Shipping, "Cước", 100_000m));
+        await db.SaveChangesAsync();
+
+        await new LandedCostAllocator(db).AllocateAsync(grn.Id);
+
+        // Cước 10.000đ/đơn vị; chỉ 1 đơn vị còn trong kho ⇒ 100.000 + 10.000.
+        item.AverageCost.Should().Be(110_000m);
+        item.TotalCostValue.Should().Be(110_000m, "giá trị tồn không được tự sinh ra tiền");
+    }
 }

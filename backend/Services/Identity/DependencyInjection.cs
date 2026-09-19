@@ -55,7 +55,8 @@ public static class DependencyInjection
         .AddDefaultTokenProviders();
 
         var jwtSettings = configuration.GetSection("Jwt");
-        var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "super_secret_key_1234567890123456");
+        // W4-5 / M11: không có khoá mặc định — thiếu/yếu thì API không khởi động (JwtSigningKeyResolver).
+        var key = Identity.Services.JwtSigningKeyResolver.ResolveBytes(configuration);
 
         services.AddAuthentication(options =>
         {

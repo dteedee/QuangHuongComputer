@@ -109,12 +109,11 @@ is the contract: every seeder is an upsert by natural key, so running it again i
 run reports a non-zero total on a database nobody touched, a seeder is rewriting a row it should
 have left alone — find it by the per-step lines, do not "fix" it by ignoring the total.
 
-**This contract is currently broken and the breakage is known.** As of 2026-09-19 a second
-`db seed --profile reference` reports `catalog.products: 10 change(s)` forever: the importer's
-`categories updated : 10` counter fires on every run (products themselves report
-`0 created, 0 updated, 68 unchanged, 2 rejected`). It is harmless — 10 category rows are rewritten
-with identical values — but until it is fixed, "10" is the new floor and anything above it is the
-signal to investigate.
+**Đã sửa 2026-09-19 — hợp đồng này nay đúng: chạy lại phải ra 0.** Trước đó lần seed thứ hai
+báo `catalog.products: 10 change(s)` mãi. Hoá ra **không có dòng nào bị ghi lại**: bộ so sánh
+nội suy giá trị vào chuỗi, Postgres trả `VatRate = 0.1000` còn file danh mục cho ra `0.10` —
+hai số bằng nhau, EF không đánh dấu thay đổi, chỉ có bộ đếm là sai. Đã chuẩn hoá về định dạng
+bất biến. Từ nay **bất kỳ số nào khác 0 ở lần chạy thứ hai đều là dữ liệu lệch thật**, phải điều tra.
 
 ### Running the verbs without the API binary
 

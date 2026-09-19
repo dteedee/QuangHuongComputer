@@ -137,6 +137,21 @@ public sealed class CatalogReferenceImporter
         return result;
     }
 
+    /// <summary>
+    /// Change detection for the "a second run changes nothing" guarantee.
+    ///
+    /// <c>VatRate</c> MUST be normalised, exactly as ProductDatasetImporter.Snapshot normalises
+    /// money: the column is <c>numeric(5,4)</c>, so Postgres hands back <c>0.1000</c> while the
+    /// taxonomy file's <c>0.10</c> deserialises to <c>0.10</c>. The two decimals are EQUAL
+    /// (EF therefore marked nothing modified and wrote no row), but their default ToString()
+    /// differs - which is why every re-run reported all 10 categories as "updated" and
+    /// `db seed` printed "10 change(s)" forever over zero actual writes.
+    /// Interpolation is also culture-sensitive; the invariant format kills that too.
+    /// </summary>
     private static string Snapshot(Category c)
-        => $"{c.Name}|{c.Slug}|{c.DisplayOrder}|{c.IsSerialTracked}|{c.VatRate}|{c.MetaTitle}|{c.MetaDescription}|{c.IsActive}";
+        => string.Join('|', c.Name, c.Slug, c.DisplayOrder, c.IsSerialTracked, Num(c.VatRate),
+            c.MetaTitle, c.MetaDescription, c.IsActive);
+
+    private static string Num(decimal value)
+        => value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture);
 }

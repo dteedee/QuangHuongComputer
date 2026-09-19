@@ -1,3 +1,4 @@
+using Accounting.Application.TaxReporting;
 using BuildingBlocks.Security;
 using BuildingBlocks.Time;
 using Accounting.Domain;
@@ -23,8 +24,9 @@ public static class TaxReportingEndpoints
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
 
+            // W4-5 / H3: chỉ hoá đơn ĐÃ phát hành và CHƯA huỷ mới lên bảng kê.
             var invoices = await db.Invoices
-                .Where(i => i.Type == invoiceType && i.IssueDate >= start && i.IssueDate < end)
+                .Declarable(invoiceType, start, end)
                 .OrderBy(i => i.IssueDate)
                 .ToListAsync();
 
@@ -37,6 +39,27 @@ public static class TaxReportingEndpoints
                 TaxRate = i.VatRate,
                 TaxAmount = i.VatAmount
             }).ToList();
+
+            // W4-5 / H3: giấy báo có là hoá đơn điều chỉnh — phải nằm trên bảng kê bán ra
+            // với dấu ÂM, nếu không tổng bảng kê không bao giờ khớp tờ khai.
+            if (invoiceType == InvoiceType.Receivable)
+            {
+                var adjustments = await db.CreditNotes
+                    .DeclarableAdjustments(start, end)
+                    .OrderBy(c => c.IssueDate)
+                    .ToListAsync();
+
+                records.AddRange(adjustments.Select(c => new
+                {
+                    InvoiceNo = c.CreditNoteNumber,
+                    Date = c.IssueDate,
+                    Buyer = c.CustomerId?.ToString() ?? "N/A",
+                    Gross = TaxDeclarationCalculator.Sign(c.Type) * c.NetAmount,
+                    TaxRate = c.VatRate,
+                    TaxAmount = TaxDeclarationCalculator.Sign(c.Type) * c.VatAmount
+                }));
+                records = records.OrderBy(r => r.Date).ToList();
+            }
 
             return Results.Ok(new
             {
@@ -59,22 +82,10 @@ public static class TaxReportingEndpoints
                 period ?? $"{today.Year}-{today.Month:D2}",
                 type ?? "monthly");
 
-            // Output VAT (thuế đầu ra) - from sales invoices
-            var outputInvoices = await db.Invoices
-                .Where(i => i.Type == InvoiceType.Receivable && i.IssueDate >= start && i.IssueDate < end)
-                .ToListAsync();
-
-            var totalOutputVat = outputInvoices.Sum(i => i.VatAmount);
-            var totalOutputRevenue = outputInvoices.Sum(i => i.TotalAmount - i.VatAmount);
-
-            // Input VAT (thuế đầu vào) - from purchase invoices
-            var inputInvoices = await db.Invoices
-                .Where(i => i.Type == InvoiceType.Payable && i.IssueDate >= start && i.IssueDate < end)
-                .ToListAsync();
-
-            var totalInputVat = inputInvoices.Sum(i => i.VatAmount);
-
-            var vatPayable = totalOutputVat - totalInputVat;
+            // W4-5 / H3: bỏ hoá đơn nháp/đã huỷ và ĐẢO phần đã lập giấy báo có (xem
+            // TaxDeclarationCalculator — đây là số lên tờ khai, không được phép khai vống).
+            var declaration = await TaxDeclarationCalculator.BuildVatDeclarationAsync(db, start, end);
+            var vatPayable = declaration.VatPayable;
 
             return Results.Ok(new
             {
@@ -82,8 +93,21 @@ public static class TaxReportingEndpoints
                 Type = type ?? "monthly",
                 StartDate = start,
                 EndDate = end,
-                OutputVat = new { InvoiceCount = outputInvoices.Count, Revenue = totalOutputRevenue, VatAmount = totalOutputVat },
-                InputVat = new { InvoiceCount = inputInvoices.Count, VatAmount = totalInputVat },
+                OutputVat = new
+                {
+                    InvoiceCount = declaration.OutputInvoiceCount,
+                    Revenue = declaration.NetRevenue,
+                    VatAmount = declaration.NetOutputVat,
+                    GrossRevenue = declaration.OutputRevenue,
+                    GrossVatAmount = declaration.OutputVat
+                },
+                Adjustments = new
+                {
+                    Count = declaration.AdjustmentCount,
+                    Revenue = declaration.AdjustmentRevenue,
+                    VatAmount = declaration.AdjustmentVat
+                },
+                InputVat = new { InvoiceCount = declaration.InputInvoiceCount, VatAmount = declaration.InputVat },
                 VatPayable = vatPayable,
                 VatRefundable = vatPayable < 0 ? Math.Abs(vatPayable) : 0
             });
@@ -95,9 +119,8 @@ public static class TaxReportingEndpoints
             var start = new DateTime(year, 1, 1);
             var end = start.AddYears(1);
 
-            var totalRevenue = await db.Invoices
-                .Where(i => i.Type == InvoiceType.Receivable && i.IssueDate >= start && i.IssueDate < end)
-                .SumAsync(i => i.SubTotal);
+            // W4-5 / H3: doanh thu TNDN cũng phải bỏ hoá đơn nháp/huỷ và trừ giấy báo có.
+            var totalRevenue = await TaxDeclarationCalculator.BuildCitRevenueAsync(db, start, end);
 
             var deductibleExpenses = await db.Expenses
                 .Where(e => e.Status == ExpenseStatus.Paid && e.ExpenseDate >= start && e.ExpenseDate < end)

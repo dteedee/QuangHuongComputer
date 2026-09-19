@@ -16,10 +16,20 @@ namespace IntegrationTests.Infrastructure;
 /// <summary>
 /// Một container PostgreSQL + một host ApiGateway dùng chung cho cả collection.
 /// Dựng container tốn ~5s và ngốn RAM, nên tuyệt đối không dựng theo từng test class.
+///
+/// Tên database là tham số của lớp: mỗi collection có database RIÊNG. Collection nghiệp vụ dùng
+/// <c>qh_integration</c>; <see cref="FreshInstallFixture"/> dùng database riêng vì bài test "cài
+/// mới" chỉ có nghĩa trên một database KHÔNG có test nào khác ghi vào (xem FreshInstallFixture.cs).
 /// </summary>
-public sealed class IntegrationTestFixture : IAsyncLifetime
+public class IntegrationTestFixture : IAsyncLifetime
 {
-    private const string DatabaseName = "qh_integration";
+    private readonly string _databaseName;
+
+    /// <summary>Collection nghiệp vụ dùng chung: database mặc định.</summary>
+    public IntegrationTestFixture() : this("qh_integration") { }
+
+    /// <param name="databaseName">Database riêng của collection (không bao giờ là DB của chủ máy).</param>
+    protected IntegrationTestFixture(string databaseName) => _databaseName = databaseName;
 
     private PostgreSqlContainer _postgres = default!;
     private WebApplicationFactory<ApiGateway.GatewayChatRequest> _factory = default!;
@@ -42,9 +52,16 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         // container của chủ máy, không cho phép bất kỳ tiến trình reaper nào lảng vảng.
         Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
 
+        // Bộ dữ liệu catalogue PHẢI được trỏ tường minh. qh-build.sh dùng --artifacts-path nên
+        // assembly test nằm ngoài cây repo: FindDataset() dò ngược từ AppContext.BaseDirectory
+        // không bao giờ thấy dataset, bước seed "catalog.products" bị bỏ qua với một cảnh báo, và
+        // test idempotent bên dưới trở thành test rỗng — đúng cái kẽ hở đã để lọt lỗi D-8
+        // (mỗi lần seed lại báo "10 change(s)" do so sánh VatRate bằng chuỗi).
+        Environment.SetEnvironmentVariable("QH_IMPORT_DATASET", TestRepositoryPaths.CatalogDatasetRoot);
+
         _postgres = new PostgreSqlBuilder()
             .WithImage("postgres:16")
-            .WithDatabase(DatabaseName)
+            .WithDatabase(_databaseName)
             .WithUsername("postgres")
             .WithPassword("postgres")
             .WithCleanUp(true)
@@ -54,9 +71,9 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
 
         PostgresConnectionString = _postgres.GetConnectionString() + ";Include Error Detail=true";
         DatabaseSafetyGuard.AssertIsThrowawayContainer(
-            PostgresConnectionString, DatabaseName, _postgres.GetMappedPublicPort(5432));
+            PostgresConnectionString, _databaseName, _postgres.GetMappedPublicPort(5432));
 
-        var overrides = IntegrationTestConfiguration.Build(PostgresConnectionString);
+        var overrides = IntegrationTestConfiguration.Build(PostgresConnectionString, _databaseName);
 
         // Đặt qua BIẾN MÔI TRƯỜNG chứ không chỉ ConfigureAppConfiguration: các module đọc
         // configuration.GetConnectionString(...) NGAY LÚC ĐĂNG KÝ DI (Catalog/DependencyInjection.cs:16)
@@ -130,7 +147,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         foreach (var context in DatabaseMigrationRunner.ResolveAllContexts(scope.ServiceProvider))
         {
             DatabaseSafetyGuard.AssertIsThrowawayContainer(
-                context.Database.GetConnectionString() ?? "", DatabaseName, port);
+                context.Database.GetConnectionString() ?? "", _databaseName, port);
         }
     }
 }

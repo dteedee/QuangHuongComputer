@@ -115,10 +115,19 @@ public class LandedCostAllocator
                 // newAvg = (oldQtyBeforeThisLot × oldAvgBefore + line.Qty × unitCostActual) / (oldQtyBefore + line.Qty)
                 // oldQtyBefore = (QuantityOnHand hiện tại) - line.Quantity nếu GRN đã confirm.
                 // Tại thời điểm này QuantityOnHand đã bao gồm line.Quantity → oldQtyBefore = QuantityOnHand - line.Quantity.
-                var qtyBefore = Math.Max(0, invItem.QuantityOnHand - line.Quantity);
-                var totalValueBefore = qtyBefore * invItem.AverageCost;
+                //
+                // W4-5 / M8: tử số KHÔNG được dùng `line.Quantity` (số NHẬN) trong khi mẫu số là
+                // `QuantityOnHand` (số CÒN). Nhận 10@100k, bán 9 rồi mới phân bổ 100k cước thì công
+                // thức cũ cho (0 + 10×110k)/1 = 1.100.000đ/đơn vị — giá vốn thổi gấp 10 lần, và
+                // `OverrideAverageCost` chỉ chặn số âm nên không có chốt nào bắt được.
+                //
+                // Chỉ phần cước thuộc số đơn vị CÒN NẰM TRONG KHO mới được vốn hoá; phần thuộc số
+                // đã bán là chi phí của kỳ (giá vốn đã xuất, ngoài phạm vi của allocator này).
+                var landedPerUnit = line.Quantity > 0 ? share / line.Quantity : 0m;
+                var unitsStillOnHand = Math.Min(line.Quantity, invItem.QuantityOnHand);
                 var newAvg = invItem.QuantityOnHand > 0
-                    ? (totalValueBefore + line.Quantity * unitCostActual) / invItem.QuantityOnHand
+                    ? ((invItem.QuantityOnHand * invItem.AverageCost) + (landedPerUnit * unitsStillOnHand))
+                      / invItem.QuantityOnHand
                     : unitCostActual;
                 invItem.OverrideAverageCost(newAvg);
 

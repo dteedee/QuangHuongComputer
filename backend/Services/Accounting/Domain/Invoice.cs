@@ -210,8 +210,11 @@ public class Invoice : AggregateRoot<Guid>
         if (amount <= 0)
             throw new ArgumentException("Số tiền thanh toán phải lớn hơn 0.", nameof(amount));
 
-        var existingApplications = _paymentApplications.Sum(pa => pa.Amount);
-        PaymentApplication.ValidateTotalApplications(OutstandingAmount, existingApplications, amount);
+        // W4-5 / H4 — các lần ghi nhận TRƯỚC đã nằm trong `PaidAmount`, mà `OutstandingAmount`
+        // chính là `TotalAmount - PaidAmount`. Cộng `_paymentApplications` vào nữa là trừ HAI LẦN:
+        // hoá đơn trả góp 1.000.000 đã thu 400.000 sẽ từ chối chính khoản 600.000 tất toán nó.
+        // Chốt đúng: khoản mới không được vượt phần còn phải thu.
+        PaymentApplication.ValidateTotalApplications(OutstandingAmount, existingApplications: 0m, amount);
 
         _paymentApplications.Add(PaymentApplication.Create(paymentIntentId, Id, amount, notes));
         PaidAmount += amount;

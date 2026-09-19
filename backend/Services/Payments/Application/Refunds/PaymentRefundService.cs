@@ -126,6 +126,10 @@ public sealed class PaymentRefundService
         try { refund.Reject(reason); }
         catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
 
+        // W4-5 / H2 — phiếu đóng lại thì nhả chỗ đã giữ, nếu không hạn mức hoàn bị khoá vĩnh viễn.
+        var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.Id == refund.PaymentIntentId, ct);
+        intent?.ReleaseRefundReservation(refund.Amount);
+
         await _db.SaveChangesAsync(ct);
         return refund;
     }

@@ -36,6 +36,17 @@ public class PaymentIntent : AggregateRoot<Guid>
     /// <summary>Tổng đã hoàn cho khách.</summary>
     public decimal AmountRefunded { get; private set; }
 
+    /// <summary>
+    /// W4-5 / H2 — tổng của các phiếu hoàn ĐANG MỞ (Requested / Approved / Failed-chờ-làm-tay).
+    ///
+    /// Hoàn tiền là chuyển khoản TAY: tiền rời ngân hàng ở bước duyệt-rồi-chuyển, còn
+    /// <see cref="AmountRefunded"/> chỉ nhúc nhích lúc kế toán bấm "đã trả". Nếu chỉ chốt trên
+    /// <see cref="AmountRefunded"/> thì N phiếu, mỗi phiếu bằng trọn số đã thu, đều tạo và duyệt
+    /// được cùng lúc. Nên phần "đã hứa trả" phải được GIỮ CHỖ ngay khi lập phiếu, trong cùng một
+    /// <c>SaveChanges</c> với phiếu đó, và CSDL chốt <c>AmountRefunded + AmountRefundPending &lt;= Amount</c>.
+    /// </summary>
+    public decimal AmountRefundPending { get; private set; }
+
     /// <summary>Mã tham chiếu ngân hàng khi kế toán xác nhận tay (`Payments.Reconcile`).</summary>
     public string? ReconciliationReference { get; private set; }
 
@@ -144,6 +155,32 @@ public class PaymentIntent : AggregateRoot<Guid>
         return true;
     }
 
+    /// <summary>
+    /// W4-5 / H2 — giữ chỗ cho một phiếu hoàn vừa lập. Ném khi tổng (đã hoàn + đang mở + phiếu mới)
+    /// vượt số đã thu. Người gọi PHẢI lưu intent trong cùng <c>SaveChanges</c> với phiếu hoàn.
+    /// </summary>
+    public void ReserveRefund(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(amount), "Số tiền hoàn phải lớn hơn 0");
+        if (Status is not (PaymentStatus.Succeeded or PaymentStatus.PartiallyRefunded))
+            throw new InvalidOperationException($"Chỉ hoàn được khoản đã thu (trạng thái hiện tại: {Status})");
+        if (AmountRefunded + AmountRefundPending + amount > Amount)
+            throw new InvalidOperationException("Tổng hoàn (kể cả phiếu đang chờ) vượt quá số tiền đã thu");
+
+        AmountRefundPending += amount;
+    }
+
+    /// <summary>
+    /// Nhả chỗ đã giữ: phiếu bị từ chối, hoặc chỗ giữ chuyển thành tiền đã hoàn thật.
+    /// Kẹp ở 0 để phiếu cũ (lập trước W4-5, chưa có chỗ giữ) không đẩy cột xuống âm.
+    /// </summary>
+    public void ReleaseRefundReservation(decimal amount)
+    {
+        if (amount <= 0) return;
+        AmountRefundPending = Math.Max(0m, AmountRefundPending - amount);
+    }
+
     /// <summary>Ghi nhận một khoản hoàn ĐÃ TRẢ cho khách. Trả về true nếu đã hoàn hết.</summary>
     public bool RegisterRefund(decimal amount)
     {
@@ -154,6 +191,8 @@ public class PaymentIntent : AggregateRoot<Guid>
         if (AmountRefunded + amount > Amount)
             throw new InvalidOperationException("Tổng hoàn vượt quá số tiền đã thu");
 
+        // Chỗ giữ của chính phiếu này trở thành tiền đã hoàn — tổng (đã hoàn + đang giữ) không đổi.
+        ReleaseRefundReservation(amount);
         AmountRefunded += amount;
         var full = AmountRefunded >= Amount;
         Status = full ? PaymentStatus.Refunded : PaymentStatus.PartiallyRefunded;

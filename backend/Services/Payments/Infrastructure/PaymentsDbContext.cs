@@ -45,6 +45,7 @@ public class PaymentsDbContext : DbContext
                 .HasDatabaseName("IX_PaymentIntents_PaymentCode")
                 .HasFilter("\"PaymentCode\" IS NOT NULL");
             entity.Property(e => e.AmountRefunded).HasPrecision(18, 2);
+            entity.Property(e => e.AmountRefundPending).HasPrecision(18, 2);
             entity.Property(e => e.ReconciliationReference).HasMaxLength(100);
 
             entity.ToTable(t =>
@@ -54,6 +55,10 @@ public class PaymentsDbContext : DbContext
                 t.HasCheckConstraint(
                     "CK_PaymentIntents_Refund_NotOverAmount",
                     "\"AmountRefunded\" >= 0 AND \"AmountRefunded\" <= \"Amount\"");
+                // W4-5 / H2: phiếu hoàn ĐANG MỞ cũng là tiền đã hứa trả — tổng phải nằm trong số đã thu.
+                t.HasCheckConstraint(
+                    "CK_PaymentIntents_RefundPending_NotOverAmount",
+                    "\"AmountRefundPending\" >= 0 AND \"AmountRefunded\" + \"AmountRefundPending\" <= \"Amount\"");
             });
         });
 

@@ -51,11 +51,17 @@ public class PromotionEvaluator
 
     private static PromotionEvaluationResult ApplyPercent(Promotion p, PricingContext ctx)
     {
-        var raw = decimal.Round(ctx.Subtotal * (p.DiscountValue / 100m), 2);
+        // W4-5 / M4 (D01 §3.1): tiền VND tròn ĐỒNG, AwayFromZero. `decimal.Round(x, 2)` để lại
+        // phần lẻ xu trong số báo cho khách và đẩy sang Kế toán, trong khi tổng đơn đã bị cắt tròn
+        // đồng ở allocator ⇒ Subtotal − Discount + Ship ≠ Total, lệch tới 0,99đ.
+        var raw = RoundDong(ctx.Subtotal * (p.DiscountValue / 100m));
         if (p.MaxDiscountAmount.HasValue && raw > p.MaxDiscountAmount.Value)
             raw = p.MaxDiscountAmount.Value;
         return Ok(raw, 0, 0);
     }
+
+    /// <summary>D01 §3.1 — mọi số tiền VND làm tròn về ĐỒNG, nửa đơn vị làm tròn ra xa số 0.</summary>
+    private static decimal RoundDong(decimal amount) => Math.Round(amount, 0, MidpointRounding.AwayFromZero);
 
     private static PromotionEvaluationResult ApplyFixed(Promotion p, PricingContext ctx)
     {
@@ -115,7 +121,7 @@ public class PromotionEvaluator
         if (applicable is null || applicable.Percent <= 0)
             return PromotionEvaluationResult.NotApplicable("Chưa đạt bậc tối thiểu");
 
-        var raw = decimal.Round(ctx.Subtotal * (applicable.Percent / 100m), 2);
+        var raw = RoundDong(ctx.Subtotal * (applicable.Percent / 100m));
         if (p.MaxDiscountAmount.HasValue && raw > p.MaxDiscountAmount.Value)
             raw = p.MaxDiscountAmount.Value;
         return Ok(raw, 0, 0);
@@ -139,8 +145,16 @@ public class PromotionEvaluator
             if (doc.RootElement.ValueKind != JsonValueKind.Array) return list;
             foreach (var el in doc.RootElement.EnumerateArray())
             {
-                if (el.TryGetProperty("minQty", out var q) && el.TryGetProperty("percent", out var pct))
-                    list.Add(new TierEntry(q.GetInt32(), pct.GetDecimal()));
+                if (!el.TryGetProperty("minQty", out var q) || !el.TryGetProperty("percent", out var pct))
+                    continue;
+
+                // W4-5 / M3: `percent` đến từ JSON free-text trong `Promotion.Description`, không đi
+                // qua bất kỳ validate nào của `Promotion.Create` (loại Percent thì CÓ chặn > 100).
+                // Bậc ngoài biên 0..100 là cấu hình hỏng — BỎ bậc đó, không bao giờ giảm quá 100%.
+                var percent = pct.GetDecimal();
+                if (percent < 0m || percent > 100m) continue;
+
+                list.Add(new TierEntry(q.GetInt32(), percent));
             }
         }
         catch (JsonException) { }

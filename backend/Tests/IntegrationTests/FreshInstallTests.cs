@@ -1,8 +1,10 @@
+using System.Linq;
 using System.Reflection;
 using ApiGateway.Startup;
 using FluentAssertions;
 using IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace IntegrationTests;
@@ -15,13 +17,16 @@ namespace IntegrationTests;
 ///   model nói "có bảng", còn database thì không có bảng (42P01 trên mọi giao dịch thanh toán).
 /// - <c>CustomFieldDbContext</c> từng bị bỏ khỏi danh sách context nên bảng của nó không bao giờ được tạo.
 /// - Migration viết tay không có file .Designer.cs bị MigrateAsync lặng lẽ bỏ qua.
+///
+/// Chạy trên collection RIÊNG với database riêng (<see cref="FreshInstallFixture"/>): tiền đề
+/// "vừa cài mới" chỉ đúng khi không test nào khác ghi vào database này.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
+[Collection(FreshInstallCollection.Name)]
 public sealed class FreshInstallTests
 {
-    private readonly IntegrationTestFixture _fixture;
+    private readonly FreshInstallFixture _fixture;
 
-    public FreshInstallTests(IntegrationTestFixture fixture) => _fixture = fixture;
+    public FreshInstallTests(FreshInstallFixture fixture) => _fixture = fixture;
 
     [Fact(DisplayName = "Cài mới: sau khi migrate không còn migration nào treo ở bất kỳ DbContext nào")]
     public async Task Migrate_KhongConMigrationTreo()
@@ -100,9 +105,45 @@ public sealed class FreshInstallTests
         _fixture.FirstSeedChangeCount.Should().BeGreaterThan(0,
             "lần seed đầu trên DB rỗng bắt buộc phải tạo dữ liệu nền, nếu 0 thì seeder không chạy gì cả");
 
+        // Không có khẳng định này thì test rỗng: nếu dataset không được trỏ tới, bước
+        // "catalog.products" bị bỏ qua (trả 0) và lần seed thứ hai luôn bằng 0 dù importer hỏng.
+        using (var scope = _fixture.CreateScope())
+        {
+            var catalog = scope.ServiceProvider.GetRequiredService<Catalog.Infrastructure.CatalogDbContext>();
+            // Database này là của riêng collection "cài mới" (FreshInstallFixture) — không test
+            // nào khác ghi vào, nên mọi khẳng định dưới đây độc lập với thứ tự chạy.
+            // Khẳng định đúng thứ cần bảo vệ: mỗi slug trong taxonomy tồn tại ĐÚNG MỘT lần.
+            // Đây chính là bug đã xảy ra — CatalogDbSeeder gán cứng slug tiếng Anh lệch 7/10 so
+            // với taxonomy, nên một lần cài mới sinh ra HAI bộ danh mục song song.
+            // List<string>, KHÔNG phải string[]: với mảng, C# 13 bind Contains sang overload
+            // MemoryExtensions/ReadOnlySpan và EF không dịch được (TypeLoadException lúc chạy).
+            var taxonomySlugs = new List<string>
+            {
+                "laptop", "pc-gaming", "pc-do-hoa", "man-hinh-may-tinh", "linh-kien-may-tinh",
+                "gaming-gear", "thiet-bi-mang", "camera", "loa-mic-webcam-stream",
+                "phu-kien-may-tinh-laptop",
+            };
+            var slugCounts = await catalog.Categories
+                .Where(c => taxonomySlugs.Contains(c.Slug))
+                .GroupBy(c => c.Slug)
+                .Select(g => new { Slug = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            slugCounts.Select(x => x.Slug).Should().BeEquivalentTo(taxonomySlugs,
+                "mọi danh mục trong taxonomy phải được tạo khi cài mới");
+            slugCounts.Where(x => x.Count > 1).Should().BeEmpty(
+                "mỗi slug chỉ được tồn tại một lần — trùng nghĩa là có hai nguồn tạo danh mục");
+            (await catalog.Products.CountAsync()).Should().BeGreaterThan(0,
+                "bước seed catalog.products phải thực sự nạp dataset, nếu không test idempotent vô nghĩa");
+        }
+
         var second = await _fixture.RunReferenceSeedAsync();
 
         second.Should().Be(0, "seed phải idempotent: chạy lại trên DB đã seed không được ghi thêm gì");
+
+        // Chạy lần ba: bắt các lỗi chỉ lộ ra sau khi lần hai đã ghi đè (ví dụ hai bên cùng ghi
+        // một hàng và lật qua lật lại).
+        (await _fixture.RunReferenceSeedAsync()).Should().Be(0, "lần seed thứ ba cũng phải là no-op");
     }
 
     private static Exception Root(Exception ex) => ex.InnerException is null ? ex : Root(ex.InnerException);
