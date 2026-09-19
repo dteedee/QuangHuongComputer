@@ -11,6 +11,8 @@
 #   scripts/qh-build.sh be       <path/to/Module.csproj> [extra dotnet args]
 #   scripts/qh-build.sh be-test  <filter>                [extra dotnet args]
 #   scripts/qh-build.sh fe-tsc
+#   scripts/qh-build.sh be-test-integration [filter]     # ApiGateway thật + Postgres Testcontainer (cần Docker, ~2 phút)
+#   scripts/qh-build.sh be-test-all                      # unit + tích hợp — lệnh của cổng đợt
 #   scripts/qh-build.sh fe-lint  [paths...]
 #   scripts/qh-build.sh fe-test  [pattern...]
 #   scripts/qh-build.sh status
@@ -93,6 +95,7 @@ case "$cmd" in
     ;;
 
   be-test)
+    # Unit test: nhanh (~2s), không cần Docker. Đây là cửa mặc định cho mọi track.
     filter="${1:-}"; shift || true
     check_ram
     if [ -n "$filter" ]; then
@@ -102,6 +105,27 @@ case "$cmd" in
       run_locked "$DOTNET_LOCK" dotnet test "$REPO_ROOT/backend/Tests/UnitTests/UnitTests.csproj" \
         -m:1 --artifacts-path "$QH_SCRATCH/ut-artifacts" "$@"
     fi
+    ;;
+
+  be-test-integration)
+    # Test tích hợp (W4-2): dựng ApiGateway thật trên một Postgres Testcontainer dùng một lần.
+    # Chậm (~2 phút) và cần Docker, nên TÁCH khỏi be-test; cổng đợt phải chạy cả hai.
+    # Trước đây be-test chỉ gọi UnitTests.csproj, nên 47 test này KHÔNG BAO GIỜ chạy và
+    # một cổng chỉ chạy be-test sẽ tưởng phần tích hợp đã được phủ.
+    filter="${1:-}"; shift || true
+    check_ram
+    if [ -n "$filter" ]; then
+      run_locked "$DOTNET_LOCK" dotnet test "$REPO_ROOT/backend/Tests/IntegrationTests/IntegrationTests.csproj" \
+        -m:1 --artifacts-path "$QH_SCRATCH/it-artifacts" --filter "$filter" "$@"
+    else
+      run_locked "$DOTNET_LOCK" dotnet test "$REPO_ROOT/backend/Tests/IntegrationTests/IntegrationTests.csproj" \
+        -m:1 --artifacts-path "$QH_SCRATCH/it-artifacts" "$@"
+    fi
+    ;;
+
+  be-test-all)
+    # Cổng đợt dùng lệnh này: unit + tích hợp, dừng ngay khi một bên đỏ.
+    "$0" be-test && "$0" be-test-integration
     ;;
 
   fe-tsc)

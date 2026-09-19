@@ -87,7 +87,24 @@ public static class SePayWebhookEndpoint
             if (payload is null || payload.Id == 0)
                 return Results.BadRequest(new { success = false, error = "INVALID_PAYLOAD" });
 
-            // 4) Audit trail (giữ từ route v1 đã xoá — trang admin đọc bảng này).
+            // 4a) CHỐNG GỬI LẠI (idempotent). SePay retry cùng một giao dịch nhiều lần.
+            // Trước đây bước này không có, nên lần gửi lại: intent đã sang Succeeded => matcher
+            // không khớp => ghi thêm một dòng SePayTransactions trùng kèm lỗi "chưa gán được đơn"
+            // SAI SỰ THẬT (kế toán tưởng tiền chưa vào đơn), và PaymentWebhookHandler — nơi chứa
+            // lớp chống trùng thật — KHÔNG BAO GIỜ được gọi lần hai.
+            // Dùng lại chính bảng ProcessedWebhooks (khoá Provider + TransactionId) thay vì thêm
+            // một cơ chế chống trùng thứ hai.
+            var txnKey = payload.Id.ToString();
+            var alreadyProcessed = await db.ProcessedWebhooks
+                .AsNoTracking()
+                .AnyAsync(w => w.Provider == "SePay" && w.TransactionId == txnKey, ct);
+            if (alreadyProcessed)
+            {
+                logger.LogInformation("SePay: bỏ qua webhook gửi lại cho giao dịch {TxnId}", payload.Id);
+                return Results.Ok(new { success = true, matched = true, duplicate = true });
+            }
+
+            // 4b) Audit trail (giữ từ route v1 đã xoá — trang admin đọc bảng này).
             var transaction = new SePayTransaction
             {
                 Gateway = payload.Gateway,

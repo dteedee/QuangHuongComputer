@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    W4-2 — bộ test tích hợp chạy trên PostgreSQL thật (Testcontainers) + toàn bộ host
+    ApiGateway qua WebApplicationFactory. Mục tiêu: bắt đúng lớp lỗi đã lọt lưới
+    (thiếu bảng khi migrate, thủng phân quyền, tiền do client gửi lên, webhook lặp).
+    KHÔNG dùng InMemory provider: các lỗi này chỉ lộ ra trên Postgres thật.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.2" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.10.0" />
+  </ItemGroup>
+
+  <!--
+    Nhúng đường dẫn repo vào assembly: test chạy từ thư mục artifacts nằm NGOÀI cây repo
+    (qh-build.sh bắt buộc vậy) nên không dò ngược từ AppContext.BaseDirectory được.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>QhRepoRoot</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../..'))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../ApiGateway/ApiGateway.csproj" />
+  </ItemGroup>
+
+</Project>
