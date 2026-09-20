@@ -3,6 +3,7 @@
  * huỷ, thu tiền, ghi chú) phải hiện ở đây (Success Criteria của phase file).
  */
 import { History } from 'lucide-react';
+import { StatusBadge } from '../../../components/ui';
 import type { OrderDetailHistoryEntry } from '../../../api/sales/types';
 import { getOrderStatusInfo } from './order-status-badges';
 
@@ -11,27 +12,38 @@ const formatDateTime = (iso: string) =>
 
 export const OrderTimeline = ({ history }: { history: OrderDetailHistoryEntry[] }) => {
     if (history.length === 0) {
-        return <p className="text-xs font-semibold text-gray-400 uppercase">Chưa có lịch sử thao tác.</p>;
+        return <p className="text-13 text-fg-muted">Chưa có lịch sử thao tác.</p>;
     }
 
     return (
-        <ol className="space-y-4">
+        <ol className="flex flex-col gap-3">
             {history.map((entry, idx) => {
                 const status = getOrderStatusInfo(entry.toStatus);
                 return (
-                    <li key={entry.id} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                            <span className={`w-8 h-8 rounded-full flex items-center justify-center ${status.bg} ${status.color}`}>
-                                {status.icon}
-                            </span>
-                            {idx < history.length - 1 && <span className="flex-1 w-px bg-gray-100 dark:bg-gray-800 mt-1" />}
+                    <li key={entry.id} className="flex gap-3">
+                        <div className="flex flex-col items-center pt-0.5">
+                            <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-fg-subtle" aria-hidden />
+                            {idx < history.length - 1 && <span className="mt-1 w-px flex-1 bg-line" aria-hidden />}
                         </div>
-                        <div className="pb-4 flex-1">
-                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                {entry.fromStatus ? `${getOrderStatusInfo(entry.fromStatus).label} → ` : ''}{status.label}
+                        <div className="flex-1 pb-3">
+                            <p className="flex flex-wrap items-center gap-1.5 text-13 text-fg">
+                                {entry.fromStatus && (
+                                    <>
+                                        <span className="text-fg-muted">{getOrderStatusInfo(entry.fromStatus).label}</span>
+                                        <span aria-hidden className="text-fg-subtle">→</span>
+                                    </>
+                                )}
+                                <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
                             </p>
-                            <p className="text-[11px] font-semibold text-gray-400 uppercase mt-0.5">{formatDateTime(entry.createdAt)}{entry.changedBy ? ` · ${entry.changedBy}` : ''}</p>
-                            {entry.notes && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic flex items-start gap-1"><History size={12} className="mt-0.5 shrink-0" />{entry.notes}</p>}
+                            <p className="mt-0.5 text-2xs text-fg-subtle">
+                                {formatDateTime(entry.createdAt)}{entry.changedBy ? ` · ${entry.changedBy}` : ''}
+                            </p>
+                            {entry.notes && (
+                                <p className="mt-1 flex items-start gap-1 text-xs text-fg-muted">
+                                    <History size={12} aria-hidden className="mt-0.5 shrink-0" />
+                                    {entry.notes}
+                                </p>
+                            )}
                         </div>
                     </li>
                 );

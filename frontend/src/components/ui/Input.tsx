@@ -21,6 +21,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   error?: string;
   hint?: ReactNode;
   icon?: ComponentType<{ className?: string; size?: number | string }>;
+  /**
+   * Class cho THẺ BỌC ngoài cùng. `className` rơi vào chính thẻ `<input>`, nên các class bố cục
+   * của lưới cha (`sm:col-span-2`, `md:row-span-2`…) đặt vào `className` sẽ im lặng không có tác
+   * dụng — lỗi khó thấy vì không có cảnh báo nào. Class bố cục đặt vào đây.
+   */
+  wrapperClassName?: string;
   iconPosition?: 'left' | 'right';
   /** Unit / currency box glued to the right edge (`.affix`, §5). */
   suffix?: ReactNode;
@@ -30,6 +36,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   {
     className,
+    wrapperClassName,
     label,
     error,
     hint,
@@ -55,7 +62,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     [ariaDescribedBy, error || hint ? msgId : undefined].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div className="w-full">
+    <div className={cn('w-full', wrapperClassName)}>
       {label && (
         <label htmlFor={inputId} className={labelClass}>
           {label}

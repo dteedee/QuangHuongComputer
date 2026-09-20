@@ -3,6 +3,7 @@ import type { ConfigurationEntry } from '../api/systemConfig';
 import { HEX_COLOR_REGEX, accentDefaults } from '../design-system/brand-tokens';
 import { usePublicConfig } from '../lib/use-public-config';
 import { browserStorage } from '../lib/browser-storage';
+import { accentBrandCss } from './accent-brand-tokens';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AccentColor = 'red' | 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'amber';
@@ -180,6 +181,21 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         const rgb = hexToRgbTriple(primary);
         if (rgb) document.documentElement.style.setProperty('--accent-primary-rgb', rgb);
     }, [isDark, accent, remoteAccent]);
+
+    /* Màu nhấn phải ăn vào token `--brand` của vỏ admin, nếu không bộ chọn màu chỉ là
+     * đồ trang trí (xem `accent-brand-tokens.ts` — lỗi mất tính năng của §9.1).
+     * Một thẻ <style> duy nhất, tái sử dụng; không đụng storefront vì selector có
+     * `[data-shell='admin']`. */
+    useEffect(() => {
+        const STYLE_ID = 'qh-accent-brand';
+        let el = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+        if (!el) {
+            el = document.createElement('style');
+            el.id = STYLE_ID;
+            document.head.appendChild(el);
+        }
+        el.textContent = accentBrandCss(accent);
+    }, [accent]);
 
     const setMode = (newMode: ThemeMode) => {
         setModeState(newMode);

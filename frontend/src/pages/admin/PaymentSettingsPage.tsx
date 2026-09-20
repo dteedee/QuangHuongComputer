@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, Save, ShieldAlert } from 'lucide-react';
+import { Check, Copy, ShieldAlert } from 'lucide-react';
 import {
     Button, Card, CardBody, CardHeader, CardTitle, Input, PageHeader,
-    QueryBoundary, Skeleton, StatusBadge, Switch, notify,
+    QueryBoundary, SaveButton, Skeleton, StatusBadge, Switch, notify, type SaveStatus,
 } from '../../components/ui';
 import { paymentApi, type PaymentConfigEntry, type PaymentProviderStatus } from '../../api/payment';
 import { normalizeApiError } from '../../lib/api-error';
@@ -58,10 +58,10 @@ function StatusTable({ rows }: { rows: PaymentProviderStatus[] }) {
             {rows.map((r) => (
                 <div key={r.code} className="flex flex-col gap-2 rounded-xl border border-line p-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                        <p className="text-sm font-semibold text-fg">{r.name}</p>
+                        <p className="text-13 font-semibold text-fg">{r.name}</p>
                         <p className="font-mono text-2xs text-fg-subtle">{r.code}</p>
                         {!r.configured && r.missingKeys.length > 0 && (
-                            <p className="mt-1 break-words text-xs text-fg-muted">
+                            <p className="mt-1 break-words text-2xs text-fg-muted">
                                 Thiếu: <span className="font-mono">{r.missingKeys.join(', ')}</span>
                             </p>
                         )}
@@ -83,6 +83,8 @@ export default function PaymentSettingsPage() {
 
     const [form, setForm] = useState<Record<string, string>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
+    /* §9.4: nút lưu bốn trạng thái — "Đã lưu" là dòng chữ có dấu tích, không phải nút. */
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
     useEffect(() => {
         if (!configQuery.data) return;
@@ -98,11 +100,13 @@ export default function PaymentSettingsPage() {
             for (const [key, value] of entries) await paymentApi.saveConfig({ key, value });
             return entries.length;
         },
+        onMutate: () => setSaveStatus('saving'),
         onSuccess: (n) => {
+            setSaveStatus('saved');
             notify.success(`Đã lưu ${n} thiết lập.`);
             void qc.invalidateQueries({ queryKey: ['payments', 'admin', 'config'] });
         },
-        onError: (e) => notify.error(normalizeApiError(e).message),
+        onError: (e) => { setSaveStatus('error'); notify.error(normalizeApiError(e).message); },
     });
 
     const submit = (e: React.FormEvent) => {
@@ -197,7 +201,13 @@ export default function PaymentSettingsPage() {
                                 máy chủ, nên một thiết lập vừa lưu chỉ đổi trạng thái sau khi máy chủ nạp lại cấu hình.
                             </p>
                             <div className="flex justify-end">
-                                <Button type="submit" icon={Save} loading={save.isPending}>Lưu thiết lập</Button>
+                                <SaveButton
+                                    type="submit"
+                                    status={saveStatus}
+                                    label="Lưu thiết lập"
+                                    errorMessage="Không lưu được thiết lập, thử lại."
+                                    onDone={() => setSaveStatus('idle')}
+                                />
                             </div>
                         </form>
                     )}

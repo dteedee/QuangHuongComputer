@@ -1,14 +1,15 @@
 /**
- * D04 — "Xác nhận chuyển khoản" confirms ONE pending payment intent (not the
- * order directly): pick which pending payment, enter the bank reference the
- * money arrived with, `POST /payments/reconciliation/confirm/{paymentId}`.
+ * D04 — "Xác nhận chuyển khoản" xác nhận MỘT khoản thu đang chờ (payment
+ * intent), không phải cả đơn: chọn khoản thu, nhập mã tham chiếu ngân hàng,
+ * `POST /payments/reconciliation/confirm/{paymentId}`.
+ *
+ * design-guidelines §9.3: overlay lấy từ `components/ui` (`Dialog`).
  */
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Landmark, Loader2, X } from 'lucide-react';
-import { formatCurrency } from '../../../utils/format';
+import { Landmark } from 'lucide-react';
+import { Button, Dialog, EmptyState, Input, Select, formatDong } from '../../../components/ui';
 
-/** One `PaymentIntent` row from `getPaymentIntentsForOrder` (provider `SePay`, status `Pending`). */
+/** Một dòng `PaymentIntent` từ `getPaymentIntentsForOrder` (provider `SePay`, status `Pending`). */
 export interface PendingBankTransferIntent {
     id: string;
     amount: number;
@@ -22,7 +23,9 @@ interface OrderBankTransferModalProps {
     isSubmitting: boolean;
 }
 
-export const OrderBankTransferModal = ({ open, onClose, pendingPayments, onSubmit, isSubmitting }: OrderBankTransferModalProps) => {
+export const OrderBankTransferModal = ({
+    open, onClose, pendingPayments, onSubmit, isSubmitting,
+}: OrderBankTransferModalProps) => {
     const [paymentId, setPaymentId] = useState(pendingPayments[0]?.id ?? '');
     const [bankReference, setBankReference] = useState('');
     const [error, setError] = useState('');
@@ -38,59 +41,46 @@ export const OrderBankTransferModal = ({ open, onClose, pendingPayments, onSubmi
     };
 
     return (
-        <AnimatePresence>
-            {open && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={onClose} className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" />
-                    <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-md overflow-hidden">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-50 dark:border-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                                    <Landmark size={20} />
-                                </div>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Xác nhận chuyển khoản</h2>
-                            </div>
-                            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-accent">
-                                <X size={18} />
-                            </button>
-                        </div>
-                        {pendingPayments.length === 0 ? (
-                            <div className="p-6 text-sm text-gray-400">Không có khoản chuyển khoản đang chờ đối soát.</div>
-                        ) : (
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-semibold text-gray-400 uppercase">Khoản thu đang chờ</label>
-                                    <select value={paymentId} onChange={(e) => setPaymentId(e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-semibold outline-none">
-                                        {pendingPayments.map((p) => (
-                                            <option key={p.id} value={p.id}>{formatCurrency(p.amount)} — {p.id.slice(0, 8)}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-semibold text-gray-400 uppercase">Mã tham chiếu ngân hàng</label>
-                                    <input value={bankReference} onChange={(e) => setBankReference(e.target.value)}
-                                        placeholder="VD: FT26091812345"
-                                        className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border ${error ? 'border-red-400' : 'border-transparent'} rounded-xl text-sm font-semibold outline-none`} />
-                                    {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <button type="button" onClick={onClose} className="flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-800 text-gray-500 text-xs font-semibold uppercase rounded-xl">
-                                        Hủy
-                                    </button>
-                                    <button type="submit" disabled={isSubmitting}
-                                        className="flex-[2] flex items-center justify-center gap-2 px-4 py-3 bg-accent text-white text-xs font-semibold uppercase rounded-xl disabled:opacity-50">
-                                        {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Landmark size={16} />}
-                                        Xác nhận đã nhận tiền
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </motion.div>
-                </div>
+        <Dialog
+            open={open}
+            onOpenChange={(o) => { if (!o) onClose(); }}
+            title="Xác nhận chuyển khoản"
+            description="Đối soát một khoản thu đang chờ với mã tham chiếu tiền về từ ngân hàng."
+            size="sm"
+        >
+            {pendingPayments.length === 0 ? (
+                <EmptyState
+                    icon={Landmark}
+                    title="Không có khoản chuyển khoản đang chờ"
+                    description="Mọi khoản thu của đơn này đã được đối soát."
+                />
+            ) : (
+                <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                    <Select
+                        label="Khoản thu đang chờ"
+                        value={paymentId}
+                        onChange={(e) => setPaymentId(e.target.value)}
+                        options={pendingPayments.map((p) => ({
+                            value: p.id,
+                            label: `${formatDong(p.amount)} ₫ — ${p.id.slice(0, 8)}`,
+                        }))}
+                    />
+                    <Input
+                        label="Mã tham chiếu ngân hàng"
+                        inputSize="sm"
+                        placeholder="VD: FT26091812345"
+                        value={bankReference}
+                        onChange={(e) => setBankReference(e.target.value)}
+                        error={error || undefined}
+                    />
+                    <div className="mt-1 flex items-center justify-end gap-2 border-t border-line pt-3">
+                        <Button type="button" variant="ghost" size="sm" onClick={onClose}>Huỷ</Button>
+                        <Button type="submit" size="sm" icon={Landmark} loading={isSubmitting}>
+                            Xác nhận đã nhận tiền
+                        </Button>
+                    </div>
+                </form>
             )}
-        </AnimatePresence>
+        </Dialog>
     );
 };

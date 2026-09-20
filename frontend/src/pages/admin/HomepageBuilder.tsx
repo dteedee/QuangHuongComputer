@@ -1,3 +1,10 @@
+/**
+ * Trình dựng trang chủ — viết lại giao diện theo design-guidelines §9.
+ *  · `PageHeader` + `SaveButton` 4 trạng thái thay cho nút "Đã lưu thứ tự" màu đỏ nhạt (§9.4).
+ *  · Bỏ toàn bộ `bg-white`/`gray-*`/`white/5` — trang này trước đây vẽ chữ trắng trên nền
+ *    sáng (`text-white` trên `bg-bg`) nên tiêu đề gần như vô hình; nay dùng token (§9.1).
+ *  · Bỏ `max-w-6xl mx-auto`, dùng hết bề ngang (§9.2).
+ */
 import React, { useState, useEffect } from 'react';
 import {
     DndContext, closestCenter, KeyboardSensor, PointerSensor,
@@ -8,9 +15,13 @@ import {
     verticalListSortingStrategy, useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Save, Plus, Trash2, GripVertical, Edit3, CheckCircle2, XCircle, Eye, Loader2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Edit3, Eye, EyeOff, Pencil } from 'lucide-react';
 import { contentApi, type HomepageSection } from '../../api/content';
 import { useConfirm } from '../../context/ConfirmContext';
+import {
+    Badge, Button, Card, EmptyState, IconButton, PageHeader, SaveButton, Skeleton,
+    type SaveStatus,
+} from '../../components/ui';
 import { ConfigModal, type SaveMeta } from '../../components/homepage-builder/section-config-modal';
 import toast from 'react-hot-toast';
 
@@ -50,57 +61,59 @@ interface SortableSectionProps {
 
 const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleting, onDelete, onEdit, onToggle }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-    const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.5 : 1 };
 
     return (
-        <div
-            ref={setNodeRef} style={style}
-            className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 ${isDragging ? 'border-red-500 shadow-md' : 'border-gray-100'} mb-3 group transition-all`}
+        <li
+            ref={setNodeRef}
+            style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+            className={`flex items-center gap-2 rounded-xl border bg-surface px-2.5 py-2 ${isDragging ? 'z-floating border-brand shadow-md' : 'border-line'}`}
         >
-            <button {...attributes} {...listeners} className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing shrink-0">
-                <GripVertical size={22} />
+            <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                aria-label={`Kéo để đổi thứ tự: ${section.title}`}
+                className="flex h-9 w-7 shrink-0 cursor-grab items-center justify-center rounded-lg text-fg-subtle transition-colors hover:bg-sunken hover:text-fg active:cursor-grabbing"
+            >
+                <GripVertical size={18} aria-hidden />
             </button>
 
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-gray-800 text-sm uppercase tracking-tight truncate">{section.title}</h3>
-                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-gray-200 shrink-0">
-                        {SECTION_TYPE_LABELS[section.sectionType] ?? section.sectionType}
-                    </span>
-                    {!section.isActive && (
-                        <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-red-100 flex items-center gap-1 shrink-0">
-                            <XCircle size={10} /> Đã ẩn
-                        </span>
-                    )}
+            <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-13 font-semibold text-fg">{section.title}</h3>
+                    <Badge variant="neutral">{SECTION_TYPE_LABELS[section.sectionType] ?? section.sectionType}</Badge>
+                    {!section.isActive && <Badge variant="warning">Đã ẩn</Badge>}
                 </div>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{section.cssClass || 'Không có class tuỳ chỉnh'}</p>
+                <p className="mt-0.5 truncate text-2xs text-fg-subtle">
+                    {section.cssClass || 'Không có class tuỳ chỉnh'}
+                </p>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
-                <button
-                    onClick={() => onToggle(section.id)}
-                    className={`p-2 rounded-lg transition-colors ${section.isActive ? 'text-green-500 hover:bg-green-50' : 'text-gray-300 hover:bg-gray-50'}`}
+            <div className="flex shrink-0 items-center gap-1">
+                <IconButton
+                    aria-label={section.isActive ? 'Ẩn khối' : 'Hiện khối'}
                     title={section.isActive ? 'Ẩn khối' : 'Hiện khối'}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onToggle(section.id)}
                 >
-                    <CheckCircle2 size={18} />
-                </button>
-                <button
-                    onClick={() => onEdit(section)}
-                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Sửa cấu hình"
-                >
-                    <Edit3 size={18} />
-                </button>
-                <button
-                    onClick={() => onDelete(section.id)}
-                    disabled={isDeleting}
-                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    {section.isActive ? <Eye size={16} /> : <EyeOff size={16} />}
+                </IconButton>
+                <IconButton aria-label="Sửa cấu hình" title="Sửa cấu hình" variant="ghost" size="sm" onClick={() => onEdit(section)}>
+                    <Edit3 size={16} />
+                </IconButton>
+                <IconButton
+                    aria-label="Xoá khối"
                     title="Xoá khối"
+                    variant="ghost"
+                    size="sm"
+                    loading={isDeleting}
+                    onClick={() => onDelete(section.id)}
                 >
-                    {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                </button>
+                    <Trash2 size={16} />
+                </IconButton>
             </div>
-        </div>
+        </li>
     );
 };
 
@@ -109,7 +122,8 @@ const SortableSection: React.FC<SortableSectionProps> = ({ id, section, isDeleti
 export const HomepageBuilder = () => {
     const [sections, setSections] = useState<HomepageSection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    /* §9.4: trạng thái nút lưu do trang sở hữu — "Đã lưu" là dòng chữ, không phải nút. */
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [isAdding, setIsAdding] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingSection, setEditingSection] = useState<HomepageSection | null>(null);
@@ -219,90 +233,79 @@ export const HomepageBuilder = () => {
     };
 
     const handlePublish = async () => {
-        setIsSaving(true);
+        setSaveStatus('saving');
         try {
             await contentApi.admin.reorderHomepageSections(
                 sections.map((s, i) => ({ id: s.id, displayOrder: i + 1 }))
             );
             setHasOrderChanged(false);
-            toast.success('Đã đăng bố cục trang chủ!');
+            setSaveStatus('saved');
         } catch {
-            toast.error('Không đăng được bố cục');
-        } finally {
-            setIsSaving(false);
+            setSaveStatus('error');
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="max-w-6xl mx-auto p-8 flex flex-col items-center justify-center gap-4">
-                <Loader2 className="animate-spin text-red-500" size={48} />
-                <p className="text-gray-400 font-bold uppercase text-sm">Đang tải các khối...</p>
-            </div>
-        );
-    }
-
     return (
-        <div className="max-w-6xl mx-auto">
-            <header className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-semibold text-white uppercase tracking-wider">Xây dựng trang chủ</h1>
-                    <p className="text-gray-400 mt-1">Thiết kế và sắp xếp lại các khối của trang chủ</p>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => window.open('/', '_blank')}
-                        className="bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-xl transition flex items-center gap-2 text-sm"
-                    >
-                        <Eye size={16} /> Xem trước
-                    </button>
-                    <button
-                        onClick={handlePublish}
-                        disabled={isSaving || !hasOrderChanged}
-                        className="bg-accent hover:bg-accent-hover disabled:opacity-50 text-white px-5 py-2 rounded-xl transition flex items-center gap-2 font-bold shadow-lg shadow-accent-dark/20 text-sm"
-                    >
-                        {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                        {isSaving ? 'Đang đăng...' : hasOrderChanged ? 'Đăng thứ tự' : 'Đã lưu thứ tự'}
-                    </button>
-                </div>
-            </header>
+        <div className="space-y-4">
+            <PageHeader
+                title="Trình dựng trang chủ"
+                description="Thêm, ẩn và sắp xếp các khối của trang chủ. Kéo để đổi thứ tự rồi bấm Đăng."
+                actions={
+                    <>
+                        <Button variant="outline" size="sm" icon={Eye} onClick={() => window.open('/', '_blank')}>
+                            Xem trước
+                        </Button>
+                        {/* Hành động chính DUY NHẤT của màn hình (§9.1). */}
+                        <SaveButton
+                            size="sm"
+                            status={saveStatus}
+                            label="Đăng thứ tự"
+                            savingLabel="Đang đăng…"
+                            savedLabel="Đã đăng"
+                            errorMessage="Không đăng được bố cục, thử lại."
+                            disabled={!hasOrderChanged}
+                            onClick={handlePublish}
+                            onDone={() => setSaveStatus('idle')}
+                        />
+                    </>
+                }
+            />
 
-            <div className="grid lg:grid-cols-4 gap-8">
-                {/* Section Type Palette */}
-                <div className="lg:col-span-1 border-r border-white/10 pr-8">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Thêm khối</h3>
-                    <div className="space-y-2">
+            <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
+                <Card padded radius="xl" className="min-w-0">
+                    <h2 className="mb-2 text-2xs font-semibold uppercase tracking-wider text-fg-subtle">Thêm khối</h2>
+                    <div className="space-y-1.5">
                         {SECTION_TYPES.map(type => (
                             <button
                                 key={type}
+                                type="button"
                                 onClick={() => addSection(type)}
                                 disabled={isAdding}
-                                className="w-full bg-white/5 hover:bg-blue-500/10 hover:text-red-400 text-gray-400 p-3 rounded-xl border-2 border-transparent hover:border-red-500/30 transition-all text-left group disabled:opacity-50"
+                                className="flex w-full items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2 text-left text-13 font-medium text-fg transition-colors hover:bg-sunken disabled:opacity-50"
                             >
-                                <div className="flex items-center justify-between font-bold text-xs uppercase">
-                                    {SECTION_TYPE_LABELS[type] ?? type.replace(/_/g, ' ')}
-                                    {isAdding
-                                        ? <Loader2 size={14} className="animate-spin" />
-                                        : <Plus size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    }
-                                </div>
+                                <span className="truncate">{SECTION_TYPE_LABELS[type] ?? type.replace(/_/g, ' ')}</span>
+                                <Plus size={14} className="shrink-0 text-fg-subtle" aria-hidden />
                             </button>
                         ))}
                     </div>
-                </div>
+                </Card>
 
-                {/* DnD Layout */}
-                <div className="lg:col-span-3">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase mb-4">Bố cục hiện tại</h3>
-                    {sections.length === 0 ? (
-                        <div className="text-center py-16 text-gray-500">
-                            <p className="text-lg font-bold">Chưa có khối nào</p>
-                            <p className="text-sm mt-2">Thêm khối từ bảng bên trái</p>
+                <Card padded radius="xl" className="min-w-0">
+                    <h2 className="mb-2 text-2xs font-semibold uppercase tracking-wider text-fg-subtle">Bố cục hiện tại</h2>
+                    {isLoading ? (
+                        <div className="space-y-2">
+                            {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
                         </div>
+                    ) : sections.length === 0 ? (
+                        <EmptyState
+                            icon={Pencil}
+                            title="Chưa có khối nào"
+                            description="Thêm khối từ danh sách bên trái để bắt đầu dựng trang chủ."
+                        />
                     ) : (
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                             <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                                <div>
+                                <ul className="space-y-2">
                                     {sections.map(section => (
                                         <SortableSection
                                             key={section.id}
@@ -314,11 +317,11 @@ export const HomepageBuilder = () => {
                                             onToggle={toggleSection}
                                         />
                                     ))}
-                                </div>
+                                </ul>
                             </SortableContext>
                         </DndContext>
                     )}
-                </div>
+                </Card>
             </div>
 
             {editingSection && (

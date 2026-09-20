@@ -1,12 +1,16 @@
 /**
- * Renders ONLY the legal next actions, straight from the API's
- * `allowedNext` (phase spec step 3) — never a hardcoded status list. Each
- * button is `<Can>`-gated on `Sales.UpdateStatus`/`CancelOrder`/`TakeDeposit`;
- * the backend still enforces it, this only hides what would 403 anyway.
+ * Chỉ vẽ những hành động HỢP LỆ kế tiếp, lấy thẳng từ `allowedNext` của API
+ * (phase spec bước 3) — không bao giờ là danh sách trạng thái viết cứng. Mỗi
+ * nút được `<Can>` chặn theo `Sales.UpdateStatus`/`CancelOrder`/`TakeDeposit`;
+ * backend vẫn kiểm tra, đây chỉ giấu thứ đằng nào cũng 403.
+ *
+ * design-guidelines §9.1: chỉ hành động ĐẦU TIÊN là nút đỏ (primary); phần còn
+ * lại `outline`; huỷ đơn là `danger` (cảnh báo).
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Landmark, Loader2, Package, PackageCheck, Truck, Wallet, XCircle } from 'lucide-react';
+import { CheckCircle2, Landmark, Package, PackageCheck, Truck, Wallet, XCircle } from 'lucide-react';
+import { Button } from '../../../components/ui';
 import { Can } from '../../../components/Can';
 import { PERMISSIONS } from '../../../constants/permissions';
 import { salesAdminOrdersApi } from '../../../api/sales/admin-orders';
@@ -21,27 +25,33 @@ interface OrderActionBarProps {
     transitions?: OrderTransitionsDto;
 }
 
+type IconType = typeof Package;
+
 /** Nhãn nút theo action_map trong Todo/step 3 của phase file. */
-const ACTION_META: Record<ExtendedOrderStatus, { label: string; icon: React.ReactNode }> = {
-    Draft: { label: 'Lưu bản nháp', icon: <Package size={14} /> },
-    Pending: { label: 'Chờ xác nhận', icon: <Package size={14} /> },
-    Confirmed: { label: 'Xác nhận', icon: <CheckCircle2 size={14} /> },
-    Paid: { label: 'Đã thanh toán', icon: <Wallet size={14} /> },
-    Fulfilled: { label: 'Đóng gói', icon: <PackageCheck size={14} /> },
-    Shipped: { label: 'Giao hàng', icon: <Truck size={14} /> },
-    Delivered: { label: 'Đã giao', icon: <PackageCheck size={14} /> },
-    Completed: { label: 'Hoàn tất', icon: <CheckCircle2 size={14} /> },
-    Cancelled: { label: 'Huỷ', icon: <XCircle size={14} /> },
+const ACTION_META: Record<ExtendedOrderStatus, { label: string; icon: IconType }> = {
+    Draft: { label: 'Lưu bản nháp', icon: Package },
+    Pending: { label: 'Chờ xác nhận', icon: Package },
+    Confirmed: { label: 'Xác nhận', icon: CheckCircle2 },
+    Paid: { label: 'Đã thanh toán', icon: Wallet },
+    Fulfilled: { label: 'Đóng gói', icon: PackageCheck },
+    Shipped: { label: 'Giao hàng', icon: Truck },
+    Delivered: { label: 'Đã giao', icon: PackageCheck },
+    Completed: { label: 'Hoàn tất', icon: CheckCircle2 },
+    Cancelled: { label: 'Huỷ', icon: XCircle },
 };
 
 export const OrderActionBar = ({ order, transitions }: OrderActionBarProps) => {
     const [shipModalOpen, setShipModalOpen] = useState(false);
     const [bankTransferModalOpen, setBankTransferModalOpen] = useState(false);
-    const { transitionMutation, confirmCodMutation, confirmBankTransferMutation, runSimpleTransition, runCancel } = useOrderActions(order.id);
+    const {
+        transitionMutation, confirmCodMutation, confirmBankTransferMutation,
+        runSimpleTransition, runCancel,
+    } = useOrderActions(order.id);
 
-    // `order.allowedTransitions` (the detail response's own copy) keys the status as `value` not
-    // `status` — an inconsistency verified against TEST :5050 — so it is never used as a fallback
-    // here; the dedicated `GET .../transitions` endpoint (`transitions` prop) is the one source of truth.
+    // `order.allowedTransitions` (bản sao trong response chi tiết) đặt khoá trạng thái là
+    // `value` chứ không phải `status` — sai lệch đã kiểm chứng trên TEST :5050 — nên không
+    // bao giờ dùng làm dự phòng ở đây; endpoint riêng `GET .../transitions` (prop `transitions`)
+    // là nguồn sự thật duy nhất.
     const allowedNext = transitions?.allowedNext ?? [];
     const isBusy = transitionMutation.isPending;
 
@@ -52,65 +62,70 @@ export const OrderActionBar = ({ order, transitions }: OrderActionBarProps) => {
     };
 
     /**
-     * D04's "Xác nhận chuyển khoản" confirms a PAYMENT INTENT
-     * (`Payments.Domain.PaymentIntent`, provider `SePay` = bank-transfer/
-     * VietQR per `PaymentEnums.cs`), not an `OrderPayments` row — those are
-     * already-applied receipts, a different table. Verified against TEST
-     * :5050 (2026-09-18).
+     * "Xác nhận chuyển khoản" của D04 xác nhận một PAYMENT INTENT
+     * (`Payments.Domain.PaymentIntent`, provider `SePay` = chuyển khoản/VietQR theo
+     * `PaymentEnums.cs`), không phải một dòng `OrderPayments` — đó là các khoản đã
+     * ghi nhận, bảng khác. Đã kiểm chứng trên TEST :5050 (18/09/2026).
      */
     const paymentIntentsQuery = useQuery({
         queryKey: ['order-payment-intents', order.id],
         queryFn: () => salesAdminOrdersApi.getPaymentIntentsForOrder(order.id),
     });
-    const pendingBankTransferIntents = (paymentIntentsQuery.data ?? []).filter((p) => p.provider === 'SePay' && p.status === 'Pending');
+    const pendingBankTransferIntents = (paymentIntentsQuery.data ?? [])
+        .filter((p) => p.provider === 'SePay' && p.status === 'Pending');
     const hasPendingCod = order.paymentStatus !== 'Paid' && order.money.amountDue > 0;
 
     return (
         <>
-            <div className="flex flex-wrap items-center gap-3">
-                {allowedNext.map((next) => (
-                    <Can key={next.status} permission={next.status === 'Cancelled' ? PERMISSIONS.SALES_CANCEL_ORDER : PERMISSIONS.SALES_UPDATE_STATUS}>
-                        <button
-                            onClick={() => handleAction(next.status)}
-                            disabled={isBusy}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase transition-all disabled:opacity-50 ${
-                                next.status === 'Cancelled'
-                                    ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                                    : 'bg-accent text-white hover:bg-accent-hover shadow-sm shadow-blue-500/15'
-                            }`}
+            <div className="flex flex-wrap items-center gap-2">
+                {allowedNext.map((next, index) => {
+                    const meta = ACTION_META[next.status];
+                    const isCancel = next.status === 'Cancelled';
+                    return (
+                        <Can
+                            key={next.status}
+                            permission={isCancel ? PERMISSIONS.SALES_CANCEL_ORDER : PERMISSIONS.SALES_UPDATE_STATUS}
                         >
-                            {isBusy ? <Loader2 size={14} className="animate-spin" /> : (ACTION_META[next.status]?.icon ?? <Package size={14} />)}
-                            {next.label}
-                        </button>
-                    </Can>
-                ))}
+                            <Button
+                                size="sm"
+                                /* Tối đa MỘT nút đỏ: hành động kế tiếp đầu tiên. */
+                                variant={isCancel ? 'danger' : index === 0 ? 'primary' : 'outline'}
+                                icon={meta?.icon ?? Package}
+                                loading={isBusy}
+                                onClick={() => handleAction(next.status)}
+                            >
+                                {next.label}
+                            </Button>
+                        </Can>
+                    );
+                })}
 
-                {/* D04: hai action riêng, đi qua endpoint đối soát — không đổi status trực tiếp. */}
+                {/* D04: hai hành động riêng, đi qua endpoint đối soát — không đổi status trực tiếp. */}
                 <Can permission={PERMISSIONS.PAYMENTS_COLLECT_COD}>
                     {hasPendingCod && (
-                        <button
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            icon={Wallet}
+                            loading={confirmCodMutation.isPending}
                             onClick={() => confirmCodMutation.mutate()}
-                            disabled={confirmCodMutation.isPending}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-50"
                         >
-                            {confirmCodMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Wallet size={14} />}
                             Đã thu COD
-                        </button>
+                        </Button>
                     )}
                 </Can>
                 <Can permission={PERMISSIONS.PAYMENTS_RECONCILE}>
                     {pendingBankTransferIntents.length > 0 && (
-                        <button
-                            onClick={() => setBankTransferModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase bg-blue-50 text-blue-600 hover:bg-blue-100"
-                        >
-                            <Landmark size={14} /> Xác nhận chuyển khoản
-                        </button>
+                        <Button size="sm" variant="outline" icon={Landmark} onClick={() => setBankTransferModalOpen(true)}>
+                            Xác nhận chuyển khoản
+                        </Button>
                     )}
                 </Can>
 
                 {allowedNext.length === 0 && (
-                    <span className="text-xs font-semibold text-gray-400 uppercase">Đơn hàng đã ở trạng thái cuối — không còn hành động nào</span>
+                    <p className="text-13 text-fg-muted">
+                        Đơn hàng đã ở trạng thái cuối — không còn hành động nào.
+                    </p>
                 )}
             </div>
 

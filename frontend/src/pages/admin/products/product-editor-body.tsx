@@ -97,7 +97,7 @@ export function ProductEditorBody({
       </div>
 
       {isDirty && (
-        <div className="fixed inset-x-0 bottom-0 z-[40] border-t border-line bg-surface/95 px-4 py-3 backdrop-blur xl:left-[264px]">
+        <div className="fixed inset-x-0 bottom-0 z-floating border-t border-line bg-surface/95 px-4 py-3 backdrop-blur xl:left-[264px]">
           <div className="mx-auto flex max-w-admin items-center justify-between gap-3">
             <p className="text-13 text-fg-muted">Có thay đổi chưa lưu.</p>
             <div className="flex flex-wrap items-center gap-2">

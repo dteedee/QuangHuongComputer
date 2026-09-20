@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, Pencil, Plus, Power, Search, Tag, Trash2 } from 'lucide-react';
 import {
-  Badge, Button, Card, CardBody, IconButton, Img, Input, PageHeader, QueryBoundary, Skeleton,
-  StatusBadge, notify,
+  Badge, Button, Card, CardBody, DataTable, IconButton, Img, Input, PageHeader, RowActions,
+  StatusBadge, notify, type DataTableColumn,
 } from '../../../components/ui';
 import { Can } from '../../../components/Can';
 import { useConfirm } from '../../../context/ConfirmContext';
@@ -14,7 +14,7 @@ import { queryKeys } from '../../../lib/query-keys';
 import { BrandFormDialog } from './brand-form-dialog';
 import type { Brand, BrandWriteDto } from '../../../api/catalog/types';
 
-/** Lưới thương hiệu: logo, website, thứ tự hiển thị, ẩn/hiện. */
+/** Danh sách thương hiệu: logo, website, thứ tự hiển thị, ẩn/hiện. */
 export function BrandGridPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -42,6 +42,8 @@ export function BrandGridPage() {
     catch (error) { notify.error('Thao tác thất bại', { description: (error as Error).message }); }
   };
 
+  const openCreate = () => { setEditing(null); setDialogOpen(true); };
+
   const term = search.trim().toLowerCase();
   const rows = useMemo(
     () => (query.data ?? [])
@@ -50,6 +52,94 @@ export function BrandGridPage() {
     [query.data, term],
   );
 
+  const columns: DataTableColumn<Brand>[] = [
+    {
+      id: 'logo', header: 'Logo', width: '4rem', menuLabel: 'Logo',
+      cell: (b) => (
+        <div className="w-9">
+          {b.logoUrl
+            ? <Img src={b.logoUrl} alt="" ratio="1/1" fit="contain" blend wrapperClassName="rounded-md" />
+            : <div className="flex aspect-square items-center justify-center rounded-md bg-sunken text-fg-subtle"><Tag size={15} /></div>}
+        </div>
+      ),
+    },
+    {
+      id: 'name', header: 'Thương hiệu', locked: true,
+      cell: (b) => (
+        <>
+          <p className="text-13 font-medium text-fg">{b.name}</p>
+          <p className="truncate text-2xs text-fg-subtle">/{b.slug || '—'}</p>
+        </>
+      ),
+    },
+    {
+      id: 'description', header: 'Mô tả', defaultHidden: true, nowrap: false,
+      cell: (b) => <span className="line-clamp-2 text-xs text-fg-muted">{b.description || '—'}</span>,
+    },
+    {
+      id: 'website', header: 'Website',
+      cell: (b) => (b.website
+        ? (
+          <a
+            href={b.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-brand-text hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={13} aria-hidden /> Mở website
+          </a>
+        )
+        : <span className="text-xs text-fg-subtle">Chưa có</span>),
+    },
+    {
+      id: 'productCount', header: 'Sản phẩm', align: 'right',
+      cell: (b) => <Badge variant="neutral">{b.productCount ?? 0}</Badge>,
+    },
+    {
+      id: 'isActive', header: 'Trạng thái', align: 'center',
+      cell: (b) => <StatusBadge tone={b.isActive ? 'success' : 'neutral'}>{b.isActive ? 'Hiện' : 'Ẩn'}</StatusBadge>,
+    },
+    {
+      id: 'actions', header: '', align: 'right', locked: true, width: '1%',
+      cell: (brand) => (
+        <RowActions onClick={(e) => e.stopPropagation()}>
+          <Can permission={PERMISSIONS.CATALOG_EDIT}>
+            <IconButton aria-label={`Sửa ${brand.name}`} size="sm" variant="ghost" onClick={() => { setEditing(brand); setDialogOpen(true); }}>
+              <Pencil size={15} />
+            </IconButton>
+            <IconButton
+              aria-label={brand.isActive ? `Ẩn ${brand.name}` : `Hiện ${brand.name}`}
+              size="sm"
+              variant="ghost"
+              onClick={() => void mutate(brand.isActive ? 'Đã ẩn thương hiệu' : 'Đã hiện thương hiệu', () =>
+                brand.isActive ? catalogAdminApi.deleteBrand(brand.id) : catalogAdminApi.activateBrand(brand.id))}
+            >
+              <Power size={15} />
+            </IconButton>
+          </Can>
+          <Can permission={PERMISSIONS.CATALOG_DELETE}>
+            <IconButton
+              aria-label={`Xoá ${brand.name}`}
+              size="sm"
+              variant="ghost"
+              onClick={async () => {
+                const ok = await confirm({
+                  title: 'Ẩn thương hiệu?',
+                  message: `"${brand.name}" sẽ được ẩn. Nếu còn sản phẩm đang hoạt động thuộc hãng này, máy chủ sẽ từ chối.`,
+                  confirmText: 'Ẩn thương hiệu',
+                });
+                if (ok) await mutate('Đã ẩn thương hiệu', () => catalogAdminApi.deleteBrand(brand.id));
+              }}
+            >
+              <Trash2 size={15} />
+            </IconButton>
+          </Can>
+        </RowActions>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -57,9 +147,7 @@ export function BrandGridPage() {
         description="Hãng sản xuất hiển thị trên cửa hàng và trong bộ lọc sản phẩm."
         actions={
           <Can permission={PERMISSIONS.CATALOG_CREATE}>
-            <Button variant="primary" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-              <Plus size={16} /> Thêm thương hiệu
-            </Button>
+            <Button variant="primary" icon={Plus} onClick={openCreate}>Thêm thương hiệu</Button>
           </Can>
         }
       />
@@ -69,105 +157,28 @@ export function BrandGridPage() {
           <Input
             label="Tìm thương hiệu"
             icon={Search}
+            inputSize="sm"
             placeholder="Tên thương hiệu"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
-          <QueryBoundary
-            query={query}
-            skeleton={
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
-              </div>
-            }
-            isEmpty={() => rows.length === 0}
-            errorTitle="Không tải được danh sách thương hiệu"
+          <DataTable
+            caption="Danh sách thương hiệu"
+            columns={columns}
+            rows={query.isPending ? undefined : rows}
+            rowKey={(b) => b.id}
+            loading={query.isPending}
+            error={query.error}
+            onRetry={() => query.refetch()}
+            enableColumnVisibility
             empty={{
               icon: Tag,
               title: term ? 'Không có thương hiệu nào khớp' : 'Chưa có thương hiệu nào',
               description: term ? 'Thử từ khoá khác.' : 'Thêm hãng sản xuất để lọc sản phẩm theo thương hiệu.',
-              action: { label: 'Thêm thương hiệu', onClick: () => { setEditing(null); setDialogOpen(true); } },
+              action: { label: 'Thêm thương hiệu', onClick: openCreate },
             }}
-          >
-            {() => (
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {rows.map((brand) => (
-                  <li key={brand.id} className="group/row rounded-xl border border-line bg-surface p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 shrink-0">
-                        {brand.logoUrl ? (
-                          <Img src={brand.logoUrl} alt="" ratio="1/1" fit="contain" blend wrapperClassName="rounded-lg" />
-                        ) : (
-                          <div className="flex aspect-square items-center justify-center rounded-lg bg-sunken text-fg-subtle">
-                            <Tag size={18} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-fg">{brand.name}</p>
-                        <p className="truncate text-xs text-fg-subtle">/{brand.slug || '—'}</p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <StatusBadge tone={brand.isActive ? 'success' : 'neutral'}>
-                            {brand.isActive ? 'Hiện' : 'Ẩn'}
-                          </StatusBadge>
-                          <Badge variant="neutral">{brand.productCount ?? 0} sản phẩm</Badge>
-                        </div>
-                      </div>
-                    </div>
-                    {brand.description && (
-                      <p className="mt-3 line-clamp-2 text-xs text-fg-muted">{brand.description}</p>
-                    )}
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      {brand.website ? (
-                        <a
-                          href={brand.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-brand-text hover:underline"
-                        >
-                          <ExternalLink size={13} /> Website
-                        </a>
-                      ) : <span className="text-xs text-fg-subtle">Chưa có website</span>}
-                      <div className="flex items-center gap-1">
-                        <Can permission={PERMISSIONS.CATALOG_EDIT}>
-                          <IconButton aria-label="Sửa thương hiệu" size="sm" variant="ghost" onClick={() => { setEditing(brand); setDialogOpen(true); }}>
-                            <Pencil size={15} />
-                          </IconButton>
-                          <IconButton
-                            aria-label={brand.isActive ? 'Ẩn thương hiệu' : 'Hiện thương hiệu'}
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => void mutate(brand.isActive ? 'Đã ẩn thương hiệu' : 'Đã hiện thương hiệu', () =>
-                              brand.isActive ? catalogAdminApi.deleteBrand(brand.id) : catalogAdminApi.activateBrand(brand.id))}
-                          >
-                            <Power size={15} />
-                          </IconButton>
-                        </Can>
-                        <Can permission={PERMISSIONS.CATALOG_DELETE}>
-                          <IconButton
-                            aria-label="Xoá thương hiệu"
-                            size="sm"
-                            variant="ghost"
-                            onClick={async () => {
-                              const ok = await confirm({
-                                title: 'Ẩn thương hiệu?',
-                                message: `"${brand.name}" sẽ được ẩn. Nếu còn sản phẩm đang hoạt động thuộc hãng này, máy chủ sẽ từ chối.`,
-                                confirmText: 'Ẩn thương hiệu',
-                              });
-                              if (ok) await mutate('Đã ẩn thương hiệu', () => catalogAdminApi.deleteBrand(brand.id));
-                            }}
-                          >
-                            <Trash2 size={15} />
-                          </IconButton>
-                        </Can>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </QueryBoundary>
+          />
         </CardBody>
       </Card>
 

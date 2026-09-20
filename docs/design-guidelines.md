@@ -156,6 +156,18 @@ công dân hạng nhất. Mọi quyết định dưới đây do chủ dự án 
 3. Form: React Hook Form + Zod, nhãn trên ô, lỗi ngay dưới ô, không toast cho lỗi validate.
 4. Modal/Drawer lấy từ `components/ui`, không tự dựng overlay.
 
+**Ngoại lệ được chấp nhận của quy tắc "danh sách phải dùng DataTable"** (chốt 20/09/2026 —
+ghi ra để lần sau không ai tưởng là sót):
+- Cây phân cấp (`category-tree-page`): thụt lề theo cấp, thu gọn nhánh, đổi thứ tự — bảng phẳng
+  không diễn đạt được quan hệ cha–con.
+- Danh sách lồng danh sách (`spec-schema-page`): nhóm chứa thuộc tính.
+- Bảng Kanban: không phải danh sách dạng hàng.
+Ngoài ba dạng trên, mọi danh sách đều phải đi qua `DataTable`.
+
+**Quy ước phụ, áp cho mọi trang back office:**
+- Thông báo dùng `notify` của kit, KHÔNG gọi thẳng `react-hot-toast` trong trang.
+- Tiền tệ in bằng `formatDong()` kèm ký hiệu `₫` (U+20AB), không dùng chữ `đ` thường.
+
 ### 9.4 Nút lưu phải có đủ 4 trạng thái
 `rảnh` (bấm được, primary) · `đang lưu` (spinner, khoá) · `đã lưu` (KHÔNG phải nút — là dòng chữ
 mờ kèm dấu tích, tự biến mất sau vài giây) · `lỗi` (nút trở lại trạng thái rảnh + thông báo lỗi).

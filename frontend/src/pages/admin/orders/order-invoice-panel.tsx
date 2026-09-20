@@ -1,19 +1,19 @@
 /**
- * D07 — invoice number, lookup code, e-invoice status on the order; admin
- * can correct the buyer's details until the invoice is issued/recorded.
+ * D07 — số hoá đơn, mã tra cứu, trạng thái HĐĐT của đơn; quản trị viên sửa
+ * được thông tin người mua cho tới khi hoá đơn được phát hành/ghi nhận.
  *
- * The admin-orders detail endpoint does not carry invoice fields
- * (`docs/api-contracts/sales-pos-returns-loyalty.md` §4 lists no `invoice`
- * key) — this panel looks the invoice up itself: `invoicesApi.list({search:
- * orderNumber})` (accounting.md §1) then `einvoiceApi.status` for the
- * e-invoice status + lookup code (accounting-einvoice.md). Filed as IR
- * w3#(see report) asking W2-10/W2-24 to fold this into the order detail
- * response directly instead of two extra round-trips per order.
+ * Endpoint chi tiết admin-orders không mang trường hoá đơn
+ * (`docs/api-contracts/sales-pos-returns-loyalty.md` §4 không có khoá
+ * `invoice`) — panel này tự tra: `invoicesApi.list({search: orderNumber})`
+ * (accounting.md §1) rồi `einvoiceApi.status` để lấy trạng thái + mã tra cứu
+ * (accounting-einvoice.md). Đã mở IR w3#(xem báo cáo) đề nghị W2-10/W2-24 gộp
+ * thẳng vào response chi tiết đơn thay vì hai vòng gọi thêm cho mỗi đơn.
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { FileText, Loader2, Pencil } from 'lucide-react';
+import { FileText, Pencil } from 'lucide-react';
+import { Button, Card, Input, SaveButton, Skeleton, type SaveStatus } from '../../../components/ui';
 import { invoicesApi } from '../../../api/accounting/invoices';
 import { einvoiceApi } from '../../../api/accounting/einvoice';
 import type { InvoiceBuyer } from '../../../api/accounting/types';
@@ -30,9 +30,18 @@ const EINVOICE_STATUS_LABEL: Record<string, string> = {
 
 const LOCKED_STATUSES = new Set(['Issued', 'ExternalRecorded', 'Adjusted', 'Replaced']);
 
+const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <div>
+        <p className="text-2xs text-fg-subtle">{label}</p>
+        <p className="text-13 font-medium text-fg">{value}</p>
+    </div>
+);
+
 export const OrderInvoicePanel = ({ orderNumber }: { orderNumber: string }) => {
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState<InvoiceBuyer>({});
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+    const [saveError, setSaveError] = useState('');
     const queryClient = useQueryClient();
 
     const invoiceQuery = useQuery({
@@ -53,13 +62,17 @@ export const OrderInvoicePanel = ({ orderNumber }: { orderNumber: string }) => {
         mutationFn: (buyer: InvoiceBuyer) => einvoiceApi.updateBuyer(invoiceQuery.data!.detail.id, buyer),
         onSuccess: () => {
             toast.success('Đã cập nhật thông tin người mua!');
-            setEditing(false);
+            /* §9.4: "Đã lưu" là dòng chữ, tự hết — form đóng ở `onDone`. */
+            setSaveStatus('saved');
             queryClient.invalidateQueries({ queryKey: ['order-invoice-lookup', orderNumber] });
         },
-        onError: (err: any) => toast.error(err?.response?.data?.error || 'Hoá đơn đã xuất, không thể sửa thông tin người mua'),
+        onError: (err: any) => {
+            setSaveStatus('error');
+            setSaveError(err?.response?.data?.error || 'Hoá đơn đã xuất, không thể sửa thông tin người mua');
+        },
     });
 
-    if (invoiceQuery.isLoading) return <Loader2 className="animate-spin text-gray-300" size={18} />;
+    if (invoiceQuery.isLoading) return <Skeleton className="h-28 w-full" />;
     if (!invoiceQuery.data) return null; // chưa có hoá đơn cho đơn này — không hiện panel
 
     const { detail, eStatus } = invoiceQuery.data;
@@ -67,41 +80,85 @@ export const OrderInvoicePanel = ({ orderNumber }: { orderNumber: string }) => {
     const buyer = detail.buyer ?? {};
 
     return (
-        <div className="space-y-4 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-            <div className="flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold text-gray-900 dark:text-gray-100 uppercase flex items-center gap-2">
-                    <FileText size={14} className="text-accent" /> Hoá đơn
-                </h3>
-                <Can permission={PERMISSIONS.ACCOUNTING_EDIT_INVOICE}>
-                    {!isLocked && !editing && (
-                        <button onClick={() => { setForm(buyer); setEditing(true); }} className="flex items-center gap-1.5 text-xs font-semibold text-accent">
-                            <Pencil size={12} /> Sửa thông tin người mua
-                        </button>
-                    )}
-                </Can>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><p className="text-[10px] text-gray-400 uppercase">Số hoá đơn</p><p className="font-bold text-gray-900 dark:text-gray-100">{detail.invoiceNumber}</p></div>
-                <div><p className="text-[10px] text-gray-400 uppercase">Mã tra cứu</p><p className="font-bold text-gray-900 dark:text-gray-100">{eStatus?.lookupCode || '—'}</p></div>
-                <div className="col-span-2"><p className="text-[10px] text-gray-400 uppercase">Trạng thái HĐĐT</p><p className="font-bold text-gray-900 dark:text-gray-100">{EINVOICE_STATUS_LABEL[eStatus?.status ?? ''] ?? 'Chưa xuất HĐĐT'}</p></div>
-            </div>
+        <Card padded radius="xl" variant="flat" className="bg-sunken">
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-2">
+                    <h3 className="flex items-center gap-2 text-13 font-semibold uppercase tracking-wider text-fg-subtle">
+                        <FileText size={14} aria-hidden /> Hoá đơn
+                    </h3>
+                    <Can permission={PERMISSIONS.ACCOUNTING_EDIT_INVOICE}>
+                        {!isLocked && !editing && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                icon={Pencil}
+                                onClick={() => { setForm(buyer); setEditing(true); setSaveStatus('idle'); }}
+                            >
+                                Sửa thông tin người mua
+                            </Button>
+                        )}
+                    </Can>
+                </div>
 
-            {editing ? (
-                <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                    <input placeholder="Tên người mua" value={form.legalName ?? form.fullName ?? ''} onChange={(e) => setForm((f) => ({ ...f, legalName: e.target.value, fullName: e.target.value }))} className="w-full px-3 py-2 bg-white dark:bg-gray-900 rounded-lg text-sm" />
-                    <input placeholder="Mã số thuế" value={form.taxCode ?? ''} onChange={(e) => setForm((f) => ({ ...f, taxCode: e.target.value }))} className="w-full px-3 py-2 bg-white dark:bg-gray-900 rounded-lg text-sm" />
-                    <input placeholder="Địa chỉ" value={form.address ?? ''} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2 bg-white dark:bg-gray-900 rounded-lg text-sm" />
-                    <div className="flex gap-2 pt-1">
-                        <button onClick={() => setEditing(false)} className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 rounded-lg text-xs font-semibold">Hủy</button>
-                        <button onClick={() => updateBuyerMutation.mutate(form)} disabled={updateBuyerMutation.isPending} className="flex-1 px-3 py-2 bg-accent text-white rounded-lg text-xs font-semibold disabled:opacity-50">Lưu</button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Số hoá đơn" value={<span className="num">{detail.invoiceNumber}</span>} />
+                    <Field label="Mã tra cứu" value={<span className="num">{eStatus?.lookupCode || '—'}</span>} />
+                    <div className="sm:col-span-2">
+                        <Field
+                            label="Trạng thái HĐĐT"
+                            value={EINVOICE_STATUS_LABEL[eStatus?.status ?? ''] ?? 'Chưa xuất HĐĐT'}
+                        />
                     </div>
                 </div>
-            ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {buyer.legalName || buyer.fullName || 'Khách hàng cá nhân'}{buyer.taxCode ? ` · MST ${buyer.taxCode}` : ''}
-                </p>
-            )}
-            {isLocked && <p className="text-[10px] text-gray-400 italic">Hoá đơn đã phát hành — không thể sửa thông tin người mua.</p>}
-        </div>
+
+                {editing ? (
+                    <div className="flex flex-col gap-3 border-t border-line pt-3">
+                        <Input
+                            label="Tên người mua"
+                            inputSize="sm"
+                            value={form.legalName ?? form.fullName ?? ''}
+                            onChange={(e) => setForm((f) => ({ ...f, legalName: e.target.value, fullName: e.target.value }))}
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Input
+                                label="Mã số thuế"
+                                inputSize="sm"
+                                value={form.taxCode ?? ''}
+                                onChange={(e) => setForm((f) => ({ ...f, taxCode: e.target.value }))}
+                            />
+                            <Input
+                                label="Địa chỉ"
+                                inputSize="sm"
+                                value={form.address ?? ''}
+                                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                            />
+                        </div>
+                        <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => { setEditing(false); setSaveStatus('idle'); }}>
+                                Huỷ
+                            </Button>
+                            <SaveButton
+                                size="sm"
+                                status={saveStatus}
+                                errorMessage={saveError}
+                                onClick={() => { setSaveStatus('saving'); updateBuyerMutation.mutate(form); }}
+                                onDone={() => { setEditing(false); setSaveStatus('idle'); }}
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-13 text-fg-muted">
+                        {buyer.legalName || buyer.fullName || 'Khách hàng cá nhân'}
+                        {buyer.taxCode ? ` · MST ${buyer.taxCode}` : ''}
+                    </p>
+                )}
+
+                {isLocked && (
+                    <p className="text-2xs text-fg-subtle">
+                        Hoá đơn đã phát hành — không thể sửa thông tin người mua.
+                    </p>
+                )}
+            </div>
+        </Card>
     );
 };

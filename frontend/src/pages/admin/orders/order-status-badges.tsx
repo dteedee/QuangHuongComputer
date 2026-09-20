@@ -1,31 +1,35 @@
 /**
- * Vietnamese labels + badge classes shared by the list, kanban and detail
- * drawer (W3-10). Single place so the wording never drifts between views.
+ * Nhãn tiếng Việt + tone của `StatusBadge` dùng chung cho danh sách, kanban và
+ * ngăn chi tiết. Một chỗ duy nhất để chữ không lệch giữa ba khung nhìn.
+ *
+ * design-guidelines §9.1: trạng thái nghiệp vụ đi qua `StatusBadge`, KHÔNG tự
+ * chọn màu (bản cũ tự chọn màu Tailwind thô, đã bỏ).
  */
 import { CheckCircle2, Clock, Package, Truck, XCircle } from 'lucide-react';
 import type { OrderStatus, PaymentStatus } from '../../../api/sales/types';
+import type { StatusTone } from '../../../components/ui';
 
 export interface StatusVisual {
-    color: string;
-    bg: string;
+    tone: StatusTone;
     icon: React.ReactNode;
     label: string;
 }
 
-export const getOrderStatusInfo = (status: string): StatusVisual => {
-    switch (status) {
-        case 'Draft': return { color: 'text-amber-500', bg: 'bg-amber-50', icon: <Clock size={16} />, label: 'Bản nháp' };
-        case 'Pending': return { color: 'text-orange-500', bg: 'bg-orange-50', icon: <Clock size={16} />, label: 'Chờ xác nhận' };
-        case 'Confirmed': return { color: 'text-blue-500', bg: 'bg-blue-50', icon: <CheckCircle2 size={16} />, label: 'Đã xác nhận' };
-        case 'Paid': return { color: 'text-indigo-500', bg: 'bg-indigo-50', icon: <CheckCircle2 size={16} />, label: 'Đã thanh toán' };
-        case 'Fulfilled': return { color: 'text-cyan-600', bg: 'bg-cyan-50', icon: <Package size={16} />, label: 'Đã đóng gói' };
-        case 'Shipped': return { color: 'text-purple-500', bg: 'bg-purple-50', icon: <Truck size={16} />, label: 'Đang giao' };
-        case 'Delivered': return { color: 'text-emerald-500', bg: 'bg-emerald-50', icon: <Package size={16} />, label: 'Đã giao' };
-        case 'Completed': return { color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <CheckCircle2 size={16} />, label: 'Hoàn tất' };
-        case 'Cancelled': return { color: 'text-rose-500', bg: 'bg-rose-50', icon: <XCircle size={16} />, label: 'Đã hủy' };
-        default: return { color: 'text-gray-500', bg: 'bg-gray-50', icon: <Clock size={16} />, label: status };
-    }
+/** Enum backend -> [tone, nhãn]. Khai báo MỘT lần cho nghiệp vụ đơn hàng. */
+const ORDER_STATUS: Record<string, StatusVisual> = {
+    Draft: { tone: 'neutral', icon: <Clock size={14} />, label: 'Bản nháp' },
+    Pending: { tone: 'warning', icon: <Clock size={14} />, label: 'Chờ xác nhận' },
+    Confirmed: { tone: 'info', icon: <CheckCircle2 size={14} />, label: 'Đã xác nhận' },
+    Paid: { tone: 'info', icon: <CheckCircle2 size={14} />, label: 'Đã thanh toán' },
+    Fulfilled: { tone: 'info', icon: <Package size={14} />, label: 'Đã đóng gói' },
+    Shipped: { tone: 'violet', icon: <Truck size={14} />, label: 'Đang giao' },
+    Delivered: { tone: 'success', icon: <Package size={14} />, label: 'Đã giao' },
+    Completed: { tone: 'success', icon: <CheckCircle2 size={14} />, label: 'Hoàn tất' },
+    Cancelled: { tone: 'danger', icon: <XCircle size={14} />, label: 'Đã huỷ' },
 };
+
+export const getOrderStatusInfo = (status: string): StatusVisual =>
+    ORDER_STATUS[status] ?? { tone: 'neutral', icon: <Clock size={14} />, label: status };
 
 export const getPaymentStatusLabel = (status: PaymentStatus | string): string => {
     switch (status) {
@@ -36,6 +40,17 @@ export const getPaymentStatusLabel = (status: PaymentStatus | string): string =>
         case 'Failed': return 'Thất bại';
         case 'Refunded': return 'Đã hoàn tiền';
         default: return status;
+    }
+};
+
+/** Tone cho trạng thái thanh toán — chỉ dùng ở cột "Thanh toán" của danh sách. */
+export const getPaymentStatusTone = (status: PaymentStatus | string): StatusTone => {
+    switch (status) {
+        case 'Paid': return 'success';
+        case 'PartiallyPaid': return 'info';
+        case 'Failed': return 'danger';
+        case 'Refunded': return 'violet';
+        default: return 'neutral';
     }
 };
 

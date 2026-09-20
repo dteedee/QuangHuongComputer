@@ -1,6 +1,13 @@
+/**
+ * Quản lý khuyến mãi — viết lại giao diện theo design-guidelines §9.
+ *  · `<table>` tự viết → `DataTable` của bộ UI kit (§9.3): sắp xếp, rỗng, lỗi, khung xương lo sẵn.
+ *  · Trạng thái dùng `StatusBadge` thay cho bảng màu `bg-green-100/...` tự chế (§9.1).
+ *  · Token thay hết `gray-*` / `bg-white`; tiêu đề `text-xl` qua `PageHeader` (§9.2).
+ *  · Mỗi màn TỐI ĐA một nút đỏ — ở đây là "Tạo khuyến mãi".
+ */
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Search, RefreshCw, Play, Pause, BarChart3, Ticket, X, Filter, Archive, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, Search, RefreshCw, Play, Pause, BarChart3, Ticket, Filter, Archive, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   promotionsApi,
@@ -14,15 +21,19 @@ import {
 } from '../../api/promotions';
 import { PromotionWizard } from '../../components/admin/promotion-wizard';
 import { PromotionEffectivenessReport } from '../../components/admin/promotion-effectiveness-report';
-import { ConfirmDialog } from '../../components/ui';
+import {
+  Button, Card, ConfirmDialog, DataTable, IconButton, Input, PageHeader, Select, StatusBadge,
+  Tab, TabList, Tabs, type DataTableColumn, type StatusTone,
+} from '../../components/ui';
 
-type Tab = 'list' | 'report';
+type TabKey = 'list' | 'report';
 
-const STATUS_STYLE: Record<PromotionStatus, string> = {
-  Draft: 'bg-gray-100 text-gray-700',
-  Active: 'bg-green-100 text-green-700',
-  Paused: 'bg-amber-100 text-amber-700',
-  Expired: 'bg-red-100 text-red-700',
+/** Enum backend → tone của `StatusBadge`. Khai báo MỘT lần (§9.1). */
+const STATUS_TONE: Record<PromotionStatus, StatusTone> = {
+  Draft: 'neutral',
+  Active: 'success',
+  Paused: 'warning',
+  Expired: 'danger',
 };
 
 export default function PromotionsPage() {
@@ -31,10 +42,11 @@ export default function PromotionsPage() {
   const [statusFilter, setStatusFilter] = useState<PromotionStatus | ''>('');
   const [storeFilter, setStoreFilter] = useState('');
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<Tab>('list');
+  const [tab, setTab] = useState<TabKey>('list');
 
   const [items, setItems] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<Promotion | null>(null);
   const [selectedReport, setSelectedReport] = useState<Promotion | null>(null);
@@ -52,10 +64,9 @@ export default function PromotionsPage() {
     try {
       const data = await promotionsApi.list(filter);
       setItems(data ?? []);
+      setLoadError(null);
     } catch (e) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Không tải được danh sách promotion — backend chưa sẵn sàng?';
-      toast.error(msg);
+      setLoadError(e);
       setItems([]);
     } finally {
       setLoading(false);
@@ -80,7 +91,6 @@ export default function PromotionsPage() {
   };
 
   const openCreate = () => { setEditing(null); setWizardOpen(true); };
-  const openEdit = (p: Promotion) => { setEditing(p); setWizardOpen(true); };
 
   const doActivate = async (p: Promotion) => {
     try { await promotionsApi.activate(p.id); toast.success('Đã kích hoạt'); void load(); }
@@ -97,18 +107,18 @@ export default function PromotionsPage() {
     try {
       if (confirmTarget.action === 'archive') {
         await promotionsApi.archive(confirmTarget.promotion.id);
-        toast.success('Đã lưu trữ promotion');
+        toast.success('Đã lưu trữ khuyến mãi');
       } else {
         await promotionsApi.remove(confirmTarget.promotion.id);
-        toast.success('Đã xoá promotion');
+        toast.success('Đã xoá khuyến mãi');
       }
       setConfirmTarget(null);
       void load();
     } catch (e) {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
         ?? (confirmTarget.action === 'archive'
-          ? 'Không lưu trữ được — promotion đã có lượt dùng, hãy Tạm dừng thay thế.'
-          : 'Không xoá được — promotion đã có lượt dùng, hãy Lưu trữ thay thế.');
+          ? 'Không lưu trữ được — khuyến mãi đã có lượt dùng, hãy Tạm dừng thay thế.'
+          : 'Không xoá được — khuyến mãi đã có lượt dùng, hãy Lưu trữ thay thế.');
       toast.error(msg);
     } finally {
       setConfirmLoading(false);
@@ -121,149 +131,159 @@ export default function PromotionsPage() {
     setParams(next, { replace: true });
   };
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Ticket className="w-7 h-7 text-accent" /> Quản lý Khuyến mãi
-          </h1>
-          <p className="text-sm text-gray-500">
-            Mã nhập tay, khuyến mãi tự động và Flash Sale — thay thế Coupons + Flash Sales cũ.
-          </p>
+  const columns: DataTableColumn<Promotion>[] = [
+    {
+      id: 'name', header: 'Tên / Mã', locked: true,
+      cell: (p) => (
+        <button type="button" onClick={() => { setEditing(p); setWizardOpen(true); }} className="text-left">
+          <span className="block font-medium text-fg">{p.name}</span>
+          {p.code && <code className="mt-0.5 block font-mono text-2xs text-fg-subtle">{p.code}</code>}
+        </button>
+      ),
+    },
+    { id: 'type', header: 'Loại', cell: (p) => promotionTypeLabel[p.type] },
+    { id: 'discount', header: 'Giảm', nowrap: true, cell: (p) => <span className="font-medium text-brand-text">{formatDiscount(p)}</span> },
+    {
+      id: 'status', header: 'Trạng thái', align: 'center',
+      cell: (p) => <StatusBadge tone={STATUS_TONE[p.status]}>{promotionStatusLabel[p.status]}</StatusBadge>,
+    },
+    { id: 'priority', header: 'Ưu tiên', align: 'right', cell: (p) => <span className="num">{p.priority}</span> },
+    {
+      id: 'usage', header: 'Sử dụng', align: 'right',
+      cell: (p) => <span className="num">{p.currentUsage}{p.maxTotalUsage ? ` / ${p.maxTotalUsage}` : ''}</span>,
+    },
+    {
+      id: 'period', header: 'Hiệu lực', nowrap: true,
+      cell: (p) => (
+        <span className="text-2xs text-fg-muted">
+          {new Date(p.startAt).toLocaleDateString('vi-VN')}
+          {p.endAt && <> → {new Date(p.endAt).toLocaleDateString('vi-VN')}</>}
+        </span>
+      ),
+    },
+    {
+      id: 'actions', header: 'Thao tác', align: 'right', width: '1%', locked: true,
+      cell: (p) => (
+        <div className="flex items-center justify-end gap-1">
+          {p.status === 'Active' ? (
+            <IconButton aria-label="Tạm dừng" title="Tạm dừng" variant="ghost" size="sm" onClick={() => doPause(p)}>
+              <Pause className="h-4 w-4" />
+            </IconButton>
+          ) : (
+            <IconButton aria-label="Kích hoạt" title="Kích hoạt" variant="ghost" size="sm" onClick={() => doActivate(p)}>
+              <Play className="h-4 w-4" />
+            </IconButton>
+          )}
+          <IconButton aria-label="Báo cáo hiệu quả" title="Báo cáo hiệu quả" variant="ghost" size="sm" onClick={() => { setSelectedReport(p); setTab('report'); }}>
+            <BarChart3 className="h-4 w-4" />
+          </IconButton>
+          <IconButton aria-label="Lưu trữ" title="Lưu trữ" variant="ghost" size="sm" onClick={() => setConfirmTarget({ promotion: p, action: 'archive' })}>
+            <Archive className="h-4 w-4" />
+          </IconButton>
+          <IconButton aria-label="Xoá" title="Xoá" variant="ghost" size="sm" onClick={() => setConfirmTarget({ promotion: p, action: 'delete' })}>
+            <Trash2 className="h-4 w-4 text-danger" />
+          </IconButton>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => void load()} className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
-            <RefreshCw className="w-4 h-4" /> Làm mới
-          </button>
-          <button onClick={openCreate} className="flex items-center gap-1 px-4 py-2 text-sm bg-accent text-white rounded-lg hover:bg-accent-hover">
-            <Plus className="w-4 h-4" /> Tạo Promotion
-          </button>
-        </div>
-      </header>
+      ),
+    },
+  ];
 
-      <div className="flex items-center gap-1 border-b border-gray-200">
-        <TabButton active={tab === 'list'} onClick={() => setTab('list')}>Danh sách</TabButton>
-        <TabButton active={tab === 'report'} onClick={() => setTab('report')} disabled={!selectedReport}>
-          <span className="flex items-center gap-1"><BarChart3 className="w-4 h-4" /> Báo cáo hiệu quả</span>
-        </TabButton>
-      </div>
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Khuyến mãi"
+        description="Mã nhập tay, khuyến mãi tự động và Flash Sale — thay thế Coupons + Flash Sales cũ."
+        actions={
+          <>
+            <Button variant="outline" size="sm" icon={RefreshCw} onClick={() => void load()}>Làm mới</Button>
+            {/* Nút đỏ DUY NHẤT của màn hình (§9.1). */}
+            <Button size="sm" icon={Plus} onClick={openCreate}>Tạo khuyến mãi</Button>
+          </>
+        }
+      />
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
+        <TabList aria-label="Chế độ xem khuyến mãi">
+          <Tab value="list">Danh sách</Tab>
+          <Tab value="report" disabled={!selectedReport}>Báo cáo hiệu quả</Tab>
+        </TabList>
+      </Tabs>
 
       {tab === 'list' && (
         <>
-          <div className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo tên hoặc mã..."
-                className="w-full pl-10 pr-9 py-2 border rounded-lg text-sm focus:outline-none focus:border-accent"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select value={filterType ?? ''} onChange={(e) => changeType(e.target.value as PromotionType | '')} className="px-3 py-2 border rounded-lg text-sm">
-                <option value="">Tất cả loại</option>
-                <option value="Code">Mã nhập tay</option>
-                <option value="Automatic">Tự động</option>
-                <option value="FlashSale">Flash Sale</option>
-              </select>
-              <select value={statusFilter} onChange={(e) => setStatusFilter((e.target.value as PromotionStatus | ''))} className="px-3 py-2 border rounded-lg text-sm">
-                <option value="">Tất cả trạng thái</option>
-                <option value="Draft">Nháp</option>
-                <option value="Active">Đang chạy</option>
-                <option value="Paused">Tạm dừng</option>
-                <option value="Expired">Hết hạn</option>
-              </select>
-              <input value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)} placeholder="Store ID..."
-                className="px-3 py-2 border rounded-lg text-sm w-40" />
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="p-10 text-center text-sm text-gray-500">Đang tải...</div>
-            ) : filtered.length === 0 ? (
-              <EmptyState onCreate={openCreate} />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr className="text-left text-xs uppercase text-gray-500">
-                      <Th>Tên / Mã</Th>
-                      <Th>Loại</Th>
-                      <Th>Giảm</Th>
-                      <Th>Trạng thái</Th>
-                      <Th>Ưu tiên</Th>
-                      <Th>Sử dụng</Th>
-                      <Th>Hiệu lực</Th>
-                      <Th className="text-right">Thao tác</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {filtered.map((p) => (
-                      <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <button onClick={() => openEdit(p)} className="text-left">
-                            <div className="font-semibold text-gray-900">{p.name}</div>
-                            {p.code && <code className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{p.code}</code>}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">{promotionTypeLabel[p.type]}</td>
-                        <td className="px-4 py-3 text-red-600 font-medium">{formatDiscount(p)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[p.status]}`}>
-                            {promotionStatusLabel[p.status]}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">{p.priority}</td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {p.currentUsage}{p.maxTotalUsage ? ` / ${p.maxTotalUsage}` : ''}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">
-                          {new Date(p.startAt).toLocaleDateString('vi-VN')}
-                          {p.endAt && <> → {new Date(p.endAt).toLocaleDateString('vi-VN')}</>}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-1">
-                            {p.status === 'Active' ? (
-                              <IconBtn onClick={() => doPause(p)} title="Tạm dừng"><Pause className="w-4 h-4" /></IconBtn>
-                            ) : (
-                              <IconBtn onClick={() => doActivate(p)} title="Kích hoạt"><Play className="w-4 h-4" /></IconBtn>
-                            )}
-                            <IconBtn onClick={() => { setSelectedReport(p); setTab('report'); }} title="Báo cáo">
-                              <BarChart3 className="w-4 h-4" />
-                            </IconBtn>
-                            <IconBtn onClick={() => setConfirmTarget({ promotion: p, action: 'archive' })} title="Lưu trữ">
-                              <Archive className="w-4 h-4" />
-                            </IconBtn>
-                            <IconBtn onClick={() => setConfirmTarget({ promotion: p, action: 'delete' })} title="Xoá">
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </IconBtn>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <Card padded radius="xl">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end">
+              <div className="min-w-0 flex-1">
+                <Input
+                  label="Tìm kiếm"
+                  icon={Search}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Tìm theo tên hoặc mã…"
+                />
               </div>
-            )}
-          </div>
+              <div className="grid flex-1 gap-3 sm:grid-cols-3">
+                <Select
+                  label="Loại"
+                  value={filterType ?? ''}
+                  onChange={(e) => changeType(e.target.value as PromotionType | '')}
+                  options={[
+                    { value: '', label: 'Tất cả loại' },
+                    { value: 'Code', label: 'Mã nhập tay' },
+                    { value: 'Automatic', label: 'Tự động' },
+                    { value: 'FlashSale', label: 'Flash Sale' },
+                  ]}
+                />
+                <Select
+                  label="Trạng thái"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as PromotionStatus | '')}
+                  options={[
+                    { value: '', label: 'Tất cả trạng thái' },
+                    { value: 'Draft', label: 'Nháp' },
+                    { value: 'Active', label: 'Đang chạy' },
+                    { value: 'Paused', label: 'Tạm dừng' },
+                    { value: 'Expired', label: 'Hết hạn' },
+                  ]}
+                />
+                <Input
+                  label="Chi nhánh"
+                  icon={Filter}
+                  value={storeFilter}
+                  onChange={(e) => setStoreFilter(e.target.value)}
+                  placeholder="Mã chi nhánh…"
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card padded radius="xl">
+            <DataTable
+              caption="Danh sách khuyến mãi"
+              columns={columns}
+              rows={loading ? undefined : filtered}
+              rowKey={(p) => p.id}
+              loading={loading}
+              error={loadError}
+              onRetry={() => void load()}
+              enableColumnVisibility
+              empty={{
+                icon: Ticket,
+                title: 'Chưa có khuyến mãi nào',
+                description: 'Tạo khuyến mãi đầu tiên để áp dụng cho đơn hàng.',
+                action: { label: 'Tạo khuyến mãi', onClick: openCreate, icon: Plus },
+              }}
+            />
+          </Card>
         </>
       )}
 
       {tab === 'report' && selectedReport && (
-        <div className="space-y-4">
-          <button onClick={() => setTab('list')} className="text-sm text-gray-500 hover:text-accent">
-            ← Quay lại danh sách
-          </button>
-          <h2 className="text-lg font-bold text-gray-900">Báo cáo: {selectedReport.name}</h2>
+        <div className="space-y-3">
+          <Button variant="ghost" size="sm" onClick={() => setTab('list')}>← Quay lại danh sách</Button>
+          <h2 className="text-13 font-semibold uppercase tracking-wider text-fg-subtle">
+            Báo cáo: {selectedReport.name}
+          </h2>
           <PromotionEffectivenessReport promotion={selectedReport} />
         </div>
       )}
@@ -280,7 +300,7 @@ export default function PromotionsPage() {
       <ConfirmDialog
         open={!!confirmTarget}
         onOpenChange={(open) => { if (!open) setConfirmTarget(null); }}
-        title={confirmTarget?.action === 'archive' ? 'Lưu trữ promotion?' : 'Xoá promotion?'}
+        title={confirmTarget?.action === 'archive' ? 'Lưu trữ khuyến mãi?' : 'Xoá khuyến mãi?'}
         description={
           confirmTarget?.action === 'archive'
             ? `"${confirmTarget?.promotion.name}" sẽ chuyển sang Hết hạn và không thể kích hoạt lại. Nếu đã có lượt dùng, dùng Tạm dừng thay thế.`
@@ -291,49 +311,6 @@ export default function PromotionsPage() {
         loading={confirmLoading}
         onConfirm={() => void confirmArchiveOrDelete()}
       />
-    </div>
-  );
-}
-
-function TabButton({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-        active ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-800'
-      } disabled:opacity-40`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <th className={`px-4 py-3 font-semibold ${className}`}>{children}</th>;
-}
-
-function IconBtn({ children, onClick, title }: { children: React.ReactNode; onClick: () => void; title: string }) {
-  return (
-    <button onClick={onClick} title={title} className="p-1.5 text-gray-500 hover:text-accent hover:bg-accent/10 rounded-lg">
-      {children}
-    </button>
-  );
-}
-
-function EmptyState({ onCreate }: { onCreate: () => void }) {
-  return (
-    <div className="p-10 text-center">
-      <Ticket className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-      <p className="text-sm text-gray-500 mb-3">Chưa có promotion nào.</p>
-      <button onClick={onCreate} className="inline-flex items-center gap-1 px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-hover">
-        <Plus className="w-4 h-4" /> Tạo promotion đầu tiên
-      </button>
-      <div className="mt-3">
-        <Link to="/backoffice/flash-sales" className="text-xs text-gray-400 hover:underline">
-          (Trang Flash Sales cũ)
-        </Link>
-      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default function InboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
-    <motion.div variants={fadeUpAdmin} initial="hidden" animate="show" className="space-y-6 pb-16">
+    <motion.div variants={fadeUpAdmin} initial="hidden" animate="show" className="space-y-4 pb-8">
       <PageHeader
         title="Hộp thư liên hệ"
         description="Tin nhắn từ form liên hệ trên website — xác nhận tiếp nhận trong 03 ngày làm việc (Luật BVQLNTD 19/2023 Đ.31)."

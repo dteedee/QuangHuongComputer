@@ -10,6 +10,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Store } from 'lucide-react';
+import { buttonVariants, Card, PageHeader, Pagination } from '../../components/ui';
+import { paths } from '../../routes';
 import { salesAdminOrdersApi } from '../../api/sales/admin-orders';
 import type { Order } from '../../api/sales/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -85,47 +87,47 @@ export const AdminOrdersPage = () => {
     const total = ordersQuery.data?.total ?? 0;
 
     return (
-        <div className="space-y-10 pb-20 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-5xl font-semibold text-gray-900 dark:text-gray-100 tracking-tighter leading-none mb-3">
-                        Quản lý <span className="text-accent">Đơn hàng</span>
-                    </h1>
-                    <p className="text-gray-700 dark:text-gray-300 font-semibold uppercase text-xs">Hệ thống xử lý đơn hàng và vận chuyển toàn quốc</p>
-                </div>
-                {/* Toy create-order modal removed (phase spec step 3) — POS is the real order-creation surface. */}
-                <Link to="/backoffice/pos" className="flex items-center gap-3 px-8 py-4 bg-accent hover:bg-accent-hover text-white text-xs font-semibold uppercase rounded-xl transition-all shadow-sm shadow-blue-500/15 active:scale-95">
-                    <Store size={18} /> Tạo đơn tại POS
-                </Link>
-            </div>
+        /* §9.2: khoảng cách gap-4, không `space-y-10 pb-20` kiểu landing page. */
+        <div className="space-y-4">
+            <PageHeader
+                title="Đơn hàng"
+                description="Xử lý đơn từ website, POS và báo giá — lọc, đổi trạng thái, xem chi tiết."
+                actions={
+                    /* Tạo đơn là hành động chính DUY NHẤT của màn hình (§9.1).
+                       Modal tạo đơn đồ chơi đã gỡ ở phase-58 — POS là nơi tạo đơn thật. */
+                    <Link to={paths.backoffice.pos()} className={buttonVariants({ variant: 'primary', size: 'sm' })}>
+                        <Store size={16} aria-hidden /> Tạo đơn tại POS
+                    </Link>
+                }
+            />
 
             <OrdersFilterBar filters={filters} onChange={handleFilterChange} onReset={resetFilters} hasActiveFilters={hasActiveFilters} viewMode={viewMode} onViewModeChange={setViewMode} />
 
-            <motion.div key={viewMode} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className={viewMode === 'list' ? 'premium-card overflow-hidden' : ''}>
-                <QueryBoundary
-                    query={ordersQuery}
-                    isEmpty={() => orders.length === 0}
-                    empty={{ title: 'Chưa có đơn hàng nào', description: 'Đơn hàng tạo từ website, POS hoặc báo giá sẽ xuất hiện ở đây.' }}
-                    skeleton={<div className="p-8 space-y-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 bg-gray-50 dark:bg-gray-800 rounded-xl animate-pulse" />)}</div>}
-                    errorTitle="Không tải được danh sách đơn hàng"
-                >
-                    {() => viewMode === 'list' ? (
-                        <OrdersListTable orders={orders} highlightedOrderId={highlightedOrderId} highlightedRowRef={highlightedRowRef} onSelect={(o) => setSelectedOrderId(o.id)} onCancel={handleCancelOrder} />
-                    ) : (
-                        <OrdersKanbanBoard orders={orders} onSelect={(o) => setSelectedOrderId(o.id)} onChanged={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })} />
-                    )}
-                </QueryBoundary>
-            </motion.div>
+            <motion.div key={viewMode} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <Card padded={false} radius="xl" className="overflow-hidden">
+                    <QueryBoundary
+                        query={ordersQuery}
+                        isEmpty={() => orders.length === 0}
+                        empty={{ title: 'Chưa có đơn hàng nào', description: 'Đơn hàng tạo từ website, POS hoặc báo giá sẽ xuất hiện ở đây.' }}
+                        skeleton={<div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-10 animate-pulse rounded-lg bg-sunken" />)}</div>}
+                        errorTitle="Không tải được danh sách đơn hàng"
+                    >
+                        {() => viewMode === 'list' ? (
+                            <OrdersListTable orders={orders} highlightedOrderId={highlightedOrderId} highlightedRowRef={highlightedRowRef} onSelect={(o) => setSelectedOrderId(o.id)} onCancel={handleCancelOrder} />
+                        ) : (
+                            <div className="p-4">
+                                <OrdersKanbanBoard orders={orders} onSelect={(o) => setSelectedOrderId(o.id)} onChanged={() => queryClient.invalidateQueries({ queryKey: ['admin-orders'] })} />
+                            </div>
+                        )}
+                    </QueryBoundary>
 
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6 mt-10">
-                <span className="text-xs font-semibold text-gray-400">
-                    Hiển thị <span className="text-gray-900 dark:text-gray-100">{orders.length}</span> / <span className="text-gray-900 dark:text-gray-100">{total}</span> đơn hàng
-                </span>
-                <div className="flex gap-3">
-                    <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent disabled:opacity-30 transition-all shadow-sm">Trang trước</button>
-                    <button disabled={orders.length < 20} onClick={() => setPage((p) => p + 1)} className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-semibold uppercase text-gray-400 hover:text-accent disabled:opacity-30 transition-all shadow-sm">Trang kế &gt;</button>
-                </div>
-            </div>
+                    {/* §9.3: phân trang dùng `Pagination` của bộ UI kit — hiện đúng dải
+                        "1–20 / 137" thay vì hai nút "Trang trước / Trang kế" không số. */}
+                    <div className="border-t border-line px-3 py-2">
+                        <Pagination page={page} pageSize={20} total={total} onPageChange={setPage} />
+                    </div>
+                </Card>
+            </motion.div>
 
             <OrderDetailDrawer orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
         </div>

@@ -136,7 +136,6 @@ export const BackofficeLayout = () => {
                 isOpen={showCommandPalette}
                 onClose={() => setShowCommandPalette(false)}
                 items={allItems}
-                isDark={isDark}
             />
 
             <AdminFAB />

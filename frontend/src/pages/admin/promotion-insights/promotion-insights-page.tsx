@@ -55,7 +55,7 @@ export default function PromotionInsightsPage() {
   const totalOrders = reportQuery.data?.promotions.reduce((s, p) => s + p.orderCount, 0) ?? null;
 
   return (
-    <motion.div variants={fadeUpAdmin} initial="hidden" animate="show" className="space-y-6 pb-16">
+    <motion.div variants={fadeUpAdmin} initial="hidden" animate="show" className="space-y-4 pb-8">
       <PageHeader
         title="Hiệu quả khuyến mãi"
         description="Số đơn, doanh thu, tiền giảm và tỉ lệ dùng lại theo từng chương trình — số liệu thật từ báo cáo, không tự tính."
@@ -69,7 +69,7 @@ export default function PromotionInsightsPage() {
       {reportQuery.isError ? (
         <ErrorState error={reportQuery.error} onRetry={() => reportQuery.refetch()} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Tổng số đơn (kỳ)" value={reportQuery.isPending ? undefined : totalOrders} />
           <StatCard label="Tổng doanh thu (kỳ)" value={reportQuery.isPending ? undefined : totalRevenue !== null ? `${totalRevenue.toLocaleString('vi-VN')}đ` : null} />
           <StatCard label="Tổng tiền đã giảm (kỳ)" value={reportQuery.isPending ? undefined : totalDiscount !== null ? `${totalDiscount.toLocaleString('vi-VN')}đ` : null} />

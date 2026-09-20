@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Download, Package, Plus } from 'lucide-react';
-import { Button, Card, CardBody, DataTable, PageHeader, Pagination, notify } from '../../../components/ui';
+import { Button, Card, CardBody, DataTable, PageHeader, Pagination } from '../../../components/ui';
 import { Can } from '../../../components/Can';
-import { useConfirm, usePrompt } from '../../../context/ConfirmContext';
 import { PERMISSIONS } from '../../../constants/permissions';
-import { catalogAdminApi } from '../../../api/catalog/admin';
 import { catalogPublicListingApi } from '../../../api/catalog/public-listing';
 import { queryKeys } from '../../../lib/query-keys';
 import { paths } from '../../../routes';
@@ -14,14 +12,12 @@ import { buildProductColumns } from './product-list-columns';
 import { ProductListFilters } from './product-list-filters';
 import { ProductBulkActions, ProductRowActions } from './product-list-actions';
 import { useAdminProductList } from './use-admin-product-list';
+import { useProductListMutations } from './use-product-list-mutations';
 import type { Product } from '../../../api/catalog/types';
 
 /** Danh sách sản phẩm quản trị: lọc, sắp xếp, chọn nhiều, xuất Excel. */
 export function AdminProductsPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const confirm = useConfirm();
-  const { promptSelect } = usePrompt();
   const [selected, setSelected] = useState<string[]>([]);
   const list = useAdminProductList();
 
@@ -42,49 +38,11 @@ export function AdminProductsPage() {
     [brandsQuery.data],
   );
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
-
-  const run = async (label: string, work: () => Promise<unknown>) => {
-    try {
-      await work();
-      await refresh();
-      notify.success(label);
-    } catch (error) {
-      notify.error('Thao tác thất bại', { description: (error as Error).message });
-    }
-  };
-
-  const handlers = {
-    onEdit: (p: Product) => navigate(paths.backoffice.productEdit(p.id)),
-    onDuplicate: (p: Product) =>
-      run('Đã nhân bản sản phẩm', async () => {
-        const copy = await catalogAdminApi.createProduct({
-          name: `${p.name} (bản sao)`,
-          description: p.description ?? '',
-          price: p.price,
-          costPrice: p.costPrice ?? 0,
-          categoryId: p.categoryId,
-          brandId: p.brandId,
-          stockQuantity: 0,
-          warrantyInfo: p.warrantyInfo,
-          warrantyMonths: p.warrantyMonths ?? undefined,
-          isReturnExcluded: p.isReturnExcluded,
-          unitName: p.unitName ?? undefined,
-        });
-        navigate(paths.backoffice.productEdit(copy.id));
-      }),
-    onTogglePublish: (p: Product) =>
-      run(p.publishedAt ? 'Đã gỡ khỏi web' : 'Đã hiện trên web', () =>
-        p.publishedAt ? catalogAdminApi.unpublishProduct(p.id) : catalogAdminApi.publishProduct(p.id)),
-    onHide: async (p: Product) => {
-      const ok = await confirm({
-        title: 'Ẩn sản phẩm?',
-        message: `"${p.name}" sẽ ngừng kinh doanh và biến mất khỏi mọi kênh bán. Có thể mở bán lại bất cứ lúc nào.`,
-        confirmText: 'Ẩn sản phẩm',
-      });
-      if (ok) await run('Đã ẩn sản phẩm', () => catalogAdminApi.deleteProduct(p.id));
-    },
-  };
+  const { handlers, bulk, exportXlsx } = useProductListMutations({
+    categories,
+    filters: list.filters,
+    selectedIds: selected,
+  });
 
   const columns = useMemo(
     () => [
@@ -102,50 +60,6 @@ export function AdminProductsPage() {
     [list.stockOf],
   );
 
-  const bulk = (ids: string[]) => (
-    <ProductBulkActions
-      ids={ids}
-      categories={categories}
-      onActivate={() => run(`Đã mở bán ${ids.length} sản phẩm`, () =>
-        Promise.all(ids.map((i) => catalogAdminApi.activateProduct(i))))}
-      onChangeCategory={async () => {
-        const categoryId = await promptSelect({
-          title: 'Chuyển ngành hàng',
-          message: `Áp dụng cho ${ids.length} sản phẩm đã chọn.`,
-          options: categories,
-        });
-        if (categoryId) {
-          await run('Đã chuyển ngành hàng', () =>
-            Promise.all(ids.map((i) => catalogAdminApi.updateProduct(i, { categoryId }))));
-        }
-      }}
-      onHide={async () => {
-        const ok = await confirm({
-          title: `Ẩn ${ids.length} sản phẩm?`,
-          message: 'Các sản phẩm này sẽ ngừng kinh doanh trên mọi kênh. Có thể mở bán lại sau.',
-          confirmText: 'Ẩn sản phẩm',
-        });
-        if (ok) await run(`Đã ẩn ${ids.length} sản phẩm`, () =>
-          Promise.all(ids.map((i) => catalogAdminApi.deleteProduct(i))));
-      }}
-    />
-  );
-
-  const exportXlsx = () =>
-    run('Đã tải tệp Excel', async () => {
-      const blob = await catalogAdminApi.exportProducts({
-        categoryId: list.filters.categoryId || undefined,
-        brandId: list.filters.brandId || undefined,
-        ids: selected.length > 0 ? selected.join(',') : undefined,
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `san-pham-${new Date().toISOString().slice(0, 10)}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
   return (
     <div className="space-y-4">
       <PageHeader
@@ -154,13 +68,12 @@ export function AdminProductsPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Can permission={PERMISSIONS.CATALOG_EXPORT}>
-              <Button variant="outline" onClick={exportXlsx}>
-                <Download size={16} /> Xuất Excel
-              </Button>
+              <Button variant="outline" icon={Download} onClick={exportXlsx}>Xuất Excel</Button>
             </Can>
             <Can permission={PERMISSIONS.CATALOG_CREATE}>
-              <Button variant="primary" onClick={() => navigate(paths.backoffice.productNew())}>
-                <Plus size={16} /> Thêm sản phẩm
+              {/* Hành động chính DUY NHẤT của màn hình (§9.1). */}
+              <Button variant="primary" icon={Plus} onClick={() => navigate(paths.backoffice.productNew())}>
+                Thêm sản phẩm
               </Button>
             </Can>
           </div>
@@ -195,7 +108,15 @@ export function AdminProductsPage() {
             selectedIds={selected}
             onSelectionChange={setSelected}
             enableColumnVisibility
-            bulkActions={bulk}
+            bulkActions={(ids) => (
+              <ProductBulkActions
+                ids={ids}
+                categories={categories}
+                onActivate={() => bulk.activate(ids)}
+                onChangeCategory={() => bulk.changeCategory(ids)}
+                onHide={() => bulk.hide(ids)}
+              />
+            )}
             skeletonRows={list.pageSize}
             empty={{
               icon: Package,

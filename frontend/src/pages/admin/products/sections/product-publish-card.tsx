@@ -58,7 +58,7 @@ export function ProductPublishCard({
               <>
                 <Button
                   type="button"
-                  variant="primary"
+                  variant="outline"
                   size="sm"
                   className="w-full"
                   loading={busy}
@@ -74,7 +74,7 @@ export function ProductPublishCard({
                 )}
               </>
             )}
-            <Button type="button" variant={product.isActive ? 'outline' : 'primary'} size="sm" className="w-full" loading={busy} onClick={onToggleActive}>
+            <Button type="button" variant="outline" size="sm" className="w-full" loading={busy} onClick={onToggleActive}>
               <Power size={15} /> {product.isActive ? 'Ngừng kinh doanh' : 'Mở bán lại'}
             </Button>
           </div>

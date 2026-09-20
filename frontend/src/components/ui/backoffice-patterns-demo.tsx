@@ -139,7 +139,7 @@ export const BackofficePatternsDemo = () => {
                     {/* §9.6: đường dẫn/URL dùng ô rộng hết hàng, không cắt cụt. */}
                     <Input
                         label="Đường dẫn theo dõi"
-                        className="sm:col-span-2"
+                        wrapperClassName="sm:col-span-2"
                         defaultValue="https://quanghuong.vn/theo-doi-don-hang/DH-2601"
                     />
                 </div>
