@@ -146,15 +146,17 @@ export const salesAccountOrdersApi = {
 
     // Return Requests (customer side)
     returns: {
-        // Get my return requests (Phase 07: đổi tên endpoint -> /sales/returns/mine)
+        // Get my return requests — server route thật là GET /sales/returns (lọc theo user
+        // đăng nhập ngay trong handler), KHÔNG có route con /mine (xem
+        // backend/Services/Sales/Endpoints/Returns/ReturnEndpoints.cs dòng ~63).
         getMine: async () => {
-            const response = await client.get<ReturnRequest[]>('/sales/returns/mine');
+            const response = await client.get<ReturnRequest[]>('/sales/returns');
             return response.data;
         },
 
         // Backward-compat alias
         getList: async () => {
-            const response = await client.get<ReturnRequest[]>('/sales/returns/mine');
+            const response = await client.get<ReturnRequest[]>('/sales/returns');
             return response.data;
         },
 

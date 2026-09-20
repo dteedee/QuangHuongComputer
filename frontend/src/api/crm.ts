@@ -450,9 +450,9 @@ export const crmApi = {
       await client.delete(`/crm/customers/${customerId}/segments/${segmentId}`);
     },
 
-    /** `POST /crm/customers/analytics/recalculate` — `ManageCustomers`. No body. */
+    /** `POST /crm/analytics/recalculate` — `ManageCustomers`. No body. */
     recalculateAnalytics: async (): Promise<{ processed: number; autoAssigned: number }> => {
-      const response = await client.post<{ processed: number; autoAssigned: number }>('/crm/customers/analytics/recalculate');
+      const response = await client.post<{ processed: number; autoAssigned: number }>('/crm/analytics/recalculate');
       return response.data;
     },
   },

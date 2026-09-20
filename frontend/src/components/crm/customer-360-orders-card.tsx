@@ -39,7 +39,7 @@ export function Customer360OrdersCard({ userId }: { userId: string }) {
           {orders.map((o) => (
             <button
               key={o.id}
-              onClick={() => navigate(`/backoffice/sales/orders?orderId=${o.id}`)}
+              onClick={() => navigate(`/backoffice/orders?orderId=${o.id}`)}
               className="w-full flex items-center justify-between py-2 text-left hover:bg-gray-50 rounded-lg px-2"
             >
               <div className="flex items-center gap-2 text-sm text-gray-700">

@@ -60,6 +60,6 @@ export async function chatWithAI(message: string, history: Array<{ role: string;
 
 // AI PC Builder
 export async function getAIPCBuildSuggestion(budget: number, useCase: string) {
-  const { data } = await client.post('/catalog/pc-builder/ai-suggest', { budget, useCase });
+  const { data } = await client.post('/catalog/pc-builder/suggest', { budget, useCase });
   return data;
 }

@@ -8,14 +8,14 @@ import { client } from './client';
  * unowned call sites in `pages/account/address-book-page.tsx` and
  * `components/address-book-selector.tsx`).
  *
- * NOTE (found while moving this, not fixed here — see
- * `reports/integration-requests-w1.md`): `api/auth.ts`'s
- * `authApi.{addAddress,updateAddress,deleteAddress,getMyAddresses}` is a
- * SECOND, independent address CRUD hitting `/auth/me/addresses` (this file
- * hits `/sales/addresses`). `pages/AccountPage.tsx` uses the `authApi` one;
- * `pages/account/address-book-page.tsx` + `components/address-book-selector.tsx`
- * use this one. Two different backend routes for the same feature — flagged,
- * not merged (needs the backend owner to say which route is canonical).
+ * NOTE: `api/auth.ts`'s `authApi.{addAddress,updateAddress,deleteAddress,
+ * getMyAddresses}` used to be a SECOND, independent address CRUD hitting
+ * `/auth/me/addresses`. Backend removed that route cluster at W1-2 (see
+ * `backend/Services/Identity/Endpoints/UserProfileEndpoints.cs` header —
+ * `/api/sales/addresses`, i.e. this file, is the surviving book) and grep
+ * confirmed zero remaining callers of the `authApi` versions, so they were
+ * deleted from `api/auth.ts` too. This file (`/sales/addresses`) is the only
+ * address book now.
  */
 
 export async function getAddresses() {

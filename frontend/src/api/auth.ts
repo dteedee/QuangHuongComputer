@@ -234,38 +234,6 @@ export const authApi = {
     },
 
     /**
-     * Get my addresses
-     */
-    getMyAddresses: async (): Promise<CustomerAddress[]> => {
-        const response = await client.get<CustomerAddress[]>('/auth/me/addresses');
-        return response.data;
-    },
-
-    /**
-     * Add new address
-     */
-    addAddress: async (address: Omit<CustomerAddress, 'id'>): Promise<{ message: string; id: string }> => {
-        const response = await client.post<{ message: string; id: string }>('/auth/me/addresses', address);
-        return response.data;
-    },
-
-    /**
-     * Update address
-     */
-    updateAddress: async (id: string, address: Omit<CustomerAddress, 'id'>): Promise<{ message: string }> => {
-        const response = await client.put<{ message: string }>(`/auth/me/addresses/${id}`, address);
-        return response.data;
-    },
-
-    /**
-     * Delete address
-     */
-    deleteAddress: async (id: string): Promise<{ message: string }> => {
-        const response = await client.delete<{ message: string }>(`/auth/me/addresses/${id}`);
-        return response.data;
-    },
-
-    /**
      * Request password reset
      */
     forgotPassword: async (email: string): Promise<void> => {

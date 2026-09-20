@@ -19,8 +19,15 @@ namespace Sales.Application.Installments;
 /// </summary>
 public class InstallmentApplicationService
 {
-    public const string PartnersConfigKey = "Sales:Installment:Partners";
-    public const string LeadHoldHoursConfigKey = "Installment:LeadHoldHours";
+    // Khoá của BẢNG CẤU HÌNH ADMIN (config.Configurations), không phải đường dẫn appsettings:
+    // IAppSettings tra thẳng theo tên khoá trong bảng đó. Hai hằng số cũ mang dạng
+    // "Sales:Installment:Partners" nên không bao giờ khớp hàng nào -> ActivePartners() luôn rỗng,
+    // tức trả góp bị tắt vĩnh viễn mà không ai chỉnh được từ back office. Giữ tên cũ làm khoá
+    // dự phòng đọc từ appsettings (xem ReadPartnersRaw).
+    public const string PartnersConfigKey = "INSTALLMENT_PARTNERS";
+    public const string LeadHoldHoursConfigKey = "INSTALLMENT_LEAD_HOLD_HOURS";
+    public const string LegacyPartnersConfigKey = "Sales:Installment:Partners";
+    public const string LegacyLeadHoldHoursConfigKey = "Installment:LeadHoldHours";
     private const int DefaultLeadHoldHours = 72;
 
     private readonly SalesDbContext _db;
@@ -40,11 +47,15 @@ public class InstallmentApplicationService
     /// <summary>Danh sách đối tác đang bật, đọc từ config phân tách bởi dấu phẩy. Rỗng = tắt trả góp.</summary>
     public IReadOnlyList<string> ActivePartners()
     {
-        var raw = _settings.GetString(PartnersConfigKey, string.Empty);
+        var raw = _settings.GetString(
+            PartnersConfigKey,
+            _settings.GetString(LegacyPartnersConfigKey, string.Empty));
         return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    public int LeadHoldHours() => _settings.GetInt(LeadHoldHoursConfigKey, DefaultLeadHoldHours);
+    public int LeadHoldHours() => _settings.GetInt(
+        LeadHoldHoursConfigKey,
+        _settings.GetInt(LegacyLeadHoldHoursConfigKey, DefaultLeadHoldHours));
 
     public async Task<InstallmentApplication> ApplyAsync(
         Guid customerId, Guid orderId, string provider, int termMonths, decimal downPayment,

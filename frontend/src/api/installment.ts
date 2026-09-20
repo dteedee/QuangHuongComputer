@@ -71,36 +71,8 @@ export interface MyInstallmentApplication {
  * upload-removal half of the same component); filed again below with the endpoint evidence. Do
  * not build new UI against these — use `getPartners`/`getMyApplications` above.
  */
-export interface InstallmentProvider {
-    code: string;
-    name: string;
-    type: 'CreditCard' | 'FinanceCompany';
-    isZeroPercent: boolean;
-    annualInterestRate: number;
-    supportedTerms: number[];
-    minDownPaymentPercent: number;
-    processingFeePercent: number;
-    monthlyCollectionFee: number;
-}
 
-export interface InstallmentCalculationRequest {
-    totalAmount: number;
-    termMonths: number;
-    downPaymentPercent: number;
-    annualInterestRate?: number;
-    processingFee?: number;
-    monthlyCollectionFee?: number;
-}
 
-export interface InstallmentCalculationResponse {
-    principal: number;
-    downPaymentAmount: number;
-    monthlyPayment: number;
-    totalPayment: number;
-    difference: number;
-    termMonths: number;
-    interestRate: number;
-}
 
 /**
  * @deprecated field names don't match `ApplyInstallmentDto` (`Provider`/`DownPayment`/
@@ -157,15 +129,4 @@ export const installmentApi = {
         return response.data;
     },
 
-    /** @deprecated dead route — see the LEGACY comment above `InstallmentProvider`. */
-    getProviders: async (): Promise<InstallmentProvider[]> => {
-        const response = await client.get<InstallmentProvider[]>('/payment/installments/providers');
-        return response.data;
-    },
-
-    /** @deprecated dead route — see the LEGACY comment above `InstallmentProvider`. */
-    calculate: async (data: InstallmentCalculationRequest): Promise<InstallmentCalculationResponse> => {
-        const response = await client.post<InstallmentCalculationResponse>('/payment/installments/calculate', data);
-        return response.data;
-    },
 };

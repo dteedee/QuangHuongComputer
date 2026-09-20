@@ -8,6 +8,9 @@ import type { RouteDef, RedirectDef } from './route-types';
 import { ROUTES } from './route-paths';
 
 const AccountPage = lazy(() => import('../pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const ProfilePage = lazy(() => import('../pages/account/profile-page'));
+const SecurityPage = lazy(() => import('../pages/account/security-page'));
+const ReturnsListPage = lazy(() => import('../pages/account/returns-list-page'));
 const OrdersPage = lazy(() => import('../pages/account/OrdersPage').then((m) => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('../pages/account/OrderDetailPage').then((m) => ({ default: m.OrderDetailPage })));
 const NewReturnRequestPage = lazy(() => import('../pages/account/NewReturnRequestPage').then((m) => ({ default: m.NewReturnRequestPage })));
@@ -21,8 +24,11 @@ const GuestOrderLookupPage = lazy(() => import('../pages/account/GuestOrderLooku
 // (routes/index.ts), matching the old "bắt buộc đăng nhập (mọi role)" behaviour exactly.
 export const storefrontAccountRoutes: RouteDef[] = [
   { path: 'tai-khoan', element: AccountPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, name: 'account' },
+  { path: 'tai-khoan/profile', element: ProfilePage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountProfile' },
+  { path: 'tai-khoan/security', element: SecurityPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountSecurity' },
   { path: 'tai-khoan/orders', element: OrdersPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountOrders' },
   { path: 'tai-khoan/orders/:orderId', element: OrderDetailPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountOrderDetail' },
+  { path: 'tai-khoan/returns', element: ReturnsListPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountReturns' },
   { path: 'tai-khoan/returns/new', element: NewReturnRequestPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountReturnNew' },
   { path: 'tai-khoan/returns/:id', element: ReturnRequestDetailPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountReturnDetail' },
   { path: 'tai-khoan/loyalty', element: LoyaltyPage, layout: 'storefront', seo: 'noindex', requiresAuth: true, hidden: true, name: 'accountLoyalty' },

@@ -58,7 +58,7 @@ export default function RfqDetailPage() {
         <div className="p-6 max-w-[1500px] mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <button
-                    onClick={() => navigate('/backoffice/rfq')}
+                    onClick={() => navigate('/backoffice/inventory/rfq')}
                     className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
                 >
                     <ArrowLeft size={16} /> Quay lại danh sách RFQ

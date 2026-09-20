@@ -25,6 +25,10 @@ public static class SystemConfigSeedDataOperations
             // JSON extensibility: public-facing key dùng bởi FE FreeShippingProgress (Number, public category)
             Entry("FREESHIP_THRESHOLD", "500000", "Ngưỡng đơn hàng được miễn phí vận chuyển (VNĐ)", "Sales & Tax", now, ConfigValueType.Number),
             Entry("SHIPPING_COST", "30000", "Phí vận chuyển cơ bản (VNĐ)", "Sales & Tax", now),
+            // Trả góp: danh sách đối tác tài chính đang bật, phân tách bởi dấu phẩy. ĐỂ TRỐNG =
+            // tắt trả góp (ActivePartners() rỗng thì mọi hồ sơ bị từ chối ngay tại tầng nghiệp vụ).
+            Entry("INSTALLMENT_PARTNERS", "", "Đối tác trả góp đang bật, cách nhau bởi dấu phẩy (để trống = tắt trả góp)", "Sales & Tax", now),
+            Entry("INSTALLMENT_LEAD_HOLD_HOURS", "72", "Số giờ giữ hàng chờ công ty tài chính duyệt hồ sơ trả góp", "Sales & Tax", now, ConfigValueType.Number),
             Entry("MIN_ORDER_VALUE", "100000", "Giá trị đơn hàng tối thiểu", "Sales & Tax", now),
             Entry("MAX_DISCOUNT_PERCENT", "30", "Giảm giá tối đa cho phép (%)", "Sales & Tax", now),
             Entry("RETURN_WINDOW_DAYS", "7", "Số ngày cho phép đổi trả hàng", "Sales & Tax", now),

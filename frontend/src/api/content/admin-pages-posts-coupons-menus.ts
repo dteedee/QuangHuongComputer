@@ -13,7 +13,7 @@ import type { Coupon, HomepageSection, Menu, MenuItem, Page, Post } from './type
 export const contentAdminCoreApi = {
     // Seed
     seed: async () => {
-        const response = await client.post('/content/admin/seed');
+        const response = await client.post('/content/seed');
         return response.data;
     },
 
@@ -88,7 +88,7 @@ export const contentAdminCoreApi = {
         return response.data;
     },
     validateCoupon: async (code: string, orderAmount: number) => {
-        const response = await client.post('/content/coupons/validate', { code, orderAmount });
+        const response = await client.post('/content/admin/coupons/validate', { code, orderAmount });
         return response.data;
     },
 

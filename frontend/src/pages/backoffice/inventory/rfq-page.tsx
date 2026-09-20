@@ -131,7 +131,7 @@ export default function RfqPage() {
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex justify-center gap-1.5">
                                             <button
-                                                onClick={() => navigate(`/backoffice/rfq/${rfq.id}`)}
+                                                onClick={() => navigate(`/backoffice/inventory/rfq/${rfq.id}`)}
                                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold"
                                             >
                                                 <Eye size={13} /> Chi tiết
@@ -156,7 +156,7 @@ export default function RfqPage() {
             {showCreate && (
                 <RfqCreateModal
                     onClose={() => setShowCreate(false)}
-                    onCreated={id => { setShowCreate(false); void load(); navigate(`/backoffice/rfq/${id}`); }}
+                    onCreated={id => { setShowCreate(false); void load(); navigate(`/backoffice/inventory/rfq/${id}`); }}
                 />
             )}
 
