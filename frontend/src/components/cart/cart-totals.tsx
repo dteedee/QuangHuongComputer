@@ -12,6 +12,13 @@ export interface CartTotalsProps {
   vatBreakdown?: VatBucketDto[];
   /** Chưa biết phí ship (khách chưa chọn địa chỉ) ⇒ hiện "Tính ở bước thanh toán". */
   shippingUnknown?: boolean;
+  /**
+   * Đơn đã vượt ngưỡng miễn phí vận chuyển. Chính sách phía server chỉ nhìn tiền hàng sau giảm,
+   * KHÔNG nhìn địa chỉ, nên khi cờ này bật thì phí ship đã biết chắc là 0 — được phép nói "Miễn
+   * phí" ngay cả khi `shippingUnknown`. Không có cờ này thì thanh tiến độ phía trên báo "được
+   * miễn phí giao hàng" trong khi dòng ngay dưới vẫn báo "Tính ở bước thanh toán".
+   */
+  freeShippingReached?: boolean;
 }
 
 /**
@@ -21,6 +28,7 @@ export interface CartTotalsProps {
  */
 export function CartTotals({
   subtotal, discountAmount, shippingAmount, total, tax, vatBreakdown, shippingUnknown,
+  freeShippingReached,
 }: CartTotalsProps) {
   const buckets = vatBreakdown?.filter(b => b.vat > 0) ?? [];
   const singleRate = buckets.length === 1 ? buckets[0].rate : null;
@@ -41,10 +49,10 @@ export function CartTotals({
 
       <div className="flex justify-between text-fg-muted pb-3 border-b border-line">
         <span>Phí vận chuyển</span>
-        {shippingUnknown
-          ? <span className="text-2xs text-fg-subtle">Tính ở bước thanh toán</span>
-          : shippingAmount === 0
-            ? <span className="font-semibold text-success">Miễn phí</span>
+        {freeShippingReached || (!shippingUnknown && shippingAmount === 0)
+          ? <span className="font-semibold text-success">Miễn phí</span>
+          : shippingUnknown
+            ? <span className="text-2xs text-fg-subtle">Tính ở bước thanh toán</span>
             : <Price value={shippingAmount} tone="admin" />}
       </div>
 

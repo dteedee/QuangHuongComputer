@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using BuildingBlocks.Configuration;
 using BuildingBlocks.Security;
 using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
@@ -79,7 +80,7 @@ internal static class CartOptionsEndpoints
 
         // W0-4: phí ship KHÔNG còn do client quyết định — server tính lại từ ShippingFeePolicy.
         // dto.ShippingAmount chỉ còn để tương thích payload cũ (giữ endpoint không 400).
-        group.MapPost("/cart/set-shipping", async ([FromBody] SetShippingDto dto, SalesDbContext db, ClaimsPrincipal user, IConfiguration config) =>
+        group.MapPost("/cart/set-shipping", async ([FromBody] SetShippingDto dto, SalesDbContext db, ClaimsPrincipal user, IAppSettings settings, IConfiguration config) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -93,7 +94,7 @@ internal static class CartOptionsEndpoints
                 return Results.NotFound(new { Error = "Cart not found" });
 
             var fee = ShippingFeePolicy.Calculate(
-                cart.SubtotalAmount - cart.EffectiveDiscountAmount, isPickup: false, config);
+                cart.SubtotalAmount - cart.EffectiveDiscountAmount, isPickup: false, settings, config);
             cart.SetShippingAmount(fee);
             await db.SaveChangesAsync();
 

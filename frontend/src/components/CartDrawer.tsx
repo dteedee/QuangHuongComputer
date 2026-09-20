@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { FreeShippingProgress } from './cart/free-shipping-progress';
 import { CartRemoveButton } from './cart/cart-remove-button';
 import { CartTotals } from './cart/cart-totals';
+import { useFreeShipping } from '../hooks/use-free-shipping';
 import { Badge, Button, Drawer, EmptyState, IconButton, Img, Price, Skeleton } from './ui';
 
 interface CartDrawerProps {
@@ -21,6 +22,8 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
         total, tax, vatBreakdown, isGuest, isLoading, isUpdating,
     } = useCart();
     const navigate = useNavigate();
+    // Cùng một nguồn với thanh tiến độ phía trên, để hai chỗ không nói ngược nhau.
+    const freeShipping = useFreeShipping(Math.max(0, subtotal - discountAmount));
 
     const go = (path: string) => { navigate(path); onClose(); };
 
@@ -29,6 +32,7 @@ export const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             <CartTotals
                 subtotal={subtotal} discountAmount={discountAmount} shippingAmount={shippingAmount}
                 total={total} tax={tax} vatBreakdown={vatBreakdown} shippingUnknown={isGuest}
+                freeShippingReached={freeShipping.reached}
             />
             <div className="grid grid-cols-2 gap-3">
                 <Button variant="outline" onClick={() => go('/gio-hang')}>Xem giỏ hàng</Button>

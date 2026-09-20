@@ -55,6 +55,19 @@ describe('CartTotals', () => {
     expect(screen.getByText('Tính ở bước thanh toán')).toBeInTheDocument();
   });
 
+  // Lỗi thật thấy trên :5174 ngày 2026-09-20: ngăn kéo giỏ hàng báo "Đơn hàng được miễn phí
+  // giao hàng" ở trên, còn dòng Phí vận chuyển ngay dưới vẫn báo "Tính ở bước thanh toán".
+  it('đã đạt ngưỡng freeship -> nói "Miễn phí", không hoãn sang bước thanh toán', () => {
+    render(
+      <CartTotals
+        subtotal={13990000} discountAmount={0} shippingAmount={0} total={13990000} tax={0}
+        shippingUnknown freeShippingReached
+      />,
+    );
+    expect(screen.getByText('Miễn phí')).toBeInTheDocument();
+    expect(screen.queryByText('Tính ở bước thanh toán')).not.toBeInTheDocument();
+  });
+
   it('discountAmount > 0 -> hiện dòng Giảm giá với đúng số tiền server trả', () => {
     render(<CartTotals subtotal={200000} discountAmount={20000} shippingAmount={0} total={180000} tax={0} />);
     expect(screen.getByText('Giảm giá')).toBeInTheDocument();

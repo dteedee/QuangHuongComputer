@@ -1,6 +1,6 @@
 import { Truck } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
-import { useSystemConfig } from '../../context/SystemConfigContext';
+import { useFreeShipping } from '../../hooks/use-free-shipping';
 
 interface FreeShippingProgressProps {
     /** Giá trị đơn hàng hiện tại (đã trừ giảm giá) dùng để tính tiến độ. */
@@ -12,14 +12,10 @@ interface FreeShippingProgressProps {
 
 /**
  * Thanh tiến độ "mua thêm X để miễn phí ship" — dùng chung ở CartDrawer & CartPage.
- * Ngưỡng đọc từ config public FREESHIP_THRESHOLD (admin sửa trong ConfigPortal), fallback 500K.
+ * Ngưỡng và trạng thái lấy từ `useFreeShipping` để khối tiền bên dưới nói cùng một điều.
  */
 export function FreeShippingProgress({ amount, threshold, className }: FreeShippingProgressProps) {
-    const { getNumber } = useSystemConfig();
-    const effectiveThreshold = threshold ?? getNumber('FREESHIP_THRESHOLD', 500000);
-    const progress = Math.min((amount / effectiveThreshold) * 100, 100);
-    const remaining = Math.max(0, effectiveThreshold - amount);
-    const reached = progress >= 100;
+    const { progress, remaining, reached } = useFreeShipping(amount, threshold);
 
     return (
         <div className={`bg-white p-4 rounded-xl border border-gray-100 shadow-sm animate-fade-in ${className ?? ''}`}>

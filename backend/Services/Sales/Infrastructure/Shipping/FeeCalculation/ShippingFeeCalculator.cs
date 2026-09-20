@@ -8,12 +8,10 @@ namespace Sales.Infrastructure.Shipping.FeeCalculation;
 /// <summary>
 /// Free trên ngưỡng, còn lại phí phẳng — đọc qua <see cref="IAppSettings"/> (bảng
 /// <c>SystemConfig.Configurations</c>, sửa được từ trang admin, có cache 60s) thay vì
-/// <see cref="IConfiguration"/> tĩnh. Đây LÀ khoảng trống D12/phase-49 chỉ ra: trước track này,
-/// <c>Sales.Application.Pricing.ShippingFeePolicy</c> (W0-4, file KHÔNG thuộc ownership của track
-/// này — <c>Application/Pricing/**</c> là của W2-3) đọc <c>IConfiguration</c>, nên sửa ngưỡng free-
-/// ship ở màn hình admin không đổi gì lúc checkout. Track này KHÔNG sửa được file đó trực tiếp;
-/// đã ghi integration request để W2-3 đổi <c>CheckoutOrchestrator</c> sang gọi
-/// <see cref="IShippingFeeCalculator"/> này (endpoint <c>/api/sales/shipping/quote</c> đã dùng nó).
+/// <see cref="IConfiguration"/> tĩnh. Ngưỡng + phí phẳng lấy qua
+/// <see cref="ShippingFeePolicy.Read(IAppSettings?, IConfiguration?)"/> nên class này và
+/// <c>CheckoutOrchestrator</c> không thể lệch nhau: cùng khoá, cùng thứ tự ưu tiên
+/// (cấu hình admin → appsettings → hằng số). Lớp này bổ sung thêm phần báo giá theo địa chỉ (GHN).
 ///
 /// GHN fee API: CHỈ gọi khi <c>Shipping:GHN:Token</c> có cấu hình VÀ có province+ward — nhưng vì
 /// GHN dùng district_id nội bộ riêng của họ (không phải mã hành chính 2025 hai cấp của nhà nước) và
@@ -39,8 +37,11 @@ public sealed class ShippingFeeCalculator : IShippingFeeCalculator
         if (request.IsPickup)
             return new ShippingFeeQuoteResult(0m, IsFreeShipping: true, Source: "pickup");
 
-        var threshold = _settings.GetDecimal("Shipping:FreeThreshold", ShippingFeePolicy.DefaultFreeThreshold);
-        var flat = _settings.GetDecimal("Shipping:FlatFee", ShippingFeePolicy.DefaultFlatFee);
+        // Khoá của bảng cấu hình admin là FREESHIP_THRESHOLD / SHIPPING_COST, KHÔNG phải
+        // "Shipping:FreeThreshold" (đường dẫn của appsettings). Bản trước tra bằng tên appsettings
+        // nên IAppSettings không bao giờ tìm thấy hàng nào và luôn rơi về hằng số — sửa ngưỡng
+        // trong back office vẫn không đổi phí. Đọc chung một chỗ với ShippingFeePolicy.
+        var (threshold, flat) = ShippingFeePolicy.Read(_settings, _config);
         var netSubtotal = request.NetSubtotal < 0 ? 0m : request.NetSubtotal;
 
         if (netSubtotal >= threshold)

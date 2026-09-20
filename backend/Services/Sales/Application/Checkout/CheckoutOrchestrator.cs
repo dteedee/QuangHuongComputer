@@ -1,3 +1,4 @@
+using BuildingBlocks.Configuration;
 using BuildingBlocks.Messaging.IntegrationEvents;
 using BuildingBlocks.Time;
 using Catalog.Infrastructure;
@@ -42,6 +43,7 @@ public class CheckoutOrchestrator
     private readonly IBusinessClock _clock;
     private readonly IPublishEndpoint _bus;
     private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
+    private readonly IAppSettings _settings;
     private readonly ILogger<CheckoutOrchestrator> _logger;
 
     public CheckoutOrchestrator(
@@ -56,6 +58,7 @@ public class CheckoutOrchestrator
         IBusinessClock clock,
         IPublishEndpoint bus,
         Microsoft.Extensions.Configuration.IConfiguration config,
+        IAppSettings settings,
         ILogger<CheckoutOrchestrator> logger)
     {
         _salesDb = salesDb;
@@ -69,6 +72,7 @@ public class CheckoutOrchestrator
         _clock = clock;
         _bus = bus;
         _config = config;
+        _settings = settings;
         _logger = logger;
     }
 
@@ -171,7 +175,7 @@ public class CheckoutOrchestrator
                 Shipping = req.Shipping with
                 {
                     ShippingFee = ShippingFeePolicy.Calculate(
-                        netSubtotal, req.Shipping.IsPickup, _config),
+                        netSubtotal, req.Shipping.IsPickup, _settings, _config),
                 },
             };
         }

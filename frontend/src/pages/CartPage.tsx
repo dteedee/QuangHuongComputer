@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { ArrowRight, RotateCcw, ShieldCheck, ShoppingBag, Tag, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { ROUTES } from '../routes/route-paths';
-import { useSystemConfig } from '../context/SystemConfigContext';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import { FreeShippingProgress } from '../components/cart/free-shipping-progress';
+import { useFreeShipping } from '../hooks/use-free-shipping';
 import { CartLineRow } from '../components/cart/cart-line-row';
 import { CartTotals } from '../components/cart/cart-totals';
 import {
@@ -26,9 +26,11 @@ export const CartPage = () => {
         subtotal, discountAmount, shippingAmount, total, tax, vatBreakdown,
         isLoading, isUpdating, error, refreshCart,
     } = useCart();
-    const { getNumber } = useSystemConfig();
     const navigate = useNavigate();
     const [confirmClear, setConfirmClear] = useState(false);
+    // Gọi ở đầu component: bên dưới có nhiều nhánh return sớm (lỗi / đang tải / giỏ rỗng),
+    // đặt hook sau chúng sẽ vi phạm rules-of-hooks.
+    const freeShipping = useFreeShipping(Math.max(0, subtotal - discountAmount));
 
     // ---------- 1. Lỗi ----------
     if (error && items.length === 0) {
@@ -76,7 +78,6 @@ export const CartPage = () => {
     }
 
     // ---------- 4. Có hàng ----------
-    const freeShipThreshold = getNumber('FREESHIP_THRESHOLD', 500000);
     const progressAmount = Math.max(0, subtotal - discountAmount);
 
     return (
@@ -102,7 +103,7 @@ export const CartPage = () => {
 
                 <div className="flex flex-col lg:flex-row gap-8">
                     <div className="flex-1 min-w-0 space-y-4">
-                        <FreeShippingProgress amount={progressAmount} threshold={freeShipThreshold} />
+                        <FreeShippingProgress amount={progressAmount} threshold={freeShipping.threshold} />
 
                         <motion.div
                             variants={stagger()} initial="hidden" animate="show"
@@ -159,6 +160,7 @@ export const CartPage = () => {
                                     tax={tax}
                                     vatBreakdown={vatBreakdown}
                                     shippingUnknown={isGuest}
+                                    freeShippingReached={freeShipping.reached}
                                 />
 
                                 <p className="text-2xs text-fg-subtle">
