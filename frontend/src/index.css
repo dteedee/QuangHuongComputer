@@ -98,6 +98,15 @@
 
 html {
   scroll-behavior: smooth;
+
+  /* Tắt scroll anchoring của Chrome — nếu không, header sticky bị "giật giật" khi cuộn chậm.
+     Cơ chế: header nằm TRONG luồng tài liệu và tự thu gọn khi scrollY vượt ngưỡng, làm chiều cao
+     tài liệu giảm ~62px. Chrome neo lại vị trí cuộn để bù phần mất đi, kéo scrollY tụt xuống dưới
+     ngưỡng → header bung ra → tài liệu cao lại → scrollY tăng → thu gọn... lặp vô hạn.
+     Đo thật trên /san-pham: scrollY nhảy 62→41→63→40→57→64 trong khi header đổi 175→127→175→113→175.
+     Đặt `overflow-anchor: none` thì dãy cuộn thành đơn điệu 8,16,…,112 và header chỉ đổi đúng một lần.
+     Trang này không có khối nào tự chèn thêm nội dung phía trên viewport nên không cần neo cuộn. */
+  overflow-anchor: none;
 }
 
 /* Page background/foreground come from the semantic tokens — they already flip

@@ -26,11 +26,40 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const location = useLocation();
 
-    // Scroll listener for sticky shrink
+    // Thu gọn header khi cuộn — CÓ VÙNG CHẾT (hysteresis), không dùng một ngưỡng duy nhất.
+    //
+    // Một ngưỡng duy nhất (`scrollY > 60`) gây rung: header nằm trong luồng tài liệu, thu gọn làm
+    // tài liệu thấp đi ~62px, trình duyệt bù lại vị trí cuộn và đẩy scrollY qua lại quanh đúng con
+    // số 60 → header đóng/mở liên tục. `overflow-anchor: none` trong index.css chặn nguyên nhân
+    // gốc trên Chrome; vùng chết dưới đây là lớp chắn thứ hai cho các trình duyệt bù cuộn theo
+    // cách khác, và cũng tránh việc chỉ lăn chuột một nấc quanh ngưỡng đã làm header nhấp nháy.
+    // Vùng chết phải RỘNG HƠN phần chiều cao mất đi khi thu gọn (~62px), nếu không cú bù cuộn vẫn
+    // đủ sức kéo ngược qua ngưỡng còn lại.
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 60);
+        const COLLAPSE_ABOVE = 140;
+        const EXPAND_BELOW = 60;
+        let frame = 0;
+
+        const readScroll = () => {
+            frame = 0;
+            const y = window.scrollY;
+            // Đang thu gọn thì chỉ bung khi lên hẳn trên EXPAND_BELOW, và ngược lại.
+            setIsScrolled((collapsed) => (collapsed ? y > EXPAND_BELOW : y > COLLAPSE_ABOVE));
+        };
+
+        // Gộp nhiều sự kiện scroll vào một khung hình: cuộn chậm bắn rất nhiều sự kiện, mỗi lần
+        // setState là một lần render lại cả header.
+        const handleScroll = () => {
+            if (frame) return;
+            frame = requestAnimationFrame(readScroll);
+        };
+
+        readScroll(); // tải trang ở giữa chừng (nhấn F5 khi đang cuộn) vẫn ra đúng trạng thái
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (frame) cancelAnimationFrame(frame);
+        };
     }, []);
 
     // One shared cache entry per resource (phase §12): the header no longer
