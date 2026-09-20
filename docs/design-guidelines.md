@@ -126,7 +126,55 @@ Home `max-w-shell`, lưới gợi ý `grid-cols-2 md:grid-cols-3 lg:grid-cols-4`
 9. `focus:outline-none` ×222, modal không `role="dialog"`/focus trap/ESC → §4 + kit W1-12 là bắt buộc.
 10. Số không `tabular-nums` nên cột tiền nhảy khi đổi trang → `.num` / `.price` / `.money`.
 
-## 9. Việc còn treo (chủ đích, không phải quên)
+## 9. Back office — ngôn ngữ riêng (chốt 20/09/2026)
+
+Back office KHÔNG dùng lại cảm giác của storefront. Storefront để bán hàng: thoáng, nhiều đỏ,
+nhiều cảm xúc. Back office là công cụ nhân viên ngồi 8 tiếng/ngày: mật độ cao, ít màu, bảng là
+công dân hạng nhất. Mọi quyết định dưới đây do chủ dự án chốt, không suy diễn.
+
+### 9.1 Màu — trung tính, đỏ là điểm nhấn
+- Nền trang `bg-bg`, khối nội dung `bg-surface`, viền `border-line`. Không `bg-white`, không `gray-*`.
+- **Đỏ thương hiệu (`brand`) CHỈ dùng cho:** nút hành động chính của trang (mỗi màn tối đa MỘT),
+  trạng thái nguy hiểm/cảnh báo, và chỉ báo mục đang chọn ở sidebar (thanh 2px bên trái + chữ
+  `text-brand`, KHÔNG tô nền đỏ đặc).
+- Nút điều hướng (ví dụ "Quay về trang chủ") là `variant="ghost"` hoặc `outline`, không bao giờ đỏ.
+- Trạng thái nghiệp vụ dùng `success` / `warning` / `danger` / `info` qua `StatusBadge`, không tự chọn màu.
+- **Cấm `isDark ? ... : ...`.** Token tự lật ở `tokens.css`. Thấy ternary này là lỗi cần sửa.
+- Cấm mã hex trong file trang.
+
+### 9.2 Mật độ — gọn
+- Chữ nội dung `text-13` (13/20, đã có sẵn trong `tailwind.config.js`), meta `text-2xs`.
+- Tiêu đề trang `text-xl font-bold` — KHÔNG dùng thang `text-4xl` của storefront.
+- Hàng bảng cao 40px (`h-10`), padding ô `px-3 py-2`. Ô nhập `h-9`.
+- Khoảng cách giữa các khối `gap-4`; trong một khối `gap-3`. Không `space-y-8` kiểu landing page.
+- Khung nội dung dùng hết bề ngang màn hình (`max-w-none` + padding ngang), không kẹp `max-w-shell`.
+
+### 9.3 Mỗi trang đúng một khuôn
+1. `PageHeader` — tiêu đề, mô tả một dòng, vùng hành động bên phải. Bắt buộc mọi trang.
+2. Dữ liệu dạng danh sách: **bắt buộc `components/ui/data-table`**. Không tự viết `<table>`.
+   DataTable lo sẵn: sắp xếp, phân trang, trạng thái rỗng, trạng thái lỗi, khung xương khi tải.
+3. Form: React Hook Form + Zod, nhãn trên ô, lỗi ngay dưới ô, không toast cho lỗi validate.
+4. Modal/Drawer lấy từ `components/ui`, không tự dựng overlay.
+
+### 9.4 Nút lưu phải có đủ 4 trạng thái
+`rảnh` (bấm được, primary) · `đang lưu` (spinner, khoá) · `đã lưu` (KHÔNG phải nút — là dòng chữ
+mờ kèm dấu tích, tự biến mất sau vài giây) · `lỗi` (nút trở lại trạng thái rảnh + thông báo lỗi).
+Sai lầm cũ ở Menu Manager: "Đã lưu" vẫn là nút đỏ nhạt, người dùng không biết đã xong hay đang chờ bấm.
+
+### 9.5 Tiếng Việt toàn bộ
+Menu, breadcrumb, nhãn nút, thông báo đều tiếng Việt. Không trộn Việt–Anh trong cùng một cụm.
+Ví dụ: "Homepage Builder" → "Trình dựng trang chủ"; "Menu Manager" → "Quản lý menu";
+"Flash Sales" → "Giờ vàng". Giữ nguyên thuật ngữ đã là chuẩn ngành và không có từ Việt gọn hơn
+(SKU, POS, CRM, RFQ, VAT).
+
+### 9.6 Chống mẫu riêng của back office
+- Widget của khách (chat, popup khuyến mãi) KHÔNG được xuất hiện trong back office.
+- Không nhồi số liệu vào sidebar. Sidebar để điều hướng; số liệu thuộc về dashboard.
+- Mọi con số tiền phải có đơn vị. "Doanh thu 0" là vô nghĩa — phải là "0 ₫" hoặc khung xương khi chưa tải.
+- Ô nhập không được cắt cụt nội dung; đường dẫn/URL dùng ô rộng hết hàng hoặc có tooltip đầy đủ.
+- Không bắt người dùng nhớ mã kỹ thuật (tên icon Lucide, mã màu): phải có bộ chọn.
+
+## 10. Việc còn treo (chủ đích, không phải quên)
 
 1. `frontend/src/dark-theme.css` giờ là **bridge tạm** (0 `!important`, map class legacy → token). Xoá khi wave 3 viết lại trang bằng token và bỏ import trong `main.tsx`.
 2. `design-system/theme.ts` còn sống vì `components/atoms/index.tsx` import — W1-12 xoá cả hai.

@@ -59,6 +59,10 @@ export const Tr = forwardRef<HTMLTableRowElement, TrProps>(function Tr(
       className={cn(
         'group/row border-b border-line/70 transition-colors duration-140 ease-out',
         'hover:bg-fg/[.025]',
+        /* Mật độ gọn back office (§9.2): hàng 40px. Bật theo NGỮ CẢNH, không đổi mặc định —
+         * `[data-shell=admin]` (vỏ back office) hoặc `[data-density=compact]` (DataTable
+         * density="compact"). Storefront không có thuộc tính nào trong hai cái nên giữ nguyên. */
+        '[[data-shell=admin]_&]:h-10 [[data-density=compact]_&]:h-10',
         /* Selected row: tinted + a 3px brand bar inside the first cell (§5). */
         selected && 'bg-brand-subtle/55 [&>td:first-child]:shadow-[inset_3px_0_0_rgb(var(--brand))]',
         className,
@@ -109,6 +113,8 @@ export const Td = forwardRef<HTMLTableCellElement, TdProps>(function Td(
       ref={ref}
       className={cn(
         'px-3 py-3 align-middle text-fg',
+        /* px-3 py-2 trong vỏ admin / bảng gọn (§9.2). */
+        '[[data-shell=admin]_&]:py-2 [[data-density=compact]_&]:py-2',
         nowrap && 'whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',

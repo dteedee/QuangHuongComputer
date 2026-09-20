@@ -31,6 +31,7 @@ export {
 
 /* --- actions -------------------------------------------------------------- */
 export { Button, type ButtonProps } from './Button';
+export { SaveButton, type SaveButtonProps, type SaveStatus } from './save-button';
 export { IconButton, type IconButtonProps } from './icon-button';
 
 /* --- display -------------------------------------------------------------- */
@@ -101,11 +102,15 @@ export { DataTable } from './data-table';
 export type {
   DataTableColumn,
   DataTableProps,
+  DataTableDensity,
   SortState,
   SortDirection,
 } from './data-table-types';
 export { SortHeader, ColumnMenu } from './data-table-header';
 export { Pagination, type PaginationProps } from './pagination';
+
+/* --- khuôn mẫu back office (trang mẫu để copy, xem file để biết cách dùng) --- */
+export { BackofficePatternsDemo } from './backoffice-patterns-demo';
 
 /* --- app chrome that already lived here ----------------------------------- */
 export { AudienceSwitcher } from './audience-switcher';

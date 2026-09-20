@@ -42,8 +42,7 @@ export const BackofficeLayout = () => {
 
     const {
         filteredGroups, allItems, expandedGroups, toggleGroup, isActive, isGroupActive,
-        pendingCount, salesStats,
-    } = useBackofficeMenu();
+    } = useBackofficeMenu();  // `pendingCount`/`salesStats` cố tình KHÔNG lấy: số liệu thuộc dashboard, không thuộc sidebar (§9.6).
 
     // useNotifications' internal callbacks depend on `roles` by reference — `user?.roles || []`
     // creates a brand-new array every render (when user is falsy), which cascades into an
@@ -62,8 +61,13 @@ export const BackofficeLayout = () => {
     });
 
     return (
-        <div className={`h-screen flex overflow-hidden transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
-            <aside className={`hidden lg:block transition-all duration-300 border-r ${isDark ? 'border-gray-800' : 'border-slate-200'} ${sidebarCollapsed ? 'w-20' : 'w-60'}`}>
+        /* `data-shell="admin"` LÀ công tắc mật độ của cả bộ UI kit: `tokens.css` hạ `--bg`
+         * xuống một bậc xám, còn `components/ui/variants.ts` đã viết sẵn các biến thể
+         * `[[data-shell=admin]_&]` (nút 40px, chữ 13px, card p-4, PageHeader text-xl).
+         * Vì storefront không bao giờ có thuộc tính này, mật độ gọn KHÔNG THỂ rò sang
+         * mặt khách — không cần prop, không cần fork component. (design-guidelines §9.2) */
+        <div data-shell="admin" className="flex h-screen overflow-hidden bg-bg">
+            <aside className={`hidden lg:block shrink-0 border-r border-line transition-[width] duration-300 ${sidebarCollapsed ? 'w-16' : 'w-60'}`}>
                 <BackofficeSidebar
                     collapsed={sidebarCollapsed}
                     groups={filteredGroups}
@@ -71,8 +75,6 @@ export const BackofficeLayout = () => {
                     onToggleGroup={toggleGroup}
                     isActive={isActive}
                     isGroupActive={isGroupActive}
-                    pendingCount={pendingCount}
-                    monthRevenue={salesStats?.monthRevenue}
                 />
             </aside>
 
@@ -84,13 +86,13 @@ export const BackofficeLayout = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                            className="lg:hidden fixed inset-0 z-scrim bg-black/40 backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ x: -300 }}
                             animate={{ x: 0 }}
                             exit={{ x: -300 }}
-                            className="lg:hidden fixed inset-y-0 left-0 w-60 z-[60] shadow-2xl"
+                            className="lg:hidden fixed inset-y-0 left-0 z-drawer w-60 border-r border-line shadow-xl"
                         >
                             <BackofficeSidebar
                                 collapsed={false}
@@ -99,8 +101,6 @@ export const BackofficeLayout = () => {
                                 onToggleGroup={toggleGroup}
                                 isActive={isActive}
                                 isGroupActive={isGroupActive}
-                                pendingCount={pendingCount}
-                                monthRevenue={salesStats?.monthRevenue}
                             />
                         </motion.div>
                     </>
@@ -123,8 +123,10 @@ export const BackofficeLayout = () => {
                     onRefreshNotifications={refreshNotifications}
                 />
 
-                <main className={`flex-1 overflow-y-auto transition-colors duration-300 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
-                    <div className="p-4 lg:p-6 max-w-[1700px] mx-auto min-h-full">
+                {/* §9.2: khung nội dung dùng HẾT bề ngang màn hình — chỉ padding ngang,
+                    không `max-w-*` + `mx-auto` (màn 1920px trước đây bỏ trống ~450px bên phải). */}
+                <main className="min-w-0 flex-1 overflow-y-auto bg-bg">
+                    <div className="min-h-full w-full max-w-none px-4 py-4 lg:px-6 lg:py-5">
                         <RouteOutlet skeleton={<BackofficeRouteSkeleton />} />
                     </div>
                 </main>

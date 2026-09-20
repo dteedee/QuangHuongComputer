@@ -33,6 +33,15 @@ export interface SortState {
   dir: SortDirection;
 }
 
+/**
+ * Mật độ hiển thị.
+ *  · `'auto'` (mặc định) — theo vỏ: gọn khi nằm trong `[data-shell="admin"]`, thoáng ở
+ *    storefront. KHÔNG đổi diện mạo mặc định của bất kỳ trang nào đang chạy.
+ *  · `'compact'` — ép hàng 40px / ô px-3 py-2 / chữ 13px kể cả ngoài vỏ admin
+ *    (dùng cho bảng admin nhúng trong trang khác, hoặc trang mẫu).
+ */
+export type DataTableDensity = 'auto' | 'compact';
+
 export interface DataTableProps<T> {
   /** Accessible name for the table — required, becomes its `<caption>`. */
   caption: string;
@@ -68,4 +77,6 @@ export interface DataTableProps<T> {
   className?: string;
   /** Extra controls rendered in the toolbar, left of the column menu. */
   toolbar?: ReactNode;
+  /** Xem `DataTableDensity`. Mặc định `'auto'` — không ép gì cả. */
+  density?: DataTableDensity;
 }

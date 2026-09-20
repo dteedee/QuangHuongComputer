@@ -19,6 +19,12 @@ export interface PageHeaderProps {
   /** Tabs / filter row rendered under the header, inside the same block. */
   children?: ReactNode;
   className?: string;
+  /**
+   * `'auto'` (mặc định) — H1 36/44 ở storefront, tự co còn `text-xl` trong
+   * `[data-shell="admin"]`. `'compact'` — ép khuôn admin (`text-xl font-bold`,
+   * mô tả một dòng) kể cả ngoài vỏ admin. design-guidelines §9.2 / §9.3.
+   */
+  density?: 'auto' | 'compact';
 }
 
 export const PageHeader = ({
@@ -28,8 +34,9 @@ export const PageHeader = ({
   actions,
   children,
   className,
+  density = 'auto',
 }: PageHeaderProps) => (
-  <header className={cn('mb-5', className)}>
+  <header className={cn('mb-5 [[data-shell=admin]_&]:mb-4', density === 'compact' && 'mb-4', className)}>
     {breadcrumbs && breadcrumbs.length > 0 && (
       <Breadcrumb items={breadcrumbs} className="mb-2" />
     )}
@@ -40,12 +47,22 @@ export const PageHeader = ({
             'font-display font-semibold tracking-tight text-fg',
             /* 36/44 storefront H1 · admin pages are denser (§3, §4) */
             'text-3xl leading-9 [[data-shell=admin]_&]:text-xl [[data-shell=admin]_&]:leading-7',
+            density === 'compact' && 'text-xl font-bold leading-7',
           )}
         >
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-prose text-sm leading-5 text-fg-muted">{description}</p>
+          <p
+            className={cn(
+              'mt-1.5 max-w-prose text-sm leading-5 text-fg-muted',
+              /* §9.3: mô tả admin đúng MỘT dòng — dài thì cắt, không đẩy bảng xuống. */
+              '[[data-shell=admin]_&]:truncate [[data-shell=admin]_&]:text-13',
+              density === 'compact' && 'truncate text-13',
+            )}
+          >
+            {description}
+          </p>
         )}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}

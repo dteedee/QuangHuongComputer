@@ -14,6 +14,7 @@ import { KitchenSinkDisplay } from './kitchen-sink-display';
 import { KitchenSinkInputs } from './kitchen-sink-inputs';
 import { KitchenSinkOverlays } from './kitchen-sink-overlays';
 import { KitchenSinkData } from './kitchen-sink-data';
+import { BackofficePatternsDemo } from '../../components/ui/backoffice-patterns-demo';
 
 type Shell = 'storefront' | 'admin';
 
@@ -22,6 +23,8 @@ const SECTIONS = [
   { id: 'inputs', label: 'Nhập liệu', node: <KitchenSinkInputs /> },
   { id: 'overlays', label: 'Lớp phủ', node: <KitchenSinkOverlays /> },
   { id: 'data', label: 'Dữ liệu', node: <KitchenSinkData /> },
+  // Khuôn trang back office (docs/design-guidelines.md §9) — các track chuyển trang soi ở đây.
+  { id: 'backoffice', label: 'Khuôn back office', node: <BackofficePatternsDemo /> },
 ];
 
 export const KitchenSinkPage = () => {

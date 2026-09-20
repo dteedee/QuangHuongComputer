@@ -40,6 +40,7 @@ export function DataTable<T>({
   onRowClick,
   className,
   toolbar,
+  density = 'auto',
 }: DataTableProps<T>) {
   const [hidden, setHidden] = useState<Set<string>>(
     () => new Set(columns.filter((c) => c.defaultHidden).map((c) => c.id)),
@@ -75,7 +76,9 @@ export function DataTable<T>({
     });
 
   return (
-    <div className={cn('relative', className)}>
+    /* `data-density` là móc CSS duy nhất của mật độ gọn (xem `table.tsx`). Khi
+     * `density="auto"` thuộc tính không tồn tại -> bảng giữ đúng diện mạo cũ. */
+    <div data-density={density === 'compact' ? 'compact' : undefined} className={cn('relative', className)}>
       {(toolbar || enableColumnVisibility) && (
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">{toolbar}</div>

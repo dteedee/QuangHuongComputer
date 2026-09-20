@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../context/ThemeContext';
+import { cn } from '../../lib/utils';
+import { viLabel } from './backoffice-sidebar-menu-config';
 import type { ResolvedMenuGroup } from './backoffice-menu-types';
 
 interface BackofficeSidebarNavProps {
@@ -13,90 +14,126 @@ interface BackofficeSidebarNavProps {
     isGroupActive: (groupId: string) => boolean;
 }
 
-/** Collapsible group + item list rendered inside the sidebar. */
+/**
+ * Danh sách nhóm + mục của sidebar back office.
+ *
+ * Thứ bậc thị giác (design-guidelines §9.2) — hai cấp phải khác hẳn nhau, không cấp nào
+ * "trôi nổi" giữa các nhóm:
+ *   · NHÓM  = chữ 11px, HOA, giãn chữ, `text-fg-subtle`, không nền, không icon màu mè.
+ *   · MỤC   = chữ 13px, thụt vào 12px, cao 36–40px, nằm trong khối thụt lề của nhóm.
+ *
+ * Mục đang chọn (§9.1): thanh 2px `bg-brand` bên trái + chữ `text-brand-text` +
+ * nền `bg-brand-subtle` rất nhạt. TUYỆT ĐỐI không tô nền đỏ đặc.
+ * Toàn bộ màu đi qua token — không còn ternary sáng/tối (§9.1).
+ */
 export const BackofficeSidebarNav = ({
     groups, collapsed, expandedGroups, onToggleGroup, isActive, isGroupActive,
-}: BackofficeSidebarNavProps) => {
-    const { isDark, colors } = useTheme();
-
-    return (
-        <div className="flex-1 px-3 py-4 space-y-4 overflow-y-auto scrollbar-hide">
+}: BackofficeSidebarNavProps) => (
+    <nav aria-label="Điều hướng quản trị" className="flex-1 overflow-y-auto scrollbar-hide px-2 py-3">
+        <ul className="space-y-3">
             {groups.map(group => {
                 const groupActive = isGroupActive(group.id);
                 const isExpanded = expandedGroups.includes(group.id);
+                const groupTitle = viLabel(group.title);
+                const panelId = `bo-group-${group.id}`;
 
                 return (
-                    <div key={group.id} className="space-y-1">
+                    <li key={group.id}>
                         <button
+                            type="button"
                             onClick={() => onToggleGroup(group.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium uppercase tracking-wider transition-all ${groupActive
-                                ? isDark ? 'text-white bg-gray-800/50' : 'text-gray-900 bg-gray-100/50'
-                                : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
-                                }`}
+                            aria-expanded={isExpanded}
+                            aria-controls={panelId}
+                            title={collapsed ? groupTitle : undefined}
+                            className={cn(
+                                'w-full flex items-center gap-2 rounded-md px-2 py-1.5',
+                                'text-2xs font-semibold uppercase tracking-[.08em]',
+                                'transition-colors duration-140 ease-out hover:text-fg',
+                                collapsed && 'justify-center',
+                                groupActive ? 'text-fg-muted' : 'text-fg-subtle',
+                            )}
                         >
-                            <span className="flex items-center gap-2">
-                                <span className={groupActive ? '' : group.color} style={groupActive ? { color: colors.primary } : {}}>
-                                    {group.icon}
-                                </span>
-                                {!collapsed && group.title}
-                            </span>
+                            <span className="shrink-0 text-fg-subtle" aria-hidden>{group.icon}</span>
                             {!collapsed && (
-                                <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                <>
+                                    <span className="flex-1 text-left truncate">{groupTitle}</span>
+                                    <ChevronDown
+                                        size={12}
+                                        aria-hidden
+                                        className={cn(
+                                            'shrink-0 transition-transform duration-220 ease-out motion-reduce:transition-none',
+                                            isExpanded && 'rotate-180',
+                                        )}
+                                    />
+                                </>
                             )}
                         </button>
 
                         <AnimatePresence initial={false}>
                             {(isExpanded || collapsed) && (
-                                <motion.div
+                                <motion.ul
+                                    id={panelId}
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                                    className="overflow-hidden space-y-1"
+                                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                                    className={cn(
+                                        'overflow-hidden space-y-0.5',
+                                        /* Thụt lề = tín hiệu "thuộc về nhóm trên"; dải kẻ mảnh làm rõ cấp. */
+                                        !collapsed && 'mt-1 ml-3 border-l border-line pl-1',
+                                        collapsed && 'mt-1',
+                                    )}
                                 >
                                     {group.items.map(item => {
                                         const active = isActive(item.path);
+                                        const label = viLabel(item.title);
                                         return (
-                                            <Link
-                                                key={item.path}
-                                                to={item.path}
-                                                title={collapsed ? item.title : undefined}
-                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group ${active
-                                                    ? isDark ? 'bg-gray-800 text-white' : 'bg-blue-50 text-blue-700'
-                                                    : isDark ? 'text-gray-400 hover:text-white hover:bg-gray-800/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                                                    }`}
-                                                style={active ? { borderLeft: `3px solid ${colors.primary}` } : {}}
-                                            >
-                                                <span
-                                                    className={`flex-shrink-0 ${active ? '' : isDark ? 'text-gray-500' : 'text-slate-400'}`}
-                                                    style={active ? { color: colors.primary } : {}}
+                                            <li key={item.path}>
+                                                <Link
+                                                    to={item.path}
+                                                    title={collapsed ? label : undefined}
+                                                    aria-current={active ? 'page' : undefined}
+                                                    className={cn(
+                                                        'relative flex items-center gap-2.5 rounded-md text-13',
+                                                        'transition-colors duration-140 ease-out',
+                                                        collapsed ? 'justify-center px-0 py-2' : 'px-2.5 py-2',
+                                                        active
+                                                            ? 'bg-brand-subtle font-semibold text-brand-text'
+                                                            : 'text-fg-muted hover:bg-sunken hover:text-fg',
+                                                        /* Thanh 2px bên trái — chỉ báo duy nhất được dùng màu đỏ. */
+                                                        active && !collapsed &&
+                                                            'before:absolute before:-left-1 before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-brand',
+                                                    )}
                                                 >
-                                                    {item.icon}
-                                                </span>
-                                                {!collapsed && (
-                                                    <>
-                                                        <span className="text-sm font-medium flex-1">{item.title}</span>
-                                                        {item.badge ? (
-                                                            <span
-                                                                className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                                style={{ backgroundColor: colors.primary }}
-                                                            >
-                                                                {item.badge}
-                                                            </span>
-                                                        ) : active ? (
-                                                            <ChevronRight size={14} className="text-gray-400" />
-                                                        ) : null}
-                                                    </>
-                                                )}
-                                            </Link>
+                                                    <span
+                                                        aria-hidden
+                                                        className={cn(
+                                                            'shrink-0 [&>svg]:h-[18px] [&>svg]:w-[18px]',
+                                                            active ? 'text-brand' : 'text-fg-subtle',
+                                                        )}
+                                                    >
+                                                        {item.icon}
+                                                    </span>
+                                                    {!collapsed && (
+                                                        <>
+                                                            <span className="flex-1 truncate">{label}</span>
+                                                            {item.badge ? (
+                                                                <span className="num shrink-0 rounded-full bg-brand px-1.5 py-px text-2xs font-bold text-white">
+                                                                    {item.badge}
+                                                                </span>
+                                                            ) : null}
+                                                        </>
+                                                    )}
+                                                </Link>
+                                            </li>
                                         );
                                     })}
-                                </motion.div>
+                                </motion.ul>
                             )}
                         </AnimatePresence>
-                    </div>
+                    </li>
                 );
             })}
-        </div>
-    );
-};
+        </ul>
+    </nav>
+);

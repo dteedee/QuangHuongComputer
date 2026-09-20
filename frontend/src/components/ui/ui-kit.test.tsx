@@ -17,6 +17,9 @@ import { Breadcrumb } from './breadcrumb';
 import { QueryBoundary } from './query-boundary';
 import { Input } from './Input';
 import { Tooltip } from './tooltip';
+import { PageHeader } from './page-header';
+import { DataTable } from './data-table';
+import { SaveButton } from './save-button';
 import { sanitizeImageSrc, sanitizeHtml, pageWindow, initialsOf, formatDong } from './kit-utils';
 
 describe('Dialog', () => {
@@ -237,5 +240,62 @@ describe('pure helpers', () => {
     expect(pageWindow(6, 20)).toEqual([1, '…', 5, 6, 7, '…', 20]);
     expect(pageWindow(1, 1)).toEqual([1]);
     expect(pageWindow(2, 3)).toEqual([1, 2, 3]);
+  });
+});
+
+/* ==========================================================================
+ * W1-8 — mật độ back office & nút lưu 4 trạng thái (design-guidelines §9.2/§9.4)
+ * ======================================================================== */
+
+describe('mật độ admin không rò sang storefront', () => {
+  it('DataTable mặc định KHÔNG đặt data-density; chỉ density="compact" mới đặt', () => {
+    const cols = [{ id: 'a', header: 'A', cell: (r: { a: string }) => r.a }];
+    const rows = [{ a: 'x' }];
+
+    const { container, rerender } = render(
+      <DataTable caption="mặc định" columns={cols} rows={rows} rowKey={(r) => r.a} />,
+    );
+    expect(container.querySelector('[data-density]')).toBeNull();
+
+    rerender(
+      <DataTable caption="gọn" columns={cols} rows={rows} rowKey={(r) => r.a} density="compact" />,
+    );
+    expect(container.querySelector('[data-density="compact"]')).not.toBeNull();
+  });
+
+  it('PageHeader mặc định giữ H1 storefront (text-3xl); density="compact" mới xuống text-xl', () => {
+    const { rerender } = render(<PageHeader title="Sản phẩm" />);
+    expect(screen.getByRole('heading', { level: 1 }).className).toContain('text-3xl');
+
+    rerender(<PageHeader title="Sản phẩm" density="compact" />);
+    const h1 = screen.getByRole('heading', { level: 1 });
+    expect(h1.className).toContain('text-xl');
+    expect(h1.className).toContain('font-bold');
+  });
+});
+
+describe('SaveButton — bốn trạng thái §9.4', () => {
+  it('rảnh: là nút bấm được', () => {
+    render(<SaveButton status="idle" />);
+    expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();
+  });
+
+  it('đang lưu: spinner + khoá', () => {
+    render(<SaveButton status="saving" />);
+    const btn = screen.getByRole('button', { name: /Đang lưu/ });
+    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('đã lưu: KHÔNG phải nút — là dòng chữ có role="status"', () => {
+    render(<SaveButton status="saved" />);
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Đã lưu');
+  });
+
+  it('lỗi: nút trở lại trạng thái rảnh + thông báo lỗi', () => {
+    render(<SaveButton status="error" errorMessage="Mất kết nối" />);
+    expect(screen.getByRole('button', { name: 'Lưu thay đổi' })).toBeEnabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Mất kết nối');
   });
 });

@@ -70,4 +70,110 @@ function buildFallbackMenu(): BackofficeMenuGroupConfig[] {
     }).filter((group) => group.items.length > 0);
 }
 
-export const FALLBACK_MENU: BackofficeMenuGroupConfig[] = buildFallbackMenu();
+/* ------------------------------------------------------------------------- */
+/* Việt hoá nhãn (design-guidelines §9.5)                                     */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Nhãn menu/breadcrumb phải tiếng Việt toàn bộ, không trộn Việt–Anh.
+ *
+ * Bảng này là lớp dịch DUY NHẤT và cố tình đặt ở tầng hiển thị, vì nhãn đến từ HAI nguồn:
+ *   1. manifest route (`routes/*.ts`) — qua `buildFallbackMenu()` ở trên;
+ *   2. bảng DB `BackofficeMenuItems` — `use-backoffice-menu.ts` đè lên fallback khi API trả về.
+ * Không sửa được nguồn 2 từ frontend, nên `viLabel()` được gọi ngay tại chỗ render
+ * (`backoffice-sidebar-nav`, `backoffice-breadcrumb`) để cả hai nguồn đều ra tiếng Việt.
+ *
+ * Giữ nguyên thuật ngữ đã chuẩn ngành, không có từ Việt gọn hơn: SKU, POS, CRM, RFQ, VAT.
+ * Khoá tra cứu không phân biệt hoa/thường + khoảng trắng thừa.
+ */
+const VI_LABEL_OVERRIDES: Record<string, string> = {
+    /* --- nhãn tiếng Anh còn sót trong manifest route ----------------------- */
+    'homepage builder': 'Trình dựng trang chủ',
+    'menu manager': 'Quản lý menu',
+    'quản lý menu': 'Quản lý menu',        // chuẩn hoá hoa/thường
+    'quản lý nội dung': 'Quản lý nội dung',
+    'flash sales': 'Giờ vàng',
+    'flash sale': 'Giờ vàng',
+    campaigns: 'Chiến dịch',
+    campaign: 'Chiến dịch',
+    leads: 'Khách tiềm năng',
+    lead: 'Khách tiềm năng',
+    pipeline: 'Phễu bán hàng',
+
+    /* --- nhãn tiếng Anh có thể đến từ DB ----------------------------------- */
+    dashboard: 'Tổng quan',
+    overview: 'Tổng quan',
+    settings: 'Cấu hình',
+    configuration: 'Cấu hình',
+    users: 'Người dùng',
+    'user management': 'Người dùng',
+    roles: 'Vai trò & quyền',
+    'roles & permissions': 'Vai trò & quyền',
+    permissions: 'Vai trò & quyền',
+    products: 'Sản phẩm',
+    product: 'Sản phẩm',
+    categories: 'Danh mục',
+    category: 'Danh mục',
+    brands: 'Thương hiệu',
+    suppliers: 'Nhà cung cấp',
+    inventory: 'Kho hàng',
+    stock: 'Kho hàng',
+    'purchase orders': 'Đơn mua hàng',
+    orders: 'Đơn hàng',
+    order: 'Đơn hàng',
+    returns: 'Đổi trả',
+    customers: 'Khách hàng',
+    reviews: 'Đánh giá',
+    reports: 'Báo cáo',
+    report: 'Báo cáo',
+    coupons: 'Mã giảm giá',
+    vouchers: 'Mã giảm giá',
+    promotions: 'Khuyến mãi',
+    banners: 'Ảnh quảng cáo',
+    blog: 'Bài viết',
+    posts: 'Bài viết',
+    pages: 'Trang nội dung',
+    media: 'Thư viện ảnh',
+    warranty: 'Bảo hành',
+    repairs: 'Sửa chữa',
+    technicians: 'Kỹ thuật viên',
+    tasks: 'Công việc',
+    branches: 'Chi nhánh',
+    payroll: 'Chạy lương',
+    recruitment: 'Tuyển dụng',
+    employees: 'Nhân sự',
+    finance: 'Tài chính',
+    accounting: 'Tài chính',
+    loyalty: 'Điểm thưởng',
+    'audit log': 'Nhật ký hệ thống',
+    logs: 'Nhật ký hệ thống',
+    backup: 'Sao lưu',
+    notifications: 'Thông báo',
+    'contact inbox': 'Hộp thư liên hệ',
+    inbox: 'Hộp thư liên hệ',
+
+    /* --- tên nhóm ----------------------------------------------------------- */
+    sales: 'Kinh doanh',
+    service: 'Dịch vụ & Kỹ thuật',
+    'service & technical': 'Dịch vụ & Kỹ thuật',
+    'finance & hr': 'Tài chính & Nhân sự',
+    'content & marketing': 'Nội dung & Marketing',
+    content: 'Nội dung & Marketing',
+    marketing: 'Nội dung & Marketing',
+    system: 'Hệ thống',
+    admin: 'Hệ thống',
+    administration: 'Hệ thống',
+};
+
+/** Trả nhãn tiếng Việt cho một tiêu đề menu/breadcrumb. Không có trong bảng thì giữ nguyên. */
+export function viLabel(title: string): string {
+    if (!title) return title;
+    return VI_LABEL_OVERRIDES[title.trim().toLowerCase()] ?? title;
+}
+
+/** Menu dự phòng, nhãn đã Việt hoá. Khai báo CUỐI file vì phụ thuộc `VI_LABEL_OVERRIDES`. */
+export const FALLBACK_MENU: BackofficeMenuGroupConfig[] = buildFallbackMenu().map((group) => ({
+    ...group,
+    title: viLabel(group.title),
+    items: group.items.map((item) => ({ ...item, title: viLabel(item.title) })),
+}));

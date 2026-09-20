@@ -31,6 +31,23 @@ function AnalyticsTracker() {
     return null;
 }
 
+/**
+ * Storefront shell = RootLayout + các widget CHỈ dành cho khách.
+ *
+ * Trước đây `<AiChatWidget />` và `<ComparisonBar />` mount ngoài `<Routes>` nên chúng nổi
+ * trên cả back office — vi phạm design-guidelines §9.6 ("Widget của khách KHÔNG được xuất
+ * hiện trong back office"). Gắn chúng vào chính nhánh route storefront là cách duy nhất
+ * không cần `pathname.startsWith('/backoffice')` rải rác trong component.
+ * RootLayout vẫn render `<Outlet/>` như cũ; fragment chỉ thêm anh em cạnh nó.
+ */
+const StorefrontShell = () => (
+    <>
+        <RootLayout />
+        <ComparisonBar />
+        <AiChatWidget />
+    </>
+);
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Bọc children bằng GoogleOAuthProvider chỉ khi có client id thật — tránh
@@ -47,10 +64,9 @@ function App() {
             <BrowserRouter>
                 <AnalyticsTracker />
                 <ScrollToTop />
-                <ComparisonBar />
                 <Suspense fallback={<PageLoader />}>
                     <Routes>
-                        <Route path="/" element={<RootLayout />}>
+                        <Route path="/" element={<StorefrontShell />}>
                             {renderRoutesFor('storefront')}
                             {renderRedirectsFor('storefront')}
                             <Route path="*" element={<NotFoundPage />} />
@@ -68,7 +84,6 @@ function App() {
                         {renderRedirectsFor('standalone')}
                     </Routes>
                 </Suspense>
-                <AiChatWidget />
             </BrowserRouter>
         </OptionalGoogleOAuthProvider>
     );

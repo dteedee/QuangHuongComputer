@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Store, Power } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Store, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
+import { cn } from '../../lib/utils';
+import { buttonVariants } from '../ui/variants';
+import { IconButton } from '../ui/icon-button';
 import { BackofficeSidebarNav } from './backoffice-sidebar-nav';
 import type { ResolvedMenuGroup } from './backoffice-menu-types';
 import { ROUTES } from '../../routes';
@@ -14,55 +15,46 @@ interface BackofficeSidebarProps {
     onToggleGroup: (id: string) => void;
     isActive: (path: string) => boolean;
     isGroupActive: (groupId: string) => boolean;
-    pendingCount: number;
-    monthRevenue?: number;
 }
 
-/** Sidebar content shared by the desktop rail and the mobile drawer. */
+/**
+ * Ruột sidebar, dùng chung cho thanh desktop và ngăn kéo mobile.
+ *
+ * Đã gỡ 2 ô thống kê "Đơn chờ / Doanh thu" (design-guidelines §9.6: "Không nhồi số liệu vào
+ * sidebar. Sidebar để điều hướng; số liệu thuộc về dashboard") — hai ô này còn vi phạm luôn
+ * quy tắc "mọi con số tiền phải có đơn vị" vì hiển thị "0" trống không.
+ *
+ * "Quay về trang chủ" là liên kết `ghost` nhỏ, không còn nút đỏ tràn chiều ngang: đỏ chỉ
+ * dành cho hành động chính của trang và chỉ báo mục đang chọn (§9.1).
+ * Không còn ternary sáng/tối — token tự lật ở `tokens.css`.
+ */
 export const BackofficeSidebar = ({
-    collapsed, groups, expandedGroups, onToggleGroup, isActive, isGroupActive, pendingCount, monthRevenue,
+    collapsed, groups, expandedGroups, onToggleGroup, isActive, isGroupActive,
 }: BackofficeSidebarProps) => {
     const { user, logout } = useAuth();
-    const { isDark, colors } = useTheme();
     const navigate = useNavigate();
-    const roles = user?.roles || [];
+    const role = user?.roles?.[0];
 
     return (
-        <div className={`flex flex-col h-full transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-            {/* Logo & Brand */}
-            <div className={`px-6 py-6 flex items-center gap-3 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm bg-gradient-to-br ${colors.gradient}`}>
+        <div className="flex h-full flex-col bg-surface">
+            {/* Thương hiệu */}
+            <div className={cn(
+                'flex h-16 shrink-0 items-center gap-2.5 border-b border-line px-4',
+                collapsed && 'justify-center px-0',
+            )}>
+                <span
+                    aria-hidden
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white"
+                >
                     QH
-                </div>
+                </span>
                 {!collapsed && (
-                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col">
-                        <span className={`text-sm font-semibold leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            Quang Hưởng
-                        </span>
-                        <span className="text-xs font-medium mt-1" style={{ color: colors.primary }}>
-                            Management
-                        </span>
-                    </motion.div>
+                    <span className="flex min-w-0 flex-col leading-tight">
+                        <span className="truncate text-13 font-semibold text-fg">Quang Hưởng</span>
+                        <span className="text-2xs font-medium text-fg-subtle">Trang quản trị</span>
+                    </span>
                 )}
             </div>
-
-            {/* Quick Stats */}
-            {!collapsed && (
-                <div className={`px-4 py-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-                    <div className="grid grid-cols-2 gap-2">
-                        <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                            <div className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Đơn chờ</div>
-                            <div className="text-xl font-bold" style={{ color: colors.primary }}>{pendingCount}</div>
-                        </div>
-                        <div className={`p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                            <div className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Doanh thu</div>
-                            <div className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {monthRevenue ? `${(monthRevenue / 1000000).toFixed(1)}M` : '0'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <BackofficeSidebarNav
                 groups={groups}
@@ -73,38 +65,45 @@ export const BackofficeSidebar = ({
                 isGroupActive={isGroupActive}
             />
 
-            {/* User Section */}
-            <div className={`p-4 border-t ${isDark ? 'border-gray-800 bg-gray-900/50' : 'border-gray-100 bg-gray-50/50'}`}>
-                {!collapsed && (
-                    <Link
-                        to={ROUTES.HOME}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium text-white shadow-sm transition-all hover:opacity-90"
-                        style={{ backgroundColor: colors.primary }}
-                    >
-                        <Store size={14} /> Quay về trang chủ
-                    </Link>
-                )}
+            {/* Chân: liên kết phụ + tài khoản */}
+            <div className="shrink-0 border-t border-line p-2">
+                <Link
+                    to={ROUTES.HOME}
+                    title={collapsed ? 'Quay về trang chủ' : undefined}
+                    className={cn(
+                        buttonVariants({ variant: 'ghost', size: 'sm' }),
+                        'w-full text-13 font-medium',
+                        collapsed ? 'px-0' : 'justify-start',
+                    )}
+                >
+                    <Store size={16} aria-hidden />
+                    {!collapsed && 'Quay về trang chủ'}
+                </Link>
 
-                <div className={`flex items-center gap-3 p-3 rounded-xl mt-3 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white" style={{ backgroundColor: colors.primary }}>
-                        {user?.fullName?.charAt(0)}
-                    </div>
+                <div className={cn(
+                    'mt-1 flex items-center gap-2 rounded-md px-2 py-1.5',
+                    collapsed && 'justify-center px-0',
+                )}>
+                    <span
+                        aria-hidden
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunken text-13 font-bold text-fg-muted"
+                    >
+                        {user?.fullName?.charAt(0) ?? '?'}
+                    </span>
                     {!collapsed && (
                         <>
-                            <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {user?.fullName}
-                                </p>
-                                <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                                    {roles[0]}
-                                </p>
-                            </div>
-                            <button
+                            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                                <span className="truncate text-13 font-medium text-fg">{user?.fullName}</span>
+                                <span className="truncate text-2xs text-fg-subtle">{role}</span>
+                            </span>
+                            <IconButton
+                                size="sm"
+                                aria-label="Đăng xuất"
+                                title="Đăng xuất"
                                 onClick={() => { logout(); navigate(ROUTES.LOGIN); }}
-                                className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400 hover:text-red-400' : 'hover:bg-gray-100 text-gray-400 hover:text-red-500'}`}
                             >
-                                <Power size={18} />
-                            </button>
+                                <LogOut size={16} aria-hidden />
+                            </IconButton>
                         </>
                     )}
                 </div>
