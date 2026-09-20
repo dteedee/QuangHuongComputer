@@ -17,8 +17,8 @@ interface ProductBuyingGuideTabProps {
  * hotline đọc từ useCompanyInfo.
  *
  * D04 (thanh toán lúc ra mắt): đã bỏ ô VNPay/MoMo/ZaloPay (chưa cấu hình khoá thật, sẽ chỉ
- * hiện khi `GET /api/payments/methods` báo bật — W2-4/track VNPay riêng) và máy tính trả góp
- * (chưa có đối tác nào tích hợp API lúc ra mắt — trả góp là lead-mode theo D10).
+ * hiện khi `GET /api/payments/methods` báo bật — W2-4/track VNPay riêng).
+ * Trả góp: chủ cửa hàng chốt KHÔNG cung cấp (20/09/2026) — không quảng cáo ở bất kỳ đâu.
  */
 export default function ProductBuyingGuideTab({ warrantyInfo }: ProductBuyingGuideTabProps) {
     const { getNumber } = useSystemConfig();
@@ -31,7 +31,7 @@ export default function ProductBuyingGuideTab({ warrantyInfo }: ProductBuyingGui
 
     return (
         <div className="space-y-5">
-            <h3 className="text-xl font-bold text-gray-900">Hướng dẫn mua &amp; trả góp</h3>
+            <h3 className="text-xl font-bold text-gray-900">Hướng dẫn mua hàng</h3>
 
             {/* Cách đặt hàng */}
             <section className="bg-white rounded-xl border border-gray-100 p-5">

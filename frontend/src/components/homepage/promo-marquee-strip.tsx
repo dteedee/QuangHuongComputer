@@ -18,7 +18,6 @@ import { useCompanyInfo } from '../../hooks/use-company-info';
  */
 const PROMO_ITEMS = [
     'Miễn phí giao hàng cho đơn từ 500K',
-    'Trả góp 0% lãi suất',
     'Bảo hành chính hãng',
     'Hỗ trợ 24/7',
 ];

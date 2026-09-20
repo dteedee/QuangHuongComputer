@@ -431,7 +431,7 @@ public static class ContentDbSeeder
                     {
                         ""title"": ""PC GAMING CHIẾN MỌI GAME"",
                         ""subtitle"": ""RTX 40 SERIES - SIÊU MẠNH"",
-                        ""description"": ""Build PC Gaming từ 15 triệu - Trả góp 0%"",
+                        ""description"": ""Build PC Gaming từ 15 triệu - Giao nhanh toàn quốc"",
                         ""image"": """",
                         ""gradient"": ""from-blue-600 via-purple-600 to-pink-600"",
                         ""link"": ""/products?category=pc-gaming"",
@@ -447,7 +447,6 @@ public static class ContentDbSeeder
             var bannerGridConfig = @"{
                 ""banners"": [
                     { ""title"": ""Quà Tặng Tết"", ""subtitle"": ""Trị giá lên đến 5 triệu"", ""icon"": ""Gift"", ""gradient"": ""from-red-500 to-pink-600"", ""link"": ""/products"" },
-                    { ""title"": ""Trả Góp 0%"", ""subtitle"": ""Duyệt nhanh 5 phút"", ""icon"": ""Award"", ""gradient"": ""from-blue-500 to-cyan-600"", ""link"": ""/products"" },
                     { ""title"": ""Freeship Toàn Quốc"", ""subtitle"": ""Đơn từ 500.000đ"", ""icon"": ""Truck"", ""gradient"": ""from-emerald-500 to-green-600"", ""link"": ""/products"" }
                 ],
                 ""columns"": 3
@@ -746,15 +745,7 @@ public static class ContentDbSeeder
          </div>
     </section>
 
-    <section>
-         <h2 class='text-2xl font-black text-gray-900 mb-4 uppercase'>3. Trả góp 0%</h2>
-         <p class='mb-2'>Hỗ trợ trả góp qua thẻ tín dụng (Visa, Master, JCB) của 28 ngân hàng liên kết.</p>
-         <ul class='list-disc pl-5 space-y-1'>
-            <li>Kỳ hạn linh hoạt: 3, 6, 9, 12 tháng.</li>
-            <li>Phí chuyển đổi thấp.</li>
-            <li>Thủ tục online đơn giản, không cần giấy tờ.</li>
-         </ul>
-    </section>
+
 </div>";
 
     private const string DefaultAboutContent = "<p>Chào mừng đến với Quang Hưởng Computer! Thế giới công nghệ hàng đầu...</p>";
@@ -898,7 +889,6 @@ public static class ContentDbSeeder
         <div style='background-color: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 0.75rem; padding: 1.25rem;'>
             <h3 style='font-weight: 700; font-size: 1.125rem; margin-bottom: 0.75rem; color: #111827;'>🎁 Ưu đãi thêm</h3>
             <ul style='list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #374151;'>
-                <li style='margin-bottom: 0.5rem;'>✓ Trả góp 0% lãi suất 12 tháng</li>
                 <li style='margin-bottom: 0.5rem;'>✓ Tặng phần mềm Office 365 bản quyền</li>
                 <li>✓ Miễn phí cài đặt phần mềm học tập</li>
             </ul>
@@ -973,7 +963,6 @@ public static class ContentDbSeeder
             <ul style='list-style: none; padding: 0; margin: 0; color: #374151;'>
                 <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Giảm ngay 500.000đ</li>
                 <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Hoàn tiền 1% mọi giao dịch</li>
-                <li style='margin-bottom: 0.5rem;'><span style='color: #22c55e;'>✓</span> Trả góp 0% lãi suất 6 tháng</li>
                 <li><span style='color: #22c55e;'>✓</span> Miễn phí thường niên năm đầu</li>
             </ul>
         </div>

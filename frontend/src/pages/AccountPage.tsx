@@ -8,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 import { useMyOrders } from './account/use-my-orders';
 import { formatCurrency } from '../utils/format';
 import type { OrderStatus } from '../api/sales/types';
-import { installmentApi, type MyInstallmentApplication } from '../api/installment';
 
 /**
  * Account overview (phase-56 Step 1+2). Was a 598-LOC monolith mixing profile edit, address CRUD
@@ -45,11 +44,6 @@ function StatCard({ label, value }: { label: string; value: string }) {
     );
 }
 
-const INSTALLMENT_STATUS_LABEL: Record<string, string> = {
-    PendingApproval: 'Đang chờ duyệt', Approved: 'Đã duyệt', Rejected: 'Bị từ chối',
-    Active: 'Đang trả góp', Completed: 'Đã hoàn tất', Expired: 'Hết hạn giữ hồ sơ',
-};
-
 export const AccountPage = () => {
     const { user } = useAuth();
     const { orders, stats, isLoading, error, reload } = useMyOrders();
@@ -58,9 +52,7 @@ export const AccountPage = () => {
     // D10: "add a list of the customer's instalment applications with their hold expiry."
     // Only rendered when non-empty — most customers never open a lead, and an empty card here
     // would just be noise above the orders list.
-    const [installmentApps, setInstallmentApps] = useState<MyInstallmentApplication[]>([]);
     useEffect(() => {
-        installmentApi.getMyApplications().then(setInstallmentApps).catch(() => setInstallmentApps([]));
     }, []);
 
     return (
@@ -94,32 +86,6 @@ export const AccountPage = () => {
                         </Link>
                     ))}
                 </div>
-
-                {/* Instalment (trả góp) lead applications — D10 */}
-                {installmentApps.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-                        <div className="px-5 py-4 border-b border-gray-100">
-                            <h2 className="font-bold text-gray-900 flex items-center gap-2"><CreditCard size={16} /> Hồ sơ trả góp</h2>
-                        </div>
-                        <ul className="divide-y divide-gray-50">
-                            {installmentApps.map((app) => (
-                                <li key={app.id} className="flex items-center justify-between px-5 py-3.5 text-sm">
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{app.provider} · {app.termMonths} tháng</p>
-                                        {app.status === 'PendingApproval' && app.expiresAt && (
-                                            <p className="text-xs text-amber-600 mt-0.5">
-                                                Giữ hồ sơ đến {new Date(app.expiresAt).toLocaleString('vi-VN')}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
-                                        {INSTALLMENT_STATUS_LABEL[app.status] || app.status}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
 
                 {/* Recent orders */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm">

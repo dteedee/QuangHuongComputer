@@ -69,7 +69,7 @@ export default function ProductDetailTabs({
         ...(videoMedias.length > 0
             ? [{ key: 'video' as const, label: 'Video', count: videoMedias.length }]
             : []),
-        { key: 'buying', label: 'Mua & trả góp' },
+        { key: 'buying', label: 'Hướng dẫn mua hàng' },
         {
             key: 'reviews',
             label: 'Đánh giá',
