@@ -35,6 +35,10 @@ public static class DependencyInjection
         // AddInventoryModule() registers IStockLedger and InventoryDbContext.
         services.AddScoped<IRepairStockService, RepairStockService>();
 
+        // Hoa hồng kỹ thuật (HR) đọc phiếu sửa đã thu tiền qua contract, không tham chiếu Repair.
+        services.AddScoped<BuildingBlocks.Contracts.IRepairCommissionSourceQuery,
+            Application.Commission.RepairCommissionSourceQuery>();
+
         return services;
     }
 }
