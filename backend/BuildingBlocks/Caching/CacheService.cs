@@ -164,6 +164,7 @@ public static class CacheKeys
     public static string ProductsListKey(int page, int pageSize, Guid? categoryId, Guid? brandId, string? search)
         => $"{Prefix}products:list:{page}:{pageSize}:{categoryId}:{brandId}:{search}";
     public static string RelatedProductsKey(Guid productId) => $"{Prefix}products:related:{productId}";
+    public static string BoughtTogetherKey(Guid productId) => $"{Prefix}products:bought-together:{productId}";
     public static string ProductsPattern => $"{Prefix}product*";
     public static string ProductsListPattern => $"{Prefix}products:list*";
 

@@ -238,6 +238,7 @@ Route chứa đoạn `admin`, `backoffice`, `internal` không bao giờ công kh
 | `/api/auth/forgot-password` | POST | Người dùng mất mật khẩu nên không đăng nhập được. |
 | `/api/auth/reset-password` | POST | Xác thực bằng token gửi qua email, không bằng JWT. |
 | `/api/catalog/**` | GET/HEAD | Danh mục sản phẩm là mặt tiền cửa hàng; chỉ GET. |
+| `/api/catalog/products/{productId}/bought-together` | GET/HEAD | Gợi ý 'Thường được mua cùng' trên trang sản phẩm/giỏ: chỉ sản phẩm đã đăng web + SỐ ĐƠN tổng hợp (ICoPurchaseQuery), không mã đơn, không khách; cache 3 giờ (CatalogBoughtTogetherEndpoints.cs:27-44). |
 | `/api/content/**` | GET/HEAD | Trang tĩnh, bài viết, banner hiển thị cho khách; chỉ GET. |
 | `/api/promotions` | GET/HEAD | Danh sách khuyến mãi đang chạy hiển thị trên storefront. |
 | `/api/promotions/{code}` | GET/HEAD | Tra cứu một mã khuyến mãi trước khi đăng nhập. |

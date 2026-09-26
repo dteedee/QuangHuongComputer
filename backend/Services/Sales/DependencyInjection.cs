@@ -66,6 +66,11 @@ public static class DependencyInjection
         services.AddScoped<BuildingBlocks.Contracts.IPurchaseVerificationQuery,
                            Sales.Application.Orders.PurchaseVerificationQuery>();
 
+        // Catalog hỏi "sản phẩm này thường được mua cùng gì" (khối gợi ý trên trang sản phẩm)
+        // qua contract ở BuildingBlocks — chỉ số đếm tổng hợp, không dữ liệu đơn/khách.
+        services.AddScoped<BuildingBlocks.Contracts.ICoPurchaseQuery,
+                           Sales.Application.Orders.CoPurchaseQuery>();
+
         return services;
     }
 

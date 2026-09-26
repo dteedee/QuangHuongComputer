@@ -31,6 +31,7 @@ public static class CatalogEndpoints
 
         group.MapCatalogProductQueryEndpoints();
         group.MapCatalogProductSearchEndpoints();
+        group.MapCatalogBoughtTogetherEndpoints();
         group.MapCatalogProductAdminEndpoints();
         group.MapCatalogCategoryEndpoints();
         group.MapCatalogBrandEndpoints();
