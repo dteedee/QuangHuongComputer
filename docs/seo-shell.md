@@ -9,12 +9,37 @@ is wired through end-to-end, but every provider in this track always sets it to 
 ## What it does
 
 `GET|HEAD /_shell/{**path}`, anonymous, in `ApiGateway`, answers every public storefront URL with:
-a real HTTP status (200 / 301 / 404 — never a client-side-only "soft 200"), `<title>`/description/
+a real HTTP status (200 / 301 / 302 / 404 / 410 — never a client-side-only "soft 200"), `<title>`/description/
 canonical/robots/OG tags, and JSON-LD, all spliced into the built SPA `index.html` before it's sent.
 The edge (`deploy/Caddyfile`) rewrites everything that isn't a static asset or an excluded prefix
 (`/api/*`, `/hubs/*`, `/media/*`, `/uploads/*`, `/health*`, `/sitemap.xml`, `/robots.txt`) to
 `/_shell{uri}`. If the shell is unreachable, the edge falls back to the static `index.html` — the
 SPA still works with generic meta tags.
+
+## Redirect manager (runs BEFORE providers)
+
+Admin-managed table `content."UrlRedirects"` (backoffice `/backoffice/redirects`, API
+`/api/content/admin/redirects`, permissions `Content.ViewRedirects` / `Content.ManageRedirects`).
+The shell asks `IUrlRedirectResolver` first — before any provider and before the template is
+loaded — so an old URL gets a real **301/302** (absolute `Location` from `Frontend:Url`, incoming
+query carried over unless the target has its own) or a **410** page, for crawlers and humans alike.
+
+- Lookup = one dictionary hit on an `IMemoryCache` copy of the ACTIVE rows (10-min safety TTL);
+  every write evicts it AND the `seo-shell` output-cache tag. Redirect/410 responses are never
+  stored in the output cache (so the hit counter sees every request).
+- Hit counter: non-blocking enqueue into a bounded in-memory channel (drops on overflow), flushed
+  every 3s as one `UPDATE … HitCount = HitCount + n` per row.
+- Save-time rules (`UrlRedirectPath`, `UrlRedirectChainGuard`): source normalised (lowercase,
+  decoded, no query/trailing slash, full old-site URLs reduced to their path), unique; rejects `/`,
+  `/api`, `/_shell`, `/hubs`, `/media`, `/uploads`, `/health*`, `/assets`, `/backoffice`,
+  `/sitemap.xml`, `/robots.txt` and Caddy `@assets` extensions; target = `/path` or http(s) URL
+  only; no self-redirect, loop or chain (walk ≤ 10 hops). A chain that still slips in (toggling
+  rows) is collapsed to one hop at read time; a loop resolves to "no redirect".
+- Bulk: CSV/XLSX import (`dryRun|commit`, all-or-nothing, `onDuplicate=skip|update`) and CSV export
+  through the shared `ExcelImportPipeline`.
+- Slug renames: `SlugChangeRedirectInterceptor` on `CatalogDbContext` records `/san-pham/{old}` →
+  `/san-pham/{new}` (and `/danh-muc/…`) after the save/transaction commits, retargeting rows that
+  pointed at the old path so the table stays flat. There is no separate slug-history table.
 
 ## Provider contract (`BuildingBlocks/Seo`)
 
