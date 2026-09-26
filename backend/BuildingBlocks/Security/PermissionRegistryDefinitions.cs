@@ -87,7 +87,8 @@ internal static class PermissionRegistryDefinitions
             P(Permissions.Repair.AssignTechnician, "Phân công kỹ thuật viên", PermissionType.Manage, Permissions.Repair.ViewAll),
             P(Permissions.Repair.CreateQuote, "Lập báo giá sửa chữa", PermissionType.Create, Permissions.Repair.ViewAll),
             P(Permissions.Repair.ApproveQuote, "Duyệt báo giá sửa chữa", PermissionType.Approve, Permissions.Repair.ViewAll),
-            P(Permissions.Repair.Complete, "Hoàn tất phiếu sửa chữa", PermissionType.Manage, Permissions.Repair.ViewAll));
+            P(Permissions.Repair.Complete, "Hoàn tất phiếu sửa chữa", PermissionType.Manage, Permissions.Repair.ViewAll),
+            P(Permissions.Repair.ManageServiceTypes, "Quản lý danh mục dịch vụ sửa chữa", PermissionType.Manage, Permissions.Repair.ViewAll));
 
         Module("Warranty", "Bảo hành",
             P(Permissions.Warranty.SubmitClaim, "Gửi yêu cầu bảo hành", PermissionType.Create),

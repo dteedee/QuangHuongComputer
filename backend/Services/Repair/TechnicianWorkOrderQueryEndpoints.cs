@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Repair.Application.Quotes;
 using Repair.Domain;
 using Repair.Infrastructure;
 
@@ -50,9 +51,12 @@ public static class TechnicianWorkOrderQueryEndpoints
                     w.TicketNumber,
                     w.CustomerId,
                     w.DeviceModel,
+                    w.DeviceType,
+                    w.DeviceBrand,
                     w.SerialNumber,
                     w.Description,
                     w.Status,
+                    w.Priority,
                     w.TechnicianId,
                     w.ServiceType,
                     w.ServiceAddress,
@@ -93,6 +97,7 @@ public static class TechnicianWorkOrderQueryEndpoints
                     w.CustomerId,
                     w.DeviceModel,
                     w.Description,
+                    w.Priority,
                     w.ServiceType,
                     w.ServiceAddress,
                     w.CreatedAt
@@ -110,8 +115,9 @@ public static class TechnicianWorkOrderQueryEndpoints
 
             var workOrder = await db.WorkOrders
                 .Include(w => w.Parts)
-                .Include(w => w.Quotes)
+                .Include(w => w.Quotes).ThenInclude(q => q.Lines)
                 .Include(w => w.ActivityLogs.OrderByDescending(a => a.CreatedAt))
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(w => w.Id == id);
 
             if (workOrder == null)
@@ -130,9 +136,18 @@ public static class TechnicianWorkOrderQueryEndpoints
                 workOrder.TicketNumber,
                 workOrder.CustomerId,
                 workOrder.DeviceModel,
+                workOrder.DeviceType,
+                workOrder.DeviceBrand,
                 workOrder.SerialNumber,
                 workOrder.Description,
                 workOrder.Status,
+                workOrder.Priority,
+                workOrder.AccessoriesReceived,
+                workOrder.IntakePhotoUrls,
+                workOrder.ServiceTypeId,
+                ServiceTypeName = workOrder.ServiceTypeId == null ? null
+                    : await db.RepairServiceTypes.Where(t => t.Id == workOrder.ServiceTypeId).Select(t => t.Name).FirstOrDefaultAsync(),
+                workOrder.ServiceBookingId,
                 workOrder.TechnicianId,
                 workOrder.ServiceType,
                 workOrder.ServiceAddress,
@@ -145,24 +160,18 @@ public static class TechnicianWorkOrderQueryEndpoints
                 Parts = workOrder.Parts.Select(p => new
                 {
                     p.Id,
+                    p.InventoryItemId,
                     p.PartName,
                     p.PartNumber,
+                    p.SerialNumber,
                     p.Quantity,
                     p.UnitPrice,
+                    p.UnitCost,
+                    p.IsBoughtIn,
                     p.TotalPrice
                 }),
-                Quotes = workOrder.Quotes.Select(q => new
-                {
-                    q.Id,
-                    q.QuoteNumber,
-                    q.PartsCost,
-                    q.LaborCost,
-                    q.ServiceFee,
-                    q.TotalCost,
-                    q.Status,
-                    q.CreatedAt,
-                    q.ValidUntil
-                }),
+                workOrder.CurrentQuoteId,
+                Quotes = workOrder.Quotes.OrderByDescending(q => q.CreatedAt).Select(RepairQuoteDtoMapper.ToDto),
                 ActivityLogs = workOrder.ActivityLogs.Select(a => new
                 {
                     a.Id,
@@ -171,11 +180,19 @@ public static class TechnicianWorkOrderQueryEndpoints
                     a.PreviousStatus,
                     a.NewStatus,
                     a.PerformedByName,
+                    a.PhotoStage,
+                    a.PhotoUrls,
                     a.CreatedAt
                 }),
                 workOrder.CreatedAt,
                 workOrder.AssignedAt,
                 workOrder.DiagnosedAt,
+                workOrder.QuotedAt,
+                workOrder.ApprovedAt,
+                workOrder.PaidAt,
+                workOrder.PaymentReference,
+                workOrder.HandoverAt,
+                workOrder.HandoverReceivedByName,
                 workOrder.StartedAt,
                 workOrder.FinishedAt
             });

@@ -7,6 +7,7 @@ import {
     ArrowUpDown, ChevronDown, X, LayoutList, KanbanSquare
 } from 'lucide-react';
 import { repairApi, type WorkOrder, type WorkOrderStatus } from '../../../api/repair';
+import { WorkOrderPriorityBadge } from '../../../components/repair/work-order-priority-badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { DndContext, DragOverlay, useSensors, useSensor, PointerSensor, closestCorners, useDraggable, useDroppable } from '@dnd-kit/core';
@@ -71,7 +72,10 @@ const DraggableWorkOrderCard = ({ order, onClick }: { order: WorkOrder, onClick:
                 onClick={onClick}
             >
                 <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase">#{order.ticketNumber?.split('-')[1] || order.ticketNumber}</span>
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase">
+                        #{order.ticketNumber?.split('-')[1] || order.ticketNumber}
+                        <WorkOrderPriorityBadge priority={order.priority} />
+                    </span>
                     <span className="text-xs text-slate-400">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
                 <p className="text-xs font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1.5 line-clamp-1">
@@ -546,6 +550,7 @@ export const TechPortal = () => {
                                                     {getStatusIcon(order.status)}
                                                     {translateStatus(order.status)}
                                                 </span>
+                                                <div className="mt-1"><WorkOrderPriorityBadge priority={order.priority} /></div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">

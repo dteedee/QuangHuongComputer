@@ -8,16 +8,14 @@
  */
 import client from '../client';
 import type { BookingStatus, WorkOrderStatus } from './types';
+import type { RepairQuote, RepairQuotePreview, UpsertRepairQuoteInput } from './quote-types';
 
 export const repairAdminApi = {
     // Technician-only quote actions (customer approve/reject live in public.ts).
     quotes: {
-        update: async (id: string, updates: {
-            partsCost?: number;
-            laborCost?: number;
-            serviceFee?: number;
-        }): Promise<{ message: string; totalCost: number }> => {
-            const response = await client.put(`/repair/quotes/${id}`, updates);
+        /** Replaces every line + the quote-level discount (pending quotes only). */
+        update: async (id: string, input: UpsertRepairQuoteInput): Promise<{ message: string; totalCost: number; quote: RepairQuote }> => {
+            const response = await client.put(`/repair/quotes/${id}`, input);
             return response.data;
         },
 
@@ -66,12 +64,15 @@ export const repairAdminApi = {
             return response.data;
         },
 
+        /** `inventoryItemId` omitted ⇒ bought-in part: `unitCost` required, stock untouched. */
         addPart: async (id: string, part: {
-            inventoryItemId: string;
+            inventoryItemId?: string | null;
             partName: string;
             quantity: number;
             unitPrice: number;
             partNumber?: string;
+            serialNumber?: string;
+            unitCost?: number;
         }): Promise<{ message: string; partId: string; totalPartsCost: number }> => {
             const response = await client.post(`/repair/tech/work-orders/${id}/parts`, part);
             return response.data;
@@ -87,35 +88,40 @@ export const repairAdminApi = {
             return response.data;
         },
 
-        createQuote: async (id: string, quote: {
-            partsCost: number;
-            laborCost: number;
-            serviceFee: number;
-            estimatedHours: number;
-            hourlyRate: number;
-            description?: string;
-            notes?: string;
-        }): Promise<{
+        createQuote: async (id: string, quote: UpsertRepairQuoteInput): Promise<{
             message: string;
             quoteId: string;
             quoteNumber: string;
             totalCost: number;
             validUntil: string;
+            quote: RepairQuote;
         }> => {
             const response = await client.post(`/repair/work-orders/${id}/quote`, quote);
+            return response.data;
+        },
+
+        /** Server-side totals for a draft quote — the editor shows these instead of adding numbers itself. */
+        previewQuote: async (id: string, quote: UpsertRepairQuoteInput): Promise<RepairQuotePreview> => {
+            const response = await client.post(`/repair/work-orders/${id}/quote/preview`, quote);
             return response.data;
         },
     },
 
     admin: {
         // Bookings
-        getAllBookings: async (page = 1, pageSize = 20, status?: string): Promise<{
+        getAllBookings: async (page = 1, pageSize = 20, status?: string, search?: string): Promise<{
             total: number;
             page: number;
             pageSize: number;
             bookings: any[];
         }> => {
-            const response = await client.get('/repair/admin/bookings', { params: { page, pageSize, status } });
+            const response = await client.get('/repair/admin/bookings', { params: { page, pageSize, status, search } });
+            return response.data;
+        },
+
+        /** "Khách không đến" — only Pending/Approved bookings whose day has come. */
+        markNoShow: async (id: string): Promise<{ message: string; status: BookingStatus }> => {
+            const response = await client.put(`/repair/admin/bookings/${id}/no-show`);
             return response.data;
         },
 

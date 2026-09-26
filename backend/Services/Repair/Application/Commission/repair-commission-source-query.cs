@@ -7,9 +7,14 @@ namespace Repair.Application.Commission;
 
 /// <summary>
 /// Cài đặt <see cref="IRepairCommissionSourceQuery"/> — chỉ ĐỌC, không đổi schema Repair.
-/// Căn cứ hoa hồng = <c>LaborCost + ServiceFee</c> của phiếu; linh kiện (PartsCost) bị loại.
-/// Nếu cấu trúc tiền công của phiếu sửa đổi (dòng báo giá/dịch vụ), chỉ cần sửa
-/// <see cref="Map"/> ở đây — HR không biết gì về cấu trúc đó.
+/// Căn cứ hoa hồng = tiền công + phí dịch vụ; linh kiện bị loại.
+/// <para>
+/// Báo giá chi tiết theo dòng (RepairQuoteLine): khi phiếu có báo giá hiện hành KHÁCH ĐÃ DUYỆT, tiền
+/// công/dịch vụ lấy từ báo giá đó — <c>RepairQuote.LaborCost</c> = Σ dòng Công,
+/// <c>RepairQuote.ServiceFee</c> = Σ dòng Dịch vụ + Khác, đều là số SAU giảm giá (dòng + phân bổ
+/// giảm giá cả phiếu), ĐÃ GỒM VAT; dòng Linh kiện không bao giờ vào căn cứ. Phiếu không qua báo
+/// giá (hoặc báo giá chưa duyệt) giữ cách cũ: <c>WorkOrder.LaborCost + WorkOrder.ServiceFee</c>.
+/// </para>
 /// </summary>
 public sealed class RepairCommissionSourceQuery : IRepairCommissionSourceQuery
 {
@@ -20,6 +25,7 @@ public sealed class RepairCommissionSourceQuery : IRepairCommissionSourceQuery
     public async Task<RepairCommissionSource?> GetAsync(Guid workOrderId, CancellationToken cancellationToken = default)
     {
         var workOrder = await _db.WorkOrders.AsNoTracking()
+            .Include(w => w.Quotes)
             .FirstOrDefaultAsync(w => w.Id == workOrderId, cancellationToken);
         if (workOrder is null) return null;
 
@@ -37,6 +43,7 @@ public sealed class RepairCommissionSourceQuery : IRepairCommissionSourceQuery
         var to = DateTime.SpecifyKind(toUtc, DateTimeKind.Unspecified);
 
         var workOrders = await _db.WorkOrders.AsNoTracking()
+            .Include(w => w.Quotes)
             .Where(w => w.PaidAt != null && w.PaidAt >= from && w.PaidAt < to)
             .ToListAsync(cancellationToken);
 
@@ -50,15 +57,28 @@ public sealed class RepairCommissionSourceQuery : IRepairCommissionSourceQuery
             .ToList();
     }
 
-    internal static RepairCommissionSource Map(WorkOrder w, Technician? technician) => new(
-        w.Id,
-        w.TicketNumber,
-        w.TechnicianId,
-        technician?.UserId,
-        technician?.Name,
-        w.LaborCost,
-        w.ServiceFee,
-        w.PaidAt is { } paid ? DateTime.SpecifyKind(paid, DateTimeKind.Utc) : null,
-        IsSettled: w.Status is WorkOrderStatus.Paid or WorkOrderStatus.Delivered,
-        IsVoidedAfterPayment: w.PaidAt.HasValue && w.Status == WorkOrderStatus.Cancelled);
+    internal static RepairCommissionSource Map(WorkOrder w, Technician? technician)
+    {
+        var (labor, service) = CommissionBase(w);
+        return new(
+            w.Id,
+            w.TicketNumber,
+            w.TechnicianId,
+            technician?.UserId,
+            technician?.Name,
+            labor,
+            service,
+            w.PaidAt is { } paid ? DateTime.SpecifyKind(paid, DateTimeKind.Utc) : null,
+            IsSettled: w.Status is WorkOrderStatus.Paid or WorkOrderStatus.Delivered,
+            IsVoidedAfterPayment: w.PaidAt.HasValue && w.Status == WorkOrderStatus.Cancelled);
+    }
+
+    /// <summary>(Tiền công, phí dịch vụ) làm căn cứ hoa hồng — xem ghi chú đầu lớp. Cần w.Quotes đã nạp.</summary>
+    public static (decimal Labor, decimal Service) CommissionBase(WorkOrder w)
+    {
+        var approved = w.Quotes.FirstOrDefault(q => q.Id == w.CurrentQuoteId && q.Status == QuoteStatus.Approved);
+        return approved is not null
+            ? (approved.LaborCost, approved.ServiceFee)
+            : (w.LaborCost, w.ServiceFee);
+    }
 }

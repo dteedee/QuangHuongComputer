@@ -92,6 +92,9 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 | `/api/warranty/admin`, `/rma`, `/loaner-devices` | `PermissionModules.Warranty` | |
 | `/api/repair` | `SecurityPolicies.Authenticated` | đơn sửa chữa của tôi |
 | `/api/repair/admin`, `/api/repair/tech` | `PermissionModules.Repair` | |
+| `/api/repair/admin/service-types` | GET `Repair.ViewAll`; POST/PUT/DELETE `Repair.ManageServiceTypes` | nhóm riêng, policy tường minh từng endpoint. Admin/Manager (seed v4). `GET /api/repair/service-types` công khai (allow-list) |
+| `/api/repair/tech/work-orders/{id}/{intake,intake-photos,progress-photos}` | `Repair.UpdateStatus` | handler chỉ cho Quản lý/Admin hoặc kỹ thuật viên đang được giao phiếu |
+| `/api/repair/work-orders/{id}/quote`, `/quote/preview` | `Authenticated` + `Repair.CreateQuote` | `PUT /api/repair/quotes/{id}`, `/await-approval`: `Repair.UpdateStatus`; handler kiểm quản lý hoặc KTV được giao (TechnicianAccess) |
 | `/api/reports/*` | 1 nhóm/1 mảng: sales+analytics+comparison `Reporting.ViewSales`; financial+tax `Reporting.ViewFinancial`; inventory `Reporting.ViewInventory`; repair+warranty `Reporting.ViewRepair`; hr `Reporting.ViewHR`; excel+customization `Reporting.ExportReports`; crm `CRM.ViewAnalytics`; system-health `System.ViewConfig` | Accountant/HR/InventoryStaff đọc được báo cáo của mình |
 | `/api/config/*`, `/api/admin/stores`, `/admin/backoffice-menu` | `PermissionModules.SystemConfig` | GET `System.ViewConfig` (Admin+Manager), ghi `System.ManageConfig` (Admin) |
 | `/api/config/backoffice-menu` | `SecurityPolicies.Staff` | menu của chính người đăng nhập |

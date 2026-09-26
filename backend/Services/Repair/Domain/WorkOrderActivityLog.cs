@@ -12,6 +12,10 @@ public class WorkOrderActivityLog : Entity<Guid>
     public Guid? PerformedBy { get; private set; }
     public string? PerformedByName { get; private set; }
 
+    /// <summary>Ảnh trước/sau khi sửa gắn với dòng nhật ký này (URL tương đối từ IFileStorage).</summary>
+    public WorkOrderPhotoStage? PhotoStage { get; private set; }
+    public List<string> PhotoUrls { get; private set; } = new();
+
     // Reference to work order
     public WorkOrder? WorkOrder { get; private set; }
 
@@ -82,7 +86,28 @@ public class WorkOrderActivityLog : Entity<Guid>
             "Quote generated",
             performedBy,
             performedByName,
-            $"Quote {quoteNumber} created with total cost: ${totalCost:F2}");
+            string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"),
+                "Báo giá {0}: tổng {1:N0} ₫ (đã gồm VAT)", quoteNumber, totalCost));
+    }
+
+    /// <summary>Dòng nhật ký kèm ảnh trước/sau khi sửa.</summary>
+    public static WorkOrderActivityLog CreatePhotos(
+        Guid workOrderId,
+        WorkOrderPhotoStage stage,
+        IReadOnlyCollection<string> photoUrls,
+        string? note,
+        Guid? performedBy = null,
+        string? performedByName = null)
+    {
+        var log = new WorkOrderActivityLog(
+            workOrderId,
+            stage == WorkOrderPhotoStage.Before ? "Ảnh trước khi sửa" : "Ảnh sau khi sửa",
+            performedBy,
+            performedByName,
+            string.IsNullOrWhiteSpace(note) ? null : note.Trim());
+        log.PhotoStage = stage;
+        log.PhotoUrls = photoUrls.ToList();
+        return log;
     }
 
     public static WorkOrderActivityLog CreateNote(

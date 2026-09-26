@@ -39,8 +39,9 @@ public static class PublicTrackingEndpoints
                 return Results.BadRequest(new { error = "Mã phiếu và số điện thoại là bắt buộc." });
 
             var workOrder = await db.WorkOrders
-                .Include(w => w.Quotes)
+                .Include(w => w.Quotes).ThenInclude(q => q.Lines)
                 .Include(w => w.ActivityLogs)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(w => w.TicketNumber == ticketNumber);
 
             // Phone lives on the ServiceBooking behind a booked order, or is looked up
@@ -64,9 +65,32 @@ public static class PublicTrackingEndpoints
                 return Results.NotFound(new { error = "Không tìm thấy phiếu sửa chữa với thông tin đã cung cấp." });
             }
 
+            // Báo giá hiện hành, chi tiết từng dòng + VAT (không có giá vốn, không id nội bộ): khách
+            // xem được đang trả cho cái gì trước khi đăng nhập để duyệt.
             var currentQuote = workOrder.Quotes
                 .Where(q => q.Id == workOrder.CurrentQuoteId)
-                .Select(q => new { q.QuoteNumber, q.TotalCost, Status = q.Status.ToString(), q.ValidUntil })
+                .Select(q => new
+                {
+                    q.QuoteNumber,
+                    Status = q.Status.ToString(),
+                    q.ValidUntil,
+                    q.SubtotalAmount,
+                    DiscountTotal = q.LineDiscountTotal + q.DiscountAmount,
+                    q.NetAmount,
+                    q.VatAmount,
+                    q.VatRate,
+                    q.TotalCost,
+                    Lines = q.Lines.OrderBy(l => l.Sequence).Select(l => new
+                    {
+                        l.Sequence,
+                        Kind = l.Kind.ToString(),
+                        l.Description,
+                        l.Quantity,
+                        l.UnitPrice,
+                        Discount = l.LineDiscount + l.AllocatedDiscount,
+                        l.LineTotal
+                    })
+                })
                 .FirstOrDefault();
 
             return Results.Ok(new

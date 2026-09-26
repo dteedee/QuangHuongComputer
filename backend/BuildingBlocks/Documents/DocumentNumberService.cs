@@ -39,6 +39,9 @@ public static class DocumentNumberTypes
     /// <summary>D10: báo giá / quotation.</summary>
     public const string Quotation = "bg";
 
+    /// <summary>Lịch hẹn sửa chữa (Repair.ServiceBooking). Sequence do migration Repair AddBookingNumberAndNoShow tạo.</summary>
+    public const string ServiceBooking = "lh";
+
     /// <summary>type -> printed prefix. Iteration order is the migration order in W1-11.</summary>
     public static readonly IReadOnlyDictionary<string, string> All =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -55,7 +58,8 @@ public static class DocumentNumberTypes
             [ReturnRequest] = "RET",
             [Payment] = "PAY",
             [SalesOrder] = "SO",
-            [Quotation] = "BG"
+            [Quotation] = "BG",
+            [ServiceBooking] = "LH"
         };
 
     /// <summary>Sequence name W1-11's migration must create for <paramref name="documentType"/>.</summary>

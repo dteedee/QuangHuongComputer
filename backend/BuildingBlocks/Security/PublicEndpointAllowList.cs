@@ -143,6 +143,7 @@ public static class PublicEndpointAllowList
 
         // --- Sửa chữa / bảo hành: tra cứu tự phục vụ + tham số chính sách ---
         new PublicEndpointRule("/api/repair/onsite-fee", Get, "Phí tận nơi niêm yết; 2 con số từ cấu hình, không đọc DB (PublicTrackingEndpoints.cs:22-31)."),
+        new PublicEndpointRule("/api/repair/service-types", Get, "Bảng giá dịch vụ sửa chữa đang bật (tên, mô tả, giá gốc niêm yết, thời gian ước tính) cho form đặt lịch; không PII (ServiceTypeEndpoints.cs)."),
         new PublicEndpointRule("/api/repair/track/{ticketNumber}", Get, "Tra phiếu sửa bằng mã phiếu VÀ số điện thoại; sai một trong hai trả cùng 404; rate limit 'contact' (PublicTrackingEndpoints.cs:35-85)."),
         new PublicEndpointRule("/api/warranty/policies/effective", Get, "Số tháng bảo hành áp cho 1 sản phẩm, không hồ sơ bảo hành, không PII (policy-endpoints.cs:27-43)."),
         new PublicEndpointRule("/api/warranty/policies/public-matrix", Get, "Ma trận chính sách bảo hành trên trang 'Chính sách' (policy-endpoints.cs:45-62)."),

@@ -25,6 +25,8 @@ public static class RepairEndpoints
         app.MapQuoteEndpoints();
         app.MapPaymentHandoverEndpoints();
         app.MapPublicTrackingEndpoints();
+        app.MapServiceTypeEndpoints();
+        app.MapWorkOrderIntakeEndpoints();
 
         // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
         // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
@@ -112,8 +114,18 @@ public static class RepairEndpoints
                 workOrder.PartsCost,
                 workOrder.LaborCost,
                 workOrder.TotalCost,
+                workOrder.ServiceFee,
                 workOrder.TechnicalNotes,
+                // Màn "phiếu sửa của tôi" cần id báo giá hiện hành để khách xem dòng + duyệt/từ chối.
+                workOrder.CurrentQuoteId,
+                workOrder.Priority,
+                workOrder.DeviceType,
+                workOrder.DeviceBrand,
+                workOrder.AccessoriesReceived,
                 workOrder.CreatedAt,
+                workOrder.AssignedAt,
+                workOrder.QuotedAt,
+                workOrder.ApprovedAt,
                 workOrder.StartedAt,
                 workOrder.FinishedAt
             });
@@ -159,13 +171,18 @@ public static class RepairEndpoints
         // Route sinh ra vẫn là /api/repair/admin/...
         var adminGroup = app.MapGroup("/api/repair/admin").RequireModulePermissions(PermissionModules.Repair);
 
-        adminGroup.MapGet("/work-orders", async (RepairDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
+        adminGroup.MapGet("/work-orders", async (RepairDbContext db, int page = 1, int pageSize = 20, string? status = null, string? priority = null) =>
         {
             var query = db.WorkOrders.AsQueryable();
 
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<WorkOrderStatus>(status, true, out var statusEnum))
             {
                 query = query.Where(w => w.Status == statusEnum);
+            }
+
+            if (!string.IsNullOrEmpty(priority) && Enum.TryParse<WorkOrderPriority>(priority, true, out var priorityEnum))
+            {
+                query = query.Where(w => w.Priority == priorityEnum);
             }
 
             var total = await query.CountAsync();
@@ -178,8 +195,10 @@ public static class RepairEndpoints
                     w.Id,
                     w.TicketNumber,
                     w.CustomerId,
+                    w.DeviceModel,
                     w.Description,
                     w.Status,
+                    w.Priority,
                     w.TechnicianId,
                     w.EstimatedCost,
                     TotalCost = w.PartsCost + w.LaborCost,
@@ -278,9 +297,10 @@ public static class RepairEndpoints
             try
             {
                 var performedBy = TechnicianAccess.GetUserName(user);
-                foreach (var part in workOrder.Parts)
+                // Linh kiện mua ngoài (InventoryItemId = null) không bao giờ chạm sổ kho.
+                foreach (var part in workOrder.Parts.Where(p => p.InventoryItemId.HasValue))
                 {
-                    await stock.CommitAsync(part.InventoryItemId, part.Quantity, workOrder.Id, performedBy);
+                    await stock.CommitAsync(part.InventoryItemId!.Value, part.Quantity, workOrder.Id, performedBy);
                 }
 
                 workOrder.CompleteRepair(dto.PartsCost, dto.LaborCost, dto.Notes);
@@ -321,9 +341,9 @@ public static class RepairEndpoints
             if (workOrder.Status != WorkOrderStatus.Completed)
             {
                 var performedBy = TechnicianAccess.GetUserName(user);
-                foreach (var part in workOrder.Parts)
+                foreach (var part in workOrder.Parts.Where(p => p.InventoryItemId.HasValue))
                 {
-                    await stock.ReleaseAsync(part.InventoryItemId, part.Quantity, workOrder.Id, performedBy);
+                    await stock.ReleaseAsync(part.InventoryItemId!.Value, part.Quantity, workOrder.Id, performedBy);
                 }
             }
 

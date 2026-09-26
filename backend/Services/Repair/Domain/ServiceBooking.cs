@@ -4,10 +4,18 @@ namespace Repair.Domain;
 
 public class ServiceBooking : Entity<Guid>
 {
+    /// <summary>Số lịch hẹn dễ đọc (LH-yyyyMM-#####) từ IDocumentNumberService, loại "lh".</summary>
+    public string BookingNumber { get; private set; } = string.Empty;
+    public DateTime? NoShowAt { get; private set; }
+
     public Guid CustomerId { get; private set; }
     public Guid? OrganizationId { get; private set; }
 
     // Service Details
+    /// <summary>Dịch vụ khách chọn trong danh mục <see cref="RepairServiceType"/>.</summary>
+    public Guid ServiceTypeId { get; private set; }
+
+    /// <summary>Tại cửa hàng / tận nơi — SUY RA từ <see cref="RepairServiceType.IsOnSite"/>, không do client chọn.</summary>
     public ServiceType ServiceType { get; private set; }
     public string DeviceModel { get; private set; } = string.Empty;
     public string? SerialNumber { get; private set; }
@@ -58,7 +66,7 @@ public class ServiceBooking : Entity<Guid>
     /// </summary>
     public ServiceBooking(
         Guid customerId,
-        ServiceType serviceType,
+        RepairServiceType serviceType,
         string deviceModel,
         string issueDescription,
         DateTime preferredDate,
@@ -71,15 +79,17 @@ public class ServiceBooking : Entity<Guid>
     {
         Id = Guid.NewGuid();
         CustomerId = customerId;
-        ServiceType = serviceType;
+        ServiceTypeId = serviceType.Id;
+        ServiceType = serviceType.LegacyServiceType;
         DeviceModel = deviceModel;
         IssueDescription = issueDescription;
-        PreferredDate = preferredDate;
+        // Chỉ giữ NGÀY hẹn (khung giờ nằm ở PreferredTimeSlot) — đếm sức chứa theo (ngày, khung).
+        PreferredDate = DateTime.SpecifyKind(preferredDate.Date, DateTimeKind.Utc);
         PreferredTimeSlot = timeSlot;
         AcceptedTerms = acceptedTerms;
         TermsAcceptedAt = acceptedTerms ? DateTime.UtcNow : null;
         Status = BookingStatus.Pending;
-        OnSiteFee = serviceType == ServiceType.OnSite ? onSiteFee : 0m;
+        OnSiteFee = serviceType.IsOnSite ? onSiteFee : 0m;
         CustomerName = customerName;
         CustomerPhone = customerPhone;
         CustomerEmail = customerEmail;
@@ -133,8 +143,41 @@ public class ServiceBooking : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void AssignBookingNumber(string bookingNumber)
+    {
+        if (!string.IsNullOrEmpty(BookingNumber))
+            throw new InvalidOperationException("Booking number already assigned");
+        BookingNumber = bookingNumber;
+    }
+
+    /// <summary>Ngày hẹn dạng lịch (không giờ) — khoá đếm sức chứa cùng với khung giờ.</summary>
+    public DateOnly PreferredDay => DateOnly.FromDateTime(PreferredDate);
+
+    /// <summary>Lịch hẹn còn chiếm chỗ trong khung giờ (không tính đã từ chối / khách không đến).</summary>
+    public static bool OccupiesSlot(BookingStatus status)
+        => status is BookingStatus.Pending or BookingStatus.Approved or BookingStatus.Converted;
+
+    /// <summary>
+    /// "Khách không đến": chỉ từ Pending/Approved, và chỉ khi ngày hẹn đã tới
+    /// (<paramref name="todayVn"/> = ngày làm việc giờ Việt Nam) — không đánh trước được.
+    /// </summary>
+    public void MarkNoShow(DateOnly todayVn)
+    {
+        if (Status != BookingStatus.Pending && Status != BookingStatus.Approved)
+            throw new InvalidOperationException($"Cannot mark no-show for booking in {Status} status");
+        if (PreferredDay > todayVn)
+            throw new InvalidOperationException("Cannot mark no-show before the appointment day");
+
+        Status = BookingStatus.NoShow;
+        NoShowAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void LinkWorkOrder(Guid workOrderId)
     {
+        if (Status != BookingStatus.Pending && Status != BookingStatus.Approved)
+            throw new InvalidOperationException($"Cannot convert booking in {Status} status");
+
         WorkOrderId = workOrderId;
         Status = BookingStatus.Converted;
         UpdatedAt = DateTime.UtcNow;

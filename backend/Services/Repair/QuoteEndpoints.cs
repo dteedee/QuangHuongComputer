@@ -1,359 +1,121 @@
-using BuildingBlocks.Security;
 using System.Security.Claims;
+using BuildingBlocks.Endpoints;
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Repair.Application.Quotes;
 using Repair.Domain;
 using Repair.Infrastructure;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Repair;
 
+/// <summary>
+/// Phía KHÁCH của báo giá: xem (kèm từng dòng + VAT), đồng ý, từ chối. Chỉ chủ phiếu được
+/// duyệt/từ chối, và chỉ báo giá HIỆN HÀNH của phiếu (<c>WorkOrder.CurrentQuoteId</c>). Phần soạn
+/// báo giá của nhân viên nằm ở <see cref="QuoteStaffEndpoints"/>.
+/// </summary>
 public static class QuoteEndpoints
 {
     public static void MapQuoteEndpoints(this IEndpointRouteBuilder app)
     {
-        // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
-        // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
+        // W1-10: nhánh khách hàng -> chỉ cần đăng nhập; handler tự lọc theo chủ phiếu.
         var group = app.MapGroup("/api/repair").RequireAuthorization(SecurityPolicies.Authenticated);
+        app.MapQuoteStaffEndpoints();
 
-        // Technician: Create quote for work order
-        group.MapPost("/work-orders/{id:guid}/quote", async (
-            Guid id,
-            [FromBody] CreateQuoteDto dto,
-            RepairDbContext db,
-            ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var workOrder = await db.WorkOrders
-                .Include(w => w.Quotes)
-                .Include(w => w.Parts)
-                .FirstOrDefaultAsync(w => w.Id == id);
-
-            if (workOrder == null)
-                return Results.NotFound(new { Error = "Work order not found" });
-
-            // Check authorization
-            var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-            var isManager = roles.Contains("Manager") || roles.Contains("Admin");
-            var isTechnician = roles.Contains("TechnicianInShop") || roles.Contains("TechnicianOnSite");
-
-            if (!isManager && (!isTechnician || workOrder.TechnicianId != userId))
-                return Results.Forbid();
-
-            try
-            {
-                var quote = new RepairQuote(
-                    workOrder.Id,
-                    dto.PartsCost,
-                    dto.LaborCost,
-                    dto.ServiceFee,
-                    dto.EstimatedHours,
-                    dto.HourlyRate,
-                    dto.Description,
-                    dto.Notes
-                );
-
-                workOrder.CreateQuote(quote);
-
-                var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
-                var log = WorkOrderActivityLog.CreateQuoteGenerated(
-                    workOrder.Id,
-                    quote.QuoteNumber,
-                    quote.TotalCost,
-                    userId,
-                    userName);
-                workOrder.AddActivityLog(log);
-                db.WorkOrderActivityLogs.Add(log);
-
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new
-                {
-                    Message = "Quote created",
-                    QuoteId = quote.Id,
-                    QuoteNumber = quote.QuoteNumber,
-                    TotalCost = quote.TotalCost,
-                    ValidUntil = quote.ValidUntil
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        })
-        .RequireAuthorization(Permissions.Repair.UpdateStatus);
-
-        // Customer: Get quote details
         group.MapGet("/quotes/{id:guid}", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
 
-            var quote = await db.RepairQuotes
-                .Include(q => q.WorkOrder)
-                .FirstOrDefaultAsync(q => q.Id == id);
-
-            if (quote == null)
-                return Results.NotFound(new { Error = "Quote not found" });
-
-            // Check if user is customer or staff
-            var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-            var isStaff = roles.Contains("Admin") || roles.Contains("Manager") ||
-                         roles.Contains("TechnicianInShop") || roles.Contains("TechnicianOnSite");
-
-            if (!isStaff && quote.WorkOrder!.CustomerId != userId)
+            var quote = await LoadAsync(db, id);
+            if (!RepairQuoteAccess.IsRepairStaff(user) && quote.WorkOrder!.CustomerId != userId)
                 return Results.Forbid();
 
-            // Check if quote is expired and mark it
             if (quote.IsExpired() && quote.Status == QuoteStatus.Pending)
             {
                 quote.MarkAsExpired();
                 await db.SaveChangesAsync();
             }
 
-            return Results.Ok(new
-            {
-                quote.Id,
-                quote.QuoteNumber,
-                quote.WorkOrderId,
-                quote.PartsCost,
-                quote.LaborCost,
-                quote.ServiceFee,
-                quote.TotalCost,
-                quote.EstimatedHours,
-                quote.HourlyRate,
-                quote.Description,
-                quote.Notes,
-                quote.Status,
-                quote.ValidUntil,
-                quote.ApprovedAt,
-                quote.RejectedAt,
-                quote.RejectionReason,
-                quote.CreatedAt,
-                IsExpired = quote.IsExpired()
-            });
+            return Results.Ok(RepairQuoteDtoMapper.ToDto(quote));
         });
 
-        // Customer: Approve quote
         group.MapPut("/quotes/{id:guid}/approve", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
 
-            var quote = await db.RepairQuotes
-                .Include(q => q.WorkOrder)
-                .FirstOrDefaultAsync(q => q.Id == id);
-
-            if (quote == null)
-                return Results.NotFound(new { Error = "Quote not found" });
-
-            // Check if user is the customer
-            if (quote.WorkOrder!.CustomerId != userId)
+            var quote = await LoadAsync(db, id);
+            var workOrder = quote.WorkOrder!;
+            if (workOrder.CustomerId != userId)
                 return Results.Forbid();
+            EnsureCurrent(workOrder, quote);
 
             try
             {
+                var previous = workOrder.Status;
                 quote.Approve();
-                quote.WorkOrder.ApproveQuote();
-
-                var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Customer";
-                var log = WorkOrderActivityLog.CreateStatusChange(
-                    quote.WorkOrder.Id,
-                    WorkOrderStatus.AwaitingApproval,
-                    WorkOrderStatus.Approved,
-                    userId,
-                    userName,
-                    $"Quote {quote.QuoteNumber} approved by customer");
-                quote.WorkOrder.AddActivityLog(log);
-                db.WorkOrderActivityLogs.Add(log);
-
+                workOrder.ApproveQuote(quote.TotalCost);
+                Log(db, workOrder, previous, userId, user, $"Khách đồng ý báo giá {quote.QuoteNumber}");
                 await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    Message = "Quote approved",
-                    QuoteStatus = quote.Status.ToString(),
-                    WorkOrderStatus = quote.WorkOrder.Status.ToString()
-                });
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
+                throw new ConflictException("Báo giá đã hết hạn hoặc không còn chờ duyệt.");
             }
+
+            return Results.Ok(new { Message = "Quote approved", QuoteStatus = quote.Status.ToString(), WorkOrderStatus = workOrder.Status.ToString() });
         });
 
-        // Customer: Reject quote
-        group.MapPut("/quotes/{id:guid}/reject", async (
-            Guid id,
-            [FromBody] RejectQuoteDto dto,
-            RepairDbContext db,
-            ClaimsPrincipal user) =>
+        group.MapPut("/quotes/{id:guid}/reject", async (Guid id, [FromBody] RejectQuoteDto dto, RepairDbContext db, ClaimsPrincipal user) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
+            if (string.IsNullOrWhiteSpace(dto.Reason))
+                throw new RequestValidationException("reason", "Vui lòng cho biết lý do từ chối.");
 
-            var quote = await db.RepairQuotes
-                .Include(q => q.WorkOrder)
-                .FirstOrDefaultAsync(q => q.Id == id);
-
-            if (quote == null)
-                return Results.NotFound(new { Error = "Quote not found" });
-
-            // Check if user is the customer
-            if (quote.WorkOrder!.CustomerId != userId)
+            var quote = await LoadAsync(db, id);
+            var workOrder = quote.WorkOrder!;
+            if (workOrder.CustomerId != userId)
                 return Results.Forbid();
+            EnsureCurrent(workOrder, quote);
 
             try
             {
+                var previous = workOrder.Status;
                 quote.Reject(dto.Reason);
-                quote.WorkOrder.RejectQuote();
-
-                var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Customer";
-                var log = WorkOrderActivityLog.CreateStatusChange(
-                    quote.WorkOrder.Id,
-                    WorkOrderStatus.AwaitingApproval,
-                    WorkOrderStatus.Rejected,
-                    userId,
-                    userName,
-                    $"Quote {quote.QuoteNumber} rejected: {dto.Reason}");
-                quote.WorkOrder.AddActivityLog(log);
-                db.WorkOrderActivityLogs.Add(log);
-
+                workOrder.RejectQuote();
+                Log(db, workOrder, previous, userId, user, $"Khách từ chối báo giá {quote.QuoteNumber}: {dto.Reason}");
                 await db.SaveChangesAsync();
-                return Results.Ok(new
-                {
-                    Message = "Quote rejected",
-                    QuoteStatus = quote.Status.ToString(),
-                    WorkOrderStatus = quote.WorkOrder.Status.ToString()
-                });
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
+                throw new ConflictException("Báo giá không còn chờ duyệt.");
             }
+
+            return Results.Ok(new { Message = "Quote rejected", QuoteStatus = quote.Status.ToString(), WorkOrderStatus = workOrder.Status.ToString() });
         });
+    }
 
-        // Technician: Update quote (only if pending)
-        group.MapPut("/quotes/{id:guid}", async (
-            Guid id,
-            [FromBody] UpdateQuoteDto dto,
-            RepairDbContext db,
-            ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
+    internal static async Task<RepairQuote> LoadAsync(RepairDbContext db, Guid id)
+        => await db.RepairQuotes.Include(q => q.WorkOrder).Include(q => q.Lines).FirstOrDefaultAsync(q => q.Id == id)
+           ?? throw NotFoundException.For("báo giá", id);
 
-            var quote = await db.RepairQuotes
-                .Include(q => q.WorkOrder)
-                .FirstOrDefaultAsync(q => q.Id == id);
+    private static void EnsureCurrent(WorkOrder workOrder, RepairQuote quote)
+    {
+        if (workOrder.CurrentQuoteId != quote.Id)
+            throw new ConflictException("Báo giá này đã được thay bằng báo giá mới hơn.");
+    }
 
-            if (quote == null)
-                return Results.NotFound(new { Error = "Quote not found" });
-
-            // Check authorization
-            var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-            var isManager = roles.Contains("Manager") || roles.Contains("Admin");
-            var isTechnician = roles.Contains("TechnicianInShop") || roles.Contains("TechnicianOnSite");
-
-            if (!isManager && (!isTechnician || quote.WorkOrder!.TechnicianId != userId))
-                return Results.Forbid();
-
-            try
-            {
-                quote.UpdateCosts(dto.PartsCost, dto.LaborCost, dto.ServiceFee);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new
-                {
-                    Message = "Quote updated",
-                    TotalCost = quote.TotalCost
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        })
-        .RequireAuthorization(Permissions.Repair.UpdateStatus);
-
-        // Mark quote as awaiting approval
-        group.MapPut("/quotes/{id:guid}/await-approval", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
-        {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-                return Results.Unauthorized();
-
-            var quote = await db.RepairQuotes
-                .Include(q => q.WorkOrder)
-                .FirstOrDefaultAsync(q => q.Id == id);
-
-            if (quote == null)
-                return Results.NotFound(new { Error = "Quote not found" });
-
-            // Check authorization
-            var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-            var isManager = roles.Contains("Manager") || roles.Contains("Admin");
-            var isTechnician = roles.Contains("TechnicianInShop") || roles.Contains("TechnicianOnSite");
-
-            if (!isManager && (!isTechnician || quote.WorkOrder!.TechnicianId != userId))
-                return Results.Forbid();
-
-            try
-            {
-                quote.WorkOrder!.MarkAwaitingApproval();
-
-                var userName = user.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
-                var log = WorkOrderActivityLog.CreateStatusChange(
-                    quote.WorkOrder.Id,
-                    WorkOrderStatus.Quoted,
-                    WorkOrderStatus.AwaitingApproval,
-                    userId,
-                    userName,
-                    "Quote sent to customer for approval");
-                quote.WorkOrder.AddActivityLog(log);
-                db.WorkOrderActivityLogs.Add(log);
-
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new
-                {
-                    Message = "Quote sent for customer approval",
-                    WorkOrderStatus = quote.WorkOrder.Status.ToString()
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        })
-        .RequireAuthorization(Permissions.Repair.UpdateStatus);
+    /// <summary>Stage log tường minh — xem ghi chú đồng thời trên WorkOrder.AddActivityLog.</summary>
+    private static void Log(RepairDbContext db, WorkOrder workOrder, WorkOrderStatus previous, Guid userId, ClaimsPrincipal user, string text)
+    {
+        var log = WorkOrderActivityLog.CreateStatusChange(
+            workOrder.Id, previous, workOrder.Status, userId, user.FindFirstValue(ClaimTypes.Name) ?? "Khách hàng", text);
+        workOrder.AddActivityLog(log);
+        db.WorkOrderActivityLogs.Add(log);
     }
 }
-
-// DTOs
-public record CreateQuoteDto(
-    decimal PartsCost,
-    decimal LaborCost,
-    decimal ServiceFee,
-    decimal EstimatedHours,
-    decimal HourlyRate,
-    string? Description,
-    string? Notes
-);
-
-public record UpdateQuoteDto(
-    decimal? PartsCost,
-    decimal? LaborCost,
-    decimal? ServiceFee
-);
-
-public record RejectQuoteDto(string Reason);

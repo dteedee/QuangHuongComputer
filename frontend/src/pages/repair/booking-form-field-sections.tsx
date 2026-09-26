@@ -112,10 +112,12 @@ interface ScheduleSectionProps {
     errors: Record<string, string>;
     onChange: ChangeHandler;
     onTimeSlotChange: (value: TimeSlot) => void;
+    /** Slots already at capacity for the chosen date (server `booking-slots`). */
+    fullSlots?: TimeSlot[];
 }
 
 export const BookingScheduleSection: React.FC<ScheduleSectionProps> = ({
-    preferredDate, timeSlot, minDate, errors, onChange, onTimeSlotChange,
+    preferredDate, timeSlot, minDate, errors, onChange, onTimeSlotChange, fullSlots = [],
 }) => (
     <div className={CARD}>
         <h2 className={HEADING}>Thời gian bạn muốn hẹn</h2>
@@ -134,9 +136,10 @@ export const BookingScheduleSection: React.FC<ScheduleSectionProps> = ({
                     name="timeSlot"
                     value={timeSlot}
                     onChange={(val) => onTimeSlotChange(val as TimeSlot)}
-                    options={TIME_SLOT_OPTIONS}
+                    options={TIME_SLOT_OPTIONS.map((o) => (fullSlots.includes(o.value) ? { ...o, label: `${o.label} — đã kín lịch` } : o))}
                     placeholder="Chọn khung giờ"
                 />
+                <FieldError message={errors.timeSlot} />
             </div>
         </div>
     </div>

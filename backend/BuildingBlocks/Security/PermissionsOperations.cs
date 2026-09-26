@@ -13,6 +13,8 @@ public static partial class Permissions
         public const string CreateQuote = "Permissions.Repair.CreateQuote";
         public const string ApproveQuote = "Permissions.Repair.ApproveQuote";
         public const string Complete = "Permissions.Repair.Complete";
+        /// <summary>Sửa danh mục dịch vụ sửa chữa (tên, giá gốc, thời gian, bật/tắt).</summary>
+        public const string ManageServiceTypes = "Permissions.Repair.ManageServiceTypes";
     }
 
     public static class Warranty

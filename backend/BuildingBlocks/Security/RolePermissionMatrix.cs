@@ -23,7 +23,7 @@ public sealed record RoleGrant(string Permission, int SinceVersion);
 public static class RolePermissionMatrix
 {
     /// <summary>Tăng số này khi thêm quyền mới cho một role đã tồn tại.</summary>
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 
     /// <summary>Loại claim lưu phiên bản seed trên từng role.</summary>
     public const string SeedVersionClaimType = "PermissionSeedVersion";

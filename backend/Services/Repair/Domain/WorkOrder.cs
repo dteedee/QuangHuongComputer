@@ -2,7 +2,7 @@ using BuildingBlocks.SharedKernel;
 
 namespace Repair.Domain;
 
-public class WorkOrder : Entity<Guid>
+public partial class WorkOrder : Entity<Guid>
 {
     public string TicketNumber { get; private set; } = string.Empty;
     public Guid CustomerId { get; private set; }
@@ -35,6 +35,8 @@ public class WorkOrder : Entity<Guid>
     public DateTime? QuotedAt { get; private set; }
     public DateTime? ApprovedAt { get; private set; }
     public ServiceType? ServiceType { get; private set; }
+    /// <summary>Dịch vụ trong danh mục (từ lịch hẹn, hoặc lễ tân chọn khi nhận máy).</summary>
+    public Guid? ServiceTypeId { get; private set; }
     public string? ServiceAddress { get; private set; }
     public decimal ServiceFee { get; private set; }
 
@@ -70,6 +72,7 @@ public class WorkOrder : Entity<Guid>
         Description = booking.IssueDescription;
         ServiceBookingId = booking.Id;
         ServiceType = booking.ServiceType;
+        ServiceTypeId = booking.ServiceTypeId;
         ServiceAddress = booking.ServiceAddress;
         ServiceFee = booking.OnSiteFee;
         EstimatedCost = booking.EstimatedCost;
@@ -169,11 +172,13 @@ public class WorkOrder : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ApproveQuote()
+    /// <param name="approvedTotal">Tổng báo giá khách đã duyệt — thành chi phí dự kiến của phiếu.</param>
+    public void ApproveQuote(decimal? approvedTotal = null)
     {
         if (Status != WorkOrderStatus.AwaitingApproval && Status != WorkOrderStatus.Quoted)
             throw new InvalidOperationException("Must be awaiting approval or quoted");
 
+        if (approvedTotal is >= 0) EstimatedCost = approvedTotal.Value;
         Status = WorkOrderStatus.Approved;
         ApprovedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;

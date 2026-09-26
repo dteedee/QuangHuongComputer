@@ -5,8 +5,8 @@
 > trong `Permissions*.cs`, mô tả trong `PermissionRegistryDefinitions.cs`,
 > ma trận trong `RolePermissionMatrixData.cs` rồi chạy lại test.
 
-- Phiên bản seed hiện tại: **v3**
-- Tổng số quyền: **122**
+- Phiên bản seed hiện tại: **v4**
+- Tổng số quyền: **123**
 - Admin luôn có toàn bộ quyền và được `PermissionAuthorizationHandler` bypass.
 - Seed chỉ THÊM quyền; quyền admin gỡ tay không bị cấp lại (xem `RolePermissionSeeder`).
 
@@ -14,8 +14,8 @@
 
 | Vai trò | Số quyền | Phạm vi |
 |---|---:|---|
-| `Admin` | 122 | Toàn quyền (break-glass). |
-| `Manager` | 101 | Quản lý cửa hàng: mọi nghiệp vụ trừ cấu hình hệ thống, tạo tài khoản và phân vai trò. |
+| `Admin` | 123 | Toàn quyền (break-glass). |
+| `Manager` | 102 | Quản lý cửa hàng: mọi nghiệp vụ trừ cấu hình hệ thống, tạo tài khoản và phân vai trò. |
 | `Sale` | 29 | Bán hàng: POS, đơn hàng, báo giá, khách hàng tiềm năng, thu COD. |
 | `InventoryStaff` | 13 | Kho: nhập/xuất/kiểm kê, lập đề nghị mua — không duyệt, không tài chính. |
 | `Accountant` | 27 | Kế toán: hoá đơn, công nợ, thanh toán, báo cáo tài chính, tham số lương/thuế (D06). |
@@ -106,6 +106,7 @@
 | `Repair.CreateQuote` | Lập báo giá sửa chữa | Create | `Repair.ViewAll` | x | x |  |  |  |  |  | x | x |  |  |
 | `Repair.ApproveQuote` | Duyệt báo giá sửa chữa | Approve | `Repair.ViewAll` | x | x |  |  |  |  |  |  |  |  |  |
 | `Repair.Complete` | Hoàn tất phiếu sửa chữa | Manage | `Repair.ViewAll` | x | x |  |  |  |  |  | x | x |  |  |
+| `Repair.ManageServiceTypes` | Quản lý danh mục dịch vụ sửa chữa | Manage | `Repair.ViewAll` | x | x |  |  |  |  |  |  |  |  |  |
 
 ### Warranty — Bảo hành
 
@@ -291,6 +292,7 @@ Route chứa đoạn `admin`, `backoffice`, `internal` không bao giờ công kh
 | `/api/sales/shipping/provinces/{code}/wards` | GET/HEAD | Dữ liệu tham chiếu xã/phường tĩnh (ShippingAddressEndpoints.cs:40-48). |
 | `/api/sales/shipping/quote` | POST | Phí ship ở trang giỏ hàng trước khi đăng nhập; phí do server tính, client không gửi phí (ShippingQuoteEndpoints.cs:24-42). |
 | `/api/repair/onsite-fee` | GET/HEAD | Phí tận nơi niêm yết; 2 con số từ cấu hình, không đọc DB (PublicTrackingEndpoints.cs:22-31). |
+| `/api/repair/service-types` | GET/HEAD | Bảng giá dịch vụ sửa chữa đang bật (tên, mô tả, giá gốc niêm yết, thời gian ước tính) cho form đặt lịch; không PII (ServiceTypeEndpoints.cs). |
 | `/api/repair/track/{ticketNumber}` | GET/HEAD | Tra phiếu sửa bằng mã phiếu VÀ số điện thoại; sai một trong hai trả cùng 404; rate limit 'contact' (PublicTrackingEndpoints.cs:35-85). |
 | `/api/warranty/policies/effective` | GET/HEAD | Số tháng bảo hành áp cho 1 sản phẩm, không hồ sơ bảo hành, không PII (policy-endpoints.cs:27-43). |
 | `/api/warranty/policies/public-matrix` | GET/HEAD | Ma trận chính sách bảo hành trên trang 'Chính sách' (policy-endpoints.cs:45-62). |

@@ -1,110 +1,122 @@
-using BuildingBlocks.Security;
-using BuildingBlocks.Configuration;
 using System.Security.Claims;
+using BuildingBlocks.Configuration;
+using BuildingBlocks.Documents;
+using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Repair.Application.Bookings;
 using Repair.Domain;
 using Repair.Infrastructure;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Repair;
 
+/// <summary>
+/// Phía KHÁCH của lịch hẹn: đặt lịch (chọn dịch vụ trong danh mục, số lịch hẹn LH-..., giới hạn
+/// sức chứa khung giờ kiểm ở server), xem lịch của mình, xem khung giờ còn chỗ. Phần quản trị ở
+/// <see cref="BookingAdminEndpoints"/>.
+/// </summary>
 public static class BookingEndpoints
 {
     public static void MapBookingEndpoints(this IEndpointRouteBuilder app)
     {
-        // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
-        // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.
+        // W1-10: nhánh khách hàng -> chỉ cần đăng nhập; handler lọc theo userId.
         var group = app.MapGroup("/api/repair").RequireAuthorization(SecurityPolicies.Authenticated);
+        app.MapBookingAdminEndpoints();
 
-        // Customer Endpoints
-        group.MapPost("/book", async ([FromBody] CreateBookingDto model, RepairDbContext db, IAppSettings settings, ClaimsPrincipal user) =>
+        group.MapPost("/book", async ([FromBody] CreateBookingDto model, RepairDbContext db, IAppSettings settings,
+            IDocumentNumberService documentNumbers, ClaimsPrincipal user, CancellationToken ct) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
 
+            // Dịch vụ lấy từ danh mục RepairServiceTypes; client cũ còn gửi enum ServiceType
+            // (InShop/OnSite) thì map sang 2 dòng seed có Id cố định.
+            var serviceTypeId = model.ServiceTypeId
+                ?? (model.ServiceType == ServiceType.OnSite ? RepairServiceType.OnSiteSeedId : RepairServiceType.InShopSeedId);
+            var serviceType = await db.RepairServiceTypes.FirstOrDefaultAsync(s => s.Id == serviceTypeId && s.IsActive, ct);
+            if (serviceType == null)
+                return Results.BadRequest(new { Error = "Dịch vụ đã chọn không tồn tại hoặc đã ngừng nhận." });
+
+            // IR#54/D08: on-site is config-gated (Warranty.OnsiteEnabled, default OFF) and the fee is
+            // config-driven (Warranty.OnsiteFeeVnd, default 0) - never a hardcoded literal.
+            if (serviceType.IsOnSite && !settings.GetBool("Warranty.OnsiteEnabled", false))
+                return Results.BadRequest(new { Error = "Dịch vụ tận nơi hiện chưa được bật." });
+
+            ServiceBooking booking;
             try
             {
-                // IR#54/D08: on-site service is config-gated (Warranty.OnsiteEnabled,
-                // default OFF) and the fee is config-driven (Warranty.OnsiteFeeVnd,
-                // default 0) - both keys shared with the warranty on-site flow (D08 §3),
-                // never a hardcoded literal.
-                if (model.ServiceType == ServiceType.OnSite && !settings.GetBool("Warranty.OnsiteEnabled", false))
-                    return Results.BadRequest(new { Error = "Dịch vụ tận nơi hiện chưa được bật." });
-
-                var onSiteFee = model.ServiceType == ServiceType.OnSite
-                    ? settings.GetDecimal("Warranty.OnsiteFeeVnd", 0m)
-                    : 0m;
-                var booking = new ServiceBooking(
-                    userId,
-                    model.ServiceType,
-                    model.DeviceModel,
-                    model.IssueDescription,
-                    model.PreferredDate,
-                    model.TimeSlot,
-                    model.AcceptedTerms,
-                    model.CustomerName,
-                    model.CustomerPhone,
-                    model.CustomerEmail,
-                    onSiteFee
-                );
+                var onSiteFee = serviceType.IsOnSite ? settings.GetDecimal("Warranty.OnsiteFeeVnd", 0m) : 0m;
+                booking = new ServiceBooking(userId, serviceType, model.DeviceModel, model.IssueDescription,
+                    model.PreferredDate, model.TimeSlot, model.AcceptedTerms, model.CustomerName,
+                    model.CustomerPhone, model.CustomerEmail, onSiteFee);
 
                 if (!string.IsNullOrWhiteSpace(model.SerialNumber))
                     booking.SetSerialNumber(model.SerialNumber);
 
-                if (model.ServiceType == ServiceType.OnSite)
+                if (serviceType.IsOnSite)
                 {
                     if (string.IsNullOrWhiteSpace(model.ServiceAddress) || !model.LocationType.HasValue)
-                        return Results.BadRequest(new { Error = "Service address and location type are required for on-site service" });
-
+                        return Results.BadRequest(new { Error = "Vui lòng nhập địa chỉ và loại địa điểm cho dịch vụ tận nơi." });
                     booking.SetOnSiteDetails(model.ServiceAddress, model.LocationType.Value, model.LocationNotes);
                 }
 
-                if (model.ImageUrls != null && model.ImageUrls.Any())
-                    booking.AddMedia(model.ImageUrls, new List<string>());
-
-                if (model.VideoUrls != null && model.VideoUrls.Any())
-                    booking.AddMedia(new List<string>(), model.VideoUrls);
-
+                booking.AddMedia(model.ImageUrls ?? new List<string>(), model.VideoUrls ?? new List<string>());
                 if (model.OrganizationId.HasValue)
                     booking.LinkOrganization(model.OrganizationId.Value, model.AllowPayLater);
 
-                // Validate booking
                 booking.ValidateBooking();
-
-                db.ServiceBookings.Add(booking);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new
-                {
-                    booking.Id,
-                    booking.CustomerId,
-                    booking.ServiceType,
-                    booking.PreferredDate,
-                    booking.PreferredTimeSlot,
-                    booking.OnSiteFee,
-                    booking.Status,
-                    Message = "Booking created successfully"
-                });
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
+                return Results.BadRequest(new { error = BookingValidationMessage(ex.Message) });
             }
-            catch (Exception ex)
+
+            // Số lịch hẹn cấp NGOÀI transaction (nextval không rollback — lỗ số là chấp nhận được).
+            booking.AssignBookingNumber(await documentNumbers.NextAsync(DocumentNumberTypes.ServiceBooking, ct));
+            await BookingSlotCapacity.SaveIfRoomAsync(db, booking, BookingSlotCapacity.Resolve(settings, booking.PreferredTimeSlot), ct);
+
+            return Results.Ok(new
             {
-                return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
-            }
+                booking.Id,
+                booking.BookingNumber,
+                booking.CustomerId,
+                booking.ServiceType,
+                booking.ServiceTypeId,
+                ServiceTypeName = serviceType.Name,
+                booking.PreferredDate,
+                booking.PreferredTimeSlot,
+                booking.OnSiteFee,
+                booking.Status,
+                Message = "Booking created successfully"
+            });
         });
 
-        group.MapGet("/bookings", async (RepairDbContext db, ClaimsPrincipal user) =>
+        // Khung giờ còn chỗ của một ngày — để form đặt lịch khoá khung đã kín trước khi khách gửi.
+        group.MapGet("/booking-slots", async (DateOnly date, RepairDbContext db, IAppSettings settings, CancellationToken ct) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            var slots = new List<object>();
+            foreach (var slot in Enum.GetValues<TimeSlot>())
+            {
+                var capacity = BookingSlotCapacity.Resolve(settings, slot);
+                var occupied = await BookingSlotCapacity.Occupying(db, date, slot).CountAsync(ct);
+                slots.Add(new
+                {
+                    Slot = slot.ToString(),
+                    Capacity = BookingSlotCapacity.IsUnlimited(capacity) ? (int?)null : capacity,
+                    Remaining = BookingSlotCapacity.Remaining(occupied, capacity),
+                    IsFull = !BookingSlotCapacity.HasRoom(occupied, capacity)
+                });
+            }
+
+            return Results.Ok(new { Date = date, Slots = slots });
+        });
+
+        group.MapGet("/bookings", async (RepairDbContext db, ClaimsPrincipal user, CancellationToken ct) =>
+        {
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
 
             var bookings = await db.ServiceBookings
@@ -112,194 +124,53 @@ public static class BookingEndpoints
                 .OrderByDescending(b => b.CreatedAt)
                 .Select(b => new
                 {
-                    b.Id,
-                    b.ServiceType,
-                    b.DeviceModel,
-                    b.SerialNumber,
-                    b.IssueDescription,
-                    b.PreferredDate,
-                    b.PreferredTimeSlot,
-                    b.ServiceAddress,
-                    b.LocationType,
-                    b.OnSiteFee,
-                    b.EstimatedCost,
-                    b.Status,
-                    b.WorkOrderId,
-                    b.CreatedAt
+                    b.Id, b.BookingNumber, b.ServiceType, b.ServiceTypeId,
+                    ServiceTypeName = db.RepairServiceTypes.Where(t => t.Id == b.ServiceTypeId).Select(t => t.Name).FirstOrDefault(),
+                    b.DeviceModel, b.SerialNumber, b.IssueDescription, b.PreferredDate, b.PreferredTimeSlot,
+                    b.ServiceAddress, b.LocationType, b.OnSiteFee, b.EstimatedCost, b.Status, b.WorkOrderId, b.CreatedAt
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return Results.Ok(bookings);
         });
 
         group.MapGet("/bookings/{id:guid}", async (Guid id, RepairDbContext db, ClaimsPrincipal user) =>
         {
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            if (!TechnicianAccess.TryGetUserId(user, out var userId))
                 return Results.Unauthorized();
 
             var booking = await db.ServiceBookings.FindAsync(id);
-
             if (booking == null)
                 return Results.NotFound(new { Error = "Booking not found" });
-
             if (booking.CustomerId != userId)
                 return Results.Forbid();
 
             return Results.Ok(new
             {
-                booking.Id,
-                booking.ServiceType,
-                booking.DeviceModel,
-                booking.SerialNumber,
-                booking.IssueDescription,
-                booking.ImageUrls,
-                booking.VideoUrls,
-                booking.PreferredDate,
-                booking.PreferredTimeSlot,
-                booking.ServiceAddress,
-                booking.LocationType,
-                booking.LocationNotes,
-                booking.EstimatedCost,
-                booking.OnSiteFee,
-                booking.Status,
-                booking.WorkOrderId,
-                booking.CustomerName,
-                booking.CustomerPhone,
-                booking.CustomerEmail,
-                booking.CreatedAt
+                booking.Id, booking.BookingNumber, booking.ServiceType, booking.ServiceTypeId,
+                booking.DeviceModel, booking.SerialNumber, booking.IssueDescription, booking.ImageUrls, booking.VideoUrls,
+                booking.PreferredDate, booking.PreferredTimeSlot, booking.ServiceAddress, booking.LocationType,
+                booking.LocationNotes, booking.EstimatedCost, booking.OnSiteFee, booking.Status, booking.WorkOrderId,
+                booking.CustomerName, booking.CustomerPhone, booking.CustomerEmail, booking.CreatedAt
             });
-        });
-
-        // Admin Endpoints
-        // W1-10: tạo từ `app` chứ không từ `group` — group cha đã mang policy tường minh
-        // (Policy.Authenticated), mà RequireModulePermissions bỏ qua endpoint đã có policy.
-        // Route sinh ra vẫn là /api/repair/admin/...
-        var adminGroup = app.MapGroup("/api/repair/admin").RequireModulePermissions(PermissionModules.Repair);
-
-        adminGroup.MapGet("/bookings", async (RepairDbContext db, int page = 1, int pageSize = 20, string? status = null) =>
-        {
-            var query = db.ServiceBookings.AsQueryable();
-
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<BookingStatus>(status, true, out var statusEnum))
-            {
-                query = query.Where(b => b.Status == statusEnum);
-            }
-
-            var total = await query.CountAsync();
-            var bookings = await query
-                .OrderByDescending(b => b.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(b => new
-                {
-                    b.Id,
-                    b.CustomerId,
-                    b.ServiceType,
-                    b.DeviceModel,
-                    b.IssueDescription,
-                    b.PreferredDate,
-                    b.PreferredTimeSlot,
-                    b.ServiceAddress,
-                    b.OnSiteFee,
-                    b.EstimatedCost,
-                    b.Status,
-                    b.WorkOrderId,
-                    b.CustomerName,
-                    b.CustomerPhone,
-                    b.CreatedAt
-                })
-                .ToListAsync();
-
-            return Results.Ok(new
-            {
-                Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Bookings = bookings
-            });
-        });
-
-        adminGroup.MapGet("/bookings/{id:guid}", async (Guid id, RepairDbContext db) =>
-        {
-            var booking = await db.ServiceBookings.FindAsync(id);
-            if (booking == null)
-                return Results.NotFound(new { Error = "Booking not found" });
-
-            return Results.Ok(booking);
-        });
-
-        adminGroup.MapPut("/bookings/{id:guid}/approve", async (Guid id, RepairDbContext db) =>
-        {
-            var booking = await db.ServiceBookings.FindAsync(id);
-            if (booking == null)
-                return Results.NotFound(new { Error = "Booking not found" });
-
-            try
-            {
-                booking.Approve();
-                await db.SaveChangesAsync();
-                return Results.Ok(new { Message = "Booking approved", Status = booking.Status.ToString() });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        adminGroup.MapPut("/bookings/{id:guid}/reject", async (Guid id, [FromBody] RejectBookingDto dto, RepairDbContext db) =>
-        {
-            var booking = await db.ServiceBookings.FindAsync(id);
-            if (booking == null)
-                return Results.NotFound(new { Error = "Booking not found" });
-
-            try
-            {
-                booking.Reject(dto.Reason);
-                await db.SaveChangesAsync();
-                return Results.Ok(new { Message = "Booking rejected", Status = booking.Status.ToString() });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
-            }
-        });
-
-        adminGroup.MapPost("/bookings/{id:guid}/convert", async (Guid id, [FromBody] ConvertBookingDto? dto, RepairDbContext db) =>
-        {
-            var booking = await db.ServiceBookings.FindAsync(id);
-            if (booking == null)
-                return Results.NotFound(new { Error = "Booking not found" });
-
-            if (booking.Status != BookingStatus.Approved && booking.Status != BookingStatus.Pending)
-                return Results.BadRequest(new { Error = "Only approved or pending bookings can be converted" });
-
-            try
-            {
-                var workOrder = new WorkOrder(booking, dto?.TechnicianId);
-                db.WorkOrders.Add(workOrder);
-
-                booking.LinkWorkOrder(workOrder.Id);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(new
-                {
-                    Message = "Booking converted to work order",
-                    WorkOrderId = workOrder.Id,
-                    TicketNumber = workOrder.TicketNumber
-                });
-            }
-            catch (Exception ex)
-            {
-                return Results.Problem("Có lỗi xảy ra. Vui lòng thử lại.");
-            }
         });
     }
+
+    /// <summary>Lỗi kiểm tra của ServiceBooking.ValidateBooking (tiếng Anh nội bộ) → câu tiếng Việt cho khách.</summary>
+    private static string BookingValidationMessage(string internalMessage) => internalMessage switch
+    {
+        "Device model is required" => "Vui lòng nhập tên thiết bị.",
+        "Issue description is required" => "Vui lòng mô tả lỗi.",
+        "Preferred date cannot be in the past" => "Ngày hẹn không được ở quá khứ.",
+        "Terms and conditions must be accepted" => "Vui lòng đồng ý điều khoản dịch vụ.",
+        "Service address is required for on-site service" => "Vui lòng nhập địa chỉ cho dịch vụ tận nơi.",
+        "Customer contact information is required" => "Vui lòng nhập họ tên và số điện thoại.",
+        _ => "Thông tin đặt lịch chưa hợp lệ. Vui lòng kiểm tra lại."
+    };
 }
 
-// DTOs
 public record CreateBookingDto(
-    ServiceType ServiceType,
+    ServiceType? ServiceType,
     string DeviceModel,
     string? SerialNumber,
     string IssueDescription,
@@ -315,8 +186,6 @@ public record CreateBookingDto(
     List<string>? ImageUrls,
     List<string>? VideoUrls,
     Guid? OrganizationId,
-    bool AllowPayLater = false
+    bool AllowPayLater = false,
+    Guid? ServiceTypeId = null
 );
-
-public record RejectBookingDto(string Reason);
-public record ConvertBookingDto(Guid? TechnicianId);

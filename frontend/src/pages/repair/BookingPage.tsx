@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { repairApi } from '../../api/repair';
-import type { ServiceType, TimeSlot, ServiceLocation } from '../../api/repair';
+import type { TimeSlot, ServiceLocation } from '../../api/repair';
+import type { PublicRepairServiceType } from '../../api/repair/service-types';
+import { queryKeys } from '../../lib/query-keys';
+import { BookingServicePicker } from './booking-service-picker';
+import { BookingSubmitSection } from './booking-submit-section';
 import { useAuth } from '../../context/AuthContext';
 import { z } from 'zod';
 import { validationMessages as msg } from '../../lib/validation/messages';
@@ -25,7 +30,8 @@ import {
  */
 export const BookingPage: React.FC = () => {
     const { user } = useAuth();
-    const [serviceType, setServiceType] = useState<ServiceType>('InShop');
+    const [service, setService] = useState<PublicRepairServiceType | null>(null);
+    const isOnSite = service?.isOnSite ?? false;
     const [formData, setFormData] = useState({
         deviceModel: '',
         serialNumber: '',
@@ -44,9 +50,17 @@ export const BookingPage: React.FC = () => {
     const [videoFiles, setVideoFiles] = useState<File[]>([]);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Khung giờ đã kín của ngày đang chọn — chỉ để báo sớm; server kiểm lại khi gửi (có khoá).
+    const slots = useQuery({
+        queryKey: [...queryKeys.repair.all, 'booking-slots', formData.preferredDate],
+        queryFn: () => repairApi.booking.getSlots(formData.preferredDate),
+        enabled: !!formData.preferredDate && !!user,
+    });
+    const fullSlots = (slots.data?.slots ?? []).filter((x) => x.isFull).map((x) => x.slot);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -74,10 +88,20 @@ export const BookingPage: React.FC = () => {
                 acceptedTerms: z.literal(true, {
                     errorMap: () => ({ message: 'Vui lòng đồng ý điều khoản dịch vụ sửa chữa' }),
                 }),
-                serviceAddress: serviceType === 'OnSite'
+                serviceAddress: isOnSite
                     ? z.string().min(1, msg.requireInput('địa chỉ'))
                     : z.string().optional(),
             });
+            if (!service) {
+                setErrors({ serviceTypeId: 'Vui lòng chọn dịch vụ' });
+                setSubmitError('Vui lòng chọn dịch vụ.');
+                return;
+            }
+            if (fullSlots.includes(formData.timeSlot)) {
+                setErrors({ timeSlot: 'Khung giờ này đã kín lịch' });
+                setSubmitError('Khung giờ bạn chọn đã kín lịch. Vui lòng chọn khung giờ hoặc ngày khác.');
+                return;
+            }
 
             const result = schema.safeParse(formData);
             if (!result.success) {
@@ -92,16 +116,16 @@ export const BookingPage: React.FC = () => {
             setErrors({});
 
             // Upload media chưa được nối vào storage service — gửi danh sách rỗng thay vì URL bịa.
-            await repairApi.booking.create({
-                serviceType,
+            const created = await repairApi.booking.create({
+                serviceTypeId: service.id,
                 deviceModel: formData.deviceModel,
                 serialNumber: formData.serialNumber || undefined,
                 issueDescription: formData.issueDescription,
                 preferredDate: formData.preferredDate,
                 timeSlot: formData.timeSlot,
-                serviceAddress: serviceType === 'OnSite' ? formData.serviceAddress : undefined,
-                locationType: serviceType === 'OnSite' ? formData.locationType : undefined,
-                locationNotes: serviceType === 'OnSite' ? formData.locationNotes : undefined,
+                serviceAddress: isOnSite ? formData.serviceAddress : undefined,
+                locationType: isOnSite ? formData.locationType : undefined,
+                locationNotes: isOnSite ? formData.locationNotes : undefined,
                 acceptedTerms: formData.acceptedTerms,
                 customerName: formData.customerName,
                 customerPhone: formData.customerPhone,
@@ -110,7 +134,7 @@ export const BookingPage: React.FC = () => {
                 videoUrls: [],
             });
 
-            setSubmitSuccess(true);
+            setSubmitSuccess(created.bookingNumber);
             setFormData({
                 deviceModel: '',
                 serialNumber: '',
@@ -127,7 +151,7 @@ export const BookingPage: React.FC = () => {
             });
             setImageFiles([]);
             setVideoFiles([]);
-            setTimeout(() => setSubmitSuccess(false), 5000);
+            void slots.refetch();
         } catch (error) {
             const apiError = (error as { response?: { data?: { error?: string } }; message?: string });
             setSubmitError(
@@ -140,9 +164,7 @@ export const BookingPage: React.FC = () => {
         }
     };
 
-    const minDate = new Date().toISOString().split('T')[0];
-    const serviceCardClass = (active: boolean) =>
-        `p-4 border-2 rounded-lg text-left transition ${active ? 'border-accent bg-red-50' : 'border-gray-300 hover:border-red-300'}`;
+    const minDate = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
 
     return (
         <div className="max-w-4xl mx-auto p-4 sm:p-6">
@@ -154,7 +176,8 @@ export const BookingPage: React.FC = () => {
 
             {submitSuccess && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    Đã gửi yêu cầu đặt lịch! Cửa hàng sẽ liên hệ với bạn để xác nhận trong thời gian sớm nhất.
+                    Đã gửi yêu cầu đặt lịch <strong className="font-mono">{submitSuccess}</strong>. Cửa hàng sẽ liên hệ với bạn để xác nhận
+                    trong thời gian sớm nhất — hãy giữ số lịch hẹn này khi liên hệ.
                 </div>
             )}
 
@@ -165,23 +188,7 @@ export const BookingPage: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="bg-white p-5 sm:p-6 rounded-lg shadow">
-                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Chọn hình thức phục vụ</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button type="button" onClick={() => setServiceType('InShop')} className={serviceCardClass(serviceType === 'InShop')}>
-                            <div className="text-base font-semibold">Mang máy đến cửa hàng</div>
-                            <div className="text-sm text-gray-600 mt-1">Bạn mang thiết bị tới cửa hàng Quang Hưởng</div>
-                            <div className="text-sm font-semibold text-green-600 mt-2">Miễn phí tiếp nhận và kiểm tra</div>
-                        </button>
-                        <button type="button" onClick={() => setServiceType('OnSite')} className={serviceCardClass(serviceType === 'OnSite')}>
-                            <div className="text-base font-semibold">Kỹ thuật viên đến tận nơi</div>
-                            <div className="text-sm text-gray-600 mt-1">Kỹ thuật viên tới địa chỉ của bạn</div>
-                            <div className="text-sm font-semibold text-accent mt-2">
-                                Phạm vi và phí dịch vụ (nếu có) được nhân viên xác nhận trước khi đi
-                            </div>
-                        </button>
-                    </div>
-                </div>
+                <BookingServicePicker value={service?.id ?? null} onChange={setService} />
 
                 <BookingDeviceSection
                     deviceModel={formData.deviceModel}
@@ -205,9 +212,10 @@ export const BookingPage: React.FC = () => {
                     errors={errors}
                     onChange={handleInputChange}
                     onTimeSlotChange={val => setFormData(prev => ({ ...prev, timeSlot: val }))}
+                    fullSlots={fullSlots}
                 />
 
-                {serviceType === 'OnSite' && (
+                {isOnSite && (
                     <BookingLocationSection
                         serviceAddress={formData.serviceAddress}
                         locationType={formData.locationType}
@@ -226,46 +234,13 @@ export const BookingPage: React.FC = () => {
                     onChange={handleInputChange}
                 />
 
-                <div className="bg-white p-5 sm:p-6 rounded-lg shadow">
-                    <div className="mb-4">
-                        <label className="flex items-start">
-                            <input
-                                type="checkbox"
-                                name="acceptedTerms"
-                                checked={formData.acceptedTerms}
-                                onChange={handleInputChange}
-                                className="mt-1 mr-2"
-                            />
-                            <span className="text-sm">
-                                Tôi đồng ý với{' '}
-                                <button type="button" onClick={() => setShowTermsModal(true)} className="text-accent font-semibold hover:underline">
-                                    điều khoản dịch vụ sửa chữa
-                                </button>{' '}
-                                của Quang Hưởng Computer *
-                            </span>
-                        </label>
-                        {errors.acceptedTerms && <p className="mt-1 text-xs text-red-500 ml-5">{errors.acceptedTerms}</p>}
-                    </div>
-
-                    <div className="bg-red-50 border border-red-100 p-4 rounded-lg mb-4 text-sm text-gray-700 space-y-1">
-                        <div className="font-semibold text-gray-900">Chi phí dự kiến</div>
-                        <p>
-                            Kỹ thuật viên kiểm tra và báo giá bằng VNĐ trước khi sửa; bạn đồng ý thì mới thực hiện.
-                            Đặt lịch không phát sinh chi phí.
-                        </p>
-                        <p>
-                            Trường hợp thiết bị còn bảo hành: cửa hàng chịu chi phí sửa chữa và vận chuyển hai chiều.
-                        </p>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-accent text-white py-3 rounded-lg font-semibold hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu đặt lịch'}
-                    </button>
-                </div>
+                <BookingSubmitSection
+                    acceptedTerms={formData.acceptedTerms}
+                    error={errors.acceptedTerms}
+                    isSubmitting={isSubmitting}
+                    onChange={handleInputChange}
+                    onShowTerms={() => setShowTermsModal(true)}
+                />
             </form>
 
             {showTermsModal && <BookingServiceTermsModal onClose={() => setShowTermsModal(false)} />}
