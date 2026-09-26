@@ -19,7 +19,7 @@ namespace ApiGateway.Startup;
 /// 5. HTTPS redirect
 /// 6. Static files (2 mounts, W1-6 / D02) + compression + output cache (D11)
 /// 7. Global exception / security headers / performance monitoring
-/// 8. Authentication → Rate limiter → Authorization → domain-specific validation
+/// 8. Authentication → Rate limiter → Authorization
 ///
 /// Why the rate limiter sits BETWEEN authentication and authorization:
 ///   · after UseAuthentication, so HttpContext.User is populated and a signed-in caller gets their
@@ -86,9 +86,8 @@ public static class MiddlewarePipeline
         app.UseAuthentication();
         app.UseRateLimiter();
         app.UseAuthorization();
-
-        // Review validation: Ensure users have purchased a product before reviewing
-        app.UseReviewValidation();
+        // "Đã mua mới được đánh giá" nay do chính endpoint review hỏi Sales qua
+        // BuildingBlocks.Contracts.IPurchaseVerificationQuery — không còn middleware ghi header.
     }
 
     /// <summary>Hai mount tĩnh của W1-6 / D02 — xem doc comment ở đầu file.</summary>
