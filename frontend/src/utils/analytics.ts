@@ -11,11 +11,41 @@ export function initGA4(measurementId: string) {
   (window as any).gtag = gtag;
 }
 
+/**
+ * Facebook Pixel bootstrap as plain bundled code. It used to be injected as an INLINE `<script>`
+ * via innerHTML (with the pixel id interpolated into the source), which a CSP without
+ * 'unsafe-inline' blocks — and which was itself a script-injection sink. Same queue-stub semantics
+ * as Facebook's snippet: calls made before fbevents.js loads are queued and replayed by it.
+ */
+type FbqStub = ((...args: unknown[]) => void) & {
+  callMethod?: (...args: unknown[]) => void;
+  queue: unknown[][];
+  push: FbqStub;
+  loaded: boolean;
+  version: string;
+};
+
 export function initFBPixel(pixelId: string) {
   if (!pixelId || typeof window === 'undefined') return;
+  const w = window as unknown as { fbq?: FbqStub; _fbq?: FbqStub };
+  if (w.fbq) return;
+  const fbq = function (...args: unknown[]) {
+    if (fbq.callMethod) fbq.callMethod(...args);
+    else fbq.queue.push(args);
+  } as FbqStub;
+  fbq.queue = [];
+  fbq.push = fbq;
+  fbq.loaded = true;
+  fbq.version = '2.0';
+  w.fbq = fbq;
+  if (!w._fbq) w._fbq = fbq;
+
   const script = document.createElement('script');
-  script.innerHTML = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');`;
+  script.async = true;
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(script);
+  fbq('init', pixelId);
+  fbq('track', 'PageView');
 }
 
 export function trackPageView(path: string) {
