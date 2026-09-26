@@ -49,7 +49,7 @@ public class DocumentNumberTests
     public void DanhSachLoaiChungTu_LaHopDongCoDinhVoiW1_11()
     {
         DocumentNumberTypes.All.Keys.Should().BeEquivalentTo(
-            new[] { "po", "grn", "dn", "rma", "inv", "wo", "tr", "pr", "rfq", "ret", "pay", "so", "bg" });
+            new[] { "po", "grn", "dn", "rma", "inv", "wo", "tr", "pr", "rfq", "ret", "pay", "so", "bg", "lh" });
 
         DocumentNumberTypes.SequenceName("po").Should().Be("docnum_po_seq");
         DocumentNumberTypes.SequenceName("BG").Should().Be("docnum_bg_seq");

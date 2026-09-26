@@ -371,6 +371,11 @@ namespace Repair.Migrations
                     b.Property<bool>("AllowPayLater")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("BookingNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -416,6 +421,9 @@ namespace Repair.Migrations
 
                     b.Property<int?>("LocationType")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("NoShowAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("OnSiteFee")
                         .HasPrecision(18, 2)
@@ -463,9 +471,14 @@ namespace Repair.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookingNumber")
+                        .IsUnique();
+
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("PreferredDate");
+
+                    b.HasIndex("PreferredDate", "PreferredTimeSlot", "Status");
 
                     b.HasIndex("ServiceTypeId");
 

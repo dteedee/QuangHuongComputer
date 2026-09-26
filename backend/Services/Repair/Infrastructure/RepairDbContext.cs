@@ -116,6 +116,12 @@ public class RepairDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.PreferredDate);
 
+            // Số lịch hẹn LH-yyyyMM-##### (IDocumentNumberService) + đếm sức chứa theo (ngày, khung giờ).
+            entity.Property(e => e.BookingNumber).HasMaxLength(30).IsRequired();
+            entity.HasIndex(e => e.BookingNumber).IsUnique();
+            entity.HasIndex(e => new { e.PreferredDate, e.PreferredTimeSlot, e.Status });
+            entity.Ignore(e => e.PreferredDay);
+
             entity.ToTable(t =>
             {
                 t.HasCheckConstraint("CK_ServiceBookings_EstimatedCost_NonNegative", "\"EstimatedCost\" >= 0");
