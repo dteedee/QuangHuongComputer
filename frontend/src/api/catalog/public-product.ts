@@ -13,6 +13,8 @@ import type {
     ProductDetailBundle,
     ProductMedia,
     ProductReview,
+    CreateProductReviewRequest,
+    ReviewPhoto,
     ProductSpecGroup,
     ProductVariant,
     SpecificationGroup,
@@ -101,17 +103,27 @@ export const catalogPublicProductApi = {
         return response.data;
     },
 
-    createProductReview: async (productId: string, data: {
-        rating: number;
-        title?: string;
-        comment: string;
-        imageUrls?: string;
-        videoUrl?: string;
-    }) => {
+    createProductReview: async (productId: string, data: CreateProductReviewRequest) => {
         const response = await client.post<{ message: string; id: string; isVerifiedPurchase: boolean }>(
             `/catalog/products/${productId}/reviews`,
             data
         );
+        return response.data;
+    },
+
+    /**
+     * Tải MỘT ảnh cho đánh giá. Server kiểm magic bytes, mã hoá lại WebP, xoá EXIF — chỉ URL
+     * trả về từ đây mới được chấp nhận trong `photos` khi tạo đánh giá.
+     */
+    uploadReviewPhoto: async (file: File, onProgress?: (percent: number) => void) => {
+        const form = new FormData();
+        form.append('file', file);
+        const response = await client.post<ReviewPhoto>('/catalog/reviews/photos', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            onUploadProgress: (e) => {
+                if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+            },
+        });
         return response.data;
     },
 

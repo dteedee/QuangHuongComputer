@@ -8,7 +8,9 @@
  * Contract: `docs/api-contracts/catalog.md` §8 (spec schema) and §9 (reviews).
  */
 import client from '../client';
+import type { PagedResult } from '../../types/paging';
 import type {
+    AdminReviewRow,
     PendingReview,
     ProductReview,
     ReviewSentiment,
@@ -93,6 +95,29 @@ export const catalogReviewAdminApi = {
     approve: async (reviewId: string) => {
         const response = await client.post<{ message: string }>(`/catalog/reviews/admin/${reviewId}/approve`);
         return response.data;
+    },
+    /** Toàn hệ thống, có lọc trạng thái duyệt + đã/chưa phản hồi, phân trang ở server. */
+    list: async (params: {
+        status?: 'pending' | 'approved' | 'all';
+        replied?: boolean;
+        search?: string;
+        page?: number;
+        pageSize?: number;
+    }) => {
+        const response = await client.get<PagedResult<AdminReviewRow>>('/catalog/reviews/admin/list', { params });
+        return response.data;
+    },
+    /** "Phản hồi từ Quang Hưởng" — POST tạo mới (409 nếu đã có), PUT sửa, DELETE gỡ. */
+    reply: async (reviewId: string, text: string) => {
+        const response = await client.post<ProductReview>(`/catalog/reviews/admin/${reviewId}/reply`, { text });
+        return response.data;
+    },
+    editReply: async (reviewId: string, text: string) => {
+        const response = await client.put<ProductReview>(`/catalog/reviews/admin/${reviewId}/reply`, { text });
+        return response.data;
+    },
+    deleteReply: async (reviewId: string) => {
+        await client.delete(`/catalog/reviews/admin/${reviewId}/reply`);
     },
     /** Reject = hard delete (backend has no "rejected" state) — recalculates the rating. */
     reject: async (reviewId: string) => {
