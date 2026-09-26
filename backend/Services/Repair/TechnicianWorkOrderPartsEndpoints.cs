@@ -43,17 +43,23 @@ public static class TechnicianWorkOrderPartsEndpoints
             try
             {
                 var performedBy = TechnicianAccess.GetUserName(user);
-                await stock.ReserveAsync(dto.InventoryItemId, dto.Quantity, workOrder.Id, performedBy);
-
+                // Tạo part TRƯỚC (validate đầu vào), giữ hàng SAU — lỗi validate không để lại giữ hàng.
                 var part = new WorkOrderPart(
                     workOrder.Id,
                     dto.InventoryItemId,
                     dto.PartName,
                     dto.Quantity,
                     dto.UnitPrice,
-                    dto.PartNumber);
+                    dto.PartNumber,
+                    dto.SerialNumber,
+                    dto.UnitCost);
+
+                // Linh kiện mua ngoài (không có InventoryItemId) KHÔNG giữ hàng trong kho.
+                if (dto.InventoryItemId is Guid inventoryItemId)
+                    await stock.ReserveAsync(inventoryItemId, dto.Quantity, workOrder.Id, performedBy);
 
                 workOrder.AddPart(part);
+                db.WorkOrderParts.Add(part); // stage tường minh — khoá Guid sinh sẵn (xem WorkOrder.AddActivityLog)
 
                 var log = WorkOrderActivityLog.CreatePartAdded(
                     workOrder.Id, dto.PartName, dto.Quantity, userId, performedBy);
@@ -74,9 +80,9 @@ public static class TechnicianWorkOrderPartsEndpoints
                 // was reserved (IStockLedger only mutates on success), nothing to roll back.
                 return Results.BadRequest(new { error = "Không đủ hàng tồn kho cho linh kiện này." });
             }
-            catch (Exception)
+            catch (ArgumentException)
             {
-                return Results.BadRequest(new { error = "Có lỗi xảy ra. Vui lòng thử lại." });
+                return Results.BadRequest(new { error = "Số lượng phải lớn hơn 0 và đơn giá không được âm." });
             }
         });
 
@@ -105,9 +111,9 @@ public static class TechnicianWorkOrderPartsEndpoints
 
             // Only reserved (not yet committed at Completed) - a part on a Completed
             // work order is already a real stock-out and must not be released here.
-            if (workOrder.Status != WorkOrderStatus.Completed)
+            if (workOrder.Status != WorkOrderStatus.Completed && removedPart.InventoryItemId is Guid inventoryItemId)
             {
-                await stock.ReleaseAsync(removedPart.InventoryItemId, removedPart.Quantity, workOrder.Id, TechnicianAccess.GetUserName(user));
+                await stock.ReleaseAsync(inventoryItemId, removedPart.Quantity, workOrder.Id, TechnicianAccess.GetUserName(user));
             }
 
             workOrder.RemovePart(partId);
@@ -143,11 +149,14 @@ public static class TechnicianWorkOrderPartsEndpoints
 }
 
 // DTOs shared by the technician parts/log endpoints.
+/// <summary><see cref="InventoryItemId"/> = null ⇒ linh kiện mua ngoài: bắt buộc <see cref="UnitCost"/>, không chạm kho.</summary>
 public record AddPartsDto(
-    Guid InventoryItemId,
+    Guid? InventoryItemId,
     string PartName,
     int Quantity,
     decimal UnitPrice,
-    string? PartNumber
+    string? PartNumber,
+    string? SerialNumber = null,
+    decimal? UnitCost = null
 );
 public record AddLogDto(string Note);

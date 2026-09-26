@@ -2,7 +2,7 @@ using BuildingBlocks.SharedKernel;
 
 namespace Repair.Domain;
 
-public class WorkOrder : Entity<Guid>
+public partial class WorkOrder : Entity<Guid>
 {
     public string TicketNumber { get; private set; } = string.Empty;
     public Guid CustomerId { get; private set; }

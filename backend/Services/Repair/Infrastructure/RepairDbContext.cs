@@ -45,6 +45,13 @@ public class RepairDbContext : DbContext
             entity.Property(e => e.ActualCost).HasPrecision(18, 2);
             entity.Property(e => e.ServiceFee).HasPrecision(18, 2);
 
+            // Tiếp nhận máy (WorkOrderIntake.cs)
+            entity.Property(e => e.DeviceType).HasMaxLength(WorkOrder.MaxDeviceFieldLength);
+            entity.Property(e => e.DeviceBrand).HasMaxLength(WorkOrder.MaxDeviceFieldLength);
+            entity.Property(e => e.AccessoriesReceived).HasColumnType("text[]").IsRequired();
+            entity.Property(e => e.IntakePhotoUrls).HasColumnType("text[]").IsRequired();
+            entity.HasIndex(e => new { e.Priority, e.Status });
+
             // Navigation properties
             entity.HasMany(e => e.Parts)
                 .WithOne(p => p.WorkOrder)
@@ -120,6 +127,9 @@ public class RepairDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 2);
+            entity.Property(e => e.SerialNumber).HasMaxLength(WorkOrderPart.MaxSerialLength);
+            entity.Ignore(e => e.IsBoughtIn);
 
             entity.HasIndex(e => e.WorkOrderId);
             entity.HasIndex(e => e.InventoryItemId);
@@ -128,6 +138,9 @@ public class RepairDbContext : DbContext
             {
                 t.HasCheckConstraint("CK_WorkOrderParts_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
                 t.HasCheckConstraint("CK_WorkOrderParts_Quantity_Positive", "\"Quantity\" > 0");
+                // Mua ngoài phải có giá vốn; hàng trong kho không lưu giá vốn ở đây.
+                t.HasCheckConstraint("CK_WorkOrderParts_BoughtIn_HasCost",
+                    "\"InventoryItemId\" IS NOT NULL OR (\"UnitCost\" IS NOT NULL AND \"UnitCost\" >= 0)");
             });
         });
 
@@ -170,6 +183,7 @@ public class RepairDbContext : DbContext
         modelBuilder.Entity<WorkOrderActivityLog>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.PhotoUrls).HasColumnType("text[]").IsRequired();
             entity.HasIndex(e => e.WorkOrderId);
             entity.HasIndex(e => e.CreatedAt);
         });
