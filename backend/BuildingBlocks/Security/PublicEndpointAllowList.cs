@@ -47,7 +47,7 @@ public static class PublicEndpointAllowList
         new PublicEndpointRule("/api/catalog/**", Get, "Danh mục sản phẩm là mặt tiền cửa hàng; chỉ GET."),
         new PublicEndpointRule("/api/content/**", Get, "Trang tĩnh, bài viết, banner hiển thị cho khách; chỉ GET."),
         new PublicEndpointRule("/api/promotions", Get, "Danh sách khuyến mãi đang chạy hiển thị trên storefront."),
-        new PublicEndpointRule("/api/promotions/{code}", Get, "Tra cứu một mã khuyến mãi trước khi đăng nhập."),
+        new PublicEndpointRule("/api/promotions/{code}", Get, "Xem một khuyến mãi ĐANG CHẠY (Promotion.RunningPredicate); nháp/tạm dừng -> 404, nhân viên dùng /admin/{id}."),
         new PublicEndpointRule("/api/stores", Get, "D09: danh sách cửa hàng/địa chỉ liên hệ công khai."),
         new PublicEndpointRule("/api/stores/{id}", Get, "D09: chi tiết một cửa hàng."),
         new PublicEndpointRule("/api/ai/recommendations/**", Get, "Gợi ý sản phẩm cho khách vãng lai."),

@@ -195,7 +195,7 @@ export const promotionsApi = {
   },
 
   get: async (id: string): Promise<Promotion> => {
-    const res = await client.get<Promotion>(`${BASE}/${id}`);
+    const res = await client.get<Promotion>(`${ADMIN}/${id}`);
     return res.data;
   },
 
