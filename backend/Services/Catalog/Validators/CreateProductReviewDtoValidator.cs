@@ -19,5 +19,20 @@ public class CreateProductReviewDtoValidator : AbstractValidator<CreateProductRe
         RuleFor(x => x.Title)
             .MaximumLength(200).WithMessage(VietnameseValidationMessages.StringTooLong("Tiêu đề", 200))
             .When(x => x.Title != null);
+
+        RuleFor(x => x.Pros)
+            .MaximumLength(Domain.ProductReview.MaxProsConsLength)
+            .WithMessage(VietnameseValidationMessages.StringTooLong("Ưu điểm", Domain.ProductReview.MaxProsConsLength));
+        RuleFor(x => x.Cons)
+            .MaximumLength(Domain.ProductReview.MaxProsConsLength)
+            .WithMessage(VietnameseValidationMessages.StringTooLong("Nhược điểm", Domain.ProductReview.MaxProsConsLength));
+
+        RuleFor(x => x.Photos)
+            .Must(p => p == null || p.Count <= Domain.ReviewPhotoPolicy.MaxPhotos)
+            .WithMessage($"Tối đa {Domain.ReviewPhotoPolicy.MaxPhotos} ảnh cho một đánh giá.");
+        // Chỉ nhận ảnh của kho media cửa hàng (đã qua kiểm magic bytes + mã hoá lại khi tải lên).
+        RuleForEach(x => x.Photos)
+            .Must(p => p != null && Domain.ReviewPhotoPolicy.IsAcceptable(new Domain.ReviewPhoto(p.Url, p.ThumbnailUrl)))
+            .WithMessage("Ảnh đánh giá phải được tải lên qua trang của cửa hàng.");
     }
 }

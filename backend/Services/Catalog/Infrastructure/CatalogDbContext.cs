@@ -304,6 +304,11 @@ public class CatalogDbContext : DbContext
             entity.Property(pr => pr.Comment).IsRequired().HasColumnType("text");
             entity.Property(pr => pr.Title).HasMaxLength(200);
             entity.Property(pr => pr.ImageUrls).HasColumnType("jsonb");
+            // W2: ưu/nhược điểm + "Phản hồi từ Quang Hưởng".
+            entity.Property(pr => pr.Pros).HasMaxLength(ProductReview.MaxProsConsLength);
+            entity.Property(pr => pr.Cons).HasMaxLength(ProductReview.MaxProsConsLength);
+            entity.Property(pr => pr.ReplyText).HasColumnType("text");
+            entity.Property(pr => pr.RepliedBy).HasMaxLength(450);
             
             entity.HasOne<Product>()
                 .WithMany()

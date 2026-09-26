@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Catalog.Infrastructure;
 using Catalog.Domain;
 using BuildingBlocks.Validation;
+using Catalog.Application.Reviews;
 
 namespace Catalog;
 
@@ -31,14 +32,10 @@ public static class CatalogReviewEndpoints
 
             var reviews = await query
                 .OrderByDescending(r => r.CreatedAt)
-                .Select(r => new
-                {
-                    r.Id, r.ProductId, r.CustomerId, r.Rating, r.Title, r.Comment,
-                    r.IsVerifiedPurchase, r.IsApproved, r.HelpfulCount, r.ImageUrls, r.VideoUrl, r.CreatedAt
-                })
                 .ToListAsync();
 
-            return Results.Ok(reviews);
+            // Ảnh chỉ trả những URL thuộc kho cửa hàng; phản hồi của shop không kèm id nhân viên.
+            return Results.Ok(reviews.Select(ReviewResponseMapper.ToView));
         });
 
         group.MapPost("/products/{productId:guid}/reviews", async (
@@ -62,8 +59,9 @@ public static class CatalogReviewEndpoints
                 return Results.Json(new { message = "Bạn cần mua sản phẩm này trước khi đánh giá" },
                     statusCode: StatusCodes.Status403Forbidden);
 
+            var photos = dto.Photos?.Select(p => new ReviewPhoto(p.Url, p.ThumbnailUrl)).ToList();
             var review = new ProductReview(productId, userId, dto.Rating, dto.Comment, dto.Title,
-                isVerifiedPurchase, dto.ImageUrls, dto.VideoUrl);
+                isVerifiedPurchase, ReviewPhotoPolicy.Serialize(photos), dto.VideoUrl, dto.Pros, dto.Cons);
 
             db.ProductReviews.Add(review);
             await db.SaveChangesAsync();
@@ -109,5 +107,7 @@ public static class CatalogReviewEndpoints
         });
 
         group.MapCatalogReviewAdminEndpoints();
+        group.MapCatalogReviewReplyEndpoints();
+        group.MapCatalogReviewPhotoEndpoints();
     }
 }

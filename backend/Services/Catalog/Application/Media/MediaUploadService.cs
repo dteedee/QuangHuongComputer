@@ -32,9 +32,29 @@ public sealed class MediaUploadService
         string mimeType,
         CancellationToken ct = default)
     {
+        return await SaveRenditionsAsync(source, "products", ProductSlug(productId), stripMetadata: false, ct);
+    }
+
+    /// <summary>
+    /// Ảnh đánh giá của khách: cùng quy trình với ảnh sản phẩm (giải mã bằng ImageSharp rồi MÃ HOÁ
+    /// LẠI WebP ⇒ mọi payload lạ bám trong file gốc đều rơi mất), lưu ở vùng <c>reviews</c> với
+    /// slug cố định <c>review</c> — đúng định dạng mà <c>ReviewPhotoPolicy</c> chấp nhận.
+    /// Khác ảnh sản phẩm: XOÁ EXIF/IPTC/XMP — ảnh chụp bằng điện thoại của khách thường mang toạ độ GPS nhà họ.
+    /// </summary>
+    public Task<MediaUploadResult> UploadReviewImageAsync(Stream source, CancellationToken ct = default)
+        => SaveRenditionsAsync(source, Domain.ReviewPhotoPolicy.StorageArea, "review", stripMetadata: true, ct);
+
+    private async Task<MediaUploadResult> SaveRenditionsAsync(
+        Stream source, string area, string slug, bool stripMetadata, CancellationToken ct)
+    {
         source.Position = 0;
         using var image = await Image.LoadAsync(source, ct);
-        var slug = ProductSlug(productId);
+        if (stripMetadata)
+        {
+            image.Metadata.ExifProfile = null;
+            image.Metadata.IptcProfile = null;
+            image.Metadata.XmpProfile = null;
+        }
         var originalFileSize = source.Length;
 
         string? thumbnailUrl = null;
@@ -52,7 +72,7 @@ public sealed class MediaUploadService
                 await clone.SaveAsync(variantStream, new WebpEncoder { Quality = 85 }, ct);
             }
             variantStream.Position = 0;
-            var stored = await _storage.SaveAsync(variantStream, "products", "webp", "image/webp", $"{slug}-w{width}", ct);
+            var stored = await _storage.SaveAsync(variantStream, area, "webp", "image/webp", $"{slug}-w{width}", ct);
 
             if (width == ImageWidths[0]) thumbnailUrl = stored.RelativeUrl;
             else mainUrl = stored.RelativeUrl;
