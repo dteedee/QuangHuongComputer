@@ -242,6 +242,8 @@ public partial class Order : Entity<Guid>
         if (item != null)
         {
             Items.Remove(item);
+            // Giảm riêng của dòng bị bỏ không được "rơi" thành giảm cấp đơn (xem CalculateAmounts).
+            DiscountAmount = Math.Max(0m, DiscountAmount - item.LineDiscount);
             CalculateAmounts();
         }
     }

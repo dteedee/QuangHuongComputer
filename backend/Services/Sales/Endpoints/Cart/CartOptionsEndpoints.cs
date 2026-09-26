@@ -29,7 +29,8 @@ internal static class CartOptionsEndpoints
 {
     public static void MapCartOptionsEndpoints(RouteGroupBuilder group)
     {
-        group.MapPost("/cart/apply-coupon", async ([FromBody] ApplyCouponDto dto, SalesDbContext salesDb, ContentDbContext contentDb, ClaimsPrincipal user) =>
+        group.MapPost("/cart/apply-coupon", async ([FromBody] ApplyCouponDto dto, SalesDbContext salesDb, ContentDbContext contentDb,
+            Sales.Application.Pricing.Bundles.BundleCartPricingService bundlePricing, ClaimsPrincipal user, CancellationToken ct) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -43,7 +44,11 @@ internal static class CartOptionsEndpoints
                 return Results.NotFound(new { Error = "Cart not found" });
 
             // Validate coupon — nguồn duy nhất: CouponValidator (Content.Coupons).
-            var couponResult = await CouponValidator.ValidateAsync(contentDb, dto.CouponCode, cart.SubtotalAmount);
+            // Coupon chỉ tính trên dòng KHÔNG được giá combo (chống giảm chồng) — cùng luật với lúc chốt đơn.
+            var lines = cart.Items.ToList();
+            var bundles = await bundlePricing.PriceAsync(lines, checkStock: true, ct);
+            var eligibleSubtotal = lines.Where((item, index) => !item.IsGift && !bundles.IsLocked(index)).Sum(i => i.Subtotal);
+            var couponResult = await CouponValidator.ValidateAsync(contentDb, dto.CouponCode, eligibleSubtotal, ct);
             if (!couponResult.Success)
                 return Results.BadRequest(new { Error = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ" });
 

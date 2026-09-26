@@ -20,6 +20,16 @@ public class CartItem
     public bool IsGift { get; private set; }
     public string? AppliedPromotionCode { get; private set; }
 
+    /// <summary>
+    /// Dòng thuộc NHÓM COMBO (<c>Catalog.ProductBundles</c>). Dòng combo không gộp với dòng lẻ cùng
+    /// sản phẩm; giá combo do <c>BundleCartPricer</c> tính lại mỗi lần đọc giỏ/chốt đơn.
+    /// Null = dòng lẻ bình thường.
+    /// </summary>
+    public Guid? BundleId { get; private set; }
+
+    /// <summary>Tên combo lúc thêm vào giỏ — chỉ để hiển thị nhóm.</summary>
+    public string? BundleName { get; private set; }
+
     public CartItem(Guid productId, string productName, decimal price, int quantity)
         : this(productId, productName, price, quantity, null, null, null)
     {
@@ -63,6 +73,21 @@ public class CartItem
         if (IsGift) return;                 // Hàng tặng luôn 0đ.
         if (price < 0m) return;
         Price = price;
+    }
+
+    /// <summary>Gắn dòng vào nhóm combo (chỉ gọi bởi <see cref="Cart"/>).</summary>
+    internal void AttachToBundle(Guid bundleId, string? bundleName)
+    {
+        if (IsGift) return;
+        BundleId = bundleId;
+        BundleName = bundleName;
+    }
+
+    /// <summary>Tách dòng khỏi nhóm combo — giá trở về giá lẻ.</summary>
+    internal void DetachFromBundle()
+    {
+        BundleId = null;
+        BundleName = null;
     }
 
     internal void MarkAsGift(string? promotionCode)

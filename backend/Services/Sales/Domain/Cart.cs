@@ -11,7 +11,7 @@ namespace Sales.Domain;
 /// THEO DÒNG ở tầng ứng dụng (<c>CartVatBreakdownService</c>) vì chỉ ở đó mới join được
 /// <c>Categories.VatRate</c>/<c>VatReductionEligible</c> của từng sản phẩm.
 /// </summary>
-public class Cart : Entity<Guid>
+public partial class Cart : Entity<Guid>
 {
     public Guid CustomerId { get; private set; }
     public List<CartItem> Items { get; private set; } = new();
@@ -71,8 +71,9 @@ public class Cart : Entity<Guid>
         if (quantity <= 0)
             throw new ArgumentException("Quantity phải lớn hơn 0", nameof(quantity));
 
+        // Chỉ gộp vào dòng LẺ — dòng combo là một nhóm riêng (CartBundles.cs).
         var existingItem = Items.FirstOrDefault(i =>
-            i.ProductId == productId && i.VariantId == variantId && !i.IsGift);
+            i.ProductId == productId && i.VariantId == variantId && !i.IsGift && i.BundleId == null);
 
         if (existingItem != null)
         {
@@ -84,12 +85,21 @@ public class Cart : Entity<Guid>
         }
     }
 
-    public void RemoveItem(Guid productId) => Items.RemoveAll(i => i.ProductId == productId);
+    /// <summary>Xoá mọi dòng của sản phẩm; combo nào mất món thì vỡ nhóm và trở về giá lẻ.</summary>
+    public void RemoveItem(Guid productId)
+    {
+        var brokenBundles = BundleIdsOf(Items.Where(i => i.ProductId == productId));
+        Items.RemoveAll(i => i.ProductId == productId);
+        foreach (var bundleId in brokenBundles) BreakBundle(bundleId);
+    }
 
     public void RemoveItem(Guid productId, Guid? variantId)
     {
-        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
-        if (item != null) Items.Remove(item);
+        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && i.BundleId == null)
+            ?? Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
+        if (item == null) return;
+        Items.Remove(item);
+        if (item.BundleId.HasValue) BreakBundle(item.BundleId.Value);
     }
 
     public void UpdateItemQuantity(Guid productId, int quantity)
@@ -97,8 +107,16 @@ public class Cart : Entity<Guid>
 
     public void UpdateItemQuantity(Guid productId, Guid? variantId, int quantity)
     {
-        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId);
-        if (item == null) return;
+        // Ưu tiên dòng lẻ. Chỉ còn dòng combo thì đổi số lượng = vỡ combo (giá về giá lẻ).
+        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && i.BundleId == null && !i.IsGift);
+        if (item == null)
+        {
+            var bundled = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && i.BundleId != null);
+            if (bundled == null) return;
+            BreakBundle(bundled.BundleId!.Value);
+            item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && i.BundleId == null && !i.IsGift);
+            if (item == null) return;
+        }
 
         if (quantity <= 0) Items.Remove(item);
         else item.UpdateQuantity(quantity);
@@ -112,42 +130,9 @@ public class Cart : Entity<Guid>
     /// </summary>
     public void UpdateItemPrice(Guid productId, Guid? variantId, decimal price)
     {
-        var item = Items.FirstOrDefault(i => i.ProductId == productId && i.VariantId == variantId && !i.IsGift);
-        item?.SetServerPrice(price);
-    }
-
-    /// <summary>
-    /// Gộp giỏ khách vãng lai vào giỏ tài khoản khi đăng nhập.
-    /// Quy tắc: cộng dồn số lượng theo (ProductId, VariantId); bỏ qua dòng quà (sẽ được
-    /// <c>PricingEngine</c> sinh lại); giá lấy theo giỏ ĐÍCH vì giá được tính lại lúc chốt đơn.
-    /// </summary>
-    public void MergeFrom(Cart source)
-    {
-        if (source == null || source.Id == Id) return;
-
-        foreach (var item in source.Items.Where(i => !i.IsGift))
-        {
-            AddItem(item.ProductId, item.ProductName, item.Price, item.Quantity,
-                item.VariantId, item.VariantName, item.VariantSku);
-        }
-
-        // Mã giảm giá của giỏ vãng lai chỉ được giữ khi giỏ đích chưa có mã.
-        if (string.IsNullOrWhiteSpace(CouponCode) && !string.IsNullOrWhiteSpace(source.CouponCode))
-        {
-            CouponCode = source.CouponCode;
-            DiscountAmount = source.DiscountAmount;
-        }
-
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>Gắn giỏ vãng lai vào tài khoản vừa đăng nhập/đăng ký.</summary>
-    public void AssignToCustomer(Guid customerId)
-    {
-        if (customerId == Guid.Empty) return;
-        CustomerId = customerId;
-        AnonymousId = null;
-        UpdatedAt = DateTime.UtcNow;
+        // MỌI dòng khớp (dòng lẻ + dòng combo cùng sản phẩm) — không chỉ dòng đầu tiên.
+        foreach (var item in Items.Where(i => i.ProductId == productId && i.VariantId == variantId && !i.IsGift))
+            item.SetServerPrice(price);
     }
 
     /// <summary>
