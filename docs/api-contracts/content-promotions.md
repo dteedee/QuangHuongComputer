@@ -80,6 +80,17 @@ Storefront flash-sale feed. Returns only `Type=FlashSale`, `Status=Active`, with
 ### Public `GET /api/promotions/available` / `GET /api/promotions/{id}`
 
 Unchanged - code-lookup suggestion feed + single-promotion read, both pre-existing.
+`/available` is also the source of the coupon cards on `/khuyen-mai` (called anonymously, no
+`customerId`). Real row shape (note: no `startAt`):
+
+```json
+[{ "id": "guid", "code": "QH500K", "name": "string", "description": "string|null",
+   "discountType": "Percent|Fixed|FreeShip|BuyXGetY|Tiered|FixedPrice", "discountValue": 500000,
+   "maxDiscountAmount": null, "endAt": "iso8601|null", "usageRemaining": 12 }]
+```
+
+Both `/available` and `/api/content/promotions/active` filter with `Promotion.RunningPredicate(now)`
+(one predicate, also used by the SEO providers — `docs/seo-shell.md`).
 
 ## 2. CMS content (posts/pages/banners/menus/homepage/contact)
 

@@ -95,6 +95,23 @@ track's file ownership. `ApiGateway.csproj` already references every module (it'
 `ISeoPageProvider` contract, same read-only-DbContext pattern as every other provider. No other
 file needed to change for this to work; it is not filed as an integration request.
 
+## Content providers (news / promotions / flash sale)
+
+All in `Services/Content/Seo/` because every row they read is Content's (`Post`, `Promotion`) —
+the "ApiGateway/Seo" exception above only applies to data Content does not reference.
+
+| Provider | Paths | Visibility predicate | Sitemap |
+|---|---|---|---|
+| `ContentPostSeoProvider` | `/tin-tuc`, `/tin-tuc/{slug}` | `Post.PublishedPredicate`, type != `Promotion` (a promotion slug -> 301 `/khuyen-mai/{slug}`) | list + every news post |
+| `PromotionSeoProvider` | `/khuyen-mai`, `/khuyen-mai/{slug}` | `Post.PublishedPredicate` + type `Promotion`; code count via `Promotion.RunningPredicate` | list (only when non-empty) + every promotion post |
+| `FlashSaleSeoProvider` | `/flash-sale` | `Promotion.RunningPredicate` + `Type = FlashSale` + at least one reward with a real `FlashPrice` | `/flash-sale` only while a sale is running (`hourly`) |
+| `ContentPageSeoProvider` | `/chinh-sach/{promotions,khuyen-mai,news,tin-tuc}` | — | never (301 to `/khuyen-mai` / `/tin-tuc`) |
+
+`Promotion.RunningPredicate(utcNow)` (`Status == Active && StartAt <= now && (EndAt == null || EndAt >= now)`)
+is the one "running" predicate shared by `GET /api/content/promotions/active`, `GET /api/promotions/available`
+and these providers — same D10 reasoning as `Post.PublishedPredicate`. Empty listing pages answer 200
+(the SPA has a real empty state) with `noindex,follow`, never a 404. Tests: `Tests/UnitTests/Seo/`.
+
 ## Known gap: Repair module pages
 
 `/bao-hanh`, `/sua-chua`, `/sua-chua/:id` are real, "index"-flagged public pages
