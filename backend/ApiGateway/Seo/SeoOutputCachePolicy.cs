@@ -31,6 +31,9 @@ public sealed class SeoOutputCachePolicy : IOutputCachePolicy
         }
 
         context.EnableOutputCaching = true;
+        // Tagged so a redirect-table write can evict every shell entry at once (a cached 200 for a
+        // path that now redirects would otherwise outlive the change by up to CacheSeconds).
+        context.Tags.Add(BuildingBlocks.Seo.SeoOutputCacheTags.Shell);
         context.AllowCacheLookup = true;
         context.AllowCacheStorage = true;
         context.ResponseExpirationTimeSpan = TimeSpan.FromSeconds(context.HttpContext.RequestServices
@@ -52,6 +55,13 @@ public sealed class SeoOutputCachePolicy : IOutputCachePolicy
     {
         var response = context.HttpContext.Response;
         if (response.Headers.ContainsKey("Set-Cookie"))
+        {
+            context.AllowCacheStorage = false;
+        }
+        // Redirects / 410 are never stored: they are one dictionary lookup to recompute, and serving
+        // them from cache would skip the redirect hit counter.
+        if (response.StatusCode is StatusCodes.Status301MovedPermanently or StatusCodes.Status302Found
+            or StatusCodes.Status410Gone)
         {
             context.AllowCacheStorage = false;
         }
