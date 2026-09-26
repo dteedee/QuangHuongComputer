@@ -8,6 +8,7 @@ using HR.Infrastructure;
 using HR.Domain;
 using HR.Application.Attendance;
 using System.Security.Claims;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -264,7 +265,7 @@ public static class AttendanceEndpoints
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return Results.BadRequest(new { error = ex.Message });
+                    return Results.BadRequest(new { error = ClientSafeError.Message(ex) });
                 }
             }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
@@ -282,7 +283,7 @@ public static class AttendanceEndpoints
                     await db.SaveChangesAsync();
                     return Results.Ok(new { message = "Bảng công đã chốt.", ts.LockedAt });
                 }
-                catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+                catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             }).RequireAuthorization(Permissions.HR.ManageAttendance);
     }
 

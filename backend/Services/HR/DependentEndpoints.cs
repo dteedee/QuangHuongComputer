@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -46,7 +47,7 @@ public static class DependentEndpoints
                 await SyncEmployeeDependentCount(db, eid);
                 return Results.Created($"/api/hr/employees/{eid}/dependents/{dep.Id}", dep);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPut("/{id:guid}", async (Guid eid, Guid id, UpdateDependentDto dto, HRDbContext db) =>
@@ -61,7 +62,7 @@ public static class DependentEndpoints
                 await SyncEmployeeDependentCount(db, eid);
                 return Results.Ok(dep);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapDelete("/{id:guid}", async (Guid eid, Guid id, HRDbContext db) =>

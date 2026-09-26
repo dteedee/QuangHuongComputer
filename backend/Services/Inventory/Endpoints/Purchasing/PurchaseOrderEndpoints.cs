@@ -142,7 +142,7 @@ public sealed class PurchaseOrderEndpoints : IInventorySubmodule
             var po = await db.PurchaseOrders.FirstOrDefaultAsync(p => p.Id == id, ct)
                 ?? throw NotFoundException.For("đơn mua hàng", id);
             try { po.Send(); }
-            catch (InvalidOperationException ex) { throw new DomainException(ex.Message); }
+            catch (InvalidOperationException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { message = "Đã gửi đơn hàng", status = po.Status.ToString() });
         })
@@ -153,7 +153,7 @@ public sealed class PurchaseOrderEndpoints : IInventorySubmodule
             var po = await db.PurchaseOrders.FirstOrDefaultAsync(p => p.Id == id, ct)
                 ?? throw NotFoundException.For("đơn mua hàng", id);
             try { po.Cancel(); }
-            catch (InvalidOperationException ex) { throw new DomainException(ex.Message); }
+            catch (InvalidOperationException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
             await db.SaveChangesAsync(ct);
             return Results.Ok(new { message = "Đã hủy đơn hàng", status = po.Status.ToString() });
         })

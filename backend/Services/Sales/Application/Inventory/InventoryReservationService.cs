@@ -2,6 +2,7 @@ using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Application.Inventory;
 
@@ -103,7 +104,7 @@ public class InventoryReservationService
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return ReservationOutcome.Failure(ex.Message);
+                    return ReservationOutcome.Failure(ClientSafeError.Message(ex));
                 }
             }
             else if (delta < 0)
@@ -165,7 +166,7 @@ public class InventoryReservationService
             catch (InvalidOperationException ex)
             {
                 _logger.LogError(ex, "Commit giữ chỗ thất bại cho {Reference}", referenceId);
-                return ReservationOutcome.Failure($"Không thể xác nhận tồn kho: {ex.Message}");
+                return ReservationOutcome.Failure($"Không thể xác nhận tồn kho: {ClientSafeError.Message(ex)}");
             }
 
             reservation.Fulfill();

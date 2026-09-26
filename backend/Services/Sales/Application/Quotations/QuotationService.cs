@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Sales.Application.Pricing;
 using Sales.Domain;
 using Sales.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Application.Quotations;
 
@@ -58,7 +59,7 @@ internal static class QuotationService
                 buyerType, req.BuyerLegalName, req.BuyerTaxCode, req.BuyerBudgetUnitCode, req.BuyerAddress,
                 validUntil, req.PaymentTermDays, req.TermsText, req.Notes, createdBy);
         }
-        catch (ArgumentException ex) { return (null, ex.Message); }
+        catch (ArgumentException ex) { return (null, ClientSafeError.Message(ex)); }
 
         // Dòng được dựng với QuotationId rỗng ở BuildAsync (chưa có Id lúc đó) — gán lại đúng.
         var reboundLines = lines.Select(l => new SalesQuotationLine(
@@ -66,7 +67,7 @@ internal static class QuotationService
             l.Quantity, l.UnitPrice, l.LineDiscount, l.VatStatutoryRate, l.VatReductionEligible, l.VatRate, l.Notes)).ToList();
 
         try { quotation.ReplaceLines(reboundLines); }
-        catch (InvalidOperationException ex) { return (null, ex.Message); }
+        catch (InvalidOperationException ex) { return (null, ClientSafeError.Message(ex)); }
 
         salesDb.Set<SalesQuotation>().Add(quotation);
         await salesDb.SaveChangesAsync(ct);
@@ -108,7 +109,7 @@ internal static class QuotationService
                 validUntil, req.PaymentTermDays, req.TermsText, req.Notes);
             quotation.ReplaceLines(lines);
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException) { return (null, ex.Message); }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException) { return (null, ClientSafeError.Message(ex)); }
 
         await salesDb.SaveChangesAsync(ct);
         return (quotation, null);

@@ -118,7 +118,7 @@ public static class PaymentAdminReconcileEndpoints
                 throw new ConflictException($"Giao dịch đang ở trạng thái {intent.Status}, không xác nhận lại được.");
 
             try { intent.ConfirmManually(model.BankReference); }
-            catch (ArgumentException ex) { throw new DomainException(ex.Message); }
+            catch (ArgumentException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
 
             await db.SaveChangesAsync(ct);
             await bus.Publish(new PaymentSucceededEvent(intent.Id, intent.OrderId, intent.Amount, DateTime.UtcNow), ct);

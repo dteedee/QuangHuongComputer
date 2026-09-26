@@ -102,7 +102,7 @@ public static class RfqEndpoints
 
                 return Results.Ok(new { rfq.Id, rfq.Number, rfq.Status, sentTo = dto.SupplierIds.Count });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // Nhập báo giá tay từ NCC (email/PDF/điện thoại → nhập vào hệ thống).
@@ -122,7 +122,7 @@ public static class RfqEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/inventory/rfq/{id}/quotations/{quot.Id}", quot);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // Bảng so sánh — tô sáng giá tốt nhất từng cột.
@@ -199,7 +199,7 @@ public static class RfqEndpoints
 
                 return Results.Ok(new { poId = po.Id, poNumber = po.PONumber, totalAmount = po.TotalAmount });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>
@@ -207,7 +207,7 @@ public static class RfqEndpoints
             var rfq = await db.RequestForQuotations.FindAsync(id);
             if (rfq == null) return Results.NotFound();
             try { rfq.Cancel(); await db.SaveChangesAsync(); return Results.Ok(rfq); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
     }
 

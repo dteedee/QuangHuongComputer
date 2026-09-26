@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Endpoints;
 
 namespace Catalog;
 
@@ -83,7 +84,7 @@ public static class CatalogSpecificationAdminEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.Created($"/api/catalog/specifications/attributes/{attr.Id}", new { id = attr.Id });
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Manage).WithValidation<CreateSpecAttributeRequest>();
 
         group.MapPut("/specifications/attributes/{id:guid}", async (
@@ -106,7 +107,7 @@ public static class CatalogSpecificationAdminEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.NoContent();
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Manage).WithValidation<UpdateSpecAttributeRequest>();
 
         group.MapDelete("/specifications/attributes/{id:guid}", async (Guid id, CatalogDbContext db, CancellationToken ct) =>

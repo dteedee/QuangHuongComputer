@@ -28,7 +28,7 @@ internal static class SerialStatusTransitions
         catch (InvalidOperationException ex)
         {
             // Thông điệp của state machine là tiếng Anh nội bộ; đổi sang câu người dùng đọc được.
-            throw new DomainException($"Không thực hiện được thao tác trên serial: {ex.Message}");
+            throw new DomainException($"Không thực hiện được thao tác trên serial: {ClientSafeError.Message(ex)}");
         }
     }
 }

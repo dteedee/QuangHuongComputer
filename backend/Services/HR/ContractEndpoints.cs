@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -55,7 +56,7 @@ public static class ContractEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/contracts/{c.Id}", c);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // PUT /api/hr/contracts/{id} — sửa hợp đồng (chỉ khi chưa Active hoặc sửa các trường
@@ -71,7 +72,7 @@ public static class ContractEndpoints
                 return Results.Ok(c);
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            { return Results.BadRequest(new { error = ex.Message }); }
+            { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("/{id:guid}/activate", async (Guid id, HRDbContext db) =>
@@ -79,7 +80,7 @@ public static class ContractEndpoints
             var c = await db.EmploymentContracts.FindAsync(id);
             if (c == null) return Results.NotFound();
             try { c.Activate(); await db.SaveChangesAsync(); return Results.Ok(c); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/contracts/{id}/renew — tạo hợp đồng kế tiếp, giữ số cũ + hậu tố -R{n}.
@@ -104,7 +105,7 @@ public static class ContractEndpoints
                 return Results.Created($"/api/hr/contracts/{renewed.Id}", renewed);
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            { return Results.BadRequest(new { error = ex.Message }); }
+            { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("/{id:guid}/terminate", async (Guid id, TerminateContractDto dto, HRDbContext db) =>
@@ -118,7 +119,7 @@ public static class ContractEndpoints
                 return Results.Ok(c);
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            { return Results.BadRequest(new { error = ex.Message }); }
+            { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapDelete("/{id:guid}", async (Guid id, HRDbContext db) =>

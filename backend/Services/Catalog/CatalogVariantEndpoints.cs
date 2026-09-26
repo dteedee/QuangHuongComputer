@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Endpoints;
 
 namespace Catalog;
 
@@ -116,8 +117,8 @@ public static class CatalogVariantEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.Ok(new { id = variant.Id });
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Create);
 
         // Sửa biến thể
@@ -135,7 +136,7 @@ public static class CatalogVariantEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.NoContent();
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Edit);
 
         // Soft delete: chuyển sang Discontinued
@@ -169,7 +170,7 @@ public static class CatalogVariantEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.Ok(new { id = type.Id });
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Create);
 
         group.MapGet("/option-types/{id:guid}/values", async (Guid id, CatalogDbContext db, CancellationToken ct) =>
@@ -194,7 +195,7 @@ public static class CatalogVariantEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.Ok(new { id = value.Id });
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Catalog.Create);
     }
 

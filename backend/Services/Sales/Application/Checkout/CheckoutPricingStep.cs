@@ -3,6 +3,7 @@ using Content.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Sales.Application.Pricing;
 using Sales.Domain;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Application.Checkout;
 
@@ -83,7 +84,7 @@ internal static class CheckoutPricingStep
                 }
                 catch (InvalidOperationException ex)
                 {
-                    return CheckoutPricing.Failed(ex.Message);
+                    return CheckoutPricing.Failed(ClientSafeError.Message(ex));
                 }
             }
         }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -50,7 +51,7 @@ public static class SalaryStructureEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/employees/{eid}/salary-structures/{newStr.Id}", newStr);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // PUT /api/hr/employees/{eid}/salary-structures/{id} — W2-7 khoản 8, FE salaryStructureApi.update.
@@ -64,7 +65,7 @@ public static class SalaryStructureEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(s);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapDelete("/{id:guid}", async (Guid eid, Guid id, HRDbContext db) =>
@@ -96,7 +97,7 @@ public static class SalaryStructureEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/employees/{eid}/allowances/{a.Id}", a);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         allowanceGroup.MapDelete("/{id:guid}", async (Guid eid, Guid id, HRDbContext db) =>

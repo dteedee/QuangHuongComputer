@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
 using System.Security.Claims;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -45,7 +46,7 @@ public static class EmployeeAssetEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/employees/{employeeId}/assets/{asset.Id}", asset);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/employees/{eid}/assets/{id}/return
@@ -65,7 +66,7 @@ public static class EmployeeAssetEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(asset);
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         single.MapDelete("/", async (Guid employeeId, Guid id, HRDbContext db) =>

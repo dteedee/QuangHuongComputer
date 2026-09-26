@@ -96,7 +96,7 @@ public class InstallmentApplicationService
         }
         catch (ArgumentException ex)
         {
-            throw new DomainException(ex.Message);
+            throw new DomainException(ClientSafeError.Message(ex));
         }
 
         _db.InstallmentApplications.Add(app);

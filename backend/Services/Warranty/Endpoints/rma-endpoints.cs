@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Warranty.Domain;
 using Warranty.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Warranty;
 
@@ -83,7 +84,7 @@ public static class WarrantyRmaEndpoints
             var rma = await db.Rmas.FindAsync(id);
             if (rma == null) return Results.NotFound();
             try { rma.MarkSent(dto.ExternalRmaCode); await db.SaveChangesAsync(); return Results.Ok(ToDto(rma)); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("/{id:guid}/receive", async (Guid id, [FromBody] ReceiveRmaDto dto, WarrantyDbContext db) =>
@@ -91,7 +92,7 @@ public static class WarrantyRmaEndpoints
             var rma = await db.Rmas.FindAsync(id);
             if (rma == null) return Results.NotFound();
             try { rma.MarkReceived(dto.Result, dto.Notes); await db.SaveChangesAsync(); return Results.Ok(ToDto(rma)); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         }).WithValidation<ReceiveRmaDto>();
 
         // D08 §4 / Implementation Step 4 "auto-progress when ... an RMA closes": mọi WarrantyClaim
@@ -129,7 +130,7 @@ public static class WarrantyRmaEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(ToDto(rma));
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         });
 
         // Cảnh báo RMA quá hạn (chưa nhận về).

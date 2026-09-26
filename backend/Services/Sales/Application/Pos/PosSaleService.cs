@@ -6,6 +6,7 @@ using Sales.Application.Loyalty;
 using Sales.Application.Orders;
 using Sales.Domain;
 using Sales.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Application.Pos;
 
@@ -72,7 +73,7 @@ public sealed class PosSaleService
         }
         catch (PosDiscountRejectedException ex)
         {
-            return new Outcome(null, ex.Message, 400);
+            return new Outcome(null, ClientSafeError.Message(ex), 400);
         }
 
         // 3. TIỀN — kiểm trước khi tạo đơn: tender sai thì không được để lại đơn rác đã trừ tồn.

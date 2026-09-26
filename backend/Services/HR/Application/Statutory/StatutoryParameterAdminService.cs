@@ -182,7 +182,7 @@ public sealed class StatutoryParameterAdminService
         }
         catch (InvalidOperationException ex)
         {
-            throw new RequestValidationException("value", ex.Message);
+            throw new RequestValidationException("value", ClientSafeError.Message(ex));
         }
     }
 

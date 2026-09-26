@@ -1,6 +1,7 @@
 using HR.Domain;
 using HR.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Endpoints;
 
 namespace HR.Application.Leave;
 
@@ -110,7 +111,7 @@ public class LeaveApprovalService
         }
 
         try { leave.Approve(approverName); }
-        catch (InvalidOperationException ex) { return ex.Message; }
+        catch (InvalidOperationException ex) { return ClientSafeError.Message(ex); }
 
         await SyncApprovalRequestAsync(leaveId, ApprovalStatus.Approved, approverId, null);
         await _db.SaveChangesAsync();
@@ -123,7 +124,7 @@ public class LeaveApprovalService
         if (leave == null) return "Không tìm thấy đơn nghỉ phép.";
 
         try { leave.Reject(reason, rejectorName); }
-        catch (InvalidOperationException ex) { return ex.Message; }
+        catch (InvalidOperationException ex) { return ClientSafeError.Message(ex); }
 
         await SyncApprovalRequestAsync(leaveId, ApprovalStatus.Rejected, approverId, reason);
         await _db.SaveChangesAsync();

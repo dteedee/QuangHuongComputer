@@ -6,6 +6,7 @@ using Sales.Domain;
 using Identity.Infrastructure;
 using BuildingBlocks.Time;
 using Reporting.Shared;
+using BuildingBlocks.Endpoints;
 
 namespace Reporting.Endpoints;
 
@@ -18,7 +19,7 @@ public static class SalesReportEndpoints
             var today = clock.TodayVn.ToDateTime(TimeOnly.MinValue);
             ReportPeriod period;
             try { period = ReportPeriod.Resolve(clock, startDate, endDate, defaultSpanMonths: 12); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             var (start, end) = (period.Start, period.End);
             var thisMonth = new DateTime(today.Year, today.Month, 1);
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using HR.Application.Tax;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -26,7 +27,7 @@ public static class PitFinalizationEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.NotFound(new { error = ex.Message });
+                return Results.NotFound(new { error = ClientSafeError.Message(ex) });
             }
         });
 
@@ -75,7 +76,7 @@ public static class PitFinalizationEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.NotFound(new { error = ex.Message });
+                return Results.NotFound(new { error = ClientSafeError.Message(ex) });
             }
         });
     }

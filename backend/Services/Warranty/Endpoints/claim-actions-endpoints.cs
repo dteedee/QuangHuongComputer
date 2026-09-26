@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Warranty.Domain;
 using Warranty.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Warranty;
 
@@ -154,7 +155,7 @@ public static class ClaimActionEndpoints
                     Status = claim.Status.ToString()
                 });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         });
 
         // Phase 07: Sinh phiếu tiếp nhận bảo hành (JSON — frontend render + in).

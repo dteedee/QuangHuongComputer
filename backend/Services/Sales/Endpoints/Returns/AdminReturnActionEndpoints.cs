@@ -77,7 +77,7 @@ internal static partial class AdminReturnEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { Message = "Đã kiểm hàng", rr.Id, rr.Status, rr.ReceivedCondition, rr.RestockWarehouseId });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // Phase 07: Complete — chạy Orchestrator (Refund/Exchange/Replace), nhập kho, hoàn tiền/đơn mới.
@@ -93,7 +93,7 @@ internal static partial class AdminReturnEndpoints
                 var result = await orchestrator.ProcessAfterInspectionAsync(id, processedBy);
                 return Results.Ok(new { Message = "Đã hoàn tất yêu cầu", result });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Sales.ManageReturns);
 
         // Legacy /refund alias — điều hướng qua Complete cho tương thích cũ.
@@ -109,7 +109,7 @@ internal static partial class AdminReturnEndpoints
                 var result = await orchestrator.ProcessAfterInspectionAsync(id, processedBy);
                 return Results.Ok(new { Message = "Return request refunded", Status = "Completed", result });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Sales.ManageReturns);
     }
 }

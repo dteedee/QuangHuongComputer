@@ -4,6 +4,7 @@ using InventoryModule.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using BuildingBlocks.Endpoints;
 
 namespace InventoryModule;
 
@@ -36,7 +37,7 @@ public static class SupplierScorecardEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.NotFound(new { error = ex.Message });
+                return Results.NotFound(new { error = ClientSafeError.Message(ex) });
             }
         });
     }

@@ -92,7 +92,7 @@ public static class PurchaseReturnEndpoints
             var ret = await db.PurchaseReturns.FindAsync(id);
             if (ret == null) return Results.NotFound();
             try { ret.Confirm(); await db.SaveChangesAsync(); return Results.Ok(ret); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/accept", async (Guid id, InventoryDbContext db) =>
@@ -100,7 +100,7 @@ public static class PurchaseReturnEndpoints
             var ret = await db.PurchaseReturns.FindAsync(id);
             if (ret == null) return Results.NotFound();
             try { ret.Accept(); await db.SaveChangesAsync(); return Results.Ok(ret); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/accept-refund", async (Guid id, AcceptRefundDto dto, InventoryDbContext db) =>
@@ -112,8 +112,8 @@ public static class PurchaseReturnEndpoints
             var refund = dto.RefundAmount ?? dto.Amount
                 ?? throw new RequestValidationException("refundAmount", "Phải nhập số tiền hoàn.");
             try { ret.MarkRefunded(refund); await db.SaveChangesAsync(); return Results.Ok(ret); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>
@@ -121,7 +121,7 @@ public static class PurchaseReturnEndpoints
             var ret = await db.PurchaseReturns.FindAsync(id);
             if (ret == null) return Results.NotFound();
             try { ret.Cancel(); await db.SaveChangesAsync(); return Results.Ok(ret); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
     }
 }
