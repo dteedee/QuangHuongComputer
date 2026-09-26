@@ -58,6 +58,8 @@ public static class IntegrationTestConfiguration
             // thật sự — chưa cấu hình thì nó trả 503 và không kiểm chứng được gì.
             ["Payment:SePay:WebhookSecret"] = SePayWebhookSecret,
             ["Payment:SePay:ApiKey"] = SePayApiKey,
+            // SEO shell lấy template từ handler giả (ShellTemplateStub), không từ Vite của máy.
+            ["Seo:ShellTemplateUrl"] = ShellTemplateStub.Url,
         };
     }
 

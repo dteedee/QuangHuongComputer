@@ -24,6 +24,13 @@ public interface ISeoPageProvider
     /// </summary>
     Task<SeoPage?> ResolveAsync(string path, string query, CancellationToken ct);
 
+    /// <summary>
+    /// True for a catch-all provider (e.g. CMS pages at `/{slug}`): the shell asks it only after every
+    /// specific provider AND the template-only prefix list declined the path, so it can never shadow
+    /// a real route. Default false.
+    /// </summary>
+    bool IsFallback => false;
+
     /// <summary>Every indexable URL this provider is responsible for, for `/sitemap.xml`.</summary>
     IAsyncEnumerable<SitemapEntry> EnumerateAsync(CancellationToken ct);
 }

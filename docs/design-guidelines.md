@@ -110,9 +110,9 @@ Home `max-w-shell`, lưới gợi ý `grid-cols-2 md:grid-cols-3 lg:grid-cols-4`
 ## 7. SEO shell (D11) — `frontend/index.html`
 
 - `<!-- seo:head --> … <!-- /seo:head -->` bọc title/description/OG mặc định: ApiGateway thay cả khối này theo URL. Giữ nguyên marker, giữ default hợp lệ (edge rơi về file tĩnh khi shell chết).
-- `<!-- seo:body -->` nằm trong `#root`: nơi shell chèn snapshot semantic. React xoá `#root` ở lần render đầu nên không bao giờ thấy cả hai.
+- `<!-- seo:body --> … <!-- /seo:body -->` nằm trong `#root`: shell thay phần giữa bằng `<main class="seo-snapshot">` (H1, giá, link, thân bài đã lọc — docs/seo-shell.md "Body fragment"). `main.tsx` dùng `createRoot` (không hydrate) nên React thay hẳn khối này ở lần render đầu.
 - `.seo-shell-header` là placeholder cao **64px (mobile) / 108px (≥1024px)** = đúng chiều cao header thật (`h-16` / `h-9` + `h-[72px]`). **Đổi header ở wave 3 thì phải đổi 2 số này**, nếu không sẽ có CLS.
-- CSS inline cho snapshot phải ≤ 1KB (hiện 915 B) và phải nằm inline — nó vẽ trước khi stylesheet tải xong.
+- CSS inline cho snapshot phải ≤ 1KB (hiện ≈960 B, gồm `.seo-crumbs`/`.seo-pager`) và phải nằm inline — nó vẽ trước khi stylesheet tải xong.
 - Ảnh OG mặc định: `frontend/public/brand/og-default.png` 1200×630 (PNG/JPG; Meta không tài liệu hoá SVG). Không tham chiếu `og-default.svg` trong thẻ OG nữa.
 
 ## 8. Chống mẫu (điều đã làm UI cũ trông rẻ tiền)

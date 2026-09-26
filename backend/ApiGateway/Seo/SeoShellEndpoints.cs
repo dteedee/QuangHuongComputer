@@ -82,23 +82,22 @@ public static class SeoShellEndpoints
 
         var headHtml = SeoShellHeadRenderer.RenderHead(page, siteUrl, siteWideNoindex);
         var html = SeoShellMarkerReplacer.InjectHead(template, headHtml);
-        if (page.SnapshotHtml is not null)
+        if (page.Body is not null)
         {
-            html = SeoShellMarkerReplacer.InjectBody(html, page.SnapshotHtml);
+            html = SeoShellMarkerReplacer.InjectBody(html, SeoShellBodyRenderer.Render(page.Body));
         }
 
         return Results.Content(html, "text/html; charset=utf-8", statusCode: page.Status);
     }
 
-    private static async Task<SeoPage> ResolvePageAsync(IEnumerable<ISeoPageProvider> providers, string path, string query, CancellationToken ct)
+    /// <summary>Provider lookup order (public for unit tests): specific -> template-only -> fallback -> 404.</summary>
+    public static async Task<SeoPage> ResolvePageAsync(IEnumerable<ISeoPageProvider> providers, string path, string query, CancellationToken ct)
     {
-        foreach (var provider in providers)
-        {
-            if (!provider.TryMatch(path)) continue;
-            var resolved = await provider.ResolveAsync(path, query, ct);
-            if (resolved is not null) return resolved;
-            break; // provider claimed the path but found nothing -> a real 404, not "try the next provider"
-        }
+        // Order: specific providers -> template-only prefixes -> fallback (catch-all) providers.
+        // A catch-all like the CMS `/{slug}` provider must never shadow `/gio-hang`, `/login`, ...
+        var all = providers as IReadOnlyCollection<ISeoPageProvider> ?? providers.ToList();
+        var specific = await TryProvidersAsync(all.Where(p => !p.IsFallback), path, query, ct);
+        if (specific is not null) return specific;
 
         if (SeoTemplateOnlyPrefixes.Matches(path))
         {
@@ -112,6 +111,18 @@ public static class SeoShellEndpoints
             };
         }
 
-        return SeoPage.NotFound(path);
+        return await TryProvidersAsync(all.Where(p => p.IsFallback), path, query, ct) ?? SeoPage.NotFound(path);
+    }
+
+    private static async Task<SeoPage?> TryProvidersAsync(IEnumerable<ISeoPageProvider> providers, string path, string query, CancellationToken ct)
+    {
+        foreach (var provider in providers)
+        {
+            if (!provider.TryMatch(path)) continue;
+            // Provider claimed the path: its answer (or a real 404 when it found nothing) is final —
+            // never "try the next provider".
+            return await provider.ResolveAsync(path, query, ct) ?? SeoPage.NotFound(path);
+        }
+        return null;
     }
 }

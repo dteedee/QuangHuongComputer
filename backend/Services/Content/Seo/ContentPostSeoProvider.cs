@@ -71,6 +71,7 @@ public sealed class ContentPostSeoProvider : ISeoPageProvider
                 BuildArticleJsonLd(post),
                 SeoJsonLdBuilders.BreadcrumbList(new[] { ("Trang chủ", (string?)"/"), ("Tin tức", (string?)"/tin-tuc"), (post.Title, (string?)null) }),
             },
+            Body = ContentSeoBodyBuilder.Article(post.Title, post.Content, ("Tin tức", ListPath)),
         };
     }
 

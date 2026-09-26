@@ -29,8 +29,11 @@ public sealed record SeoPage
     /// <summary>Already-built JSON-LD objects (plain CLR objects/dictionaries), serialized by the shell with System.Text.Json's default encoder.</summary>
     public IReadOnlyList<object> JsonLd { get; init; } = Array.Empty<object>();
 
-    /// <summary>W2-17b only (gated, not shipped this track). Null means "no snapshot" — never render an empty shell.</summary>
-    public string? SnapshotHtml { get; init; }
+    /// <summary>
+    /// Thân trang vẽ sẵn vào `#root` (H1, giá, liên kết...) cho bot không chạy JS. Null = chỉ head,
+    /// SPA tự vẽ thân. Provider đưa dữ liệu, `SeoShellBodyRenderer` (ApiGateway) encode và dựng markup.
+    /// </summary>
+    public SeoBodyFragment? Body { get; init; }
 
     public static SeoPage NotFound(string canonicalPath) => new()
     {

@@ -6,7 +6,7 @@ namespace ApiGateway.Seo;
 /// Splices rendered head/body markup into the SPA template using the marker contract W1-7 baked
 /// into `index.html`: `&lt;!--seo:head--&gt;...&lt;!--/seo:head--&gt;` wraps the default
 /// title/description/OG so the shell can replace the whole block, and `&lt;!--seo:body--&gt;`
-/// sits inside `#root` for a W2-17b snapshot (not used this track — 17b is gated on CLS).
+/// plus `&lt;!-- /seo:body --&gt;` sit inside `#root` for the server-rendered body fragment.
 /// If a marker is missing (template drifted), falls back to inserting before `&lt;/head&gt;` so a
 /// broken marker degrades to "extra head tags" instead of "no SEO shell at all".
 /// </summary>
@@ -17,6 +17,7 @@ public static class SeoShellMarkerReplacer
     private const string HeadStart = "<!-- seo:head -->";
     private const string HeadEnd = "<!-- /seo:head -->";
     private const string BodyMarker = "<!-- seo:body -->";
+    private const string BodyEndMarker = "<!-- /seo:body -->";
 
     public static string InjectHead(string template, string headHtml)
     {
@@ -34,15 +35,23 @@ public static class SeoShellMarkerReplacer
         return template[..headClose] + headHtml + template[headClose..];
     }
 
-    /// <summary>W2-17b only. Not called this track (SnapshotHtml is always null on every SeoPage produced today).</summary>
-    public static string InjectBody(string template, string snapshotHtml)
+    /// <summary>
+    /// Replaces everything between `&lt;!-- seo:body --&gt;` and `&lt;!-- /seo:body --&gt;` (the
+    /// template's explanatory comment) with <paramref name="bodyHtml"/>. No end marker (older
+    /// template) -> inserts right after the start marker. No start marker -> template untouched:
+    /// the body fragment is an extra for bots, never worth breaking the page for.
+    /// </summary>
+    public static string InjectBody(string template, string bodyHtml)
     {
-        var marker = template.IndexOf(BodyMarker, StringComparison.Ordinal);
-        if (marker < 0) return template;
-        var sb = new StringBuilder(template.Length + snapshotHtml.Length);
-        sb.Append(template, 0, marker + BodyMarker.Length);
-        sb.Append(snapshotHtml);
-        sb.Append(template, marker + BodyMarker.Length, template.Length - marker - BodyMarker.Length);
+        var start = template.IndexOf(BodyMarker, StringComparison.Ordinal);
+        if (start < 0) return template;
+        var contentStart = start + BodyMarker.Length;
+        var end = template.IndexOf(BodyEndMarker, contentStart, StringComparison.Ordinal);
+        var resumeAt = end >= 0 ? end : contentStart;
+        var sb = new StringBuilder(template.Length + bodyHtml.Length);
+        sb.Append(template, 0, contentStart);
+        sb.Append(bodyHtml);
+        sb.Append(template, resumeAt, template.Length - resumeAt);
         return sb.ToString();
     }
 }

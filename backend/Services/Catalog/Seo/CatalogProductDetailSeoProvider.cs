@@ -83,6 +83,7 @@ public sealed class CatalogProductDetailSeoProvider : ISeoPageProvider
             // guessing (see SeoShellHeadRenderer.RenderHead / SeoDefaults.DefaultOgImage).
             OgImage = null,
             JsonLd = jsonLd,
+            Body = await CatalogSeoBodyBuilder.ProductAsync(_db, product, ct),
         };
     }
 
