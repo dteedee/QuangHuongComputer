@@ -72,6 +72,15 @@ public sealed class RepairQuoteApprovalFlowTests
         var created = await ReadOk(await admin.PostAsJsonAsync($"/api/repair/work-orders/{workOrderId}/quote", body));
         var quoteId = created.GetProperty("quoteId").GetString();
         created.GetProperty("totalCost").GetDecimal().Should().Be(1_000_000, "tạo phải ra đúng số đã xem trước");
+
+        // Sửa báo giá đang chờ: bỏ giảm giá cả phiếu ⇒ server tính lại (thay toàn bộ dòng), rồi trả lại như cũ.
+        var withoutDiscount = await ReadOk(await admin.PutAsJsonAsync($"/api/repair/quotes/{quoteId}", new
+        {
+            body.lines, discountAmount = 0, body.estimatedHours, body.hourlyRate, body.description,
+        }));
+        withoutDiscount.GetProperty("totalCost").GetDecimal().Should().Be(1_100_000);
+        withoutDiscount.GetProperty("quote").GetProperty("lines").GetArrayLength().Should().Be(3);
+        await ReadOk(await admin.PutAsJsonAsync($"/api/repair/quotes/{quoteId}", body));
         await ReadOk(await admin.PutAsync($"/api/repair/quotes/{quoteId}/await-approval", null));
 
         var quote = await ReadOk(await customer.GetAsync($"/api/repair/quotes/{quoteId}"));
