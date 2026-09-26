@@ -8,35 +8,26 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { AlertCircle, Calendar, CheckCircle2, Clock, RefreshCw, User, Wrench, XCircle } from 'lucide-react';
+import { AlertCircle, Calendar, CheckCircle2, Clock, RefreshCw, Search, User, UserX, Wrench, XCircle } from 'lucide-react';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { repairApi, getTimeSlotLabel, type BookingStatus, type TimeSlot } from '../../../api/repair';
 import { formatCurrency } from '../../../utils/format';
 import { Can } from '../../../components/Can';
 import { PERMISSIONS } from '../../../constants/permissions';
-
-const STATUS_LABEL: Record<BookingStatus, string> = {
-    Pending: 'Chờ duyệt',
-    Approved: 'Đã duyệt',
-    Rejected: 'Đã từ chối',
-    Converted: 'Đã chuyển phiếu sửa',
-};
-
-const STATUS_CLS: Record<BookingStatus, string> = {
-    Pending: 'bg-amber-100 text-amber-700',
-    Approved: 'bg-blue-100 text-blue-700',
-    Rejected: 'bg-red-100 text-red-700',
-    Converted: 'bg-emerald-100 text-emerald-700',
-};
+import { STATUS_CLS, STATUS_LABEL, appointmentDayReached } from './booking-status-meta';
+import { BookingRejectDialog } from './booking-reject-dialog';
 
 export default function BookingsQueuePage() {
     const [statusFilter, setStatusFilter] = useState<BookingStatus | ''>('Pending');
     const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [rejectReason, setRejectReason] = useState('');
+    const [search, setSearch] = useState('');
+    const term = useDebounce(search.trim(), 300);
     const queryClient = useQueryClient();
 
     const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: ['repair-bookings', statusFilter],
-        queryFn: () => repairApi.admin.getAllBookings(1, 50, statusFilter || undefined),
+        queryKey: ['repair-bookings', statusFilter, term],
+        queryFn: () => repairApi.admin.getAllBookings(1, 50, statusFilter || undefined, term || undefined),
     });
 
     const approveMutation = useMutation({
@@ -54,6 +45,12 @@ export default function BookingsQueuePage() {
             void queryClient.invalidateQueries({ queryKey: ['repair-bookings'] });
         },
         onError: (err: any) => toast.error(err?.response?.data?.error || 'Không từ chối được'),
+    });
+
+    const noShowMutation = useMutation({
+        mutationFn: (id: string) => repairApi.admin.markNoShow(id),
+        onSuccess: () => { toast.success('Đã ghi nhận khách không đến'); void queryClient.invalidateQueries({ queryKey: ['repair-bookings'] }); },
+        onError: (err: any) => toast.error(err?.response?.data?.error || 'Không ghi nhận được'),
     });
 
     const convertMutation = useMutation({
@@ -79,8 +76,19 @@ export default function BookingsQueuePage() {
                 </button>
             </div>
 
-            <div className="flex gap-2">
-                {(['Pending', 'Approved', 'Rejected', 'Converted', ''] as const).map(s => (
+            <label className="relative block max-w-sm">
+                <span className="sr-only">Tìm lịch hẹn</span>
+                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden />
+                <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Số lịch hẹn (LH-…), tên hoặc SĐT"
+                    className="w-full rounded-xl border border-gray-300 py-2 pl-9 pr-3 text-sm"
+                />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+                {(['Pending', 'Approved', 'NoShow', 'Rejected', 'Converted', ''] as const).map(s => (
                     <button
                         key={s || 'all'}
                         onClick={() => setStatusFilter(s)}
@@ -113,8 +121,10 @@ export default function BookingsQueuePage() {
                         {bookings.map((b: any) => (
                             <div key={b.id} className="p-5 flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-1">
+                                    <div className="flex flex-wrap items-center gap-3 mb-1">
+                                        {b.bookingNumber && <span className="font-mono text-xs font-semibold text-gray-500">{b.bookingNumber}</span>}
                                         <span className="font-bold text-gray-900">{b.deviceModel}</span>
+                                        {b.serviceTypeName && <span className="px-2 py-0.5 rounded-lg text-xs bg-gray-100 text-gray-600">{b.serviceTypeName}</span>}
                                         <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${STATUS_CLS[b.status as BookingStatus]}`}>
                                             {STATUS_LABEL[b.status as BookingStatus]}
                                         </span>
@@ -125,7 +135,7 @@ export default function BookingsQueuePage() {
                                     <p className="text-sm text-gray-600 line-clamp-2">{b.issueDescription}</p>
                                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                                         <span className="flex items-center gap-1"><User size={12} /> {b.customerName || b.customerId}</span>
-                                        <span className="flex items-center gap-1"><Clock size={12} /> {getTimeSlotLabel(b.timeSlot as TimeSlot)}</span>
+                                        <span className="flex items-center gap-1"><Clock size={12} /> {getTimeSlotLabel(b.preferredTimeSlot as TimeSlot)}</span>
                                         <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(b.preferredDate ?? b.createdAt).toLocaleDateString('vi-VN')}</span>
                                         {b.onSiteFee > 0 && <span>Phí tại nhà: {formatCurrency(b.onSiteFee)}</span>}
                                     </div>
@@ -149,6 +159,17 @@ export default function BookingsQueuePage() {
                                         </Can>
                                     </div>
                                 )}
+                                {(b.status === 'Pending' || b.status === 'Approved') && appointmentDayReached(b.preferredDate) && (
+                                    <Can permission={PERMISSIONS.REPAIR_UPDATE_STATUS}>
+                                        <button
+                                            onClick={() => noShowMutation.mutate(b.id)}
+                                            disabled={noShowMutation.isPending}
+                                            className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 disabled:opacity-50 flex-shrink-0"
+                                        >
+                                            <UserX size={14} /> Khách không đến
+                                        </button>
+                                    </Can>
+                                )}
                                 {b.status === 'Approved' && (
                                     <Can permission={PERMISSIONS.REPAIR_VIEW_ALL}>
                                         <button
@@ -166,30 +187,14 @@ export default function BookingsQueuePage() {
                 )}
             </div>
 
-            {rejectingId && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-3">Lý do từ chối</h3>
-                        <textarea
-                            value={rejectReason}
-                            onChange={(e) => setRejectReason(e.target.value)}
-                            rows={3}
-                            placeholder="Nhập lý do từ chối yêu cầu..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none"
-                        />
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={() => { setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold">Hủy</button>
-                            <button
-                                onClick={() => rejectMutation.mutate({ id: rejectingId, reason: rejectReason })}
-                                disabled={!rejectReason.trim() || rejectMutation.isPending}
-                                className="px-5 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-                            >
-                                Xác nhận từ chối
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <BookingRejectDialog
+                open={!!rejectingId}
+                reason={rejectReason}
+                onReasonChange={setRejectReason}
+                pending={rejectMutation.isPending}
+                onCancel={() => { setRejectingId(null); setRejectReason(''); }}
+                onConfirm={() => rejectingId && rejectMutation.mutate({ id: rejectingId, reason: rejectReason })}
+            />
         </div>
     );
 }
