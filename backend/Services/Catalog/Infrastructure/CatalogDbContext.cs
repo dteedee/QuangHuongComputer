@@ -441,6 +441,8 @@ public class CatalogDbContext : DbContext
             entity.Property(pb => pb.Description).HasColumnType("text");
             entity.Property(pb => pb.TotalPrice).HasPrecision(18, 2);
             entity.Property(pb => pb.OriginalPrice).HasPrecision(18, 2);
+            // Chế độ giá % (null = giá cố định TotalPrice) — W2 combo.
+            entity.Property(pb => pb.DiscountPercent).HasPrecision(5, 2);
             
             entity.HasIndex(pb => pb.ValidFrom)
                 .HasDatabaseName("ix_product_bundles_valid_from");
@@ -452,6 +454,9 @@ public class CatalogDbContext : DbContext
             {
                 t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
                 t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_ProductBundles_DiscountPercent_Range",
+                    "\"DiscountPercent\" IS NULL OR (\"DiscountPercent\" > 0 AND \"DiscountPercent\" < 100)");
             });
         });
 

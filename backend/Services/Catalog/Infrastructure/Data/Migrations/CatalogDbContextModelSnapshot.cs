@@ -463,6 +463,10 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
@@ -504,6 +508,8 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.ToTable("ProductBundles", "public", t =>
                         {
+                            t.HasCheckConstraint("CK_ProductBundles_DiscountPercent_Range", "\"DiscountPercent\" IS NULL OR (\"DiscountPercent\" > 0 AND \"DiscountPercent\" < 100)");
+
                             t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
 
                             t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
