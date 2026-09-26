@@ -69,6 +69,7 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 | `/api/catalog` (ghi) | `Permissions.Catalog.{Create,Edit,Delete}` theo verb | GET là storefront công khai |
 | `/api/catalog/reviews/admin` | `Permissions.Catalog.Manage` | |
 | `/api/content/admin` | `Permissions.Content.ManagePages` | KHÔNG dùng verb-mapping: `Content.ViewPages` khách hàng cũng có |
+| `/api/content/admin/redirects` | GET (list, `{id}`, `test`, `export`, `template`) `Content.ViewRedirects`; POST/PUT/DELETE, `{id}/active`, `import` `Content.ManageRedirects` | nhóm RIÊNG map từ `app` (không lồng dưới `/api/content/admin` — nhóm cha `ManagePages` sẽ AND vào). Admin/Manager/Marketing (seed v3) |
 | `/api/promotions/admin` | `Permissions.Content.ManageCoupons` | |
 | `/api/crm` (7 nhóm cùng tiền tố) | dashboard `CRM.ViewCustomers`; customers `PermissionModules.Crm`; segments View/ManageSegments; leads + pipeline View/ManageLeads; campaigns `PermissionModules.Campaigns`; tasks `CRM.ManageTasks` | Marketing quản chiến dịch mà không đụng khách hàng |
 | `/api/crm/campaigns/{id}/send` | `Permissions.CRM.SendCampaigns` | gửi thật ra ngoài |

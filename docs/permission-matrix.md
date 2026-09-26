@@ -5,8 +5,8 @@
 > trong `Permissions*.cs`, mô tả trong `PermissionRegistryDefinitions.cs`,
 > ma trận trong `RolePermissionMatrixData.cs` rồi chạy lại test.
 
-- Phiên bản seed hiện tại: **v2**
-- Tổng số quyền: **120**
+- Phiên bản seed hiện tại: **v3**
+- Tổng số quyền: **122**
 - Admin luôn có toàn bộ quyền và được `PermissionAuthorizationHandler` bypass.
 - Seed chỉ THÊM quyền; quyền admin gỡ tay không bị cấp lại (xem `RolePermissionSeeder`).
 
@@ -14,13 +14,13 @@
 
 | Vai trò | Số quyền | Phạm vi |
 |---|---:|---|
-| `Admin` | 120 | Toàn quyền (break-glass). |
-| `Manager` | 99 | Quản lý cửa hàng: mọi nghiệp vụ trừ cấu hình hệ thống, tạo tài khoản và phân vai trò. |
+| `Admin` | 122 | Toàn quyền (break-glass). |
+| `Manager` | 101 | Quản lý cửa hàng: mọi nghiệp vụ trừ cấu hình hệ thống, tạo tài khoản và phân vai trò. |
 | `Sale` | 29 | Bán hàng: POS, đơn hàng, báo giá, khách hàng tiềm năng, thu COD. |
 | `InventoryStaff` | 13 | Kho: nhập/xuất/kiểm kê, lập đề nghị mua — không duyệt, không tài chính. |
 | `Accountant` | 27 | Kế toán: hoá đơn, công nợ, thanh toán, báo cáo tài chính, tham số lương/thuế (D06). |
 | `HR` | 8 | Nhân sự: hồ sơ, chấm công, nghỉ phép, bảng lương. Chỉ ĐỌC tham số luật. |
-| `Marketing` | 22 | Nội dung website + chiến dịch CRM. |
+| `Marketing` | 24 | Nội dung website + chiến dịch CRM. |
 | `TechnicianInShop` | 11 | Sửa chữa tại cửa hàng + xử lý bảo hành. |
 | `TechnicianOnSite` | 10 | Sửa chữa tại nhà khách. |
 | `Customer` | 9 | Khách hàng: đơn/bảo hành/sửa chữa của chính mình. Không có quyền nhân viên nào. |
@@ -133,6 +133,8 @@
 | `Content.ManageMedia` | Tải lên và quản lý thư viện ảnh | Manage | `Content.ViewPages` | x | x |  |  |  |  | x |  |  |  |  |
 | `Content.ManageMenus` | Quản lý menu điều hướng | Manage | `Content.ViewPages` | x | x |  |  |  |  | x |  |  |  |  |
 | `Content.ManageContacts` | Xử lý liên hệ từ website | Manage | `Content.ViewPages` | x | x |  |  |  |  | x |  |  |  |  |
+| `Content.ViewRedirects` | Xem bảng chuyển hướng URL | View |  | x | x |  |  |  |  | x |  |  |  |  |
+| `Content.ManageRedirects` | Quản lý chuyển hướng URL (301/302/410), nhập/xuất CSV | Manage | `Content.ViewRedirects` | x | x |  |  |  |  | x |  |  |  |  |
 
 ### CRM — Khách hàng
 

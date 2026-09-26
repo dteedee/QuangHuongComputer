@@ -108,7 +108,9 @@ internal static class PermissionRegistryDefinitions
             P(Permissions.Content.ManageBanners, "Quản lý banner trang chủ", PermissionType.Manage, Permissions.Content.ViewBanners),
             P(Permissions.Content.ManageMedia, "Tải lên và quản lý thư viện ảnh", PermissionType.Manage, Permissions.Content.ViewPages),
             P(Permissions.Content.ManageMenus, "Quản lý menu điều hướng", PermissionType.Manage, Permissions.Content.ViewPages),
-            P(Permissions.Content.ManageContacts, "Xử lý liên hệ từ website", PermissionType.Manage, Permissions.Content.ViewPages));
+            P(Permissions.Content.ManageContacts, "Xử lý liên hệ từ website", PermissionType.Manage, Permissions.Content.ViewPages),
+            P(Permissions.Content.ViewRedirects, "Xem bảng chuyển hướng URL", PermissionType.View),
+            P(Permissions.Content.ManageRedirects, "Quản lý chuyển hướng URL (301/302/410), nhập/xuất CSV", PermissionType.Manage, Permissions.Content.ViewRedirects));
 
         Module("CRM", "Khách hàng",
             P(Permissions.CRM.ViewCustomers, "Xem khách hàng", PermissionType.View),
