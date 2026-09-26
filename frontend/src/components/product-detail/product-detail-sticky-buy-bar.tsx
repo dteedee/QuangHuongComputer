@@ -12,6 +12,7 @@ import type { ProductMediaView } from '../../api/catalog/public-product';
 import { dur, ease } from '../../design-system/motion';
 import { formatNumber } from '../../utils/format';
 import { Button, Img } from '../ui';
+import { useRootFlag } from '../layout/use-root-flag';
 
 interface ProductDetailStickyBuyBarProps {
   show: boolean;
@@ -28,6 +29,8 @@ export default function ProductDetailStickyBuyBar({
   show, product, displayMedia, displayPrice, stockQuantity, addingToCart, onBuyNow, onAddToCart,
 }: ProductDetailStickyBuyBarProps) {
   const outOfStock = stockQuantity <= 0;
+  // Công bố `--sticky-buy-offset` để nút chat / lên đầu trang tự nâng lên trên thanh này.
+  useRootFlag('data-sticky-buy', show);
 
   return (
     <AnimatePresence>
@@ -37,7 +40,7 @@ export default function ProductDetailStickyBuyBar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 96, opacity: 0 }}
           transition={{ duration: dur.move, ease: ease.expo }}
-          className="fixed bottom-0 left-0 right-0 z-[100] border-t border-line bg-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgb(0_0_0/.08)]"
+          className="sticky-buy-bar fixed bottom-mobile-nav left-0 right-0 z-[100] border-t border-line bg-surface px-4 pt-3 shadow-[0_-4px_20px_rgb(0_0_0/.08)]"
         >
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">

@@ -46,9 +46,9 @@ export default function AiChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        // bottom-20 (80px) trên mobile để không đè lên thanh điều hướng dưới (MobileBottomNav,
-        // h-16=64px, z-[95]) của RootLayout; từ lg trở lên thanh đó ẩn nên về lại bottom-6.
-        className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-2xl z-50 transition-colors"
+        // bottom-floating (styles/base.css): nâng lên trên thanh điều hướng dưới + thanh mua nhanh
+        // trang sản phẩm khi chúng đang hiện, kèm safe-area.
+        className="fixed bottom-floating right-4 lg:right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-2xl z-50 transition-colors"
         title="Trợ lý AI"
       >
         💬
@@ -57,7 +57,7 @@ export default function AiChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 w-[calc(100vw-2rem)] max-w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
+    <div className="fixed bottom-floating right-4 lg:right-6 w-[calc(100vw-2rem)] max-w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
       {/* Header */}
       <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center flex-shrink-0">
         <span className="font-semibold text-sm">🤖 Trợ lý AI Quang Hưởng</span>
