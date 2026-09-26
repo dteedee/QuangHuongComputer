@@ -4,6 +4,43 @@ All notable changes to Quang Hưởng Computer project documented here. Format: 
 
 ---
 
+# Hợp nhất về một hệ thống (2026-09-26)
+
+Chọn repo .NET này làm hệ thống duy nhất; các ý tưởng đáng giá của bản dựng thử Go/Nuxt (QHC)
+được làm lại ở đây theo chuẩn của repo (không chép code). Mỗi đợt merge đều qua: build solution,
+unit, integration (Postgres thật), frontend test, tsc, eslint.
+
+## [2026-09-26] — Đợt 2: tính năng lấy từ QHC
+- **Sửa chữa**: báo giá theo dòng (linh kiện/công/dịch vụ) có chiết khấu + VAT tính ở server;
+  danh mục dịch vụ sửa chữa chỉnh được; ảnh nhận máy / trước-sau; ưu tiên, hãng/model máy; serial
+  linh kiện thay, linh kiện mua ngoài; lịch hẹn có số `LH-…`, trạng thái "khách không đến", sức chứa
+  mỗi khung giờ khoá ở Postgres.
+- **Hoa hồng kỹ thuật viên**: tính trên tiền công + dịch vụ, duyệt, vào bảng lương (chịu thuế TNCN).
+- **Combo sản phẩm** end-to-end (giá combo do server tính, không cộng dồn với coupon); admin trả
+  lời đánh giá; khách tải ảnh đánh giá (xoá EXIF/GPS); trang **Cấu hình mẫu** `/cau-hinh-mau`.
+- **"Thường được mua cùng"** từ lịch sử đơn 180 ngày; **giao diện chuyển kho** + 5 lỗi chuyển kho
+  (huỷ sau khi xuất làm mất hàng, xuất kho đồng thời trừ 2 lần, serial bán được khi đang đi đường,
+  giá vốn nhận sai, tên hàng lấy từ client).
+- **SEO shell** trả thêm phần thân trang (H1, giá, thông số, link danh mục) cho crawler; route CMS
+  `/{slug}`; thanh điều hướng dưới trên mobile; `GET /api/promotions/{id}` công khai không còn lộ
+  khuyến mãi nháp/tạm dừng.
+- **Cấu hình admin không có hiệu lực (lỗi có sẵn)**: không module nào đăng ký `IAppSettingsStore`,
+  nên mọi `IAppSettings` đọc hằng số trong code — admin đổi phí ship, % hoa hồng, sức chứa khung giờ
+  đều vô tác dụng. SystemConfig nay cấp store từ bảng `Configurations`; endpoint ghi cấu hình xoá
+  snapshot ngay; nhật ký audit không còn ghi rõ giá trị `Secret`.
+
+## [2026-09-26] — Đợt 1: bảo mật + trang còn thiếu
+- Refresh token chuyển sang cookie `HttpOnly; Secure; SameSite=Strict`, access token chỉ nằm trong
+  bộ nhớ; CSP bỏ `'unsafe-inline'` cho script (API và Caddy dùng chung một chuỗi); mọi HTML nhúng
+  qua `SafeHtml`.
+- "Đã mua hàng" của đánh giá do server tra đơn; bỏ khoá TOTP chấm công viết cứng; reCAPTCHA được
+  server xác minh thật (trước đó token bị bỏ qua) và không còn rơi về khoá test ở production;
+  112 chỗ trả `ex.Message` ra client đi qua `ClientSafeError`.
+- Trang `/tin-tuc`, `/khuyen-mai`, `/khuyen-mai/:slug`, `/flash-sale`; trình quản lý chuyển hướng
+  URL (301/302/410, nhập CSV, tự tạo 301 khi đổi slug sản phẩm/danh mục).
+
+---
+
 # Full-system overhaul (branch `feat/full-system-overhaul`, 2026-09-18 → 2026-09-19)
 
 Waves 0-4, seven commits (two of them are fix commits between waves). Numbers below are the ones

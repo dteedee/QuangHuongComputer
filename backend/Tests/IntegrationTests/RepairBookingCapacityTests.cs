@@ -16,8 +16,8 @@ namespace IntegrationTests;
 /// Sức chứa khung giờ đặt lịch chạy thật trên Postgres: (sức chứa + 2) khách đặt CÙNG LÚC vào một
 /// khung ⇒ đúng "sức chứa" lịch được nhận (khoá cố vấn theo ngày + khung), còn lại 409; lịch nhận
 /// được có số LH-yyyyMM-#####; "Khách không đến" trước ngày hẹn bị chặn.
-/// Sức chứa đọc qua IAppSettings như production (hiện host chưa đăng ký IAppSettingsStore nên là
-/// giá trị mặc định — test không phụ thuộc con số cụ thể).
+/// Sức chứa đọc qua IAppSettings như production (bảng cấu hình admin, rơi về mặc định nếu chưa
+/// đặt) — test không phụ thuộc con số cụ thể.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public sealed class RepairBookingCapacityTests

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using SystemConfig.Infrastructure;
+using BuildingBlocks.Configuration;
 using BuildingBlocks.Database;
 
 namespace SystemConfig;
@@ -50,6 +51,10 @@ public static class DependencyInjection
             if (interceptor != null)
                 options.AddInterceptors(interceptor);
         });
+
+        // Bảng cấu hình admin là nguồn của IAppSettings. Thiếu dòng này, mọi setting đọc qua
+        // IAppSettings (phí ship, % hoa hồng, sức chứa khung giờ...) luôn là hằng số trong code.
+        services.AddScoped<IAppSettingsStore, SystemConfigAppSettingsStore>();
 
         return services;
     }

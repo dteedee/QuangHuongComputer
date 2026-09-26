@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SystemConfig.Infrastructure;
 using SystemConfig.Domain;
 using BuildingBlocks.Caching;
+using BuildingBlocks.Configuration;
 using BuildingBlocks.Endpoints;
 using System.Text.Json;
 
@@ -142,7 +143,7 @@ public static class SystemConfigEndpoints
             return Results.Ok(entry);
         });
 
-        adminGroup.MapPost("/", async (ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapPost("/", async (ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, IAppSettings appSettings, HttpContext httpContext) =>
         {
             var (isValid, errorMessage) = ConfigValidator.Validate(entry);
             if (!isValid)
@@ -172,12 +173,13 @@ public static class SystemConfigEndpoints
             }
             await db.SaveChangesAsync();
 
-            await httpContext.LogAuditAsync(action, "Configuration", entry.Key, $"Value: {entry.Value}, Module: {entry.Module}");
+            await httpContext.LogAuditAsync(action, "Configuration", entry.Key, $"Value: {AuditValue(entry)}, Module: {entry.Module}");
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
+            appSettings.Invalidate();
             return Results.Ok(existing ?? entry);
         });
 
-        adminGroup.MapPost("/{key}", async (string key, ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapPost("/{key}", async (string key, ConfigurationEntry entry, SystemConfigDbContext db, ICacheService cache, IAppSettings appSettings, HttpContext httpContext) =>
         {
             var (isValid, errorMessage) = ConfigValidator.Validate(entry);
             if (!isValid)
@@ -209,12 +211,13 @@ public static class SystemConfigEndpoints
             existing.LastUpdated = DateTime.UtcNow;
 
             await db.SaveChangesAsync();
-            await httpContext.LogAuditAsync(action, "Configuration", key, $"Value: {entry.Value}");
+            await httpContext.LogAuditAsync(action, "Configuration", key, $"Value: {AuditValue(entry)}");
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
+            appSettings.Invalidate();
             return Results.Ok(existing);
         });
 
-        adminGroup.MapPost("/bulk", async (List<ConfigurationEntry> entries, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapPost("/bulk", async (List<ConfigurationEntry> entries, SystemConfigDbContext db, ICacheService cache, IAppSettings appSettings, HttpContext httpContext) =>
         {
             if (entries is null || entries.Count == 0) return Results.BadRequest(new { error = "Danh sách rỗng" });
             if (entries.Count > 500) return Results.BadRequest(new { error = "Tối đa 500 mục mỗi lần" });
@@ -257,10 +260,11 @@ public static class SystemConfigEndpoints
 
             await httpContext.LogAuditAsync("BulkUpdate", "Configuration", string.Join(",", keys.Take(20)), $"{entries.Count} keys");
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
+            appSettings.Invalidate();
             return Results.Ok(new { updated = entries.Count });
         });
 
-        adminGroup.MapDelete("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache, HttpContext httpContext) =>
+        adminGroup.MapDelete("/{key}", async (string key, SystemConfigDbContext db, ICacheService cache, IAppSettings appSettings, HttpContext httpContext) =>
         {
             var existing = await db.Configurations.FindAsync(key);
             if (existing == null) return Results.NotFound();
@@ -272,6 +276,7 @@ public static class SystemConfigEndpoints
             await db.SaveChangesAsync();
             await httpContext.LogAuditAsync("Delete", "Configuration", key, "Deleted configuration entry");
             await cache.RemoveByPatternAsync(CacheKeys.SystemConfigPattern);
+            appSettings.Invalidate();
             return Results.NoContent();
         });
     }
@@ -287,6 +292,13 @@ public static class SystemConfigEndpoints
     /// Giữ lại 4 ký tự cuối để người vận hành vẫn đối chiếu được "đã đặt đúng khoá chưa" mà không
     /// lộ giá trị. Muốn đổi thì ghi đè bằng PUT/POST, không cần đọc ra.
     /// </summary>
+    /// <summary>
+    /// Giá trị ghi vào nhật ký audit: mục <see cref="ConfigValueType.Secret"/> (mật khẩu SMTP, API key...)
+    /// không bao giờ được ghi rõ vào bảng audit, vốn đọc được bởi nhiều vai trò hơn trang cấu hình.
+    /// </summary>
+    private static string AuditValue(ConfigurationEntry entry)
+        => entry.ValueType == ConfigValueType.Secret ? "***" : entry.Value;
+
     private static void MaskSecret(ConfigurationEntry entry)
     {
         if (entry.ValueType != ConfigValueType.Secret || string.IsNullOrEmpty(entry.Value)) return;
