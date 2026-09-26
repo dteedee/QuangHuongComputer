@@ -1,6 +1,6 @@
 // GENERATED FILE - do not hand-edit.
 // Source: plans/260917-2100-full-system-overhaul/reports/w1-1-permissions.json
-// (W1-1 permission catalog, seedVersion 3). Regenerate from that JSON
+// (W1-1 permission catalog, seedVersion 4). Regenerate from that JSON
 // if the backend catalog changes - see phase-17-w1-fe-app-shell.md Risk Assessment:
 // "import permission strings from a generated constants/permissions.ts; do not hand-type."
 
@@ -72,6 +72,7 @@ export const PERMISSIONS_CATALOG: readonly PermissionCatalogEntry[] = [
   { key: 'Permissions.Repair.CreateQuote', module: 'Repair', moduleDisplayName: 'Sửa chữa', displayName: 'Lập báo giá sửa chữa', type: 'Create', dependsOn: 'Permissions.Repair.ViewAll', roles: ['Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite'] },
   { key: 'Permissions.Repair.ApproveQuote', module: 'Repair', moduleDisplayName: 'Sửa chữa', displayName: 'Duyệt báo giá sửa chữa', type: 'Approve', dependsOn: 'Permissions.Repair.ViewAll', roles: ['Admin', 'Manager'] },
   { key: 'Permissions.Repair.Complete', module: 'Repair', moduleDisplayName: 'Sửa chữa', displayName: 'Hoàn tất phiếu sửa chữa', type: 'Manage', dependsOn: 'Permissions.Repair.ViewAll', roles: ['Admin', 'Manager', 'TechnicianInShop', 'TechnicianOnSite'] },
+  { key: 'Permissions.Repair.ManageServiceTypes', module: 'Repair', moduleDisplayName: 'Sửa chữa', displayName: 'Quản lý danh mục dịch vụ sửa chữa', type: 'Manage', dependsOn: 'Permissions.Repair.ViewAll', roles: ['Admin', 'Manager'] },
   { key: 'Permissions.Warranty.SubmitClaim', module: 'Warranty', moduleDisplayName: 'Bảo hành', displayName: 'Gửi yêu cầu bảo hành', type: 'Create', dependsOn: null, roles: ['Admin', 'Sale', 'Customer'] },
   { key: 'Permissions.Warranty.ViewOwn', module: 'Warranty', moduleDisplayName: 'Bảo hành', displayName: 'Xem yêu cầu bảo hành của mình', type: 'View', dependsOn: null, roles: ['Admin', 'TechnicianOnSite', 'Customer'] },
   { key: 'Permissions.Warranty.ViewAll', module: 'Warranty', moduleDisplayName: 'Bảo hành', displayName: 'Xem tất cả yêu cầu bảo hành', type: 'View', dependsOn: null, roles: ['Admin', 'Manager', 'Sale', 'TechnicianInShop', 'TechnicianOnSite'] },

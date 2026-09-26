@@ -64,6 +64,7 @@ export const PERMISSIONS = {
   REPAIR_CREATE_QUOTE: 'Permissions.Repair.CreateQuote',
   REPAIR_APPROVE_QUOTE: 'Permissions.Repair.ApproveQuote',
   REPAIR_COMPLETE: 'Permissions.Repair.Complete',
+  REPAIR_MANAGE_SERVICE_TYPES: 'Permissions.Repair.ManageServiceTypes',
   WARRANTY_SUBMIT_CLAIM: 'Permissions.Warranty.SubmitClaim',
   WARRANTY_VIEW_OWN: 'Permissions.Warranty.ViewOwn',
   WARRANTY_VIEW_ALL: 'Permissions.Warranty.ViewAll',

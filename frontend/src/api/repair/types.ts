@@ -11,7 +11,10 @@
 export type ServiceType = 'InShop' | 'OnSite';
 export type ServiceLocation = 'CustomerHome' | 'CustomerOffice' | 'School' | 'Government' | 'Other';
 export type TimeSlot = 'Morning' | 'Afternoon' | 'Evening';
-export type BookingStatus = 'Pending' | 'Approved' | 'Rejected' | 'Converted';
+export type BookingStatus = 'Pending' | 'Approved' | 'Rejected' | 'Converted' | 'NoShow';
+export type { WorkOrderPriority } from './work-order-priority';
+export type { RepairQuote } from './quote-types';
+import type { WorkOrderPriority } from './work-order-priority';
 export type QuoteStatus = 'Pending' | 'Approved' | 'Rejected' | 'Expired';
 
 export type WorkOrderStatus =
@@ -33,6 +36,10 @@ export type WorkOrderStatus =
 
 export interface ServiceBooking {
     id: string;
+    /** LH-yyyyMM-##### — human-readable booking number. */
+    bookingNumber: string;
+    serviceTypeId: string;
+    serviceTypeName?: string | null;
     customerId: string;
     organizationId?: string;
     serviceType: ServiceType;
@@ -67,6 +74,12 @@ export interface WorkOrder {
     serialNumber?: string;
     description: string;
     status: WorkOrderStatus;
+    priority?: WorkOrderPriority;
+    deviceType?: string | null;
+    deviceBrand?: string | null;
+    accessoriesReceived?: string[];
+    intakePhotoUrls?: string[];
+    serviceTypeId?: string | null;
     technicianId?: string;
     serviceType?: ServiceType;
     serviceAddress?: string;
@@ -104,33 +117,17 @@ export interface WorkOrder {
 export interface WorkOrderPart {
     id: string;
     workOrderId: string;
-    inventoryItemId: string;
+    /** null ⇒ bought-in part (not from stock, never touches the stock ledger). */
+    inventoryItemId?: string | null;
+    isBoughtIn?: boolean;
     partName: string;
     partNumber?: string;
+    serialNumber?: string | null;
+    /** Cost price of a bought-in part (VND). */
+    unitCost?: number | null;
     quantity: number;
     unitPrice: number;
     totalPrice: number;
-}
-
-export interface RepairQuote {
-    id: string;
-    workOrderId: string;
-    quoteNumber: string;
-    partsCost: number;
-    laborCost: number;
-    serviceFee: number;
-    totalCost: number;
-    estimatedHours: number;
-    hourlyRate: number;
-    description?: string;
-    notes?: string;
-    status: QuoteStatus;
-    approvedAt?: string;
-    rejectedAt?: string;
-    rejectionReason?: string;
-    validUntil: string;
-    createdAt: string;
-    isExpired: boolean;
 }
 
 export interface ActivityLog {
@@ -141,6 +138,8 @@ export interface ActivityLog {
     previousStatus?: WorkOrderStatus;
     newStatus?: WorkOrderStatus;
     performedByName?: string;
+    photoStage?: 'Before' | 'After' | null;
+    photoUrls?: string[];
     createdAt: string;
 }
 

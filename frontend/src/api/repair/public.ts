@@ -4,12 +4,15 @@
  * step 7c). Functions moved verbatim; `api/repair.ts` re-exports them.
  */
 import client from '../client';
-import type { BookingStatus, QuoteStatus, RepairQuote, ServiceBooking, ServiceLocation, ServiceType, TimeSlot, WorkOrderStatus } from './types';
+import type { BookingStatus, QuoteStatus, ServiceBooking, ServiceLocation, ServiceType, TimeSlot, WorkOrderStatus } from './types';
+import type { PublicTrackedQuote, RepairQuote } from './quote-types';
 
 export const repairPublicApi = {
     booking: {
         create: async (data: {
-            serviceType: ServiceType;
+            /** Catalog service (preferred). `serviceType` is only the legacy InShop/OnSite fallback. */
+            serviceTypeId?: string;
+            serviceType?: ServiceType;
             deviceModel: string;
             serialNumber?: string;
             issueDescription: string;
@@ -28,8 +31,10 @@ export const repairPublicApi = {
             allowPayLater?: boolean;
         }): Promise<{
             id: string;
+            bookingNumber: string;
             customerId: string;
             serviceType: ServiceType;
+            serviceTypeName?: string;
             preferredDate: string;
             preferredTimeSlot: TimeSlot;
             onSiteFee: number;
@@ -47,6 +52,15 @@ export const repairPublicApi = {
 
         getBooking: async (id: string): Promise<ServiceBooking> => {
             const response = await client.get(`/repair/bookings/${id}`);
+            return response.data;
+        },
+
+        /** Remaining capacity per time slot for a date (`yyyy-MM-dd`) — enforced again server-side on submit. */
+        getSlots: async (date: string): Promise<{
+            date: string;
+            slots: Array<{ slot: TimeSlot; capacity: number | null; remaining: number | null; isFull: boolean }>;
+        }> => {
+            const response = await client.get('/repair/booking-slots', { params: { date } });
             return response.data;
         },
     },
@@ -100,8 +114,9 @@ export const repairPublicApi = {
         createdAt: string;
         startedAt?: string;
         finishedAt?: string;
-        quote?: { status: QuoteStatus; totalAmount?: number } | null;
-        timeline?: { status: string; timestamp: string; note?: string }[];
+        /** Current quote with its lines + VAT breakdown (server-computed). */
+        quote?: PublicTrackedQuote | null;
+        timeline?: { activity: string; description?: string | null; createdAt: string }[];
     }> => {
         const response = await client.get(`/repair/track/${encodeURIComponent(ticketNumber)}`, {
             params: { phone },

@@ -10,6 +10,10 @@
 export * from './repair/types';
 export * from './repair/public';
 export * from './repair/admin';
+export * from './repair/quote-types';
+export * from './repair/service-types';
+export * from './repair/intake';
+export * from './repair/work-order-priority';
 
 import { repairPublicApi } from './repair/public';
 import { repairAdminApi } from './repair/admin';
