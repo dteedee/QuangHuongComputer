@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using HR.Infrastructure;
 using HR.Application.Attendance;
+using HR.Application.Commission;
 using HR.Application.Payroll;
 using HR.Application.Leave;
 using HR.Application.Statutory;
@@ -64,6 +65,10 @@ public static class DependencyInjection
         services.AddScoped<StatutoryParameterAdminService>();
         services.AddScoped<OvertimeScheduleService>();
         services.AddScoped<PitFinalizationService>();
+
+        // Hoa hồng kỹ thuật: cần IRepairCommissionSourceQuery do module Repair đăng ký.
+        services.AddScoped<CommissionDefaults>();
+        services.AddScoped<CommissionAccrualService>();
 
         return services;
     }

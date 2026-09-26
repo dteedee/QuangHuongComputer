@@ -278,6 +278,8 @@ public static class ServiceRegistration
             x.AddConsumers(typeof(Accounting.DependencyInjection).Assembly);
             x.AddConsumers(typeof(Warranty.DependencyInjection).Assembly);
             x.AddConsumers(typeof(Identity.DependencyInjection).Assembly);
+            // HR: hoa hồng kỹ thuật nghe RepairWorkOrderSettlementChangedEvent.
+            x.AddConsumers(typeof(HR.DependencyInjection).Assembly);
 
             // phase-14 step 2: custom outbox (BuildingBlocks/Messaging/Outbox/**) deleted - it was
             // dead code (grepped: 0 live callers besides itself). Its replacement,

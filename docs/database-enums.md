@@ -108,6 +108,7 @@
 | `ClaimStatus` | 0 = Pending, 1 = Approved, 2 = Rejected, 3 = Resolved, 4 = InProgress |
 | `ClaimType` | 1 = RepairAtShop, 2 = SendToManufacturer, 3 = ExchangeNew, 4 = Rejected |
 | `CodSettlementStatus` | 0 = NotApplicable, 1 = AwaitingRemittance, 2 = Remitted |
+| `CommissionStatus` | 0 = Pending, 1 = Approved, 2 = Paid, 3 = Reversed |
 | `ConditionOperator` | 1 = Eq, 2 = Gte, 3 = Lte, 4 = In, 5 = Between |
 | `ConditionType` | 1 = MinOrderValue, 2 = Category, 3 = Brand, 4 = Product, 5 = CustomerGroup, 6 = TimeOfDay, 7 = DayOfWeek, 8 = FirstOrder, 9 = Quantity |
 | `ConfigValueType` | 0 = String, 1 = Number, 2 = Boolean, 3 = Json, 4 = Secret, 5 = Url, 6 = Email, 7 = Percentage, 8 = Color |
@@ -196,7 +197,7 @@
 | `WarrantyProvider` | 1 = Manufacturer, 2 = Store |
 | `WarrantyStatus` | 0 = Active, 1 = Expired, 2 = Voided |
 
-## Cột nào lưu enum nào (114 cột)
+## Cột nào lưu enum nào (115 cột)
 
 | Module | Bảng | Cột | Enum | Kiểu cột |
 |---|---|---|---|---|
@@ -243,6 +244,7 @@
 | HR | `hr.ApprovalRequests` | `Type` | `ApprovalType` | integer |
 | HR | `hr.AttendanceRecords` | `CheckInMethod` | `CheckInMethod` | integer |
 | HR | `hr.AttendanceRecords` | `Status` | `AttendanceStatus` | integer |
+| HR | `hr.CommissionEntries` | `Status` | `CommissionStatus` | integer |
 | HR | `hr.Dependents` | `Relation` | `DependentRelation` | integer |
 | HR | `hr.EmployeeAssets` | `ConditionOnAssign` | `AssetCondition` | integer |
 | HR | `hr.EmployeeAssets` | `ConditionOnReturn` | `AssetCondition` | integer |
