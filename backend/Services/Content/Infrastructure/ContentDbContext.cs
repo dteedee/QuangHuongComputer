@@ -27,6 +27,9 @@ public class ContentDbContext : DbContext
     public DbSet<PromotionReward> PromotionRewards { get; set; } = null!;
     public DbSet<PromotionUsage> PromotionUsages { get; set; } = null!;
 
+    /// <summary>Bảng chuyển hướng URL 301/302/410 cho SEO shell (xem UrlRedirectConfiguration).</summary>
+    public DbSet<UrlRedirect> UrlRedirects { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -227,6 +230,8 @@ public class ContentDbContext : DbContext
             entity.HasIndex(e => e.CreatedAt)
                 .HasDatabaseName("IX_ContactMessage_CreatedAt");
         });
+
+        modelBuilder.ApplyConfiguration(new UrlRedirectConfiguration());
 
         // W1-11 / audit db-schema-migrations-07: module này chưa gọi
         // ConfigureCommonColumnProperties nên model của Npgsql 8 đòi timestamptz cho MỌI cột

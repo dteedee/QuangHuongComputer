@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Content.Infrastructure;
 using BuildingBlocks.Database;
+using BuildingBlocks.Seo;
+using Content.Application.Redirects;
 
 namespace Content;
 
@@ -29,6 +31,17 @@ public static class DependencyInjection
         });
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+        // Bảng chuyển hướng URL (SEO shell): bảng active giữ trong IMemoryCache, đếm lượt truy cập
+        // qua hàng đợi trong bộ nhớ + dịch vụ nền ghi theo lô, tự tạo 301 khi Catalog đổi slug.
+        services.AddMemoryCache();
+        services.AddSingleton<UrlRedirectHitQueue>();
+        services.AddSingleton<UrlRedirectTable>();
+        services.AddSingleton<IUrlRedirectResolver>(sp => sp.GetRequiredService<UrlRedirectTable>());
+        services.AddSingleton<ISlugRedirectRecorder, SlugRedirectRecorder>();
+        services.AddHostedService<UrlRedirectHitFlushService>();
+        services.AddScoped<UrlRedirectService>();
+        services.AddScoped<UrlRedirectImportService>();
 
         return services;
     }

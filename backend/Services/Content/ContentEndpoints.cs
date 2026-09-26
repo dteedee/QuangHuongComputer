@@ -19,6 +19,9 @@ public static class ContentEndpoints
     {
         var group = app.MapGroup("/api/content");
 
+        // Bảng chuyển hướng URL 301/302/410 — nhóm riêng, quyền riêng (Content.View/ManageRedirects).
+        Content.Endpoints.Redirects.UrlRedirectEndpoints.MapUrlRedirectEndpoints(app);
+
         // ==================== PUBLIC ENDPOINTS ====================
 
         // Public Posts
