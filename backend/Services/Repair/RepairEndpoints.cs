@@ -114,8 +114,18 @@ public static class RepairEndpoints
                 workOrder.PartsCost,
                 workOrder.LaborCost,
                 workOrder.TotalCost,
+                workOrder.ServiceFee,
                 workOrder.TechnicalNotes,
+                // Màn "phiếu sửa của tôi" cần id báo giá hiện hành để khách xem dòng + duyệt/từ chối.
+                workOrder.CurrentQuoteId,
+                workOrder.Priority,
+                workOrder.DeviceType,
+                workOrder.DeviceBrand,
+                workOrder.AccessoriesReceived,
                 workOrder.CreatedAt,
+                workOrder.AssignedAt,
+                workOrder.QuotedAt,
+                workOrder.ApprovedAt,
                 workOrder.StartedAt,
                 workOrder.FinishedAt
             });

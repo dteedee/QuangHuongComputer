@@ -11,6 +11,7 @@ public sealed record RepairQuoteDto(
     decimal SubtotalAmount,
     decimal LineDiscountTotal,
     decimal DiscountAmount,
+    decimal DiscountTotal,
     decimal NetAmount,
     decimal VatAmount,
     decimal VatRate,
@@ -43,6 +44,7 @@ public sealed record RepairQuoteLineDto(
     decimal LineDiscount,
     decimal GrossAmount,
     decimal AllocatedDiscount,
+    decimal TotalDiscount,
     decimal LineTotal,
     decimal VatRate,
     decimal NetAmount,
@@ -67,13 +69,14 @@ public static class RepairQuoteDtoMapper
 {
     public static RepairQuoteDto ToDto(RepairQuote q) => new(
         q.Id, q.QuoteNumber, q.WorkOrderId, q.Status.ToString(),
-        q.SubtotalAmount, q.LineDiscountTotal, q.DiscountAmount, q.NetAmount, q.VatAmount, q.VatRate,
+        q.SubtotalAmount, q.LineDiscountTotal, q.DiscountAmount, q.LineDiscountTotal + q.DiscountAmount,
+        q.NetAmount, q.VatAmount, q.VatRate,
         q.PartsCost, q.LaborCost, q.ServiceFee, q.TotalCost,
         q.EstimatedHours, q.HourlyRate, q.Description, q.Notes,
         q.ValidUntil, q.ApprovedAt, q.RejectedAt, q.RejectionReason, q.CreatedAt, q.IsExpired(),
         q.Lines.OrderBy(l => l.Sequence).Select(l => new RepairQuoteLineDto(
             l.Id, l.Sequence, l.Kind.ToString(), l.Description, l.InventoryItemId, l.ProductId, l.ServiceTypeId,
-            l.Quantity, l.UnitPrice, l.LineDiscount, l.GrossAmount, l.AllocatedDiscount, l.LineTotal,
+            l.Quantity, l.UnitPrice, l.LineDiscount, l.GrossAmount, l.AllocatedDiscount, l.LineDiscount + l.AllocatedDiscount, l.LineTotal,
             l.VatRate, l.NetAmount, l.VatAmount)).ToList());
 
     public static RepairQuotePreviewDto ToPreview(IReadOnlyList<RepairQuoteLineDraft> drafts, RepairQuotePricing p) => new(
@@ -82,5 +85,5 @@ public static class RepairQuoteDtoMapper
         drafts.Select((d, i) => new RepairQuoteLineDto(
             null, i + 1, d.Kind.ToString(), d.Description.Trim(), d.InventoryItemId, d.ProductId, d.ServiceTypeId,
             d.Quantity, d.UnitPrice, d.LineDiscount, p.LineAmounts[i].GrossAmount, p.LineAmounts[i].AllocatedDiscount,
-            p.LineAmounts[i].LineTotal, p.LineAmounts[i].VatRate, p.LineAmounts[i].NetAmount, p.LineAmounts[i].VatAmount)).ToList());
+            d.LineDiscount + p.LineAmounts[i].AllocatedDiscount, p.LineAmounts[i].LineTotal, p.LineAmounts[i].VatRate, p.LineAmounts[i].NetAmount, p.LineAmounts[i].VatAmount)).ToList());
 }
