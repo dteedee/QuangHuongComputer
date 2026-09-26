@@ -115,8 +115,9 @@ export const Footer = () => {
                     <h4 className="text-sm font-bold text-white uppercase mb-4 pb-2 border-b border-gray-800">Về Quang Hưởng</h4>
                     <ul className="space-y-0.5">
                         <FL to={ROUTES.ABOUT} label="Giới thiệu chung" />
-                        <FL to={buildPath(ROUTES.POLICY, 'news')} label="Tin tức công nghệ" />
-                        <FL to={buildPath(ROUTES.POLICY, 'promotions')} label="Tin khuyến mãi" />
+                        <FL to={ROUTES.NEWS} label="Tin tức công nghệ" />
+                        <FL to={ROUTES.PROMOTIONS} label="Khuyến mãi" />
+                        <FL to={ROUTES.FLASH_SALE} label="Flash sale" />
                         <FL to={ROUTES.RECRUITMENT} label="Tuyển dụng" />
                         <FL to={ROUTES.CONTACT} label="Liên hệ" />
                     </ul>

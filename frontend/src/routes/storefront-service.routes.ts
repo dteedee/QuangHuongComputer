@@ -19,6 +19,10 @@ const RecruitmentPage = lazy(() => import('../pages/RecruitmentPage').then((m) =
 const JobDetailPage = lazy(() => import('../pages/JobDetailPage').then((m) => ({ default: m.JobDetailPage })));
 const PolicyPage = lazy(() => import('../pages/PolicyPage').then((m) => ({ default: m.PolicyPage })));
 const PostDetailPage = lazy(() => import('../pages/PostDetailPage').then((m) => ({ default: m.PostDetailPage })));
+const NewsListingPage = lazy(() => import('../pages/news/news-listing-page'));
+const PromotionListingPage = lazy(() => import('../pages/promotions/promotion-listing-page'));
+const PromotionDetailPage = lazy(() => import('../pages/promotions/promotion-detail-page'));
+const FlashSalePage = lazy(() => import('../pages/flash-sale/flash-sale-page'));
 const ContactPage = lazy(() => import('../pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const TermsPage = lazy(() => import('../pages/TermsPage').then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import('../pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
@@ -42,7 +46,12 @@ export const storefrontServiceRoutes: RouteDef[] = [
   { path: 'tuyen-dung', element: RecruitmentPage, layout: 'storefront', seo: 'index', name: 'recruitment' },
   { path: 'tuyen-dung/:id', element: JobDetailPage, layout: 'storefront', seo: 'index', hidden: true, name: 'recruitmentDetail' },
   { path: 'chinh-sach/:type', element: PolicyPage, layout: 'storefront', seo: 'index', hidden: true, name: 'policy' },
+  { path: 'tin-tuc', element: NewsListingPage, layout: 'storefront', seo: 'index', name: 'news' },
   { path: 'tin-tuc/:slug', element: PostDetailPage, layout: 'storefront', seo: 'index', hidden: true, name: 'newsDetail' },
+  // Khuyến mãi + flash sale có trang riêng (trước chỉ là một danh sách trong PolicyPage).
+  { path: 'khuyen-mai', element: PromotionListingPage, layout: 'storefront', seo: 'index', name: 'promotions' },
+  { path: 'khuyen-mai/:slug', element: PromotionDetailPage, layout: 'storefront', seo: 'index', hidden: true, name: 'promotionDetail' },
+  { path: 'flash-sale', element: FlashSalePage, layout: 'storefront', seo: 'index', name: 'flashSale' },
   { path: 'lien-he', element: ContactPage, layout: 'storefront', seo: 'index', name: 'contact' },
   { path: 'dieu-khoan', element: TermsPage, layout: 'storefront', seo: 'index', name: 'terms' },
   { path: 'bao-mat', element: PrivacyPage, layout: 'storefront', seo: 'index', name: 'privacy' },
@@ -65,9 +74,15 @@ export const storefrontServiceRedirects: RedirectDef[] = [
   { from: 'privacy', to: ROUTES.PRIVACY, layout: 'storefront' },
   { from: 'about', to: ROUTES.ABOUT, layout: 'storefront' },
   { from: 'stores', to: ROUTES.STORES, layout: 'storefront' },
-  // Old convenience redirects (pre-existing) — now two hops (old -> /policy/:type old path -> new
-  // canonical) is avoided by pointing straight at the final canonical URL.
-  { from: 'promotion', to: '/chinh-sach/promotions', layout: 'storefront' },
-  { from: 'promotions', to: '/chinh-sach/promotions', layout: 'storefront' },
-  { from: 'news', to: '/chinh-sach/news', layout: 'storefront' },
+  // Old convenience redirects (pre-existing) — pointed straight at the final canonical URL (one hop).
+  { from: 'promotion', to: ROUTES.PROMOTIONS, layout: 'storefront' },
+  { from: 'promotions', to: ROUTES.PROMOTIONS, layout: 'storefront' },
+  { from: 'news', to: ROUTES.NEWS, layout: 'storefront' },
+  // The two "policies" that were really post lists. Static segments outrank `chinh-sach/:type`
+  // in React Router, so these win over PolicyPage; the SEO shell answers the same paths with 301
+  // (`ContentPageSeoProvider.LegacyListRedirects`).
+  { from: 'chinh-sach/promotions', to: ROUTES.PROMOTIONS, layout: 'storefront' },
+  { from: 'chinh-sach/khuyen-mai', to: ROUTES.PROMOTIONS, layout: 'storefront' },
+  { from: 'chinh-sach/news', to: ROUTES.NEWS, layout: 'storefront' },
+  { from: 'chinh-sach/tin-tuc', to: ROUTES.NEWS, layout: 'storefront' },
 ];

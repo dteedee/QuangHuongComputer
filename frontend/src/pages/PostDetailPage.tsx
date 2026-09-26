@@ -1,5 +1,5 @@
 
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
 import { Loader2, ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
@@ -43,6 +43,9 @@ export const PostDetailPage = () => {
         );
     }
 
+    // Promotion posts live at `/khuyen-mai/:slug` (the SEO shell 301s this URL there too).
+    if (post.type === 'Promotion') return <Navigate to={buildPath(ROUTES.PROMOTION_DETAIL, post.slug)} replace />;
+
     return (
         <div className="bg-gray-50 min-h-screen pb-12 font-sans">
             <SEO
@@ -58,7 +61,7 @@ export const PostDetailPage = () => {
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Link to={ROUTES.HOME} className="hover:text-accent transition-colors">Trang chủ</Link>
                         <span>/</span>
-                        <Link to={buildPath(ROUTES.POLICY, 'tin-tuc')} className="hover:text-accent transition-colors">Tin tức & Blog</Link>
+                        <Link to={ROUTES.NEWS} className="hover:text-accent transition-colors">Tin tức</Link>
                         <span>/</span>
                         <span className="text-gray-900 font-medium truncate max-w-[200px] md:max-w-md">{post.title}</span>
                     </div>
@@ -72,7 +75,7 @@ export const PostDetailPage = () => {
                         <img
                             src={
                                 post.thumbnailUrl ||
-                                `/images/placeholders/${post.type === 'Promotion' ? 'promo' : 'news'}-${((post.slug.length + (post.title.codePointAt(0) || 0)) % (post.type === 'Promotion' ? 6 : 2)) + 1}.png`
+                                `/images/placeholders/news-${((post.slug.length + (post.title.codePointAt(0) || 0)) % 2) + 1}.png`
                             }
                             alt={post.title}
                             className="w-full h-full object-cover"
@@ -134,11 +137,11 @@ export const PostDetailPage = () => {
                 {/* Back button */}
                 <div className="mt-6">
                     <Link
-                        to={post.type === 'Promotion' ? buildPath(ROUTES.POLICY, 'khuyen-mai') : buildPath(ROUTES.POLICY, 'tin-tuc')}
+                        to={ROUTES.NEWS}
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-accent font-medium text-sm transition-colors cursor-pointer group"
                     >
                         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                        Quay lại danh sách {post.type === 'Promotion' ? 'khuyến mãi' : 'tin tức'}
+                        Quay lại danh sách tin tức
                     </Link>
                 </div>
             </div>
