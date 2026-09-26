@@ -4,7 +4,8 @@ import { Search, ArrowLeft, Wrench, PhoneCall } from 'lucide-react';
 import { ROUTES } from '../../routes/route-paths';
 import { repairPublicApi } from '../../api/repair/public';
 import { getStatusColor, getWorkOrderStatusLabel, type WorkOrderStatus } from '../../api/repair/types';
-import { formatCurrency } from '../../utils/format';
+import { RepairQuoteBreakdown } from '../../components/repair/repair-quote-breakdown';
+import { breakdownFromTracked } from '../../components/repair/repair-quote-breakdown-adapters';
 import { AnimatedSection } from '../../components/motion/animated-section';
 import SEO from '../../components/SEO';
 
@@ -119,10 +120,20 @@ export const RepairTrackingPage = () => {
                                             {getWorkOrderStatusLabel(result.status as WorkOrderStatus)}
                                         </span>
                                     </div>
-                                    {result.quote?.totalAmount != null && (
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-sm text-gray-500">Báo giá</span>
-                                            <span className="font-semibold text-gray-900">{formatCurrency(result.quote.totalAmount)}</span>
+                                    {result.quote && (
+                                        <div className="mb-4 rounded-xl border border-gray-100 p-4">
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-gray-900">Báo giá {result.quote.quoteNumber}</span>
+                                                <span className="text-xs text-gray-500">
+                                                    Hiệu lực đến {new Date(result.quote.validUntil).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+                                                </span>
+                                            </div>
+                                            <RepairQuoteBreakdown {...breakdownFromTracked(result.quote)} caption="Chi tiết báo giá" />
+                                            {result.quote.status === 'Pending' && (
+                                                <p className="mt-3 text-xs text-gray-500">
+                                                    Đăng nhập tài khoản đã đặt lịch, vào "Phiếu sửa chữa của tôi" để đồng ý hoặc từ chối báo giá.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                     {result.timeline && result.timeline.length > 0 && (
@@ -131,9 +142,9 @@ export const RepairTrackingPage = () => {
                                                 <li key={i} className="text-sm flex gap-3">
                                                     <span className="w-2 h-2 mt-1.5 rounded-full bg-accent shrink-0" />
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{t.status}</p>
-                                                        <p className="text-gray-400 text-xs">{new Date(t.timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
-                                                        {t.note && <p className="text-gray-500 text-xs mt-0.5">{t.note}</p>}
+                                                        <p className="font-medium text-gray-900">{t.activity}</p>
+                                                        <p className="text-gray-400 text-xs">{new Date(t.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
+                                                        {t.description && <p className="text-gray-500 text-xs mt-0.5">{t.description}</p>}
                                                     </div>
                                                 </li>
                                             ))}

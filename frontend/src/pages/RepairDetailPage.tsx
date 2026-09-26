@@ -1,14 +1,15 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { repairApi, type WorkOrder, type RepairQuote, type WorkOrderStatus, getStatusColor, getWorkOrderStatusLabel } from '../api/repair';
-import { formatCurrency } from '../utils/format';
+import { RepairQuoteBreakdown } from '../components/repair/repair-quote-breakdown';
+import { breakdownFromQuote } from '../components/repair/repair-quote-breakdown-adapters';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useCompanyInfo } from '../hooks/use-company-info';
 import { ROUTES } from '../routes/route-paths';
 import {
     ArrowLeft, Clock, CheckCircle, XCircle, Play, AlertCircle,
-    FileText, Wrench, Package, DollarSign, Calendar, User, MessageSquare
+    FileText, Calendar, User, MessageSquare
 } from 'lucide-react';
 
 // W3-15: see `RepairPage.tsx` — same fix, delegate to the shared label map.
@@ -168,30 +169,7 @@ export const RepairDetailPage = () => {
 
                     {/* Quote details */}
                     <div className="bg-white rounded-2xl p-6 mb-6 border border-amber-100">
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span className="text-gray-600 font-medium flex items-center gap-2">
-                                    <Package size={16} /> Chi phí linh kiện
-                                </span>
-                                <span className="font-bold text-gray-900">{formatCurrency(quote.partsCost)}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span className="text-gray-600 font-medium flex items-center gap-2">
-                                    <Wrench size={16} /> Chi phí nhân công
-                                </span>
-                                <span className="font-bold text-gray-900">{formatCurrency(quote.laborCost)}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span className="text-gray-600 font-medium flex items-center gap-2">
-                                    <DollarSign size={16} /> Phí dịch vụ
-                                </span>
-                                <span className="font-bold text-gray-900">{formatCurrency(quote.serviceFee)}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-4 bg-gray-900 rounded-xl px-4 -mx-2">
-                                <span className="text-white font-black uppercase tracking-wider">Tổng cộng</span>
-                                <span className="text-2xl font-black text-accent">{formatCurrency(quote.totalCost)}</span>
-                            </div>
-                        </div>
+                        <RepairQuoteBreakdown {...breakdownFromQuote(quote)} caption="Chi tiết báo giá sửa chữa" />
 
                         {quote.description && (
                             <div className="mt-6 p-4 bg-gray-50 rounded-xl">
@@ -235,24 +213,10 @@ export const RepairDetailPage = () => {
                         <FileText size={20} className="text-accent" />
                         Thông tin báo giá
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-xl">
-                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Linh kiện</p>
-                            <p className="font-bold text-gray-900">{formatCurrency(quote.partsCost)}</p>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-xl">
-                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Nhân công</p>
-                            <p className="font-bold text-gray-900">{formatCurrency(quote.laborCost)}</p>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-xl">
-                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Phí dịch vụ</p>
-                            <p className="font-bold text-gray-900">{formatCurrency(quote.serviceFee)}</p>
-                        </div>
-                        <div className="p-4 bg-accent rounded-xl">
-                            <p className="text-xs text-red-100 font-bold uppercase mb-1">Tổng cộng</p>
-                            <p className="font-black text-white text-lg">{formatCurrency(quote.totalCost)}</p>
-                        </div>
-                    </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                        Mã báo giá {quote.quoteNumber} · {quote.status === 'Approved' ? 'Bạn đã đồng ý' : quote.status === 'Rejected' ? 'Bạn đã từ chối' : quote.status === 'Expired' ? 'Đã hết hạn' : 'Chờ duyệt'}
+                    </p>
+                    <RepairQuoteBreakdown {...breakdownFromQuote(quote)} caption="Chi tiết báo giá sửa chữa" />
                 </div>
             )}
 
