@@ -28,12 +28,17 @@ public partial class Order
                 Quantity: item.Quantity,
                 LineDiscount: item.LineDiscount,
                 VatRate: item.VatRate > 0m ? item.VatRate : TaxRate,
-                IsGift: item.IsGift));
+                IsGift: item.IsGift,
+                ExcludeFromOrderDiscount: item.BundleId.HasValue));
         }
 
         var shippingVatRate = ShippingVatRate > 0m ? ShippingVatRate : TaxRate;
+        // Bất biến: DiscountAmount = TỔNG giảm (giảm riêng của dòng + giảm cấp đơn). Phần cấp đơn
+        // đem phân bổ = tổng − giảm riêng của dòng; nếu không, tính lại lần hai (đổi phí ship…) sẽ
+        // phân bổ giảm giá combo thêm một lần nữa.
+        var orderLevelDiscount = Math.Max(0m, DiscountAmount - SumLineDiscounts());
         var totals = OrderTotalsCalculator.Compute(
-            inputs, DiscountAmount, ShippingAmount, ShippingDiscount, shippingVatRate);
+            inputs, orderLevelDiscount, ShippingAmount, ShippingDiscount, shippingVatRate);
 
         SubtotalAmount = totals.Subtotal;
         // Clamp ngược về entity: giảm giá không bao giờ vượt tiền hàng.
@@ -55,7 +60,7 @@ public partial class Order
     {
         RequireMutable("áp mã giảm giá");
         CouponCode = couponCode;
-        DiscountAmount = discountAmount;
+        DiscountAmount = discountAmount + SumLineDiscounts();
         CouponSnapshot = couponSnapshot;
         DiscountReason = discountReason;
         CalculateAmounts();
@@ -72,12 +77,15 @@ public partial class Order
         if (discountAmount < 0) throw new ArgumentException("discountAmount không được âm", nameof(discountAmount));
         if (shippingDiscount < 0) throw new ArgumentException("shippingDiscount không được âm", nameof(shippingDiscount));
 
-        DiscountAmount = discountAmount;
+        DiscountAmount = discountAmount + SumLineDiscounts();
         ShippingDiscount = shippingDiscount;
         AppliedPromotionsJson = appliedPromotionsJson;
         if (!string.IsNullOrEmpty(couponCode)) CouponCode = couponCode;
         CalculateAmounts();
     }
+
+    /// <summary>Tổng giảm giá RIÊNG của các dòng (giá combo) — phần không phải giảm cấp đơn.</summary>
+    private decimal SumLineDiscounts() => Items.Where(i => !i.IsGift).Sum(i => i.LineDiscount);
 
     /// <summary>D01 §3.3 — thuế suất hiệu lực của phí ship, resolve theo ngày ở tầng ứng dụng.</summary>
     public void SetShippingVatRate(decimal effectiveRate)

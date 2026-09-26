@@ -100,8 +100,21 @@ public record CartDto(
     List<CartItemDto> Items,
     // D01 §6 — thuế tách theo NHÓM THUẾ SUẤT. Giỏ có thể trộn hàng 8% và 10%, khi đó
     // nhãn "Trong đó VAT (8%)" là sai; frontend đọc mảng này và KHÔNG tự tính thuế.
-    IReadOnlyList<VatBucket>? VatBreakdown = null
+    IReadOnlyList<VatBucket>? VatBreakdown = null,
+    // Combo trong giỏ: nhóm nào được giá combo, nhóm nào vỡ/hết hạn và vì sao.
+    IReadOnlyList<CartBundleGroupDto>? Bundles = null
 );
+
+/// <summary>Một nhóm combo trong giỏ (xem <c>BundleCartPricer</c>).</summary>
+public record CartBundleGroupDto(
+    Guid BundleId,
+    string Name,
+    bool IsApplied,
+    string? Reason,
+    int Sets,
+    decimal ListTotal,
+    decimal BundleTotal,
+    decimal Discount);
 
 public record CartItemDto(
     Guid ProductId,
@@ -114,8 +127,16 @@ public record CartItemDto(
     // Biến thể sản phẩm — snapshot lịch sử; null nếu sản phẩm không có biến thể.
     Guid? VariantId = null,
     string? VariantName = null,
-    string? VariantSku = null
+    string? VariantSku = null,
+    // Combo: dòng thuộc nhóm nào, giảm combo chia về dòng, thành tiền sau giảm combo.
+    Guid? BundleId = null,
+    string? BundleName = null,
+    decimal LineDiscount = 0m,
+    decimal LineTotal = 0m
 );
+
+/// <summary>POST /api/sales/cart/bundles — thêm <c>Quantity</c> bộ combo vào giỏ.</summary>
+public record AddBundleToCartDto(Guid BundleId, int Quantity = 1);
 
 public record AddToCartDto(
     Guid ProductId,
@@ -138,8 +159,12 @@ public record GuestCheckoutDto(
     List<GuestCheckoutItemDto> Items,
     string? CouponCode = null,
     string? Notes = null,
-    string? PaymentMethod = null
+    string? PaymentMethod = null,
+    // Combo trong giỏ vãng lai (localStorage): server tự nạp món + giá của combo.
+    List<GuestCheckoutBundleDto>? Bundles = null
 );
+
+public record GuestCheckoutBundleDto(Guid BundleId, int Quantity);
 
 public record GuestCheckoutItemDto(
     Guid ProductId,

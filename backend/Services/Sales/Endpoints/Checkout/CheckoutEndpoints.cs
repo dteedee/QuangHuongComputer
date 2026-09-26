@@ -70,6 +70,8 @@ public static class CheckoutEndpoints
         app.MapPost("/api/sales/public/guest-checkout", async (
             GuestCheckoutDto model,
             SalesDbContext salesDb,
+            Catalog.Infrastructure.CatalogDbContext catalogDb,
+            InventoryModule.Infrastructure.InventoryDbContext inventoryDb,
             CheckoutOrchestrator orchestrator,
             HttpContext http,
             CancellationToken ct) =>
@@ -78,7 +80,9 @@ public static class CheckoutEndpoints
 
             var cart = await CheckoutCartResolver.ForGuestAsync(salesDb, anonymousId, ct);
             var sync = CheckoutCartResolver.SyncLines(cart,
-                model.Items.Select(i => (i.ProductId, (Guid?)null, i.Quantity)).ToList());
+                (model.Items ?? new()).Select(i => (i.ProductId, (Guid?)null, i.Quantity)).ToList(),
+                allowEmpty: model.Bundles is { Count: > 0 });
+            sync ??= await CheckoutCartResolver.SyncBundlesAsync(cart, model.Bundles, catalogDb, inventoryDb, ct);
             if (sync != null) return Results.BadRequest(new { Error = sync });
             await salesDb.SaveChangesAsync(ct);
 

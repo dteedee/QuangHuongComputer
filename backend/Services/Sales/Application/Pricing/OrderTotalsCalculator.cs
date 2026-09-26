@@ -46,7 +46,8 @@ public static class OrderTotalsCalculator
             var line = input[i];
             var gross = RoundDong(line.UnitPriceIncludingVat * line.Quantity);
             var lineDiscount = Clamp(line.LineDiscount, gross);
-            basis[i] = new DiscountLine(line.Sequence, gross - lineDiscount, line.IsGift);
+            // Dòng combo (đã giảm giá combo) KHÔNG gánh thêm giảm giá cấp đơn — chống giảm chồng.
+            basis[i] = new DiscountLine(line.Sequence, gross - lineDiscount, line.IsGift || line.ExcludeFromOrderDiscount);
         }
 
         // 2. Phân bổ giảm giá cấp đơn — 3 chốt chặn của D01 §3.2 nằm trong allocator dùng chung.
@@ -164,13 +165,15 @@ public static class OrderTotalsCalculator
 /// <param name="LineDiscount">Giảm giá riêng của dòng (khuyến mãi theo sản phẩm).</param>
 /// <param name="VatRate">Thuế suất hiệu lực của dòng (<c>VatRateResolver.Resolve</c>). ≤ 0 → không tách thuế.</param>
 /// <param name="IsGift">Hàng khuyến mại không thu tiền — loại khỏi cơ sở phân bổ giảm giá.</param>
+/// <param name="ExcludeFromOrderDiscount">Dòng combo đã áp giá combo — không nhận giảm giá cấp đơn.</param>
 public readonly record struct TotalsLineInput(
     int Sequence,
     decimal UnitPriceIncludingVat,
     int Quantity,
     decimal LineDiscount,
     decimal VatRate,
-    bool IsGift);
+    bool IsGift,
+    bool ExcludeFromOrderDiscount = false);
 
 /// <summary>Kết quả của một dòng — đúng bộ số mà <c>OrderItems</c> phải snapshot (D01 §4).</summary>
 public sealed record TotalsLineResult(

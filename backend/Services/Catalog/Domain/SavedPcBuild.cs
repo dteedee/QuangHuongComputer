@@ -2,7 +2,15 @@ namespace Catalog.Domain;
 
 using BuildingBlocks.SharedKernel;
 
-public class SavedPcBuild : Entity<Guid>
+/// <summary>
+/// Cấu hình PC đã lưu. Hai loại dùng chung bảng:
+///  · build của KHÁCH (<see cref="CustomerId"/> có giá trị) — riêng tư, xem theo mã chia sẻ;
+///  · "Cấu hình mẫu" của CỬA HÀNG (<see cref="CustomerId"/> = null, có <see cref="UseCaseTag"/>) —
+///    bản SAO do nhân viên tạo từ một build đã lưu (<see cref="CreateGalleryCopy"/>). Build của khách
+///    không bao giờ bị sửa hay công khai; các cờ gallery chỉ đổi được qua API quản trị.
+/// Quy tắc hiển thị công khai: <see cref="SavedPcBuildGallery.IsPubliclyVisible"/>.
+/// </summary>
+public partial class SavedPcBuild : Entity<Guid>
 {
     public Guid? CustomerId { get; private set; }
     public string BuildCode { get; private set; }

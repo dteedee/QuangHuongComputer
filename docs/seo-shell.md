@@ -188,6 +188,15 @@ the anonymous `GET /api/promotions/{id}` (draft/paused -> 404; staff use `GET /a
 and these providers — same D10 reasoning as `Post.PublishedPredicate`. Empty listing pages answer 200
 (the SPA has a real empty state) with `noindex,follow`, never a 404. Tests: `Tests/UnitTests/Seo/`.
 
+## Catalog: sample builds gallery
+
+`PcBuildGallerySeoProvider` (`Services/Catalog/Seo/`) owns `/cau-hinh-mau`. Predicate:
+`SavedPcBuild.IsPubliclyVisible` (the same one `GET /api/catalog/pc-builder/gallery` uses). Empty
+gallery -> 200 `noindex,follow`, not in the sitemap (same as `/flash-sale`); otherwise `index,follow`,
+BreadcrumbList + ItemList (items link to `/cau-hinh-mau#{buildCode}` — each card carries that id),
+sitemap entry `weekly`. Filters (`?tag=`, `?budget=`) are not separate pages: canonical is always
+the clean path. Tests: `Tests/UnitTests/Catalog/Gallery/`.
+
 ## Known gap: Repair module pages
 
 `/bao-hanh`, `/sua-chua`, `/sua-chua/:id` are real, "index"-flagged public pages

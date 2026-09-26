@@ -40,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<CheckoutOrchestrator>();
         services.AddScoped<InventoryReservationService>();
         services.AddScoped<LineVatProfileResolver>();
+        // Combo: giá combo cho giỏ + chốt đơn, một nguồn duy nhất.
+        services.AddScoped<Sales.Application.Pricing.Bundles.BundleCartPricingService>();
 
         // Nguồn giá mặc định: giá niêm yết trong Catalog. W2-19 đăng ký thêm nguồn giá báo giá.
         services.AddScoped<IOrderPriceSource, CatalogOrderPriceSource>();

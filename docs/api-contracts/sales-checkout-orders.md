@@ -26,6 +26,10 @@ Quy ước lỗi/paging/validation: `docs/api-conventions.md`. Quyền: `docs/pe
 | POST | `/api/sales/cart/set-shipping` | đăng nhập | |
 | DELETE | `/api/sales/cart/clear` | đăng nhập | |
 | POST | `/api/sales/cart/merge` | đăng nhập | Gộp giỏ vãng lai (cookie `qh_aid`) vào tài khoản + gắn đơn cũ |
+| POST | `/api/sales/cart/bundles` `{bundleId, quantity}` | đăng nhập | Thêm `quantity` bộ combo (1-10) thành MỘT nhóm dòng (`bundleId`); chặn combo tắt/hết hạn/món gỡ web/không đủ hàng |
+| DELETE | `/api/sales/cart/bundles/{bundleId}` | đăng nhập | Gỡ cả nhóm combo |
+| PUT | `/api/sales/cart/bundles/{bundleId}/items/{productId}` `{quantity}` | đăng nhập | Đổi số lượng một món ⇒ **combo vỡ**, các món về dòng lẻ, giá về giá lẻ |
+| DELETE | `/api/sales/cart/bundles/{bundleId}/items/{productId}` | đăng nhập | Bỏ một món ⇒ **combo vỡ**, món còn lại về giá lẻ |
 | GET | `/api/sales/public/cart` | công khai | Giỏ khách vãng lai theo cookie |
 | POST | `/api/sales/public/cart/items` | công khai | |
 
@@ -158,3 +162,22 @@ số tiền xem trước khớp số tiền thật. Trả `subtotal`, `discountT
 `PaymentStatus = Paid` **hoặc** `Status = Completed`, và **không** tính khi đơn `Cancelled`
 hoặc `PaymentStatus = Refunded`; `NetAmount(total, refunded)` trừ tiền đã hoàn và không âm.
 W2-10 (`/admin/stats`), W2-16 (Reporting) và W2-14 (kế toán) phải dùng lại, không tự viết điều kiện.
+
+## Combo (giá combo tính ở server)
+
+- Dòng combo mang `bundleId`/`bundleName`; không gộp với dòng lẻ cùng sản phẩm. `DELETE
+  /cart/items/{productId}` xoá dòng lẻ trước, chỉ khi sản phẩm chỉ nằm trong combo mới xoá dòng
+  combo (và combo vỡ).
+- `GET /api/sales/cart` thêm: mỗi dòng `bundleId, bundleName, lineDiscount, lineTotal` (sau giảm
+  combo, trước coupon) và mảng `bundles[{bundleId, name, isApplied, reason, sets, listTotal,
+  bundleTotal, discount}]`. `subtotalAmount/discountAmount/totalAmount` đã gồm giảm combo.
+- Nhóm chỉ được giá combo khi: combo đang bật + trong hạn, nhóm có đúng các món của combo với cùng
+  số bộ k ≥ 1, còn đủ hàng (giỏ) và giá combo < giá lẻ hiện hành. Không đủ ⇒ `isApplied=false` +
+  `reason`, các dòng tính như dòng lẻ (lúc chốt đơn cũng vậy — không lỗi, không giảm).
+- Tiền giảm chia về dòng bằng allocator số dư lớn nhất dùng chung (D01 §3.2) và lưu ở
+  `OrderItem.LineDiscount` (+ `BundleId`, `BundleName`) ⇒ VAT theo dòng vẫn đúng, Σ khớp tổng đơn.
+- **Không giảm chồng:** dòng đã được giá combo bị loại khỏi giỏ đưa cho `PricingEngine`, khỏi tạm
+  tính của coupon (`apply-coupon` và lúc chốt đơn) và khỏi phân bổ giảm giá cấp đơn
+  (`TotalsLineInput.ExcludeFromOrderDiscount`). `Order.DiscountAmount` = tổng giảm (combo + cấp đơn).
+- Khách vãng lai: `POST /api/sales/public/guest-checkout` nhận thêm `bundles: [{bundleId,
+  quantity}]` (món, số lượng, giá do server nạp); `items` có thể rỗng khi giỏ chỉ có combo.

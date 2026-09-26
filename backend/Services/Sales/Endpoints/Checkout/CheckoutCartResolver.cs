@@ -52,9 +52,11 @@ internal static class CheckoutCartResolver
     /// Giá truyền vào là 0 — giá thật do orchestrator ghi đè ngay sau đó.
     /// Trả về thông báo lỗi nếu danh sách không hợp lệ.
     /// </summary>
-    public static string? SyncLines(Cart cart, IReadOnlyList<(Guid ProductId, Guid? VariantId, int Quantity)> lines)
+    public static string? SyncLines(Cart cart, IReadOnlyList<(Guid ProductId, Guid? VariantId, int Quantity)> lines,
+        bool allowEmpty = false)
     {
-        if (lines == null || lines.Count == 0)
+        lines ??= Array.Empty<(Guid, Guid?, int)>();
+        if (lines.Count == 0 && !allowEmpty)
             return "Đơn hàng phải có ít nhất một sản phẩm";
 
         foreach (var line in lines)
@@ -74,5 +76,34 @@ internal static class CheckoutCartResolver
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Giỏ vãng lai: thêm các combo khách gửi kèm (chỉ <c>bundleId</c> + số bộ). Món, số lượng và
+    /// giá đều do server nạp từ Catalog — client không quyết định được gì về tiền.
+    /// Gọi SAU <see cref="SyncLines"/> (nó xoá sạch giỏ trước).
+    /// </summary>
+    public static async Task<string?> SyncBundlesAsync(
+        Cart cart,
+        IReadOnlyList<GuestCheckoutBundleDto>? bundles,
+        Catalog.Infrastructure.CatalogDbContext catalogDb,
+        InventoryModule.Infrastructure.InventoryDbContext inventoryDb,
+        CancellationToken ct)
+    {
+        if (bundles == null || bundles.Count == 0) return null;
+        if (bundles.Select(b => b.BundleId).Distinct().Count() != bundles.Count)
+            return "Mỗi combo chỉ được gửi một lần";
+
+        foreach (var request in bundles)
+        {
+            var (bundle, error) = await Sales.Application.Pricing.Bundles.BundleCartComponentsLoader.LoadAsync(
+                catalogDb, inventoryDb, request.BundleId, request.Quantity, cart, ct);
+            if (bundle == null) return error;
+            cart.AddBundle(bundle.BundleId, bundle.Name, bundle.Components, request.Quantity);
+        }
+
+        return cart.Items.Any(i => i.Quantity > MaxQuantityPerLine)
+            ? $"Số lượng mỗi sản phẩm tối đa {MaxQuantityPerLine}"
+            : null;
     }
 }

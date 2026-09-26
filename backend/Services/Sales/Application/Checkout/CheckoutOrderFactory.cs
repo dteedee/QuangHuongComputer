@@ -25,9 +25,13 @@ internal static class CheckoutOrderFactory
         var items = new List<OrderItem>();
         var sequence = 0;
 
-        foreach (var cartItem in cart.Items.Where(i => !i.IsGift))
+        var payable = cart.Items.Where(i => !i.IsGift).ToList();
+        for (var index = 0; index < payable.Count; index++)
         {
+            var cartItem = payable[index];
             var profile = vatProfiles.For(cartItem.ProductId);
+            // Combo: phần giảm đã chia về dòng; nhóm KHÔNG đủ điều kiện thì dòng về giá lẻ (không gắn combo).
+            var bundleApplied = pricing.Bundles?.IsLocked(index) == true;
             snapshots.Products.TryGetValue(cartItem.ProductId, out var product);
             var variant = ResolveVariant(snapshots, cartItem.VariantId);
 
@@ -45,7 +49,10 @@ internal static class CheckoutOrderFactory
                 vatReductionEligible: profile.ReductionEligible,
                 vatRate: profile.EffectiveRate,
                 unitName: profile.UnitName,
-                sequence: ++sequence));
+                sequence: ++sequence,
+                lineDiscount: bundleApplied ? pricing.Bundles!.DiscountFor(index) : 0m,
+                bundleId: bundleApplied ? cartItem.BundleId : null,
+                bundleName: bundleApplied ? cartItem.BundleName : null));
         }
 
         // Hàng tặng: giá 0, KHÔNG gánh giảm giá, nhưng vẫn phải trừ tồn và hiện trên hoá đơn

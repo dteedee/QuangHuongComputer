@@ -13,10 +13,14 @@ const ComparePage = lazy(() => import('../pages/ComparePage').then((m) => ({ def
 const BuildPcPage = lazy(() => import('../pages/build-pc/build-pc-page').then((m) => ({ default: m.BuildPcPage })));
 const BuildPcSharedViewPage = lazy(() =>
   import('../pages/build-pc/build-pc-shared-view-page').then((m) => ({ default: m.BuildPcSharedViewPage })));
+const PcBuildGalleryPage = lazy(() =>
+  import('../pages/pc-build-gallery/pc-build-gallery-page').then((m) => ({ default: m.PcBuildGalleryPage })));
 
 export const storefrontPcbuilderRoutes: RouteDef[] = [
   { path: 'so-sanh', element: ComparePage, layout: 'storefront', seo: 'index', name: 'compare' },
   { path: 'xay-dung-cau-hinh', element: BuildPcPage, layout: 'storefront', seo: 'index', name: 'pcBuilder' },
+  // Gallery "Cấu hình PC mẫu" — SEO shell: Catalog/Seo/PcBuildGallerySeoProvider.cs.
+  { path: 'cau-hinh-mau', element: PcBuildGalleryPage, layout: 'storefront', seo: 'index', name: 'pcBuildGallery' },
   {
     path: 'xay-dung-cau-hinh/:code', element: BuildPcSharedViewPage, layout: 'storefront',
     seo: 'noindex', hidden: true, name: 'pcBuilderDetail',

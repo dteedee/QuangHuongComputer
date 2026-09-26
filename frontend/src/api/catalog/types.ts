@@ -245,22 +245,53 @@ export interface ProductDetailBundle extends Product {
     stockByBranch?: StockByBranch[];
 }
 
+/** Một ảnh đánh giá — chỉ URL do kho media của cửa hàng sinh ra (`POST /catalog/reviews/photos`). */
+export interface ReviewPhoto {
+    url: string;
+    thumbnailUrl: string;
+}
+
+/** "Phản hồi từ Quang Hưởng" — không kèm danh tính nhân viên. */
+export interface ReviewReply {
+    text: string;
+    repliedAt?: string | null;
+}
+
+/** Row shape of `GET /catalog/products/{id}/reviews` (ReviewView). */
 export interface ProductReview {
     id: string;
     productId: string;
     customerId: string;
     rating: number;
-    title?: string;
+    title?: string | null;
     comment: string;
+    pros?: string | null;
+    cons?: string | null;
     isVerifiedPurchase: boolean;
     isApproved: boolean;
     helpfulCount: number;
-    approvedAt?: string;
-    approvedBy?: string;
-    imageUrls?: string;
-    videoUrl?: string;
+    images?: ReviewPhoto[];
+    videoUrl?: string | null;
     createdAt: string;
-    updatedAt?: string;
+    reply?: ReviewReply | null;
+}
+
+/** Body of `POST /catalog/products/{id}/reviews`. */
+export interface CreateProductReviewRequest {
+    rating: number;
+    comment: string;
+    title?: string;
+    photos?: ReviewPhoto[];
+    videoUrl?: string;
+    pros?: string;
+    cons?: string;
+}
+
+/** Row of `GET /catalog/reviews/admin/list`. */
+export interface AdminReviewRow {
+    review: ProductReview;
+    productName?: string | null;
+    repliedBy?: string | null;
 }
 
 export interface ProductAttribute {

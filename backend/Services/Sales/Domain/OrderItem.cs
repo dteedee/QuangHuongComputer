@@ -61,6 +61,13 @@ public class OrderItem : Entity<Guid>
     public bool IsGift { get; private set; }
     public string? AppliedPromotionCode { get; private set; }
 
+    /// <summary>
+    /// Dòng thuộc combo ĐÃ ĐƯỢC ÁP giá combo lúc chốt đơn. Phần giảm của combo nằm ở
+    /// <see cref="LineDiscount"/>; dòng combo KHÔNG nhận thêm giảm giá cấp đơn (coupon/khuyến mãi).
+    /// </summary>
+    public Guid? BundleId { get; private set; }
+    public string? BundleName { get; private set; }
+
     public OrderItem(
         Guid productId,
         string productName,
@@ -78,7 +85,9 @@ public class OrderItem : Entity<Guid>
         bool vatReductionEligible = true,
         decimal vatRate = 0m,
         string? unitName = null,
-        int sequence = 0)
+        int sequence = 0,
+        Guid? bundleId = null,
+        string? bundleName = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -102,6 +111,8 @@ public class OrderItem : Entity<Guid>
         VatRate = vatRate;
         UnitName = unitName;
         Sequence = sequence;
+        BundleId = isGift ? null : bundleId;
+        BundleName = BundleId.HasValue ? bundleName : null;
     }
 
     protected OrderItem() { }

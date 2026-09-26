@@ -1,251 +1,140 @@
 import { useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, MessageSquare, Star, X } from 'lucide-react';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MessageSquare } from 'lucide-react';
 import {
-  Badge, Button, Card, CardBody, Combobox, PageHeader, QueryBoundary, Select, SkeletonText,
-  StatCard, StatusBadge, Tab, TabList, TabPanel, Tabs, notify,
+  Card, CardBody, DataTable, Input, PageHeader, Pagination, Select, StatCard, notify,
 } from '../../../components/ui';
-import { Can } from '../../../components/Can';
 import { usePrompt } from '../../../context/ConfirmContext';
+import { usePermissions } from '../../../hooks/usePermissions';
 import { PERMISSIONS } from '../../../constants/permissions';
 import { catalogAdminApi } from '../../../api/catalog/admin';
+import type { AdminReviewRow } from '../../../api/catalog/types';
 import { queryKeys } from '../../../lib/query-keys';
-import { formatDateTime } from '../../admin/products/admin-formatting';
+import { normalizeApiError } from '../../../lib/api-error';
+import { reviewManagementColumns } from './reviews/review-management-columns';
+import { ReviewReplyDialog } from './reviews/review-reply-dialog';
 
-const RATINGS = [
-  { value: '', label: 'Mọi số sao' },
-  ...[5, 4, 3, 2, 1].map((n) => ({ value: String(n), label: `${n} sao` })),
+type StatusFilter = 'pending' | 'approved' | 'all';
+type RepliedFilter = '' | 'true' | 'false';
+
+const STATUS_OPTIONS = [
+  { value: 'pending', label: 'Chờ duyệt' },
+  { value: 'approved', label: 'Đã duyệt' },
+  { value: 'all', label: 'Tất cả' },
 ];
-
-const Stars = ({ rating }: { rating: number }) => (
-  <span className="inline-flex items-center gap-0.5" aria-label={`${rating} trên 5 sao`}>
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} size={13} className={i < rating ? 'fill-warning text-warning' : 'text-fg-subtle'} aria-hidden />
-    ))}
-  </span>
-);
+const REPLIED_OPTIONS = [
+  { value: '', label: 'Mọi trạng thái phản hồi' },
+  { value: 'false', label: 'Chưa phản hồi' },
+  { value: 'true', label: 'Đã phản hồi' },
+];
+const PAGE_SIZE = 20;
 
 /**
- * Kiểm duyệt đánh giá sản phẩm.
- *
- * Backend chỉ có 3 mặt (catalog.md §9): hàng chờ duyệt (toàn hệ thống), duyệt,
- * và từ chối = XOÁ HẲN. Không có trạng thái "đã từ chối" để liệt kê lại, cũng
- * chưa có endpoint liệt kê đánh giá đã duyệt theo toàn hệ thống — nên tab
- * "Đã duyệt" làm việc theo TỪNG sản phẩm qua
- * `GET /products/{id}/reviews?approvedOnly=false` (chỉ nhân viên được bỏ lọc).
- * Hai khoảng hở này đã ghi vào `integration-requests-w3.md`, không bịa UI thay thế.
+ * Kiểm duyệt + phản hồi đánh giá sản phẩm, trên danh sách toàn hệ thống
+ * `GET /catalog/reviews/admin/list` (lọc trạng thái duyệt, đã/chưa phản hồi, tìm theo nội dung).
+ * Từ chối = xoá hẳn (backend không có trạng thái "đã từ chối"); phản hồi hiển thị công khai
+ * dưới đánh giá với nhãn "Phản hồi từ Quang Hưởng".
  */
 export function ReviewsManagementPage() {
   const queryClient = useQueryClient();
   const { promptText } = usePrompt();
-  const [tab, setTab] = useState('pending');
-  const [productFilter, setProductFilter] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('');
-  const [approvedProductId, setApprovedProductId] = useState('');
+  const { hasPermission } = usePermissions();
+  const canManage = hasPermission(PERMISSIONS.CATALOG_MANAGE);
 
-  const pendingQuery = useQuery({
-    queryKey: queryKeys.catalog.list({ resource: 'reviews-pending' }),
-    queryFn: catalogAdminApi.reviews.listPending,
+  const [status, setStatus] = useState<StatusFilter>('pending');
+  const [replied, setReplied] = useState<RepliedFilter>('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [replyRow, setReplyRow] = useState<AdminReviewRow | null>(null);
+
+  const params = {
+    status, page, pageSize: PAGE_SIZE,
+    replied: replied === '' ? undefined : replied === 'true',
+    search: search.trim() || undefined,
+  };
+  const listQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'reviews-admin', ...params }),
+    queryFn: () => catalogAdminApi.reviews.list(params),
+    placeholderData: keepPreviousData,
+  });
+  const pendingCountQuery = useQuery({
+    queryKey: queryKeys.catalog.list({ resource: 'reviews-admin-pending-count' }),
+    queryFn: () => catalogAdminApi.reviews.list({ status: 'pending', page: 1, pageSize: 1 }),
   });
   const sentimentQuery = useQuery({
     queryKey: queryKeys.catalog.list({ resource: 'reviews-sentiment' }),
     queryFn: catalogAdminApi.reviews.sentiment,
   });
-  const productsQuery = useQuery({
-    queryKey: queryKeys.catalog.list({ resource: 'products-for-reviews' }),
-    queryFn: () => catalogAdminApi.listProducts({ pageSize: 100 }),
-  });
-  const approvedQuery = useQuery({
-    queryKey: queryKeys.catalog.list({ resource: 'reviews-of-product', id: approvedProductId }),
-    queryFn: () => catalogAdminApi.reviews.listForProduct(approvedProductId),
-    enabled: tab === 'approved' && Boolean(approvedProductId),
-  });
-
-  const productOptions = useMemo(
-    () => (productsQuery.data?.products ?? []).map((p) => ({ value: p.id, label: p.name })),
-    [productsQuery.data],
-  );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.catalog.all });
 
   const run = async (label: string, work: () => Promise<unknown>) => {
-    try { await work(); refresh(); notify.success(label); }
-    catch (error) { notify.error('Thao tác thất bại', { description: (error as Error).message }); }
+    try { await work(); await refresh(); notify.success(label); }
+    catch (error) { notify.error('Thao tác thất bại', { description: normalizeApiError(error).message }); }
   };
 
-  const reject = async (id: string, what: string) => {
-    const reason = await promptText({
-      title: 'Từ chối đánh giá',
-      message: `Nhập lý do từ chối "${what}" để xác nhận. Máy chủ CHƯA lưu được lý do (không có trạng thái "đã từ chối"), nên đánh giá sẽ bị xoá hẳn và điểm trung bình được tính lại.`,
-      required: true,
-    });
-    if (reason === null) return;
-    await run('Đã từ chối đánh giá', () => catalogAdminApi.reviews.reject(id));
-  };
-
-  const pending = useMemo(() => {
-    const rows = pendingQuery.data ?? [];
-    return rows.filter(
-      (r) => (!productFilter || r.productId === productFilter) && (!ratingFilter || r.rating === Number(ratingFilter)),
-    );
-  }, [pendingQuery.data, productFilter, ratingFilter]);
+  const columns = useMemo(() => reviewManagementColumns({
+    canManage,
+    onApprove: (r) => void run('Đã duyệt đánh giá', () => catalogAdminApi.reviews.approve(r.review.id)),
+    onReply: setReplyRow,
+    onReject: async (r) => {
+      const reason = await promptText({
+        title: 'Từ chối đánh giá',
+        message: `Nhập lý do để xác nhận. Máy chủ chưa lưu lý do, nên đánh giá "${r.review.title || r.review.comment.slice(0, 40)}" sẽ bị xoá hẳn và điểm trung bình được tính lại.`,
+        required: true,
+      });
+      if (reason !== null) await run('Đã từ chối đánh giá', () => catalogAdminApi.reviews.reject(r.review.id));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [canManage]);
 
   const sentiment = sentimentQuery.data;
+  const resetPage = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(1); };
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="Đánh giá sản phẩm"
-        description="Duyệt đánh giá của khách trước khi hiển thị trên cửa hàng."
+        description="Duyệt đánh giá của khách và phản hồi công khai với tư cách Quang Hưởng."
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Chờ duyệt" value={pendingQuery.data?.length ?? null} />
+        <StatCard label="Chờ duyệt" value={pendingCountQuery.data?.total ?? null} />
         <StatCard label="Tổng đánh giá" value={sentiment?.totalReviews ?? null} />
         <StatCard label="Tích cực" value={sentiment ? `${sentiment.positivePercent}%` : null} />
         <StatCard label="Tiêu cực" value={sentiment ? `${sentiment.negativePercent}%` : null} />
       </div>
 
       <Card padded>
-        <CardBody className="space-y-4">
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabList aria-label="Trạng thái đánh giá">
-              <Tab value="pending" count={pendingQuery.data?.length}>Chờ duyệt</Tab>
-              <Tab value="approved">Đã duyệt</Tab>
-            </TabList>
-
-            <TabPanel value="pending">
-              <div className="mb-4 grid max-w-2xl gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label className="block text-13 font-medium text-fg" htmlFor="review-product-filter">
-                    Sản phẩm
-                  </label>
-                  <Combobox
-                    id="review-product-filter"
-                    options={[{ value: '', label: 'Mọi sản phẩm' }, ...productOptions]}
-                    value={productFilter}
-                    onChange={setProductFilter}
-                    placeholder="Lọc theo sản phẩm"
-                  />
-                </div>
-                <Select
-                  label="Số sao"
-                  options={RATINGS}
-                  value={ratingFilter}
-                  onChange={(e) => setRatingFilter(e.target.value)}
-                />
-              </div>
-              <QueryBoundary
-                query={pendingQuery}
-                skeleton={<SkeletonText lines={6} />}
-                isEmpty={() => pending.length === 0}
-                errorTitle="Không tải được hàng chờ duyệt"
-                empty={{
-                  icon: MessageSquare,
-                  title: productFilter || ratingFilter ? 'Không có đánh giá nào khớp bộ lọc' : 'Không còn đánh giá nào chờ duyệt',
-                  description: 'Đánh giá mới của khách sẽ xuất hiện ở đây.',
-                  secondaryAction: { label: 'Xoá bộ lọc', onClick: () => { setProductFilter(''); setRatingFilter(''); } },
-                }}
-              >
-                {() => (
-                  <ul className="space-y-3">
-                    {pending.map((r) => (
-                      <li key={r.id} className="rounded-xl border border-line p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-13 font-semibold text-fg">{r.productName}</p>
-                            <div className="mt-1 flex flex-wrap items-center gap-2">
-                              <Stars rating={r.rating} />
-                              {r.isVerifiedPurchase && <Badge variant="success">Đã mua hàng</Badge>}
-                              <span className="num text-xs text-fg-subtle">{formatDateTime(r.createdAt)}</span>
-                            </div>
-                          </div>
-                          <Can permission={PERMISSIONS.CATALOG_MANAGE}>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="primary" onClick={() => void run('Đã duyệt đánh giá', () => catalogAdminApi.reviews.approve(r.id))}>
-                                <Check size={15} /> Duyệt
-                              </Button>
-                              <Button size="sm" variant="danger" onClick={() => void reject(r.id, r.title || r.comment.slice(0, 40))}>
-                                <X size={15} /> Từ chối
-                              </Button>
-                            </div>
-                          </Can>
-                        </div>
-                        {r.title && <p className="mt-2 text-13 font-medium text-fg">{r.title}</p>}
-                        <p className="mt-1 whitespace-pre-line text-13 text-fg-muted">{r.comment}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </QueryBoundary>
-            </TabPanel>
-
-            <TabPanel value="approved">
-              <div className="mb-4">
-                <label className="mb-1.5 block text-13 font-medium text-fg" htmlFor="approved-product">
-                  Sản phẩm
-                </label>
-                <Combobox
-                  id="approved-product"
-                  options={productOptions}
-                  value={approvedProductId}
-                  onChange={setApprovedProductId}
-                  placeholder="Chọn sản phẩm để xem đánh giá"
-                  className="max-w-md"
-                />
-                <p className="mt-1.5 text-xs text-fg-subtle">
-                  Máy chủ chỉ liệt kê đánh giá theo từng sản phẩm — hãy chọn một sản phẩm.
-                </p>
-              </div>
-              {!approvedProductId ? (
-                <p className="rounded-xl border border-dashed border-line-strong px-4 py-10 text-center text-13 text-fg-muted">
-                  Chọn một sản phẩm ở trên để xem toàn bộ đánh giá của sản phẩm đó.
-                </p>
-              ) : (
-                <QueryBoundary
-                  query={approvedQuery}
-                  skeleton={<SkeletonText lines={5} />}
-                  isEmpty={(rows) => rows.length === 0}
-                  errorTitle="Không tải được đánh giá của sản phẩm"
-                  empty={{ icon: MessageSquare, title: 'Sản phẩm này chưa có đánh giá nào' }}
-                >
-                  {(rows) => (
-                    <ul className="space-y-3">
-                      {rows.map((r) => (
-                        <li key={r.id} className="rounded-xl border border-line p-4">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Stars rating={r.rating} />
-                              <StatusBadge tone={r.isApproved ? 'success' : 'warning'}>
-                                {r.isApproved ? 'Đã duyệt' : 'Chờ duyệt'}
-                              </StatusBadge>
-                              <span className="num text-xs text-fg-subtle">{formatDateTime(r.createdAt)}</span>
-                            </div>
-                            <Can permission={PERMISSIONS.CATALOG_MANAGE}>
-                              <div className="flex items-center gap-2">
-                                {!r.isApproved && (
-                                  <Button size="sm" variant="primary" onClick={() => void run('Đã duyệt đánh giá', () => catalogAdminApi.reviews.approve(r.id))}>
-                                    <Check size={15} /> Duyệt
-                                  </Button>
-                                )}
-                                <Button size="sm" variant="outline" onClick={() => void reject(r.id, r.title || r.comment.slice(0, 40))}>
-                                  <X size={15} /> Gỡ đánh giá
-                                </Button>
-                              </div>
-                            </Can>
-                          </div>
-                          {r.title && <p className="mt-2 text-13 font-medium text-fg">{r.title}</p>}
-                          <p className="mt-1 whitespace-pre-line text-13 text-fg-muted">{r.comment}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </QueryBoundary>
-              )}
-            </TabPanel>
-          </Tabs>
+        <CardBody className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Select label="Trạng thái duyệt" options={STATUS_OPTIONS} value={status}
+              onChange={(e) => resetPage(setStatus)(e.target.value as StatusFilter)} />
+            <Select label="Phản hồi" options={REPLIED_OPTIONS} value={replied}
+              onChange={(e) => resetPage(setReplied)(e.target.value as RepliedFilter)} />
+            <Input label="Tìm theo nội dung" value={search} placeholder="Tiêu đề hoặc nội dung đánh giá"
+              onChange={(e) => resetPage(setSearch)(e.target.value)} />
+          </div>
+          <DataTable
+            caption="Danh sách đánh giá sản phẩm"
+            columns={columns}
+            rows={listQuery.data?.items}
+            rowKey={(r) => r.review.id}
+            loading={listQuery.isPending}
+            error={listQuery.error}
+            onRetry={() => void listQuery.refetch()}
+            empty={{ icon: MessageSquare, title: 'Không có đánh giá nào khớp bộ lọc',
+              action: { label: 'Xem tất cả', onClick: () => { setStatus('all'); setReplied(''); setSearch(''); setPage(1); } } }}
+            pagination={(
+              <Pagination page={page} pageSize={PAGE_SIZE} total={listQuery.data?.total ?? 0} onPageChange={setPage} />
+            )}
+          />
         </CardBody>
       </Card>
+
+      {replyRow && (
+        <ReviewReplyDialog row={replyRow} onClose={() => setReplyRow(null)} onChanged={() => void refresh()} />
+      )}
     </div>
   );
 }

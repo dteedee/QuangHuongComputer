@@ -222,12 +222,22 @@ of the search facets in §3).
 | Method & path | Permission | Notes |
 |---|---|---|
 | `GET /products/{id}/reviews?approvedOnly=true` | public / staff | `approvedOnly=false` is honoured ONLY for authenticated staff (`CatalogStaffAccess.IsStaff`) - anonymous/customer requests always get approved-only, regardless of the query param (fixed this track - previously anyone could pass `approvedOnly=false`). |
-| `POST /products/{id}/reviews` `CreateProductReviewDto{rating,comment,title?,imageUrls?,videoUrl?}` | authenticated | Validated. One review per (product, customer). Starts `isApproved=false`. |
+| `POST /products/{id}/reviews` `CreateProductReviewDto{rating,comment,title?,photos?:[{url,thumbnailUrl}],videoUrl?,pros?,cons?}` | authenticated | Validated. One review per (product, customer). Starts `isApproved=false`. `photos` ≤ 5 and every URL must come from `POST /reviews/photos` (`ReviewPhotoPolicy`: `/media/u/reviews/yyyy/MM/{guid}-review-w{400,1600}.webp`) - any other URL is a 400. `pros`/`cons` ≤ 500 chars. The old free-text `imageUrls` field is gone (it stored arbitrary URLs). |
+| `POST /reviews/photos` (multipart, exactly one file) | authenticated | Same checks as product media (`MediaValidator`: magic bytes, JPG/PNG/WebP ≤ 5 MB, no SVG) then decoded and **re-encoded** to WebP 400w + 1600w with EXIF/IPTC/XMP stripped (phone photos carry GPS). Per-account quota `CatalogMediaUploadQuota` (50 MB/h) -> `429`. Returns `{url, thumbnailUrl}`. |
 | `POST /reviews/{id}/helpful` | **authenticated (changed this track - was anonymous)** | One vote per (review, user) - `ProductReviewHelpfulVotes` unique index; second attempt -> `409`. |
 | `GET /products/{id}/reviews/stats` | public | Approved-only aggregate. |
 | `POST /reviews/admin/{id}/approve` | `Catalog.Manage` | **Now recalculates `Products.AverageRating`/`ReviewCount` (was a no-op before this track).** |
 | `DELETE /reviews/admin/{id}` | `Catalog.Manage` | Reject/delete; recalculates rating if the removed review was approved. |
 | `GET /reviews/admin/pending` \| `GET /reviews/admin/sentiment-analysis` | `Catalog.Manage` | Unchanged. |
+| `GET /reviews/admin/list?status=pending\|approved\|all&replied=true\|false&search=&page=&pageSize=` | `Catalog.Manage` | `PagedResult<{review: ReviewView, productName, repliedBy}>`, newest first. |
+| `POST /reviews/admin/{id}/reply` `{text}` | `Catalog.Manage` | "Phản hồi từ Quang Hưởng". ≤ 2000 chars. `409` if a reply already exists. Audited. |
+| `PUT /reviews/admin/{id}/reply` `{text}` | `Catalog.Manage` | Edit; `404` if there is no reply. |
+| `DELETE /reviews/admin/{id}/reply` | `Catalog.Manage` | `204`; `404` if there is no reply. |
+
+`ReviewView` (public list): `{id, productId, customerId, rating, title, comment, pros, cons,
+isVerifiedPurchase, isApproved, helpfulCount, images:[{url, thumbnailUrl}], videoUrl, createdAt,
+reply: {text, repliedAt} | null}`. `images` is re-filtered through `ReviewPhotoPolicy` on read; the
+staff id (`RepliedBy`) is never exposed publicly.
 
 ## 10. Stock projection (event, not HTTP)
 
@@ -243,3 +253,27 @@ is nothing to attribute sold quantity to per product without querying back into 
 "a consumer must never query back across modules"). Needs a contract change
 (`BuildingBlocks/Messaging/IntegrationEvents/OrderLifecycleEvents.cs`, not this track's file) -
 filed as an integration request.
+
+## 11. Combos ("Combo tiết kiệm", `/api/catalog/bundles`)
+
+A combo is a set of products (`items[{productId, quantity, isMainItem}]`) sold together at either a
+**fixed price per set** (`totalPrice`) or a **percentage off** the current list total
+(`discountPercent`, 0 < x < 100) - never both. `IsActive` is the on/off switch (global query filter
+hides inactive combos from every public read and from checkout). Money is always recomputed from
+today's `Products.Price` with `ProductBundle.PricePerSet` (rounded to the đồng, never above list) -
+the same function Sales uses at checkout, so the PDP savings match the cart.
+
+| Method & path | Permission | Notes |
+|---|---|---|
+| `GET /bundles` \| `GET /bundles/{id}` \| `GET /bundles/product/{productId}` | public | Live combos only: active, inside `validFrom..validTo`, every item published, and cheaper than list. |
+| `GET /bundles/admin` \| `GET /bundles/admin/{id}` | `Catalog.View` | Includes inactive/expired combos. |
+| `POST /bundles` `CreateBundleRequest{name, description?, totalPrice, originalPrice(ignored), imageUrl?, validFrom?, validTo?, items[{productId,isMainItem,quantity}], discountPercent?, isActive?}` | `Catalog.Create` | 1-10 distinct products, qty 1-20, ≥ 2 units in total; fixed price must be > 0 and < list total; `imageUrl` must be a `/media/...` upload. Returns `201 {id}`. |
+| `PUT /bundles/{id}` | `Catalog.Edit` | Same body; items are replaced. |
+| `PATCH /bundles/{id}/active` `{isActive}` | `Catalog.Edit` | |
+| `DELETE /bundles/{id}` | `Catalog.Delete` | `204`. |
+
+`BundleView`: `{id, name, description, imageUrl, validFrom, validTo, isActive, pricingMode:
+'fixed'|'percent', discountPercent, fixedPrice, originalPrice, bundlePrice, savings, isPurchasable,
+totalPrice(= bundlePrice, legacy name), items[{id, productId, productName, productSlug, productImage,
+productSku, isMainItem, quantity, unitPrice, isPublished, inStock}]}`. Cart/checkout behaviour of
+combos: `docs/api-contracts/sales-checkout-orders.md` § Combo.

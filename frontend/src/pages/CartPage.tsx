@@ -10,6 +10,7 @@ import { useFreeShipping } from '../hooks/use-free-shipping';
 import { CartLineRow } from '../components/cart/cart-line-row';
 import { CartTotals } from '../components/cart/cart-totals';
 import { CartBoughtTogetherRow } from '../components/cart/cart-bought-together-row';
+import { CartBundleGroupList } from '../components/cart/cart-bundle-group-list';
 import {
     Badge, Button, Card, CardBody, ConfirmDialog, EmptyState, ErrorState, PageHeader, Skeleton,
 } from '../components/ui';
@@ -27,6 +28,7 @@ export const CartPage = () => {
         subtotal, discountAmount, shippingAmount, total, tax, vatBreakdown,
         isLoading, isUpdating, error, refreshCart,
     } = useCart();
+    const standaloneItems = items.filter(i => !i.bundleId);
     const navigate = useNavigate();
     const [confirmClear, setConfirmClear] = useState(false);
     // Gọi ở đầu component: bên dưới có nhiều nhánh return sớm (lỗi / đang tải / giỏ rỗng),
@@ -106,11 +108,14 @@ export const CartPage = () => {
                     <div className="flex-1 min-w-0 space-y-4">
                         <FreeShippingProgress amount={progressAmount} threshold={freeShipping.threshold} />
 
+                        <CartBundleGroupList />
+
+                        {standaloneItems.length > 0 && (
                         <motion.div
                             variants={stagger()} initial="hidden" animate="show"
                             className="rounded-xl border border-line bg-surface shadow-xs divide-y divide-line"
                         >
-                            {items.map((item) => (
+                            {standaloneItems.map((item) => (
                                 <motion.div key={`${item.id}-${item.variantId ?? ''}`} variants={fadeUp}>
                                     <CartLineRow
                                         item={item}
@@ -121,6 +126,7 @@ export const CartPage = () => {
                                 </motion.div>
                             ))}
                         </motion.div>
+                        )}
 
                         <div className="flex flex-wrap justify-between items-center gap-3">
                             <Button variant="ghost" size="sm" onClick={() => setConfirmClear(true)}>

@@ -31,7 +31,8 @@ internal static class CartQueryEndpoints
         // ==================== CART ENDPOINTS ====================
 
         group.MapGet("/cart", async (SalesDbContext db, CatalogDbContext catalogDb, InventoryDbContext inventoryDb,
-            LineVatProfileResolver vatResolver, ClaimsPrincipal user, CancellationToken ct) =>
+            LineVatProfileResolver vatResolver, Sales.Application.Pricing.Bundles.BundleCartPricingService bundlePricing,
+            ClaimsPrincipal user, CancellationToken ct) =>
         {
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
@@ -78,20 +79,24 @@ internal static class CartQueryEndpoints
 
                 // D01 §6 — thuế suất THEO DÒNG (join Categories), không dùng một thuế suất chung.
                 var vatProfiles = await vatResolver.ResolveAsync(productIds, ct: ct);
-                var cartTotals = CartVatBreakdown.Compute(cart, vatProfiles);
+                // Combo: giá combo tính lại mỗi lần đọc giỏ (combo hết hạn/hết hàng ⇒ về giá lẻ ngay).
+                var cartLines = cart.Items.ToList();
+                var bundles = await bundlePricing.PriceAsync(cartLines, checkStock: true, ct);
+                var cartTotals = CartVatBreakdown.Compute(cart, vatProfiles, bundles);
 
                 return Results.Ok(new CartDto(
                     cart.Id,
                     cart.CustomerId,
-                    cart.SubtotalAmount,
-                    cart.EffectiveDiscountAmount,
+                    cartTotals.Subtotal,
+                    // Tổng giảm = giảm combo (theo dòng) + coupon (chỉ trên dòng không thuộc combo).
+                    cartTotals.EffectiveDiscount,
                     // D01: VAT nằm TRONG giá → đây là phần thuế TÁCH RA, không cộng thêm vào Total.
                     cartTotals.TaxAmount,
                     cart.ShippingAmount,
-                    cart.TotalAmount,
+                    cartTotals.Total,
                     cart.TaxRate,
                     cart.CouponCode,
-                    cart.Items.Select(i => new CartItemDto(
+                    cartLines.Select((i, index) => new CartItemDto(
                         i.ProductId,
                         i.ProductName,
                         i.Price,
@@ -105,9 +110,15 @@ internal static class CartQueryEndpoints
                         // Snapshot biến thể trong giỏ hàng — không đổi khi admin sửa tên biến thể sau.
                         i.VariantId,
                         i.VariantName,
-                        i.VariantSku
+                        i.VariantSku,
+                        i.BundleId,
+                        i.BundleName,
+                        cartTotals.Lines[index].LineDiscount,
+                        cartTotals.Lines[index].Payable + cartTotals.Lines[index].AllocatedOrderDiscount
                     )).ToList(),
-                    cartTotals.VatBreakdown
+                    cartTotals.VatBreakdown,
+                    bundles.Groups.Select(g => new CartBundleGroupDto(
+                        g.BundleId, g.Name, g.IsApplied, g.Reason, g.Sets, g.ListTotal, g.BundleTotal, g.Discount)).ToList()
                 ));
             }
             catch (Exception)

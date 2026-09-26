@@ -56,6 +56,7 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 | `/api/sales/staff-checkout` | `Permissions.Sales.Pos` | |
 | `/api/sales/return-policies` | `Permissions.Sales.ManageReturns` | `/effective` là GET công khai |
 | `/api/sales/addresses`, `/api/sales/checkout/session*`, `/api/installment` | `SecurityPolicies.Authenticated` | tự phục vụ |
+| `/api/sales/cart/bundles*` | `SecurityPolicies.Authenticated` (nhóm `/api/sales`) | combo trong giỏ của chính mình; giá combo do server tính |
 | `/api/admin/installment` | `Permissions.Sales.ManageInstallments` | quyết định tín dụng |
 | `/api/shipping/create-shipment/*` | `Permissions.Sales.UpdateStatus` | |
 | `/api/payments` | `SecurityPolicies.Authenticated` | handler kiểm tra chủ đơn |
@@ -67,7 +68,10 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 | `/api/inventory/po/{id}/{approve,reject}` | `Permissions.Inventory.ApprovePurchaseOrder` | InventoryStaff lập nhưng không duyệt |
 | `/api/inventory/po-approval-rules` | `Permissions.System.ManageConfig` | |
 | `/api/catalog` (ghi) | `Permissions.Catalog.{Create,Edit,Delete}` theo verb | GET là storefront công khai |
-| `/api/catalog/reviews/admin` | `Permissions.Catalog.Manage` | |
+| `/api/catalog/reviews/admin` | `Permissions.Catalog.Manage` | gồm `list` và `{id}/reply` (POST/PUT/DELETE) — khách không ghi được phản hồi của cửa hàng |
+| `/api/catalog/reviews/photos` (POST) | `SecurityPolicies.Authenticated` | ảnh đánh giá: magic bytes + mã hoá lại WebP + hạn mức theo tài khoản |
+| `/api/catalog/bundles/admin`, `/admin/{id}` | `Permissions.Catalog.View` | combo kể cả đã tắt/hết hạn; tạo/sửa/`{id}/active`/xoá theo verb `Catalog.{Create,Edit,Delete}` |
+| `/api/catalog/pc-builder/admin/gallery` | `Permissions.Catalog.Manage` | cấu hình mẫu; GET `/api/catalog/pc-builder/gallery` công khai |
 | `/api/content/admin` | `Permissions.Content.ManagePages` | KHÔNG dùng verb-mapping: `Content.ViewPages` khách hàng cũng có |
 | `/api/content/admin/redirects` | GET (list, `{id}`, `test`, `export`, `template`) `Content.ViewRedirects`; POST/PUT/DELETE, `{id}/active`, `import` `Content.ManageRedirects` | nhóm RIÊNG map từ `app` (không lồng dưới `/api/content/admin` — nhóm cha `ManagePages` sẽ AND vào). Admin/Manager/Marketing (seed v3) |
 | `/api/promotions/admin` | `Permissions.Content.ManageCoupons` | |

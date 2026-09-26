@@ -1376,6 +1376,13 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("AppliedPromotionCode");
 
+                            b1.Property<Guid?>("BundleId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("BundleName")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
                             b1.Property<bool>("IsGift")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("boolean")
@@ -1508,6 +1515,13 @@ namespace Sales.Infrastructure.Data.Migrations
                                 .HasMaxLength(50)
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("AppliedPromotionCode");
+
+                            b1.Property<Guid?>("BundleId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("BundleName")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
 
                             b1.Property<DateTime>("CreatedAt")
                                 .HasColumnType("timestamp with time zone");

@@ -16,17 +16,22 @@ namespace Sales.Application.Pricing;
 /// </summary>
 public static class CartVatBreakdown
 {
-    /// <summary>Tính tổng + tách thuế theo dòng cho một giỏ, dùng hồ sơ thuế đã tra sẵn.</summary>
-    public static OrderTotals Compute(Cart cart, VatProfileSet profiles)
+    /// <summary>
+    /// Tính tổng + tách thuế theo dòng cho một giỏ, dùng hồ sơ thuế đã tra sẵn.
+    /// <paramref name="bundles"/> (chỉ số dòng = vị trí trong <c>cart.Items</c>): giảm combo là giảm
+    /// RIÊNG của dòng, và dòng combo không gánh coupon — y hệt <c>Order.CalculateAmounts</c>.
+    /// </summary>
+    public static OrderTotals Compute(Cart cart, VatProfileSet profiles, Bundles.BundlePricingResult? bundles = null)
     {
         var lines = cart.Items
             .Select((item, index) => new TotalsLineInput(
                 Sequence: index + 1,
                 UnitPriceIncludingVat: item.Price,
                 Quantity: item.Quantity,
-                LineDiscount: 0m,
+                LineDiscount: bundles?.DiscountFor(index) ?? 0m,
                 VatRate: profiles.For(item.ProductId).EffectiveRate,
-                IsGift: item.IsGift))
+                IsGift: item.IsGift,
+                ExcludeFromOrderDiscount: bundles?.IsLocked(index) ?? false))
             .ToList();
 
         return OrderTotalsCalculator.Compute(
