@@ -27,11 +27,23 @@ public static class AuthenticationEndpoints
 
     private const string DeactivatedError = "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.";
 
+    /// <summary>Token reCAPTCHA thiếu/sai/điểm thấp ⇒ 400; chưa cấu hình trên Production ⇒ 503.</summary>
+    private static IResult? RecaptchaFailure(RecaptchaOutcome outcome) => outcome.Passed ? null
+        : outcome.NotConfigured
+            ? Results.Json(new { Error = "Chức năng tạm thời không khả dụng. Vui lòng thử lại sau." },
+                statusCode: StatusCodes.Status503ServiceUnavailable)
+            : Results.BadRequest(new { Error = "Không xác minh được yêu cầu. Vui lòng tải lại trang và thử lại." });
+
     public static void MapAuthenticationEndpoints(this RouteGroupBuilder group)
     {
         group.MapPost("/register", async (RegisterDto model, UserManager<ApplicationUser> userManager,
-            IPublishEndpoint publishEndpoint, IEmailService emailService) =>
+            IPublishEndpoint publishEndpoint, IEmailService emailService, IRecaptchaVerifier recaptcha,
+            HttpContext httpContext) =>
         {
+            var captchaFailure = RecaptchaFailure(await recaptcha.VerifyAsync(
+                model.RecaptchaToken, "register", TokenIssuer.ClientIp(httpContext)));
+            if (captchaFailure is not null) return captchaFailure;
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -60,8 +72,13 @@ public static class AuthenticationEndpoints
         // ----------------------------------------------------------------- login
         group.MapPost("/login", async (LoginDto model, UserManager<ApplicationUser> userManager,
             IdentityDbContext db, IRateLimitService rateLimitService, ITokenIssuer tokenIssuer,
-            ITwoFactorChallengeService challenges, HttpContext httpContext) =>
+            ITwoFactorChallengeService challenges, IRecaptchaVerifier recaptcha, HttpContext httpContext) =>
         {
+            // Chặn bot TRƯỚC mọi truy vấn tài khoản / bộ đếm sai mật khẩu.
+            var captchaFailure = RecaptchaFailure(await recaptcha.VerifyAsync(
+                model.RecaptchaToken, "login", TokenIssuer.ClientIp(httpContext)));
+            if (captchaFailure is not null) return captchaFailure;
+
             // In-process throttle (5 failures / 10 min per e-mail) in front of
             // the persistent Identity lockout configured in DependencyInjection.
             var rateLimitKey = $"login:{PasswordResetCodeService.NormalizeEmail(model.Email)}";

@@ -118,7 +118,7 @@ public sealed class GrnInspectionEndpoints : IInventorySubmodule
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
         {
             // Quy tắc nghiệp vụ của aggregate -> 400 theo đúng hợp đồng lỗi (docs/api-conventions.md §1).
-            throw new DomainException(ex.Message);
+            throw new DomainException(ClientSafeError.Message(ex));
         }
     }
 }

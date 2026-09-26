@@ -60,6 +60,12 @@ public static class DependencyInjection
         services.AddScoped<Payments.Application.IOrderPaymentInfoProvider,
                            Sales.Application.Payments.OrderPaymentInfoProvider>();
 
+        // Catalog hỏi "khách đã nhận món này chưa" (huy hiệu đánh giá đã mua) qua contract ở
+        // BuildingBlocks — Catalog không tham chiếu Sales. Thiếu đăng ký ⇒ endpoint review 500,
+        // không bao giờ tự cấp huy hiệu (fail-closed).
+        services.AddScoped<BuildingBlocks.Contracts.IPurchaseVerificationQuery,
+                           Sales.Application.Orders.PurchaseVerificationQuery>();
+
         return services;
     }
 

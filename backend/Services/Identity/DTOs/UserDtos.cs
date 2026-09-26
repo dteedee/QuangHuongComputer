@@ -1,8 +1,10 @@
 namespace Identity.DTOs;
 
-public record RegisterDto(string Email, string Password, string FullName);
+/// <param name="RecaptchaToken">Token reCAPTCHA v3 (action "register"), kiểm ở server qua IRecaptchaVerifier.</param>
+public record RegisterDto(string Email, string Password, string FullName, string? RecaptchaToken = null);
 
-public record LoginDto(string Email, string Password);
+/// <param name="RecaptchaToken">Token reCAPTCHA v3 (action "login"), kiểm ở server qua IRecaptchaVerifier.</param>
+public record LoginDto(string Email, string Password, string? RecaptchaToken = null);
 
 public record GoogleLoginDto(string? IdToken);
 

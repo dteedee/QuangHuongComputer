@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Sales.Application.Checkout;
 using Sales.Application.Quotations;
 using Sales.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Endpoints.Quotations;
 
@@ -21,7 +22,7 @@ internal static partial class QuotationEndpoints
             var quotation = await QuotationService.LoadAsync(db, id, ct);
             if (quotation == null) return Results.NotFound(new { Error = "Không tìm thấy báo giá" });
             try { quotation.Send(); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
             await db.SaveChangesAsync(ct);
             return Results.Ok(QuotationService.ToDto(quotation));
         }).RequireAuthorization(Permissions.Sales.Quotations.Edit);
@@ -32,7 +33,7 @@ internal static partial class QuotationEndpoints
             var quotation = await QuotationService.LoadAsync(db, id, ct);
             if (quotation == null) return Results.NotFound(new { Error = "Không tìm thấy báo giá" });
             try { quotation.Accept(clock.UtcNow.UtcDateTime); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
             await db.SaveChangesAsync(ct);
             return Results.Ok(QuotationService.ToDto(quotation));
         }).RequireAuthorization(Permissions.Sales.Quotations.Edit);
@@ -43,7 +44,7 @@ internal static partial class QuotationEndpoints
             var quotation = await QuotationService.LoadAsync(db, id, ct);
             if (quotation == null) return Results.NotFound(new { Error = "Không tìm thấy báo giá" });
             try { quotation.Reject(body?.Reason); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
             await db.SaveChangesAsync(ct);
             return Results.Ok(QuotationService.ToDto(quotation));
         }).RequireAuthorization(Permissions.Sales.Quotations.Edit);

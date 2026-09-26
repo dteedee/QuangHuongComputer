@@ -60,8 +60,8 @@ public sealed class PaymentRefundService
         {
             refund = PaymentRefund.Request(intent, amount, channel, reason, requestedBy, idempotencyKey);
         }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
-        catch (ArgumentOutOfRangeException ex) { throw new DomainException(ex.Message); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ClientSafeError.Message(ex)); }
+        catch (ArgumentOutOfRangeException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
 
         _db.PaymentRefunds.Add(refund);
         await _db.SaveChangesAsync(ct);
@@ -83,7 +83,7 @@ public sealed class PaymentRefundService
             ?? throw NotFoundException.For("giao dịch thanh toán", refund.PaymentIntentId);
 
         try { refund.Approve(approver); }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ClientSafeError.Message(ex)); }
 
         var provider = _registry.Resolve(intent.Provider);
         if (provider is { SupportsGatewayRefund: true })
@@ -124,7 +124,7 @@ public sealed class PaymentRefundService
             ?? throw NotFoundException.For("phiếu hoàn tiền", refundId);
 
         try { refund.Reject(reason); }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ClientSafeError.Message(ex)); }
 
         // W4-5 / H2 — phiếu đóng lại thì nhả chỗ đã giữ, nếu không hạn mức hoàn bị khoá vĩnh viễn.
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.Id == refund.PaymentIntentId, ct);
@@ -142,8 +142,8 @@ public sealed class PaymentRefundService
             refund.Complete(reference, channel);
             intent.RegisterRefund(refund.Amount);
         }
-        catch (InvalidOperationException ex) { throw new ConflictException(ex.Message); }
-        catch (ArgumentException ex) { throw new DomainException(ex.Message); }
+        catch (InvalidOperationException ex) { throw new ConflictException(ClientSafeError.Message(ex)); }
+        catch (ArgumentException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
 
         // Ghi DB TRƯỚC khi báo ra ngoài — kế toán không bao giờ được thấy credit note của
         // một khoản hoàn chưa commit.

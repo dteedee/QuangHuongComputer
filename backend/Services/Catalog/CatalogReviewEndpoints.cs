@@ -1,5 +1,7 @@
+using BuildingBlocks.Contracts;
 using BuildingBlocks.Security;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +42,8 @@ public static class CatalogReviewEndpoints
         });
 
         group.MapPost("/products/{productId:guid}/reviews", async (
-            Guid productId, CreateProductReviewDto dto, CatalogDbContext db, HttpContext context) =>
+            Guid productId, CreateProductReviewDto dto, CatalogDbContext db, HttpContext context,
+            [FromServices] IPurchaseVerificationQuery purchases, CancellationToken ct) =>
         {
             var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -52,7 +55,13 @@ public static class CatalogReviewEndpoints
                 .FirstOrDefaultAsync(r => r.ProductId == productId && r.CustomerId == userId);
             if (existingReview != null) return Results.BadRequest(new { message = "Bạn đã đánh giá sản phẩm này rồi" });
 
-            var isVerifiedPurchase = context.Request.Headers["X-Verified-Purchase"].FirstOrDefault() == "true";
+            // Server tự quyết "đã mua" qua Sales (đơn đã giao/hoàn tất có món này) — không đọc bất kỳ
+            // header/field nào từ client. Chưa nhận hàng thì chưa được đánh giá (giữ luật W0-3).
+            var isVerifiedPurchase = await purchases.HasReceivedProductAsync(userId, productId, ct);
+            if (!isVerifiedPurchase)
+                return Results.Json(new { message = "Bạn cần mua sản phẩm này trước khi đánh giá" },
+                    statusCode: StatusCodes.Status403Forbidden);
+
             var review = new ProductReview(productId, userId, dto.Rating, dto.Comment, dto.Title,
                 isVerifiedPurchase, dto.ImageUrls, dto.VideoUrl);
 

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using HR.Application.Leave;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace HR.Endpoints;
 
@@ -100,7 +101,7 @@ public static class LeaveSelfServiceEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { message = "Đã huỷ đơn nghỉ phép." });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
     }
 }

@@ -30,6 +30,13 @@ x-api-image: &api-image
     Redis__InstanceName: "quanghc:"
     Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
     Jwt__ExpireMinutes: ${JWT_EXPIRE_MINUTES:-60}
+    # Secret TOTP chấm công QR — không có giá trị mặc định trong code; rỗng ⇒ chấm công QR bị từ chối
+    # (fail-closed, log lỗi lúc boot). scripts/gen-secrets.sh sinh sẵn.
+    Hr__AttendanceTotpSecret: ${ATTENDANCE_TOTP_SECRET:-}
+    # reCAPTCHA v3 cho đăng nhập/đăng ký: bật mặc định; trên Production thiếu secret ⇒ TỪ CHỐI
+    # (fail-closed) trừ khi tắt tường minh RECAPTCHA_ENABLED=false. Dev/Testing thiếu secret ⇒ bỏ qua.
+    Recaptcha__Enabled: ${RECAPTCHA_ENABLED:-true}
+    Recaptcha__SecretKey: ${RECAPTCHA_SECRET_KEY:-}
     # D05 §3: ONE variable drives the site address, the SPA's API base, media/CORS/return URLs.
     # BaseUrl feeds PaymentUrlBuilder's VNPay/MoMo return+notify fallbacks (same-origin design —
     # PaymentUrlBuilder.cs already derives correct URLs from BaseUrl/Frontend:Url when the
@@ -247,6 +254,7 @@ services:
         VITE_NODE_ENV: production
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
         VITE_FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+        VITE_RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
     container_name: ${COMPOSE_PROJECT_NAME:-quanghuong}-web
     profiles: ["app"]
     environment:

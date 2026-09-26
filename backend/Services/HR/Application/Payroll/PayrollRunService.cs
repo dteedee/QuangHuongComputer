@@ -1,7 +1,9 @@
 using BuildingBlocks.Configuration;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace HR.Application.Payroll;
 
@@ -14,11 +16,15 @@ public class PayrollRunService
     private readonly PayrollCalculationService _calculator;
     private readonly IAppSettings? _settings;
 
-    public PayrollRunService(HRDbContext db, PayrollCalculationService calculator, IAppSettings? settings = null)
+    private readonly ILogger<PayrollRunService>? _logger;
+
+    public PayrollRunService(HRDbContext db, PayrollCalculationService calculator, IAppSettings? settings = null,
+        ILogger<PayrollRunService>? logger = null)
     {
         _db = db;
         _calculator = calculator;
         _settings = settings;
+        _logger = logger;
     }
 
     /// <summary>
@@ -87,7 +93,8 @@ public class PayrollRunService
             catch (InvalidOperationException ex)
             {
                 summary.Skipped++;
-                summary.Errors.Add($"{emp.EmployeeCode ?? emp.Id.ToString()}: {ex.Message}");
+                // Lỗi nghiệp vụ (message tiếng Việt của domain) giữ nguyên; lỗi EF/thư viện bị ẩn + log đủ (M6).
+                summary.Errors.Add($"{emp.EmployeeCode ?? emp.Id.ToString()}: {ClientSafeError.MessageOrGeneric(ex, _logger)}");
             }
         }
 

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Sales.Application.Inventory;
 using Sales.Domain;
 using Sales.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Endpoints.Checkout;
 
@@ -88,7 +89,7 @@ internal static class CheckoutSessionEndpoints
         if (session.Result != null) return session.Result;
 
         try { session.Session!.Extend(additionalMinutes: 15); }
-        catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+        catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
 
         await salesDb.SaveChangesAsync(ct);
         return Results.Ok(new { session.Session!.ExpiresAt, session.Session.WasExtended });

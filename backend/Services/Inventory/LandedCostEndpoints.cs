@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Endpoints;
 
 namespace InventoryModule;
 
@@ -64,7 +65,7 @@ public static class LandedCostEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = ClientSafeError.Message(ex) });
             }
         });
 

@@ -59,7 +59,7 @@ internal static class PosSaleEndpoints
             }
             catch (PosDiscountRejectedException ex)
             {
-                throw new DomainException(ex.Message);
+                throw new DomainException(ClientSafeError.Message(ex));
             }
         }).RequireAuthorization(Permissions.Sales.Pos);
 

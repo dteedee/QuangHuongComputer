@@ -92,7 +92,7 @@ public static class PurchaseRequisitionEndpoints
             var pr = await db.PurchaseRequisitions.FindAsync(id);
             if (pr == null) return Results.NotFound();
             try { pr.Submit(); await db.SaveChangesAsync(); return Results.Ok(pr); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/approve", async (Guid id, ClaimsPrincipal user, InventoryDbContext db) =>
@@ -105,7 +105,7 @@ public static class PurchaseRequisitionEndpoints
             if (pr.RequestedBy == userId.Value)
                 throw new ForbiddenException("Người đề nghị không được tự duyệt đề nghị mua của mình.");
             try { pr.Approve(userId.Value); await db.SaveChangesAsync(); return Results.Ok(pr); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/reject", async (Guid id, RejectDto dto, ClaimsPrincipal user, InventoryDbContext db) =>
@@ -115,8 +115,8 @@ public static class PurchaseRequisitionEndpoints
             var pr = await db.PurchaseRequisitions.FindAsync(id);
             if (pr == null) return Results.NotFound();
             try { pr.Reject(userId.Value, dto.Reason); await db.SaveChangesAsync(); return Results.Ok(pr); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("{id:guid}/convert-to-po", async (
@@ -138,7 +138,7 @@ public static class PurchaseRequisitionEndpoints
                 await db.SaveChangesAsync(ct);
                 return Results.Ok(new { poId = po.Id, poNumber = po.PONumber, totalAmount = po.TotalAmount });
             }
-            catch (InvalidOperationException ex) { throw new DomainException(ex.Message); }
+            catch (InvalidOperationException ex) { throw new DomainException(ClientSafeError.Message(ex)); }
         });
 
         group.MapPost("{id:guid}/cancel", async (Guid id, InventoryDbContext db) =>
@@ -146,7 +146,7 @@ public static class PurchaseRequisitionEndpoints
             var pr = await db.PurchaseRequisitions.FindAsync(id);
             if (pr == null) return Results.NotFound();
             try { pr.Cancel(); await db.SaveChangesAsync(); return Results.Ok(pr); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
     }
 

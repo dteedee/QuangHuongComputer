@@ -4,6 +4,7 @@ using Catalog.Application.BulkOps;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using BuildingBlocks.Endpoints;
 
 namespace Catalog.Endpoints.BulkOps;
 
@@ -50,7 +51,7 @@ public static class CatalogImportEndpoints
             catch (InvalidDataException ex)
             {
                 // Lỗi CẤU TRÚC tệp (thiếu cột, quá 5.000 dòng, quá dung lượng...) - api-conventions.md §7.
-                return Results.BadRequest(new { error = ex.Message });
+                return Results.BadRequest(new { error = ClientSafeError.Message(ex) });
             }
 
             string? errorWorkbookToken = null;

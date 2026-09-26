@@ -1,5 +1,6 @@
 using FluentAssertions;
 using HR.Application.Attendance;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace UnitTests.Domain.HR;
@@ -12,6 +13,13 @@ public class AttendanceValidatorTests
     private static readonly Guid Store1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid Store2 = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
+    /// <summary>Secret riêng của test — không còn secret mặc định trong mã nguồn.</summary>
+    internal const string TestSecret = "unit-test-attendance-totp-secret-0123456789";
+
+    internal static IConfiguration ConfigWithSecret(string? secret) => new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?> { [AttendanceTotpSecret.ConfigKey] = secret })
+        .Build();
+
     private static AttendanceValidator MakeValidator()
     {
         var provider = new InMemoryStoreLocationProvider(new()
@@ -23,7 +31,7 @@ public class AttendanceValidatorTests
                 Latitude: null, Longitude: null,
                 AllowedIps: new string[0])
         });
-        return new AttendanceValidator(provider);
+        return new AttendanceValidator(provider, ConfigWithSecret(TestSecret));
     }
 
     // ============ HAVERSINE ============
@@ -104,7 +112,7 @@ public class AttendanceValidatorTests
     [Fact]
     public void GenerateQr_TraVeChuoi6ChuSo()
     {
-        var code = AttendanceValidator.GenerateQr(Store1);
+        var code = AttendanceValidator.GenerateQr(Store1, TestSecret);
         code.Length.Should().Be(6);
         code.All(char.IsDigit).Should().BeTrue();
     }
@@ -114,7 +122,7 @@ public class AttendanceValidatorTests
     {
         var v = MakeValidator();
         var now = DateTimeOffset.UtcNow;
-        var code = AttendanceValidator.GenerateQr(Store1, now);
+        var code = AttendanceValidator.GenerateQr(Store1, TestSecret, now);
         var res = v.ValidateQr(code, Store1, now);
         res.IsValid.Should().BeTrue();
     }
@@ -124,7 +132,7 @@ public class AttendanceValidatorTests
     {
         var v = MakeValidator();
         var past = DateTimeOffset.UtcNow.AddSeconds(-60);
-        var codeOld = AttendanceValidator.GenerateQr(Store1, past);
+        var codeOld = AttendanceValidator.GenerateQr(Store1, TestSecret, past);
         var res = v.ValidateQr(codeOld, Store1);
         res.IsValid.Should().BeFalse();
     }
@@ -141,7 +149,7 @@ public class AttendanceValidatorTests
     public void ValidateQr_MaCuaStoreKhac_TraVeFail()
     {
         var v = MakeValidator();
-        var code = AttendanceValidator.GenerateQr(Store1);
+        var code = AttendanceValidator.GenerateQr(Store1, TestSecret);
         var res = v.ValidateQr(code, Store2);
         res.IsValid.Should().BeFalse();
     }

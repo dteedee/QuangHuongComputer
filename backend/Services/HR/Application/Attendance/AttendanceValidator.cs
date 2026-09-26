@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using HR.Domain;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace HR.Application.Attendance;
 
@@ -15,32 +17,6 @@ public class AttendanceValidationResult
 }
 
 /// <summary>
-/// Cung cấp toạ độ + danh sách IP cho từng Store (chi nhánh).
-/// Được inject để tránh phụ thuộc trực tiếp vào SystemConfigDbContext (cross-module).
-/// </summary>
-public interface IStoreLocationProvider
-{
-    Task<StoreLocationInfo?> GetAsync(Guid storeId, CancellationToken ct = default);
-}
-
-public record StoreLocationInfo(
-    Guid StoreId,
-    decimal? Latitude,
-    decimal? Longitude,
-    IReadOnlyCollection<string> AllowedIps);
-
-/// <summary>Fallback in-memory nếu chưa cấu hình SystemConfig.</summary>
-public class InMemoryStoreLocationProvider : IStoreLocationProvider
-{
-    private readonly Dictionary<Guid, StoreLocationInfo> _stores;
-    public InMemoryStoreLocationProvider(Dictionary<Guid, StoreLocationInfo>? seed = null)
-        => _stores = seed ?? new();
-    public void Add(StoreLocationInfo info) => _stores[info.StoreId] = info;
-    public Task<StoreLocationInfo?> GetAsync(Guid storeId, CancellationToken ct = default)
-        => Task.FromResult(_stores.TryGetValue(storeId, out var info) ? info : null);
-}
-
-/// <summary>
 /// Validator chấm công theo 4 phương thức:
 /// - QR: mã TOTP 30s sinh từ StoreId (chống chụp màn hình)
 /// - GPS: bán kính X mét từ Store (Haversine)
@@ -50,26 +26,27 @@ public class InMemoryStoreLocationProvider : IStoreLocationProvider
 public class AttendanceValidator
 {
     private readonly IStoreLocationProvider _stores;
-    private readonly string _totpSecret;
-
-    /// <summary>Fallback khi chưa cấu hình <c>Hr:AttendanceTotpSecret</c> — hằng số cũ, giữ để
-    /// <see cref="GenerateQr"/> tĩnh (dùng bởi <c>AttendanceValidatorTests.cs</c>, đóng băng ở
-    /// wave 2) và các store chưa set biến môi trường vẫn ra đúng mã như trước W2-7.</summary>
-    public const string DefaultTotpSecret = "QuangHuongComputer2026-TOTP-Secret-DoNotShare";
+    private readonly string? _totpSecret;
+    private readonly ILogger<AttendanceValidator> _logger;
 
     /// <summary>Phương thức chấm công được PHÉP, đọc từ config <c>Hr:AllowedCheckInMethods</c>
     /// (CSV, mặc định KHÔNG có Web — chấm qua trình duyệt chỉ xác thực bằng IP, dễ giả mạo).</summary>
     private readonly HashSet<CheckInMethod> _allowedMethods;
 
-    // W2-7: TOTP secret trước đây hardcode trong mã nguồn (const, cả team + git history đều đọc
-    // được) — chuyển sang config Hr:AttendanceTotpSecret, fallback về hằng số cũ để không phá
-    // các store chưa cấu hình biến môi trường. `config` optional (mặc định null → toàn bộ dùng
-    // fallback) để không phá AttendanceValidatorTests.cs (backend/Tests/UnitTests/** đóng băng ở
-    // wave 2 — không sửa được để truyền IConfiguration giả).
-    public AttendanceValidator(IStoreLocationProvider stores, IConfiguration? config = null)
+    /// <summary>Lý do trả cho người dùng khi QR chưa cấu hình secret — không lộ chi tiết cấu hình.</summary>
+    public const string QrNotConfiguredReason =
+        "Chấm công bằng mã QR chưa được cấu hình trên hệ thống. Vui lòng liên hệ quản trị viên.";
+
+    // Secret TOTP đọc từ Hr:AttendanceTotpSecret qua AttendanceTotpSecret — KHÔNG có fallback
+    // hằng số trong mã nguồn. Thiếu ⇒ QR bị từ chối (fail-closed) và log lỗi; GPS/WiFi/Manual vẫn chạy.
+    public AttendanceValidator(
+        IStoreLocationProvider stores,
+        IConfiguration? config = null,
+        ILogger<AttendanceValidator>? logger = null)
     {
         _stores = stores;
-        _totpSecret = config?["Hr:AttendanceTotpSecret"] ?? DefaultTotpSecret;
+        _logger = logger ?? NullLogger<AttendanceValidator>.Instance;
+        _totpSecret = AttendanceTotpSecret.Resolve(config);
 
         var configured = config?["Hr:AllowedCheckInMethods"];
         if (string.IsNullOrWhiteSpace(configured))
@@ -96,26 +73,41 @@ public class AttendanceValidator
     // QR — TOTP 30s
     // ==============================================================
 
+    /// <summary>Secret TOTP đã được cấu hình hợp lệ hay chưa.</summary>
+    public bool IsQrConfigured => _totpSecret is not null;
+
     /// <summary>
     /// Sinh QR code (chuỗi 6 chữ số) cho Store tại thời điểm now, dùng secret ĐÃ CẤU HÌNH của
     /// validator này — dùng ở endpoint thật (<c>GET /api/hr/attendance/qr-code</c>) để mã sinh ra
-    /// khớp với secret mà <see cref="ValidateQr"/> sẽ kiểm.
+    /// khớp với secret mà <see cref="ValidateQr"/> sẽ kiểm. Null khi chưa cấu hình secret.
     /// </summary>
-    public string GenerateCode(Guid storeId, DateTimeOffset? now = null) => GenerateQr(storeId, now, _totpSecret);
-
-    /// <summary>Sinh QR code tĩnh — giữ chữ ký cũ (KHÔNG đổi thành instance method) vì
-    /// <c>AttendanceValidatorTests.cs</c> gọi tĩnh và file đó đóng băng ở wave 2. Dùng
-    /// <see cref="DefaultTotpSecret"/> trừ khi gọi kèm <paramref name="secret"/>.</summary>
-    public static string GenerateQr(Guid storeId, DateTimeOffset? now = null, string? secret = null)
+    public string? GenerateCode(Guid storeId, DateTimeOffset? now = null)
     {
+        if (_totpSecret is null)
+        {
+            LogQrNotConfigured();
+            return null;
+        }
+        return GenerateQr(storeId, _totpSecret, now);
+    }
+
+    /// <summary>Sinh QR code với secret truyền vào tường minh (không có secret mặc định).</summary>
+    public static string GenerateQr(Guid storeId, string secret, DateTimeOffset? now = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
         var t = now ?? DateTimeOffset.UtcNow;
         var counter = t.ToUnixTimeSeconds() / 30;
-        return ComputeTotp(storeId, counter, secret ?? DefaultTotpSecret);
+        return ComputeTotp(storeId, counter, secret);
     }
 
     /// <summary>Validate QR: chấp nhận code của bucket hiện tại và 1 bucket trước (dung sai clock skew).</summary>
     public AttendanceValidationResult ValidateQr(string code, Guid storeId, DateTimeOffset? now = null)
     {
+        if (_totpSecret is null)
+        {
+            LogQrNotConfigured();
+            return AttendanceValidationResult.Fail(QrNotConfiguredReason);
+        }
         if (string.IsNullOrWhiteSpace(code) || code.Length != 6)
             return AttendanceValidationResult.Fail("Mã QR không hợp lệ.");
 
@@ -133,6 +125,11 @@ public class AttendanceValidator
         }
         return AttendanceValidationResult.Fail("Mã QR đã hết hạn hoặc sai.");
     }
+
+    private void LogQrNotConfigured() => _logger.LogError(
+        "Chấm công QR bị từ chối: {Key} chưa được cấu hình hợp lệ. Đặt biến môi trường " +
+        "ATTENDANCE_TOTP_SECRET (tối thiểu {Min} ký tự, scripts/gen-secrets.sh sinh sẵn).",
+        AttendanceTotpSecret.ConfigKey, AttendanceTotpSecret.MinimumLength);
 
     private static string ComputeTotp(Guid storeId, long counter, string secret)
     {

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Sales.Domain;
 using Sales.Infrastructure;
 using InventoryModule.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Sales.Application.Carts.Commands.AddToCart;
 
@@ -68,7 +69,7 @@ public class AddToCartCommandHandler : IRequestHandler<AddToCartCommand, Guid>
         }
         catch (InvalidOperationException ex)
         {
-            throw new InvalidOperationException($"Không thể đặt trước hàng: {ex.Message}");
+            throw new InvalidOperationException($"Không thể đặt trước hàng: {ClientSafeError.Message(ex)}");
         }
 
         // 6. Thêm vào giỏ hàng (kèm snapshot biến thể)

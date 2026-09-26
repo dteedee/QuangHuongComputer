@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using BuildingBlocks.Endpoints;
 
 namespace Content;
 
@@ -147,7 +148,7 @@ public static class PromotionEndpoints
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
             {
-                return Results.BadRequest(new { message = ex.Message });
+                return Results.BadRequest(new { message = ClientSafeError.Message(ex) });
             }
 
             if (dto.Conditions is not null)
@@ -180,7 +181,7 @@ public static class PromotionEndpoints
             }
             catch (ArgumentException ex)
             {
-                return Results.BadRequest(new { message = ex.Message });
+                return Results.BadRequest(new { message = ClientSafeError.Message(ex) });
             }
 
             await db.SaveChangesAsync();
@@ -193,7 +194,7 @@ public static class PromotionEndpoints
             var promo = await db.Promotions.FindAsync(id);
             if (promo is null) return Results.NotFound();
             try { promo.Archive(); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { message = ClientSafeError.Message(ex) }); }
             await db.SaveChangesAsync();
             return Results.Ok(new { message = "Đã lưu trữ", status = promo.Status.ToString() });
         });
@@ -215,7 +216,7 @@ public static class PromotionEndpoints
             var promo = await db.Promotions.FindAsync(id);
             if (promo is null) return Results.NotFound();
             try { promo.Activate(); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { message = ClientSafeError.Message(ex) }); }
             await db.SaveChangesAsync();
             return Results.Ok(new { message = "Đã kích hoạt", status = promo.Status.ToString() });
         });

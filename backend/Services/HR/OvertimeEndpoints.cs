@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using HR.Infrastructure;
 using HR.Domain;
 using System.Security.Claims;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -31,7 +32,7 @@ public static class OvertimeEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/overtime/{req.Id}", req);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // GET /api/hr/overtime/pending — danh sách chờ duyệt
@@ -73,7 +74,7 @@ public static class OvertimeEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { message = "Đã duyệt OT.", req.Status });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         group.MapPost("/{id:guid}/reject",
@@ -91,7 +92,7 @@ public static class OvertimeEndpoints
                     return Results.Ok(new { message = "Đã từ chối OT.", req.Status });
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
-                    { return Results.BadRequest(new { error = ex.Message }); }
+                    { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             }).RequireAuthorization(Permissions.HR.ManageAttendance);
 
         // IDOR guard: previously open to ANY authenticated user with no role check at all —
@@ -108,7 +109,7 @@ public static class OvertimeEndpoints
                     return Results.Ok(new { message = "Đã ghi giờ thực tế.", req.ActualHours, req.Status });
                 }
                 catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
-                    { return Results.BadRequest(new { error = ex.Message }); }
+                    { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             }).RequireAuthorization(Permissions.HR.ManageAttendance);
     }
 }

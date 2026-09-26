@@ -7,6 +7,7 @@ using BuildingBlocks.Security;
 using InventoryModule.Application.Purchasing;
 using InventoryModule.Domain;
 using InventoryModule.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace InventoryModule;
 
@@ -38,7 +39,7 @@ public static class PoApprovalEndpoints
                 var req = await svc.SubmitForApprovalAsync(id, userId.Value);
                 return Results.Ok(new { approvalRequestId = req.Id, requiredRole = req.RequiredRole, amount = req.Amount });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("/po/{id:guid}/approve", async (Guid id, ClaimsPrincipal user, PoApprovalService svc) =>
@@ -51,8 +52,8 @@ public static class PoApprovalEndpoints
                 await svc.ApproveAsync(id, userId.Value, user);
                 return Results.Ok(new { message = "Đã duyệt PO." });
             }
-            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ClientSafeError.Message(ex) }, statusCode: StatusCodes.Status403Forbidden); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             // W1-10: duyệt PO -> Inventory.ApprovePurchaseOrder (InventoryStaff KHÔNG có quyền này).
             // Kiểm tra role bắt buộc theo hạn mức vẫn do PoApprovalService làm thêm một lớp nữa.
         }).RequireAuthorization(Permissions.Inventory.ApprovePurchaseOrder);
@@ -66,9 +67,9 @@ public static class PoApprovalEndpoints
                 await svc.RejectAsync(id, userId.Value, dto.Reason, user);
                 return Results.Ok(new { message = "Đã từ chối PO." });
             }
-            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status403Forbidden); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return Results.Json(new { error = ClientSafeError.Message(ex) }, statusCode: StatusCodes.Status403Forbidden); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.Inventory.ApprovePurchaseOrder);
 
         // Đơn PO đang chờ duyệt — lọc theo role người dùng.
@@ -142,7 +143,7 @@ public static class PoApprovalEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/inventory/po-approval-rules/{rule.Id}", rule);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         ruleGroup.MapPut("{id:guid}", async (Guid id, CreateApprovalRuleDto dto, InventoryDbContext db) =>
@@ -155,7 +156,7 @@ public static class PoApprovalEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(rule);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         ruleGroup.MapDelete("{id:guid}", async (Guid id, InventoryDbContext db) =>

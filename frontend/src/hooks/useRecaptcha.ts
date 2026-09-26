@@ -10,6 +10,9 @@ export const useRecaptcha = (siteKey: string) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
+        // Không có site key (build production chưa cấu hình) ⇒ không nạp script Google.
+        if (!siteKey) return;
+
         // Check if reCAPTCHA script is already loaded
         if (window.grecaptcha) {
             setIsLoaded(true);
@@ -39,7 +42,7 @@ export const useRecaptcha = (siteKey: string) => {
     const executeRecaptcha = async (action: string): Promise<string | undefined> => {
         // If reCAPTCHA is not loaded (blocked by ad blocker, etc.), return undefined
         // Backend should handle missing token gracefully in development
-        if (!isLoaded || !window.grecaptcha) {
+        if (!siteKey || !isLoaded || !window.grecaptcha) {
             console.warn('reCAPTCHA not loaded - proceeding without token');
             return undefined;
         }

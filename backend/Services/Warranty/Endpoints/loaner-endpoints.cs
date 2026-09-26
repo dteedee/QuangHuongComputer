@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Warranty.Domain;
 using Warranty.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Warranty;
 
@@ -66,7 +67,7 @@ public static class LoanerDeviceEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/warranty/loaner-devices/{l.Id}", l);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         }).WithValidation<CreateLoanerDeviceDto>();
 
         group.MapPost("/{id:guid}/return", async (Guid id, [FromBody] ReturnLoanerDto dto, WarrantyDbContext db) =>
@@ -74,7 +75,7 @@ public static class LoanerDeviceEndpoints
             var l = await db.LoanerDevices.FindAsync(id);
             if (l == null) return Results.NotFound();
             try { l.MarkReturned(dto.ConditionAtReturn, dto.Notes); await db.SaveChangesAsync(); return Results.Ok(l); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapPost("/{id:guid}/lost", async (Guid id, [FromBody] LoanerNoteDto dto, WarrantyDbContext db) =>
@@ -82,7 +83,7 @@ public static class LoanerDeviceEndpoints
             var l = await db.LoanerDevices.FindAsync(id);
             if (l == null) return Results.NotFound();
             try { l.MarkLost(dto.Notes); await db.SaveChangesAsync(); return Results.Ok(l); }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { Error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapGet("/overdue", async (WarrantyDbContext db) =>

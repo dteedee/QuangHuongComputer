@@ -9,6 +9,7 @@ using HR.Application.Payroll;
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 using System.Security.Claims;
+using BuildingBlocks.Endpoints;
 
 namespace HR;
 
@@ -36,8 +37,8 @@ public static class PayrollEndpoints
                 }
                 return Results.Created($"/api/hr/payroll/runs/{run.Id}", new { run.Id, run.Year, run.Month, run.Name, status = run.Status.ToString() });
             }
-            catch (InvalidOperationException ex) { return Results.Conflict(new { error = ex.Message }); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.Conflict(new { error = ClientSafeError.Message(ex) }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/payroll/runs/{id}/calculate — tính hàng loạt
@@ -48,7 +49,7 @@ public static class PayrollEndpoints
                 var summary = await svc.CalculateAllAsync(id);
                 return Results.Ok(summary);
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // GET /api/hr/payroll/runs/{id}
@@ -113,7 +114,7 @@ public static class PayrollEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { message = "Đã duyệt kỳ lương.", status = run.Status.ToString() });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/payroll/runs/{id}/mark-paid — chi trả
@@ -150,7 +151,7 @@ public static class PayrollEndpoints
                 }
                 return Results.Ok(new { message = "Đã chi trả kỳ lương.", status = run.Status.ToString(), count = payrolls.Count });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/payroll/runs/{id}/cancel — huỷ kỳ lương (chỉ khi Draft/Calculated)
@@ -164,7 +165,7 @@ public static class PayrollEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { message = "Đã huỷ kỳ lương.", status = run.Status.ToString() });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // GET /api/hr/payroll/mine?year= — self-service, chỉ bảng lương của chính nhân viên gọi.
@@ -209,7 +210,7 @@ public static class PayrollEndpoints
                     Status = recalculated.Status.ToString()
                 });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // GET /api/hr/payroll/{payrollId}
@@ -241,7 +242,7 @@ public static class PayrollEndpoints
                 var payslip = await gen.GenerateAsync(payrollId);
                 return Results.Ok(payslip);
             }
-            catch (InvalidOperationException ex) { return Results.NotFound(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.NotFound(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // GET /api/hr/payroll/runs/{id}/bank-transfer-file — file CSV chuyển khoản
@@ -260,7 +261,7 @@ public static class PayrollEndpoints
                     .Concat(System.Text.Encoding.UTF8.GetBytes(csv)).ToArray();
                 return Results.File(bytes, "text/csv", $"bank-transfer-{id}.csv");
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         }).RequireAuthorization(Permissions.HR.ViewPayroll);
     }
 }

@@ -6,6 +6,7 @@ using Payments.Application.Configuration;
 using Payments.Application.Providers;
 using Payments.Domain;
 using Payments.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace Payments.Application;
 
@@ -113,7 +114,7 @@ public sealed class PaymentInitiationService
         {
             // Cấu hình cổng sai (ví dụ BIN không phải 6 chữ số) là lỗi vận hành, không phải lỗi khách.
             _logger.LogError(ex, "Không dựng được lệnh thanh toán cho provider {Provider}", strategy.Provider);
-            throw PaymentDomainException.ProviderConfiguration(ex.Message);
+            throw PaymentDomainException.ProviderConfiguration(ClientSafeError.Message(ex));
         }
 
         await _db.SaveChangesAsync(ct);

@@ -21,12 +21,15 @@ ARG VITE_NODE_ENV=production
 ARG VITE_GOOGLE_CLIENT_ID
 ARG VITE_FACEBOOK_APP_ID
 ARG VITE_SIGNALR_HUB_URL=/hubs/chat
+# Rỗng ⇒ bản build production tắt reCAPTCHA phía client (không bao giờ rơi về key test của Google).
+ARG VITE_RECAPTCHA_SITE_KEY
 
 ENV VITE_API_URL=$VITE_API_URL \
     VITE_NODE_ENV=$VITE_NODE_ENV \
     VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
     VITE_FACEBOOK_APP_ID=$VITE_FACEBOOK_APP_ID \
-    VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL
+    VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL \
+    VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
 
 # Layer caching: dependencies only reinstall when the lockfile changes.
 COPY frontend/package.json frontend/package-lock.json ./

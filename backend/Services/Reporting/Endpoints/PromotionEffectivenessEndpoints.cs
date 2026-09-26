@@ -6,6 +6,7 @@ using Content.Infrastructure;
 using Sales.Infrastructure;
 using Sales.Domain;
 using Reporting.Shared;
+using BuildingBlocks.Endpoints;
 
 namespace Reporting.Endpoints;
 
@@ -26,7 +27,7 @@ public static class PromotionEffectivenessEndpoints
         {
             ReportPeriod period;
             try { period = ReportPeriod.Resolve(clock, startDate, endDate); }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             var (start, end) = (period.Start, period.End);
 
             // Nhật ký dùng thật trong kỳ (một dòng / một lượt áp dụng thành công).

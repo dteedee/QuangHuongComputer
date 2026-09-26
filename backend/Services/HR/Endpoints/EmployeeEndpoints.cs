@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using HR.Domain;
 using HR.Infrastructure;
+using BuildingBlocks.Endpoints;
 
 namespace HR.Endpoints;
 
@@ -97,7 +98,7 @@ public static class EmployeeEndpoints
                 await db.SaveChangesAsync();
                 return Results.Created($"/api/hr/employees/{employee.Id}", employee);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
             catch (DbUpdateException) { return Results.Conflict(new { error = "Email hoặc mã nhân viên đã tồn tại." }); }
         });
 
@@ -121,7 +122,7 @@ public static class EmployeeEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(employee);
             }
-            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         group.MapDelete("/{id:guid}", async (Guid id, HRDbContext db) =>
@@ -147,7 +148,7 @@ public static class EmployeeEndpoints
                 await db.SaveChangesAsync();
                 return Results.Ok(new { message = "Đã cho nhân viên nghỉ việc.", employee.Status, employee.TerminationDate });
             }
-            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return Results.BadRequest(new { error = ClientSafeError.Message(ex) }); }
         });
 
         // POST /api/hr/employees/{id}/link-user — gắn tài khoản đăng nhập có sẵn.
