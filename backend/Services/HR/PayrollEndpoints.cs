@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using HR.Application.Commission;
 using HR.Infrastructure;
 using HR.Domain;
 using HR.Application.Payroll;
@@ -108,6 +109,11 @@ public static class PayrollEndpoints
             // run.Approve() tự duyệt hết payroll con đang Calculated, không cần load tay riêng.
             var run = await db.PayrollRuns.Include(r => r.Payrolls).FirstOrDefaultAsync(r => r.Id == id);
             if (run == null) return Results.NotFound();
+            // Hoa hồng đã bị huỷ sau khi tính lương -> số trên phiếu lương sai, bắt tính lại trước.
+            var staleCommissions = await CommissionPayrollLinker.CountStaleLinksAsync(
+                db, run.Payrolls.Select(p => p.Id).ToList());
+            if (staleCommissions > 0)
+                return Results.BadRequest(new { error = $"Có {staleCommissions} khoản hoa hồng đã bị huỷ sau khi tính lương. Tính lại kỳ lương trước khi duyệt." });
             try
             {
                 run.Approve(approverId);
@@ -137,6 +143,9 @@ public static class PayrollEndpoints
                     if (p.Status == PayrollStatus.Processed) p.MarkAsPaid();
                 }
                 run.MarkAsPaid(payerId);
+                // Cùng transaction: hoa hồng đã gắn vào các bảng lương vừa trả -> Paid.
+                await CommissionPayrollLinker.MarkPaidAsync(db,
+                    payrolls.Where(p => p.Status == PayrollStatus.Paid).Select(p => p.Id).ToList(), DateTime.UtcNow);
                 await db.SaveChangesAsync();
 
                 // Publish integration events → Accounting ghi sổ chi phí

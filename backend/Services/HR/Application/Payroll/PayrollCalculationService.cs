@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BuildingBlocks.Configuration;
 using BuildingBlocks.TaxEngine;
+using HR.Application.Commission;
 using HR.Domain;
 using HR.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,9 @@ public partial class PayrollCalculationService
 
         var payDate = await ResolvePayDateAsync(payrollRunId, year, month, ct);
         var profile = await BuildProfileAsync(employeeId, year, month, effectiveDate, payroll, ct);
+        // Hoa hồng kỹ thuật đã duyệt (kỳ ≤ tháng lương) -> thu nhập chịu thuế, không đóng bảo hiểm.
+        var commission = await CommissionPayrollLinker.AttachAsync(_db, payroll, ct);
+        profile = profile with { Commission = commission.Amount, CommissionEntryCount = commission.EntryCount };
 
         var periodParameters = await _parameters.ResolveAsync(new DateOnly(year, month, 1), ct);
         var payDateParameters = await _parameters.ResolveAsync(payDate, ct);
@@ -117,7 +121,8 @@ public partial class PayrollCalculationService
         payroll.ApplyCalculationResult(
             baseSalary: result.BaseSalaryProrated,
             overtimePay: result.OvertimePay,
-            totalBonuses: result.OvertimePay + result.TaxableAllowances + result.ExemptAllowances + result.Bonuses,
+            totalBonuses: result.OvertimePay + result.TaxableAllowances + result.ExemptAllowances + result.Bonuses
+                          + result.Commission,
             insuranceDeduction: result.InsuranceEmployee + result.UnionDuesEmployee,
             taxDeduction: result.Pit,
             otherDeductions: result.OtherDeductions,
