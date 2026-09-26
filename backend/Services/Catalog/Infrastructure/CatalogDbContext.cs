@@ -408,6 +408,14 @@ public class CatalogDbContext : DbContext
 
             entity.HasIndex(pc => pc.CustomerId)
                 .HasDatabaseName("ix_saved_pc_builds_customer_id");
+
+            // W2: "Cấu hình mẫu" /cau-hinh-mau — cờ chỉ nhân viên đặt được.
+            entity.Property(pc => pc.IsFeatured).HasDefaultValue(false);
+            entity.Property(pc => pc.IsPublic).HasDefaultValue(false);
+            entity.Property(pc => pc.UseCaseTag).HasMaxLength(30);
+            entity.Property(pc => pc.SortOrder).HasDefaultValue(0);
+            entity.HasIndex(pc => new { pc.IsPublic, pc.SortOrder })
+                .HasDatabaseName("ix_saved_pc_builds_public_sort");
         });
 
         // SavedPcBuildItem configurations

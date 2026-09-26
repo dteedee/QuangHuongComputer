@@ -1150,10 +1150,25 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<bool>("IsCompatible")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPublic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(18, 2)
@@ -1168,6 +1183,10 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("UseCaseTag")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BuildCode")
@@ -1176,6 +1195,9 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_saved_pc_builds_customer_id");
+
+                    b.HasIndex("IsPublic", "SortOrder")
+                        .HasDatabaseName("ix_saved_pc_builds_public_sort");
 
                     b.ToTable("SavedPcBuilds", "public");
                 });
