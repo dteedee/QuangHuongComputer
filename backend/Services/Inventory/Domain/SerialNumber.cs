@@ -137,6 +137,39 @@ public class SerialNumber : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Máy rời kho theo phiếu chuyển. Giữ <see cref="WarehouseId"/> = kho xuất (nơi cuối cùng biết
+    /// chắc máy ở đó) nhưng KHÔNG còn InStock — kho nào cũng không bán được máy đang trên đường.
+    /// </summary>
+    public void StartTransit(string transferNumber)
+    {
+        if (Status != SerialStatus.InStock)
+            throw new InvalidOperationException($"Cannot ship serial {Serial}: current status is {Status}");
+
+        Status = SerialStatus.InTransit;
+        Notes = $"Đang chuyển theo phiếu {transferNumber}";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Kho nhận đã kiểm đếm thấy máy: về kho mới, bán được.</summary>
+    public void CompleteTransit(Guid toWarehouseId)
+    {
+        if (Status != SerialStatus.InTransit)
+            throw new InvalidOperationException($"Serial {Serial} is not in transit");
+
+        Status = SerialStatus.InStock;
+        WarehouseId = toWarehouseId;
+        Notes = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Kho nhận KHÔNG thấy máy: giữ InTransit để còn truy, ghi rõ phiếu nào báo thiếu.</summary>
+    public void FlagMissingInTransit(string transferNumber)
+    {
+        Notes = $"Thiếu khi nhận phiếu {transferNumber} — cần kiểm tra";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public bool IsUnderWarranty()
     {
         return WarrantyEndDate.HasValue && WarrantyEndDate.Value > DateTime.UtcNow;
@@ -157,5 +190,6 @@ public enum SerialStatus
     Returned,   // Hàng trả lại
     Defective,  // Lỗi / hỏng
     InRepair,   // Đang sửa chữa
-    Scrapped    // Đã thanh lý
+    Scrapped,   // Đã thanh lý
+    InTransit   // Đang chuyển kho (đã xuất khỏi kho nguồn, kho đích chưa nhận)
 }
