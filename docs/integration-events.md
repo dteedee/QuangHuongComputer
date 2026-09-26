@@ -54,8 +54,8 @@ outbox package, or accept fire-and-forget for another wave) - see `w1-5-report.m
 All records live in `BuildingBlocks/Messaging/IntegrationEvents/*.cs`. A consumer subscribes by
 implementing `IConsumer<TEvent>` in a `Consumers/` folder inside its own module and MassTransit
 auto-wires it via `x.AddConsumers(typeof(<Module>.DependencyInjection).Assembly)`
-(`ServiceRegistration.cs`) - five assemblies are scanned today: Communication, Sales, Accounting,
-Warranty, Identity. A module publishing a NEW event type needs its assembly added to that list too
+(`ServiceRegistration.cs`) - six assemblies are scanned today: Communication, Sales, Accounting,
+Warranty, Identity, HR. A module publishing a NEW event type needs its assembly added to that list too
 (integration request against `ServiceRegistration.cs`, this track's file).
 
 | Event | File | Status |
@@ -81,6 +81,7 @@ Warranty, Identity. A module publishing a NEW event type needs its assembly adde
 | `LowStockEvent` | `InventoryEvents.cs` | **Contract only** |
 | `RepairCompletedEvent` | `ServiceOperationsEvents.cs` | **Contract only** |
 | `WarrantyClaimUpdatedEvent` | `ServiceOperationsEvents.cs` | **Contract only** |
+| `RepairWorkOrderSettlementChangedEvent` | `ServiceOperationsEvents.cs` | Published (Repair: `PUT .../work-orders/{id}/pay`, and `.../cancel` when the order was already paid), consumed (HR: `RepairSettlementCommissionConsumer` -> technician commission). Payload is just the id: HR re-reads the truth through `IRepairCommissionSourceQuery`, and `POST /api/hr/commissions/sync` reconciles a whole period, because there is no outbox (a lost event is repaired by the sync) |
 
 "Contract only" = the record type exists and compiles, no `Publish()`/`IConsumer<T>` wired to it
 anywhere yet. Risk Assessment for this track says "leave business logic to wave 2" - wiring these
