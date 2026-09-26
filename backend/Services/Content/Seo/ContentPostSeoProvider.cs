@@ -6,7 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Content.Seo;
 
-/// <summary>`/tin-tuc`, `/tin-tuc/{slug}`. Uses `Post.PublishedPredicate` (D10) — the one predicate list/detail/sitemap all share.</summary>
+/// <summary>
+/// `/tin-tuc`, `/tin-tuc/{slug}`. Uses `Post.PublishedPredicate` (D10) — the one predicate list/detail/sitemap all share.
+/// Bài `PostType.Promotion` KHÔNG thuộc `/tin-tuc`: URL chuẩn của nó là `/khuyen-mai/{slug}`
+/// (`PromotionSeoProvider`) — link cũ `/tin-tuc/{slug}` trả 301 sang đó, sitemap chỉ liệt kê một bản.
+/// </summary>
 public sealed class ContentPostSeoProvider : ISeoPageProvider
 {
     private const string ListPath = "/tin-tuc";
@@ -28,7 +32,7 @@ public sealed class ContentPostSeoProvider : ISeoPageProvider
         {
             var parsedQuery = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(query);
             var page = parsedQuery.TryGetValue("page", out var v) && int.TryParse(v.ToString(), out var p) && p > 1 ? p : 1;
-            var total = await _db.Posts.Where(predicate).CountAsync(ct);
+            var total = await _db.Posts.Where(predicate).Where(p => p.Type != PostType.Promotion).CountAsync(ct);
             var canonicalPath = page > 1 ? $"{ListPath}?page={page}" : ListPath;
 
             return new SeoPage
@@ -48,6 +52,7 @@ public sealed class ContentPostSeoProvider : ISeoPageProvider
         var slug = SlugPattern.Match(path).Groups["slug"].Value;
         var post = await _db.Posts.Where(predicate).FirstOrDefaultAsync(p => p.Slug == slug, ct);
         if (post is null) return SeoPage.NotFound(path);
+        if (post.Type == PostType.Promotion) return SeoPage.RedirectPermanent($"/khuyen-mai/{post.Slug}");
 
         var description = Truncate(StripHtml(post.Content), 160);
         return new SeoPage
@@ -72,10 +77,11 @@ public sealed class ContentPostSeoProvider : ISeoPageProvider
     public async IAsyncEnumerable<SitemapEntry> EnumerateAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        var any = await _db.Posts.Where(Post.PublishedPredicate(now)).AnyAsync(ct);
+        var newsPosts = _db.Posts.Where(Post.PublishedPredicate(now)).Where(p => p.Type != PostType.Promotion);
+        var any = await newsPosts.AnyAsync(ct);
         if (any) yield return new SitemapEntry(ListPath, null, "daily", 0.6m);
 
-        var posts = _db.Posts.Where(Post.PublishedPredicate(now)).Select(p => new { p.Slug, p.PublishedAt });
+        var posts = newsPosts.Select(p => new { p.Slug, p.PublishedAt });
         await foreach (var p in posts.AsAsyncEnumerable().WithCancellation(ct))
         {
             if (string.IsNullOrEmpty(p.Slug)) continue;

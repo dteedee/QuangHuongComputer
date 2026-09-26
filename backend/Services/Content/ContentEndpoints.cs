@@ -96,10 +96,8 @@ public static class ContentEndpoints
             var now = DateTime.UtcNow;
             var promos = await db.Promotions
                 .Include(p => p.Rewards)
-                .Where(p => p.Type == PromotionType.FlashSale
-                    && p.Status == PromotionStatus.Active
-                    && p.StartAt <= now
-                    && (p.EndAt == null || p.EndAt >= now))
+                .Where(Promotion.RunningPredicate(now))
+                .Where(p => p.Type == PromotionType.FlashSale)
                 .OrderByDescending(p => p.Priority)
                 .ToListAsync();
 
