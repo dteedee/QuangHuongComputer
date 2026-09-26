@@ -31,6 +31,25 @@ export interface CartItemDto {
     variantId?: string;
     variantName?: string;
     variantSku?: string;
+    /** Combo: dòng thuộc nhóm combo nào (null = dòng lẻ). */
+    bundleId?: string | null;
+    bundleName?: string | null;
+    /** Giảm giá combo chia về dòng (server tính). */
+    lineDiscount?: number;
+    /** Thành tiền dòng sau giảm combo, trước coupon. */
+    lineTotal?: number;
+}
+
+/** Một nhóm combo trong giỏ — `isApplied=false` kèm `reason` khi combo vỡ/hết hạn/hết hàng. */
+export interface CartBundleGroupDto {
+    bundleId: string;
+    name: string;
+    isApplied: boolean;
+    reason?: string | null;
+    sets: number;
+    listTotal: number;
+    bundleTotal: number;
+    discount: number;
 }
 
 export interface CartDto {
@@ -47,6 +66,7 @@ export interface CartDto {
     couponCode?: string;
     items: CartItemDto[];
     vatBreakdown?: VatBucketDto[];
+    bundles?: CartBundleGroupDto[];
 }
 
 export interface GuestCartLineDto {
@@ -111,6 +131,8 @@ export interface GuestCheckoutDto {
     couponCode?: string;
     notes?: string;
     paymentMethod?: string;
+    /** Combo của giỏ vãng lai — server tự nạp món + giá; `items` có thể rỗng. */
+    bundles?: { bundleId: string; quantity: number }[];
 }
 
 export interface CheckoutResultDto {
@@ -156,6 +178,21 @@ export const salesCartCheckoutApi = {
                 '/sales/cart/apply-coupon', { couponCode })).data,
 
         removeCoupon: async () => (await client.delete<{ message: string }>('/sales/cart/remove-coupon')).data,
+
+        /** Combo: thêm N bộ (server nạp món + giá, kiểm tồn). */
+        addBundle: async (bundleId: string, quantity = 1) =>
+            (await client.post<{ message: string; bundleId: string }>('/sales/cart/bundles', { bundleId, quantity })).data,
+
+        removeBundle: async (bundleId: string) =>
+            (await client.delete<{ message: string }>(`/sales/cart/bundles/${bundleId}`)).data,
+
+        /** Đổi số lượng một món của combo ⇒ combo VỠ, giá về giá lẻ. */
+        updateBundleItem: async (bundleId: string, productId: string, quantity: number) =>
+            (await client.put<{ message: string }>(`/sales/cart/bundles/${bundleId}/items/${productId}`, { quantity })).data,
+
+        /** Bỏ một món của combo ⇒ combo VỠ, các món còn lại về giá lẻ. */
+        removeBundleItem: async (bundleId: string, productId: string) =>
+            (await client.delete<{ message: string }>(`/sales/cart/bundles/${bundleId}/items/${productId}`)).data,
 
         /** Gộp giỏ vãng lai (cookie `qh_aid`) vào tài khoản + gắn đơn đã đặt lúc còn vãng lai. */
         merge: async () =>

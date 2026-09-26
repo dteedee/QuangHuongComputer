@@ -6,6 +6,7 @@ import { normalizeApiError } from '../../lib/api-error';
 import { notify } from '../ui';
 import type { CartItem } from '../../context/CartContext';
 import type { PaymentFormState, ShippingFormState } from './checkout-types';
+import { readGuestBundles } from '../cart/guest-cart-bundles';
 
 interface SubmitParams {
     items: CartItem[];
@@ -112,7 +113,10 @@ export function useCheckoutSubmit() {
                     shippingAddress,
                     // `price` bị server bỏ qua (nó đọc lại giá thật từ Catalog) — gửi 0 để chắc
                     // chắn không có con số tiền nào đi từ trình duyệt lên.
-                    items: p.items.map(i => ({ productId: i.id, productName: i.name, price: 0, quantity: i.quantity })),
+                    // Dòng combo KHÔNG gửi như dòng lẻ: chỉ gửi bundleId + số bộ, server tự nạp món + giá.
+                    items: p.items.filter(i => !i.bundleId)
+                        .map(i => ({ productId: i.id, productName: i.name, price: 0, quantity: i.quantity })),
+                    bundles: readGuestBundles().map(b => ({ bundleId: b.bundleId, quantity: b.quantity })),
                     couponCode: p.promotionCode ?? undefined,
                     notes: p.shipping.notes,
                     paymentMethod: p.payment.paymentMethod,

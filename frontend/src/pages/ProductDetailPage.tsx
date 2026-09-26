@@ -31,6 +31,7 @@ import { notify } from '../components/ui';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import RecommendationCarousel from '../components/recommendation-carousel';
 import { WriteReviewModal } from '../components/reviews';
+import { ProductComboSavingsBlock } from '../components/product-detail/product-combo-savings-block';
 import {
     ProductDetailAddedToCartToast,
     ProductDetailBreadcrumb,
@@ -335,6 +336,8 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                <ProductComboSavingsBlock productId={product.id} />
 
                 <ProductDetailTabs
                     product={product as Product}

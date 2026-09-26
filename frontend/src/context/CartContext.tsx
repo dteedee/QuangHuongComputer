@@ -8,6 +8,13 @@ import {
     type GuestCartLine,
 } from '../components/cart/guest-cart-storage';
 import { normalizeApiError } from '../lib/api-error';
+import {
+    loadGuestBundleState, mapServerBundles, useCartBundleActions, type CartBundleGroup,
+} from './cart-bundle-actions';
+import { pushGuestBundlesToAccount, readGuestBundles, writeGuestBundles } from '../components/cart/guest-cart-bundles';
+import type { BundleView } from '../api/bundle';
+
+export type { CartBundleGroup } from './cart-bundle-actions';
 
 export interface CartItem {
     id: string;
@@ -21,6 +28,11 @@ export interface CartItem {
     /** Tên biến thể để hiển thị (VD "16GB/512GB/Đen"). Chỉ có khi sản phẩm có biến thể. */
     variantName?: string;
     variantId?: string;
+    /** Combo: dòng thuộc nhóm combo (undefined = dòng lẻ). */
+    bundleId?: string;
+    bundleName?: string;
+    /** Giảm combo chia về dòng (server tính; vãng lai = 0 đến lúc thanh toán). */
+    lineDiscount?: number;
 }
 
 /** Tập trường tối thiểu `addToCart` cần — mọi `Product` đều thoả, nên nơi gọi cũ không đổi. */
@@ -69,6 +81,15 @@ interface CartContextType {
     /** Thông điệp lỗi tải giỏ — trang giỏ hiển thị kèm nút "Thử lại" thay vì giỏ trống giả. */
     error: string | null;
     refreshCart: () => Promise<void>;
+
+    // ---- Combo (nhóm dòng mang cùng bundleId) ----
+    bundles: CartBundleGroup[];
+    addBundleToCart: (bundle: Pick<BundleView, 'id' | 'name'>, sets?: number) => Promise<boolean>;
+    removeBundle: (bundleId: string) => Promise<boolean>;
+    /** Đổi số lượng một món trong combo — combo vỡ, giá về giá lẻ. */
+    updateBundleItem: (bundleId: string, productId: string, quantity: number) => Promise<boolean>;
+    /** Bỏ một món khỏi combo — combo vỡ, các món còn lại về giá lẻ. */
+    removeBundleItem: (bundleId: string, productId: string) => Promise<boolean>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -88,6 +109,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const [isReady, setIsReady] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [bundles, setBundles] = useState<CartBundleGroup[]>([]);
     /** Đã gộp giỏ vãng lai cho phiên đăng nhập này chưa (chạy đúng một lần). */
     const mergedRef = useRef(false);
 
@@ -107,7 +129,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             lineTotal: i.subtotal,
             variantName: i.variantName,
             variantId: i.variantId,
+            bundleId: i.bundleId ?? undefined,
+            bundleName: i.bundleName ?? undefined,
+            lineDiscount: i.lineDiscount ?? 0,
         })));
+        setBundles(mapServerBundles(cart.bundles));
         setCouponCode(cart.couponCode || null);
         setTotals({
             subtotal: cart.subtotalAmount,
@@ -127,9 +153,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             writeGuestLines(kept);
             notify.error(`${dropped.length} sản phẩm trong giỏ không còn bán và đã được gỡ khỏi giỏ.`);
         }
+        const guestBundles = await loadGuestBundleState();
         setCartId(null);
         setCouponCode(null);
-        setItems(hydrated.map(l => ({
+        setBundles(guestBundles.groups);
+        setItems([...hydrated.map(l => ({
             id: l.productId,
             name: l.name,
             price: l.price,
@@ -139,11 +167,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             lineTotal: l.price * l.quantity,
             variantId: l.variantId,
             variantName: l.variantName,
-        })));
+        })), ...guestBundles.items]);
 
         // Tạm tính = Σ (giá server × số lượng). Giảm giá/VAT/phí ship của khách vãng lai chỉ
         // được chốt ở bước thanh toán — FE không suy đoán, để 0 thay vì bịa số.
-        const subtotal = hydrated.reduce((s, l) => s + l.price * l.quantity, 0);
+        const subtotal = hydrated.reduce((s, l) => s + l.price * l.quantity, 0) + guestBundles.subtotal;
         setTotals({ ...emptyTotals, subtotal, total: subtotal });
     }, []);
 
@@ -171,6 +199,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             setIsLoading(true);
             try {
                 const pending = readGuestLines();
+                if (readGuestBundles().length > 0) {
+                    await pushGuestBundlesToAccount(() => {
+                        if (!cancelled) notify.error('Một combo trong giỏ không còn đủ hàng và đã được gỡ.');
+                    });
+                }
                 if (pending.length > 0) {
                     let failed = 0;
                     await pushGuestCartToAccount(pending, () => { failed += 1; });
@@ -279,6 +312,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 await loadServerCart();
             } else {
                 writeGuestLines([]);
+                writeGuestBundles([]);
                 await loadGuestCart([]);
             }
         } catch (err) {
@@ -321,6 +355,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [isAuthenticated, loadServerCart]);
 
+    const reloadCart = useCallback(
+        () => (isAuthenticated ? loadServerCart() : loadGuestCart(readGuestLines())),
+        [isAuthenticated, loadServerCart, loadGuestCart],
+    );
+    const bundleActions = useCartBundleActions({ isAuthenticated, items, reload: reloadCart, setIsUpdating });
+
     const totalQuantity = useMemo(() => items.reduce((s, i) => s + i.quantity, 0), [items]);
 
     const contextValue = useMemo<CartContextType>(() => ({
@@ -331,10 +371,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         vatBreakdown: totals.vatBreakdown, shippingAmount: totals.shippingAmount, total: totals.total,
         itemCount: items.length, totalQuantity,
         isLoading, isReady, isUpdating, error, refreshCart,
+        bundles, ...bundleActions,
     }), [
         items, isGuest, cartId, addToCart, removeFromCart, updateQuantity, clearCart,
         couponCode, totals, applyCoupon, removeCoupon, totalQuantity,
-        isLoading, isReady, isUpdating, error, refreshCart,
+        isLoading, isReady, isUpdating, error, refreshCart, bundles, bundleActions,
     ]);
 
     return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;
