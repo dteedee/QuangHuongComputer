@@ -36,6 +36,7 @@ warn-level rule in `frontend/eslint.config.js`.
 | `/tuyen-dung/:id` | index | JobDetailPage | |
 | `/he-thong-cua-hang` | index | StoresPage | |
 | `/xay-dung-cau-hinh` | noindex | **not built** | reserved for W3-9 (PC builder); `api/pcbuilder.ts` exists, no FE page — wiring a route to a non-existent component was refused as fabrication |
+| `/cau-hinh-mau` | index | PcBuildGalleryPage | staff-curated sample builds; `?tag=`/`?budget=` filters share the clean canonical; `noindex,follow` (shell) while the gallery is empty |
 | `/so-sanh` | index | ComparePage | |
 | `/gio-hang` | noindex | CartPage | public, cart is per-session |
 | `/thanh-toan` | noindex | CheckoutPage | |

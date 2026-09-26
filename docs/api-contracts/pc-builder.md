@@ -192,3 +192,29 @@ Summary list (id, buildCode, name, totalPrice, isCompatible, createdAt, itemCoun
 longer exists — replaced in place by `POST /suggest` above (D10). The route path changed
 (`ai-suggest` → `suggest`); there is no redirect/410 shim, since the old route was never public per
 D10's framing of it as an internal defect, not a contract other tracks depend on.
+
+## 9. Sample builds gallery "Cấu hình mẫu" (`/cau-hinh-mau`)
+
+Built on `SavedPcBuilds`. A gallery entry is a **shop-owned copy** (`CustomerId = null`,
+`UseCaseTag` set) that staff create from any saved build by its share code — the customer's
+original is never renamed or published. `IsFeatured`/`IsPublic`/`UseCaseTag`/`SortOrder` are
+writable ONLY through the admin API; `POST /builds` does not accept them. Public visibility =
+`SavedPcBuild.IsPubliclyVisible` (`IsActive && IsPublic && CustomerId == null && UseCaseTag != null`),
+shared by the API, the SEO shell provider and the sitemap.
+
+Use-case tags: `gaming` (Gaming), `van-phong` (Văn phòng), `do-hoa` (Đồ họa), `streaming` (Streaming).
+
+| Method & path | Permission | Notes |
+|---|---|---|
+| `GET /gallery?tag=&minBudget=&maxBudget=` | public | Featured first, then `sortOrder`. Budget filters the **live** total. |
+| `GET /admin/gallery` | `Catalog.Manage` | All gallery entries incl. hidden. |
+| `POST /admin/gallery` `{buildCode, title, useCaseTag, sortOrder, isFeatured, isPublic}` | `Catalog.Manage` | Copies the build found by `buildCode`; `201 {id, buildCode}`. Unknown code / tag -> `400`. |
+| `PUT /admin/gallery/{id}` `{title, useCaseTag, sortOrder, isFeatured, isPublic}` | `Catalog.Manage` | |
+| `DELETE /admin/gallery/{id}` | `Catalog.Manage` | Soft delete (`IsActive=false`); `204`. |
+
+`PcGalleryBuildView`: `{id, buildCode, title, useCaseTag, useCaseLabel, isFeatured, isPublic,
+sortOrder, liveTotal, savedTotal, overallVerdict, isPurchasable, issues[{ruleId, ruleName, verdict,
+message}], items[{productId, name, sku, slug, imageUrl, slotId, slotLabel, quantity, unitPrice,
+isAvailable, inStock}]}`. `liveTotal` = Σ current price × qty of still-published parts; the verdict
+re-runs `PcBuildEvaluator` (the rule engine behind `POST /check`) on current data. `isPurchasable`
+= every part published and in stock.
