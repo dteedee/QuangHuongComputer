@@ -1,758 +1,139 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { repairApi, type WorkOrderStatus, getStatusColor, getWorkOrderStatusLabel } from '../../../api/repair';
-import { inventoryApi } from '../../../api/inventory';
-import { formatCurrency } from '../../../utils/format';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { ArrowLeft, DollarSign } from 'lucide-react';
 import {
-    ArrowLeft, Wrench, Package, FileText, Plus, Trash2, Send,
-    CheckCircle, Play, Pause, MessageSquare, Clock, AlertCircle,
-    DollarSign, User, Smartphone, Calendar
-} from 'lucide-react';
+    Button, Card, CardBody, CardHeader, CardTitle, Dialog, ErrorState, Money, PageHeader, QueryBoundary,
+    SkeletonText, StatusBadge, Textarea, notify,
+} from '../../../components/ui';
+import { normalizeApiError } from '../../../lib/api-error';
+import { paths } from '../../../routes';
+import { queryKeys } from '../../../lib/query-keys';
+import { repairApi, getWorkOrderStatusLabel, type ActivityLog, type WorkOrder, type WorkOrderPart, type WorkOrderStatus } from '../../../api/repair';
+import { repairServiceTypesApi } from '../../../api/repair/service-types';
+import type { RepairQuote } from '../../../api/repair/quote-types';
 import { WorkOrderPaymentHandoverPanel } from './work-order-payment-handover-panel';
+import { WorkOrderStatusActions } from './work-order-status-actions';
+import { WorkOrderPartsCard } from './work-order-parts-card';
+import { WorkOrderActivityCard } from './work-order-activity-card';
+import { WorkOrderIntakePanel } from './intake/work-order-intake-panel';
+import { WorkOrderAddPartDialog } from './intake/work-order-add-part-dialog';
+import { WorkOrderProgressPhotosDialog } from './intake/work-order-progress-photos-dialog';
+import { toAddPartInput } from './intake/work-order-part-schema';
+import { WorkOrderQuotePanel } from './quote/work-order-quote-panel';
+import { initialLines } from './quote/repair-quote-form-schema';
 
-// Single source of Vietnamese labels lives in `api/repair/types.ts` now
-// (was a second, slightly different copy here — DRY per dev rules).
-const translateStatus = getWorkOrderStatusLabel;
+/** `GET /repair/tech/work-orders/{id}` — flat work order + parts, quotes (with lines) and activity logs. */
+type TechWorkOrderDetail = WorkOrder & {
+    serviceTypeName?: string | null;
+    parts: WorkOrderPart[];
+    quotes: RepairQuote[];
+    activityLogs: ActivityLog[];
+};
+
+const CLOSED: WorkOrderStatus[] = ['Cancelled', 'Delivered'];
+const PARTS_EDITABLE: WorkOrderStatus[] = ['Assigned', 'Diagnosed', 'Quoted', 'Approved', 'InProgress', 'OnHold'];
 
 export const WorkOrderDetailPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
+    const [partOpen, setPartOpen] = useState(false);
+    const [photosOpen, setPhotosOpen] = useState(false);
+    const [noteOpen, setNoteOpen] = useState(false);
+    const [note, setNote] = useState('');
 
-    const [showAddPartModal, setShowAddPartModal] = useState(false);
-    const [showQuoteModal, setShowQuoteModal] = useState(false);
-    const [showNoteModal, setShowNoteModal] = useState(false);
-
-    // Part form
-    const [selectedInventoryItemId, setSelectedInventoryItemId] = useState('');
-    const [inventorySearch, setInventorySearch] = useState('');
-    const [partName, setPartName] = useState('');
-    const [partNumber, setPartNumber] = useState('');
-    const [partQuantity, setPartQuantity] = useState(1);
-    const [partUnitPrice, setPartUnitPrice] = useState(0);
-
-    // Quote form
-    const [quoteLaborCost, setQuoteLaborCost] = useState(0);
-    const [quoteServiceFee, setQuoteServiceFee] = useState(0);
-    const [quoteEstimatedHours, setQuoteEstimatedHours] = useState(1);
-    const [quoteHourlyRate, setQuoteHourlyRate] = useState(200000);
-    const [quoteDescription, setQuoteDescription] = useState('');
-    const [quoteNotes, setQuoteNotes] = useState('');
-
-    // Note form
-    const [noteContent, setNoteContent] = useState('');
-
-    // Status-change note modal — replaces native `prompt()` (D12: freezes the
-    // automation channel; standing rule: no native dialogs).
-    const [statusPrompt, setStatusPrompt] = useState<{
-        status: WorkOrderStatus; title: string; label: string; required: boolean;
-    } | null>(null);
-    const [statusPromptValue, setStatusPromptValue] = useState('');
-
-    const { data, isLoading, refetch } = useQuery({
-        queryKey: ['tech-work-order', id],
-        queryFn: () => repairApi.technician.getWorkOrderDetail(id!),
-        enabled: !!id
+    const query = useQuery({
+        queryKey: queryKeys.repair.detail(id ?? ''),
+        queryFn: () => repairApi.technician.getWorkOrderDetail(id!) as Promise<TechWorkOrderDetail>,
+        enabled: !!id,
     });
+    const services = useQuery({ queryKey: [...queryKeys.repair.all, 'service-types', 'active'], queryFn: repairServiceTypesApi.listActive });
+    const refetch = () => void query.refetch();
+    const fail = (title: string) => (e: unknown) => notify.error(title, { description: normalizeApiError(e).message });
 
-    // Fetch inventory items for part selection
-    const { data: inventoryItems = [] } = useQuery({
-        queryKey: ['inventory-items-for-parts'],
-        queryFn: () => inventoryApi.getInventory(),
-        staleTime: 5 * 60 * 1000
+    const statusMutation = useMutation({
+        mutationFn: ({ status, notes }: { status: WorkOrderStatus; notes?: string }) => repairApi.technician.updateStatus(id!, status, notes),
+        onSuccess: () => { notify.success('Đã cập nhật trạng thái'); refetch(); },
+        onError: fail('Không cập nhật được trạng thái'),
     });
-
-    const filteredInventoryItems = useMemo(() => {
-        if (!inventorySearch.trim()) return inventoryItems.slice(0, 20);
-        const q = inventorySearch.toLowerCase();
-        return inventoryItems.filter(item =>
-            (item.productName?.toLowerCase().includes(q)) ||
-            item.sku?.toLowerCase().includes(q)
-        ).slice(0, 20);
-    }, [inventoryItems, inventorySearch]);
-
-    const workOrder = data?.workOrder;
-    const parts = data?.parts || [];
-    const logs = data?.logs || [];
-
-    // Mutations
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ status, notes }: { status: WorkOrderStatus; notes?: string }) =>
-            repairApi.technician.updateStatus(id!, status, notes),
-        onSuccess: () => {
-            toast.success('Đã cập nhật trạng thái!');
-            refetch();
-        },
-        onError: (err: any) => {
-            toast.error(err?.response?.data?.error || 'Có lỗi xảy ra');
-        }
-    });
-
-    const addPartMutation = useMutation({
-        mutationFn: () => repairApi.technician.addPart(id!, {
-            inventoryItemId: selectedInventoryItemId,
-            partName,
-            partNumber,
-            quantity: partQuantity,
-            unitPrice: partUnitPrice
-        }),
-        onSuccess: () => {
-            toast.success('Đã thêm linh kiện!');
-            setShowAddPartModal(false);
-            resetPartForm();
-            refetch();
-        },
-        onError: (err: any) => {
-            toast.error(err?.response?.data?.error || 'Có lỗi xảy ra');
-        }
-    });
-
-    const removePartMutation = useMutation({
+    const removePart = useMutation({
         mutationFn: (partId: string) => repairApi.technician.removePart(id!, partId),
-        onSuccess: () => {
-            toast.success('Đã xóa linh kiện!');
-            refetch();
-        }
+        onSuccess: () => { notify.success('Đã xoá linh kiện'); refetch(); },
+        onError: fail('Không xoá được linh kiện'),
+    });
+    const addNote = useMutation({
+        mutationFn: () => repairApi.technician.addLog(id!, note.trim()),
+        onSuccess: () => { notify.success('Đã thêm ghi chú'); setNoteOpen(false); setNote(''); refetch(); },
+        onError: fail('Không thêm được ghi chú'),
     });
 
-    const createQuoteMutation = useMutation({
-        mutationFn: () => repairApi.technician.createQuote(id!, {
-            partsCost: parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0),
-            laborCost: quoteLaborCost,
-            serviceFee: quoteServiceFee,
-            estimatedHours: quoteEstimatedHours,
-            hourlyRate: quoteHourlyRate,
-            description: quoteDescription,
-            notes: quoteNotes
-        }),
-        onSuccess: () => {
-            toast.success('Đã tạo báo giá!');
-            setShowQuoteModal(false);
-            refetch();
-        },
-        onError: (err: any) => {
-            toast.error(err?.response?.data?.error || 'Có lỗi xảy ra');
-        }
-    });
-
-    const addNoteMutation = useMutation({
-        mutationFn: () => repairApi.technician.addLog(id!, noteContent),
-        onSuccess: () => {
-            toast.success('Đã thêm ghi chú!');
-            setShowNoteModal(false);
-            setNoteContent('');
-            refetch();
-        }
-    });
-
-    const resetPartForm = () => {
-        setSelectedInventoryItemId('');
-        setInventorySearch('');
-        setPartName('');
-        setPartNumber('');
-        setPartQuantity(1);
-        setPartUnitPrice(0);
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="animate-spin w-12 h-12 border-4 border-accent border-t-transparent rounded-full"></div>
-            </div>
-        );
-    }
-
-    if (!workOrder) {
-        return (
-            <div className="text-center py-20">
-                <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
-                <p className="text-xl font-bold text-gray-900">Không tìm thấy phiếu sửa chữa</p>
-            </div>
-        );
-    }
-
-    const canDiagnose = workOrder.status === 'Assigned';
-    const canAddParts = ['Assigned', 'Diagnosed', 'Quoted'].includes(workOrder.status);
-    const canCreateQuote = workOrder.status === 'Diagnosed';
-    const canStart = workOrder.status === 'Approved';
-    const canComplete = workOrder.status === 'InProgress';
-    const canPause = workOrder.status === 'InProgress';
-    const canResume = workOrder.status === 'OnHold';
+    if (!id) return <ErrorState title="Thiếu mã phiếu sửa chữa" />;
 
     return (
-        <div className="space-y-8 pb-20">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div>
-                    <button
-                        onClick={() => navigate('/backoffice/tech')}
-                        className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold mb-4 transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                        Quay lại
-                    </button>
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-semibold text-slate-900">
-                            {workOrder.ticketNumber}
-                        </h1>
-                        <span className={`px-4 py-2 rounded-xl text-sm font-semibold ${getStatusColor(workOrder.status)}`}>
-                            {translateStatus(workOrder.status)}
-                        </span>
+        <div className="space-y-4 pb-16">
+            <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => navigate(paths.backoffice.tech())}>Quay lại</Button>
+            <QueryBoundary query={query} skeleton={<SkeletonText lines={10} />} errorTitle="Không tải được phiếu sửa chữa">
+                {(wo) => {
+                    const currentQuote = wo.quotes.find((q) => q.id === wo.currentQuoteId) ?? null;
+                    const editable = !CLOSED.includes(wo.status);
+                    const partLines = initialLines({ parts: wo.parts }, []);
+                    return (
+                        <>
+                            <PageHeader
+                                title={<span className="num">{wo.ticketNumber}</span>}
+                                description={<StatusBadge tone="info">{getWorkOrderStatusLabel(wo.status)}</StatusBadge>}
+                                actions={<WorkOrderStatusActions status={wo.status} pending={statusMutation.isPending}
+                                    onChange={(status, notes) => statusMutation.mutate({ status, notes })} />}
+                            />
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                                <div className="space-y-4 lg:col-span-2">
+                                    <WorkOrderIntakePanel workOrder={wo} onChanged={refetch} editable={editable} />
+                                    <WorkOrderPartsCard parts={wo.parts} partsCost={wo.partsCost} editable={PARTS_EDITABLE.includes(wo.status)}
+                                        onAdd={() => setPartOpen(true)} onRemove={(partId) => removePart.mutate(partId)} />
+                                    <WorkOrderQuotePanel workOrderId={wo.id} workOrderStatus={wo.status} currentQuote={currentQuote}
+                                        initialLines={initialLines(wo, services.data ?? [])} partLines={wo.parts.length > 0 ? partLines : []} onChanged={refetch} />
+                                    <WorkOrderActivityCard logs={wo.activityLogs} onAddNote={() => setNoteOpen(true)}
+                                        onAddPhotos={editable ? () => setPhotosOpen(true) : undefined} />
+                                </div>
+                                <div className="space-y-4">
+                                    <Card padded>
+                                        <CardHeader><CardTitle className="flex items-center gap-2"><DollarSign size={18} aria-hidden /> Chi phí</CardTitle></CardHeader>
+                                        <CardBody>
+                                            <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-13">
+                                                <dt className="text-fg-muted">Linh kiện</dt><dd className="text-right"><Money value={wo.partsCost} /></dd>
+                                                <dt className="text-fg-muted">Nhân công</dt><dd className="text-right"><Money value={wo.laborCost} /></dd>
+                                                <dt className="text-fg-muted">Phí dịch vụ</dt><dd className="text-right"><Money value={wo.serviceFee} /></dd>
+                                                <dt className="border-t border-line pt-1 font-semibold">Theo báo giá đã duyệt</dt>
+                                                <dd className="border-t border-line pt-1 text-right font-semibold">
+                                                    <Money value={currentQuote?.status === 'Approved' ? currentQuote.totalCost : null} />
+                                                </dd>
+                                            </dl>
+                                        </CardBody>
+                                    </Card>
+                                    <WorkOrderPaymentHandoverPanel workOrder={wo} workOrderId={wo.id} refetch={refetch} />
+                                </div>
+                            </div>
+                        </>
+                    );
+                }}
+            </QueryBoundary>
+
+            <WorkOrderAddPartDialog open={partOpen} onOpenChange={setPartOpen}
+                onSubmit={async (values) => {
+                    await repairApi.technician.addPart(id, toAddPartInput(values));
+                    notify.success(values.source === 'stock' ? 'Đã thêm và giữ hàng linh kiện' : 'Đã thêm linh kiện mua ngoài');
+                    refetch();
+                }} />
+            <WorkOrderProgressPhotosDialog open={photosOpen} onOpenChange={setPhotosOpen} workOrderId={id} onUploaded={refetch} />
+            <Dialog open={noteOpen} onOpenChange={setNoteOpen} title="Thêm ghi chú" size="sm"
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setNoteOpen(false)}>Huỷ</Button>
+                        <Button loading={addNote.isPending} disabled={!note.trim()} onClick={() => addNote.mutate()}>Thêm ghi chú</Button>
                     </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="flex gap-3">
-                    {canDiagnose && (
-                        <button
-                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'Diagnosed', title: 'Hoàn tất chẩn đoán', label: 'Kết quả chẩn đoán', required: true }); }}
-                            className="flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold hover:bg-cyan-700 transition"
-                        >
-                            <Wrench size={18} />
-                            Hoàn tất chẩn đoán
-                        </button>
-                    )}
-                    {canStart && (
-                        <button
-                            onClick={() => updateStatusMutation.mutate({ status: 'InProgress' })}
-                            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
-                        >
-                            <Play size={18} />
-                            Bắt đầu sửa
-                        </button>
-                    )}
-                    {canPause && (
-                        <button
-                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'OnHold', title: 'Tạm dừng sửa chữa', label: 'Lý do tạm dừng', required: true }); }}
-                            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition"
-                        >
-                            <Pause size={18} />
-                            Tạm dừng
-                        </button>
-                    )}
-                    {canResume && (
-                        <button
-                            onClick={() => updateStatusMutation.mutate({ status: 'InProgress' })}
-                            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
-                        >
-                            <Play size={18} />
-                            Tiếp tục
-                        </button>
-                    )}
-                    {canComplete && (
-                        <button
-                            onClick={() => { setStatusPromptValue(''); setStatusPrompt({ status: 'Completed', title: 'Hoàn thành sửa chữa', label: 'Ghi chú hoàn thành (tuỳ chọn)', required: false }); }}
-                            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition"
-                        >
-                            <CheckCircle size={18} />
-                            Hoàn thành
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Device Info */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <Smartphone size={20} className="text-accent" />
-                            Thông tin thiết bị
-                        </h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-xs text-slate-500 font-medium">Model</p>
-                                <p className="font-bold text-gray-900">{workOrder.deviceModel}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500 font-medium">Serial Number</p>
-                                <p className="font-mono font-bold text-gray-900">{workOrder.serialNumber || 'N/A'}</p>
-                            </div>
-                            <div className="col-span-2">
-                                <p className="text-xs text-slate-500 font-medium">Mô tả vấn đề</p>
-                                <p className="text-gray-700 bg-gray-50 p-3 rounded-lg mt-1">{workOrder.description}</p>
-                            </div>
-                            {workOrder.technicalNotes && (
-                                <div className="col-span-2">
-                                    <p className="text-xs text-slate-500 font-medium">Ghi chú kỹ thuật</p>
-                                    <p className="text-gray-700 bg-blue-50 p-3 rounded-lg mt-1 border border-blue-100">
-                                        {workOrder.technicalNotes}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Parts Section */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                <Package size={20} className="text-accent" />
-                                Linh kiện sử dụng
-                            </h2>
-                            {canAddParts && (
-                                <button
-                                    onClick={() => setShowAddPartModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg font-bold text-sm hover:bg-accent-hover transition"
-                                >
-                                    <Plus size={16} />
-                                    Thêm linh kiện
-                                </button>
-                            )}
-                        </div>
-
-                        {parts.length === 0 ? (
-                            <p className="text-gray-400 text-center py-8">Chưa có linh kiện nào</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {parts.map((part: any) => (
-                                    <div key={part.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                        <div>
-                                            <p className="font-bold text-gray-900">{part.partName}</p>
-                                            {part.partNumber && (
-                                                <p className="text-xs text-gray-500 font-mono">#{part.partNumber}</p>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <p className="font-bold text-gray-900">{formatCurrency(part.totalPrice)}</p>
-                                                <p className="text-xs text-gray-500">{part.quantity} x {formatCurrency(part.unitPrice)}</p>
-                                            </div>
-                                            {canAddParts && (
-                                                <button
-                                                    onClick={() => removePartMutation.mutate(part.id)}
-                                                    className="p-2 text-red-500 hover:bg-blue-50 rounded-lg transition"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                                    <span className="font-bold text-gray-700">Tổng chi phí linh kiện:</span>
-                                    <span className="text-xl font-semibold text-accent">
-                                        {formatCurrency(parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0))}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Quote Section */}
-                    {canCreateQuote && (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                    <FileText size={20} className="text-blue-600" />
-                                    Tạo báo giá
-                                </h2>
-                            </div>
-                            <p className="text-gray-600 mb-4">
-                                Đã chẩn đoán xong và thêm linh kiện. Tạo báo giá để gửi cho khách hàng duyệt.
-                            </p>
-                            <button
-                                onClick={() => setShowQuoteModal(true)}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
-                            >
-                                <Send size={18} />
-                                Tạo báo giá
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Activity Log */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                                <MessageSquare size={20} className="text-accent" />
-                                Lịch sử hoạt động
-                            </h2>
-                            <button
-                                onClick={() => setShowNoteModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-200 transition"
-                            >
-                                <Plus size={16} />
-                                Thêm ghi chú
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 max-h-96 overflow-y-auto">
-                            {logs.map((log: any) => (
-                                <div key={log.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
-                                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <User size={16} className="text-gray-600" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="font-bold text-gray-900">{log.activity}</p>
-                                        {log.description && <p className="text-gray-600 text-sm mt-1">{log.description}</p>}
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            {log.performedByName || 'Hệ thống'} • {new Date(log.createdAt).toLocaleString('vi-VN')}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                    {/* Cost Summary */}
-                    <div className="bg-gray-900 rounded-xl p-6 text-white">
-                        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <DollarSign size={20} className="text-accent" />
-                            Tổng chi phí
-                        </h2>
-                        <div className="space-y-3">
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Linh kiện</span>
-                                <span className="font-bold">{formatCurrency(workOrder.partsCost)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Nhân công</span>
-                                <span className="font-bold">{formatCurrency(workOrder.laborCost)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-400">Phí dịch vụ</span>
-                                <span className="font-bold">{formatCurrency(workOrder.serviceFee)}</span>
-                            </div>
-                            <div className="border-t border-gray-700 pt-3 flex justify-between">
-                                <span className="font-bold">Tổng cộng</span>
-                                <span className="text-2xl font-semibold text-accent">{formatCurrency(workOrder.totalCost)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Payment + handover (W2-13/W3-15) */}
-                    <WorkOrderPaymentHandoverPanel workOrder={workOrder} workOrderId={id!} refetch={refetch} />
-
-                    {/* Timeline */}
-                    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <Calendar size={20} className="text-accent" />
-                            Timeline
-                        </h2>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Tạo phiếu</p>
-                                    <p className="font-bold text-gray-900">{new Date(workOrder.createdAt).toLocaleString('vi-VN')}</p>
-                                </div>
-                            </div>
-                            {workOrder.assignedAt && (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                                    <div>
-                                        <p className="text-xs text-gray-500">Phân công</p>
-                                        <p className="font-bold text-gray-900">{new Date(workOrder.assignedAt).toLocaleString('vi-VN')}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {workOrder.diagnosedAt && (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                                    <div>
-                                        <p className="text-xs text-gray-500">Chẩn đoán</p>
-                                        <p className="font-bold text-gray-900">{new Date(workOrder.diagnosedAt).toLocaleString('vi-VN')}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {workOrder.startedAt && (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                    <div>
-                                        <p className="text-xs text-gray-500">Bắt đầu sửa</p>
-                                        <p className="font-bold text-gray-900">{new Date(workOrder.startedAt).toLocaleString('vi-VN')}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {workOrder.finishedAt && (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                    <div>
-                                        <p className="text-xs text-gray-500">Hoàn thành</p>
-                                        <p className="font-bold text-emerald-600">{new Date(workOrder.finishedAt).toLocaleString('vi-VN')}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Add Part Modal */}
-            {showAddPartModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm linh kiện</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Chọn linh kiện từ kho *</label>
-                                <input
-                                    type="text"
-                                    value={inventorySearch}
-                                    onChange={(e) => setInventorySearch(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    placeholder="Tìm theo tên hoặc SKU..."
-                                />
-                                {inventorySearch && !selectedInventoryItemId && (
-                                    <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white shadow-lg">
-                                        {filteredInventoryItems.length === 0 ? (
-                                            <p className="p-3 text-sm text-gray-400">Không tìm thấy linh kiện</p>
-                                        ) : (
-                                            filteredInventoryItems.map(item => (
-                                                <button
-                                                    key={item.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSelectedInventoryItemId(item.id);
-                                                        setPartName(item.productName || item.sku);
-                                                        setPartNumber(item.sku);
-                                                        setInventorySearch(item.productName || item.sku);
-                                                    }}
-                                                    className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
-                                                >
-                                                    <span className="font-medium text-gray-900">{item.productName || item.sku}</span>
-                                                    <span className="ml-2 text-xs text-gray-400">SKU: {item.sku} · SL: {item.quantity}</span>
-                                                </button>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                                {selectedInventoryItemId && (
-                                    <div className="mt-1 flex items-center gap-2 p-2 bg-green-50 rounded-lg">
-                                        <CheckCircle size={14} className="text-green-600" />
-                                        <span className="text-sm text-green-700 font-medium">{partName}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSelectedInventoryItemId('');
-                                                setInventorySearch('');
-                                                setPartName('');
-                                                setPartNumber('');
-                                            }}
-                                            className="ml-auto text-xs text-gray-400 hover:text-red-500"
-                                        >
-                                            Đổi
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Số lượng</label>
-                                    <input
-                                        type="number"
-                                        value={partQuantity}
-                                        onChange={(e) => setPartQuantity(Number(e.target.value))}
-                                        min="1"
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Đơn giá (VNĐ)</label>
-                                    <input
-                                        type="number"
-                                        value={partUnitPrice}
-                                        onChange={(e) => setPartUnitPrice(Number(e.target.value))}
-                                        min="0"
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-xl">
-                                <p className="text-sm text-gray-500">Thành tiền:</p>
-                                <p className="text-xl font-semibold text-accent">{formatCurrency(partQuantity * partUnitPrice)}</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 mt-6">
-                            <button
-                                onClick={() => setShowAddPartModal(false)}
-                                className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={() => addPartMutation.mutate()}
-                                disabled={!selectedInventoryItemId || !partName || partQuantity < 1 || addPartMutation.isPending}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
-                            >
-                                {addPartMutation.isPending ? 'Đang thêm...' : 'Thêm'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Create Quote Modal */}
-            {showQuoteModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Tạo báo giá</h3>
-                        <div className="space-y-4">
-                            <div className="p-4 bg-gray-50 rounded-xl">
-                                <p className="text-sm text-gray-500">Chi phí linh kiện (tự động tính)</p>
-                                <p className="text-xl font-semibold text-gray-900">
-                                    {formatCurrency(parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0))}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Chi phí nhân công</label>
-                                    <input
-                                        type="number"
-                                        value={quoteLaborCost}
-                                        onChange={(e) => setQuoteLaborCost(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Phí dịch vụ</label>
-                                    <input
-                                        type="number"
-                                        value={quoteServiceFee}
-                                        onChange={(e) => setQuoteServiceFee(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Số giờ ước tính</label>
-                                    <input
-                                        type="number"
-                                        value={quoteEstimatedHours}
-                                        onChange={(e) => setQuoteEstimatedHours(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Giá/giờ</label>
-                                    <input
-                                        type="number"
-                                        value={quoteHourlyRate}
-                                        onChange={(e) => setQuoteHourlyRate(Number(e.target.value))}
-                                        className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Mô tả công việc</label>
-                                <textarea
-                                    value={quoteDescription}
-                                    onChange={(e) => setQuoteDescription(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[80px]"
-                                    placeholder="Mô tả chi tiết công việc sửa chữa..."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Ghi chú</label>
-                                <textarea
-                                    value={quoteNotes}
-                                    onChange={(e) => setQuoteNotes(e.target.value)}
-                                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[60px]"
-                                    placeholder="Ghi chú thêm..."
-                                />
-                            </div>
-                            <div className="p-4 bg-accent rounded-xl text-white">
-                                <p className="text-sm opacity-80">Tổng báo giá:</p>
-                                <p className="text-2xl font-semibold">
-                                    {formatCurrency(
-                                        parts.reduce((sum: number, p: any) => sum + p.totalPrice, 0) +
-                                        quoteLaborCost +
-                                        quoteServiceFee
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 mt-6">
-                            <button
-                                onClick={() => setShowQuoteModal(false)}
-                                className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={() => createQuoteMutation.mutate()}
-                                disabled={createQuoteMutation.isPending}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
-                            >
-                                {createQuoteMutation.isPending ? 'Đang tạo...' : 'Tạo báo giá'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Note Modal */}
-            {showNoteModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Thêm ghi chú</h3>
-                        <textarea
-                            value={noteContent}
-                            onChange={(e) => setNoteContent(e.target.value)}
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[120px]"
-                            placeholder="Nhập ghi chú..."
-                        />
-                        <div className="flex gap-4 mt-6">
-                            <button
-                                onClick={() => setShowNoteModal(false)}
-                                className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={() => addNoteMutation.mutate()}
-                                disabled={!noteContent.trim() || addNoteMutation.isPending}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
-                            >
-                                {addNoteMutation.isPending ? 'Đang thêm...' : 'Thêm ghi chú'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Status-change note modal (Diagnosed/OnHold/Completed) — no native prompt() */}
-            {statusPrompt && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl p-8 max-w-md w-full">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">{statusPrompt.title}</h3>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">{statusPrompt.label}</label>
-                        <textarea
-                            value={statusPromptValue}
-                            onChange={(e) => setStatusPromptValue(e.target.value)}
-                            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-accent min-h-[100px]"
-                            placeholder="Nhập nội dung..."
-                        />
-                        <div className="flex gap-4 mt-6">
-                            <button
-                                onClick={() => setStatusPrompt(null)}
-                                className="flex-1 py-3 border border-gray-200 rounded-xl font-bold hover:bg-gray-50"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (statusPrompt.required && !statusPromptValue.trim()) return;
-                                    updateStatusMutation.mutate({ status: statusPrompt.status, notes: statusPromptValue.trim() || undefined });
-                                    setStatusPrompt(null);
-                                }}
-                                disabled={statusPrompt.required && !statusPromptValue.trim()}
-                                className="flex-1 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover disabled:opacity-50"
-                            >
-                                Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                }>
+                <Textarea label="Nội dung" rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
+            </Dialog>
         </div>
     );
 };
