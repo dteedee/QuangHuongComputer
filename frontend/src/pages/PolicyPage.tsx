@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, Truck, RotateCcw, CreditCard, ChevronRight, Zap, FileText, Loader2, PackageSearch, MessageSquareWarning } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { contentApi } from '../api/content';
+import { ROUTES } from '../routes/route-paths';
 import SEO from '../components/SEO';
 import { SafeHtml } from '../components/ui/safe-html';
 import { PolicyMatrixTable } from '../components/policy/policy-matrix-table';
@@ -40,40 +41,31 @@ const titleMapping: Record<string, string> = {
     'khuyen-mai': 'Khuyến mãi',
 };
 
-const listTypes = ['tin-tuc', 'khuyen-mai'];
+// `tin-tuc` / `khuyen-mai` are post lists with their own pages now (`/tin-tuc`, `/khuyen-mai`);
+// `/chinh-sach/{tin-tuc,khuyen-mai,news,promotions}` are redirects in storefront-service.routes.ts.
+const listLinks: Record<string, string> = {
+    'tin-tuc': ROUTES.NEWS,
+    'khuyen-mai': ROUTES.PROMOTIONS,
+};
 
 export const PolicyPage = () => {
     const { type: rawType } = useParams<{ type: string }>();
     // Old English keys (`/policy/warranty`) still reach this page one redirect hop away — accept
     // both so a stale bookmark or an un-migrated call site never 404s.
     const currentType = slugMapping[rawType || ''] || rawType || 'bao-hanh';
-    const isListPage = listTypes.includes(currentType);
 
     // Page Logic
     const dbSlug = currentType;
     const Icon = iconMapping[currentType] || ShieldCheck;
 
-    // List Logic - Map URL type to API PostType
-    const postTypeMap: Record<string, 'News' | 'Promotion'> = {
-        'tin-tuc': 'News',
-        'khuyen-mai': 'Promotion'
-    };
-
     const { data: page, isLoading: pageLoading, error: pageError } = useQuery({
         queryKey: ['public-page', dbSlug],
         queryFn: () => contentApi.getPage(dbSlug),
-        enabled: !isListPage,
         retry: false
     });
 
-    const { data: posts, isLoading: postsLoading, error: postsError } = useQuery({
-        queryKey: ['public-posts', currentType],
-        queryFn: () => contentApi.getPosts(postTypeMap[currentType]),
-        enabled: isListPage
-    });
-
-    const isLoading = isListPage ? postsLoading : pageLoading;
-    const error = isListPage ? postsError : pageError;
+    const isLoading = pageLoading;
+    const error = pageError;
 
     return (
         <div className="bg-gray-50 min-h-screen pb-10">
@@ -101,7 +93,7 @@ export const PolicyPage = () => {
                                 return (
                                     <Link
                                         key={key}
-                                        to={`/chinh-sach/${key}`}
+                                        to={listLinks[key] ?? `/chinh-sach/${key}`}
                                         className={`p-5 border-b border-gray-50 flex items-center justify-between hover:bg-gray-50 hover:text-accent transition-all ${key === currentType ? 'text-accent font-black bg-red-50' : 'text-gray-500 font-bold'}`}
                                     >
                                         <div className="flex items-center gap-3 text-sm">
@@ -122,66 +114,6 @@ export const PolicyPage = () => {
                         <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
                             <Loader2 size={40} className="animate-spin text-accent mb-4" />
                             <p className="uppercase font-bold text-xs tracking-widest">Đang tải nội dung...</p>
-                        </div>
-                    ) : isListPage ? (
-                        // List View
-                        <div>
-                            <div className="flex items-center gap-5 mb-8 border-b border-gray-100 pb-6">
-                                <div className="p-4 bg-red-50 text-accent rounded-2xl shadow-inner">
-                                    <Icon size={32} />
-                                </div>
-                                <h1 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">{titleMapping[currentType]}</h1>
-                            </div>
-
-                            {posts && posts.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {posts.map((post: any, index: number) => {
-                                        // Fallback images per category
-                                        const promoImages = [
-                                            '/images/placeholders/promo-1.png',
-                                            '/images/placeholders/promo-2.png',
-                                            '/images/placeholders/promo-3.png',
-                                            '/images/placeholders/promo-4.png',
-                                            '/images/placeholders/promo-5.png',
-                                            '/images/placeholders/promo-6.png',
-                                        ];
-                                        const newsImages = [
-                                            '/images/placeholders/news-1.png',
-                                            '/images/placeholders/news-2.png',
-                                        ];
-                                        const fallbackPool = currentType === 'promotions' ? promoImages : newsImages;
-                                        const fallbackImage = fallbackPool[((post.slug.length + (post.title.codePointAt(0) || 0)) % fallbackPool.length)];
-
-                                        return (
-                                        <div key={post.id} className="group border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all bg-white hover:-translate-y-1">
-                                            {/* Featured image or styled fallback */}
-                                            <div className="h-48 bg-gray-100 overflow-hidden relative">
-                                                <img
-                                                    src={post.thumbnailUrl || fallbackImage}
-                                                    alt={post.title}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                    onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage; }}
-                                                />
-                                                <div className="absolute top-3 left-3 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                                    {post.type}
-                                                </div>
-                                            </div>
-                                            <div className="p-5">
-                                                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-accent transition-colors">{post.title}</h3>
-                                                <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.summary || (post.content || '').replace(/<[^>]*>?/gm, '').substring(0, 100)}...</p>
-                                                <Link to={`/tin-tuc/${post.slug}`} className="text-xs font-black uppercase tracking-widest text-accent flex items-center gap-1 hover:gap-2 transition-all">
-                                                    Xem chi tiết <ChevronRight size={12} />
-                                                </Link>
-                                            </div>
-                                        </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="text-center py-20 bg-gray-50 rounded-2xl">
-                                    <p className="text-gray-500 font-medium">Chưa có bài viết nào trong mục này.</p>
-                                </div>
-                            )}
                         </div>
                     ) : error || !page ? (
                         // Error State (Page)

@@ -84,6 +84,32 @@ export const promotionApi = {
     },
 };
 
+/**
+ * One row of `GET /api/promotions/available` as the server really sends it
+ * (`PromotionEndpoints.cs`): running, manual-code promotions only. Note it has
+ * NO `startAt` — unlike the older `Promotion` shape above.
+ */
+export interface AvailablePromotionCode {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    discountType: PromotionDiscountType | 'FixedPrice';
+    discountValue: number;
+    maxDiscountAmount: number | null;
+    endAt: string | null;
+    /** null = unlimited total usage. */
+    usageRemaining: number | null;
+}
+
+export const promotionCodePublicApi = {
+    /** Mã giảm giá đang chạy — trang `/khuyen-mai`. Anonymous; không truyền customerId. */
+    getRunningCodes: async (): Promise<AvailablePromotionCode[]> => {
+        const response = await client.get<AvailablePromotionCode[]>('/promotions/available');
+        return Array.isArray(response.data) ? response.data : [];
+    },
+};
+
 /* ------------------------------------------------------------------------ */
 /* Storefront flash sales (W3-1)                                             */
 /* ------------------------------------------------------------------------ */

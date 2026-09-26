@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Zap, Monitor, Briefcase } from 'lucide-react';
-import { buildPath, ROUTES } from '../../routes/route-paths';
+import { ROUTES } from '../../routes/route-paths';
 
 interface HeaderTopBarProps {
     isScrolled: boolean;
@@ -22,10 +22,10 @@ export const HeaderTopBar = ({ isScrolled }: HeaderTopBarProps) => {
                     Hệ thống bán lẻ máy tính uy tín — SINCE 2008
                 </span>
                 <div className="flex items-center gap-5">
-                    <Link to={buildPath(ROUTES.POLICY, 'promotions')} className="flex items-center gap-1 hover:text-white/80 transition-colors cursor-pointer">
+                    <Link to={ROUTES.PROMOTIONS} className="flex items-center gap-1 hover:text-white/80 transition-colors cursor-pointer">
                         <Zap size={11} /> Khuyến mãi
                     </Link>
-                    <Link to={buildPath(ROUTES.POLICY, 'news')} className="flex items-center gap-1 hover:text-white/80 transition-colors cursor-pointer">
+                    <Link to={ROUTES.NEWS} className="flex items-center gap-1 hover:text-white/80 transition-colors cursor-pointer">
                         <Monitor size={11} /> Tin công nghệ
                     </Link>
                     <Link to={ROUTES.RECRUITMENT} className="flex items-center gap-1 hover:text-white/80 transition-colors cursor-pointer">

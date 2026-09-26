@@ -20,6 +20,10 @@ export const ROUTES = {
   SEARCH: '/tim-kiem',
   NEWS: '/tin-tuc',
   NEWS_DETAIL: '/tin-tuc/:slug',
+  PROMOTIONS: '/khuyen-mai',
+  PROMOTION_DETAIL: '/khuyen-mai/:slug',
+  // `Promotion` (FlashSale) has no slug — one landing page shows every running sale.
+  FLASH_SALE: '/flash-sale',
   POLICY: '/chinh-sach/:type',
   TERMS: '/dieu-khoan',
   PRIVACY: '/bao-mat',

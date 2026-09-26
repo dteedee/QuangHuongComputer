@@ -38,10 +38,8 @@ public static class PromotionEndpoints
         {
             var now = DateTime.UtcNow;
             var query = db.Promotions
-                .Where(p => p.Status == PromotionStatus.Active
-                    && p.StartAt <= now
-                    && (p.EndAt == null || p.EndAt >= now)
-                    && p.Code != null); // Chỉ mã nhập tay (auto không cần gợi ý).
+                .Where(Promotion.RunningPredicate(now))
+                .Where(p => p.Code != null); // Chỉ mã nhập tay (auto không cần gợi ý).
 
             if (!string.IsNullOrEmpty(audienceTag))
                 query = query.Where(p => p.AudienceTag == null || p.AudienceTag == audienceTag);

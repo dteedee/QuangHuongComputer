@@ -19,8 +19,11 @@ warn-level rule in `frontend/eslint.config.js`.
 | `/san-pham/:slug` | index | ProductDetailPage | |
 | `/danh-muc/:slug` | index | CategoryPage | |
 | `/tim-kiem` | noindex | CategoryPage (search mode) | |
-| `/tin-tuc` | index | **not built** | no listing page component exists yet (W3-3) |
-| `/tin-tuc/:slug` | index | PostDetailPage | |
+| `/tin-tuc` | index | NewsListingPage | `?category=` tab / `?page=N` -> client sets `noindex,follow`, canonical `/tin-tuc`; excludes `Promotion` posts |
+| `/tin-tuc/:slug` | index | PostDetailPage | a `Promotion` post here -> 301 (shell) / `<Navigate>` (SPA) to `/khuyen-mai/:slug` |
+| `/khuyen-mai` | index | PromotionListingPage | promotion posts + running coupon codes + flash-sale teaser; `noindex,follow` (shell) while empty |
+| `/khuyen-mai/:slug` | index | PromotionDetailPage | `Post.Type = Promotion` only; any other post type -> 301 to `/tin-tuc/:slug` |
+| `/flash-sale` | index | FlashSalePage | no `/:slug` — `Promotion` has no slug; every running sale is a block on this page; `noindex,follow` (shell) while none is running |
 | `/chinh-sach/:type` | index | PolicyPage | |
 | `/dieu-khoan` | index | TermsPage | |
 | `/bao-mat` | index | PrivacyPage | |
@@ -67,7 +70,9 @@ tradeoff until each W3 track updates its own call sites).
 | `/recruitment`, `/recruitment/:id` | `/tuyen-dung`, `/tuyen-dung/:id` |
 | `/policy/:type`, `/post/:slug` | `/chinh-sach/:type`, `/tin-tuc/:slug` |
 | `/contact`, `/terms`, `/privacy`, `/about`, `/stores` | `/lien-he`, `/dieu-khoan`, `/bao-mat`, `/gioi-thieu`, `/he-thong-cua-hang` |
-| `/promotion`, `/promotions`, `/news` | `/chinh-sach/promotions`, `/chinh-sach/news` |
+| `/promotion`, `/promotions`, `/news` | `/khuyen-mai`, `/khuyen-mai`, `/tin-tuc` |
+| `/chinh-sach/promotions`, `/chinh-sach/khuyen-mai` | `/khuyen-mai` (also a real 301 from the SEO shell) |
+| `/chinh-sach/news`, `/chinh-sach/tin-tuc` | `/tin-tuc` (also a real 301 from the SEO shell) |
 | `/compare` | `/so-sanh` |
 | `/profile`, `/account`, `/account/*` | `/tai-khoan`, `/tai-khoan/*` (same sub-segment names) |
 | `/admin/stores` | `/backoffice/stores` (moved inside the backoffice shell — was standalone, unlayoutted) |

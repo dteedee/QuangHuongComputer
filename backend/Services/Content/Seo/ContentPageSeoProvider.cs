@@ -28,6 +28,17 @@ public sealed class ContentPageSeoProvider : ISeoPageProvider
         ["/bao-mat"] = "bao-mat",
     };
 
+    // Hai "chính sách" cũ thực chất là danh sách bài viết, nay có trang riêng. Giữ link cũ
+    // (bookmark, menu CMS chưa sửa) bằng 301 thay vì 404 — khớp `<Navigate replace>` bên SPA
+    // (`storefront-service.routes.ts`). Không có CMSPage nào mang các slug này.
+    private static readonly IReadOnlyDictionary<string, string> LegacyListRedirects = new Dictionary<string, string>
+    {
+        ["/chinh-sach/promotions"] = "/khuyen-mai",
+        ["/chinh-sach/khuyen-mai"] = "/khuyen-mai",
+        ["/chinh-sach/news"] = "/tin-tuc",
+        ["/chinh-sach/tin-tuc"] = "/tin-tuc",
+    };
+
     private readonly ContentDbContext _db;
 
     public ContentPageSeoProvider(ContentDbContext db) => _db = db;
@@ -36,6 +47,8 @@ public sealed class ContentPageSeoProvider : ISeoPageProvider
 
     public async Task<SeoPage?> ResolveAsync(string path, string query, CancellationToken ct)
     {
+        if (LegacyListRedirects.TryGetValue(path, out var target)) return SeoPage.RedirectPermanent(target);
+
         var slug = FixedRoutes.TryGetValue(path, out var fixedSlug) ? fixedSlug : PolicyPattern.Match(path).Groups["slug"].Value;
 
         var cmsPage = await _db.Pages.FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished, ct);
@@ -67,6 +80,7 @@ public sealed class ContentPageSeoProvider : ISeoPageProvider
         {
             if (string.IsNullOrEmpty(page.Slug)) continue;
             var path = reverseFixed.TryGetValue(page.Slug, out var fixedPath) ? fixedPath : $"/chinh-sach/{page.Slug}";
+            if (LegacyListRedirects.ContainsKey(path)) continue; // a redirect is never a sitemap URL
             yield return new SitemapEntry(path, page.PublishedAt, "monthly", 0.4m);
         }
     }

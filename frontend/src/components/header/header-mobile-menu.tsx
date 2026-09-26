@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
     Search, Menu as MenuIcon, Phone, Wrench, Monitor,
-    Briefcase, FileText, X, Home, ArrowRight, LogOut
+    Briefcase, FileText, X, Home, ArrowRight, LogOut, Zap, Newspaper
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Category } from '../../api/catalog';
@@ -106,6 +106,12 @@ export const HeaderMobileMenu = ({
                         </Link>
                         <Link to={ROUTES.WARRANTY} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
                             <Monitor size={18} /> Bảo hành
+                        </Link>
+                        <Link to={ROUTES.PROMOTIONS} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                            <Zap size={18} /> Khuyến mãi
+                        </Link>
+                        <Link to={ROUTES.NEWS} onClick={onClose} className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-red-50 hover:text-accent rounded-lg font-semibold text-sm transition-colors cursor-pointer">
+                            <Newspaper size={18} /> Tin tức
                         </Link>
                     </div>
 

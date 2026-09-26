@@ -8,14 +8,17 @@
  *
  * When nothing is running the endpoint returns `[]` and this component renders
  * NOTHING. The version the audit found faked a "FLASH SALE" from the first five
- * products at their normal price.
+ * products at their normal price. "Xem tất cả" opens `/flash-sale` (every row of
+ * every running sale; this section shows at most 10 tiles of the first one).
  */
-import { useQueries, useQuery } from '@tanstack/react-query';
-import { Zap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Zap } from 'lucide-react';
 import { ProductCard } from '../ProductCard';
-import { catalogPublicProductApi } from '../../api/catalog/public-product';
 import { flashSalePublicApi } from '../../api/promotions/public';
 import { queryKeys } from '../../lib/query-keys';
+import { ROUTES } from '../../routes/route-paths';
+import { useFlashSaleTiles } from '../flash-sale/use-flash-sale-tiles';
 import { FlashSaleCountdown } from './flash-sale-countdown';
 
 const MAX_TILES = 10;
@@ -28,31 +31,9 @@ export const FlashSaleSection = () => {
     });
 
     const sale = salesQuery.data?.[0];
-    // `PromotionReward.FlashPrice` is nullable in the domain (a FlashSale reward
-    // may carry only a percentage), and the endpoint passes the null straight
-    // through. A null price would render "0 ₫" and a fake "-100%" badge, so a
-    // row without a real flash price is not a flash tile.
-    const rows = (sale?.products ?? [])
-        .filter((row) => Number.isFinite(row.flashPrice) && row.flashPrice > 0)
-        .slice(0, MAX_TILES);
+    const { tiles } = useFlashSaleTiles(sale, MAX_TILES);
 
-    // The feed carries product IDs and flash terms, not product cards — fetch
-    // the products it actually references (no client-side guessing).
-    const productQueries = useQueries({
-        queries: rows.map((row) => ({
-            queryKey: queryKeys.catalog.detail(row.productId),
-            queryFn: () => catalogPublicProductApi.getProduct(row.productId),
-            staleTime: 5 * 60 * 1000,
-        })),
-    });
-
-    if (!sale || rows.length === 0) return null;
-
-    const tiles = rows
-        .map((row, i) => ({ row, product: productQueries[i]?.data }))
-        .filter((t): t is { row: (typeof rows)[number]; product: NonNullable<(typeof productQueries)[number]['data']> } => !!t.product);
-
-    if (tiles.length === 0) return null;
+    if (!sale || tiles.length === 0) return null;
 
     return (
         <section className="mx-auto mt-10 w-full max-w-shell px-4">
@@ -66,7 +47,15 @@ export const FlashSaleSection = () => {
                         {sale.description && <p className="truncate text-sm text-white/85">{sale.description}</p>}
                     </div>
                 </div>
-                {sale.endAt && <FlashSaleCountdown endAt={sale.endAt} />}
+                <div className="flex items-center gap-4">
+                    {sale.endAt && <FlashSaleCountdown endAt={sale.endAt} />}
+                    <Link
+                        to={ROUTES.FLASH_SALE}
+                        className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-white hover:text-white/80"
+                    >
+                        Xem tất cả <ChevronRight size={16} aria-hidden />
+                    </Link>
+                </div>
             </div>
 
             <div className="rounded-b-2xl border border-t-0 border-line bg-surface p-3 sm:p-4">

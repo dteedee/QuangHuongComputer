@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using BuildingBlocks.SharedKernel;
 using BuildingBlocks.Validation;
 
@@ -242,6 +243,15 @@ public class Promotion : Entity<Guid>
         CurrentUsage = next;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Predicate "đang chạy công khai" DUY NHẤT cho mọi mặt storefront đọc Promotion: feed flash sale
+    /// (`/api/content/promotions/active`), gợi ý mã (`/api/promotions/available`) và SEO provider
+    /// `/khuyen-mai`, `/flash-sale`. Cùng tinh thần `Post.PublishedPredicate` (D10): lọc ở list mà
+    /// quên ở SEO/sitemap sẽ quảng bá một chương trình đã hết hạn. So sánh luôn bằng UTC.
+    /// </summary>
+    public static Expression<Func<Promotion, bool>> RunningPredicate(DateTime utcNow) =>
+        p => p.Status == PromotionStatus.Active && p.StartAt <= utcNow && (p.EndAt == null || p.EndAt >= utcNow);
 
     /// <summary>Đang trong khung thời gian hiệu lực?</summary>
     public bool IsWithinSchedule(DateTime now)
