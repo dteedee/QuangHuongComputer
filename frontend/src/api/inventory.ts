@@ -453,43 +453,7 @@ export const inventoryApi = {
         },
     },
 
-    // ========================================
-    // STOCK TRANSFER API (Phase 2.1)
-    // ========================================
-    transfers: {
-        getList: async (status?: string): Promise<StockTransfer[]> => {
-            const response = await client.get<StockTransfer[]>('/inventory/transfers', { params: { status } });
-            return response.data;
-        },
-        create: async (data: CreateTransferDto): Promise<{ id: string; transferNumber: string; status: string }> => {
-            const response = await client.post('/inventory/transfers', data);
-            return response.data;
-        },
-        approve: async (id: string, approvedBy: string): Promise<{ message: string; status: string }> => {
-            const response = await client.put(`/inventory/transfers/${id}/approve`, { approvedBy });
-            return response.data;
-        },
-        ship: async (id: string, shippedBy: string): Promise<{ message: string; status: string }> => {
-            const response = await client.put(`/inventory/transfers/${id}/ship`, { shippedBy });
-            return response.data;
-        },
-        receive: async (id: string, receivedBy: string): Promise<{ message: string; status: string }> => {
-            const response = await client.put(`/inventory/transfers/${id}/receive`, { receivedBy });
-            return response.data;
-        },
-        cancel: async (id: string): Promise<{ message: string }> => {
-            const response = await client.put(`/inventory/transfers/${id}/cancel`);
-            return response.data;
-        },
-        /**
-         * D09 — the transfer screen's primary action: approve + ship + receive in one
-         * transaction. The four individual steps above stay for the overflow menu.
-         */
-        complete: async (id: string): Promise<{ message: string; status: string; movedSerials: string[] }> => {
-            const response = await client.post(`/inventory/transfers/${id}/complete`);
-            return response.data;
-        },
-    },
+    // Chuyển kho: xem `api/inventory-transfers.ts` (inventoryTransfersApi).
 
     // ========================================
     // STOCK MOVEMENT API (Phase 2.1)
@@ -507,8 +471,7 @@ export const inventoryApi = {
 // ============================================
 
 export type WarehouseType = 'Main' | 'Branch' | 'Transit' | 'Showroom' | 'Returns' | 'Defective';
-export type SerialStatus = 'InStock' | 'Reserved' | 'Sold' | 'Returned' | 'Defective' | 'InRepair' | 'Scrapped';
-export type TransferStatus = 'Pending' | 'Approved' | 'Shipped' | 'Received' | 'Cancelled';
+export type SerialStatus = 'InStock' | 'Reserved' | 'Sold' | 'Returned' | 'Defective' | 'InRepair' | 'Scrapped' | 'InTransit';
 export type MovementType = 'In' | 'Out' | 'Transfer' | 'Adjustment' | 'Reserved' | 'Released';
 
 export interface Warehouse {
@@ -620,32 +583,6 @@ export interface UpdateSerialStatusDto {
     notes?: string;
 }
 
-export interface StockTransfer {
-    id: string;
-    transferNumber: string;
-    fromWarehouseId: string;
-    fromWarehouse?: string;
-    toWarehouseId: string;
-    toWarehouse?: string;
-    status: TransferStatus;
-    requestedAt: string;
-    approvedAt?: string;
-    shippedAt?: string;
-    receivedAt?: string;
-    notes?: string;
-    requestedBy?: string;
-    itemCount: number;
-    totalQuantity: number;
-}
-
-export interface CreateTransferDto {
-    fromWarehouseId: string;
-    toWarehouseId: string;
-    items: { inventoryItemId: string; quantity: number; productName?: string; productSku?: string }[];
-    requestedBy?: string;
-    notes?: string;
-}
-
 export interface StockMovement {
     id: string;
     inventoryItemId: string;
@@ -707,15 +644,8 @@ export const serialStatusLabels: Record<SerialStatus, string> = {
     Returned: 'Hàng trả',
     Defective: 'Lỗi',
     InRepair: 'Đang sửa chữa',
-    Scrapped: 'Đã thanh lý'
-};
-
-export const transferStatusLabels: Record<TransferStatus, string> = {
-    Pending: 'Chờ duyệt',
-    Approved: 'Đã duyệt',
-    Shipped: 'Đang vận chuyển',
-    Received: 'Đã nhận',
-    Cancelled: 'Đã hủy'
+    Scrapped: 'Đã thanh lý',
+    InTransit: 'Đang chuyển kho'
 };
 
 export const formatCurrency = (amount: number): string => {

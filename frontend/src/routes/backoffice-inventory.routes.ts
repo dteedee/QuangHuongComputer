@@ -17,10 +17,19 @@ const PurchaseReturnsPage = lazy(() => import('../pages/backoffice/inventory/pur
 const LandedCostPage = lazy(() => import('../pages/backoffice/inventory/landed-cost-page'));
 const SupplierScorecardPage = lazy(() => import('../pages/backoffice/inventory/supplier-scorecard-page'));
 const SerialTracePage = lazy(() => import('../pages/backoffice/inventory/serial-trace-page'));
+const TransferListPage = lazy(() => import('../pages/backoffice/inventory/transfers/transfer-list-page'));
+const TransferCreatePage = lazy(() => import('../pages/backoffice/inventory/transfers/transfer-create-page'));
+const TransferDetailPage = lazy(() => import('../pages/backoffice/inventory/transfers/transfer-detail-page'));
+const TransferPrintPage = lazy(() => import('../pages/backoffice/inventory/transfers/transfer-print-page'));
 
 export const backofficeInventoryRoutes: RouteDef[] = [
   // W3-12: was `InventoryPortal` (edited Catalog.StockQuantity directly, no reason/ledger).
   { path: 'inventory', element: StockPage, layout: 'backoffice', group: 'sales', icon: 'Box', title: 'Kho hàng', description: 'Quản lý tồn kho', permission: PERMISSIONS.INVENTORY_VIEW_STOCK, name: 'inventory' },
+  // Chuyển kho: ngay dưới "Kho hàng" trong menu.
+  { path: 'inventory/transfers', element: TransferListPage, layout: 'backoffice', group: 'sales', icon: 'ArrowRightLeft', title: 'Chuyển kho', description: 'Phiếu chuyển hàng giữa các kho', permission: PERMISSIONS.INVENTORY_VIEW_STOCK, name: 'inventoryTransfers' },
+  { path: 'inventory/transfers/new', element: TransferCreatePage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.INVENTORY_MANAGE_STOCK, name: 'inventoryTransferNew' },
+  { path: 'inventory/transfers/:id', element: TransferDetailPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.INVENTORY_VIEW_STOCK, name: 'inventoryTransferDetail' },
+  { path: 'inventory/transfers/:id/print', element: TransferPrintPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.INVENTORY_VIEW_STOCK, name: 'inventoryTransferPrint' },
   { path: 'inventory/suppliers', element: SuppliersPage, layout: 'backoffice', group: 'sales', icon: 'Building2', title: 'Nhà cung cấp', description: 'Quản lý NCC', permission: PERMISSIONS.INVENTORY_VIEW_SUPPLIER, name: 'inventorySuppliers' },
   { path: 'inventory/purchase-orders', element: PurchaseOrdersPage, layout: 'backoffice', group: 'sales', icon: 'ShoppingCart', title: 'Đơn mua hàng', description: 'Đặt hàng NCC', permission: PERMISSIONS.INVENTORY_VIEW_PURCHASE_ORDER, name: 'purchaseOrders' },
   { path: 'inventory/grn', element: GoodsReceivedNotesPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.INVENTORY_RECEIVE_PURCHASE_ORDER, name: 'goodsReceivedNotes' },

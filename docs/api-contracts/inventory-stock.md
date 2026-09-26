@@ -102,15 +102,36 @@ duplicate `code` → 409 `CONFLICT`; deleting the default warehouse or one still
 | **POST** | **`/api/inventory/transfers/{id}/complete`** | **`Inventory.Approve`** |
 | PUT | `/api/inventory/transfers/{id}/cancel` | `Inventory.ManageStock` |
 
-Create body: `{ fromWarehouseId, toWarehouseId, items: [{ inventoryItemId, quantity, productName?, productSku? }], notes? }`.
-`requestedBy` in the body is **ignored** — the requester is the JWT subject. Number from
-`docnum_tr_seq` (`TR-yyyyMM-#####`). Creation validates both warehouses, that every line belongs to
-the source warehouse, and that available quantity covers it.
+Create body: `{ fromWarehouseId, toWarehouseId, items: [{ inventoryItemId, quantity, serialNumbers? }], notes? }`.
+`requestedBy`, `productName`, `productSku` in the body are **ignored** — the requester is the JWT
+subject, name/SKU are snapshotted from Catalog. Number from `docnum_tr_seq` (`TR-yyyyMM-#####`).
+Creation validates both warehouses (destination active), that every line belongs to the source
+warehouse, that available quantity covers it, and — for products whose category is
+`IsSerialTracked` — that `serialNumbers` lists exactly `quantity` serials that are `InStock` in the
+source warehouse and not already on another open (Pending/Approved/Shipped) transfer. Serials on a
+non-tracked product → 400.
 
-Ship writes one `Transfer` movement per line out of the source and moves up to `quantity`
-`InStock` serials to the destination; receive writes the matching `Transfer` movement in, carrying
-`AverageCost`. **D09 `/complete`** does approve + ship + receive inside one transaction and returns
-`{ message, status, movedSerials: [...] }` — two movements per line, serials moved, nothing half-done.
+List rows add `cancelledAt` and `hasDiscrepancy`; `search` matches the transfer number. Detail
+returns warehouse names, actor **names** (via `IUserDirectory`), `receiveNote`, and per line
+`{ id, inventoryItemId, productId, variantId, productName, productSku, quantity, receivedQuantity,
+shortage, serialNumbers }`.
+
+**Ship** (`Approved` only): one `TransferOut` movement per line; the line's serials (chosen at
+create, or FIFO for transfers created before serial selection) go to `InTransit` — no warehouse can
+sell them — and are recorded on the line. Returns `{ message, status, shippedSerials }`.
+
+**Receive** (`Shipped` only), optional body `{ lines?: [{ itemId, receivedQuantity, receivedSerials? }], note? }`;
+no body = everything arrived. `TransferIn` is posted for the received quantity only, at the unit
+cost of the `TransferOut` movement (not the source's current average). Received serials → `InStock`
+at the destination; missing ones stay `InTransit` with a note naming the transfer. A shortfall
+without `note` → 400. Response `{ message, status, hasDiscrepancy }`.
+
+**Cancel** only while `Pending`/`Approved` (409 afterwards — the old build let a shipped transfer be
+cancelled, losing the stock). **D09 `/complete`** does approve + ship + receive-all inside one
+transaction and returns `{ message, status, movedSerials: [...] }`.
+
+**Concurrency:** `StockTransfers` carries an `xmin` token; two requests acting on the same transfer
+at once → the second gets 409 and nothing is posted twice.
 
 ## 5. Adjustments
 

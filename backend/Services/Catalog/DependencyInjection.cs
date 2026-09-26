@@ -48,6 +48,9 @@ public static class DependencyInjection
         // D10: hook lịch sử giá trên CatalogDbContext đọc context này (xem PriceChangeContext.cs).
         services.AddScoped<PriceChangeContext>();
 
+        // "Thường được mua cùng": ICoPurchaseQuery do Sales đăng ký (contract ở BuildingBlocks).
+        services.AddScoped<Catalog.Application.Products.BoughtTogetherService>();
+
         // W2-1 first commit: cho phép W2-9 (PC builder) và các phân hệ sau này tự đăng ký DI mà
         // không phải sửa file này - xem ICatalogSubmodule.cs.
         services.AddCatalogSubmodules();

@@ -62,6 +62,7 @@ internal static class CatalogProductHelpers
         await cache.RemoveByPatternAsync(CacheKeys.ProductsListPattern);
         await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id));
         await cache.RemoveAsync(CacheKeys.RelatedProductsKey(id) + CacheVersion);
+        await cache.RemoveAsync(CacheKeys.BoughtTogetherKey(id) + CacheVersion);
     }
 
     /// <summary>

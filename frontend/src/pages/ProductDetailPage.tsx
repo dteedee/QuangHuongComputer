@@ -30,6 +30,7 @@ import SEO from '../components/SEO';
 import { notify } from '../components/ui';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import RecommendationCarousel from '../components/recommendation-carousel';
+import ProductBoughtTogetherBlock from '../components/product-detail/product-bought-together-block';
 import { WriteReviewModal } from '../components/reviews';
 import {
     ProductDetailAddedToCartToast,
@@ -358,6 +359,9 @@ export default function ProductDetailPage() {
                     onWriteReview={handleWriteReview}
                     onMarkHelpful={handleMarkHelpful}
                 />
+
+                {/* Bundle add-to-cart cannot choose a variant, so only variant-free products get it. */}
+                {variants.length === 0 && <ProductBoughtTogetherBlock productId={product.id} />}
 
                 <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />
 

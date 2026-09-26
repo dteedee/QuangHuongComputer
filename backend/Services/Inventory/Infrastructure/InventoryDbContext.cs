@@ -115,6 +115,27 @@ public partial class InventoryDbContext : DbContext
 
             entity.HasIndex(e => e.RequestedAt)
                 .HasDatabaseName("IX_StockTransfer_RequestedAt");
+
+            // Hai request duyệt/xuất/nhận cùng một phiếu: người sau đụng xmin → 409, không trừ tồn lần hai.
+            entity.UseXminAsConcurrencyToken();
+            entity.Property(e => e.ReceiveNote).HasMaxLength(1000);
+            entity.Ignore(e => e.HasDiscrepancy);
+        });
+
+        modelBuilder.Entity<StockTransferItem>(entity =>
+        {
+            // Converter tường minh thay vì EnableDynamicJson cho cả data source: chỉ cột này cần JSON.
+            entity.Property(e => e.SerialNumbers)
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>(),
+                    new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                        (a, b) => a!.SequenceEqual(b!),
+                        v => v.Aggregate(0, (h, s) => HashCode.Combine(h, s.GetHashCode())),
+                        v => v.ToList()))
+                .HasColumnType("jsonb")
+                .HasDefaultValueSql("'[]'::jsonb");
+            entity.Ignore(e => e.Shortage);
         });
 
         modelBuilder.Entity<StockAdjustment>(entity =>

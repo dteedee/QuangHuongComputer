@@ -96,6 +96,7 @@ sortOrder, options: [{ optionTypeId, optionTypeName, optionValueId, optionValueD
 | `GET /products/by-slug/{slug}?include=...&includeInactive` | public / staff | Same as above, looked up by slug; also increments `viewCount`. **This is the PDP route.** |
 | `GET /products/search?query&categoryId&brandId&minPrice&maxPrice&inStock&sortBy&spec[<key>]=<value>&page&pageSize` | public | See §3. |
 | `GET /products/{productId}/related?limit=8` | public | Same-category first, then same-brand; published only. |
+| `GET /products/{productId}/bought-together?limit=6&selected=` | public (allow-list) | "Thường được mua cùng": products sharing delivered/completed web orders or handed-over POS sales with the anchor in the last 180 days (cancelled never counted, gifts ignored), ranked by shared order count, min 2 orders. Only published, in-stock, variant-free products. Fewer than 2 such items → falls back to related (`source: "related"`, `orderCount: 0`). Response `{ source, anchor, items: [{ product, orderCount }], total }`; `total` = anchor + `selected` items (csv of ids; absent = all). Cached 3 h per product (`ICoPurchaseQuery` in Sales, one GROUP BY). 404 when the anchor is not published. |
 
 `include` values (comma-separated, any order): `media`, `specs`, `variants`. Omit for the cheap
 shape (no medias/specGroups/variants arrays, but `thumbnailUrl` is still populated).
