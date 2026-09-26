@@ -98,7 +98,8 @@ public static class TestAuthentication
 
         using var json = System.Text.Json.JsonDocument.Parse(body);
         var token = json.RootElement.GetProperty("token").GetString();
-        var refresh = json.RootElement.TryGetProperty("refreshToken", out var r) ? r.GetString() : null;
+        // Refresh token chỉ còn trong cookie HttpOnly `qh_rt`, không bao giờ trong body.
+        var refresh = RefreshCookieRequests.TokenFrom(response);
 
         if (string.IsNullOrEmpty(token))
         {

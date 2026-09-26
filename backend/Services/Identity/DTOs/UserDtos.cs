@@ -52,7 +52,19 @@ public class UserQueryParams : HC.CORE.Base.BaseSearchParam
 public record LoginResponseDto
 {
     public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Clear-text refresh token. NEVER serialised: it leaves the server only as the HttpOnly
+    /// <c>qh_rt</c> cookie (<see cref="Identity.Services.RefreshTokenCookie"/>), so script on the page
+    /// (an XSS payload included) can never read it.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public string RefreshToken { get; set; } = string.Empty;
+
+    /// <summary>Expiry of <see cref="RefreshToken"/>; becomes the cookie's Expires. Not serialised.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime RefreshTokenExpiresAt { get; set; }
+
     public UserInfoDto User { get; set; } = new();
 }
 

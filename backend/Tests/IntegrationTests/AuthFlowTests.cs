@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using BuildingBlocks.Security;
 using FluentAssertions;
 using Identity.Infrastructure;
@@ -29,15 +28,16 @@ public sealed class AuthFlowTests
     public async Task Refresh_XoayVongTokenCu()
     {
         var account = await TestAuthentication.CreateAccountAsync(_fixture, Roles.Customer);
-        using var client = _fixture.CreateClient();
+        using var client = _fixture.CreateCookielessClient();
 
-        var rotated = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
+        var rotated = await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
         rotated.StatusCode.Should().Be(HttpStatusCode.OK, await rotated.Content.ReadAsStringAsync());
 
-        var newRefresh = ReadProperty(await rotated.Content.ReadAsStringAsync(), "refreshToken");
+        var newRefresh = RefreshCookieRequests.TokenFrom(rotated);
+        newRefresh.Should().NotBeNullOrEmpty("refresh phải đặt cookie qh_rt mới");
         newRefresh.Should().NotBe(account.RefreshToken, "mỗi lần refresh phải sinh token mới, không trả lại token cũ");
 
-        var reuseOld = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
+        var reuseOld = await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
         reuseOld.StatusCode.Should().Be(HttpStatusCode.BadRequest, "token đã xoay không được dùng lại");
     }
 
@@ -45,15 +45,15 @@ public sealed class AuthFlowTests
     public async Task DungLaiTokenDaXoay_GietCaHoToken()
     {
         var account = await TestAuthentication.CreateAccountAsync(_fixture, Roles.Customer);
-        using var client = _fixture.CreateClient();
+        using var client = _fixture.CreateCookielessClient();
 
-        var rotated = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
-        var newRefresh = ReadProperty(await rotated.Content.ReadAsStringAsync(), "refreshToken");
+        var rotated = await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
+        var newRefresh = RefreshCookieRequests.TokenFrom(rotated);
 
         // Kẻ trộm trình lại token cũ -> hệ thống phải coi cả họ token là đã lộ.
-        await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
+        await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
 
-        var afterReuse = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = newRefresh });
+        var afterReuse = await RefreshCookieRequests.RefreshAsync(client, newRefresh);
         afterReuse.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "sau khi phát hiện dùng lại, token hợp lệ của cùng họ cũng phải bị thu hồi");
     }
@@ -62,12 +62,12 @@ public sealed class AuthFlowTests
     public async Task DangXuat_ThuHoiRefreshToken()
     {
         var account = await TestAuthentication.CreateAccountAsync(_fixture, Roles.Customer);
-        using var client = _fixture.CreateClient();
+        using var client = _fixture.CreateCookielessClient();
 
-        var logout = await client.PostAsJsonAsync("/api/auth/logout", new { refreshToken = account.RefreshToken });
+        var logout = await RefreshCookieRequests.LogoutAsync(client, account.RefreshToken);
         logout.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var refresh = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
+        var refresh = await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
         refresh.StatusCode.Should().Be(HttpStatusCode.BadRequest, "đăng xuất rồi thì không refresh được nữa");
     }
 
@@ -84,13 +84,13 @@ public sealed class AuthFlowTests
             (await users.UpdateAsync(user)).Succeeded.Should().BeTrue();
         }
 
-        using var client = _fixture.CreateClient();
+        using var client = _fixture.CreateCookielessClient();
 
         var login = await client.PostAsJsonAsync("/api/auth/login",
             new { Email = account.Email, Password = account.Password });
         login.StatusCode.Should().Be(HttpStatusCode.BadRequest, "tài khoản bị khoá không được cấp token mới");
 
-        var refresh = await client.PostAsJsonAsync("/api/auth/refresh-token", new { refreshToken = account.RefreshToken });
+        var refresh = await RefreshCookieRequests.RefreshAsync(client, account.RefreshToken);
         refresh.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "refresh token cũ không được kéo dài phiên của tài khoản đã bị vô hiệu hoá");
     }
@@ -99,7 +99,7 @@ public sealed class AuthFlowTests
     public async Task SaiMatKhau_KhongLoEmailTonTai()
     {
         var account = await TestAuthentication.CreateAccountAsync(_fixture, Roles.Customer);
-        using var client = _fixture.CreateClient();
+        using var client = _fixture.CreateCookielessClient();
 
         var wrongPassword = await client.PostAsJsonAsync("/api/auth/login",
             new { Email = account.Email, Password = "Sai-Mat-Khau-9x!" });
@@ -112,12 +112,5 @@ public sealed class AuthFlowTests
         (await wrongPassword.Content.ReadAsStringAsync())
             .Should().Be(await unknownEmail.Content.ReadAsStringAsync(),
                 "hai trường hợp phải trả lời giống hệt nhau — khác nhau là để kẻ tấn công dò được email nào có thật");
-    }
-
-    private static string ReadProperty(string body, string name)
-    {
-        using var json = JsonDocument.Parse(body);
-        return json.RootElement.GetProperty(name).GetString()
-               ?? throw new InvalidOperationException($"Thiếu '{name}' trong: {body}");
     }
 }

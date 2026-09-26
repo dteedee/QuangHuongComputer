@@ -134,6 +134,7 @@ public sealed class TokenIssuer : ITokenIssuer
         {
             Token = accessToken,
             RefreshToken = issued.Token,
+            RefreshTokenExpiresAt = issued.Entity.ExpiresAt,
             User = new UserInfoDto
             {
                 Id = user.Id,

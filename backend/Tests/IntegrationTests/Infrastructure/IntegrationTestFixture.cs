@@ -43,6 +43,17 @@ public class IntegrationTestFixture : IAsyncLifetime
         AllowAutoRedirect = false,
     });
 
+    /// <summary>
+    /// Client KHÔNG tự giữ cookie. Test refresh token tự gửi cookie <c>qh_rt</c> nào thì server nhận
+    /// đúng cookie đó; client mặc định (HandleCookies=true) sẽ lén gửi kèm cookie vừa xoay, khiến
+    /// "trình lại token cũ" thực ra lại trình token mới.
+    /// </summary>
+    public HttpClient CreateCookielessClient() => _factory.CreateClient(new WebApplicationFactoryClientOptions
+    {
+        AllowAutoRedirect = false,
+        HandleCookies = false,
+    });
+
     /// <summary>Mở scope DI mới (mỗi test tự quản DbContext của mình).</summary>
     public IServiceScope CreateScope() => Services.CreateScope();
 

@@ -77,7 +77,7 @@ public static class GoogleLoginEndpoint
 
                 // Same completion path as password login: one session row, one
                 // token pair, one lifetime. This block used to be a third copy.
-                return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
+                return RefreshTokenCookie.SignIn(httpContext, await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
             }
             catch (Exception)
             {

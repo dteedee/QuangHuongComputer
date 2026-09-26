@@ -45,5 +45,7 @@
     <ProjectReference Include="../../Services/Payments/Payments.csproj" />
     <ProjectReference Include="../../Services/SystemConfig/SystemConfig.csproj" />
     <ProjectReference Include="../../Services/Reporting/Reporting.csproj" />
+    <!-- Cookie refresh token + CSRF filter (Identity/Services/RefreshTokenCookie.cs, RequireAjaxHeaderFilter.cs). -->
+    <ProjectReference Include="../../Services/Identity/Identity.csproj" />
   </ItemGroup>
 </Project>
