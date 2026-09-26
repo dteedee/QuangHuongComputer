@@ -14,13 +14,13 @@ import { RECAPTCHA_SITE_KEY, RECAPTCHA_ACTIONS } from '../config/recaptcha';
 import confetti from 'canvas-confetti';
 import { STAFF_ROLES } from '../constants/staff-roles';
 import { authApi, isTwoFactorChallenge } from '../api/auth';
-import { browserStorage } from '../lib/browser-storage';
+import type { AuthSession } from '../api/auth-refresh';
 import TwoFactorPrompt from '../components/two-factor-prompt';
 
 const RATE_LIMIT_MESSAGE = 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau ít phút.';
 
 export const LoginPage = () => {
-    const { loginWithGoogle } = useAuth();
+    const { loginWithGoogle, completeLogin } = useAuth();
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -47,22 +47,16 @@ export const LoginPage = () => {
     };
 
     /**
-     * Persists a completed session and does a FULL reload rather than `navigate()`. `AuthContext`
-     * (owned by W1-8, out of this track's globs) only reads `token`/`refreshToken`/`user` from
-     * storage once, on mount — it has no public "adopt this already-issued session" method, and
-     * this track cannot add one to a file it doesn't own. A reload re-mounts `AuthProvider`, which
-     * picks the session up from storage exactly like a page refresh after a normal login would.
-     * Filed as an integration request (AuthContext needs a `completeLogin(data)` method) so the
-     * next track through that file can remove this workaround.
+     * Adopts a completed session in memory (the refresh token is already in its HttpOnly cookie)
+     * and routes by role. No full reload: a reload would throw the in-memory access token away and
+     * spend a refresh round-trip just to get it back.
      */
-    const persistSessionAndGo = (data: { token: string; refreshToken: string; user: { roles: string[] } }) => {
-        browserStorage.setItem('token', data.token);
-        browserStorage.setItem('refreshToken', data.refreshToken);
-        browserStorage.setJSON('user', data.user);
+    const persistSessionAndGo = (data: AuthSession) => {
+        completeLogin(data);
         setLoginSuccess(true);
         triggerConfetti();
         setTimeout(() => {
-            window.location.href = getRedirectPath(data.user.roles || []);
+            navigate(getRedirectPath(data.user.roles || []), { replace: true });
         }, 1200);
     };
 
@@ -112,10 +106,8 @@ export const LoginPage = () => {
     const handleGoogleSuccess = async (credentialResponse: any) => {
         setIsLoading(true);
         try {
-            await loginWithGoogle(credentialResponse.credential);
-            const savedUser = localStorage.getItem('user');
-            const userObj = savedUser ? JSON.parse(savedUser) : null;
-            navigate(getRedirectPath(userObj?.roles || []));
+            const signedIn = await loginWithGoogle(credentialResponse.credential);
+            navigate(getRedirectPath(signedIn.roles || []));
         } catch (error: any) {
             setLoginError(error.response?.data?.error || error.response?.data?.Error || 'Đăng nhập Google thất bại');
         } finally {

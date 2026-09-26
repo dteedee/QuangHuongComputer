@@ -17,6 +17,19 @@ export default defineConfig({
     }
   },
   server: {
+    // Same origin in dev, exactly like Caddy in prod (lib/api-origin.ts): the SPA calls /api on
+    // :5174 and Vite forwards it, so the HttpOnly refresh cookie (Path=/api/auth) is first-party.
+    // VITE_API_PROXY_TARGET points it at another API (e.g. the TEST stack on :5050).
+    proxy: Object.fromEntries(
+      ['/api', '/hubs', '/media', '/uploads'].map((prefix) => [
+        prefix,
+        {
+          target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:5000',
+          changeOrigin: false,
+          ws: prefix === '/hubs',
+        },
+      ]),
+    ),
     headers: {
       // Allow Google Sign-In popup to communicate with main window
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',

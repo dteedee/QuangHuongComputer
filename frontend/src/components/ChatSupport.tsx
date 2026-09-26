@@ -8,6 +8,8 @@ import { MessageBubble, type MessageData } from './chat/MessageBubble';
 import { TypingIndicator } from './chat/TypingIndicator';
 import { ConnectionStatus, type ConnectionState } from './chat/ConnectionStatus';
 import toast from 'react-hot-toast';
+import { API_ORIGIN } from '../lib/api-origin';
+import { accessTokenStore } from '../lib/auth/access-token-store';
 
 interface QueuedMessage {
   id: string;
@@ -42,10 +44,11 @@ export const ChatSupport = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const signalRUrl = import.meta.env.VITE_SIGNALR_HUB_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/hubs/chat`;
+    const signalRUrl = import.meta.env.VITE_SIGNALR_HUB_URL || `${API_ORIGIN}/hubs/chat`;
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl(signalRUrl, {
-        accessTokenFactory: () => localStorage.getItem('token') || ''
+        // In-memory access token (never localStorage); re-read on every (re)connect.
+        accessTokenFactory: () => accessTokenStore.get() ?? ''
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {

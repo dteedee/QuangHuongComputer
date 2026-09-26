@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { authApi, type User } from '../api/auth';
+import { authApi, adoptSession, type User } from '../api/auth';
+import { refreshSession, type AuthSession } from '../api/auth-refresh';
 import { userHasPermission } from '../constants/permissions';
-import { browserStorage } from '../lib/browser-storage';
+import { accessTokenStore, purgeLegacyAuthStorage, sessionHint } from '../lib/auth/access-token-store';
 import toast from 'react-hot-toast';
+
+// Runs once per page load, before anything reads auth state: tokens written by the pre-cookie
+// build must not linger in localStorage (see lib/auth/access-token-store.ts).
+if (typeof window !== 'undefined') purgeLegacyAuthStorage();
 
 /**
  * Thrown by `login()` when the backend says a 2FA code is still needed. Defensive-only today —
@@ -20,20 +25,24 @@ export class TwoFactorRequiredError extends Error {
 
 interface AuthContextType {
     user: User | null;
+    /** In-memory access token (never persisted). */
     token: string | null;
     login: (email: string, password: string, recaptchaToken?: string) => Promise<void>;
-    loginWithGoogle: (idToken: string) => Promise<void>;
+    /** Resolves the signed-in user so the caller can route by role. */
+    loginWithGoogle: (idToken: string) => Promise<User>;
+    /** Adopts a session another call already obtained (password/2FA login on LoginPage). */
+    completeLogin: (session: AuthSession) => void;
     register: (email: string, password: string, fullName: string, recaptchaToken?: string) => Promise<void>;
     logout: () => Promise<void>;
     isAuthenticated: boolean;
     hasPermission: (permission: string) => boolean;
-    /** True while the initial `/auth/me` session check (below) hasn't resolved yet. */
+    /** True while the page-load silent refresh (below) hasn't resolved yet. */
     isBootstrapping: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/** Full-screen splash shown only while the initial session check is in flight (mount, token present). */
+/** Full-screen splash shown only while the page-load silent refresh is in flight (session hint set). */
 const AuthBootstrapSplash = () => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <svg width="40" height="40" viewBox="0 0 38 38" stroke="#6366f1">
@@ -50,48 +59,27 @@ const AuthBootstrapSplash = () => (
 );
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [user, setUser] = useState<User | null>(() => browserStorage.getJSON<User | null>('user', null));
-    const [token, setToken] = useState<string | null>(browserStorage.getItem('token'));
-    const [isBootstrapping, setIsBootstrapping] = useState<boolean>(() => !!browserStorage.getItem('token'));
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(() => accessTokenStore.get());
+    // Anonymous visitors (no hint) never wait on, or even send, a refresh that can only fail.
+    const [isBootstrapping, setIsBootstrapping] = useState<boolean>(() => !accessTokenStore.get() && sessionHint.isSet());
 
-    // `setupTokenRefreshInterceptor()` used to also run here on every AuthProvider mount, ON TOP
-    // OF `api/auth.ts`'s own module-load call — two live interceptor registrations (integration
-    // request from W1-13, reports/integration-requests-w1.md). ES modules evaluate once, so the
-    // module-load registration alone is sufficient; removed the duplicate.
+    // The store is the single source of truth for the token: the 401 interceptor may clear it
+    // (dead session) or replace it (rotation) at any time. A cleared token drops the user, and
+    // RequireAuth then sends protected pages to /login.
+    useEffect(() => accessTokenStore.subscribe((next) => {
+        setToken(next);
+        if (!next) setUser(null);
+    }), []);
 
-    // Bootstrap: refresh a persisted session from `/auth/me` (roles + profile) instead of trusting
-    // a stale snapshot. `/auth/me` returns no `permissions` (only `/auth/login` does) — keep
-    // whatever we already have rather than wiping it (integration request: add it to `/auth/me`).
+    // Silent refresh on page load: the HttpOnly cookie buys a fresh access token plus the user
+    // (roles AND permissions, straight from the server) — no profile snapshot kept in localStorage.
     useEffect(() => {
-        if (!token) return;
+        if (!isBootstrapping) return;
         let cancelled = false;
-        authApi.getMyProfile()
-            .then((profile) => {
-                if (cancelled) return;
-                setUser((prev) => {
-                    const next: User = {
-                        id: profile.id,
-                        email: profile.email,
-                        fullName: profile.fullName,
-                        roles: profile.roles,
-                        permissions: prev?.permissions,
-                        isActive: prev?.isActive,
-                        createdAt: prev?.createdAt,
-                        lastLogin: profile.lastLoginAt,
-                    };
-                    browserStorage.setJSON('user', next);
-                    return next;
-                });
-            })
-            .catch((error: { response?: { status?: number } }) => {
-                // Refresh already tried once before this rejects — a still-401 session is dead.
-                if (!cancelled && error?.response?.status === 401) {
-                    setToken(null);
-                    setUser(null);
-                    browserStorage.removeItem('token');
-                    browserStorage.removeItem('refreshToken');
-                    browserStorage.removeItem('user');
-                }
+        refreshSession()
+            .then((session) => {
+                if (!cancelled && session) setUser(session.user);
             })
             .finally(() => {
                 if (!cancelled) setIsBootstrapping(false);
@@ -99,9 +87,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             cancelled = true;
         };
-        // Mount-only — login()/logout() already update `user`/`token` directly.
+        // Mount-only — login()/logout() update state directly.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const completeLogin = (session: AuthSession) => {
+        adoptSession(session);
+        setUser(session.user);
+    };
 
     const login = async (email: string, password: string, recaptchaToken?: string) => {
         try {
@@ -112,11 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new TwoFactorRequiredError();
             }
 
-            setToken(data.token);
-            setUser(data.user);
-            browserStorage.setItem('token', data.token);
-            browserStorage.setItem('refreshToken', data.refreshToken);
-            browserStorage.setJSON('user', data.user);
+            completeLogin(data);
 
             toast.success(`Chào mừng trở lại, ${data.user.fullName}!`, {
                 icon: '👋',
@@ -133,16 +122,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const data = await authApi.googleLogin(idToken);
 
-            setToken(data.token);
-            setUser(data.user);
-            browserStorage.setItem('token', data.token);
-            browserStorage.setItem('refreshToken', data.refreshToken);
-            browserStorage.setJSON('user', data.user);
+            completeLogin(data);
 
             toast.success(`Đăng nhập Google thành công! Chào ${data.user.fullName}`, {
                 icon: '🚀',
                 style: { borderRadius: '15px', fontWeight: 'bold' }
             });
+            return data.user;
         } catch (error: any) {
             const errorData = error.response?.data;
             let errorMessage = 'Đăng nhập Google thất bại';
@@ -188,11 +174,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            setToken(null);
+            // authApi.logout() already cleared the in-memory token; the store listener drops the user.
             setUser(null);
-            browserStorage.removeItem('token');
-            browserStorage.removeItem('refreshToken');
-            browserStorage.removeItem('user');
             toast('Đã đăng xuất tài khoản', { icon: '🚪' });
         }
     };
@@ -204,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, token, login, loginWithGoogle, register, logout, isAuthenticated: !!token, hasPermission, isBootstrapping }}>
+        <AuthContext.Provider value={{ user, token, login, loginWithGoogle, completeLogin, register, logout, isAuthenticated: !!token, hasPermission, isBootstrapping }}>
             {children}
         </AuthContext.Provider>
     );

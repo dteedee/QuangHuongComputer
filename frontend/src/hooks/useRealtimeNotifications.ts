@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
 import type { NotificationDto } from '../api/notification';
-import { browserStorage } from '../lib/browser-storage';
+import { API_ORIGIN } from '../lib/api-origin';
+import { accessTokenStore } from '../lib/auth/access-token-store';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 
@@ -39,12 +40,13 @@ export const useRealtimeNotifications = (
             return;
         }
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const signalRUrl = `${apiUrl}/hubs/notification`;
+        const signalRUrl = `${API_ORIGIN}/hubs/notification`;
 
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(signalRUrl, {
-                accessTokenFactory: () => browserStorage.getItem('token') || ''
+                // In-memory access token (never localStorage). Called on every (re)connect, so a
+                // token rotated by the refresh interceptor is picked up automatically.
+                accessTokenFactory: () => accessTokenStore.get() ?? ''
             })
             .withAutomaticReconnect({
                 nextRetryDelayInMilliseconds: (retryContext) => {
