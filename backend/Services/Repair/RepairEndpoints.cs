@@ -25,6 +25,7 @@ public static class RepairEndpoints
         app.MapQuoteEndpoints();
         app.MapPaymentHandoverEndpoints();
         app.MapPublicTrackingEndpoints();
+        app.MapServiceTypeEndpoints();
 
         // W1-10: nhánh khách hàng ("đơn sửa chữa của tôi") -> chỉ cần đăng nhập;
         // handler lọc theo userId. Nhóm /admin và các endpoint kỹ thuật viên có quyền riêng.

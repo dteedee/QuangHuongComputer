@@ -82,7 +82,8 @@ public class WorkOrderActivityLog : Entity<Guid>
             "Quote generated",
             performedBy,
             performedByName,
-            $"Quote {quoteNumber} created with total cost: ${totalCost:F2}");
+            string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"),
+                "Báo giá {0}: tổng {1:N0} ₫ (đã gồm VAT)", quoteNumber, totalCost));
     }
 
     public static WorkOrderActivityLog CreateNote(

@@ -15,7 +15,9 @@ public class RepairDbContext : DbContext
     public DbSet<ServiceBooking> ServiceBookings { get; set; }
     public DbSet<WorkOrderPart> WorkOrderParts { get; set; }
     public DbSet<RepairQuote> RepairQuotes { get; set; }
+    public DbSet<RepairQuoteLine> RepairQuoteLines { get; set; }
     public DbSet<WorkOrderActivityLog> WorkOrderActivityLogs { get; set; }
+    public DbSet<RepairServiceType> RepairServiceTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -138,10 +140,32 @@ public class RepairDbContext : DbContext
             entity.Property(e => e.EstimatedHours).HasPrecision(18, 2);
             entity.Property(e => e.HourlyRate).HasPrecision(18, 2);
 
+            entity.Property(e => e.SubtotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.LineDiscountTotal).HasPrecision(18, 2);
+            entity.Property(e => e.DiscountAmount).HasPrecision(18, 2);
+            entity.Property(e => e.NetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.VatAmount).HasPrecision(18, 2);
+            entity.Property(e => e.VatRate).HasPrecision(5, 4);
+
+            entity.HasMany(e => e.Lines)
+                .WithOne(l => l.Quote)
+                .HasForeignKey(l => l.QuoteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasIndex(e => e.QuoteNumber).IsUnique();
             entity.HasIndex(e => e.WorkOrderId);
             entity.HasIndex(e => e.Status);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_RepairQuotes_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+                t.HasCheckConstraint("CK_RepairQuotes_Totals_NonNegative",
+                    "\"PartsCost\" >= 0 AND \"LaborCost\" >= 0 AND \"ServiceFee\" >= 0");
+            });
         });
+
+        RepairQuoteLineConfiguration.Configure(modelBuilder);
+        RepairServiceTypeConfiguration.Configure(modelBuilder);
 
         modelBuilder.Entity<WorkOrderActivityLog>(entity =>
         {

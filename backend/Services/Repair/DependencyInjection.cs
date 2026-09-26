@@ -34,6 +34,7 @@ public static class DependencyInjection
         // in-process (Repair -> Inventory project reference); Inventory's own
         // AddInventoryModule() registers IStockLedger and InventoryDbContext.
         services.AddScoped<IRepairStockService, RepairStockService>();
+        services.AddScoped<Application.Quotes.RepairVatRateProvider>();
 
         return services;
     }

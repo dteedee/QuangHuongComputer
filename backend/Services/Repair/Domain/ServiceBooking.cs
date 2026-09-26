@@ -8,6 +8,10 @@ public class ServiceBooking : Entity<Guid>
     public Guid? OrganizationId { get; private set; }
 
     // Service Details
+    /// <summary>Dịch vụ khách chọn trong danh mục <see cref="RepairServiceType"/>.</summary>
+    public Guid ServiceTypeId { get; private set; }
+
+    /// <summary>Tại cửa hàng / tận nơi — SUY RA từ <see cref="RepairServiceType.IsOnSite"/>, không do client chọn.</summary>
     public ServiceType ServiceType { get; private set; }
     public string DeviceModel { get; private set; } = string.Empty;
     public string? SerialNumber { get; private set; }
@@ -58,7 +62,7 @@ public class ServiceBooking : Entity<Guid>
     /// </summary>
     public ServiceBooking(
         Guid customerId,
-        ServiceType serviceType,
+        RepairServiceType serviceType,
         string deviceModel,
         string issueDescription,
         DateTime preferredDate,
@@ -71,7 +75,8 @@ public class ServiceBooking : Entity<Guid>
     {
         Id = Guid.NewGuid();
         CustomerId = customerId;
-        ServiceType = serviceType;
+        ServiceTypeId = serviceType.Id;
+        ServiceType = serviceType.LegacyServiceType;
         DeviceModel = deviceModel;
         IssueDescription = issueDescription;
         PreferredDate = preferredDate;
@@ -79,7 +84,7 @@ public class ServiceBooking : Entity<Guid>
         AcceptedTerms = acceptedTerms;
         TermsAcceptedAt = acceptedTerms ? DateTime.UtcNow : null;
         Status = BookingStatus.Pending;
-        OnSiteFee = serviceType == ServiceType.OnSite ? onSiteFee : 0m;
+        OnSiteFee = serviceType.IsOnSite ? onSiteFee : 0m;
         CustomerName = customerName;
         CustomerPhone = customerPhone;
         CustomerEmail = customerEmail;

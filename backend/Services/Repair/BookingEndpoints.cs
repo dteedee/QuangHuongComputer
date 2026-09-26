@@ -29,19 +29,27 @@ public static class BookingEndpoints
 
             try
             {
+                // Dịch vụ lấy từ danh mục RepairServiceTypes; client cũ còn gửi enum ServiceType
+                // (InShop/OnSite) thì map sang 2 dòng seed có Id cố định.
+                var serviceTypeId = model.ServiceTypeId
+                    ?? (model.ServiceType == ServiceType.OnSite ? RepairServiceType.OnSiteSeedId : RepairServiceType.InShopSeedId);
+                var serviceType = await db.RepairServiceTypes.FirstOrDefaultAsync(s => s.Id == serviceTypeId && s.IsActive);
+                if (serviceType == null)
+                    return Results.BadRequest(new { Error = "Dịch vụ đã chọn không tồn tại hoặc đã ngừng nhận." });
+
                 // IR#54/D08: on-site service is config-gated (Warranty.OnsiteEnabled,
                 // default OFF) and the fee is config-driven (Warranty.OnsiteFeeVnd,
                 // default 0) - both keys shared with the warranty on-site flow (D08 §3),
                 // never a hardcoded literal.
-                if (model.ServiceType == ServiceType.OnSite && !settings.GetBool("Warranty.OnsiteEnabled", false))
+                if (serviceType.IsOnSite && !settings.GetBool("Warranty.OnsiteEnabled", false))
                     return Results.BadRequest(new { Error = "Dịch vụ tận nơi hiện chưa được bật." });
 
-                var onSiteFee = model.ServiceType == ServiceType.OnSite
+                var onSiteFee = serviceType.IsOnSite
                     ? settings.GetDecimal("Warranty.OnsiteFeeVnd", 0m)
                     : 0m;
                 var booking = new ServiceBooking(
                     userId,
-                    model.ServiceType,
+                    serviceType,
                     model.DeviceModel,
                     model.IssueDescription,
                     model.PreferredDate,
@@ -56,7 +64,7 @@ public static class BookingEndpoints
                 if (!string.IsNullOrWhiteSpace(model.SerialNumber))
                     booking.SetSerialNumber(model.SerialNumber);
 
-                if (model.ServiceType == ServiceType.OnSite)
+                if (serviceType.IsOnSite)
                 {
                     if (string.IsNullOrWhiteSpace(model.ServiceAddress) || !model.LocationType.HasValue)
                         return Results.BadRequest(new { Error = "Service address and location type are required for on-site service" });
@@ -84,6 +92,8 @@ public static class BookingEndpoints
                     booking.Id,
                     booking.CustomerId,
                     booking.ServiceType,
+                    booking.ServiceTypeId,
+                    ServiceTypeName = serviceType.Name,
                     booking.PreferredDate,
                     booking.PreferredTimeSlot,
                     booking.OnSiteFee,
@@ -114,6 +124,8 @@ public static class BookingEndpoints
                 {
                     b.Id,
                     b.ServiceType,
+                    b.ServiceTypeId,
+                    ServiceTypeName = db.RepairServiceTypes.Where(t => t.Id == b.ServiceTypeId).Select(t => t.Name).FirstOrDefault(),
                     b.DeviceModel,
                     b.SerialNumber,
                     b.IssueDescription,
@@ -150,6 +162,7 @@ public static class BookingEndpoints
             {
                 booking.Id,
                 booking.ServiceType,
+                booking.ServiceTypeId,
                 booking.DeviceModel,
                 booking.SerialNumber,
                 booking.IssueDescription,
@@ -196,6 +209,8 @@ public static class BookingEndpoints
                     b.Id,
                     b.CustomerId,
                     b.ServiceType,
+                    b.ServiceTypeId,
+                    ServiceTypeName = db.RepairServiceTypes.Where(t => t.Id == b.ServiceTypeId).Select(t => t.Name).FirstOrDefault(),
                     b.DeviceModel,
                     b.IssueDescription,
                     b.PreferredDate,
@@ -299,7 +314,7 @@ public static class BookingEndpoints
 
 // DTOs
 public record CreateBookingDto(
-    ServiceType ServiceType,
+    ServiceType? ServiceType,
     string DeviceModel,
     string? SerialNumber,
     string IssueDescription,
@@ -315,7 +330,8 @@ public record CreateBookingDto(
     List<string>? ImageUrls,
     List<string>? VideoUrls,
     Guid? OrganizationId,
-    bool AllowPayLater = false
+    bool AllowPayLater = false,
+    Guid? ServiceTypeId = null
 );
 
 public record RejectBookingDto(string Reason);

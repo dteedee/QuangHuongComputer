@@ -8,6 +8,7 @@ namespace BuildingBlocks.Security;
 /// <c>v2</c> = quyền W1-1 bổ sung; chỉ những mục này được cấp thêm cho DB đã ở v1,
 /// nên các thao tác thu hồi tay của admin không bị ghi đè.
 /// <c>v3</c> = bảng chuyển hướng URL (Content.ViewRedirects / ManageRedirects).
+/// <c>v4</c> = danh mục dịch vụ sửa chữa (Repair.ManageServiceTypes).
 /// Admin không có ở đây — Admin luôn nhận toàn bộ danh mục.
 /// </summary>
 internal static class RolePermissionMatrixData
@@ -16,10 +17,11 @@ internal static class RolePermissionMatrixData
     {
         var matrix = new Dictionary<string, List<RoleGrant>>(StringComparer.Ordinal);
 
-        void Role(string role, string[] v1, string[] v2, string[]? v3 = null) =>
+        void Role(string role, string[] v1, string[] v2, string[]? v3 = null, string[]? v4 = null) =>
             matrix[role] = v1.Select(p => new RoleGrant(p, 1))
                 .Concat(v2.Select(p => new RoleGrant(p, 2)))
-                .Concat((v3 ?? Array.Empty<string>()).Select(p => new RoleGrant(p, 3))).ToList();
+                .Concat((v3 ?? Array.Empty<string>()).Select(p => new RoleGrant(p, 3)))
+                .Concat((v4 ?? Array.Empty<string>()).Select(p => new RoleGrant(p, 4))).ToList();
 
         // Manager — Quản lý cửa hàng: làm được gần như mọi nghiệp vụ, trừ cấu hình hệ thống, tạo tài khoản và phân vai trò (đã bị W0-3 thu hồi).
         Role(Roles.Manager,
@@ -65,7 +67,8 @@ internal static class RolePermissionMatrixData
                 P.HR.ApproveLeave,
                 P.Reporting.ViewHR,
             },
-            v3: new[] { P.Content.ViewRedirects, P.Content.ManageRedirects });
+            v3: new[] { P.Content.ViewRedirects, P.Content.ManageRedirects },
+            v4: new[] { P.Repair.ManageServiceTypes });
         // Sale — Bán hàng: POS + đơn hàng + khách hàng tiềm năng (tiêu chí W1-1). KHÔNG có huỷ đơn, không bán công nợ, không duyệt đổi/trả.
         Role(Roles.Sale,
             v1: new[]

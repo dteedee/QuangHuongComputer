@@ -40,6 +40,10 @@ namespace Repair.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<decimal>("EstimatedHours")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -52,6 +56,14 @@ namespace Repair.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<decimal>("LaborCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("LineDiscountTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("NetAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -79,6 +91,10 @@ namespace Repair.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("SubtotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -87,6 +103,14 @@ namespace Repair.Migrations
 
                     b.Property<DateTime>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
 
                     b.Property<Guid>("WorkOrderId")
                         .HasColumnType("uuid");
@@ -100,7 +124,109 @@ namespace Repair.Migrations
 
                     b.HasIndex("WorkOrderId");
 
-                    b.ToTable("RepairQuotes");
+                    b.ToTable("RepairQuotes", t =>
+                        {
+                            t.HasCheckConstraint("CK_RepairQuotes_DiscountAmount_NonNegative", "\"DiscountAmount\" >= 0");
+
+                            t.HasCheckConstraint("CK_RepairQuotes_Totals_NonNegative", "\"PartsCost\" >= 0 AND \"LaborCost\" >= 0 AND \"ServiceFee\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Repair.Domain.RepairQuoteLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AllocatedDiscount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("InventoryItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("LineDiscount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ServiceTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("RepairQuoteLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_RepairQuoteLines_LineDiscount_NonNegative", "\"LineDiscount\" >= 0");
+
+                            t.HasCheckConstraint("CK_RepairQuoteLines_LineTotal_NonNegative", "\"LineTotal\" >= 0");
+
+                            t.HasCheckConstraint("CK_RepairQuoteLines_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_RepairQuoteLines_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Repair.Domain.RepairRequest", b =>
@@ -166,6 +292,69 @@ namespace Repair.Migrations
                     b.ToTable("RepairRequests", t =>
                         {
                             t.HasCheckConstraint("CK_RepairRequests_EstimatedCost_NonNegative", "\"EstimatedCost\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Repair.Domain.RepairServiceType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("EstimatedMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOnSite")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("RepairServiceTypes", t =>
+                        {
+                            t.HasCheckConstraint("CK_RepairServiceTypes_BasePrice_NonNegative", "\"BasePrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_RepairServiceTypes_EstimatedMinutes_NonNegative", "\"EstimatedMinutes\" >= 0");
                         });
                 });
 
@@ -249,6 +438,9 @@ namespace Repair.Migrations
                     b.Property<int>("ServiceType")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("ServiceTypeId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -273,6 +465,8 @@ namespace Repair.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("PreferredDate");
+
+                    b.HasIndex("ServiceTypeId");
 
                     b.HasIndex("Status");
 
@@ -424,6 +618,9 @@ namespace Repair.Migrations
                     b.Property<int?>("ServiceType")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("ServiceTypeId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -449,6 +646,8 @@ namespace Repair.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("ServiceTypeId");
 
                     b.HasIndex("Status");
 
@@ -589,6 +788,34 @@ namespace Repair.Migrations
                     b.Navigation("WorkOrder");
                 });
 
+            modelBuilder.Entity("Repair.Domain.RepairQuoteLine", b =>
+                {
+                    b.HasOne("Repair.Domain.RepairQuote", "Quote")
+                        .WithMany("Lines")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
+            modelBuilder.Entity("Repair.Domain.ServiceBooking", b =>
+                {
+                    b.HasOne("Repair.Domain.RepairServiceType", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Repair.Domain.WorkOrder", b =>
+                {
+                    b.HasOne("Repair.Domain.RepairServiceType", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Repair.Domain.WorkOrderActivityLog", b =>
                 {
                     b.HasOne("Repair.Domain.WorkOrder", "WorkOrder")
@@ -609,6 +836,11 @@ namespace Repair.Migrations
                         .IsRequired();
 
                     b.Navigation("WorkOrder");
+                });
+
+            modelBuilder.Entity("Repair.Domain.RepairQuote", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Repair.Domain.WorkOrder", b =>

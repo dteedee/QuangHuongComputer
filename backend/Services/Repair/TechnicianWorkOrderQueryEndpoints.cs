@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Repair.Application.Quotes;
 using Repair.Domain;
 using Repair.Infrastructure;
 
@@ -110,8 +111,9 @@ public static class TechnicianWorkOrderQueryEndpoints
 
             var workOrder = await db.WorkOrders
                 .Include(w => w.Parts)
-                .Include(w => w.Quotes)
+                .Include(w => w.Quotes).ThenInclude(q => q.Lines)
                 .Include(w => w.ActivityLogs.OrderByDescending(a => a.CreatedAt))
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(w => w.Id == id);
 
             if (workOrder == null)
@@ -151,18 +153,8 @@ public static class TechnicianWorkOrderQueryEndpoints
                     p.UnitPrice,
                     p.TotalPrice
                 }),
-                Quotes = workOrder.Quotes.Select(q => new
-                {
-                    q.Id,
-                    q.QuoteNumber,
-                    q.PartsCost,
-                    q.LaborCost,
-                    q.ServiceFee,
-                    q.TotalCost,
-                    q.Status,
-                    q.CreatedAt,
-                    q.ValidUntil
-                }),
+                workOrder.CurrentQuoteId,
+                Quotes = workOrder.Quotes.OrderByDescending(q => q.CreatedAt).Select(RepairQuoteDtoMapper.ToDto),
                 ActivityLogs = workOrder.ActivityLogs.Select(a => new
                 {
                     a.Id,
