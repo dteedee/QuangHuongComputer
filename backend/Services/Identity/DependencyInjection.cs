@@ -119,6 +119,11 @@ public static class DependencyInjection
         // Hợp đồng dùng chung cho các module ngoài Identity (CRM, Sales/POS, Reporting).
         services.AddScoped<BuildingBlocks.Contracts.IUserDirectory>(sp => (Identity.Services.UserDirectory)sp.GetRequiredService<Identity.Services.IUserDirectory>());
 
+        // reCAPTCHA v3 cho đăng nhập/đăng ký bằng mật khẩu — fail-closed trên Production khi thiếu secret.
+        services.AddHttpClient<Identity.Services.IRecaptchaVerifier, Identity.Services.RecaptchaVerifier>(
+            client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddHostedService<Identity.Services.RecaptchaStartupCheck>();
+
         // Background Services
         services.AddHostedService<Identity.Services.RefreshTokenCleanupService>();
 
