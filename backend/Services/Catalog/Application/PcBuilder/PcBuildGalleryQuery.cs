@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Catalog.Application.PcBuilder;
 
 public sealed record PcGalleryItemView(
-    Guid ProductId, string Name, string? Slug, string? ImageUrl, string SlotId,
+    Guid ProductId, string Name, string? Sku, string? Slug, string? ImageUrl, string SlotId, string SlotLabel,
     int Quantity, decimal UnitPrice, bool IsAvailable, bool InStock);
 
 public sealed record PcGalleryRuleView(string RuleId, string RuleName, string Verdict, string Message);
@@ -70,8 +70,9 @@ public static class PcBuildGalleryQuery
         {
             var c = resolved.Components.FirstOrDefault(x => x.ProductId == i.ProductId);
             var d = display(i.ProductId);
-            return new PcGalleryItemView(i.ProductId, c?.Name ?? "Linh kiện không còn bán", d?.Slug, d?.ImageUrl,
-                c?.SlotId ?? i.ComponentType, i.Quantity, c?.UnitPrice ?? i.UnitPrice,
+            var slotId = c?.SlotId ?? i.ComponentType;
+            return new PcGalleryItemView(i.ProductId, c?.Name ?? "Linh kiện không còn bán", c?.Sku, d?.Slug, d?.ImageUrl,
+                slotId, PcBuilderSlotDefinitions.Find(slotId)?.Name ?? "Linh kiện khác", i.Quantity, c?.UnitPrice ?? i.UnitPrice,
                 IsAvailable: c != null, InStock: c?.InStock ?? false);
         }).ToList();
 

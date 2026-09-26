@@ -20,6 +20,7 @@ const CMSPortal = lazy(() => import('../pages/backoffice/CMSPortal').then((m) =>
 const UrlRedirectsPage = lazy(() => import('../pages/admin/redirects/url-redirects-page').then((m) => ({ default: m.UrlRedirectsPage })));
 const UrlRedirectImportPage = lazy(() => import('../pages/admin/redirects/url-redirect-import-page'));
 const BundleListPage = lazy(() => import('../pages/admin/bundles/bundle-list-page').then((m) => ({ default: m.BundleListPage })));
+const PcBuildGalleryAdminPage = lazy(() => import('../pages/admin/pc-build-gallery/pc-build-gallery-admin-page').then((m) => ({ default: m.PcBuildGalleryAdminPage })));
 const BundleEditorPage = lazy(() => import('../pages/admin/bundles/bundle-editor-page').then((m) => ({ default: m.BundleEditorPage })));
 const ReviewsManagementPage = lazy(() => import('../pages/backoffice/admin/ReviewsManagementPage').then((m) => ({ default: m.ReviewsManagementPage })));
 
@@ -35,6 +36,8 @@ export const adminCatalogRoutes: RouteDef[] = [
   { path: 'bundles', element: BundleListPage, layout: 'backoffice', group: 'sales', icon: 'Boxes', title: 'Combo sản phẩm', description: 'Combo tiết kiệm', permission: PERMISSIONS.CATALOG_MANAGE, name: 'bundles' },
   { path: 'bundles/new', element: BundleEditorPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.CATALOG_CREATE, name: 'bundleNew' },
   { path: 'bundles/:id', element: BundleEditorPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.CATALOG_EDIT, name: 'bundleEdit' },
+  // "Cấu hình mẫu" /cau-hinh-mau — bản sao build đã lưu do nhân viên tuyển chọn.
+  { path: 'pc-build-gallery', element: PcBuildGalleryAdminPage, layout: 'backoffice', group: 'sales', icon: 'Cpu', title: 'Cấu hình mẫu', description: 'Gallery cấu hình PC', permission: PERMISSIONS.CATALOG_MANAGE, name: 'pcBuildGallery' },
   { path: 'categories', element: CategoriesPage, layout: 'backoffice', group: 'sales', icon: 'Archive', title: 'Danh mục', description: 'Phân loại sản phẩm', permission: PERMISSIONS.CATALOG_MANAGE, name: 'categories' },
   { path: 'brands', element: BrandsPage, layout: 'backoffice', group: 'sales', icon: 'Tag', title: 'Thương hiệu', description: 'Hãng sản xuất', permission: PERMISSIONS.CATALOG_MANAGE, name: 'brands' },
   { path: 'spec-schema', element: SpecSchemaPage, layout: 'backoffice', group: 'sales', icon: 'ListChecks', title: 'Thông số kỹ thuật', description: 'Nhóm & thuộc tính thông số', permission: PERMISSIONS.CATALOG_MANAGE, name: 'specSchema' },

@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import SEO from '../../components/SEO';
+import { Link } from 'react-router-dom';
 import { PageHeader, EmptyState, ErrorState, Skeleton } from '../../components/ui';
 import { ROUTES } from '../../routes';
 import type { PcCandidate, PcSlotDef } from '../../api/pcbuilder';
@@ -54,6 +55,11 @@ export const BuildPcPage = () => {
                 title="Xây dựng cấu hình PC"
                 description="Chọn từng linh kiện — hệ thống tự kiểm tra tương thích và tính tổng tiền."
                 breadcrumbs={[{ label: 'Trang chủ', to: ROUTES.HOME }, { label: 'Xây dựng cấu hình PC' }]}
+                actions={
+                    <Link to={ROUTES.PC_BUILD_GALLERY} className="text-sm font-medium text-brand-text hover:underline">
+                        Xem cấu hình mẫu
+                    </Link>
+                }
             />
 
             <div className="mb-6">

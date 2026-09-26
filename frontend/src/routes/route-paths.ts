@@ -41,6 +41,7 @@ export const ROUTES = {
   RECRUITMENT_DETAIL: '/tuyen-dung/:id',
   STORES: '/he-thong-cua-hang',
   PC_BUILDER: '/xay-dung-cau-hinh',
+  PC_BUILD_GALLERY: '/cau-hinh-mau',
   COMPARE: '/so-sanh',
   // Public but noindex (D11) — real pages, not meant to be indexed.
   CART: '/gio-hang',
