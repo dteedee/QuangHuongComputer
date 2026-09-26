@@ -17,6 +17,8 @@ const HomepageBuilder = lazy(() => import('../pages/admin/HomepageBuilder').then
 const PromotionsPage = lazy(() => import('../pages/admin/PromotionsPage'));
 const CouponsPage = lazy(() => import('../pages/backoffice/admin/CouponsPage').then((m) => ({ default: m.CouponsPage })));
 const CMSPortal = lazy(() => import('../pages/backoffice/CMSPortal').then((m) => ({ default: m.CMSPortal })));
+const UrlRedirectsPage = lazy(() => import('../pages/admin/redirects/url-redirects-page').then((m) => ({ default: m.UrlRedirectsPage })));
+const UrlRedirectImportPage = lazy(() => import('../pages/admin/redirects/url-redirect-import-page'));
 const ReviewsManagementPage = lazy(() => import('../pages/backoffice/admin/ReviewsManagementPage').then((m) => ({ default: m.ReviewsManagementPage })));
 
 // custom-fields / form-builder / automation-rules: deleted, not migrated — `/api/config/*` is
@@ -35,6 +37,9 @@ export const adminCatalogRoutes: RouteDef[] = [
   { path: 'promotions', element: PromotionsPage, layout: 'backoffice', group: 'content', icon: 'Zap', title: 'Khuyến mãi', description: 'Giảm giá & Flash Sale', permission: PERMISSIONS.CONTENT_MANAGE_COUPONS, name: 'promotions' },
   { path: 'coupons', element: CouponsPage, layout: 'backoffice', group: 'content', icon: 'Ticket', title: 'Mã giảm giá', description: 'Voucher & coupon', permission: PERMISSIONS.CONTENT_MANAGE_COUPONS, name: 'coupons' },
   { path: 'cms', element: CMSPortal, layout: 'backoffice', group: 'content', icon: 'FileText', title: 'Quản lý Nội dung', description: 'Bài viết & trang', permission: PERMISSIONS.CONTENT_MANAGE_PAGES, name: 'cms' },
+  // URL redirect manager (301/302/410) — SEO shell answers these before rendering (docs/seo-shell.md).
+  { path: 'redirects', element: UrlRedirectsPage, layout: 'backoffice', group: 'content', icon: 'Link', title: 'Chuyển hướng URL', description: '301/302 giữ thứ hạng SEO', permission: PERMISSIONS.CONTENT_VIEW_REDIRECTS, name: 'urlRedirects' },
+  { path: 'redirects/import', element: UrlRedirectImportPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.CONTENT_MANAGE_REDIRECTS, name: 'urlRedirectsImport' },
   // No `Permissions.Reviews.*` exists in the W1-1 catalog — escape hatch (route-types.ts `allowedRoles`).
   { path: 'reviews', element: ReviewsManagementPage, layout: 'backoffice', group: 'content', icon: 'Star', title: 'Đánh giá', description: 'Review sản phẩm', allowedRoles: ['Admin', 'Manager'], name: 'reviews' },
 ];
