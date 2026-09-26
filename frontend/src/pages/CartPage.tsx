@@ -9,6 +9,7 @@ import { FreeShippingProgress } from '../components/cart/free-shipping-progress'
 import { useFreeShipping } from '../hooks/use-free-shipping';
 import { CartLineRow } from '../components/cart/cart-line-row';
 import { CartTotals } from '../components/cart/cart-totals';
+import { CartBoughtTogetherRow } from '../components/cart/cart-bought-together-row';
 import {
     Badge, Button, Card, CardBody, ConfirmDialog, EmptyState, ErrorState, PageHeader, Skeleton,
 } from '../components/ui';
@@ -129,6 +130,8 @@ export const CartPage = () => {
                                 Tiếp tục mua sắm <ArrowRight size={14} />
                             </Link>
                         </div>
+
+                        <CartBoughtTogetherRow />
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {TRUST.map(({ icon: Icon, title, tone }) => (
