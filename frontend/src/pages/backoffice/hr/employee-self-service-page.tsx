@@ -5,6 +5,7 @@ import AttendanceCalendar from '../../../components/hr/attendance-calendar';
 import OvertimeRequestModal from '../../../components/hr/overtime-request-modal';
 import LeaveRequestModal from '../../../components/hr/leave-request-modal';
 import PayslipView from '../../../components/hr/payslip-view';
+import { MyCommissionsPanel } from '../../../components/hr/my-commissions-panel';
 import { useAuth } from '../../../context/AuthContext';
 import {
     attendanceApi,
@@ -24,13 +25,14 @@ import {
     type Payroll,
 } from '../../../api/hr';
 
-type TabKey = 'dashboard' | 'attendance' | 'leave' | 'payslip' | 'profile';
+type TabKey = 'dashboard' | 'attendance' | 'leave' | 'payslip' | 'commission' | 'profile';
 
 const TABS: { key: TabKey; label: string }[] = [
     { key: 'dashboard', label: 'Tổng quan' },
     { key: 'attendance', label: 'Bảng công' },
     { key: 'leave', label: 'Nghỉ phép & OT' },
     { key: 'payslip', label: 'Phiếu lương' },
+    { key: 'commission', label: 'Hoa hồng' },
     { key: 'profile', label: 'Hồ sơ' },
 ];
 
@@ -330,6 +332,7 @@ export default function EmployeeSelfServicePage() {
         attendance: renderAttendance(),
         leave: renderLeave(),
         payslip: renderPayslip(),
+        commission: <MyCommissionsPanel />,
         profile: renderProfile(),
     };
 
